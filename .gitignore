@@ -1,0 +1,8 @@
+*.a
+*.so
+*.so.*
+*.o
+*~
+config.h
+fd-*
+Makefile.local

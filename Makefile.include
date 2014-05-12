@@ -1,0 +1,93 @@
+CC ?= gcc
+CXX ?= g++
+M4 ?= m4
+SED ?= sed
+FLEX ?= flex
+PYTHON ?= python
+PYTHON2 ?= python2
+PYTHON3 ?= python3
+CYTHON  ?= cython
+SCAN_BUILD ?= scan-build
+
+PYTHON_CONFIG ?= python-config
+
+CC_NOT_GCC = no
+
+SYSTEM = $(shell uname)
+
+SYSTEM_CXXFLAGS =
+SYSTEM_LDFLAGS =
+CONFIG_FLAGS =
+
+ifeq '$(SYSTEM)' 'FreeBSD'
+  SYSTEM_CXXFLAGS = -Wno-long-long
+  SED ?= gsed
+else
+endif
+
+NOWALL ?= no
+NOPEDANTIC ?= no
+DEBUG ?= no
+PROFIL ?= no
+
+ifeq '$(CC_NOT_GCC)' 'yes'
+  NOPEDANTIC := yes
+endif
+
+ifeq '$(PROFIL)' 'yes'
+  DEBUG = yes
+endif
+
+ifeq '$(DEBUG)' 'yes'
+  CFLAGS = -g
+  CXXFLAGS = -g
+  CONFIG_FLAGS += -DDEBUG
+else
+  # force to use optimizations
+  CFLAGS += -O3
+  CXXFLAGS += -O3
+endif
+ifeq '$(PROFIL)' 'yes'
+  CFLAGS += -pg
+  CXXFLAGS += -pg
+endif
+
+ifneq '$(NOWALL)' 'yes'
+  CFLAGS += -Wall
+  CXXFLAGS += -Wall
+  ifeq '$(DEBUG)' 'yes'
+    CFLAGS   += -Wno-unused-function
+    CXXFLAGS += -Wno-unused-function
+  endif
+endif
+ifneq '$(NOPEDANTIC)' 'yes'
+  CFLAGS += -pedantic
+  CXXFLAGS += -pedantic
+endif
+
+USE_MEMCHECK ?= no
+
+ifeq '$(USE_MEMCHECK)' 'yes'
+  CONFIG_FLAGS += -DUSE_MEMCHECK
+endif
+
+BINS     ?= yes
+DYNAMIC  ?= no
+
+ifneq '$(CC_NOT_GCC)' 'yes'
+  CFLAGS += -std=gnu99 -ffast-math
+endif
+LDFLAGS += -pthread
+LDFLAGS += $(SYSTEM_LDFLAGS)
+
+
+PYTHON_CFLAGS  ?= $(shell $(PYTHON_CONFIG) --includes)
+PYTHON_LDFLAGS ?= $(shell $(PYTHON_CONFIG) --libs)
+
+
+PREFIX     ?= /usr/local
+INCLUDEDIR ?= include
+LIBDIR     ?= lib
+BINDIR     ?= bin
+
+.DEFAULT_GOAL := all

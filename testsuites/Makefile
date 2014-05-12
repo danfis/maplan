@@ -7,14 +7,14 @@ endif
 -include ../Makefile.local
 
 CFLAGS += -I./ -I../
-LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lfd -pthread
+LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lfd -L../../boruvka -lboruvka -pthread
 
 CHECK_REG=cu/check-regressions
 CHECK_TS ?=
 
 TARGETS = test
 
-OBJS = main.o
+OBJS = main.o load-from-file.o
 
 all: $(TARGETS)
 

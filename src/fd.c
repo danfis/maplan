@@ -48,18 +48,93 @@ static int readCheckWord(FILE *in, const char *word)
     return 1;
 }
 
-static int readVersion(FILE *in)
+static int readInt(FILE *in, const char *suffix)
 {
-    int version;
+    char token[READ_BUFSIZE];
+    int value;
 
-    readCheckWord(in, "begin_version");
-    if (fscanf(in, "%d", &version) != 1){
-        fprintf(stderr, "Error: expectiong version.\n");
+    sprintf(token, "begin_%s", suffix);
+    readCheckWord(in, token);
+    if (fscanf(in, "%d", &value) != 1){
+        fprintf(stderr, "Error: expectiong %s.\n", suffix);
         return -1;
     }
-    readCheckWord(in, "end_version");
+    sprintf(token, "end_%s", suffix);
+    readCheckWord(in, token);
 
-    return version;
+    // TODO
+    fprintf(stderr, "Value %s: %d\n", suffix, value);
+
+    return value;
+}
+
+static int readVersion(FILE *in)
+{
+    return readInt(in, "version");
+}
+
+static int readMetric(FILE *in)
+{
+    return readInt(in, "metric");
+}
+
+static void loadVars(FILE *in, fd_t *fd)
+{
+    int count;
+    size_t i, j, tmp;
+    char str[READ_BUFSIZE];
+    fd_var_t *var;
+
+    if (fscanf(in, "%d", &count) != 1){
+        // TODO
+    }
+
+    fd->vars_size = count;
+    fd->vars = BOR_ALLOC_ARR(fd_var_t, fd->vars_size);
+    for (i = 0; i < fd->vars_size; i++){
+        fdVarInit(fd->vars + i);
+    }
+
+    for (i = 0; i < fd->vars_size; i++){
+        var = fd->vars + i;
+
+        readCheckWord(in, "begin_variable");
+
+        if (fscanf(in, "%s", str) != 1){
+            fprintf(stderr, "XXX\n");
+            // TODO
+        }
+        // TODO
+        var->name = strdup(str);
+
+        if (fscanf(in, "%d", &var->axiom_layer) != 1){
+            // TODO
+            fprintf(stderr, "Error: Could not load axiom layer\n");
+        }
+
+        if (fscanf(in, "%d", &var->domain) != 1){
+            // TODO
+            fprintf(stderr, "Error: Could not domain range\n");
+        }
+
+        var->fact_names_size = var->domain;
+        var->fact_names = BOR_ALLOC_ARR(char *, var->fact_names_size);
+        for (j = 0; j < var->fact_names_size; ++j){
+            var->fact_names[j] = NULL;
+        }
+
+        // read the rest of the line
+        tmp = 0;
+        getline(&var->fact_names[0], &tmp, in);
+        for (j = 0; j < var->fact_names_size; ++j){
+            // TODO
+            tmp = 0;
+            getline(&var->fact_names[j], &tmp, in);
+        }
+
+        readCheckWord(in, "end_variable");
+    }
+
 }
 
 void fdLoadFromFile(fd_t *fd, const char *filename)
@@ -74,6 +149,10 @@ void fdLoadFromFile(fd_t *fd, const char *filename)
 
     // Ignore version, just read it
     readVersion(fin);
+    // TODO
+    readMetric(fin);
+
+    loadVars(fin, fd);
 
     fclose(fin);
 }

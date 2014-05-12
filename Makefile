@@ -19,13 +19,12 @@
 
 SO_VERSION = 0
 
-CFLAGS += -I.
-CXXFLAGS += -I.
+CFLAGS += -I. -I../boruvka/
 LDFLAGS += -L. -lfd -L../boruvka -lboruvka -lm -lrt
 
 TARGETS  = libfd.a
 
-OBJS  = fd
+OBJS  = fd var
 
 BIN_TARGETS =
 

@@ -7,7 +7,9 @@ endif
 -include ../Makefile.local
 
 CFLAGS += -I./ -I../
+CFLAGS += $(JANSSON_CFLAGS)
 LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lfd -L../../boruvka -lboruvka -pthread
+LDFLAGS += $(JANSSON_LDFLAGS)
 
 CHECK_REG=cu/check-regressions
 CHECK_TS ?=

@@ -4,8 +4,8 @@
 #include <fd/var.h>
 
 struct _fd_t {
-    fd_var_t *vars;
-    size_t vars_size;
+    fd_var_t *var;
+    size_t var_size;
 };
 typedef struct _fd_t fd_t;
 
@@ -23,6 +23,6 @@ void fdDel(fd_t *fd);
 /**
  * Loads definitions from specified file.
  */
-void fdLoadFromFile(fd_t *fd, const char *filename);
+void fdLoadFromJsonFile(fd_t *fd, const char *filename);
 
 #endif /* __FD_FD_H__ */

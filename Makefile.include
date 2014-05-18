@@ -81,6 +81,8 @@ LDFLAGS += -pthread
 LDFLAGS += $(SYSTEM_LDFLAGS)
 
 
+JANSSON_CFLAGS ?= $(shell pkg-config --cflags jansson)
+JANSSON_LDFLAGS ?= $(shell pkg-config --libs jansson)
 PYTHON_CFLAGS  ?= $(shell $(PYTHON_CONFIG) --includes)
 PYTHON_LDFLAGS ?= $(shell $(PYTHON_CONFIG) --libs)
 

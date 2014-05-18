@@ -20,7 +20,9 @@
 SO_VERSION = 0
 
 CFLAGS += -I. -I../boruvka/
+CFLAGS += $(JANSSON_CFLAGS)
 LDFLAGS += -L. -lfd -L../boruvka -lboruvka -lm -lrt
+LDFLAGS += $(JANSSON_LDFLAGS)
 
 TARGETS  = libfd.a
 
@@ -135,6 +137,8 @@ help:
 	@echo "    CXXFLAGS          = $(CXXFLAGS)"
 	@echo "    LDFLAGS           = $(LDFLAGS)"
 	@echo "    CONFIG_FLAGS      = $(CONFIG_FLAGS)"
+	@echo "    JANSSON_CFLAGS    = $(JANSSON_CFLAGS)"
+	@echo "    JANSSON_LDFLAGS   = $(JANSSON_LDFLAGS)"
 	@echo "    PYTHON_CFLAGS     = $(PYTHON_CFLAGS)"
 	@echo "    PYTHON_LDFLAGS    = $(PYTHON_LDFLAGS)"
 

@@ -7,6 +7,6 @@ TEST(testLoadFromFile)
     fd_t *fd;
 
     fd = fdNew();
-    fdLoadFromFile(fd, "load-from-file.in1.txt");
+    fdLoadFromJsonFile(fd, "load-from-file.in1.json");
     fdDel(fd);
 }

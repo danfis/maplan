@@ -26,7 +26,7 @@ LDFLAGS += $(JANSSON_LDFLAGS)
 
 TARGETS  = libfd.a
 
-OBJS  = fd var
+OBJS  = fd var state
 
 BIN_TARGETS =
 

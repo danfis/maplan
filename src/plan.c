@@ -3,36 +3,36 @@
 
 #include <boruvka/alloc.h>
 
-#include "fd/fd.h"
+#include "plan/plan.h"
 
 #define READ_BUFSIZE 1024
 
-fd_t *fdNew(void)
+plan_t *planNew(void)
 {
-    fd_t *fd;
+    plan_t *plan;
 
-    fd = BOR_ALLOC(fd_t);
-    fd->var = NULL;
-    fd->var_size = 0;
+    plan = BOR_ALLOC(plan_t);
+    plan->var = NULL;
+    plan->var_size = 0;
 
-    return fd;
+    return plan;
 }
 
-void fdDel(fd_t *fd)
+void planDel(plan_t *plan)
 {
     size_t i;
 
-    if (fd->var != NULL){
-        for (i = 0; i < fd->var_size; ++i){
-            fdVarFree(fd->var + i);
+    if (plan->var != NULL){
+        for (i = 0; i < plan->var_size; ++i){
+            planVarFree(plan->var + i);
         }
-        BOR_FREE(fd->var);
+        BOR_FREE(plan->var);
     }
 
-    BOR_FREE(fd);
+    BOR_FREE(plan);
 }
 
-static void loadVariable(fd_var_t *var, json_t *json)
+static void loadVariable(plan_var_t *var, json_t *json)
 {
     json_t *data, *jval;
     int i;
@@ -66,30 +66,30 @@ static void loadVariable(fd_var_t *var, json_t *json)
 #endif
 }
 
-static void loadVariables(fd_t *fd, json_t *json)
+static void loadVariables(plan_t *plan, json_t *json)
 {
     size_t i;
     json_t *json_var;
 
     // allocate array for variables
-    fd->var_size = json_array_size(json);
-    fd->var = BOR_ALLOC_ARR(fd_var_t, fd->var_size);
-    for (i = 0; i < fd->var_size; ++i){
-        fdVarInit(fd->var + i);
+    plan->var_size = json_array_size(json);
+    plan->var = BOR_ALLOC_ARR(plan_var_t, plan->var_size);
+    for (i = 0; i < plan->var_size; ++i){
+        planVarInit(plan->var + i);
     }
 
     json_array_foreach(json, i, json_var){
-        loadVariable(fd->var + i, json_var);
+        loadVariable(plan->var + i, json_var);
     }
 }
 
-void fdLoadFromJsonFile(fd_t *fd, const char *filename)
+void planLoadFromJsonFile(plan_t *plan, const char *filename)
 {
     json_t *json;
     json_t *data;
     json_error_t json_err;
 
-    // TODO: Clear fd_t structure
+    // TODO: Clear plan_t structure
 
     // open JSON data from file
     json = json_load_file(filename, 0, &json_err);
@@ -105,7 +105,7 @@ void fdLoadFromJsonFile(fd_t *fd, const char *filename)
         fprintf(stderr, "Error: No 'variable' key in json definition.\n");
         exit(-1);
     }
-    loadVariables(fd, data);
+    loadVariables(plan, data);
 
 
     // free json resources
@@ -124,7 +124,7 @@ void fdLoadFromJsonFile(fd_t *fd, const char *filename)
     // TODO
     readMetric(fin);
 
-    loadVars(fin, fd);
+    loadVars(fin, plan);
 
     fclose(fin);
 #endif

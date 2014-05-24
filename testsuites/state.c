@@ -1,11 +1,11 @@
 #include <cu/cu.h>
-#include "fd/state.h"
+#include "plan/state.h"
 
 
 TEST(testStateBasic)
 {
-    fd_state_pool_t *pool;
+    plan_state_pool_t *pool;
 
-    pool = fdStatePoolNew(10);
-    fdStatePoolDel(pool);
+    pool = planStatePoolNew(10);
+    planStatePoolDel(pool);
 }

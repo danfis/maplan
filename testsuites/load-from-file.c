@@ -1,12 +1,12 @@
 #include <cu/cu.h>
-#include "fd/fd.h"
+#include "plan/plan.h"
 
 
 TEST(testLoadFromFile)
 {
-    fd_t *fd;
+    plan_t *plan;
 
-    fd = fdNew();
-    fdLoadFromJsonFile(fd, "load-from-file.in1.json");
-    fdDel(fd);
+    plan = planNew();
+    planLoadFromJsonFile(plan, "load-from-file.in1.json");
+    planDel(plan);
 }

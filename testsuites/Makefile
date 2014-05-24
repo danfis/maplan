@@ -8,7 +8,7 @@ endif
 
 CFLAGS += -I./ -I../
 CFLAGS += $(JANSSON_CFLAGS)
-LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lfd -L../../boruvka -lboruvka -pthread
+LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -L../../boruvka -lboruvka -pthread
 LDFLAGS += $(JANSSON_LDFLAGS)
 
 CHECK_REG=cu/check-regressions

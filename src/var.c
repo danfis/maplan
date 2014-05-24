@@ -1,26 +1,26 @@
 #include <boruvka/alloc.h>
-#include "fd/var.h"
+#include "plan/var.h"
 
-void fdVarInit(fd_var_t *fd)
+void planVarInit(plan_var_t *plan)
 {
-    fd->name = NULL;
-    fd->range = -1;
-    fd->fact_name = NULL;
-    fd->axiom_layer = -1;
+    plan->name = NULL;
+    plan->range = -1;
+    plan->fact_name = NULL;
+    plan->axiom_layer = -1;
 }
 
-void fdVarFree(fd_var_t *fd)
+void planVarFree(plan_var_t *plan)
 {
     int i;
 
-    if (fd->name)
-        BOR_FREE(fd->name);
+    if (plan->name)
+        BOR_FREE(plan->name);
 
-    if (fd->fact_name != NULL){
-        for (i = 0; i < fd->range; ++i){
-            BOR_FREE(fd->fact_name[i]);
+    if (plan->fact_name != NULL){
+        for (i = 0; i < plan->range; ++i){
+            BOR_FREE(plan->fact_name[i]);
         }
-        BOR_FREE(fd->fact_name);
+        BOR_FREE(plan->fact_name);
     }
 }
 

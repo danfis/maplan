@@ -1,15 +1,15 @@
 #include <strings.h>
 #include <boruvka/alloc.h>
-#include "fd/state.h"
+#include "plan/state.h"
 
 #define INIT_ALLOC_SIZE 32
 
 
-fd_state_pool_t *fdStatePoolNew(size_t num_vars)
+plan_state_pool_t *planStatePoolNew(size_t num_vars)
 {
-    fd_state_pool_t *pool;
+    plan_state_pool_t *pool;
 
-    pool = BOR_ALLOC(fd_state_pool_t);
+    pool = BOR_ALLOC(plan_state_pool_t);
     pool->num_vars = num_vars;
     pool->states_allocated = INIT_ALLOC_SIZE * pool->num_vars;
     pool->states = BOR_ALLOC_ARR(unsigned, pool->states_allocated);
@@ -18,16 +18,16 @@ fd_state_pool_t *fdStatePoolNew(size_t num_vars)
     return pool;
 }
 
-void fdStatePoolDel(fd_state_pool_t *pool)
+void planStatePoolDel(plan_state_pool_t *pool)
 {
     if (pool->states)
         BOR_FREE(pool->states);
     BOR_FREE(pool);
 }
 
-fd_state_t fdStatePoolNewState(fd_state_pool_t *pool)
+plan_state_t planStatePoolNewState(plan_state_pool_t *pool)
 {
-    fd_state_t state;
+    plan_state_t state;
 
     if (pool->states_size + pool->num_vars >= pool->states_allocated){
         // expand a pool array if not enough space for a new state
@@ -48,12 +48,12 @@ fd_state_t fdStatePoolNewState(fd_state_pool_t *pool)
 
 
 
-int fdStateGet(const fd_state_t *state, unsigned var)
+int planStateGet(const plan_state_t *state, unsigned var)
 {
     return state->val[var];
 }
 
-void fdStateSet(fd_state_t *state, unsigned var, unsigned val)
+void planStateSet(plan_state_t *state, unsigned var, unsigned val)
 {
     state->val[var] = val;
 }

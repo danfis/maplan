@@ -1,7 +1,7 @@
 ###
-# Boruvka
+# libplan
 # --------
-# Copyright (c)2010-2012 Daniel Fiser <danfis@danfis.cz>
+# Copyright (c)2014 Daniel Fiser <danfis@danfis.cz>
 #
 #  This file is part of boruvka.
 #
@@ -21,12 +21,12 @@ SO_VERSION = 0
 
 CFLAGS += -I. -I../boruvka/
 CFLAGS += $(JANSSON_CFLAGS)
-LDFLAGS += -L. -lfd -L../boruvka -lboruvka -lm -lrt
+LDFLAGS += -L. -lplan -L../boruvka -lboruvka -lm -lrt
 LDFLAGS += $(JANSSON_LDFLAGS)
 
-TARGETS  = libfd.a
+TARGETS  = libplan.a
 
-OBJS  = fd var state
+OBJS  = plan var state
 
 BIN_TARGETS =
 
@@ -42,34 +42,34 @@ endif
 
 all: $(TARGETS)
 
-libfd.a: $(OBJS)
+libplan.a: $(OBJS)
 	ar cr $@ $(OBJS)
 	ranlib $@
 
-fd/config.h: fd/config.h.m4
+plan/config.h: plan/config.h.m4
 	$(M4) $(CONFIG_FLAGS) $< >$@
 
-bin/fd-%: bin/%-main.c libfd.a
+bin/plan-%: bin/%-main.c libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 bin/%.o: bin/%.c bin/%.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-examples/%: examples/%.c libfd.a
+examples/%: examples/%.c libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
-.objs/%.pic.o: src/%.c fd/%.h fd/config.h
+.objs/%.pic.o: src/%.c plan/%.h plan/config.h
 	$(CC) -fPIC $(CFLAGS) -c -o $@ $<
-.objs/%.pic.o: src/%.c fd/config.h
+.objs/%.pic.o: src/%.c plan/config.h
 	$(CC) -fPIC $(CFLAGS) -c -o $@ $<
 
-.objs/%.o: src/%.c fd/%.h fd/config.h
+.objs/%.o: src/%.c plan/%.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
-.objs/%.o: src/%.c fd/config.h
+.objs/%.o: src/%.c plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 
-%.h: fd/config.h
-%.c: fd/config.h
+%.h: plan/config.h
+%.c: plan/config.h
 
 
 clean:
@@ -77,7 +77,7 @@ clean:
 	rm -f .objs/*.o
 	rm -f $(TARGETS)
 	rm -f $(BIN_TARGETS)
-	rm -f fd/config.h
+	rm -f plan/config.h
 	if [ -d testsuites ]; then $(MAKE) -C testsuites clean; fi;
 	if [ -d doc ]; then $(MAKE) -C doc clean; fi;
 	

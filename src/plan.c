@@ -7,6 +7,21 @@
 
 #define READ_BUFSIZE 1024
 
+
+static void planFree(plan_t *plan)
+{
+    size_t i;
+
+    if (plan->var != NULL){
+        for (i = 0; i < plan->var_size; ++i){
+            planVarFree(plan->var + i);
+        }
+        BOR_FREE(plan->var);
+    }
+
+    plan->var = NULL;
+}
+
 plan_t *planNew(void)
 {
     plan_t *plan;
@@ -20,19 +35,11 @@ plan_t *planNew(void)
 
 void planDel(plan_t *plan)
 {
-    size_t i;
-
-    if (plan->var != NULL){
-        for (i = 0; i < plan->var_size; ++i){
-            planVarFree(plan->var + i);
-        }
-        BOR_FREE(plan->var);
-    }
-
+    planFree(plan);
     BOR_FREE(plan);
 }
 
-static void loadVariable(plan_var_t *var, json_t *json)
+static void loadJsonVariable1(plan_var_t *var, json_t *json)
 {
     json_t *data, *jval;
     int i;
@@ -56,17 +63,9 @@ static void loadVariable(plan_var_t *var, json_t *json)
             var->fact_name[i] = strdup("");
         }
     }
-
-#if 0
-    fprintf(stderr, "%s: %d | %d\n", var->name, var->range, var->axiom_layer);
-    for (i = 0; i < var->range; ++i){
-        fprintf(stderr, " %s", var->fact_name[i]);
-    }
-    fprintf(stderr, "\n");
-#endif
 }
 
-static void loadVariables(plan_t *plan, json_t *json)
+static void loadJsonVariable(plan_t *plan, json_t *json)
 {
     size_t i;
     json_t *json_var;
@@ -79,17 +78,31 @@ static void loadVariables(plan_t *plan, json_t *json)
     }
 
     json_array_foreach(json, i, json_var){
-        loadVariable(plan->var + i, json_var);
+        loadJsonVariable1(plan->var + i, json_var);
     }
+}
+
+typedef void (*load_json_data_fn)(plan_t *plan, json_t *json);
+static void loadJsonData(plan_t *plan, json_t *root,
+                         const char *keyname, load_json_data_fn fn)
+{
+    json_t *data;
+
+    data = json_object_get(root, keyname);
+    if (data == NULL){
+        fprintf(stderr, "Error: No '%s' key in json definition.\n", keyname);
+        exit(-1);
+    }
+    fn(plan, data);
 }
 
 void planLoadFromJsonFile(plan_t *plan, const char *filename)
 {
     json_t *json;
-    json_t *data;
     json_error_t json_err;
 
-    // TODO: Clear plan_t structure
+    // Clear plan_t structure
+    planFree(plan);
 
     // open JSON data from file
     json = json_load_file(filename, 0, &json_err);
@@ -100,32 +113,20 @@ void planLoadFromJsonFile(plan_t *plan, const char *filename)
         exit(-1);
     }
 
-    data = json_object_get(json, "variable");
-    if (data == NULL){
-        fprintf(stderr, "Error: No 'variable' key in json definition.\n");
-        exit(-1);
-    }
-    loadVariables(plan, data);
+    //loadJsonData(plan, json, "version", loadJsonVersion);
+    //loadJsonData(plan, json, "use_metric", loadJsonUseMetric);
+    loadJsonData(plan, json, "variable", loadJsonVariable);
+    //loadJsonData(plan, json, "goal", loadJsonGoal);
+    //loadJsonData(plan, json, "initial_state", loadJsonInitialState);
+    //loadJsonData(plan, json, "operator", loadJsonOperator);
+    //loadJsonData(plan, json, "mutex_group", loadJsonMutexGroup);
+    //loadJsonData(plan, json, "successor_generator", loadJsonSuccessorGenerator);
+    //loadJsonData(plan, json, "axiom", loadJsonAxiom);
+    //loadJsonData(plan, json, "causal_graph", loadJsonCausalGraph);
+    //loadJsonData(plan, json, "domain_transition_graph",
+    //             loadJsonDomainTransitionGrah);
 
 
     // free json resources
     json_decref(json);
-
-#if 0
-
-    fin = fopen(filename, "r");
-    if (fin == NULL){
-        fprintf(stderr, "Could not open file %s\n", filename);
-        exit(-1);
-    }
-
-    // Ignore version, just read it
-    readVersion(fin);
-    // TODO
-    readMetric(fin);
-
-    loadVars(fin, plan);
-
-    fclose(fin);
-#endif
 }

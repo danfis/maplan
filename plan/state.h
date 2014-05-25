@@ -4,12 +4,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <boruvka/segmarr.h>
+
 
 struct _plan_state_pool_t {
     size_t num_vars;         /*!< Num of variables per state */
-    unsigned *states;        /*!< States stored consecutively one after another */
-    size_t states_size;      /*!< Number of states stored */
-    size_t states_allocated; /*!< Actual allocated size of .states */
+    bor_segmarr_t *states;
+    size_t num_states;
 };
 typedef struct _plan_state_pool_t plan_state_pool_t;
 

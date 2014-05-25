@@ -11,9 +11,8 @@ plan_state_pool_t *planStatePoolNew(size_t num_vars)
 
     pool = BOR_ALLOC(plan_state_pool_t);
     pool->num_vars = num_vars;
-    pool->states_allocated = INIT_ALLOC_SIZE * pool->num_vars;
-    pool->states = BOR_ALLOC_ARR(unsigned, pool->states_allocated);
-    pool->states_size = 0;
+    pool->states = borSegmArrNew(pool->num_vars * sizeof(unsigned), 8196);
+    pool->num_states = 0;
 
     return pool;
 }
@@ -21,7 +20,7 @@ plan_state_pool_t *planStatePoolNew(size_t num_vars)
 void planStatePoolDel(plan_state_pool_t *pool)
 {
     if (pool->states)
-        BOR_FREE(pool->states);
+        borSegmArrDel(pool->states);
     BOR_FREE(pool);
 }
 
@@ -29,15 +28,8 @@ plan_state_t planStatePoolNewState(plan_state_pool_t *pool)
 {
     plan_state_t state;
 
-    if (pool->states_size + pool->num_vars >= pool->states_allocated){
-        // expand a pool array if not enough space for a new state
-        pool->states_allocated *= 2;
-        pool->states = BOR_REALLOC_ARR(pool->states, unsigned,
-                                       pool->states_allocated);
-    }
-
-    state.val = pool->states + pool->states_size;
-    pool->states_size += pool->num_vars;
+    state.val = borSegmArrGet(pool->states, pool->num_states);
+    ++pool->num_states;
 
     // initialize state
     bzero(state.val, sizeof(unsigned) * pool->num_vars);

@@ -157,5 +157,6 @@ int planLoadFromJsonFile(plan_t *plan, const char *filename)
 
 planLoadFromJsonFile_err:
     json_decref(json);
+    planFree(plan);
     return -1;
 }

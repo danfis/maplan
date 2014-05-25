@@ -5,9 +5,11 @@
 TEST(testLoadFromFile)
 {
     plan_t *plan;
+    int res;
 
     plan = planNew();
-    planLoadFromJsonFile(plan, "load-from-file.in1.json");
+    res = planLoadFromJsonFile(plan, "load-from-file.in1.json");
+    assertEquals(res, 0);
 
     assertEquals(plan->var_size, 9);
     assertEquals(plan->var[0].range, 5);

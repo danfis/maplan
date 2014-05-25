@@ -23,6 +23,6 @@ void planDel(plan_t *plan);
 /**
  * Loads definitions from specified file.
  */
-void planLoadFromJsonFile(plan_t *plan, const char *filename);
+int planLoadFromJsonFile(plan_t *plan, const char *filename);
 
 #endif /* __PLAN_PLAN_H__ */

@@ -39,7 +39,19 @@ void planDel(plan_t *plan)
     BOR_FREE(plan);
 }
 
-static void loadJsonVariable1(plan_var_t *var, json_t *json)
+
+static int loadJsonVersion(plan_t *plan, json_t *json)
+{
+    int version = 0;
+    version = json_integer_value(json);
+    if (version != 3){
+        fprintf(stderr, "Error: Unknown version.\n");
+        return -1;
+    }
+    return 0;
+}
+
+static int loadJsonVariable1(plan_var_t *var, json_t *json)
 {
     json_t *data, *jval;
     int i;
@@ -63,9 +75,11 @@ static void loadJsonVariable1(plan_var_t *var, json_t *json)
             var->fact_name[i] = strdup("");
         }
     }
+
+    return 0;
 }
 
-static void loadJsonVariable(plan_t *plan, json_t *json)
+static int loadJsonVariable(plan_t *plan, json_t *json)
 {
     size_t i;
     json_t *json_var;
@@ -78,12 +92,20 @@ static void loadJsonVariable(plan_t *plan, json_t *json)
     }
 
     json_array_foreach(json, i, json_var){
-        loadJsonVariable1(plan->var + i, json_var);
+        if (loadJsonVariable1(plan->var + i, json_var) != 0)
+            return -1;
     }
+
+    return 0;
 }
 
-typedef void (*load_json_data_fn)(plan_t *plan, json_t *json);
-static void loadJsonData(plan_t *plan, json_t *root,
+static int loadJsonInitialState(plan_t *plan, json_t *json)
+{
+    return 0;
+}
+
+typedef int (*load_json_data_fn)(plan_t *plan, json_t *json);
+static int loadJsonData(plan_t *plan, json_t *root,
                          const char *keyname, load_json_data_fn fn)
 {
     json_t *data;
@@ -91,12 +113,12 @@ static void loadJsonData(plan_t *plan, json_t *root,
     data = json_object_get(root, keyname);
     if (data == NULL){
         fprintf(stderr, "Error: No '%s' key in json definition.\n", keyname);
-        exit(-1);
+        return -1;
     }
-    fn(plan, data);
+    return fn(plan, data);
 }
 
-void planLoadFromJsonFile(plan_t *plan, const char *filename)
+int planLoadFromJsonFile(plan_t *plan, const char *filename)
 {
     json_t *json;
     json_error_t json_err;
@@ -110,14 +132,17 @@ void planLoadFromJsonFile(plan_t *plan, const char *filename)
         // TODO: Error logging
         fprintf(stderr, "Error: Could not read json data. Line %d: %s.\n",
                 json_err.line, json_err.text);
-        exit(-1);
+        goto planLoadFromJsonFile_err;
     }
 
-    //loadJsonData(plan, json, "version", loadJsonVersion);
+    if (loadJsonData(plan, json, "version", loadJsonVersion) != 0)
+        goto planLoadFromJsonFile_err;
     //loadJsonData(plan, json, "use_metric", loadJsonUseMetric);
-    loadJsonData(plan, json, "variable", loadJsonVariable);
+    if (loadJsonData(plan, json, "variable", loadJsonVariable) != 0)
+        goto planLoadFromJsonFile_err;
+    if (loadJsonData(plan, json, "initial_state", loadJsonInitialState) != 0)
+        goto planLoadFromJsonFile_err;
     //loadJsonData(plan, json, "goal", loadJsonGoal);
-    //loadJsonData(plan, json, "initial_state", loadJsonInitialState);
     //loadJsonData(plan, json, "operator", loadJsonOperator);
     //loadJsonData(plan, json, "mutex_group", loadJsonMutexGroup);
     //loadJsonData(plan, json, "successor_generator", loadJsonSuccessorGenerator);
@@ -127,6 +152,10 @@ void planLoadFromJsonFile(plan_t *plan, const char *filename)
     //             loadJsonDomainTransitionGrah);
 
 
-    // free json resources
     json_decref(json);
+    return 0;
+
+planLoadFromJsonFile_err:
+    json_decref(json);
+    return -1;
 }

@@ -2,10 +2,12 @@
 #define __PLAN_PLAN_H__
 
 #include <plan/var.h>
+#include <plan/state.h>
 
 struct _plan_t {
     plan_var_t *var;
     size_t var_size;
+    plan_state_pool_t *state_pool;
 };
 typedef struct _plan_t plan_t;
 

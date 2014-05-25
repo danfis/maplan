@@ -2,15 +2,13 @@
 #include <boruvka/alloc.h>
 #include "plan/state.h"
 
-#define INIT_ALLOC_SIZE 32
 
-
-plan_state_pool_t *planStatePoolNew(size_t num_vars)
+plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size)
 {
     plan_state_pool_t *pool;
 
     pool = BOR_ALLOC(plan_state_pool_t);
-    pool->num_vars = num_vars;
+    pool->num_vars = var_size;
     pool->states = borSegmArrNew(pool->num_vars * sizeof(unsigned), 8196);
     pool->num_states = 0;
 

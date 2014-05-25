@@ -6,6 +6,8 @@
 
 #include <boruvka/segmarr.h>
 
+#include <plan/var.h>
+
 
 struct _plan_state_pool_t {
     size_t num_vars;         /*!< Num of variables per state */
@@ -25,7 +27,7 @@ typedef struct _plan_state_t plan_state_t;
 /**
  * Initializes a new state pool.
  */
-plan_state_pool_t *planStatePoolNew(size_t num_vars);
+plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size);
 
 /**
  * Frees previously allocated pool.

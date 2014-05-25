@@ -18,8 +18,10 @@ static void planFree(plan_t *plan)
         }
         BOR_FREE(plan->var);
     }
-
     plan->var = NULL;
+
+    if (plan->state_pool)
+        planStatePoolDel(plan->state_pool);
 }
 
 plan_t *planNew(void)
@@ -29,6 +31,7 @@ plan_t *planNew(void)
     plan = BOR_ALLOC(plan_t);
     plan->var = NULL;
     plan->var_size = 0;
+    plan->state_pool = NULL;
 
     return plan;
 }
@@ -95,6 +98,9 @@ static int loadJsonVariable(plan_t *plan, json_t *json)
         if (loadJsonVariable1(plan->var + i, json_var) != 0)
             return -1;
     }
+
+    // create state pool
+    plan->state_pool = planStatePoolNew(plan->var, plan->var_size);
 
     return 0;
 }

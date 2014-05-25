@@ -73,3 +73,8 @@ void planPartStateSet(plan_part_state_t *state, unsigned var, unsigned val)
     state->val[var] = val;
     state->mask[var] = ~0u;
 }
+
+int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
+{
+    return state->mask[var] == ~0u;
+}

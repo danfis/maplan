@@ -22,6 +22,13 @@ static void planFree(plan_t *plan)
 
     if (plan->state_pool)
         planStatePoolDel(plan->state_pool);
+
+    if (plan->op){
+        for (i = 0; i < plan->op_size; ++i){
+            planOperatorFree(plan->op + i);
+        }
+        BOR_FREE(plan->op);
+    }
 }
 
 plan_t *planNew(void)
@@ -32,6 +39,8 @@ plan_t *planNew(void)
     plan->var = NULL;
     plan->var_size = 0;
     plan->state_pool = NULL;
+    plan->op = NULL;
+    plan->op_size = 0;
 
     return plan;
 }
@@ -149,8 +158,55 @@ static int loadJsonGoal(plan_t *plan, json_t *json)
     return 0;
 }
 
+static int loadJsonOperator1(plan_operator_t *op, json_t *json)
+{
+    const char *key;
+    json_t *data, *jprepost, *jpre, *jpost;
+    int var, pre, post;
+
+    data = json_object_get(json, "name");
+    planOperatorSetName(op, json_string_value(data));
+
+    data = json_object_get(json, "cost");
+    planOperatorSetCost(op, json_integer_value(data));
+
+    data = json_object_get(json, "pre_post");
+    json_object_foreach(data, key, jprepost){
+        var = atoi(key);
+
+        jpre  = json_object_get(jprepost, "pre");
+        jpost = json_object_get(jprepost, "post");
+
+        pre  = json_integer_value(jpre);
+        post = json_integer_value(jpost);
+        //fprintf(stderr, "var: %d %d %d\n", var, pre, post);
+
+        if (pre != -1)
+            planOperatorSetPrecondition(op, var, pre);
+        planOperatorSetEffect(op, var, post);
+    }
+
+    return 0;
+}
+
 static int loadJsonOperator(plan_t *plan, json_t *json)
 {
+    size_t i;
+    json_t *json_op;
+
+    // allocate array for operators
+    plan->op_size = json_array_size(json);
+    plan->op = BOR_ALLOC_ARR(plan_operator_t, plan->op_size);
+    for (i = 0; i < plan->op_size; ++i){
+        planOperatorInit(plan->op + i, plan->state_pool);
+    }
+
+    // set up all operators
+    json_array_foreach(json, i, json_op){
+        if (loadJsonOperator1(plan->op + i, json_op) != 0)
+            return -1;
+    }
+
     return 0;
 }
 

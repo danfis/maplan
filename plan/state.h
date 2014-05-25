@@ -74,4 +74,9 @@ int planPartStateGet(const plan_part_state_t *state, unsigned var);
  */
 void planPartStateSet(plan_part_state_t *state, unsigned var, unsigned val);
 
+/**
+ * Returns true if var's variable is set.
+ */
+int planPartStateIsSet(const plan_part_state_t *state, unsigned var);
+
 #endif /* __PLAN_STATE_H__ */

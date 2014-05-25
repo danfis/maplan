@@ -3,6 +3,7 @@
 
 #include <plan/var.h>
 #include <plan/state.h>
+#include <plan/operator.h>
 
 struct _plan_t {
     plan_var_t *var;
@@ -10,6 +11,8 @@ struct _plan_t {
     plan_state_pool_t *state_pool;
     plan_state_t initial_state;
     plan_part_state_t goal;
+    plan_operator_t *op;
+    size_t op_size;
 };
 typedef struct _plan_t plan_t;
 

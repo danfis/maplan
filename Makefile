@@ -13,6 +13,7 @@
 #  implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #  See the License for more information.
 ##
+DEBUG = yes
 
 -include Makefile.local
 -include Makefile.include

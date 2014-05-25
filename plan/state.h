@@ -12,7 +12,7 @@
 struct _plan_state_pool_t {
     size_t num_vars;         /*!< Num of variables per state */
     bor_segmarr_t *states;
-    size_t num_states;
+    size_t allocated;
 };
 typedef struct _plan_state_pool_t plan_state_pool_t;
 
@@ -21,6 +21,12 @@ struct _plan_state_t {
     unsigned *val;
 };
 typedef struct _plan_state_t plan_state_t;
+
+struct _plan_part_state_t {
+    unsigned *val;
+    unsigned *mask;
+};
+typedef struct _plan_part_state_t plan_part_state_t;
 
 
 
@@ -40,10 +46,10 @@ void planStatePoolDel(plan_state_pool_t *pool);
 plan_state_t planStatePoolNewState(plan_state_pool_t *pool);
 
 /**
- * Returns a temporary state that can be used for setting its values and
- * inserting it back to the state pool.
+ * Allocates and returns a new state in pool.
  */
-plan_state_t planStatePoolTmpState(plan_state_pool_t *pool);
+plan_part_state_t planStatePoolNewPartState(plan_state_pool_t *pool);
+
 
 
 /**
@@ -55,5 +61,17 @@ int planStateGet(const plan_state_t *state, unsigned var);
  * Sets a value of a specified variable.
  */
 void planStateSet(plan_state_t *state, unsigned var, unsigned val);
+
+
+
+/**
+ * Returns a value of a specified variable.
+ */
+int planPartStateGet(const plan_part_state_t *state, unsigned var);
+
+/**
+ * Sets a value of a specified variable.
+ */
+void planPartStateSet(plan_part_state_t *state, unsigned var, unsigned val);
 
 #endif /* __PLAN_STATE_H__ */

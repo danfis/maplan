@@ -32,15 +32,17 @@ TEST(testLoadFromFile)
     assertEquals(planStateGet(&plan->initial_state, 7), 2);
     assertEquals(planStateGet(&plan->initial_state, 8), 5);
 
-    assertEquals(planStateGet(&plan->goal, 0), 0);
-    assertEquals(planStateGet(&plan->goal, 1), 0);
-    assertEquals(planStateGet(&plan->goal, 2), 0);
-    assertEquals(planStateGet(&plan->goal, 3), 0);
-    assertEquals(planStateGet(&plan->goal, 4), 0);
-    assertEquals(planStateGet(&plan->goal, 5), 0);
-    assertEquals(planStateGet(&plan->goal, 6), 2);
-    assertEquals(planStateGet(&plan->goal, 7), 2);
-    assertEquals(planStateGet(&plan->goal, 8), 4);
+    assertEquals(planPartStateGet(&plan->goal, 0), 0);
+    assertEquals(planPartStateGet(&plan->goal, 1), 0);
+    assertEquals(planPartStateGet(&plan->goal, 2), 0);
+    assertEquals(planPartStateGet(&plan->goal, 3), 0);
+    assertEquals(planPartStateGet(&plan->goal, 4), 0);
+    assertEquals(planPartStateGet(&plan->goal, 5), 0);
+    assertEquals(planPartStateGet(&plan->goal, 6), 2);
+    assertEquals(planPartStateGet(&plan->goal, 7), 2);
+    assertEquals(planPartStateGet(&plan->goal, 8), 4);
+    assertEquals(plan->goal.mask[0], 0);
+    assertEquals(plan->goal.mask[8], ~0);
 
     planDel(plan);
 }

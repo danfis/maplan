@@ -107,6 +107,27 @@ static int loadJsonVariable(plan_t *plan, json_t *json)
 
 static int loadJsonInitialState(plan_t *plan, json_t *json)
 {
+    size_t i, len;
+    json_t *json_val;
+    unsigned val;
+
+    // check we have correct size of the state
+    len = json_array_size(json);
+    if (len != plan->var_size){
+        fprintf(stderr, "Error: Invalid number of variables in "
+                        "initial state.\n");
+        return -1;
+    }
+
+    // allocate a new state
+    plan->initial_state = planStatePoolNewState(plan->state_pool);
+
+    // set up state variable values
+    json_array_foreach(json, i, json_val){
+        val = json_integer_value(json_val);
+        planStateSet(&plan->initial_state, i, val + 1);
+    }
+
     return 0;
 }
 

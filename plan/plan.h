@@ -8,6 +8,7 @@ struct _plan_t {
     plan_var_t *var;
     size_t var_size;
     plan_state_pool_t *state_pool;
+    plan_state_t initial_state;
 };
 typedef struct _plan_t plan_t;
 

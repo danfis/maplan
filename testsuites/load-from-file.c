@@ -21,5 +21,16 @@ TEST(testLoadFromFile)
     assertEquals(plan->var[6].range, 5);
     assertEquals(plan->var[7].range, 5);
     assertEquals(plan->var[8].range, 5);
+
+    assertEquals(planStateGet(&plan->initial_state, 0), 3);
+    assertEquals(planStateGet(&plan->initial_state, 1), 1);
+    assertEquals(planStateGet(&plan->initial_state, 2), 2);
+    assertEquals(planStateGet(&plan->initial_state, 3), 2);
+    assertEquals(planStateGet(&plan->initial_state, 4), 2);
+    assertEquals(planStateGet(&plan->initial_state, 5), 1);
+    assertEquals(planStateGet(&plan->initial_state, 6), 4);
+    assertEquals(planStateGet(&plan->initial_state, 7), 2);
+    assertEquals(planStateGet(&plan->initial_state, 8), 5);
+
     planDel(plan);
 }

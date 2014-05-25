@@ -7,6 +7,7 @@ endif
 -include ../Makefile.local
 
 CFLAGS += -I./ -I../
+CFLAGS += -I../../boruvka
 CFLAGS += $(JANSSON_CFLAGS)
 LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -L../../boruvka -lboruvka -pthread
 LDFLAGS += $(JANSSON_LDFLAGS)

@@ -131,6 +131,24 @@ static int loadJsonInitialState(plan_t *plan, json_t *json)
     return 0;
 }
 
+static int loadJsonGoal(plan_t *plan, json_t *json)
+{
+    const char *key;
+    json_t *json_val;
+    unsigned var, val;
+
+    // allocate a new state
+    plan->goal = planStatePoolNewState(plan->state_pool);
+
+    json_object_foreach(json, key, json_val){
+        var = atoi(key);
+        val = json_integer_value(json_val);
+        planStateSet(&plan->goal, var, val + 1);
+    }
+
+    return 0;
+}
+
 typedef int (*load_json_data_fn)(plan_t *plan, json_t *json);
 static int loadJsonData(plan_t *plan, json_t *root,
                          const char *keyname, load_json_data_fn fn)
@@ -169,7 +187,8 @@ int planLoadFromJsonFile(plan_t *plan, const char *filename)
         goto planLoadFromJsonFile_err;
     if (loadJsonData(plan, json, "initial_state", loadJsonInitialState) != 0)
         goto planLoadFromJsonFile_err;
-    //loadJsonData(plan, json, "goal", loadJsonGoal);
+    if (loadJsonData(plan, json, "goal", loadJsonGoal) != 0)
+        goto planLoadFromJsonFile_err;
     //loadJsonData(plan, json, "operator", loadJsonOperator);
     //loadJsonData(plan, json, "mutex_group", loadJsonMutexGroup);
     //loadJsonData(plan, json, "successor_generator", loadJsonSuccessorGenerator);

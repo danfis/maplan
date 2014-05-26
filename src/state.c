@@ -39,10 +39,10 @@ plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size)
 
 void planStatePoolDel(plan_state_pool_t *pool)
 {
-    if (pool->states)
-        borSegmArrDel(pool->states);
     if (pool->htable)
         borHTableDel(pool->htable);
+    if (pool->states)
+        borSegmArrDel(pool->states);
 
     BOR_FREE(pool);
 }
@@ -50,32 +50,40 @@ void planStatePoolDel(plan_state_pool_t *pool)
 const plan_state_t *planStatePoolFind(plan_state_pool_t *pool,
                                       const plan_state_t *state)
 {
-    const plan_state_t *s;
-    size_t i;
+    bor_list_t *sref;
 
-    for (i = 0; i < pool->num_states; ++i){
-        s = (plan_state_t *)borSegmArrGet(pool->states, i);
-        if (planStateEq(pool, s, state))
-            return s;
-    }
-    return NULL;
+    sref = borHTableFind(pool->htable, &state->htable);
+    if (sref == NULL)
+        return NULL;
+    return BOR_LIST_ENTRY(sref, const plan_state_t, htable);
 }
 
 const plan_state_t *planStatePoolInsert(plan_state_pool_t *pool,
                                         const plan_state_t *state)
 {
-    const plan_state_t *olds;
+    size_t bucket;
+    bor_list_t *sref;
     plan_state_t *news;
 
-    olds = planStatePoolFind(pool, state);
-    if (olds)
-        return olds;
+    // compute bucket in advance because we may need it during insertion
+    bucket = borHTableBucket(pool->htable, &state->htable);
 
+    // Try to find a state within the computed bucket and if it is find
+    // just return it.
+    sref = borHTableFindBucket(pool->htable, bucket, &state->htable);
+    if (sref != NULL)
+        return BOR_LIST_ENTRY(sref, const plan_state_t, htable);
+
+    // create a new state in segmented array
     news = (plan_state_t *)borSegmArrGet(pool->states, pool->num_states);
     ++pool->num_states;
 
+    // set variable values
     memcpy(news, state, pool->state_size);
     borListInit(&news->htable);
+
+    // and insert it into hash table
+    borHTableInsertBucket(pool->htable, bucket, &news->htable);
 
     return news;
 }

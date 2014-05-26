@@ -15,6 +15,7 @@ struct _plan_state_pool_t {
     size_t state_size;
     bor_segmarr_t *states;
     size_t num_states;
+    bor_htable_t *htable;
 };
 typedef struct _plan_state_pool_t plan_state_pool_t;
 
@@ -44,18 +45,19 @@ void planStatePoolDel(plan_state_pool_t *pool);
 
 /**
  * Tries to find an equal state to the one provided.
- * If such a state is found its ID is returned, otherwise -1 is returned.
- */
-ssize_t planStatePoolFind(plan_state_pool_t *pool,
-                          const plan_state_t *state);
-
-/**
- * Inserts a new state into state pool and returns its ID.
- * If an equal state is already in the state pool, its ID is silently
+ * If such a state is found pointer to it is returned, otherwise NULL is
  * returned.
  */
-size_t planStatePoolInsert(plan_state_pool_t *pool,
-                           const plan_state_t *state);
+const plan_state_t *planStatePoolFind(plan_state_pool_t *pool,
+                                      const plan_state_t *state);
+
+/**
+ * Inserts a new state into state pool and returns pointer to it.
+ * If an equal state is already in the state pool, pointer to it is
+ * returned and nothing is actualy change to the state pool.
+ */
+const plan_state_t *planStatePoolInsert(plan_state_pool_t *pool,
+                                        const plan_state_t *state);
 
 /**
  * Returns a state with the corresponding ID or NULL if no such state

@@ -7,7 +7,7 @@ TEST(testStateBasic)
     plan_var_t vars[4];
     plan_state_pool_t *pool;
     plan_state_t *state;
-    const plan_state_t *s2;
+    const plan_state_t *ins[4];
 
     planVarInit(vars + 0);
     planVarInit(vars + 1);
@@ -25,88 +25,86 @@ TEST(testStateBasic)
 
     planStateSet(state, 0, 1);
     planStateSet(state, 1, 1);
-    assertEquals(planStatePoolInsert(pool, state), 0);
-    assertEquals(planStatePoolInsert(pool, state), 0);
+    ins[0] = planStatePoolInsert(pool, state);
+    assertEquals(planStatePoolInsert(pool, state), ins[0]);
 
     planStateZeroize(pool, state);
     planStateSet(state, 2, 2);
     planStateSet(state, 3, 5);
-    assertEquals(planStatePoolInsert(pool, state), 1);
-    assertEquals(planStatePoolInsert(pool, state), 1);
+    ins[1] = planStatePoolInsert(pool, state);
+    assertEquals(planStatePoolInsert(pool, state), ins[1]);
 
     planStateZeroize(pool, state);
     planStateSet(state, 0, 4);
     planStateSet(state, 1, 1);
     planStateSet(state, 2, 0);
     planStateSet(state, 3, 1);
-    assertEquals(planStatePoolInsert(pool, state), 2);
-    assertEquals(planStatePoolInsert(pool, state), 2);
+    ins[2] = planStatePoolInsert(pool, state);
+    assertEquals(planStatePoolInsert(pool, state), ins[2]);
 
     planStateZeroize(pool, state);
     planStateSet(state, 0, 5);
     planStateSet(state, 1, 0);
     planStateSet(state, 2, 1);
     planStateSet(state, 3, 2);
-    assertEquals(planStatePoolInsert(pool, state), 3);
-    assertEquals(planStatePoolInsert(pool, state), 3);
+    ins[3] = planStatePoolInsert(pool, state);
+    assertEquals(planStatePoolInsert(pool, state), ins[3]);
+
+
 
     planStateZeroize(pool, state);
     planStateSet(state, 0, 5);
     planStateSet(state, 1, 0);
     planStateSet(state, 2, 1);
     planStateSet(state, 3, 2);
-    assertEquals(planStatePoolFind(pool, state), 3);
+    assertEquals(planStatePoolFind(pool, state), ins[3]);
     planStateSet(state, 3, 0);
-    assertEquals(planStatePoolFind(pool, state), -1);
+    assertEquals(planStatePoolFind(pool, state), NULL);
 
     planStateZeroize(pool, state);
     planStateSet(state, 2, 2);
     planStateSet(state, 3, 5);
-    assertEquals(planStatePoolFind(pool, state), 1);
+    assertEquals(planStatePoolFind(pool, state), ins[1]);
 
     planStateZeroize(pool, state);
     planStateSet(state, 0, 1);
     planStateSet(state, 1, 1);
-    assertEquals(planStatePoolFind(pool, state), 0);
+    assertEquals(planStatePoolFind(pool, state), ins[0]);
 
     planStateZeroize(pool, state);
     planStateSet(state, 0, 4);
     planStateSet(state, 1, 1);
     planStateSet(state, 2, 0);
     planStateSet(state, 3, 1);
-    assertEquals(planStatePoolFind(pool, state), 2);
+    assertEquals(planStatePoolFind(pool, state), ins[2]);
 
 
     planStateZeroize(pool, state);
     planStateSet(state, 0, 1);
     planStateSet(state, 1, 1);
-    s2 = planStatePoolGet(pool, 0);
-    assertTrue(planStateEq(pool, s2, state));
+    assertTrue(planStateEq(pool, ins[0], state));
 
     planStateZeroize(pool, state);
     planStateSet(state, 2, 2);
     planStateSet(state, 3, 5);
-    assertFalse(planStateEq(pool, s2, state));
-    s2 = planStatePoolGet(pool, 1);
-    assertTrue(planStateEq(pool, s2, state));
+    assertFalse(planStateEq(pool, ins[0], state));
+    assertTrue(planStateEq(pool, ins[1], state));
 
     planStateZeroize(pool, state);
     planStateSet(state, 0, 4);
     planStateSet(state, 1, 1);
     planStateSet(state, 2, 0);
     planStateSet(state, 3, 1);
-    assertFalse(planStateEq(pool, s2, state));
-    s2 = planStatePoolGet(pool, 2);
-    assertTrue(planStateEq(pool, s2, state));
+    assertFalse(planStateEq(pool, ins[1], state));
+    assertTrue(planStateEq(pool, ins[2], state));
 
     planStateZeroize(pool, state);
     planStateSet(state, 0, 5);
     planStateSet(state, 1, 0);
     planStateSet(state, 2, 1);
     planStateSet(state, 3, 2);
-    assertFalse(planStateEq(pool, s2, state));
-    s2 = planStatePoolGet(pool, 3);
-    assertTrue(planStateEq(pool, s2, state));
+    assertFalse(planStateEq(pool, ins[2], state));
+    assertTrue(planStateEq(pool, ins[3], state));
 
     planStatePoolDestroyState(pool, state);
     planStatePoolDel(pool);

@@ -1,7 +1,26 @@
 #include <strings.h>
+#include <boruvka/hfunc.h>
 #include <boruvka/alloc.h>
 #include "plan/state.h"
 
+
+bor_htable_key_t htableHash(const bor_list_t *key, void *ud)
+{
+    const plan_state_t *s = BOR_LIST_ENTRY(key, const plan_state_t, htable);
+    plan_state_pool_t *pool = (plan_state_pool_t *)ud;
+    void *arr = ((char *)s) + sizeof(*s);
+
+    return borCityHash_64(arr, sizeof(unsigned) * pool->num_vars);
+}
+
+int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud)
+{
+    const plan_state_t *s1 = BOR_LIST_ENTRY(k1, const plan_state_t, htable);
+    const plan_state_t *s2 = BOR_LIST_ENTRY(k1, const plan_state_t, htable);
+    plan_state_pool_t *pool = (plan_state_pool_t *)ud;
+
+    return planStateEq(pool, s1, s2);
+}
 
 plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size)
 {
@@ -13,6 +32,7 @@ plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size)
     pool->state_size += pool->num_vars * sizeof(unsigned);
     pool->states = borSegmArrNew(pool->state_size, 8196);
     pool->num_states = 0;
+    pool->htable = borHTableNew(htableHash, htableEq, (void *)pool);
 
     return pool;
 }
@@ -21,11 +41,14 @@ void planStatePoolDel(plan_state_pool_t *pool)
 {
     if (pool->states)
         borSegmArrDel(pool->states);
+    if (pool->htable)
+        borHTableDel(pool->htable);
+
     BOR_FREE(pool);
 }
 
-ssize_t planStatePoolFind(plan_state_pool_t *pool,
-                          const plan_state_t *state)
+const plan_state_t *planStatePoolFind(plan_state_pool_t *pool,
+                                      const plan_state_t *state)
 {
     const plan_state_t *s;
     size_t i;
@@ -33,20 +56,20 @@ ssize_t planStatePoolFind(plan_state_pool_t *pool,
     for (i = 0; i < pool->num_states; ++i){
         s = (plan_state_t *)borSegmArrGet(pool->states, i);
         if (planStateEq(pool, s, state))
-            return i;
+            return s;
     }
-    return -1;
+    return NULL;
 }
 
-size_t planStatePoolInsert(plan_state_pool_t *pool,
-                           const plan_state_t *state)
+const plan_state_t *planStatePoolInsert(plan_state_pool_t *pool,
+                                        const plan_state_t *state)
 {
-    ssize_t id;
+    const plan_state_t *olds;
     plan_state_t *news;
 
-    id = planStatePoolFind(pool, state);
-    if (id >= 0)
-        return id;
+    olds = planStatePoolFind(pool, state);
+    if (olds)
+        return olds;
 
     news = (plan_state_t *)borSegmArrGet(pool->states, pool->num_states);
     ++pool->num_states;
@@ -54,7 +77,7 @@ size_t planStatePoolInsert(plan_state_pool_t *pool,
     memcpy(news, state, pool->state_size);
     borListInit(&news->htable);
 
-    return pool->num_states - 1;
+    return news;
 }
 
 const plan_state_t *planStatePoolGet(const plan_state_pool_t *pool, size_t id)

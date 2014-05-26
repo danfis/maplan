@@ -4,8 +4,9 @@
 #include <plan/state.h>
 
 struct _plan_operator_t {
-    plan_part_state_t pre; /*!< Precondition */
-    plan_part_state_t eff; /*!< Effect */
+    plan_state_pool_t *state_pool;
+    plan_part_state_t *pre; /*!< Precondition */
+    plan_part_state_t *eff; /*!< Effect */
     unsigned cost;
     char *name;
 };

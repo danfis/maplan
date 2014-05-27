@@ -17,7 +17,7 @@ CHECK_TS ?=
 
 TARGETS = test
 
-OBJS = main.o load-from-file.o state.o
+OBJS = main.o load-from-file.o state.o dataarr.o
 
 all: $(TARGETS)
 

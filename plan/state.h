@@ -8,22 +8,23 @@
 #include <boruvka/htable.h>
 
 #include <plan/var.h>
+#include <plan/dataarr.h>
 
+/**
+ * Type of a state ID which is used for reference into state pool.
+ */
+typedef long plan_state_id_t;
 
 struct _plan_state_pool_t {
-    size_t num_vars;         /*!< Num of variables per state */
-    size_t state_size;
-    bor_segmarr_t *states;
+    size_t num_vars;        /*!< Num of variables per state */
+    size_t state_size;      /*!< Size of a state in bytes */
+
+    plan_data_arr_t **data; /*!< Data arrays */
+    size_t data_size;       /*!< Number of data arrays */
+    bor_htable_t *htable;   /*!< Hash table for uniqueness of states. */
     size_t num_states;
-    bor_htable_t *htable;
 };
 typedef struct _plan_state_pool_t plan_state_pool_t;
-
-
-struct _plan_state_t {
-    bor_list_t htable;
-};
-typedef struct _plan_state_t plan_state_t;
 
 struct _plan_part_state_t {
     unsigned *val;
@@ -44,38 +45,25 @@ plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size);
 void planStatePoolDel(plan_state_pool_t *pool);
 
 /**
- * Tries to find an equal state to the one provided.
- * If such a state is found pointer to it is returned, otherwise NULL is
- * returned.
+ * Creates a new state. The given array {values} must have at least
+ * pool->num_vars elements.
+ * Uniqueness of the state is not checked!
+ * So, this function is suitable basicaly only for creating of an initial
+ * state.
  */
-const plan_state_t *planStatePoolFind(plan_state_pool_t *pool,
-                                      const plan_state_t *state);
+plan_state_id_t planStatePoolCreate(plan_state_pool_t *pool,
+                                    unsigned *values);
 
 /**
- * Inserts a new state into state pool and returns pointer to it.
- * If an equal state is already in the state pool, pointer to it is
- * returned and nothing is actualy change to the state pool.
+ * Returns value of variable var of the state specified by its id.
+ * This function is just for debugging.
  */
-const plan_state_t *planStatePoolInsert(plan_state_pool_t *pool,
-                                        const plan_state_t *state);
+unsigned planStatePoolStateVal(const plan_state_pool_t *pool,
+                               plan_state_id_t id,
+                               unsigned var);
 
-/**
- * Returns a state with the corresponding ID or NULL if no such state
- * exists.
- */
-const plan_state_t *planStatePoolGet(const plan_state_pool_t *pool, size_t id);
 
-/**
- * Creates a new state outside an internal register.
- * The resulting state can be modified ba planState*() functions.
- */
-plan_state_t *planStatePoolCreateState(plan_state_pool_t *pool);
 
-/**
- * Destroys a state previously created by planStatePoolCreateState().
- */
-void planStatePoolDestroyState(plan_state_pool_t *pool,
-                               plan_state_t *state);
 
 /**
  * Creates a partial state.
@@ -87,33 +75,6 @@ plan_part_state_t *planStatePoolCreatePartState(plan_state_pool_t *pool);
  */
 void planStatePoolDestroyPartState(plan_state_pool_t *pool,
                                    plan_part_state_t *part_state);
-
-
-
-
-
-/**
- * Returns a value of a specified variable.
- */
-int planStateGet(const plan_state_t *state, unsigned var);
-
-/**
- * Sets a value of a specified variable.
- */
-void planStateSet(plan_state_t *state, unsigned var, unsigned val);
-
-/**
- * Sets all variables to zero.
- */
-void planStateZeroize(const plan_state_pool_t *pool, plan_state_t *state);
-
-/**
- * Returns true if the two states equal.
- */
-int planStateEq(const plan_state_pool_t *pool,
-                const plan_state_t *s1, const plan_state_t *s2);
-
-
 
 /**
  * Returns a value of a specified variable.

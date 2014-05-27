@@ -4,114 +4,132 @@
 #include "plan/state.h"
 
 
+#define DATA_STATE 0
+#define DATA_HTABLE 1
+
+#define HTABLE_STATE(list) \
+    BOR_LIST_ENTRY(list, const plan_state_htable_t, htable)
+
+struct _plan_state_htable_t {
+    bor_list_t htable;
+    plan_state_id_t state_id;
+};
+typedef struct _plan_state_htable_t plan_state_htable_t;
+
+typedef unsigned plan_state_t;
+
+
+_bor_inline int planStateEq(const plan_state_pool_t *pool,
+                            plan_state_id_t s1,
+                            plan_state_id_t s2);
+
+_bor_inline const plan_state_t *planStatePoolGet(const plan_state_pool_t *p,
+                                                 plan_state_id_t id);
+
 bor_htable_key_t htableHash(const bor_list_t *key, void *ud)
 {
-    const plan_state_t *s = BOR_LIST_ENTRY(key, const plan_state_t, htable);
+    const plan_state_htable_t *s = HTABLE_STATE(key);
     plan_state_pool_t *pool = (plan_state_pool_t *)ud;
-    void *arr = ((char *)s) + sizeof(*s);
+    const plan_state_t *state = planStatePoolGet(pool, s->state_id);
 
-    return borCityHash_64(arr, sizeof(unsigned) * pool->num_vars);
+    return borCityHash_64(state, pool->state_size);
 }
 
 int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud)
 {
-    const plan_state_t *s1 = BOR_LIST_ENTRY(k1, const plan_state_t, htable);
-    const plan_state_t *s2 = BOR_LIST_ENTRY(k1, const plan_state_t, htable);
+    const plan_state_htable_t *s1 = HTABLE_STATE(k1);
+    const plan_state_htable_t *s2 = HTABLE_STATE(k2);
     plan_state_pool_t *pool = (plan_state_pool_t *)ud;
 
-    return planStateEq(pool, s1, s2);
+    return planStateEq(pool, s1->state_id, s2->state_id);
 }
 
 plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size)
 {
     plan_state_pool_t *pool;
+    void *state_init;
+    plan_state_htable_t htable_init;
 
     pool = BOR_ALLOC(plan_state_pool_t);
     pool->num_vars = var_size;
     pool->state_size  = sizeof(plan_state_t);
     pool->state_size += pool->num_vars * sizeof(unsigned);
-    pool->states = borSegmArrNew(pool->state_size, 8196);
-    pool->num_states = 0;
+
+    pool->data = BOR_ALLOC_ARR(plan_data_arr_t *, 2);
+
+    state_init = BOR_ALLOC_ARR(char, pool->state_size);
+    memset(state_init, 0, pool->state_size);
+    pool->data[0] = planDataArrNew(pool->state_size, 8196, state_init);
+    BOR_FREE(state_init);
+
+    borListInit(&htable_init.htable);
+    htable_init.state_id = -1;
+    pool->data[1] = planDataArrNew(sizeof(plan_state_htable_t), 8196,
+                                   &htable_init);
+
+    pool->data_size = 2;
     pool->htable = borHTableNew(htableHash, htableEq, (void *)pool);
+    pool->num_states = 0;
 
     return pool;
 }
 
 void planStatePoolDel(plan_state_pool_t *pool)
 {
+    size_t i;
+
     if (pool->htable)
         borHTableDel(pool->htable);
-    if (pool->states)
-        borSegmArrDel(pool->states);
+
+    for (i = 0; i < pool->data_size; ++i){
+        planDataArrDel(pool->data[i]);
+    }
 
     BOR_FREE(pool);
 }
 
-const plan_state_t *planStatePoolFind(plan_state_pool_t *pool,
-                                      const plan_state_t *state)
+plan_state_id_t planStatePoolCreate(plan_state_pool_t *pool,
+                                    unsigned *values)
 {
-    bor_list_t *sref;
+    plan_state_id_t sid;
+    plan_state_t *state;
+    plan_state_htable_t *htable;
+    size_t i;
 
-    sref = borHTableFind(pool->htable, &state->htable);
-    if (sref == NULL)
-        return NULL;
-    return BOR_LIST_ENTRY(sref, const plan_state_t, htable);
-}
+    // determine state ID
+    sid = pool->num_states;
 
-const plan_state_t *planStatePoolInsert(plan_state_pool_t *pool,
-                                        const plan_state_t *state)
-{
-    size_t bucket;
-    bor_list_t *sref;
-    plan_state_t *news;
+    // allocate a new state and initialize it with the given values
+    state = planDataArrGet(pool->data[DATA_STATE], sid);
+    for (i = 0; i < pool->num_vars; ++i){
+        state[i] = values[i];
+    }
 
-    // compute bucket in advance because we may need it during insertion
-    bucket = borHTableBucket(pool->htable, &state->htable);
+    // allocate and initialize hash table element
+    htable = planDataArrGet(pool->data[DATA_HTABLE], sid);
+    htable->state_id = sid;
 
-    // Try to find a state within the computed bucket and if it is find
-    // just return it.
-    sref = borHTableFindBucket(pool->htable, bucket, &state->htable);
-    if (sref != NULL)
-        return BOR_LIST_ENTRY(sref, const plan_state_t, htable);
+    // insert hash table element into hash table
+    borHTableInsert(pool->htable, &htable->htable);
 
-    // create a new state in segmented array
-    news = (plan_state_t *)borSegmArrGet(pool->states, pool->num_states);
+    // increase number of state currently stored in data pool
     ++pool->num_states;
 
-    // set variable values
-    memcpy(news, state, pool->state_size);
-    borListInit(&news->htable);
-
-    // and insert it into hash table
-    borHTableInsertBucket(pool->htable, bucket, &news->htable);
-
-    return news;
+    return sid;
 }
 
-const plan_state_t *planStatePoolGet(const plan_state_pool_t *pool, size_t id)
-{
-    if (id >= pool->num_states)
-        return NULL;
-
-    return (plan_state_t *)borSegmArrGet(pool->states, id);
-}
-
-plan_state_t *planStatePoolCreateState(plan_state_pool_t *pool)
+unsigned planStatePoolStateVal(const plan_state_pool_t *pool,
+                               plan_state_id_t id,
+                               unsigned var)
 {
     plan_state_t *state;
-
-    state = (plan_state_t *)BOR_ALLOC_ARR(char, pool->state_size);
-    bzero(state, pool->state_size);
-    borListInit(&state->htable);
-
-    return state;
+    state = planDataArrGet(pool->data[DATA_STATE], id);
+    return state[var];
 }
 
-void planStatePoolDestroyState(plan_state_pool_t *pool,
-                               plan_state_t *state)
-{
-    BOR_FREE(state);
-}
+
+
+
 
 plan_part_state_t *planStatePoolCreatePartState(plan_state_pool_t *pool)
 {
@@ -136,45 +154,6 @@ void planStatePoolDestroyPartState(plan_state_pool_t *pool,
     BOR_FREE(part_state);
 }
 
-
-
-int planStateGet(const plan_state_t *state, unsigned var)
-{
-    unsigned *arr = (unsigned *)(((char *)state) + sizeof(*state));
-    return arr[var];
-}
-
-void planStateSet(plan_state_t *state, unsigned var, unsigned val)
-{
-    unsigned *arr = (unsigned *)(((char *)state) + sizeof(*state));
-    arr[var] = val;
-}
-
-void planStateZeroize(const plan_state_pool_t *pool, plan_state_t *state)
-{
-    unsigned *arr = (unsigned *)(((char *)state) + sizeof(*state));
-    size_t i;
-
-    for (i = 0; i < pool->num_vars; ++i)
-        arr[i] = 0;
-}
-
-int planStateEq(const plan_state_pool_t *pool,
-                const plan_state_t *s1, const plan_state_t *s2)
-{
-    void *arr1 = ((char *)s1) + sizeof(*s1);
-    void *arr2 = ((char *)s2) + sizeof(*s2);
-    size_t size;
-
-    size = sizeof(unsigned) * pool->num_vars;
-
-    if (memcmp(arr1, arr2, size) == 0)
-        return 1;
-    return 0;
-}
-
-
-
 int planPartStateGet(const plan_part_state_t *state, unsigned var)
 {
     return state->val[var];
@@ -190,3 +169,21 @@ int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
 {
     return state->mask[var] == ~0u;
 }
+
+
+
+_bor_inline int planStateEq(const plan_state_pool_t *pool,
+                            plan_state_id_t s1id,
+                            plan_state_id_t s2id)
+{
+    const plan_state_t *s1 = planStatePoolGet(pool, s1id);
+    const plan_state_t *s2 = planStatePoolGet(pool, s2id);
+    return memcmp(s1, s2, pool->state_size) == 0;
+}
+
+_bor_inline const plan_state_t *planStatePoolGet(const plan_state_pool_t *p,
+                                                 plan_state_id_t id)
+{
+    return planDataArrGet(p->data[DATA_STATE], id);
+}
+

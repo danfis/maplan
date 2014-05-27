@@ -128,7 +128,7 @@ static int loadJsonInitialState(plan_t *plan, json_t *json)
     size_t i, len;
     json_t *json_val;
     unsigned val;
-    plan_state_t *state;
+    unsigned *state;
 
     // check we have correct size of the state
     len = json_array_size(json);
@@ -138,20 +138,18 @@ static int loadJsonInitialState(plan_t *plan, json_t *json)
         return -1;
     }
 
-    // allocate a new state
-    state = planStatePoolCreateState(plan->state_pool);
+    // allocate an array for the state values
+    state = BOR_ALLOC_ARR(unsigned, plan->var_size);
 
     // set up state variable values
     json_array_foreach(json, i, json_val){
         val = json_integer_value(json_val);
-        planStateSet(state, i, val);
+        state[i] = val;
     }
 
-    // insert state into state pool
-    plan->initial_state = planStatePoolInsert(plan->state_pool, state);
-
-    // deallocate memory for temporary state
-    planStatePoolDestroyState(plan->state_pool, state);
+    // create a new state and remember its ID
+    plan->initial_state = planStatePoolCreate(plan->state_pool, state);
+    BOR_FREE(state);
 
     return 0;
 }

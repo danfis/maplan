@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <boruvka/alloc.h>
 #include "plan/dataarr.h"
 
@@ -9,6 +10,11 @@ plan_data_arr_t *planDataArrNew(size_t el_size, size_t segment_size,
 
     arr = BOR_ALLOC(plan_data_arr_t);
     arr->arr = borSegmArrNew(el_size, segment_size);
+    if (arr->arr == NULL){
+        fprintf(stderr, "Error: Too low segment size for segmented array.\n");
+        exit(-1);
+    }
+
     arr->num_els = 0;
     arr->init_data = BOR_ALLOC_ARR(char, el_size);
     memcpy(arr->init_data, init_data, el_size);

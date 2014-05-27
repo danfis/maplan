@@ -6,8 +6,8 @@ TEST(testStateBasic)
 {
     plan_var_t vars[4];
     plan_state_pool_t *pool;
-    plan_state_t *state;
-    const plan_state_t *ins[4];
+    //plan_state_t *state;
+    //const plan_state_t *ins[4];
 
     planVarInit(vars + 0);
     planVarInit(vars + 1);
@@ -21,6 +21,7 @@ TEST(testStateBasic)
 
 
     pool = planStatePoolNew(vars, 4);
+    /*
     state = planStatePoolCreateState(pool);
 
     planStateSet(state, 0, 1);
@@ -107,6 +108,7 @@ TEST(testStateBasic)
     assertTrue(planStateEq(pool, ins[3], state));
 
     planStatePoolDestroyState(pool, state);
+    */
     planStatePoolDel(pool);
 
     planVarFree(vars + 0);

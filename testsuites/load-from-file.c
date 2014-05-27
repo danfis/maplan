@@ -5,7 +5,7 @@
 TEST(testLoadFromFile)
 {
     plan_t *plan;
-    const plan_state_t *initial_state;
+    //const plan_state_t *initial_state;
     int res;
 
     plan = planNew();
@@ -23,16 +23,15 @@ TEST(testLoadFromFile)
     assertEquals(plan->var[7].range, 5);
     assertEquals(plan->var[8].range, 5);
 
-    initial_state = planStatePoolGet(plan->state_pool, 0);
-    assertEquals(planStateGet(initial_state, 0), 2);
-    assertEquals(planStateGet(initial_state, 1), 0);
-    assertEquals(planStateGet(initial_state, 2), 1);
-    assertEquals(planStateGet(initial_state, 3), 1);
-    assertEquals(planStateGet(initial_state, 4), 1);
-    assertEquals(planStateGet(initial_state, 5), 0);
-    assertEquals(planStateGet(initial_state, 6), 3);
-    assertEquals(planStateGet(initial_state, 7), 1);
-    assertEquals(planStateGet(initial_state, 8), 4);
+    assertEquals(planStatePoolStateVal(plan->state_pool, 0, 0), 2);
+    assertEquals(planStatePoolStateVal(plan->state_pool, 0, 1), 0);
+    assertEquals(planStatePoolStateVal(plan->state_pool, 0, 2), 1);
+    assertEquals(planStatePoolStateVal(plan->state_pool, 0, 3), 1);
+    assertEquals(planStatePoolStateVal(plan->state_pool, 0, 4), 1);
+    assertEquals(planStatePoolStateVal(plan->state_pool, 0, 5), 0);
+    assertEquals(planStatePoolStateVal(plan->state_pool, 0, 6), 3);
+    assertEquals(planStatePoolStateVal(plan->state_pool, 0, 7), 1);
+    assertEquals(planStatePoolStateVal(plan->state_pool, 0, 8), 4);
 
     assertEquals(planPartStateGet(plan->goal, 0), 0);
     assertEquals(planPartStateGet(plan->goal, 1), 0);

@@ -9,7 +9,7 @@ struct _plan_t {
     plan_var_t *var;
     size_t var_size;
     plan_state_pool_t *state_pool;
-    size_t initial_state;
+    plan_state_id_t initial_state;
     plan_part_state_t *goal;
     plan_operator_t *op;
     size_t op_size;

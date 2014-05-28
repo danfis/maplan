@@ -5,8 +5,8 @@
 void planOperatorInit(plan_operator_t *op, plan_state_pool_t *state_pool)
 {
     op->state_pool = state_pool;
-    op->pre = planStatePoolCreatePartState(state_pool);
-    op->eff = planStatePoolCreatePartState(state_pool);
+    op->pre = planPartStateNew(state_pool);
+    op->eff = planPartStateNew(state_pool);
     op->name = NULL;
     op->cost = 0;
 }
@@ -15,8 +15,8 @@ void planOperatorFree(plan_operator_t *op)
 {
     if (op->name)
         BOR_FREE(op->name);
-    planStatePoolDestroyPartState(op->state_pool, op->pre);
-    planStatePoolDestroyPartState(op->state_pool, op->eff);
+    planPartStateDel(op->state_pool, op->pre);
+    planPartStateDel(op->state_pool, op->eff);
 }
 
 

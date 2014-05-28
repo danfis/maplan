@@ -13,7 +13,7 @@ static void planFree(plan_t *plan)
     size_t i;
 
     if (plan->goal){
-        planStatePoolDestroyPartState(plan->state_pool, plan->goal);
+        planPartStateDel(plan->state_pool, plan->goal);
         plan->goal = NULL;
     }
 
@@ -128,7 +128,7 @@ static int loadJsonInitialState(plan_t *plan, json_t *json)
     size_t i, len;
     json_t *json_val;
     unsigned val;
-    unsigned *state;
+    plan_state_t *state;
 
     // check we have correct size of the state
     len = json_array_size(json);
@@ -138,18 +138,20 @@ static int loadJsonInitialState(plan_t *plan, json_t *json)
         return -1;
     }
 
-    // allocate an array for the state values
-    state = BOR_ALLOC_ARR(unsigned, plan->var_size);
+    // create a new state structure
+    state = planStateNew(plan->state_pool);
 
     // set up state variable values
     json_array_foreach(json, i, json_val){
         val = json_integer_value(json_val);
-        state[i] = val;
+        planStateSet(state, i, val);
     }
 
     // create a new state and remember its ID
-    plan->initial_state = planStatePoolCreate(plan->state_pool, state);
-    BOR_FREE(state);
+    plan->initial_state = planStatePoolInsert(plan->state_pool, state);
+
+    // destroy the previously created state
+    planStateDel(plan->state_pool, state);
 
     return 0;
 }
@@ -161,7 +163,7 @@ static int loadJsonGoal(plan_t *plan, json_t *json)
     unsigned var, val;
 
     // allocate a new state
-    plan->goal = planStatePoolCreatePartState(plan->state_pool);
+    plan->goal = planPartStateNew(plan->state_pool);
 
     json_object_foreach(json, key, json_val){
         var = atoi(key);

@@ -23,13 +23,13 @@ void planOperatorFree(plan_operator_t *op)
 void planOperatorSetPrecondition(plan_operator_t *op,
                                  unsigned var, unsigned val)
 {
-    planPartStateSet(op->pre, var, val);
+    planPartStateSet(op->state_pool, op->pre, var, val);
 }
 
 void planOperatorSetEffect(plan_operator_t *op,
                            unsigned var, unsigned val)
 {
-    planPartStateSet(op->eff, var, val);
+    planPartStateSet(op->state_pool, op->eff, var, val);
 }
 
 void planOperatorSetName(plan_operator_t *op, const char *name)

@@ -17,6 +17,14 @@ struct _plan_state_htable_t {
 typedef struct _plan_state_htable_t plan_state_htable_t;
 
 
+/** Sets variable to value in packed state buffer */
+void planStatePackerSet(plan_state_packer_t *packer,
+                        unsigned var, unsigned val,
+                        void *buf);
+/** Sets mask (~0) corresponding to the variable in packed state buffer */
+void planStatePackerSetMask(plan_state_packer_t *packer,
+                            unsigned var, void *buf);
+
 /** Returns true if the two given states are equal. */
 _bor_inline int planStateEq(const plan_state_pool_t *pool,
                             plan_state_id_t s1,
@@ -281,10 +289,14 @@ int planPartStateGet(const plan_part_state_t *state, unsigned var)
     return state->val[var];
 }
 
-void planPartStateSet(plan_part_state_t *state, unsigned var, unsigned val)
+void planPartStateSet(plan_state_pool_t *pool,
+                      plan_part_state_t *state, unsigned var, unsigned val)
 {
     state->val[var] = val;
     state->is_set[var] = 1;
+
+    planStatePackerSet(pool->packer, var, val, state->valbuf);
+    planStatePackerSetMask(pool->packer, var, state->maskbuf);
 }
 
 int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
@@ -296,6 +308,21 @@ int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
 
 
 
+
+void planStatePackerSet(plan_state_packer_t *packer,
+                        unsigned var, unsigned val,
+                        void *buf)
+{
+    unsigned *vbuf = (unsigned *)buf;
+    vbuf[var] = val;
+}
+
+void planStatePackerSetMask(plan_state_packer_t *packer,
+                            unsigned var, void *buf)
+{
+    unsigned *vbuf = (unsigned *)buf;
+    vbuf[var] = ~0;
+}
 
 _bor_inline int planStateEq(const plan_state_pool_t *pool,
                             plan_state_id_t s1id,

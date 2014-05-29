@@ -189,7 +189,8 @@ int planPartStateGet(const plan_part_state_t *state, unsigned var);
 /**
  * Sets a value of a specified variable.
  */
-void planPartStateSet(plan_part_state_t *state, unsigned var, unsigned val);
+void planPartStateSet(plan_state_pool_t *pool,
+                      plan_part_state_t *state, unsigned var, unsigned val);
 
 /**
  * Returns true if var's variable is set.

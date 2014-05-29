@@ -168,7 +168,7 @@ static int loadJsonGoal(plan_t *plan, json_t *json)
     json_object_foreach(json, key, json_val){
         var = atoi(key);
         val = json_integer_value(json_val);
-        planPartStateSet(plan->goal, var, val);
+        planPartStateSet(plan->state_pool, plan->goal, var, val);
     }
 
     return 0;

@@ -60,8 +60,13 @@ typedef struct _plan_state_t plan_state_t;
  * Struct representing partial state.
  */
 struct _plan_part_state_t {
-    unsigned *val;
-    unsigned *mask;
+    unsigned *val; /*!< Array of unpacked values */
+    int *is_set;   /*!< Array of bool flags stating whether the
+                        corresponding value is set */
+    size_t num_vars;
+
+    void *valbuf;  /*!< Buffer of packed values */
+    void *maskbuf; /*!< Buffer of mask for values */
 };
 typedef struct _plan_part_state_t plan_part_state_t;
 

@@ -47,8 +47,16 @@ TEST(testLoadFromFile)
     assertEquals(planPartStateGet(plan->goal, 6), 1);
     assertEquals(planPartStateGet(plan->goal, 7), 1);
     assertEquals(planPartStateGet(plan->goal, 8), 3);
-    assertEquals(plan->goal->mask[0], 0);
-    assertEquals(plan->goal->mask[8], ~0);
+
+    assertFalse(planPartStateIsSet(plan->goal, 0));
+    assertFalse(planPartStateIsSet(plan->goal, 1));
+    assertFalse(planPartStateIsSet(plan->goal, 2));
+    assertFalse(planPartStateIsSet(plan->goal, 3));
+    assertFalse(planPartStateIsSet(plan->goal, 4));
+    assertFalse(planPartStateIsSet(plan->goal, 5));
+    assertTrue(planPartStateIsSet(plan->goal, 6));
+    assertTrue(planPartStateIsSet(plan->goal, 7));
+    assertTrue(planPartStateIsSet(plan->goal, 8));
 
     assertEquals(plan->op_size, 32);
     assertEquals(plan->op[0].cost, 1);

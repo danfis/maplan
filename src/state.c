@@ -243,13 +243,24 @@ void planStateZeroize(plan_state_t *state)
 plan_part_state_t *planPartStateNew(plan_state_pool_t *pool)
 {
     plan_part_state_t *ps;
+    size_t i, size;
 
     ps = BOR_ALLOC(plan_part_state_t);
-    ps->val  = BOR_ALLOC_ARR(unsigned, pool->num_vars);
-    ps->mask = BOR_ALLOC_ARR(unsigned, pool->num_vars);
+    ps->num_vars = pool->num_vars;
+    ps->val    = BOR_ALLOC_ARR(unsigned, pool->num_vars);
+    ps->is_set = BOR_ALLOC_ARR(int, pool->num_vars);
 
-    bzero(ps->val, sizeof(unsigned) * pool->num_vars);
-    bzero(ps->mask, sizeof(unsigned) * pool->num_vars);
+    for (i = 0; i < pool->num_vars; ++i){
+        ps->val[i] = 0;
+        ps->is_set[i] = 0;
+    }
+
+    size = planStatePackerBufSize(pool->packer);
+    ps->valbuf  = BOR_ALLOC_ARR(char, size);
+    ps->maskbuf = BOR_ALLOC_ARR(char, size);
+
+    bzero(ps->valbuf, size);
+    bzero(ps->maskbuf, size);
 
     return ps;
 
@@ -259,7 +270,9 @@ void planPartStateDel(plan_state_pool_t *pool,
                       plan_part_state_t *part_state)
 {
     BOR_FREE(part_state->val);
-    BOR_FREE(part_state->mask);
+    BOR_FREE(part_state->is_set);
+    BOR_FREE(part_state->valbuf);
+    BOR_FREE(part_state->maskbuf);
     BOR_FREE(part_state);
 }
 
@@ -271,12 +284,12 @@ int planPartStateGet(const plan_part_state_t *state, unsigned var)
 void planPartStateSet(plan_part_state_t *state, unsigned var, unsigned val)
 {
     state->val[var] = val;
-    state->mask[var] = ~0u;
+    state->is_set[var] = 1;
 }
 
 int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
 {
-    return state->mask[var] == ~0u;
+    return state->is_set[var];
 }
 
 

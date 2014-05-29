@@ -87,3 +87,95 @@ TEST(testStateBasic)
     planVarFree(vars + 2);
     planVarFree(vars + 3);
 }
+
+TEST(testStatePreEff)
+{
+    plan_var_t vars[4];
+    plan_state_pool_t *pool;
+    plan_state_t *state;
+    plan_state_id_t ids[4];
+    plan_part_state_t *parts[4];
+    //plan_state_id_t ins[4];
+
+    planVarInit(vars + 0);
+    planVarInit(vars + 1);
+    planVarInit(vars + 2);
+    planVarInit(vars + 3);
+
+    vars[0].range = 3;
+    vars[1].range = 2;
+    vars[2].range = 2;
+    vars[3].range = 4;
+
+    pool = planStatePoolNew(vars, 4);
+
+    state = planStateNew(pool);
+    planStateSet(state, 0, 1);
+    planStateSet(state, 1, 0);
+    planStateSet(state, 2, 1);
+    planStateSet(state, 3, 3);
+    ids[0] = planStatePoolInsert(pool, state);
+
+    planStateSet(state, 0, 0);
+    planStateSet(state, 1, 0);
+    planStateSet(state, 2, 1);
+    planStateSet(state, 3, 3);
+    ids[1] = planStatePoolInsert(pool, state);
+
+    planStateSet(state, 0, 2);
+    planStateSet(state, 1, 0);
+    planStateSet(state, 2, 0);
+    planStateSet(state, 3, 1);
+    ids[2] = planStatePoolInsert(pool, state);
+
+    planStateSet(state, 0, 0);
+    planStateSet(state, 1, 0);
+    planStateSet(state, 2, 0);
+    planStateSet(state, 3, 3);
+    ids[3] = planStatePoolInsert(pool, state);
+
+    planStateDel(pool, state);
+
+    parts[0] = planPartStateNew(pool);
+    planPartStateSet(pool, parts[0], 0, 1);
+    planPartStateSet(pool, parts[0], 2, 1);
+
+    parts[1] = planPartStateNew(pool);
+    planPartStateSet(pool, parts[1], 2, 1);
+    planPartStateSet(pool, parts[1], 3, 3);
+
+    parts[2] = planPartStateNew(pool);
+    planPartStateSet(pool, parts[2], 0, 2);
+    planPartStateSet(pool, parts[2], 2, 0);
+    planPartStateSet(pool, parts[2], 3, 1);
+
+    parts[3] = planPartStateNew(pool);
+    planPartStateSet(pool, parts[3], 3, 3);
+
+
+    assertTrue(planStatePoolPartStateIsSubset(pool, parts[0], ids[0]));
+    assertFalse(planStatePoolPartStateIsSubset(pool, parts[0], ids[1]));
+    assertFalse(planStatePoolPartStateIsSubset(pool, parts[0], ids[2]));
+    assertFalse(planStatePoolPartStateIsSubset(pool, parts[0], ids[3]));
+
+    assertTrue(planStatePoolPartStateIsSubset(pool, parts[1], ids[0]));
+    assertTrue(planStatePoolPartStateIsSubset(pool, parts[1], ids[1]));
+    assertFalse(planStatePoolPartStateIsSubset(pool, parts[1], ids[2]));
+    assertFalse(planStatePoolPartStateIsSubset(pool, parts[1], ids[3]));
+
+    assertFalse(planStatePoolPartStateIsSubset(pool, parts[2], ids[0]));
+    assertFalse(planStatePoolPartStateIsSubset(pool, parts[2], ids[1]));
+    assertTrue(planStatePoolPartStateIsSubset(pool, parts[2], ids[2]));
+    assertFalse(planStatePoolPartStateIsSubset(pool, parts[2], ids[3]));
+
+    assertTrue(planStatePoolPartStateIsSubset(pool, parts[3], ids[0]));
+    assertTrue(planStatePoolPartStateIsSubset(pool, parts[3], ids[1]));
+    assertFalse(planStatePoolPartStateIsSubset(pool, parts[3], ids[2]));
+    assertTrue(planStatePoolPartStateIsSubset(pool, parts[3], ids[3]));
+
+    planPartStateDel(pool, parts[0]);
+    planPartStateDel(pool, parts[1]);
+    planPartStateDel(pool, parts[2]);
+    planPartStateDel(pool, parts[3]);
+    planStatePoolDel(pool);
+}

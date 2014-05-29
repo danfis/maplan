@@ -34,6 +34,10 @@ _bor_inline int planStateEq(const plan_state_pool_t *pool,
 _bor_inline bor_htable_key_t planStateHash(const plan_state_pool_t *pool,
                                            plan_state_id_t sid);
 
+/** Performs bit operation c = a AND b. */
+void bitAnd(const void *a, const void *b, size_t size, void *c);
+
+
 /** Callbacks for bor_htable_t */
 static bor_htable_key_t htableHash(const bor_list_t *key, void *ud);
 static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud);
@@ -168,6 +172,36 @@ void planStatePoolGetState(const plan_state_pool_t *pool,
     planStatePackerUnpack(pool->packer, statebuf, state);
 }
 
+int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
+                                   const plan_part_state_t *part_state,
+                                   plan_state_id_t sid)
+{
+    void *statebuf;
+    void *masked_state;
+    size_t size;
+    int cmp;
+
+    if (sid >= pool->num_states)
+        return 0;
+
+    // prepare temporary buffer
+    size = planStatePackerBufSize(pool->packer);
+    masked_state = BOR_ALLOC_ARR(char, size);
+
+    // get corresponding state
+    statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
+
+    // mask out values we are not interested in
+    bitAnd(statebuf, part_state->maskbuf, size, masked_state);
+
+    // compare resulting buffers
+    cmp = memcmp(masked_state, part_state->valbuf, size);
+
+    // free temporary buffer
+    BOR_FREE(masked_state);
+
+    return cmp == 0;
+}
 
 
 
@@ -356,4 +390,29 @@ static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud)
     plan_state_pool_t *pool = (plan_state_pool_t *)ud;
 
     return planStateEq(pool, s1->state_id, s2->state_id);
+}
+
+void bitAnd(const void *a, const void *b, size_t size, void *c)
+{
+    const uint32_t *a32, *b32;
+    uint32_t *c32;
+    const uint8_t *a8, *b8;
+    uint8_t *c8;
+    size_t size32, size8;
+
+    size32 = size / 4;
+    a32 = a;
+    b32 = b;
+    c32 = c;
+    for (; size32 != 0; --size32, ++a32, ++b32, ++c32){
+        *c32 = *a32 & *b32;
+    }
+
+    size8 = size % 4;
+    a8 = (uint8_t *)a32;
+    b8 = (uint8_t *)b32;
+    c8 = (uint8_t *)c32;
+    for (; size8 != 0; --size8, ++a8, ++b8, ++c8){
+        *c8 = *a8 & *b8;
+    }
 }

@@ -2,9 +2,11 @@
 #define TEST_STATE_H
 
 TEST(testStateBasic);
+TEST(testStatePreEff);
 
 TEST_SUITE(TSState) {
     TEST_ADD(testStateBasic),
+    TEST_ADD(testStatePreEff),
     TEST_SUITE_CLOSURE
 };
 

@@ -104,6 +104,13 @@ void planStatePoolGetState(const plan_state_pool_t *pool,
                            plan_state_id_t sid,
                            plan_state_t *state);
 
+/**
+ * Returns if the given partial state is subset of a state identified by
+ * its ID.
+ */
+int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
+                                   const plan_part_state_t *part_state,
+                                   plan_state_id_t sid);
 
 
 

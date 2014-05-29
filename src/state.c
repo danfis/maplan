@@ -8,7 +8,7 @@
 #define DATA_HTABLE 1
 
 #define HTABLE_STATE(list) \
-    BOR_LIST_ENTRY(list, const plan_state_htable_t, htable)
+    BOR_LIST_ENTRY(list, plan_state_htable_t, htable)
 
 struct _plan_state_htable_t {
     bor_list_t htable;
@@ -36,6 +36,9 @@ _bor_inline bor_htable_key_t planStateHash(const plan_state_pool_t *pool,
 
 /** Performs bit operation c = a AND b. */
 void bitAnd(const void *a, const void *b, size_t size, void *c);
+/** Performs bit operator c = (a AND ~m) OR b. */
+void bitApplyWithMask(const void *a, const void *m, const void *b,
+                      size_t size, void *c);
 
 
 /** Callbacks for bor_htable_t */
@@ -203,6 +206,50 @@ int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
     return cmp == 0;
 }
 
+plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
+                                            const plan_part_state_t *part_state,
+                                            plan_state_id_t sid)
+{
+    void *statebuf, *newstate;
+    plan_state_id_t newid;
+    plan_state_htable_t *hstate;
+    bor_list_t *hfound;
+
+    if (sid >= pool->num_states)
+        return PLAN_NO_STATE;
+
+    // get corresponding state
+    statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
+
+    // remember ID of the new state (if it will be inserted)
+    newid = pool->num_states;
+
+    // get buffer of the new state
+    newstate = planDataArrGet(pool->data[DATA_STATE], newid);
+
+    // apply partial state to the buffer of the new state
+    bitApplyWithMask(statebuf, part_state->maskbuf, part_state->valbuf,
+                     planStatePackerBufSize(pool->packer), newstate);
+
+    // hash table struct correspodning to the new state and set it up
+    hstate = planDataArrGet(pool->data[DATA_HTABLE], newid);
+    hstate->state_id = newid;
+
+    // insert it into hash table
+    hfound = borHTableInsertUnique(pool->htable, &hstate->htable);
+
+    if (hfound == NULL){
+        // The state was inserted -- return the new id
+        ++pool->num_states;
+        return newid;
+
+    }else{
+        // Found in state pool, return its ID and forget the new state (by
+        // simply not increasing pool->num_states).
+        hstate = HTABLE_STATE(hfound);
+        return hstate->state_id;
+    }
+}
 
 
 
@@ -414,5 +461,33 @@ void bitAnd(const void *a, const void *b, size_t size, void *c)
     c8 = (uint8_t *)c32;
     for (; size8 != 0; --size8, ++a8, ++b8, ++c8){
         *c8 = *a8 & *b8;
+    }
+}
+
+void bitApplyWithMask(const void *a, const void *m, const void *b,
+                      size_t size, void *c)
+{
+    const uint32_t *a32, *b32, *m32;
+    uint32_t *c32;
+    const uint8_t *a8, *b8, *m8;
+    uint8_t *c8;
+    size_t size32, size8;
+
+    size32 = size / 4;
+    a32 = a;
+    b32 = b;
+    m32 = m;
+    c32 = c;
+    for (; size32 != 0; --size32, ++a32, ++b32, ++c32, ++m32){
+        *c32 = (*a32 & ~*m32) | *b32;
+    }
+
+    size8 = size % 4;
+    a8 = (uint8_t *)a32;
+    b8 = (uint8_t *)b32;
+    m8 = (uint8_t *)m32;
+    c8 = (uint8_t *)c32;
+    for (; size8 != 0; --size8, ++a8, ++b8, ++c8, ++m8){
+        *c8 = (*a8 & ~*m8) | *b8;
     }
 }

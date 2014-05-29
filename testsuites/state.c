@@ -94,8 +94,8 @@ TEST(testStatePreEff)
     plan_state_pool_t *pool;
     plan_state_t *state;
     plan_state_id_t ids[4];
+    plan_state_id_t newid;
     plan_part_state_t *parts[4];
-    //plan_state_id_t ins[4];
 
     planVarInit(vars + 0);
     planVarInit(vars + 1);
@@ -134,7 +134,6 @@ TEST(testStatePreEff)
     planStateSet(state, 3, 3);
     ids[3] = planStatePoolInsert(pool, state);
 
-    planStateDel(pool, state);
 
     parts[0] = planPartStateNew(pool);
     planPartStateSet(pool, parts[0], 0, 1);
@@ -173,6 +172,127 @@ TEST(testStatePreEff)
     assertFalse(planStatePoolPartStateIsSubset(pool, parts[3], ids[2]));
     assertTrue(planStatePoolPartStateIsSubset(pool, parts[3], ids[3]));
 
+    // Apply parts[0]
+    newid = planStatePoolApplyPartState(pool, parts[0], ids[0]);
+    assertEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+    newid = planStatePoolApplyPartState(pool, parts[0], ids[1]);
+    assertEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+    newid = planStatePoolApplyPartState(pool, parts[0], ids[2]);
+    assertNotEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+    planStatePoolGetState(pool, newid, state);
+    assertEquals(planStateGet(state, 0), 1);
+    assertEquals(planStateGet(state, 1), 0);
+    assertEquals(planStateGet(state, 2), 1);
+    assertEquals(planStateGet(state, 3), 1);
+
+    newid = planStatePoolApplyPartState(pool, parts[0], ids[3]);
+    assertEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+
+    // Apply parts[1]
+    newid = planStatePoolApplyPartState(pool, parts[1], ids[0]);
+    assertEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+    newid = planStatePoolApplyPartState(pool, parts[1], ids[1]);
+    assertNotEquals(newid, ids[0]);
+    assertEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+    newid = planStatePoolApplyPartState(pool, parts[1], ids[2]);
+    assertNotEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+    planStatePoolGetState(pool, newid, state);
+    assertEquals(planStateGet(state, 0), 2);
+    assertEquals(planStateGet(state, 1), 0);
+    assertEquals(planStateGet(state, 2), 1);
+    assertEquals(planStateGet(state, 3), 3);
+
+    newid = planStatePoolApplyPartState(pool, parts[1], ids[3]);
+    assertNotEquals(newid, ids[0]);
+    assertEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+
+    // Apply parts[2]
+    newid = planStatePoolApplyPartState(pool, parts[2], ids[0]);
+    assertNotEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+    newid = planStatePoolApplyPartState(pool, parts[2], ids[1]);
+    assertNotEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+    newid = planStatePoolApplyPartState(pool, parts[2], ids[2]);
+    assertNotEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+    newid = planStatePoolApplyPartState(pool, parts[2], ids[3]);
+    assertNotEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+
+    // Apply parts[3]
+    newid = planStatePoolApplyPartState(pool, parts[3], ids[0]);
+    assertEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+    newid = planStatePoolApplyPartState(pool, parts[3], ids[1]);
+    assertNotEquals(newid, ids[0]);
+    assertEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+
+    newid = planStatePoolApplyPartState(pool, parts[3], ids[2]);
+    assertNotEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertNotEquals(newid, ids[3]);
+    planStatePoolGetState(pool, newid, state);
+    assertEquals(planStateGet(state, 0), 2);
+    assertEquals(planStateGet(state, 1), 0);
+    assertEquals(planStateGet(state, 2), 0);
+    assertEquals(planStateGet(state, 3), 3);
+
+    newid = planStatePoolApplyPartState(pool, parts[3], ids[3]);
+    assertNotEquals(newid, ids[0]);
+    assertNotEquals(newid, ids[1]);
+    assertNotEquals(newid, ids[2]);
+    assertEquals(newid, ids[3]);
+
+
+
+    planStateDel(pool, state);
     planPartStateDel(pool, parts[0]);
     planPartStateDel(pool, parts[1]);
     planPartStateDel(pool, parts[2]);

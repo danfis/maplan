@@ -112,6 +112,15 @@ int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
                                    const plan_part_state_t *part_state,
                                    plan_state_id_t sid);
 
+/**
+ * Applies partial state to the state identified by its ID and saves the
+ * resulting state into state pool.
+ * The ID of the resulting state is returned.
+ */
+plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
+                                            const plan_part_state_t *part_state,
+                                            plan_state_id_t sid);
+
 
 
 /**

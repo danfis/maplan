@@ -2,11 +2,13 @@
 #include "load-from-file.h"
 #include "state.h"
 #include "dataarr.h"
+#include "succgen.h"
 
 TEST_SUITES {
     TEST_SUITE_ADD(TSLoadFromFile),
     TEST_SUITE_ADD(TSState),
     TEST_SUITE_ADD(TSDataArr),
+    TEST_SUITE_ADD(TSSuccGen),
     TEST_SUITES_CLOSURE
 };
 int main(int argc, char *argv[])

@@ -198,6 +198,11 @@ void planPartStateDel(plan_state_pool_t *pool,
                       plan_part_state_t *part_state);
 
 /**
+ * Returns number of variable the state consists of.
+ */
+_bor_inline size_t planPartStateSize(const plan_part_state_t *state);
+
+/**
  * Returns a value of a specified variable.
  */
 int planPartStateGet(const plan_part_state_t *state, unsigned var);
@@ -231,6 +236,11 @@ _bor_inline void planStateSet(plan_state_t *state,
                               unsigned var, unsigned val)
 {
     state->val[var] = val;
+}
+
+_bor_inline size_t planPartStateSize(const plan_part_state_t *state)
+{
+    return state->num_vars;
 }
 
 #endif /* __PLAN_STATE_H__ */

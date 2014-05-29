@@ -27,7 +27,7 @@ LDFLAGS += $(JANSSON_LDFLAGS)
 
 TARGETS  = libplan.a
 
-OBJS  = plan var state operator dataarr
+OBJS  = plan var state operator dataarr succgen
 
 BIN_TARGETS =
 

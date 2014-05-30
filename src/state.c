@@ -18,12 +18,12 @@ typedef struct _plan_state_htable_t plan_state_htable_t;
 
 
 /** Sets variable to value in packed state buffer */
-void planStatePackerSet(plan_state_packer_t *packer,
-                        unsigned var, unsigned val,
-                        void *buf);
+static void planStatePackerSet(plan_state_packer_t *packer,
+                               unsigned var, unsigned val,
+                               void *buf);
 /** Sets mask (~0) corresponding to the variable in packed state buffer */
-void planStatePackerSetMask(plan_state_packer_t *packer,
-                            unsigned var, void *buf);
+static void planStatePackerSetMask(plan_state_packer_t *packer,
+                                   unsigned var, void *buf);
 
 /** Returns true if the two given states are equal. */
 _bor_inline int planStateEq(const plan_state_pool_t *pool,
@@ -35,10 +35,10 @@ _bor_inline bor_htable_key_t planStateHash(const plan_state_pool_t *pool,
                                            plan_state_id_t sid);
 
 /** Performs bit operation c = a AND b. */
-void bitAnd(const void *a, const void *b, size_t size, void *c);
+static void bitAnd(const void *a, const void *b, size_t size, void *c);
 /** Performs bit operator c = (a AND ~m) OR b. */
-void bitApplyWithMask(const void *a, const void *m, const void *b,
-                      size_t size, void *c);
+static void bitApplyWithMask(const void *a, const void *m, const void *b,
+                             size_t size, void *c);
 
 
 /** Callbacks for bor_htable_t */
@@ -294,6 +294,21 @@ void planStatePackerUnpack(const plan_state_packer_t *p,
     }
 }
 
+static void planStatePackerSet(plan_state_packer_t *packer,
+                               unsigned var, unsigned val,
+                               void *buf)
+{
+    unsigned *vbuf = (unsigned *)buf;
+    vbuf[var] = val;
+}
+
+static void planStatePackerSetMask(plan_state_packer_t *packer,
+                                   unsigned var, void *buf)
+{
+    unsigned *vbuf = (unsigned *)buf;
+    vbuf[var] = ~0;
+}
+
 
 
 
@@ -391,20 +406,6 @@ int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
 
 
 
-void planStatePackerSet(plan_state_packer_t *packer,
-                        unsigned var, unsigned val,
-                        void *buf)
-{
-    unsigned *vbuf = (unsigned *)buf;
-    vbuf[var] = val;
-}
-
-void planStatePackerSetMask(plan_state_packer_t *packer,
-                            unsigned var, void *buf)
-{
-    unsigned *vbuf = (unsigned *)buf;
-    vbuf[var] = ~0;
-}
 
 _bor_inline int planStateEq(const plan_state_pool_t *pool,
                             plan_state_id_t s1id,
@@ -440,7 +441,7 @@ static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud)
     return planStateEq(pool, s1->state_id, s2->state_id);
 }
 
-void bitAnd(const void *a, const void *b, size_t size, void *c)
+static void bitAnd(const void *a, const void *b, size_t size, void *c)
 {
     const uint32_t *a32, *b32;
     uint32_t *c32;
@@ -465,8 +466,8 @@ void bitAnd(const void *a, const void *b, size_t size, void *c)
     }
 }
 
-void bitApplyWithMask(const void *a, const void *m, const void *b,
-                      size_t size, void *c)
+static void bitApplyWithMask(const void *a, const void *m, const void *b,
+                             size_t size, void *c)
 {
     const uint32_t *a32, *b32, *m32;
     uint32_t *c32;

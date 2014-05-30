@@ -79,6 +79,30 @@ TEST(testStateBasic)
     planStateSet(state, 3, 1);
     assertEquals(planStatePoolFind(pool, state), ins[2]);
 
+    planStatePoolGetState(pool, ins[0], state);
+    assertEquals(planStateGet(state, 0), 1);
+    assertEquals(planStateGet(state, 1), 1);
+    assertEquals(planStateGet(state, 2), 0);
+    assertEquals(planStateGet(state, 3), 0);
+
+    planStatePoolGetState(pool, ins[1], state);
+    assertEquals(planStateGet(state, 0), 0);
+    assertEquals(planStateGet(state, 1), 0);
+    assertEquals(planStateGet(state, 2), 2);
+    assertEquals(planStateGet(state, 3), 5);
+
+    planStatePoolGetState(pool, ins[2], state);
+    assertEquals(planStateGet(state, 0), 4);
+    assertEquals(planStateGet(state, 1), 1);
+    assertEquals(planStateGet(state, 2), 0);
+    assertEquals(planStateGet(state, 3), 1);
+
+    planStatePoolGetState(pool, ins[3], state);
+    assertEquals(planStateGet(state, 0), 5);
+    assertEquals(planStateGet(state, 1), 0);
+    assertEquals(planStateGet(state, 2), 1);
+    assertEquals(planStateGet(state, 3), 2);
+
 
     planStateDel(pool, state);
     planStatePoolDel(pool);

@@ -23,6 +23,7 @@ TEST(testStateBasic)
     pool = planStatePoolNew(vars, 4);
     state = planStateNew(pool);
 
+    planStateZeroize(state);
     planStateSet(state, 0, 1);
     planStateSet(state, 1, 1);
     ins[0] = planStatePoolInsert(pool, state);

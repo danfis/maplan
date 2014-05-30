@@ -87,6 +87,7 @@ void planStatePoolDel(plan_state_pool_t *pool)
     for (i = 0; i < pool->data_size; ++i){
         planDataArrDel(pool->data[i]);
     }
+    BOR_FREE(pool->data);
 
     if (pool->packer)
         planStatePackerDel(pool->packer);

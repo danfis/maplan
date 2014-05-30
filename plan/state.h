@@ -20,11 +20,13 @@ typedef long plan_state_id_t;
  */
 #define PLAN_NO_STATE ((plan_state_id_t)-1)
 
+struct _plan_state_packer_var_t;
 
 /**
  * Struct implementing packing of states into binary buffers.
  */
 struct _plan_state_packer_t {
+    struct _plan_state_packer_var_t *vars;
     size_t num_vars;
     size_t bufsize;
 };

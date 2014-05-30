@@ -40,9 +40,6 @@ size_t planSuccGenFind(const plan_succ_gen_t *sg,
                        plan_operator_t **op, size_t op_size);
 
 
-void planSuccGenDump(const struct _plan_succ_gen_tree_t *tree,
-                     size_t prefix, FILE *fout);
-
 /**** INLINES ****/
 _bor_inline size_t planSuccGenNumOperators(const plan_succ_gen_t *sg)
 {

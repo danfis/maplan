@@ -1,6 +1,5 @@
 #include <cu/cu.h>
 #include "plan/plan.h"
-#include "plan/succgen.h"
 
 
 TEST(testLoadFromFile)
@@ -87,10 +86,5 @@ TEST(testLoadFromFile)
     assertEquals(planPartStateGet(plan->op[5].pre, 6), 0);
     assertFalse(planPartStateIsSet(plan->op[5].pre, 6));
 
-
-    plan_succ_gen_t *sg;
-    sg = planSuccGenNew(plan->op, plan->op_size);
-    planSuccGenDump(sg->root, 0, stdout);
-    planSuccGenDel(sg);
     planDel(plan);
 }

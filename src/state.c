@@ -18,10 +18,12 @@ typedef struct _plan_state_htable_t plan_state_htable_t;
 
 
 struct _plan_state_packer_var_t {
-    int bitlen;
-    uint32_t shift;
-    uint32_t mask;
-    int pos;
+    int bitlen;          /*!< Number of bits required to store a value */
+    uint32_t shift;      /*!< Left shift size during packing */
+    uint32_t mask;       /*!< Mask for packed values */
+    uint32_t clear_mask; /*!< Clear mask for packed values (i.e., ~mask) */
+    int pos;             /*!< Position of a word in buffer where values are
+                              stored. */
 };
 typedef struct _plan_state_packer_var_t plan_state_packer_var_t;
 
@@ -32,6 +34,20 @@ static void planStatePackerSet(plan_state_packer_t *packer,
 /** Sets mask (~0) corresponding to the variable in packed state buffer */
 static void planStatePackerSetMask(plan_state_packer_t *packer,
                                    unsigned var, void *buf);
+/** Returns number of bits needed for storing all values in interval
+ * [0,range). */
+static int packerBitsNeeded(int range);
+/** Comparator for sorting variables by their bit length */
+static int sortCmpVar(const void *a, const void *b);
+/** Constructs mask for variable */
+static uint32_t packerVarMask(int bitlen, int shift);
+/** Set variable into packed buffer */
+static void packerSetVar(const plan_state_packer_var_t *var,
+                         uint32_t val,
+                         void *buffer);
+/** Retrieves a value of the variable from packed buffer */
+static unsigned packerGetVar(const plan_state_packer_var_t *var,
+                             const void *buffer);
 
 /** Returns true if the two given states are equal. */
 _bor_inline int planStateEq(const plan_state_pool_t *pool,
@@ -281,39 +297,6 @@ plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
 
 
 
-/** Returns number of bits needed for storing all values in interval
- * [0,range). */
-static int packerBitsNeeded(int range)
-{
-    uint32_t max_val = range - 1;
-    int num = 32;
-
-    for (; (max_val & 0x80000000) != 0x80000000; --num, max_val <<= 1);
-    return num;
-}
-
-static int sortCmpVar(const void *a, const void *b)
-{
-    const plan_state_packer_var_t *va = *(const plan_state_packer_var_t **)a;
-    const plan_state_packer_var_t *vb = *(const plan_state_packer_var_t **)b;
-    if (va->bitlen == vb->bitlen){
-        return 0;
-    }else if (va->bitlen < vb->bitlen){
-        return 1;
-    }else{
-        return -1;
-    }
-}
-
-static uint32_t packerVarMask(int bitlen, int shift)
-{
-    uint32_t mask1, mask2;
-
-    mask1 = 0xffffffff << shift;
-    mask2 = 0xffffffff >> (32 - shift - bitlen);
-    return mask1 & mask2;
-}
-
 /** State Packer **/
 plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
                                         size_t var_size)
@@ -352,6 +335,7 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
                 pvars[i]->shift = 32 - bitlen;
                 pvars[i]->mask = packerVarMask(pvars[i]->bitlen,
                                                pvars[i]->shift);
+                pvars[i]->clear_mask = ~pvars[i]->mask;
                 ++is_set;
             }
         }
@@ -366,27 +350,6 @@ void planStatePackerDel(plan_state_packer_t *p)
     if (p->vars)
         BOR_FREE(p->vars);
     BOR_FREE(p);
-}
-
-static void packerSetVar(const plan_state_packer_var_t *var,
-                         uint32_t val,
-                         void *buffer)
-{
-    uint32_t *buf;
-    val = (val << var->shift) & var->mask;
-    buf = ((uint32_t *)buffer) + var->pos;
-    *buf = (*buf & ~var->mask) | val;
-}
-
-static unsigned packerGetVar(const plan_state_packer_var_t *var,
-                             const void *buffer)
-{
-    uint32_t val;
-    uint32_t *buf;
-    buf = ((uint32_t *)buffer) + var->pos;
-    val = *buf;
-    val = (val & var->mask) >> var->shift;
-    return val;
 }
 
 void planStatePackerPack(const plan_state_packer_t *p,
@@ -421,6 +384,58 @@ static void planStatePackerSetMask(plan_state_packer_t *packer,
 {
     uint32_t *buf = (uint32_t *)_buf;
     buf[packer->vars[var].pos] |= packer->vars[var].mask;
+}
+
+static int packerBitsNeeded(int range)
+{
+    uint32_t max_val = range - 1;
+    int num = 32;
+
+    for (; (max_val & 0x80000000) != 0x80000000; --num, max_val <<= 1);
+    return num;
+}
+
+static int sortCmpVar(const void *a, const void *b)
+{
+    const plan_state_packer_var_t *va = *(const plan_state_packer_var_t **)a;
+    const plan_state_packer_var_t *vb = *(const plan_state_packer_var_t **)b;
+    if (va->bitlen == vb->bitlen){
+        return 0;
+    }else if (va->bitlen < vb->bitlen){
+        return 1;
+    }else{
+        return -1;
+    }
+}
+
+static uint32_t packerVarMask(int bitlen, int shift)
+{
+    uint32_t mask1, mask2;
+
+    mask1 = 0xffffffff << shift;
+    mask2 = 0xffffffff >> (32 - shift - bitlen);
+    return mask1 & mask2;
+}
+
+static void packerSetVar(const plan_state_packer_var_t *var,
+                         uint32_t val,
+                         void *buffer)
+{
+    uint32_t *buf;
+    val = (val << var->shift) & var->mask;
+    buf = ((uint32_t *)buffer) + var->pos;
+    *buf = (*buf & var->clear_mask) | val;
+}
+
+static unsigned packerGetVar(const plan_state_packer_var_t *var,
+                             const void *buffer)
+{
+    uint32_t val;
+    uint32_t *buf;
+    buf = ((uint32_t *)buffer) + var->pos;
+    val = *buf;
+    val = (val & var->mask) >> var->shift;
+    return val;
 }
 
 

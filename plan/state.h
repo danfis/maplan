@@ -181,6 +181,11 @@ _bor_inline void planStateSet(plan_state_t *state,
                               unsigned var, unsigned val);
 
 /**
+ * Returns number of variables in state.
+ */
+_bor_inline size_t planStateSize(const plan_state_t *state);
+
+/**
  * Zeroize all variable values.
  */
 void planStateZeroize(plan_state_t *state);
@@ -238,6 +243,11 @@ _bor_inline void planStateSet(plan_state_t *state,
                               unsigned var, unsigned val)
 {
     state->val[var] = val;
+}
+
+_bor_inline size_t planStateSize(const plan_state_t *state)
+{
+    return state->num_vars;
 }
 
 _bor_inline size_t planPartStateSize(const plan_part_state_t *state)

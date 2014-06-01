@@ -16,14 +16,26 @@ struct _plan_state_htable_t {
 };
 typedef struct _plan_state_htable_t plan_state_htable_t;
 
+/** Type of one word in buffer of packed variable values.
+ *  Bear in mind that the word's size must be big enough to store a whole
+ *  range of the biggest variable */
+typedef uint32_t packer_word_t;
+
+/** Number of bits in packed word */
+#define PACKER_WORD_BITS (8u * sizeof(packer_word_t))
+/** Word with only highest bit set (i.e., 0x80000...) */
+#define PACKER_WORD_SET_HI_BIT \
+    (((packer_word_t)1u) << (PACKER_WORD_BITS - 1u))
+/** Word with all bits set (i.e., 0xffff...) */
+#define PACKER_WORD_SET_ALL_BITS ((packer_word_t)-1)
 
 struct _plan_state_packer_var_t {
-    int bitlen;          /*!< Number of bits required to store a value */
-    uint32_t shift;      /*!< Left shift size during packing */
-    uint32_t mask;       /*!< Mask for packed values */
-    uint32_t clear_mask; /*!< Clear mask for packed values (i.e., ~mask) */
-    int pos;             /*!< Position of a word in buffer where values are
-                              stored. */
+    int bitlen;               /*!< Number of bits required to store a value */
+    packer_word_t shift;      /*!< Left shift size during packing */
+    packer_word_t mask;       /*!< Mask for packed values */
+    packer_word_t clear_mask; /*!< Clear mask for packed values (i.e., ~mask) */
+    int pos;                  /*!< Position of a word in buffer where
+                                   values are stored. */
 };
 typedef struct _plan_state_packer_var_t plan_state_packer_var_t;
 
@@ -40,10 +52,10 @@ static int packerBitsNeeded(int range);
 /** Comparator for sorting variables by their bit length */
 static int sortCmpVar(const void *a, const void *b);
 /** Constructs mask for variable */
-static uint32_t packerVarMask(int bitlen, int shift);
+static packer_word_t packerVarMask(int bitlen, int shift);
 /** Set variable into packed buffer */
 static void packerSetVar(const plan_state_packer_var_t *var,
-                         uint32_t val,
+                         packer_word_t val,
                          void *buffer);
 /** Retrieves a value of the variable from packed buffer */
 static unsigned packerGetVar(const plan_state_packer_var_t *var,
@@ -302,7 +314,7 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
                                         size_t var_size)
 {
     size_t i, is_set;
-    int bitlen, bytepos;
+    int bitlen, wordpos;
     plan_state_packer_t *p;
     plan_state_packer_var_t **pvars;
 
@@ -322,17 +334,17 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
     qsort(pvars, var_size, sizeof(plan_state_packer_var_t *), sortCmpVar);
 
     is_set = 0;
-    bytepos = -1;
+    wordpos = -1;
     while (is_set < var_size){
-        ++bytepos;
+        ++wordpos;
 
         bitlen = 0;
         for (i = 0; i < var_size; ++i){
             if (pvars[i]->pos == -1
-                    && pvars[i]->bitlen + bitlen <= 32){
-                pvars[i]->pos = bytepos;
+                    && pvars[i]->bitlen + bitlen <= PACKER_WORD_BITS){
+                pvars[i]->pos = wordpos;
                 bitlen += pvars[i]->bitlen;
-                pvars[i]->shift = 32 - bitlen;
+                pvars[i]->shift = PACKER_WORD_BITS - bitlen;
                 pvars[i]->mask = packerVarMask(pvars[i]->bitlen,
                                                pvars[i]->shift);
                 pvars[i]->clear_mask = ~pvars[i]->mask;
@@ -341,7 +353,16 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
         }
     }
 
-    p->bufsize = sizeof(uint32_t) * (bytepos + 1);
+    p->bufsize = sizeof(packer_word_t) * (wordpos + 1);
+
+    /*
+    for (i = 0; i < var_size; ++i){
+        fprintf(stderr, "%d %d %d %d\n", (int)PACKER_WORD_BITS,
+                p->vars[i].bitlen, p->vars[i].shift,
+                p->vars[i].pos);
+    }
+    fprintf(stderr, "%lu\n", p->bufsize);
+    */
     return p;
 }
 
@@ -382,16 +403,16 @@ static void planStatePackerSet(plan_state_packer_t *packer,
 static void planStatePackerSetMask(plan_state_packer_t *packer,
                                    unsigned var, void *_buf)
 {
-    uint32_t *buf = (uint32_t *)_buf;
+    packer_word_t *buf = (packer_word_t *)_buf;
     buf[packer->vars[var].pos] |= packer->vars[var].mask;
 }
 
 static int packerBitsNeeded(int range)
 {
-    uint32_t max_val = range - 1;
-    int num = 32;
+    packer_word_t max_val = range - 1;
+    int num = PACKER_WORD_BITS;
 
-    for (; (max_val & 0x80000000) != 0x80000000; --num, max_val <<= 1);
+    for (; !(max_val & PACKER_WORD_SET_HI_BIT); --num, max_val <<= 1);
     return num;
 }
 
@@ -408,31 +429,31 @@ static int sortCmpVar(const void *a, const void *b)
     }
 }
 
-static uint32_t packerVarMask(int bitlen, int shift)
+static packer_word_t packerVarMask(int bitlen, int shift)
 {
-    uint32_t mask1, mask2;
+    packer_word_t mask1, mask2;
 
-    mask1 = 0xffffffff << shift;
-    mask2 = 0xffffffff >> (32 - shift - bitlen);
+    mask1 = PACKER_WORD_SET_ALL_BITS << shift;
+    mask2 = PACKER_WORD_SET_ALL_BITS >> (PACKER_WORD_BITS - shift - bitlen);
     return mask1 & mask2;
 }
 
 static void packerSetVar(const plan_state_packer_var_t *var,
-                         uint32_t val,
+                         packer_word_t val,
                          void *buffer)
 {
-    uint32_t *buf;
+    packer_word_t *buf;
     val = (val << var->shift) & var->mask;
-    buf = ((uint32_t *)buffer) + var->pos;
+    buf = ((packer_word_t *)buffer) + var->pos;
     *buf = (*buf & var->clear_mask) | val;
 }
 
 static unsigned packerGetVar(const plan_state_packer_var_t *var,
                              const void *buffer)
 {
-    uint32_t val;
-    uint32_t *buf;
-    buf = ((uint32_t *)buffer) + var->pos;
+    packer_word_t val;
+    packer_word_t *buf;
+    buf = ((packer_word_t *)buffer) + var->pos;
     val = *buf;
     val = (val & var->mask) >> var->shift;
     return val;

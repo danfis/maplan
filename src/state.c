@@ -53,6 +53,25 @@ static void bitApplyWithMask(const void *a, const void *m, const void *b,
 static bor_htable_key_t htableHash(const bor_list_t *key, void *ud);
 static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud);
 
+static void printBin(const unsigned char *m, int size)
+{
+    int i, j;
+    unsigned char c;
+
+    for (i = 0; i < size; ++i){
+        c = m[i];
+
+        for (j = 0; j < 8; ++j){
+            if (c & 0x80){
+                fprintf(stderr, "1");
+            }else{
+                fprintf(stderr, "0");
+            }
+            c = c << 1;
+        }
+    }
+}
+
 plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size)
 {
     size_t state_size;
@@ -273,25 +292,6 @@ static int packerBitsNeeded(int range)
     return num;
 }
 
-static void printBin(const unsigned char *m, int size)
-{
-    int i, j;
-    unsigned char c;
-
-    for (i = 0; i < size; ++i){
-        c = m[i];
-
-        for (j = 0; j < 8; ++j){
-            if (c & 0x80){
-                fprintf(stderr, "1");
-            }else{
-                fprintf(stderr, "0");
-            }
-            c = c << 1;
-        }
-    }
-}
-
 static int sortCmpVar(const void *a, const void *b)
 {
     const plan_state_packer_var_t *va = *(const plan_state_packer_var_t **)a;
@@ -356,7 +356,6 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
             }
         }
     }
-
 
     p->bufsize = sizeof(uint32_t) * (bytepos + 1);
     return p;

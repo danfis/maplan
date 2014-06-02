@@ -17,7 +17,7 @@ struct _plan_state_htable_t {
 typedef struct _plan_state_htable_t plan_state_htable_t;
 
 /** Type of one word in buffer of packed variable values.
- *  Bear in mind that the word's size must be big enough to store a whole
+ *  Bear in mind that the word's size must be big enough to store the whole
  *  range of the biggest variable */
 typedef uint32_t packer_word_t;
 

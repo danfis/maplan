@@ -4,7 +4,7 @@
 
 
 plan_data_arr_t *planDataArrNew(size_t el_size, size_t segment_size,
-                                void *init_data)
+                                const void *init_data)
 {
     plan_data_arr_t *arr;
 

@@ -85,6 +85,24 @@ plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size);
 void planStatePoolDel(plan_state_pool_t *pool);
 
 /**
+ * Reserves a data array with elements of specified size and each element
+ * initialized once it is allocated with {init_element} (data pointed by
+ * {init_element} are copied inside).
+ * The function returns ID by which the data array can be referenced later.
+ */
+size_t planStatePoolDataReserve(plan_state_pool_t *pool,
+                                size_t element_size,
+                                const void *init_element);
+
+/**
+ * Returns an element from data array that corresponds to the specified
+ * state.
+ */
+void *planStatePoolData(plan_state_pool_t *pool,
+                        size_t data_id,
+                        plan_state_id_t state_id);
+
+/**
  * Inserts a new state into the pool.
  * If the pool already contains the same state nothing is changed and the
  * ID of the already present state is returned.

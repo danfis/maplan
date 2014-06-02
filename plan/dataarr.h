@@ -16,7 +16,7 @@ typedef struct _plan_data_arr_t plan_data_arr_t;
     (type *)planDataArrGet((arr), (i))
 
 plan_data_arr_t *planDataArrNew(size_t el_size, size_t segment_size,
-                                void *init_data);
+                                const void *init_data);
 
 void planDataArrDel(plan_data_arr_t *arr);
 

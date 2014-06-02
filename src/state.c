@@ -150,6 +150,31 @@ void planStatePoolDel(plan_state_pool_t *pool)
     BOR_FREE(pool);
 }
 
+size_t planStatePoolDataReserve(plan_state_pool_t *pool,
+                                size_t element_size,
+                                const void *init_element)
+{
+    size_t data_id;
+
+    data_id = pool->data_size;
+    ++pool->data_size;
+    pool->data = BOR_REALLOC_ARR(pool->data, plan_data_arr_t *,
+                                 pool->data_size);
+    pool->data[data_id] = planDataArrNew(element_size, 8196, init_element);
+    return data_id;
+}
+
+void *planStatePoolData(plan_state_pool_t *pool,
+                        size_t data_id,
+                        plan_state_id_t state_id)
+{
+    if (data_id >= pool->data_size)
+        return NULL;
+
+    return planDataArrGet(pool->data[data_id], state_id);
+}
+
+
 plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
                                     const plan_state_t *state)
 {

@@ -4,6 +4,10 @@
 #include <plan/state.h>
 
 
+/**
+ * Goal Count Heuristic
+ * =====================
+ */
 struct _plan_heuristic_goalcount_t {
     const plan_part_state_t *goal;
 };

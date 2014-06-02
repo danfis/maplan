@@ -380,6 +380,9 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
 
     p->bufsize = sizeof(packer_word_t) * (wordpos + 1);
 
+    // free temporary array
+    BOR_FREE(pvars);
+
     /*
     for (i = 0; i < var_size; ++i){
         fprintf(stderr, "%d %d %d %d\n", (int)PACKER_WORD_BITS,

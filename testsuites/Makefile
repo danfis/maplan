@@ -12,10 +12,15 @@ CFLAGS += $(JANSSON_CFLAGS)
 LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -L../../boruvka -lboruvka -pthread
 LDFLAGS += $(JANSSON_LDFLAGS)
 
+BENCH_CFLAGS = -O3 -pipe -march=core2
+BENCH_CFLAGS += -I./ -I../
+BENCH_CFLAGS += -I../../boruvka
+BENCH_CFLAGS += $(JANSSON_CFLAGS)
+
 CHECK_REG=cu/check-regressions
 CHECK_TS ?=
 
-TARGETS = test
+TARGETS = test bench-ehc
 
 OBJS = main.o load-from-file.o state.o dataarr.o succgen.o statespace.o \
        search_ehc.o
@@ -24,6 +29,8 @@ all: $(TARGETS)
 
 test: cu $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
+bench-ehc: bench-ehc.c
+	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS)
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<

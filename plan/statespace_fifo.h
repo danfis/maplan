@@ -1,7 +1,6 @@
 #ifndef __PLAN_STATESPACE_FIFO_H__
 #define __PLAN_STATESPACE_FIFO_H__
 
-#include <boruvka/list.h>
 #include <plan/statespace.h>
 
 /**

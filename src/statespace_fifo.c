@@ -1,4 +1,5 @@
 #include <boruvka/alloc.h>
+#include <boruvka/list.h>
 #include "plan/statespace_fifo.h"
 
 struct _plan_state_space_fifo_node_t {

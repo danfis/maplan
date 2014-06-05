@@ -20,9 +20,10 @@ plan_state_space_t *planStateSpaceNew(plan_state_pool_t *state_pool)
 
     ss->state_pool = state_pool;
 
-    elinit.heuristic = -1;
-    elinit.state_id  = PLAN_NO_STATE;
+    elinit.state_id = PLAN_NO_STATE;
+    elinit.parent_state_id = PLAN_NO_STATE;
     elinit.state = PLAN_NODE_STATE_NEW;
+    elinit.heuristic = -1;
     ss->data_id = planStatePoolDataReserve(ss->state_pool,
                                            sizeof(plan_state_space_node_t),
                                            &elinit);
@@ -58,6 +59,7 @@ plan_state_space_node_t *planStateSpaceExtractMin(plan_state_space_t *ss)
 
 plan_state_space_node_t *planStateSpaceOpenNode(plan_state_space_t *ss,
                                                 plan_state_id_t sid,
+                                                plan_state_id_t parent_sid,
                                                 unsigned heuristic)
 {
     plan_state_space_node_t *n;
@@ -68,8 +70,10 @@ plan_state_space_node_t *planStateSpaceOpenNode(plan_state_space_t *ss,
     }
 
     // set up value of heuristic
-    n->heuristic = heuristic;
-    n->state     = PLAN_NODE_STATE_OPEN;
+    n->state_id        = sid;
+    n->parent_state_id = parent_sid;
+    n->state           = PLAN_NODE_STATE_OPEN;
+    n->heuristic       = heuristic;
 
     // insert node into open list
     borPairHeapAdd(ss->heap, &n->heap);
@@ -79,6 +83,7 @@ plan_state_space_node_t *planStateSpaceOpenNode(plan_state_space_t *ss,
 
 plan_state_space_node_t *planStateSpaceReopenNode(plan_state_space_t *ss,
                                                   plan_state_id_t sid,
+                                                  plan_state_id_t parent_sid,
                                                   unsigned heuristic)
 {
     plan_state_space_node_t *n;
@@ -88,8 +93,10 @@ plan_state_space_node_t *planStateSpaceReopenNode(plan_state_space_t *ss,
         return NULL;
 
     // set up heuristic value
-    n->heuristic = heuristic;
-    n->state     = PLAN_NODE_STATE_OPEN;
+    n->state_id        = sid;
+    n->parent_state_id = parent_sid;
+    n->state           = PLAN_NODE_STATE_OPEN;
+    n->heuristic       = heuristic;
 
     // and insert it into heap
     borPairHeapAdd(ss->heap, &n->heap);

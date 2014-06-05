@@ -31,10 +31,11 @@ TEST(testStateSpaceBasic)
     assertEquals(planStateSpaceExtractMin(sspace), NULL);
 
     // open the first node and check its values
-    node = planStateSpaceOpenNode(sspace, 0, 1);
+    node = planStateSpaceOpenNode(sspace, 0, PLAN_NO_STATE, 1);
     assertEquals(planStateSpaceNodeHeuristic(node), 1);
     assertTrue(planStateSpaceNodeIsOpen(node));
     assertEquals(planStateSpaceNodeStateId(node), 0);
+    assertEquals(planStateSpaceNodeParentStateId(node), PLAN_NO_STATE);
 
     // open second state node
     planStateSet(state, 0, 1);
@@ -42,10 +43,11 @@ TEST(testStateSpaceBasic)
     planStateSet(state, 2, 3);
     planStateSet(state, 3, 4);
     assertEquals(planStatePoolInsert(pool, state), 1);
-    node = planStateSpaceOpenNode(sspace, 1, 10);
+    node = planStateSpaceOpenNode(sspace, 1, 0, 10);
     assertEquals(planStateSpaceNodeHeuristic(node), 10);
     assertTrue(planStateSpaceNodeIsOpen(node));
     assertEquals(planStateSpaceNodeStateId(node), 1);
+    assertEquals(planStateSpaceNodeParentStateId(node), 0);
 
     // open third state node
     planStateSet(state, 0, 1);
@@ -53,10 +55,11 @@ TEST(testStateSpaceBasic)
     planStateSet(state, 2, 2);
     planStateSet(state, 3, 2);
     assertEquals(planStatePoolInsert(pool, state), 2);
-    node = planStateSpaceOpenNode(sspace, 2, 5);
+    node = planStateSpaceOpenNode(sspace, 2, 1, 5);
     assertEquals(planStateSpaceNodeHeuristic(node), 5);
     assertTrue(planStateSpaceNodeIsOpen(node));
     assertEquals(planStateSpaceNodeStateId(node), 2);
+    assertEquals(planStateSpaceNodeParentStateId(node), 1);
 
     // try to extract one node
     node = planStateSpaceExtractMin(sspace);
@@ -64,15 +67,17 @@ TEST(testStateSpaceBasic)
     assertEquals(planStateSpaceNodeHeuristic(node), 1);
     assertTrue(planStateSpaceNodeIsClosed(node));
     assertEquals(planStateSpaceNodeStateId(node), 0);
+    assertEquals(planStateSpaceNodeParentStateId(node), PLAN_NO_STATE);
 
     // check closing closed node
     assertEquals(planStateSpaceCloseNode(sspace, 0), NULL);
 
     // try to reopen the node
-    assertEquals(planStateSpaceReopenNode(sspace, 0, 11), node);
+    assertEquals(planStateSpaceReopenNode(sspace, 0, PLAN_NO_STATE, 11), node);
     assertEquals(planStateSpaceNodeHeuristic(node), 11);
     assertTrue(planStateSpaceNodeIsOpen(node));
     assertEquals(planStateSpaceNodeStateId(node), 0);
+    assertEquals(planStateSpaceNodeParentStateId(node), PLAN_NO_STATE);
 
     // close other node
     assertNotEquals(planStateSpaceCloseNode(sspace, 1), NULL);
@@ -83,12 +88,14 @@ TEST(testStateSpaceBasic)
     assertEquals(planStateSpaceNodeHeuristic(node), 5);
     assertTrue(planStateSpaceNodeIsClosed(node));
     assertEquals(planStateSpaceNodeStateId(node), 2);
+    assertEquals(planStateSpaceNodeParentStateId(node), 1);
 
     node = planStateSpaceExtractMin(sspace);
     assertNotEquals(node, NULL);
     assertEquals(planStateSpaceNodeHeuristic(node), 11);
     assertTrue(planStateSpaceNodeIsClosed(node));
     assertEquals(planStateSpaceNodeStateId(node), 0);
+    assertEquals(planStateSpaceNodeParentStateId(node), PLAN_NO_STATE);
 
     node = planStateSpaceExtractMin(sspace);
     assertEquals(node, NULL);

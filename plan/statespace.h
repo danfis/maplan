@@ -10,10 +10,11 @@
 #define PLAN_NODE_STATE_CLOSED 2
 
 struct _plan_state_space_node_t {
-    bor_pairheap_node_t heap;
-    plan_state_id_t state_id;
-    unsigned heuristic;
-    int state; /*!< One of PLAN_NODE_STATE_* values */
+    plan_state_id_t state_id;        /*!< ID of the corresponding state */
+    plan_state_id_t parent_state_id; /*!< ID of the parent state */
+    int state;                       /*!< One of PLAN_NODE_STATE_* values */
+    bor_pairheap_node_t heap;        /*!< Connector to an open list */
+    unsigned heuristic;              /*!< Value of a heuristic */
 };
 typedef struct _plan_state_space_node_t plan_state_space_node_t;
 
@@ -49,6 +50,7 @@ plan_state_space_node_t *planStateSpaceExtractMin(plan_state_space_t *ss);
  */
 plan_state_space_node_t *planStateSpaceOpenNode(plan_state_space_t *ss,
                                                 plan_state_id_t sid,
+                                                plan_state_id_t parent_sid,
                                                 unsigned heuristic);
 
 /**
@@ -57,6 +59,7 @@ plan_state_space_node_t *planStateSpaceOpenNode(plan_state_space_t *ss,
  */
 plan_state_space_node_t *planStateSpaceReopenNode(plan_state_space_t *ss,
                                                   plan_state_id_t sid,
+                                                  plan_state_id_t parent_sid,
                                                   unsigned heuristic);
 
 /**
@@ -75,6 +78,12 @@ _bor_inline unsigned planStateSpaceNodeHeuristic(const plan_state_space_node_t *
  * Returns corresponding state id.
  */
 _bor_inline plan_state_id_t planStateSpaceNodeStateId(
+                const plan_state_space_node_t *n);
+
+/**
+ * Returns corresponding parent state id.
+ */
+_bor_inline plan_state_id_t planStateSpaceNodeParentStateId(
                 const plan_state_space_node_t *n);
 
 /**
@@ -103,6 +112,12 @@ _bor_inline plan_state_id_t planStateSpaceNodeStateId(
                 const plan_state_space_node_t *n)
 {
     return n->state_id;
+}
+
+_bor_inline plan_state_id_t planStateSpaceNodeParentStateId(
+                const plan_state_space_node_t *n)
+{
+    return n->parent_state_id;
 }
 
 _bor_inline int planStateSpaceNodeIsNew(const plan_state_space_node_t *n)

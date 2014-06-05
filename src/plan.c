@@ -177,7 +177,7 @@ static int loadJsonGoal(plan_t *plan, json_t *json)
 static int loadJsonOperator1(plan_operator_t *op, json_t *json)
 {
     const char *key;
-    json_t *data, *jprepost, *jpre, *jpost;
+    json_t *data, *jprepost, *jpre, *jpost, *jprevail;
     int var, pre, post;
 
     data = json_object_get(json, "name");
@@ -199,6 +199,14 @@ static int loadJsonOperator1(plan_operator_t *op, json_t *json)
         if (pre != -1)
             planOperatorSetPrecondition(op, var, pre);
         planOperatorSetEffect(op, var, post);
+    }
+
+    data = json_object_get(json, "prevail");
+    json_object_foreach(data, key, jprevail){
+        var = atoi(key);
+        pre = json_integer_value(jprevail);
+
+        planOperatorSetPrecondition(op, var, pre);
     }
 
     return 0;

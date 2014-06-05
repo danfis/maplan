@@ -17,7 +17,8 @@ CHECK_TS ?=
 
 TARGETS = test
 
-OBJS = main.o load-from-file.o state.o dataarr.o succgen.o statespace.o
+OBJS = main.o load-from-file.o state.o dataarr.o succgen.o statespace.o \
+       search_ehc.o
 
 all: $(TARGETS)
 

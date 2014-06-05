@@ -325,7 +325,8 @@ def main():
     data = loadDomainTransitionGraphs(data, json_data)
     data = loadCausalGraph(data, json_data)
 
-    print(json.dumps(json_data))
+    #print(json.dumps(json_data))
+    print(json.dumps(json_data, sort_keys = True, indent = 4))
 
 
 if __name__ == '__main__':

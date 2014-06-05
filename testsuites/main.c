@@ -4,6 +4,7 @@
 #include "dataarr.h"
 #include "succgen.h"
 #include "statespace.h"
+#include "search_ehc.h"
 
 TEST_SUITES {
     TEST_SUITE_ADD(TSLoadFromFile),
@@ -11,6 +12,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSDataArr),
     TEST_SUITE_ADD(TSSuccGen),
     TEST_SUITE_ADD(TSStateSpace),
+    TEST_SUITE_ADD(TSSearchEHC),
     TEST_SUITES_CLOSURE
 };
 

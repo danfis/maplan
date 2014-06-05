@@ -2,9 +2,6 @@
 
 #include "plan/statespace.h"
 
-static plan_state_space_node_t *planStateSpaceNode(plan_state_space_t *ss,
-                                                   plan_state_id_t sid);
-
 /** Comparator for pairing heap */
 static int heapLessThan(const bor_pairheap_node_t *n1,
                         const bor_pairheap_node_t *n2,
@@ -23,6 +20,7 @@ plan_state_space_t *planStateSpaceNew(plan_state_pool_t *state_pool)
     elinit.state_id = PLAN_NO_STATE;
     elinit.parent_state_id = PLAN_NO_STATE;
     elinit.state = PLAN_NODE_STATE_NEW;
+    elinit.op    = NULL;
     elinit.heuristic = -1;
     ss->data_id = planStatePoolDataReserve(ss->state_pool,
                                            sizeof(plan_state_space_node_t),
@@ -60,6 +58,7 @@ plan_state_space_node_t *planStateSpaceExtractMin(plan_state_space_t *ss)
 plan_state_space_node_t *planStateSpaceOpenNode(plan_state_space_t *ss,
                                                 plan_state_id_t sid,
                                                 plan_state_id_t parent_sid,
+                                                plan_operator_t *op,
                                                 unsigned heuristic)
 {
     plan_state_space_node_t *n;
@@ -73,6 +72,7 @@ plan_state_space_node_t *planStateSpaceOpenNode(plan_state_space_t *ss,
     n->state_id        = sid;
     n->parent_state_id = parent_sid;
     n->state           = PLAN_NODE_STATE_OPEN;
+    n->op              = op;
     n->heuristic       = heuristic;
 
     // insert node into open list
@@ -84,6 +84,7 @@ plan_state_space_node_t *planStateSpaceOpenNode(plan_state_space_t *ss,
 plan_state_space_node_t *planStateSpaceReopenNode(plan_state_space_t *ss,
                                                   plan_state_id_t sid,
                                                   plan_state_id_t parent_sid,
+                                                  plan_operator_t *op,
                                                   unsigned heuristic)
 {
     plan_state_space_node_t *n;
@@ -96,6 +97,7 @@ plan_state_space_node_t *planStateSpaceReopenNode(plan_state_space_t *ss,
     n->state_id        = sid;
     n->parent_state_id = parent_sid;
     n->state           = PLAN_NODE_STATE_OPEN;
+    n->op              = op;
     n->heuristic       = heuristic;
 
     // and insert it into heap
@@ -119,6 +121,25 @@ plan_state_space_node_t *planStateSpaceCloseNode(plan_state_space_t *ss,
     return n;
 }
 
+plan_state_space_node_t *planStateSpaceNode(plan_state_space_t *ss,
+                                            plan_state_id_t sid)
+{
+    plan_state_space_node_t *n;
+    n = planStatePoolData(ss->state_pool, ss->data_id, sid);
+    n->state_id = sid;
+    return n;
+}
+
+void planStateSpaceClearOpenNodes(plan_state_space_t *ss)
+{
+    // TODO: This can be done much more efficiently but requires change in
+    // boruvka/pairheap
+    plan_state_space_node_t *n;
+
+    while ((n = planStateSpaceExtractMin(ss)) != NULL){
+        n->state = PLAN_NODE_STATE_NEW;
+    }
+}
 
 static int heapLessThan(const bor_pairheap_node_t *n1,
                         const bor_pairheap_node_t *n2,
@@ -129,13 +150,4 @@ static int heapLessThan(const bor_pairheap_node_t *n1,
     plan_state_space_node_t *el2
             = bor_container_of(n2, plan_state_space_node_t, heap);
     return el1->heuristic < el2->heuristic;
-}
-
-static plan_state_space_node_t *planStateSpaceNode(plan_state_space_t *ss,
-                                                   plan_state_id_t sid)
-{
-    plan_state_space_node_t *n;
-    n = planStatePoolData(ss->state_pool, ss->data_id, sid);
-    n->state_id = sid;
-    return n;
 }

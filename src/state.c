@@ -117,13 +117,12 @@ plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size)
 
     state_init = BOR_ALLOC_ARR(char, state_size);
     memset(state_init, 0, state_size);
-    pool->data[0] = planDataArrNew(state_size, 8196, state_init);
+    pool->data[0] = planDataArrNew(state_size, 8196, NULL, state_init);
     BOR_FREE(state_init);
 
-    borListInit(&htable_init.htable);
     htable_init.state_id = -1;
     pool->data[1] = planDataArrNew(sizeof(plan_state_htable_t), 8196,
-                                   &htable_init);
+                                   NULL, &htable_init);
 
     pool->data_size = 2;
     pool->htable = borHTableNew(htableHash, htableEq, (void *)pool);
@@ -152,7 +151,8 @@ void planStatePoolDel(plan_state_pool_t *pool)
 
 size_t planStatePoolDataReserve(plan_state_pool_t *pool,
                                 size_t element_size,
-                                const void *init_element)
+                                plan_data_arr_el_init_fn init_fn,
+                                const void *init_data)
 {
     size_t data_id;
 
@@ -160,7 +160,8 @@ size_t planStatePoolDataReserve(plan_state_pool_t *pool,
     ++pool->data_size;
     pool->data = BOR_REALLOC_ARR(pool->data, plan_data_arr_t *,
                                  pool->data_size);
-    pool->data[data_id] = planDataArrNew(element_size, 8196, init_element);
+    pool->data[data_id] = planDataArrNew(element_size, 8196,
+                                         init_fn, init_data);
     return data_id;
 }
 

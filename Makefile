@@ -31,6 +31,7 @@ OBJS  = plan var state operator dataarr succgen statespace
 OBJS += path
 OBJS += statespace_fifo
 OBJS += statespace_heap
+OBJS += statespace_bucket
 OBJS += search_ehc
 OBJS += heuristic/goalcount
 

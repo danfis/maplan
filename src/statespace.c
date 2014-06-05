@@ -15,7 +15,8 @@ void planStateSpaceNodeInit(plan_state_space_node_t *n)
 void planStateSpaceInit(plan_state_space_t *state_space,
                         plan_state_pool_t *state_pool,
                         size_t node_size,
-                        void *node_init,
+                        plan_data_arr_el_init_fn init_fn,
+                        const void *init_data,
                         plan_state_space_pop_fn fn_pop,
                         plan_state_space_insert_fn fn_insert,
                         plan_state_space_clear_fn fn_clear,
@@ -24,7 +25,7 @@ void planStateSpaceInit(plan_state_space_t *state_space,
 
     state_space->state_pool = state_pool;
     state_space->data_id = planStatePoolDataReserve(state_pool, node_size,
-                                                    node_init);
+                                                    init_fn, init_data);
 
     state_space->fn_pop       = fn_pop;
     state_space->fn_insert    = fn_insert;

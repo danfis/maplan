@@ -3,19 +3,22 @@
 
 #include <boruvka/segmarr.h>
 
+typedef void (*plan_data_arr_el_init_fn)(void *el, const void *userdata);
+
 struct _plan_data_arr_t {
     bor_segmarr_t *arr; /*!< Underlying segmented array */
     size_t num_els;     /*!< Number of elements stored in array. */
+    plan_data_arr_el_init_fn init_fn;
     void *init_data;    /*!< Initialization data buffer of size
                              arr->el_size. */
 };
 typedef struct _plan_data_arr_t plan_data_arr_t;
 
-
 #define PLAN_DATA_ARR_GET(type, arr, i) \
     (type *)planDataArrGet((arr), (i))
 
 plan_data_arr_t *planDataArrNew(size_t el_size, size_t segment_size,
+                                plan_data_arr_el_init_fn init_fn,
                                 const void *init_data);
 
 void planDataArrDel(plan_data_arr_t *arr);

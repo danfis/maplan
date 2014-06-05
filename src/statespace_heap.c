@@ -62,7 +62,8 @@ static plan_state_space_t *new(plan_state_pool_t *sp, bor_pairheap_lt heap_lt)
 
     planStateSpaceNodeInit(&node_init.node);
     planStateSpaceInit(&ss->state_space, sp,
-                       sizeof(plan_state_space_heap_node_t), &node_init,
+                       sizeof(plan_state_space_heap_node_t),
+                       NULL, &node_init,
                        pop, insert, NULL, NULL);
 
     ss->heap = borPairHeapNew(heap_lt, ss);

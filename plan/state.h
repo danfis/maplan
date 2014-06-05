@@ -86,13 +86,14 @@ void planStatePoolDel(plan_state_pool_t *pool);
 
 /**
  * Reserves a data array with elements of specified size and each element
- * initialized once it is allocated with {init_element} (data pointed by
- * {init_element} are copied inside).
+ * is initialized once it is allocated with using pair {init_fn} and
+ * {init_data} (see dataarr.h).
  * The function returns ID by which the data array can be referenced later.
  */
 size_t planStatePoolDataReserve(plan_state_pool_t *pool,
                                 size_t element_size,
-                                const void *init_element);
+                                plan_data_arr_el_init_fn init_fn,
+                                const void *init_data);
 
 /**
  * Returns an element from data array that corresponds to the specified

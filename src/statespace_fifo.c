@@ -19,19 +19,18 @@ typedef struct _plan_state_space_fifo_t plan_state_space_fifo_t;
 static plan_state_space_node_t *pop(void *state_space);
 static void insert(void *state_space, plan_state_space_node_t *node);
 
+static void nodeInit(void *node, const void *data);
+
 
 plan_state_space_t *planStateSpaceFifoNew(plan_state_pool_t *state_pool)
 {
     plan_state_space_fifo_t *ss;
-    plan_state_space_fifo_node_t node_init;
 
     ss = BOR_ALLOC(plan_state_space_fifo_t);
 
-    planStateSpaceNodeInit(&node_init.node);
-    borListInit(&node_init.fifo);
-
     planStateSpaceInit(&ss->state_space, state_pool,
-                       sizeof(plan_state_space_fifo_node_t), &node_init,
+                       sizeof(plan_state_space_fifo_node_t),
+                       nodeInit, NULL,
                        pop, insert, NULL, NULL);
 
     borListInit(&ss->fifo);
@@ -68,4 +67,11 @@ static void insert(void *_ss, plan_state_space_node_t *node)
     plan_state_space_fifo_node_t *n;
     n = bor_container_of(node, plan_state_space_fifo_node_t, node);
     borListAppend(&ss->fifo, &n->fifo);
+}
+
+static void nodeInit(void *node, const void *data)
+{
+    plan_state_space_fifo_node_t *n = node;
+    planStateSpaceNodeInit(&n->node);
+    borListInit(&n->fifo);
 }

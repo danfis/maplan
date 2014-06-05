@@ -22,7 +22,7 @@ plan_state_space_t *planStateSpaceNew(plan_state_pool_t *state_pool)
 
     elinit.heuristic = -1;
     elinit.state_id  = PLAN_NO_STATE;
-    elinit.state = PLAN_STATE_NONE;
+    elinit.state = PLAN_NODE_STATE_NEW;
     ss->data_id = planStatePoolDataReserve(ss->state_pool,
                                            sizeof(plan_state_space_node_t),
                                            &elinit);
@@ -51,7 +51,7 @@ plan_state_space_node_t *planStateSpaceExtractMin(plan_state_space_t *ss)
 
     // resolve node pointer and set it as closed
     node = bor_container_of(heap_node, plan_state_space_node_t, heap);
-    node->state = PLAN_STATE_CLOSED;
+    node->state = PLAN_NODE_STATE_CLOSED;
 
     return node;
 }
@@ -63,14 +63,13 @@ plan_state_space_node_t *planStateSpaceOpenNode(plan_state_space_t *ss,
     plan_state_space_node_t *n;
 
     n = planStateSpaceNode(ss, sid);
-    if (planStateSpaceNodeIsOpen(n)
-            || planStateSpaceNodeIsClosed(n)){
+    if (!planStateSpaceNodeIsNew(n)){
         return NULL;
     }
 
     // set up value of heuristic
     n->heuristic = heuristic;
-    n->state     = PLAN_STATE_OPEN;
+    n->state     = PLAN_NODE_STATE_OPEN;
 
     // insert node into open list
     borPairHeapAdd(ss->heap, &n->heap);
@@ -90,7 +89,7 @@ plan_state_space_node_t *planStateSpaceReopenNode(plan_state_space_t *ss,
 
     // set up heuristic value
     n->heuristic = heuristic;
-    n->state     = PLAN_STATE_OPEN;
+    n->state     = PLAN_NODE_STATE_OPEN;
 
     // and insert it into heap
     borPairHeapAdd(ss->heap, &n->heap);
@@ -108,7 +107,7 @@ plan_state_space_node_t *planStateSpaceCloseNode(plan_state_space_t *ss,
         return NULL;
 
     borPairHeapRemove(ss->heap, &n->heap);
-    n->state = PLAN_STATE_CLOSED;
+    n->state = PLAN_NODE_STATE_CLOSED;
 
     return n;
 }

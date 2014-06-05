@@ -5,15 +5,15 @@
 
 #include <plan/state.h>
 
-#define PLAN_STATE_NONE 0
-#define PLAN_STATE_OPEN 1
-#define PLAN_STATE_CLOSED 2
+#define PLAN_NODE_STATE_NEW    0
+#define PLAN_NODE_STATE_OPEN   1
+#define PLAN_NODE_STATE_CLOSED 2
 
 struct _plan_state_space_node_t {
     bor_pairheap_node_t heap;
     plan_state_id_t state_id;
     unsigned heuristic;
-    int state;
+    int state; /*!< One of PLAN_NODE_STATE_* values */
 };
 typedef struct _plan_state_space_node_t plan_state_space_node_t;
 
@@ -78,6 +78,11 @@ _bor_inline plan_state_id_t planStateSpaceNodeStateId(
                 const plan_state_space_node_t *n);
 
 /**
+ * Returns true is the node is new.
+ */
+_bor_inline int planStateSpaceNodeIsNew(const plan_state_space_node_t *n);
+
+/**
  * Returns true is the node is open.
  */
 _bor_inline int planStateSpaceNodeIsOpen(const plan_state_space_node_t *n);
@@ -100,14 +105,19 @@ _bor_inline plan_state_id_t planStateSpaceNodeStateId(
     return n->state_id;
 }
 
+_bor_inline int planStateSpaceNodeIsNew(const plan_state_space_node_t *n)
+{
+    return n->state == PLAN_NODE_STATE_NEW;
+}
+
 _bor_inline int planStateSpaceNodeIsOpen(const plan_state_space_node_t *n)
 {
-    return n->state == PLAN_STATE_OPEN;
+    return n->state == PLAN_NODE_STATE_OPEN;
 }
 
 _bor_inline int planStateSpaceNodeIsClosed(const plan_state_space_node_t *n)
 {
-    return n->state == PLAN_STATE_CLOSED;
+    return n->state == PLAN_NODE_STATE_CLOSED;
 }
 
 #endif /* __PLAN_STATESPACE_H__ */

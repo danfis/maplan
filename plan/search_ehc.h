@@ -2,7 +2,7 @@
 #define __PLAN_SEARCH_EHC_H__
 
 #include <plan/plan.h>
-#include <plan/statespace.h>
+#include <plan/statespace_fifo.h>
 #include <plan/succgen.h>
 #include <plan/heuristic/goalcount.h>
 
@@ -14,13 +14,12 @@
 
 struct _plan_search_ehc_t {
     plan_t *plan;
-    plan_state_space_t *state_space;
+    plan_state_space_fifo_t *state_space;
     plan_heuristic_goalcount_t *heur;
     plan_state_t *state;
     plan_succ_gen_t *succ_gen;
     plan_operator_t **succ_op;
     unsigned best_heur;
-    unsigned counter;
 };
 typedef struct _plan_search_ehc_t plan_search_ehc_t;
 

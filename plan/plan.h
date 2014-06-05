@@ -32,4 +32,17 @@ void planDel(plan_t *plan);
  */
 int planLoadFromJsonFile(plan_t *plan, const char *filename);
 
+/**
+ * Returns true if the given state is the goal.
+ */
+_bor_inline int planStateIsGoal(plan_t *plan, plan_state_id_t state_id);
+
+
+/**** INLINES ****/
+_bor_inline int planStateIsGoal(plan_t *plan, plan_state_id_t state_id)
+{
+    return planStatePoolPartStateIsSubset(plan->state_pool, plan->goal,
+                                          state_id);
+}
+
 #endif /* __PLAN_PLAN_H__ */

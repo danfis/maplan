@@ -52,3 +52,8 @@ void planOperatorSetCost(plan_operator_t *op, unsigned cost)
     op->cost = cost;
 }
 
+plan_state_id_t planOperatorApply(plan_operator_t *op,
+                                  plan_state_id_t state_id)
+{
+    return planStatePoolApplyPartState(op->state_pool, op->eff, state_id);
+}

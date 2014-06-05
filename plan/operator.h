@@ -23,4 +23,12 @@ void planOperatorSetEffect(plan_operator_t *op,
 void planOperatorSetName(plan_operator_t *op, const char *name);
 void planOperatorSetCost(plan_operator_t *op, unsigned cost);
 
+/**
+ * Applies the operator on the given state and store the resulting state
+ * into state pool it has reference to. The ID of the resulting state is
+ * returned.
+ */
+plan_state_id_t planOperatorApply(plan_operator_t *op,
+                                  plan_state_id_t state_id);
+
 #endif /* __PLAN_OPERATOR_H__ */

@@ -63,6 +63,26 @@ int planStateSpaceFifoOpen(plan_state_space_fifo_t *ss,
     return 0;
 }
 
+plan_state_space_fifo_node_t *planStateSpaceFifoOpen2(
+                plan_state_space_fifo_t *ss,
+                plan_state_id_t state_id,
+                plan_state_id_t parent_state_id,
+                plan_operator_t *op)
+{
+    plan_state_space_fifo_node_t *node;
+
+    node = planStateSpaceFifoNode(ss, state_id);
+    if (!planStateSpaceFifoNodeIsNew(node))
+        return NULL;
+
+    node->parent_state_id = parent_state_id;
+    node->op              = op;
+
+    planStateSpaceFifoOpen(ss, node);
+
+    return node;
+}
+
 void planStateSpaceFifoClear(plan_state_space_fifo_t *ss)
 {
     plan_state_space_fifo_node_t *node;

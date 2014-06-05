@@ -2,20 +2,38 @@
 
 #include "plan/search_ehc.h"
 
+/** Computes heuristic value of the given state. */
+static unsigned heuristic(plan_search_ehc_t *ehc,
+                          plan_state_id_t state_id)
+{
+    planStatePoolGetState(ehc->plan->state_pool, state_id, ehc->state);
+    return planHeuristicGoalCount(ehc->heur, ehc->state);
+}
+
+/** Fill ehc->succ_op[] with applicable operators in the given state.
+ *  Returns how many operators were found. */
+static size_t findApplicableOperators(plan_search_ehc_t *ehc,
+                                      plan_state_id_t state_id)
+{
+    // unroll the state into ehc->state struct
+    planStatePoolGetState(ehc->plan->state_pool, state_id, ehc->state);
+
+    // get operators to get successors
+    return planSuccGenFind(ehc->succ_gen, ehc->state, ehc->succ_op,
+                           ehc->plan->op_size);
+}
+
 static void printPlan(plan_search_ehc_t *ehc,
                       plan_state_id_t goal_state)
 {
-    plan_state_space_node_t *n;
-    const char *name;
+    plan_state_space_fifo_node_t *n;
 
-    n = planStateSpaceNode(ehc->state_space, goal_state);
-    name = planStateSpaceNodeOpName(n);
-    if (!name){
+    n = planStateSpaceFifoNode(ehc->state_space, goal_state);
+    if (!n->op)
         return;
-    }
 
-    printPlan(ehc, planStateSpaceNodeParentStateId(n));
-    fprintf(stdout, "(%s)\n", name);
+    printPlan(ehc, n->parent_state_id);
+    fprintf(stdout, "(%s)\n", n->op->name);
 }
 
 plan_search_ehc_t *planSearchEHCNew(plan_t *plan)
@@ -24,7 +42,7 @@ plan_search_ehc_t *planSearchEHCNew(plan_t *plan)
 
     ehc = BOR_ALLOC(plan_search_ehc_t);
     ehc->plan = plan;
-    ehc->state_space = planStateSpaceNew(plan->state_pool);
+    ehc->state_space = planStateSpaceFifoNew(plan->state_pool);
     ehc->heur = planHeuristicGoalCountNew(plan->goal);
     ehc->state = planStateNew(plan->state_pool);
     ehc->succ_gen = planSuccGenNew(plan->op, plan->op_size);
@@ -44,88 +62,58 @@ void planSearchEHCDel(plan_search_ehc_t *ehc)
     if (ehc->heur)
         planHeuristicGoalCountDel(ehc->heur);
     if (ehc->state_space)
-        planStateSpaceDel(ehc->state_space);
+        planStateSpaceFifoDel(ehc->state_space);
     BOR_FREE(ehc);
 }
 
 void planSearchEHCInit(plan_search_ehc_t *ehc)
 {
-    unsigned heur;
-
     // TODO: check goal state
-    planStatePoolGetState(ehc->plan->state_pool,
-                          ehc->plan->initial_state,
-                          ehc->state);
-    heur = planHeuristicGoalCount(ehc->heur, ehc->state);
-    planStateSpaceOpenNode(ehc->state_space,
-                           ehc->plan->initial_state,
-                           PLAN_NO_STATE,
-                           NULL,
-                           0);
-    ehc->best_heur = heur;
-    ehc->counter = 0;
+    planStateSpaceFifoOpen2(ehc->state_space, ehc->plan->initial_state,
+                            PLAN_NO_STATE, NULL);
+    ehc->best_heur = heuristic(ehc, ehc->plan->initial_state);
 }
 
 int planSearchEHCStep(plan_search_ehc_t *ehc)
 {
-    plan_state_space_node_t *node;
-    plan_state_id_t state_id, succ_state_id;
+    plan_state_space_fifo_node_t *cur_node;
+    plan_state_id_t succ_state_id;
     plan_operator_t *op;
     unsigned succ_heur;
     size_t i, op_size;
 
     // get best node available so far
-    node = planStateSpaceExtractMin(ehc->state_space);
-    if (node == NULL){
+    cur_node = planStateSpaceFifoPop(ehc->state_space);
+    if (cur_node == NULL){
+        // TODO
         fprintf(stderr, "No more states to expand.\n");
         return -1;
     }
-    state_id = planStateSpaceNodeStateId(node);
 
-    // unroll the state into ehc->state struct
-    planStatePoolGetState(ehc->plan->state_pool, state_id, ehc->state);
+    // Store applicable operators in ehc->succ_op[]
+    op_size = findApplicableOperators(ehc, cur_node->state_id);
 
-    // get operators to get successors
-    op_size = planSuccGenFind(ehc->succ_gen, ehc->state, ehc->succ_op,
-                              ehc->plan->op_size);
-
-    // go trough all successors
+    // go trough all applicable operators
     for (i = 0; i < op_size; ++i){
         op = ehc->succ_op[i];
 
-        if (!planStatePoolPartStateIsSubset(ehc->plan->state_pool, op->pre,
-                                            state_id)){
-            fprintf(stderr, "ERR\n");
-            return -1;
-        }
         // create a successor state
-        // TODO: Create function planOperator...
-        succ_state_id = planStatePoolApplyPartState(ehc->plan->state_pool,
-                                                    op->eff, state_id);
+        succ_state_id = planOperatorApply(op, cur_node->state_id);
 
         // skip already visited states
-        if (!planStateSpaceNodeIsNew2(ehc->state_space, succ_state_id)){
-            fprintf(stderr, "continue %d\n",
-                    planStateSpaceNodeIsOpen2(ehc->state_space,
-                        succ_state_id));
+        if (!planStateSpaceFifoNodeIsNew2(ehc->state_space, succ_state_id))
             continue;
-        }
 
         // compute heuristic of the successor state
-        planStatePoolGetState(ehc->plan->state_pool, succ_state_id,
-                              ehc->state);
-        succ_heur = planHeuristicGoalCount(ehc->heur, ehc->state);
+        succ_heur = heuristic(ehc, succ_state_id);
 
         // check whether it is a goal
-        // TODO: Create function planCheckGoal(...)
-        if (planStatePoolPartStateIsSubset(ehc->plan->state_pool,
-                                           ehc->plan->goal,
-                                           succ_state_id)){
+        if (planStateIsGoal(ehc->plan, succ_state_id)){
             // TODO
             fprintf(stderr, "Found solution %d.\n", (int)succ_heur);
-            planStateSpaceOpenNode(ehc->state_space, succ_state_id,
-                                   state_id, op, ehc->counter++);
-            planStateSpaceCloseNode(ehc->state_space, succ_state_id);
+            planStateSpaceFifoOpen2(ehc->state_space, succ_state_id,
+                                    cur_node->state_id, op);
+            planStateSpaceFifoCloseAll(ehc->state_space);
             printPlan(ehc, succ_state_id);
             
             return 1;
@@ -134,13 +122,13 @@ int planSearchEHCStep(plan_search_ehc_t *ehc)
         if (succ_heur < ehc->best_heur){
             // The discovered node is best so far. Clear open-list and
             // remember the best heuristic value.
-            planStateSpaceClearOpenNodes(ehc->state_space);
+            planStateSpaceFifoClear(ehc->state_space);
             ehc->best_heur = succ_heur;
         }
 
         // Insert node into open list
-        planStateSpaceOpenNode(ehc->state_space, succ_state_id,
-                               state_id, op, ehc->counter++);
+        planStateSpaceFifoOpen2(ehc->state_space, succ_state_id,
+                                cur_node->state_id, op);
     }
 
     return 0;

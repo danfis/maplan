@@ -2,35 +2,21 @@
 #define __PLAN_STATESPACE_FIFO_H__
 
 #include <boruvka/list.h>
-#include <plan/state.h>
-#include <plan/operator.h>
+#include <plan/statespace.h>
 
 /**
  * FIFO State Space
  * =================
  */
 
-#define PLAN_STATE_SPACE_NODE_NEW    0
-#define PLAN_STATE_SPACE_NODE_OPEN   1
-#define PLAN_STATE_SPACE_NODE_CLOSED 2
-
 struct _plan_state_space_fifo_node_t {
-    plan_state_id_t state_id;        /*!< ID of the corresponding state */
-    plan_state_id_t parent_state_id; /*!< ID of the parent state */
-    plan_operator_t *op;             /*!< Creating operator */
-    unsigned cost;                   /*!< Cost of the path from the initial
-                                          state to this state. */
-    unsigned heuristic;              /*!< Value of the heuristic */
-    int state;                       /*!< One of PLAN_STATE_SPACE_NODE_*
-                                          states */
-
-    bor_list_t fifo;                 /*!< Connector to the fifo queue */
+    plan_state_space_node_t node;
+    bor_list_t fifo; /*!< Connector to the fifo queue */
 };
 typedef struct _plan_state_space_fifo_node_t plan_state_space_fifo_node_t;
 
 struct _plan_state_space_fifo_t {
-    plan_state_pool_t *state_pool;
-    size_t data_id;
+    plan_state_space_t state_space;
     bor_list_t fifo;
 };
 typedef struct _plan_state_space_fifo_t plan_state_space_fifo_t;
@@ -48,96 +34,120 @@ void planStateSpaceFifoDel(plan_state_space_fifo_t *ss);
 /**
  * Returns a node corresponding to the state ID.
  */
-plan_state_space_fifo_node_t *planStateSpaceFifoNode(plan_state_space_fifo_t *,
-                                                     plan_state_id_t state_id);
+_bor_inline plan_state_space_fifo_node_t *planStateSpaceFifoNode(
+            plan_state_space_fifo_t *, plan_state_id_t state_id);
 
 /**
  * Returns next state waiting in fifo queue and change its state to closed.
  */
-plan_state_space_fifo_node_t *planStateSpaceFifoPop(plan_state_space_fifo_t *);
+_bor_inline plan_state_space_fifo_node_t *planStateSpaceFifoPop(
+            plan_state_space_fifo_t *);
 
 /**
  * Opens the given node, i.e., push it into fifo queue.
  * Returns 0 on success, -1 if the node is already in open or closed
  * state.
  */
-int planStateSpaceFifoOpen(plan_state_space_fifo_t *ss,
-                           plan_state_space_fifo_node_t *node);
+_bor_inline int planStateSpaceFifoOpen(plan_state_space_fifo_t *ss,
+                                       plan_state_space_fifo_node_t *node);
 
 /**
  * Opens a node correspodning to the state_id and fills it with provided
  * data. Returns the opened node or returns NULL if the node was already
  * opened or closed.
  */
-plan_state_space_fifo_node_t *planStateSpaceFifoOpen2(
+_bor_inline plan_state_space_fifo_node_t *planStateSpaceFifoOpen2(
                 plan_state_space_fifo_t *ss,
                 plan_state_id_t state_id,
                 plan_state_id_t parent_state_id,
+                plan_operator_t *op,
                 unsigned cost,
-                unsigned heuristic,
-                plan_operator_t *op);
+                unsigned heuristic);
 
 /**
  * Change all open nodes to new nodes.
  */
-void planStateSpaceFifoClear(plan_state_space_fifo_t *ss);
+_bor_inline void planStateSpaceFifoClear(plan_state_space_fifo_t *ss);
 
 /**
  * Close all open nodes.
  */
-void planStateSpaceFifoCloseAll(plan_state_space_fifo_t *ss);
+_bor_inline void planStateSpaceFifoCloseAll(plan_state_space_fifo_t *ss);
 
+
+_bor_inline int planStateSpaceFifoNodeIsNew2(plan_state_space_fifo_t *ss,
+                                             plan_state_id_t state_id);
 
 _bor_inline int planStateSpaceFifoNodeIsNew(const plan_state_space_fifo_node_t *n);
 _bor_inline int planStateSpaceFifoNodeIsOpen(const plan_state_space_fifo_node_t *n);
 _bor_inline int planStateSpaceFifoNodeIsClosed(const plan_state_space_fifo_node_t *n);
 
-_bor_inline int planStateSpaceFifoNodeIsNew2(plan_state_space_fifo_t *ss,
-                                             plan_state_id_t state_id);
-_bor_inline int planStateSpaceFifoNodeIsOpen2(plan_state_space_fifo_t *ss,
-                                              plan_state_id_t state_id);
-_bor_inline int planStateSpaceFifoNodeIsClosed2(plan_state_space_fifo_t *ss,
-                                                plan_state_id_t state_id);
-
 
 /**** INLINES ****/
-_bor_inline int planStateSpaceFifoNodeIsNew(const plan_state_space_fifo_node_t *n)
+_bor_inline plan_state_space_fifo_node_t *planStateSpaceFifoNode(
+            plan_state_space_fifo_t *ss, plan_state_id_t state_id)
 {
-    return n->state == PLAN_STATE_SPACE_NODE_NEW;
+    plan_state_space_node_t *node;
+    node = planStateSpaceNode(&ss->state_space, state_id);
+    return bor_container_of(node, plan_state_space_fifo_node_t, node);
 }
 
-_bor_inline int planStateSpaceFifoNodeIsOpen(const plan_state_space_fifo_node_t *n)
+_bor_inline plan_state_space_fifo_node_t *planStateSpaceFifoPop(
+            plan_state_space_fifo_t *ss)
 {
-    return n->state == PLAN_STATE_SPACE_NODE_OPEN;
+    plan_state_space_node_t *node;
+    node = planStateSpacePop(&ss->state_space);
+    return bor_container_of(node, plan_state_space_fifo_node_t, node);
 }
 
-_bor_inline int planStateSpaceFifoNodeIsClosed(const plan_state_space_fifo_node_t *n)
+_bor_inline int planStateSpaceFifoOpen(plan_state_space_fifo_t *ss,
+                                       plan_state_space_fifo_node_t *node)
 {
-    return n->state == PLAN_STATE_SPACE_NODE_CLOSED;
+    return planStateSpaceOpen(&ss->state_space, &node->node);
+}
+
+_bor_inline plan_state_space_fifo_node_t *planStateSpaceFifoOpen2(
+                plan_state_space_fifo_t *ss,
+                plan_state_id_t state_id,
+                plan_state_id_t parent_state_id,
+                plan_operator_t *op,
+                unsigned cost,
+                unsigned heuristic)
+{
+    plan_state_space_node_t *node;
+    node = planStateSpaceOpen2(&ss->state_space, state_id, parent_state_id,
+                               op, cost, heuristic);
+    return bor_container_of(node, plan_state_space_fifo_node_t, node);
+}
+
+_bor_inline void planStateSpaceFifoClear(plan_state_space_fifo_t *ss)
+{
+    planStateSpaceClear(&ss->state_space);
+}
+
+_bor_inline void planStateSpaceFifoCloseAll(plan_state_space_fifo_t *ss)
+{
+    planStateSpaceCloseAll(&ss->state_space);
 }
 
 _bor_inline int planStateSpaceFifoNodeIsNew2(plan_state_space_fifo_t *ss,
                                              plan_state_id_t state_id)
 {
-    plan_state_space_fifo_node_t *n;
-    n = planStateSpaceFifoNode(ss, state_id);
-    return planStateSpaceFifoNodeIsNew(n);
+    return planStateSpaceNodeIsNew2(&ss->state_space, state_id);
 }
 
-_bor_inline int planStateSpaceFifoNodeIsOpen2(plan_state_space_fifo_t *ss,
-                                              plan_state_id_t state_id)
+_bor_inline int planStateSpaceFifoNodeIsNew(const plan_state_space_fifo_node_t *n)
 {
-    plan_state_space_fifo_node_t *n;
-    n = planStateSpaceFifoNode(ss, state_id);
-    return planStateSpaceFifoNodeIsOpen(n);
+    return planStateSpaceNodeIsNew(&n->node);
 }
 
-_bor_inline int planStateSpaceFifoNodeIsClosed2(plan_state_space_fifo_t *ss,
-                                                plan_state_id_t state_id)
+_bor_inline int planStateSpaceFifoNodeIsOpen(const plan_state_space_fifo_node_t *n)
 {
-    plan_state_space_fifo_node_t *n;
-    n = planStateSpaceFifoNode(ss, state_id);
-    return planStateSpaceFifoNodeIsClosed(n);
+    return planStateSpaceNodeIsOpen(&n->node);
 }
 
+_bor_inline int planStateSpaceFifoNodeIsClosed(const plan_state_space_fifo_node_t *n)
+{
+    return planStateSpaceNodeIsClosed(&n->node);
+}
 #endif /* __PLAN_STATESPACE_H__ */

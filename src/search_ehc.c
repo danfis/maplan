@@ -77,7 +77,7 @@ static int planSearchEHCInit(plan_search_ehc_t *ehc)
 
     heur = heuristic(ehc, ehc->plan->initial_state);
     planStateSpaceFifoOpen2(ehc->state_space, ehc->plan->initial_state,
-                            PLAN_NO_STATE, 0, heur, NULL);
+                            PLAN_NO_STATE, NULL, 0, heur);
     ehc->best_heur = heur;
 
     if (planStateIsGoal(ehc->plan, ehc->plan->initial_state)){
@@ -92,7 +92,7 @@ static int planSearchEHCInit(plan_search_ehc_t *ehc)
 static int planSearchEHCStep(plan_search_ehc_t *ehc)
 {
     plan_state_space_fifo_node_t *cur_node;
-    plan_state_id_t succ_state_id;
+    plan_state_id_t cur_state_id, succ_state_id;
     plan_operator_t *op;
     unsigned succ_heur;
     size_t i, op_size;
@@ -103,16 +103,17 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
         // we reached dead end
         return -1;
     }
+    cur_state_id = cur_node->node.state_id;
 
     // Store applicable operators in ehc->succ_op[]
-    op_size = findApplicableOperators(ehc, cur_node->state_id);
+    op_size = findApplicableOperators(ehc, cur_state_id);
 
     // go trough all applicable operators
     for (i = 0; i < op_size; ++i){
         op = ehc->succ_op[i];
 
         // create a successor state
-        succ_state_id = planOperatorApply(op, cur_node->state_id);
+        succ_state_id = planOperatorApply(op, cur_state_id);
 
         // skip already visited states
         if (!planStateSpaceFifoNodeIsNew2(ehc->state_space, succ_state_id))
@@ -124,9 +125,8 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
         // check whether it is a goal
         if (planStateIsGoal(ehc->plan, succ_state_id)){
             planStateSpaceFifoOpen2(ehc->state_space, succ_state_id,
-                                    cur_node->state_id,
-                                    cur_node->cost + op->cost, succ_heur,
-                                    op);
+                                    cur_state_id, op,
+                                    cur_node->node.cost + op->cost, succ_heur);
             planStateSpaceFifoCloseAll(ehc->state_space);
             ehc->goal_state = succ_state_id;
             return 1;
@@ -141,9 +141,8 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
 
         // Insert node into open list
         planStateSpaceFifoOpen2(ehc->state_space, succ_state_id,
-                                cur_node->state_id,
-                                cur_node->cost + op->cost, succ_heur,
-                                op);
+                                cur_state_id, op,
+                                cur_node->node.cost + op->cost, succ_heur);
     }
 
     return 0;
@@ -176,9 +175,9 @@ static void extractPath(plan_search_ehc_t *ehc,
     planPathInit(path);
 
     node = planStateSpaceFifoNode(ehc->state_space, goal_state);
-    while (node && node->op){
-        planPathPrepend(path, node->op);
+    while (node && node->node.op){
+        planPathPrepend(path, node->node.op);
         node = planStateSpaceFifoNode(ehc->state_space,
-                                      node->parent_state_id);
+                                      node->node.parent_state_id);
     }
 }

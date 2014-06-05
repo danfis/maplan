@@ -76,12 +76,12 @@ static int planSearchEHCInit(plan_search_ehc_t *ehc)
     unsigned heur;
 
     heur = heuristic(ehc, ehc->plan->initial_state);
-    planStateSpaceFifoOpen2(ehc->state_space, ehc->plan->initial_state,
-                            PLAN_NO_STATE, NULL, 0, heur);
+    planStateSpaceOpen2(ehc->state_space, ehc->plan->initial_state,
+                        PLAN_NO_STATE, NULL, 0, heur);
     ehc->best_heur = heur;
 
     if (planStateIsGoal(ehc->plan, ehc->plan->initial_state)){
-        planStateSpaceFifoCloseAll(ehc->state_space);
+        planStateSpaceCloseAll(ehc->state_space);
         ehc->goal_state = ehc->plan->initial_state;
         return 1;
     }
@@ -91,19 +91,19 @@ static int planSearchEHCInit(plan_search_ehc_t *ehc)
 
 static int planSearchEHCStep(plan_search_ehc_t *ehc)
 {
-    plan_state_space_fifo_node_t *cur_node;
+    plan_state_space_node_t *cur_node;
     plan_state_id_t cur_state_id, succ_state_id;
     plan_operator_t *op;
     unsigned succ_heur;
     size_t i, op_size;
 
     // get best node available so far
-    cur_node = planStateSpaceFifoPop(ehc->state_space);
+    cur_node = planStateSpacePop(ehc->state_space);
     if (cur_node == NULL){
         // we reached dead end
         return -1;
     }
-    cur_state_id = cur_node->node.state_id;
+    cur_state_id = cur_node->state_id;
 
     // Store applicable operators in ehc->succ_op[]
     op_size = findApplicableOperators(ehc, cur_state_id);
@@ -116,7 +116,7 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
         succ_state_id = planOperatorApply(op, cur_state_id);
 
         // skip already visited states
-        if (!planStateSpaceFifoNodeIsNew2(ehc->state_space, succ_state_id))
+        if (!planStateSpaceNodeIsNew2(ehc->state_space, succ_state_id))
             continue;
 
         // compute heuristic of the successor state
@@ -124,10 +124,10 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
 
         // check whether it is a goal
         if (planStateIsGoal(ehc->plan, succ_state_id)){
-            planStateSpaceFifoOpen2(ehc->state_space, succ_state_id,
-                                    cur_state_id, op,
-                                    cur_node->node.cost + op->cost, succ_heur);
-            planStateSpaceFifoCloseAll(ehc->state_space);
+            planStateSpaceOpen2(ehc->state_space, succ_state_id,
+                                cur_state_id, op,
+                                cur_node->cost + op->cost, succ_heur);
+            planStateSpaceCloseAll(ehc->state_space);
             ehc->goal_state = succ_state_id;
             return 1;
         }
@@ -135,14 +135,14 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
         if (succ_heur < ehc->best_heur){
             // The discovered node is best so far. Clear open-list and
             // remember the best heuristic value.
-            planStateSpaceFifoClear(ehc->state_space);
+            planStateSpaceClear(ehc->state_space);
             ehc->best_heur = succ_heur;
         }
 
         // Insert node into open list
-        planStateSpaceFifoOpen2(ehc->state_space, succ_state_id,
-                                cur_state_id, op,
-                                cur_node->node.cost + op->cost, succ_heur);
+        planStateSpaceOpen2(ehc->state_space, succ_state_id,
+                            cur_state_id, op,
+                            cur_node->cost + op->cost, succ_heur);
     }
 
     return 0;
@@ -170,14 +170,13 @@ static void extractPath(plan_search_ehc_t *ehc,
                         plan_state_id_t goal_state,
                         plan_path_t *path)
 {
-    plan_state_space_fifo_node_t *node;
+    plan_state_space_node_t *node;
 
     planPathInit(path);
 
-    node = planStateSpaceFifoNode(ehc->state_space, goal_state);
-    while (node && node->node.op){
-        planPathPrepend(path, node->node.op);
-        node = planStateSpaceFifoNode(ehc->state_space,
-                                      node->node.parent_state_id);
+    node = planStateSpaceNode(ehc->state_space, goal_state);
+    while (node && node->op){
+        planPathPrepend(path, node->op);
+        node = planStateSpaceNode(ehc->state_space, node->parent_state_id);
     }
 }

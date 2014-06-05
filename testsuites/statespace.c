@@ -113,9 +113,9 @@ TEST(testStateSpaceFifo)
 {
     plan_var_t vars[4];
     plan_state_pool_t *pool;
-    plan_state_space_fifo_t *sspace;
+    plan_state_space_t *sspace;
     plan_state_t *state;
-    plan_state_space_fifo_node_t *node;
+    plan_state_space_node_t *node;
 
     planVarInit(vars + 0);
     planVarInit(vars + 1);
@@ -136,14 +136,14 @@ TEST(testStateSpaceFifo)
     assertEquals(planStatePoolInsert(pool, state), 0);
 
     // check that open list is empty
-    assertEquals(planStateSpaceFifoPop(sspace), NULL);
+    assertEquals(planStateSpacePop(sspace), NULL);
 
     // open the first node and check its values
-    node = planStateSpaceFifoNode(sspace, 0);
-    node->node.parent_state_id = PLAN_NO_STATE;
-    node->node.op = NULL;
-    assertEquals(planStateSpaceFifoOpen(sspace, node), 0);
-    assertTrue(planStateSpaceFifoNodeIsOpen(node));
+    node = planStateSpaceNode(sspace, 0);
+    node->parent_state_id = PLAN_NO_STATE;
+    node->op = NULL;
+    assertEquals(planStateSpaceOpen(sspace, node), 0);
+    assertTrue(planStateSpaceNodeIsOpen(node));
 
     // open second state node
     planStateSet(state, 0, 1);
@@ -151,11 +151,13 @@ TEST(testStateSpaceFifo)
     planStateSet(state, 2, 3);
     planStateSet(state, 3, 4);
     assertEquals(planStatePoolInsert(pool, state), 1);
-    node = planStateSpaceFifoNode(sspace, 1);
-    node->node.parent_state_id = 0;
-    node->node.op = NULL;
-    assertEquals(planStateSpaceFifoOpen(sspace, node), 0);
-    assertTrue(planStateSpaceFifoNodeIsOpen(node));
+    node = planStateSpaceNode(sspace, 1);
+    node->parent_state_id = 0;
+    node->op = NULL;
+    node->cost = 10;
+    node->heuristic = 12;
+    assertEquals(planStateSpaceOpen(sspace, node), 0);
+    assertTrue(planStateSpaceNodeIsOpen(node));
 
     // open third state node
     planStateSet(state, 0, 1);
@@ -163,34 +165,36 @@ TEST(testStateSpaceFifo)
     planStateSet(state, 2, 2);
     planStateSet(state, 3, 2);
     assertEquals(planStatePoolInsert(pool, state), 2);
-    node = planStateSpaceFifoNode(sspace, 2);
-    node->node.parent_state_id = 1;
-    node->node.op = NULL;
-    assertEquals(planStateSpaceFifoOpen(sspace, node), 0);
-    assertTrue(planStateSpaceFifoNodeIsOpen(node));
-
-    node = planStateSpaceFifoPop(sspace);
+    node = planStateSpaceOpen2(sspace, 2, 1, NULL, 5, 6);
     assertNotEquals(node, NULL);
-    assertEquals(node->node.state_id, 0);
-    assertEquals(node->node.parent_state_id, PLAN_NO_STATE);
-    assertEquals(node->node.op, NULL);
-    assertTrue(planStateSpaceFifoNodeIsClosed(node));
+    assertTrue(planStateSpaceNodeIsOpen(node));
 
-    node = planStateSpaceFifoPop(sspace);
+    node = planStateSpacePop(sspace);
     assertNotEquals(node, NULL);
-    assertEquals(node->node.state_id, 1);
-    assertEquals(node->node.parent_state_id, 0);
-    assertEquals(node->node.op, NULL);
-    assertTrue(planStateSpaceFifoNodeIsClosed(node));
+    assertEquals(node->state_id, 0);
+    assertEquals(node->parent_state_id, PLAN_NO_STATE);
+    assertEquals(node->op, NULL);
+    assertTrue(planStateSpaceNodeIsClosed(node));
 
-    node = planStateSpaceFifoPop(sspace);
+    node = planStateSpacePop(sspace);
     assertNotEquals(node, NULL);
-    assertEquals(node->node.state_id, 2);
-    assertEquals(node->node.parent_state_id, 1);
-    assertEquals(node->node.op, NULL);
-    assertTrue(planStateSpaceFifoNodeIsClosed(node));
+    assertEquals(node->state_id, 1);
+    assertEquals(node->parent_state_id, 0);
+    assertEquals(node->op, NULL);
+    assertEquals(node->cost, 10);
+    assertEquals(node->heuristic, 12);
+    assertTrue(planStateSpaceNodeIsClosed(node));
 
-    node = planStateSpaceFifoPop(sspace);
+    node = planStateSpacePop(sspace);
+    assertNotEquals(node, NULL);
+    assertEquals(node->state_id, 2);
+    assertEquals(node->parent_state_id, 1);
+    assertEquals(node->op, NULL);
+    assertEquals(node->cost, 5);
+    assertEquals(node->heuristic, 6);
+    assertTrue(planStateSpaceNodeIsClosed(node));
+
+    node = planStateSpacePop(sspace);
     assertEquals(node, NULL);
 
 
@@ -200,12 +204,12 @@ TEST(testStateSpaceFifo)
     planStateSet(state, 2, 3);
     planStateSet(state, 3, 4);
     assertEquals(planStatePoolInsert(pool, state), 3);
-    node = planStateSpaceFifoNode(sspace, 3);
-    assertTrue(planStateSpaceFifoNodeIsNew(node));
-    node->node.parent_state_id = 0;
-    node->node.op = NULL;
-    assertEquals(planStateSpaceFifoOpen(sspace, node), 0);
-    assertTrue(planStateSpaceFifoNodeIsOpen(node));
+    node = planStateSpaceNode(sspace, 3);
+    assertTrue(planStateSpaceNodeIsNew(node));
+    node->parent_state_id = 0;
+    node->op = NULL;
+    assertEquals(planStateSpaceOpen(sspace, node), 0);
+    assertTrue(planStateSpaceNodeIsOpen(node));
 
     // open third state node
     planStateSet(state, 0, 0);
@@ -213,35 +217,35 @@ TEST(testStateSpaceFifo)
     planStateSet(state, 2, 2);
     planStateSet(state, 3, 2);
     assertEquals(planStatePoolInsert(pool, state), 4);
-    node = planStateSpaceFifoNode(sspace, 4);
-    assertTrue(planStateSpaceFifoNodeIsNew(node));
-    node->node.parent_state_id = 1;
-    node->node.op = NULL;
-    assertEquals(planStateSpaceFifoOpen(sspace, node), 0);
-    assertTrue(planStateSpaceFifoNodeIsOpen(node));
+    node = planStateSpaceNode(sspace, 4);
+    assertTrue(planStateSpaceNodeIsNew(node));
+    node->parent_state_id = 1;
+    node->op = NULL;
+    assertEquals(planStateSpaceOpen(sspace, node), 0);
+    assertTrue(planStateSpaceNodeIsOpen(node));
 
-    planStateSpaceFifoClear(sspace);
-    assertEquals(planStateSpaceFifoPop(sspace), NULL);
-    node = planStateSpaceFifoNode(sspace, 3);
-    assertTrue(planStateSpaceFifoNodeIsNew(node));
-    node = planStateSpaceFifoNode(sspace, 4);
-    assertTrue(planStateSpaceFifoNodeIsNew(node));
+    planStateSpaceClear(sspace);
+    assertEquals(planStateSpacePop(sspace), NULL);
+    node = planStateSpaceNode(sspace, 3);
+    assertTrue(planStateSpaceNodeIsNew(node));
+    node = planStateSpaceNode(sspace, 4);
+    assertTrue(planStateSpaceNodeIsNew(node));
 
 
-    node = planStateSpaceFifoNode(sspace, 3);
-    assertEquals(planStateSpaceFifoOpen(sspace, node), 0);
-    assertTrue(planStateSpaceFifoNodeIsOpen(node));
+    node = planStateSpaceNode(sspace, 3);
+    assertEquals(planStateSpaceOpen(sspace, node), 0);
+    assertTrue(planStateSpaceNodeIsOpen(node));
 
-    node = planStateSpaceFifoNode(sspace, 4);
-    assertEquals(planStateSpaceFifoOpen(sspace, node), 0);
-    assertTrue(planStateSpaceFifoNodeIsOpen(node));
+    node = planStateSpaceNode(sspace, 4);
+    assertEquals(planStateSpaceOpen(sspace, node), 0);
+    assertTrue(planStateSpaceNodeIsOpen(node));
 
-    planStateSpaceFifoCloseAll(sspace);
-    assertEquals(planStateSpaceFifoPop(sspace), NULL);
-    node = planStateSpaceFifoNode(sspace, 3);
-    assertTrue(planStateSpaceFifoNodeIsClosed(node));
-    node = planStateSpaceFifoNode(sspace, 4);
-    assertTrue(planStateSpaceFifoNodeIsClosed(node));
+    planStateSpaceCloseAll(sspace);
+    assertEquals(planStateSpacePop(sspace), NULL);
+    node = planStateSpaceNode(sspace, 3);
+    assertTrue(planStateSpaceNodeIsClosed(node));
+    node = planStateSpaceNode(sspace, 4);
+    assertTrue(planStateSpaceNodeIsClosed(node));
 
     planStateDel(pool, state);
     planStateSpaceFifoDel(sspace);

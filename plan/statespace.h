@@ -78,7 +78,7 @@ void planStateSpaceInit(plan_state_space_t *state_space,
 /**
  * Free state space structure.
  */
-void planStateSpaceFree(plan_state_pool_t *state_pool);
+void planStateSpaceFree(plan_state_space_t *ss);
 
 /**
  * Returns a node corresponding to the state ID.

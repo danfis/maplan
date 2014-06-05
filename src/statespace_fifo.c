@@ -1,14 +1,25 @@
 #include <boruvka/alloc.h>
 #include "plan/statespace_fifo.h"
 
+struct _plan_state_space_fifo_node_t {
+    plan_state_space_node_t node;
+    bor_list_t fifo; /*!< Connector to the fifo queue */
+};
+typedef struct _plan_state_space_fifo_node_t plan_state_space_fifo_node_t;
+
+struct _plan_state_space_fifo_t {
+    plan_state_space_t state_space;
+    bor_list_t fifo;
+};
+typedef struct _plan_state_space_fifo_t plan_state_space_fifo_t;
+
+
 /** State space callbacks: */
 static plan_state_space_node_t *pop(void *state_space);
 static void insert(void *state_space, plan_state_space_node_t *node);
-static void clear(void *state_space);
-static void closeAll(void *state_space);
 
 
-plan_state_space_fifo_t *planStateSpaceFifoNew(plan_state_pool_t *state_pool)
+plan_state_space_t *planStateSpaceFifoNew(plan_state_pool_t *state_pool)
 {
     plan_state_space_fifo_t *ss;
     plan_state_space_fifo_node_t node_init;
@@ -20,15 +31,17 @@ plan_state_space_fifo_t *planStateSpaceFifoNew(plan_state_pool_t *state_pool)
 
     planStateSpaceInit(&ss->state_space, state_pool,
                        sizeof(plan_state_space_fifo_node_t), &node_init,
-                       pop, insert, clear, closeAll);
+                       pop, insert, NULL, NULL);
 
     borListInit(&ss->fifo);
 
-    return ss;
+    return &ss->state_space;
 }
 
-void planStateSpaceFifoDel(plan_state_space_fifo_t *ss)
+void planStateSpaceFifoDel(plan_state_space_t *_ss)
 {
+    plan_state_space_fifo_t *ss = (plan_state_space_fifo_t *)_ss;
+    planStateSpaceFree(&ss->state_space);
     BOR_FREE(ss);
 }
 
@@ -55,21 +68,3 @@ static void insert(void *_ss, plan_state_space_node_t *node)
     n = bor_container_of(node, plan_state_space_fifo_node_t, node);
     borListAppend(&ss->fifo, &n->fifo);
 }
-
-static void clear(void *_ss)
-{
-    plan_state_space_fifo_t *ss = (plan_state_space_fifo_t *)_ss;
-    plan_state_space_fifo_node_t *node;
-
-    while ((node = planStateSpaceFifoPop(ss)) != NULL){
-        node->node.state = PLAN_STATE_SPACE_NODE_NEW;
-    }
-}
-
-static void closeAll(void *_ss)
-{
-    plan_state_space_fifo_t *ss = (plan_state_space_fifo_t *)_ss;
-    while (planStateSpaceFifoPop(ss) != NULL);
-}
-
-#endif

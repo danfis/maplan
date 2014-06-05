@@ -15,7 +15,7 @@
 
 struct _plan_search_ehc_t {
     plan_t *plan;
-    plan_state_space_fifo_t *state_space;
+    plan_state_space_t *state_space;
     plan_heuristic_goalcount_t *heur;
     plan_state_t *state;
     plan_succ_gen_t *succ_gen;

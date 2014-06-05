@@ -32,7 +32,7 @@ void planStateSpaceInit(plan_state_space_t *state_space,
     state_space->fn_close_all = fn_close_all;
 }
 
-void planStateSpaceFree(plan_state_pool_t *state_pool)
+void planStateSpaceFree(plan_state_space_t *ss)
 {
 }
 
@@ -92,12 +92,24 @@ plan_state_space_node_t *planStateSpaceOpen2(plan_state_space_t *ss,
 
 void planStateSpaceClear(plan_state_space_t *ss)
 {
-    ss->fn_clear(ss);
+    plan_state_space_node_t *node;
+
+    if (ss->fn_clear){
+        ss->fn_clear(ss);
+    }else{
+        while ((node = planStateSpacePop(ss)) != NULL){
+            node->state = PLAN_STATE_SPACE_NODE_NEW;
+        }
+    }
 }
 
 void planStateSpaceCloseAll(plan_state_space_t *ss)
 {
-    ss->fn_close_all(ss);
+    if (ss->fn_close_all){
+        ss->fn_close_all(ss);
+    }else{
+        while (planStateSpacePop(ss) != NULL);
+    }
 }
 
 #if 0

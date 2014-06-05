@@ -104,8 +104,12 @@ int planSearchEHCStep(plan_search_ehc_t *ehc)
                                                     op->eff, state_id);
 
         // skip already visited states
-        if (!planStateSpaceNodeIsNew2(ehc->state_space, succ_state_id))
+        if (!planStateSpaceNodeIsNew2(ehc->state_space, succ_state_id)){
+            fprintf(stderr, "continue %d\n",
+                    planStateSpaceNodeIsOpen2(ehc->state_space,
+                        succ_state_id));
             continue;
+        }
 
         // compute heuristic of the successor state
         planStatePoolGetState(ehc->plan->state_pool, succ_state_id,

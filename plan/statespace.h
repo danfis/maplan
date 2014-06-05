@@ -17,7 +17,6 @@ struct _plan_state_space_node_t {
     plan_operator_t *op;             /*!< Creating operator */
     bor_pairheap_node_t heap;        /*!< Connector to an open list */
     unsigned heuristic;              /*!< Value of a heuristic */
-    unsigned cost;                   /*!< Cost of the path to this state */
 };
 typedef struct _plan_state_space_node_t plan_state_space_node_t;
 

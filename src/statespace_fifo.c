@@ -12,6 +12,8 @@ plan_state_space_fifo_t *planStateSpaceFifoNew(plan_state_pool_t *state_pool)
     node_init.state_id        = PLAN_NO_STATE;
     node_init.parent_state_id = PLAN_NO_STATE;
     node_init.op              = NULL;
+    node_init.cost            = -1;
+    node_init.heuristic       = -1;
     node_init.state           = PLAN_STATE_SPACE_NODE_NEW;
     borListInit(&node_init.fifo);
     ss->data_id = planStatePoolDataReserve(ss->state_pool,
@@ -67,6 +69,8 @@ plan_state_space_fifo_node_t *planStateSpaceFifoOpen2(
                 plan_state_space_fifo_t *ss,
                 plan_state_id_t state_id,
                 plan_state_id_t parent_state_id,
+                unsigned cost,
+                unsigned heuristic,
                 plan_operator_t *op)
 {
     plan_state_space_fifo_node_t *node;
@@ -77,6 +81,8 @@ plan_state_space_fifo_node_t *planStateSpaceFifoOpen2(
 
     node->parent_state_id = parent_state_id;
     node->op              = op;
+    node->cost            = cost;
+    node->heuristic       = heuristic;
 
     planStateSpaceFifoOpen(ss, node);
 

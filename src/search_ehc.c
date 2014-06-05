@@ -73,9 +73,12 @@ int planSearchEHCRun(plan_search_ehc_t *ehc, plan_path_t *path)
 
 static int planSearchEHCInit(plan_search_ehc_t *ehc)
 {
+    unsigned heur;
+
+    heur = heuristic(ehc, ehc->plan->initial_state);
     planStateSpaceFifoOpen2(ehc->state_space, ehc->plan->initial_state,
-                            PLAN_NO_STATE, NULL);
-    ehc->best_heur = heuristic(ehc, ehc->plan->initial_state);
+                            PLAN_NO_STATE, 0, heur, NULL);
+    ehc->best_heur = heur;
 
     if (planStateIsGoal(ehc->plan, ehc->plan->initial_state)){
         planStateSpaceFifoCloseAll(ehc->state_space);
@@ -121,7 +124,9 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
         // check whether it is a goal
         if (planStateIsGoal(ehc->plan, succ_state_id)){
             planStateSpaceFifoOpen2(ehc->state_space, succ_state_id,
-                                    cur_node->state_id, op);
+                                    cur_node->state_id,
+                                    cur_node->cost + op->cost, succ_heur,
+                                    op);
             planStateSpaceFifoCloseAll(ehc->state_space);
             ehc->goal_state = succ_state_id;
             return 1;
@@ -136,7 +141,9 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
 
         // Insert node into open list
         planStateSpaceFifoOpen2(ehc->state_space, succ_state_id,
-                                cur_node->state_id, op);
+                                cur_node->state_id,
+                                cur_node->cost + op->cost, succ_heur,
+                                op);
     }
 
     return 0;

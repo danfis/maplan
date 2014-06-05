@@ -18,9 +18,12 @@ struct _plan_state_space_fifo_node_t {
     plan_state_id_t state_id;        /*!< ID of the corresponding state */
     plan_state_id_t parent_state_id; /*!< ID of the parent state */
     plan_operator_t *op;             /*!< Creating operator */
-
+    unsigned cost;                   /*!< Cost of the path from the initial
+                                          state to this state. */
+    unsigned heuristic;              /*!< Value of the heuristic */
     int state;                       /*!< One of PLAN_STATE_SPACE_NODE_*
                                           states */
+
     bor_list_t fifo;                 /*!< Connector to the fifo queue */
 };
 typedef struct _plan_state_space_fifo_node_t plan_state_space_fifo_node_t;
@@ -70,6 +73,8 @@ plan_state_space_fifo_node_t *planStateSpaceFifoOpen2(
                 plan_state_space_fifo_t *ss,
                 plan_state_id_t state_id,
                 plan_state_id_t parent_state_id,
+                unsigned cost,
+                unsigned heuristic,
                 plan_operator_t *op);
 
 /**

@@ -4,37 +4,23 @@
 
 /** Computes heuristic value of the given state. */
 static unsigned heuristic(plan_search_ehc_t *ehc,
-                          plan_state_id_t state_id)
-{
-    planStatePoolGetState(ehc->plan->state_pool, state_id, ehc->state);
-    return planHeuristicGoalCount(ehc->heur, ehc->state);
-}
+                          plan_state_id_t state_id);
 
 /** Fill ehc->succ_op[] with applicable operators in the given state.
  *  Returns how many operators were found. */
 static size_t findApplicableOperators(plan_search_ehc_t *ehc,
-                                      plan_state_id_t state_id)
-{
-    // unroll the state into ehc->state struct
-    planStatePoolGetState(ehc->plan->state_pool, state_id, ehc->state);
+                                      plan_state_id_t state_id);
 
-    // get operators to get successors
-    return planSuccGenFind(ehc->succ_gen, ehc->state, ehc->succ_op,
-                           ehc->plan->op_size);
-}
+/** Initializes search. This must be call exactly once. */
+static int planSearchEHCInit(plan_search_ehc_t *ehc);
+/** Performes one step in the algorithm. */
+static int planSearchEHCStep(plan_search_ehc_t *ehc);
 
-static void printPlan(plan_search_ehc_t *ehc,
-                      plan_state_id_t goal_state)
-{
-    plan_state_space_fifo_node_t *n;
-
-    n = planStateSpaceFifoNode(ehc->state_space, goal_state);
-    if (!n->op)
-        return;
-
-    printPlan(ehc, n->parent_state_id);
-    fprintf(stdout, "(%s)\n", n->op->name);
-}
+/** Extracts a path from the initial state to the goal state as found by
+ *  EHC */
+static void extractPath(plan_search_ehc_t *ehc,
+                        plan_state_id_t goal_state,
+                        plan_path_t *path);
 
 plan_search_ehc_t *planSearchEHCNew(plan_t *plan)
 {
@@ -48,6 +34,7 @@ plan_search_ehc_t *planSearchEHCNew(plan_t *plan)
     ehc->succ_gen = planSuccGenNew(plan->op, plan->op_size);
     ehc->succ_op  = BOR_ALLOC_ARR(plan_operator_t *, plan->op_size);
     ehc->best_heur = -1;
+    ehc->goal_state = PLAN_NO_STATE;
     return ehc;
 }
 
@@ -66,15 +53,40 @@ void planSearchEHCDel(plan_search_ehc_t *ehc)
     BOR_FREE(ehc);
 }
 
-void planSearchEHCInit(plan_search_ehc_t *ehc)
+int planSearchEHCRun(plan_search_ehc_t *ehc, plan_path_t *path)
 {
-    // TODO: check goal state
+    int res;
+
+    if ((res = planSearchEHCInit(ehc)) == 0){
+        while ((res = planSearchEHCStep(ehc)) == 0);
+    }
+
+    // Reached dead end:
+    if (res == -1)
+        return 1;
+
+    extractPath(ehc, ehc->goal_state, path);
+    return 0;
+}
+
+
+
+static int planSearchEHCInit(plan_search_ehc_t *ehc)
+{
     planStateSpaceFifoOpen2(ehc->state_space, ehc->plan->initial_state,
                             PLAN_NO_STATE, NULL);
     ehc->best_heur = heuristic(ehc, ehc->plan->initial_state);
+
+    if (planStateIsGoal(ehc->plan, ehc->plan->initial_state)){
+        planStateSpaceFifoCloseAll(ehc->state_space);
+        ehc->goal_state = ehc->plan->initial_state;
+        return 1;
+    }
+
+    return 0;
 }
 
-int planSearchEHCStep(plan_search_ehc_t *ehc)
+static int planSearchEHCStep(plan_search_ehc_t *ehc)
 {
     plan_state_space_fifo_node_t *cur_node;
     plan_state_id_t succ_state_id;
@@ -85,8 +97,7 @@ int planSearchEHCStep(plan_search_ehc_t *ehc)
     // get best node available so far
     cur_node = planStateSpaceFifoPop(ehc->state_space);
     if (cur_node == NULL){
-        // TODO
-        fprintf(stderr, "No more states to expand.\n");
+        // we reached dead end
         return -1;
     }
 
@@ -109,13 +120,10 @@ int planSearchEHCStep(plan_search_ehc_t *ehc)
 
         // check whether it is a goal
         if (planStateIsGoal(ehc->plan, succ_state_id)){
-            // TODO
-            fprintf(stderr, "Found solution %d.\n", (int)succ_heur);
             planStateSpaceFifoOpen2(ehc->state_space, succ_state_id,
                                     cur_node->state_id, op);
             planStateSpaceFifoCloseAll(ehc->state_space);
-            printPlan(ehc, succ_state_id);
-            
+            ehc->goal_state = succ_state_id;
             return 1;
         }
 
@@ -134,10 +142,36 @@ int planSearchEHCStep(plan_search_ehc_t *ehc)
     return 0;
 }
 
-int planSearchEHCRun(plan_search_ehc_t *ehc)
+static unsigned heuristic(plan_search_ehc_t *ehc,
+                          plan_state_id_t state_id)
 {
-    planSearchEHCInit(ehc);
-    while (planSearchEHCStep(ehc) == 0);
-    // TODO: read plan out or report error/dead-end/etc...
-    return 0;
+    planStatePoolGetState(ehc->plan->state_pool, state_id, ehc->state);
+    return planHeuristicGoalCount(ehc->heur, ehc->state);
+}
+
+static size_t findApplicableOperators(plan_search_ehc_t *ehc,
+                                      plan_state_id_t state_id)
+{
+    // unroll the state into ehc->state struct
+    planStatePoolGetState(ehc->plan->state_pool, state_id, ehc->state);
+
+    // get operators to get successors
+    return planSuccGenFind(ehc->succ_gen, ehc->state, ehc->succ_op,
+                           ehc->plan->op_size);
+}
+
+static void extractPath(plan_search_ehc_t *ehc,
+                        plan_state_id_t goal_state,
+                        plan_path_t *path)
+{
+    plan_state_space_fifo_node_t *node;
+
+    planPathInit(path);
+
+    node = planStateSpaceFifoNode(ehc->state_space, goal_state);
+    while (node && node->op){
+        planPathPrepend(path, node->op);
+        node = planStateSpaceFifoNode(ehc->state_space,
+                                      node->parent_state_id);
+    }
 }

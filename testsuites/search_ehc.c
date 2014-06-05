@@ -5,6 +5,7 @@ TEST(testSearchEHC)
 {
     plan_t *plan;
     plan_search_ehc_t *ehc;
+    plan_path_t path;
     int res;
 
     plan = planNew();
@@ -12,8 +13,13 @@ TEST(testSearchEHC)
     assertEquals(res, 0);
 
     ehc = planSearchEHCNew(plan);
-    planSearchEHCRun(ehc);
+    planPathInit(&path);
 
+    assertEquals(planSearchEHCRun(ehc, &path), 0);
+    planPathPrint(&path, stdout);
+    assertEquals(planPathCost(&path), 28);
+
+    planPathFree(&path);
     planSearchEHCDel(ehc);
     planDel(plan);
 }

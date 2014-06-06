@@ -40,7 +40,7 @@ OBJS += list_lazy_fifo
 #OBJS += statespace_heap
 #OBJS += statespace_bucket
 OBJS += search_ehc
-OBJS += heuristic/goalcount
+OBJS += heur_goalcount
 
 BIN_TARGETS =
 

@@ -34,7 +34,7 @@ plan_search_ehc_t *planSearchEHCNew(plan_problem_t *prob)
     ehc->prob = prob;
     ehc->state_space = planStateSpaceNew(prob->state_pool);
     ehc->list = planListLazyFifoNew();
-    ehc->heur = planHeuristicGoalCountNew(prob->goal);
+    ehc->heur = planHeurGoalCountNew(prob->goal);
     ehc->state = planStateNew(prob->state_pool);
     ehc->succ_gen = planSuccGenNew(prob->op, prob->op_size);
     ehc->succ_op  = BOR_ALLOC_ARR(plan_operator_t *, prob->op_size);
@@ -52,7 +52,7 @@ void planSearchEHCDel(plan_search_ehc_t *ehc)
     if (ehc->state)
         planStateDel(ehc->prob->state_pool, ehc->state);
     if (ehc->heur)
-        planHeuristicGoalCountDel(ehc->heur);
+        planHeurGoalCountDel(ehc->heur);
     if (ehc->list)
         planListLazyFifoDel(ehc->list);
     if (ehc->state_space)
@@ -155,7 +155,7 @@ static unsigned heuristic(plan_search_ehc_t *ehc,
                           plan_state_id_t state_id)
 {
     planStatePoolGetState(ehc->prob->state_pool, state_id, ehc->state);
-    return planHeuristicGoalCount(ehc->heur, ehc->state);
+    return planHeurGoalCount(ehc->heur, ehc->state);
 }
 
 static size_t findApplicableOperators(plan_search_ehc_t *ehc,

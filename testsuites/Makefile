@@ -23,7 +23,7 @@ CHECK_TS ?=
 TARGETS = test bench-ehc
 
 OBJS = main.o load-from-file.o state.o dataarr.o succgen.o statespace.o \
-       search_ehc.o
+       search_ehc.o heur.o
 
 all: $(TARGETS)
 

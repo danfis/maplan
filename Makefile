@@ -27,11 +27,13 @@ LDFLAGS += $(JANSSON_LDFLAGS)
 
 TARGETS  = libplan.a
 
-OBJS  = plan var state operator dataarr succgen statespace
+OBJS  = plan var state operator dataarr succgen
 OBJS += path
-OBJS += statespace_fifo
-OBJS += statespace_heap
-OBJS += statespace_bucket
+OBJS += statespace
+OBJS += list_lazy_fifo
+#OBJS += statespace_fifo
+#OBJS += statespace_heap
+#OBJS += statespace_bucket
 OBJS += search_ehc
 OBJS += heuristic/goalcount
 

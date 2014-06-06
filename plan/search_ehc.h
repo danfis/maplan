@@ -2,10 +2,11 @@
 #define __PLAN_SEARCH_EHC_H__
 
 #include <plan/plan.h>
-#include <plan/statespace_fifo.h>
+#include <plan/statespace.h>
 #include <plan/succgen.h>
 #include <plan/heuristic/goalcount.h>
 #include <plan/path.h>
+#include <plan/list_lazy_fifo.h>
 
 /**
  * Enforced Hill Climbing Search
@@ -16,6 +17,7 @@
 struct _plan_search_ehc_t {
     plan_t *plan;
     plan_state_space_t *state_space;
+    plan_list_lazy_fifo_t *list;
     plan_heuristic_goalcount_t *heur;
     plan_state_t *state;
     plan_succ_gen_t *succ_gen;

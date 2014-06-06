@@ -29,7 +29,7 @@ all: $(TARGETS)
 
 test: cu $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
-bench-ehc: bench-ehc.c
+bench-ehc: bench-ehc.c ../libplan.a
 	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS)
 
 %.o: %.c %.h

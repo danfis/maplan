@@ -24,73 +24,29 @@ struct _plan_state_space_node_t {
 };
 typedef struct _plan_state_space_node_t plan_state_space_node_t;
 
-
-/**
- * Callback that choose the next node to pop from open-list and
- * returns it (and removes from the open-list). Closing of the node etc. is
- * done elsewhere.
- */
-typedef plan_state_space_node_t *(*plan_state_space_pop_fn)(void *state_space);
-
-/**
- * This function should insert node into open list.
- */
-typedef void (*plan_state_space_insert_fn)(void *state_space,
-                                           plan_state_space_node_t *node);
-
-/**
- * This function should remove all nodes from open-list and set their state
- * as NEW.
- */
-typedef void (*plan_state_space_clear_fn)(void *state_space);
-
-/**
- * This function should remove all nodes from open-list and set their state
- * as CLOSED.
- */
-typedef void (*plan_state_space_close_all_fn)(void *state_space);
-
 struct _plan_state_space_t {
     plan_state_pool_t *state_pool;
     size_t data_id;
-
-    plan_state_space_pop_fn fn_pop;
-    plan_state_space_insert_fn fn_insert;
-    plan_state_space_clear_fn fn_clear;
-    plan_state_space_close_all_fn fn_close_all;
 };
 typedef struct _plan_state_space_t plan_state_space_t;
 
 void planStateSpaceNodeInit(plan_state_space_node_t *n);
 
 /**
- * Initialize common state space struct.
+ * Creates a state space.
  */
-void planStateSpaceInit(plan_state_space_t *state_space,
-                        plan_state_pool_t *state_pool,
-                        size_t node_size,
-                        plan_data_arr_el_init_fn init_fn,
-                        const void *init_data,
-                        plan_state_space_pop_fn fn_pop,
-                        plan_state_space_insert_fn fn_insert,
-                        plan_state_space_clear_fn fn_clear,
-                        plan_state_space_close_all_fn fn_close_all);
+plan_state_space_t *planStateSpaceNew(plan_state_pool_t *state_pool);
 
 /**
  * Free state space structure.
  */
-void planStateSpaceFree(plan_state_space_t *ss);
+void planStateSpaceDel(plan_state_space_t *ss);
 
 /**
  * Returns a node corresponding to the state ID.
  */
 plan_state_space_node_t *planStateSpaceNode(plan_state_space_t *,
                                             plan_state_id_t state_id);
-
-/**
- * Returns next open state and close it.
- */
-plan_state_space_node_t *planStateSpacePop(plan_state_space_t *);
 
 /**
  * Opens the given node.
@@ -113,14 +69,38 @@ plan_state_space_node_t *planStateSpaceOpen2(plan_state_space_t *ss,
                                              unsigned heuristic);
 
 /**
- * Change all open nodes to new nodes.
+ * Reopens a closed node.
+ * Returns 0 on success, -1 if the node wasn't in closed state.
  */
-void planStateSpaceClear(plan_state_space_t *ss);
+int planStateSpaceReopen(plan_state_space_t *ss,
+                         plan_state_space_node_t *node);
 
 /**
- * Close all open nodes.
+ * Sets properties of the node and reopens it.
+ * Returns the node if successful or NULL if the node wasn't in closed
+ * state.
  */
-void planStateSpaceCloseAll(plan_state_space_t *ss);
+plan_state_space_node_t *planStateSpaceReopen2(plan_state_space_t *ss,
+                                               plan_state_id_t state_id,
+                                               plan_state_id_t parent_state_id,
+                                               plan_operator_t *op,
+                                               unsigned cost,
+                                               unsigned heuristic);
+
+/**
+ * Closes open node.
+ * Returns 0 on success, -1 if the node wasn't in open state.
+ */
+int planStateSpaceClose(plan_state_space_t *ss,
+                        plan_state_space_node_t *node);
+
+/**
+ * Close node identified by its state_id.
+ * Returns the node if successful or NULL if the node wasn't in open
+ * state.
+ */
+plan_state_space_node_t *planStateSpaceClose2(plan_state_space_t *ss,
+                                              plan_state_id_t state_id);
 
 
 /**

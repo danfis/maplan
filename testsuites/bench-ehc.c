@@ -3,17 +3,16 @@
 
 int main(int argc, char *argv[])
 {
-    plan_t *plan;
+    plan_problem_t *prob;
     plan_search_ehc_t *ehc;
     plan_path_t path;
     bor_timer_t timer;
 
     borTimerStart(&timer);
 
-    plan = planNew();
-    planLoadFromJsonFile(plan, "load-from-file.in2.json");
+    prob = planProblemFromJson("load-from-file.in2.json");
 
-    ehc = planSearchEHCNew(plan);
+    ehc = planSearchEHCNew(prob);
     planPathInit(&path);
 
     planSearchEHCRun(ehc, &path);
@@ -22,7 +21,7 @@ int main(int argc, char *argv[])
 
     planPathFree(&path);
     planSearchEHCDel(ehc);
-    planDel(plan);
+    planProblemDel(prob);
 
     borTimerStop(&timer);
     fprintf(stderr, "Elapsed Time: %.4f seconds\n",

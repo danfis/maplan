@@ -27,7 +27,12 @@ LDFLAGS += $(JANSSON_LDFLAGS)
 
 TARGETS  = libplan.a
 
-OBJS  = plan var state operator dataarr succgen
+OBJS  = problem
+OBJS += var
+OBJS += state
+OBJS += operator
+OBJS += dataarr
+OBJS += succgen
 OBJS += path
 OBJS += statespace
 OBJS += list_lazy_fifo

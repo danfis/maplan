@@ -3,16 +3,13 @@
 
 TEST(testSearchEHC)
 {
-    plan_t *plan;
+    plan_problem_t *prob;
     plan_search_ehc_t *ehc;
     plan_path_t path;
-    int res;
 
-    plan = planNew();
-    res = planLoadFromJsonFile(plan, "load-from-file.in2.json");
-    assertEquals(res, 0);
+    prob = planProblemFromJson("load-from-file.in2.json");
 
-    ehc = planSearchEHCNew(plan);
+    ehc = planSearchEHCNew(prob);
     planPathInit(&path);
 
     assertEquals(planSearchEHCRun(ehc, &path), 0);
@@ -21,5 +18,5 @@ TEST(testSearchEHC)
 
     planPathFree(&path);
     planSearchEHCDel(ehc);
-    planDel(plan);
+    planProblemDel(prob);
 }

@@ -1,30 +1,28 @@
 #include <cu/cu.h>
-#include "plan/plan.h"
+#include "plan/problem.h"
 
 
 TEST(testLoadFromFile)
 {
-    plan_t *plan;
+    plan_problem_t *p;
     plan_state_t *initial_state;
-    int res;
 
-    plan = planNew();
-    res = planLoadFromJsonFile(plan, "load-from-file.in1.json");
-    assertEquals(res, 0);
+    p = planProblemFromJson("load-from-file.in1.json");
+    assertNotEquals(p, NULL);
 
-    assertEquals(plan->var_size, 9);
-    assertEquals(plan->var[0].range, 5);
-    assertEquals(plan->var[1].range, 2);
-    assertEquals(plan->var[2].range, 2);
-    assertEquals(plan->var[3].range, 2);
-    assertEquals(plan->var[4].range, 2);
-    assertEquals(plan->var[5].range, 2);
-    assertEquals(plan->var[6].range, 5);
-    assertEquals(plan->var[7].range, 5);
-    assertEquals(plan->var[8].range, 5);
+    assertEquals(p->var_size, 9);
+    assertEquals(p->var[0].range, 5);
+    assertEquals(p->var[1].range, 2);
+    assertEquals(p->var[2].range, 2);
+    assertEquals(p->var[3].range, 2);
+    assertEquals(p->var[4].range, 2);
+    assertEquals(p->var[5].range, 2);
+    assertEquals(p->var[6].range, 5);
+    assertEquals(p->var[7].range, 5);
+    assertEquals(p->var[8].range, 5);
 
-    initial_state = planStateNew(plan->state_pool);
-    planStatePoolGetState(plan->state_pool, 0, initial_state);
+    initial_state = planStateNew(p->state_pool);
+    planStatePoolGetState(p->state_pool, 0, initial_state);
 
     assertEquals(planStateGet(initial_state, 0), 2);
     assertEquals(planStateGet(initial_state, 1), 0);
@@ -36,55 +34,55 @@ TEST(testLoadFromFile)
     assertEquals(planStateGet(initial_state, 7), 1);
     assertEquals(planStateGet(initial_state, 8), 4);
 
-    planStateDel(plan->state_pool, initial_state);
+    planStateDel(p->state_pool, initial_state);
 
-    assertEquals(planPartStateGet(plan->goal, 0), 0);
-    assertEquals(planPartStateGet(plan->goal, 1), 0);
-    assertEquals(planPartStateGet(plan->goal, 2), 0);
-    assertEquals(planPartStateGet(plan->goal, 3), 0);
-    assertEquals(planPartStateGet(plan->goal, 4), 0);
-    assertEquals(planPartStateGet(plan->goal, 5), 0);
-    assertEquals(planPartStateGet(plan->goal, 6), 1);
-    assertEquals(planPartStateGet(plan->goal, 7), 1);
-    assertEquals(planPartStateGet(plan->goal, 8), 3);
+    assertEquals(planPartStateGet(p->goal, 0), 0);
+    assertEquals(planPartStateGet(p->goal, 1), 0);
+    assertEquals(planPartStateGet(p->goal, 2), 0);
+    assertEquals(planPartStateGet(p->goal, 3), 0);
+    assertEquals(planPartStateGet(p->goal, 4), 0);
+    assertEquals(planPartStateGet(p->goal, 5), 0);
+    assertEquals(planPartStateGet(p->goal, 6), 1);
+    assertEquals(planPartStateGet(p->goal, 7), 1);
+    assertEquals(planPartStateGet(p->goal, 8), 3);
 
-    assertFalse(planPartStateIsSet(plan->goal, 0));
-    assertFalse(planPartStateIsSet(plan->goal, 1));
-    assertFalse(planPartStateIsSet(plan->goal, 2));
-    assertFalse(planPartStateIsSet(plan->goal, 3));
-    assertFalse(planPartStateIsSet(plan->goal, 4));
-    assertFalse(planPartStateIsSet(plan->goal, 5));
-    assertTrue(planPartStateIsSet(plan->goal, 6));
-    assertTrue(planPartStateIsSet(plan->goal, 7));
-    assertTrue(planPartStateIsSet(plan->goal, 8));
+    assertFalse(planPartStateIsSet(p->goal, 0));
+    assertFalse(planPartStateIsSet(p->goal, 1));
+    assertFalse(planPartStateIsSet(p->goal, 2));
+    assertFalse(planPartStateIsSet(p->goal, 3));
+    assertFalse(planPartStateIsSet(p->goal, 4));
+    assertFalse(planPartStateIsSet(p->goal, 5));
+    assertTrue(planPartStateIsSet(p->goal, 6));
+    assertTrue(planPartStateIsSet(p->goal, 7));
+    assertTrue(planPartStateIsSet(p->goal, 8));
 
-    assertEquals(plan->op_size, 32);
-    assertEquals(plan->op[0].cost, 1);
-    assertEquals(strcmp(plan->op[0].name, "pick-up a"), 0);
-    assertEquals(planPartStateGet(plan->op[0].eff, 0), 0);
-    assertEquals(planPartStateGet(plan->op[0].eff, 2), 1);
-    assertEquals(planPartStateGet(plan->op[0].eff, 5), 1);
-    assertEquals(planPartStateGet(plan->op[0].eff, 6), 0);
-    assertEquals(planPartStateGet(plan->op[0].pre, 0), 0);
-    assertEquals(planPartStateGet(plan->op[0].pre, 2), 0);
-    assertEquals(planPartStateGet(plan->op[0].pre, 5), 0);
-    assertEquals(planPartStateGet(plan->op[0].pre, 6), 4);
-    assertEquals(planPartStateGet(plan->op[5].eff, 0), 4);
-    assertTrue(planPartStateIsSet(plan->op[5].eff, 0));
-    assertEquals(planPartStateGet(plan->op[5].eff, 1), 0);
-    assertTrue(planPartStateIsSet(plan->op[5].eff, 1));
-    assertEquals(planPartStateGet(plan->op[5].eff, 5), 0);
-    assertTrue(planPartStateIsSet(plan->op[5].eff, 5));
-    assertEquals(planPartStateGet(plan->op[5].eff, 6), 0);
-    assertFalse(planPartStateIsSet(plan->op[5].eff, 6));
-    assertEquals(planPartStateGet(plan->op[5].pre, 0), 0);
-    assertTrue(planPartStateIsSet(plan->op[5].pre, 0));
-    assertEquals(planPartStateGet(plan->op[5].pre, 1), 0);
-    assertFalse(planPartStateIsSet(plan->op[5].pre, 1));
-    assertEquals(planPartStateGet(plan->op[5].pre, 5), 0);
-    assertFalse(planPartStateIsSet(plan->op[5].pre, 5));
-    assertEquals(planPartStateGet(plan->op[5].pre, 6), 0);
-    assertFalse(planPartStateIsSet(plan->op[5].pre, 6));
+    assertEquals(p->op_size, 32);
+    assertEquals(p->op[0].cost, 1);
+    assertEquals(strcmp(p->op[0].name, "pick-up a"), 0);
+    assertEquals(planPartStateGet(p->op[0].eff, 0), 0);
+    assertEquals(planPartStateGet(p->op[0].eff, 2), 1);
+    assertEquals(planPartStateGet(p->op[0].eff, 5), 1);
+    assertEquals(planPartStateGet(p->op[0].eff, 6), 0);
+    assertEquals(planPartStateGet(p->op[0].pre, 0), 0);
+    assertEquals(planPartStateGet(p->op[0].pre, 2), 0);
+    assertEquals(planPartStateGet(p->op[0].pre, 5), 0);
+    assertEquals(planPartStateGet(p->op[0].pre, 6), 4);
+    assertEquals(planPartStateGet(p->op[5].eff, 0), 4);
+    assertTrue(planPartStateIsSet(p->op[5].eff, 0));
+    assertEquals(planPartStateGet(p->op[5].eff, 1), 0);
+    assertTrue(planPartStateIsSet(p->op[5].eff, 1));
+    assertEquals(planPartStateGet(p->op[5].eff, 5), 0);
+    assertTrue(planPartStateIsSet(p->op[5].eff, 5));
+    assertEquals(planPartStateGet(p->op[5].eff, 6), 0);
+    assertFalse(planPartStateIsSet(p->op[5].eff, 6));
+    assertEquals(planPartStateGet(p->op[5].pre, 0), 0);
+    assertTrue(planPartStateIsSet(p->op[5].pre, 0));
+    assertEquals(planPartStateGet(p->op[5].pre, 1), 0);
+    assertFalse(planPartStateIsSet(p->op[5].pre, 1));
+    assertEquals(planPartStateGet(p->op[5].pre, 5), 0);
+    assertFalse(planPartStateIsSet(p->op[5].pre, 5));
+    assertEquals(planPartStateGet(p->op[5].pre, 6), 0);
+    assertFalse(planPartStateIsSet(p->op[5].pre, 6));
 
-    planDel(plan);
+    planProblemDel(p);
 }

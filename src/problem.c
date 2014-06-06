@@ -3,12 +3,12 @@
 
 #include <boruvka/alloc.h>
 
-#include "plan/plan.h"
+#include "plan/problem.h"
 
 #define READ_BUFSIZE 1024
 
 
-static void planFree(plan_t *plan)
+static void planProblemFree(plan_problem_t *plan)
 {
     size_t i;
 
@@ -39,29 +39,36 @@ static void planFree(plan_t *plan)
     plan->op_size = 0;
 }
 
-plan_t *planNew(void)
+static int loadJson(plan_problem_t *plan, const char *filename);
+
+plan_problem_t *planProblemFromJson(const char *fn)
 {
-    plan_t *plan;
+    plan_problem_t *p;
 
-    plan = BOR_ALLOC(plan_t);
-    plan->var = NULL;
-    plan->var_size = 0;
-    plan->state_pool = NULL;
-    plan->op = NULL;
-    plan->op_size = 0;
-    plan->goal = NULL;
+    p = BOR_ALLOC(plan_problem_t);
+    p->var = NULL;
+    p->var_size = 0;
+    p->state_pool = NULL;
+    p->op = NULL;
+    p->op_size = 0;
+    p->goal = NULL;
 
-    return plan;
+    if (loadJson(p, fn) != 0){
+        planProblemFree(p);
+        return NULL;
+    }
+
+    return p;
 }
 
-void planDel(plan_t *plan)
+void planProblemDel(plan_problem_t *plan)
 {
-    planFree(plan);
+    planProblemFree(plan);
     BOR_FREE(plan);
 }
 
 
-static int loadJsonVersion(plan_t *plan, json_t *json)
+static int loadJsonVersion(plan_problem_t *plan, json_t *json)
 {
     int version = 0;
     version = json_integer_value(json);
@@ -100,7 +107,7 @@ static int loadJsonVariable1(plan_var_t *var, json_t *json)
     return 0;
 }
 
-static int loadJsonVariable(plan_t *plan, json_t *json)
+static int loadJsonVariable(plan_problem_t *plan, json_t *json)
 {
     size_t i;
     json_t *json_var;
@@ -123,7 +130,7 @@ static int loadJsonVariable(plan_t *plan, json_t *json)
     return 0;
 }
 
-static int loadJsonInitialState(plan_t *plan, json_t *json)
+static int loadJsonInitialState(plan_problem_t *plan, json_t *json)
 {
     size_t i, len;
     json_t *json_val;
@@ -156,7 +163,7 @@ static int loadJsonInitialState(plan_t *plan, json_t *json)
     return 0;
 }
 
-static int loadJsonGoal(plan_t *plan, json_t *json)
+static int loadJsonGoal(plan_problem_t *plan, json_t *json)
 {
     const char *key;
     json_t *json_val;
@@ -212,7 +219,7 @@ static int loadJsonOperator1(plan_operator_t *op, json_t *json)
     return 0;
 }
 
-static int loadJsonOperator(plan_t *plan, json_t *json)
+static int loadJsonOperator(plan_problem_t *plan, json_t *json)
 {
     size_t i;
     json_t *json_op;
@@ -233,8 +240,8 @@ static int loadJsonOperator(plan_t *plan, json_t *json)
     return 0;
 }
 
-typedef int (*load_json_data_fn)(plan_t *plan, json_t *json);
-static int loadJsonData(plan_t *plan, json_t *root,
+typedef int (*load_json_data_fn)(plan_problem_t *plan, json_t *json);
+static int loadJsonData(plan_problem_t *plan, json_t *root,
                          const char *keyname, load_json_data_fn fn)
 {
     json_t *data;
@@ -247,13 +254,10 @@ static int loadJsonData(plan_t *plan, json_t *root,
     return fn(plan, data);
 }
 
-int planLoadFromJsonFile(plan_t *plan, const char *filename)
+static int loadJson(plan_problem_t *plan, const char *filename)
 {
     json_t *json;
     json_error_t json_err;
-
-    // Clear plan_t structure
-    planFree(plan);
 
     // open JSON data from file
     json = json_load_file(filename, 0, &json_err);
@@ -289,6 +293,6 @@ int planLoadFromJsonFile(plan_t *plan, const char *filename)
 
 planLoadFromJsonFile_err:
     json_decref(json);
-    planFree(plan);
     return -1;
 }
+

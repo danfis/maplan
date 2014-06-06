@@ -26,18 +26,18 @@ static void extractPath(plan_search_ehc_t *ehc,
                         plan_state_id_t goal_state,
                         plan_path_t *path);
 
-plan_search_ehc_t *planSearchEHCNew(plan_t *plan)
+plan_search_ehc_t *planSearchEHCNew(plan_problem_t *prob)
 {
     plan_search_ehc_t *ehc;
 
     ehc = BOR_ALLOC(plan_search_ehc_t);
-    ehc->plan = plan;
-    ehc->state_space = planStateSpaceNew(plan->state_pool);
+    ehc->prob = prob;
+    ehc->state_space = planStateSpaceNew(prob->state_pool);
     ehc->list = planListLazyFifoNew();
-    ehc->heur = planHeuristicGoalCountNew(plan->goal);
-    ehc->state = planStateNew(plan->state_pool);
-    ehc->succ_gen = planSuccGenNew(plan->op, plan->op_size);
-    ehc->succ_op  = BOR_ALLOC_ARR(plan_operator_t *, plan->op_size);
+    ehc->heur = planHeuristicGoalCountNew(prob->goal);
+    ehc->state = planStateNew(prob->state_pool);
+    ehc->succ_gen = planSuccGenNew(prob->op, prob->op_size);
+    ehc->succ_op  = BOR_ALLOC_ARR(plan_operator_t *, prob->op_size);
     ehc->best_heur = -1;
     ehc->goal_state = PLAN_NO_STATE;
     return ehc;
@@ -50,7 +50,7 @@ void planSearchEHCDel(plan_search_ehc_t *ehc)
     if (ehc->succ_op)
         BOR_FREE(ehc->succ_op);
     if (ehc->state)
-        planStateDel(ehc->plan->state_pool, ehc->state);
+        planStateDel(ehc->prob->state_pool, ehc->state);
     if (ehc->heur)
         planHeuristicGoalCountDel(ehc->heur);
     if (ehc->list)
@@ -82,22 +82,22 @@ static int planSearchEHCInit(plan_search_ehc_t *ehc)
     plan_state_space_node_t *node;
 
     // compute heuristic for the initial state
-    heur = heuristic(ehc, ehc->plan->initial_state);
+    heur = heuristic(ehc, ehc->prob->initial_state);
     ehc->best_heur = heur;
 
     // create a first node from the initial state
     node = planStateSpaceOpen2(ehc->state_space,
-                               ehc->plan->initial_state,
+                               ehc->prob->initial_state,
                                PLAN_NO_STATE, NULL, 0, heur);
     planStateSpaceClose(ehc->state_space, node);
 
-    if (planStateIsGoal(ehc->plan, ehc->plan->initial_state)){
-        ehc->goal_state = ehc->plan->initial_state;
+    if (planProblemCheckGoal(ehc->prob, ehc->prob->initial_state)){
+        ehc->goal_state = ehc->prob->initial_state;
         return 1;
     }
 
     // add recepies for successor nodes into list
-    addSuccessors(ehc, ehc->plan->initial_state);
+    addSuccessors(ehc, ehc->prob->initial_state);
 
     return 0;
 }
@@ -134,7 +134,7 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
     planStateSpaceClose(ehc->state_space, cur_node);
 
     // check if the current state is the goal
-    if (planStateIsGoal(ehc->plan, cur_state_id)){
+    if (planProblemCheckGoal(ehc->prob, cur_state_id)){
         ehc->goal_state = cur_state_id;
         return 1;
     }
@@ -154,7 +154,7 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
 static unsigned heuristic(plan_search_ehc_t *ehc,
                           plan_state_id_t state_id)
 {
-    planStatePoolGetState(ehc->plan->state_pool, state_id, ehc->state);
+    planStatePoolGetState(ehc->prob->state_pool, state_id, ehc->state);
     return planHeuristicGoalCount(ehc->heur, ehc->state);
 }
 
@@ -162,11 +162,11 @@ static size_t findApplicableOperators(plan_search_ehc_t *ehc,
                                       plan_state_id_t state_id)
 {
     // unroll the state into ehc->state struct
-    planStatePoolGetState(ehc->plan->state_pool, state_id, ehc->state);
+    planStatePoolGetState(ehc->prob->state_pool, state_id, ehc->state);
 
     // get operators to get successors
     return planSuccGenFind(ehc->succ_gen, ehc->state, ehc->succ_op,
-                           ehc->plan->op_size);
+                           ehc->prob->op_size);
 }
 
 static void addSuccessors(plan_search_ehc_t *ehc,

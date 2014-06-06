@@ -1,6 +1,6 @@
 #include <cu/cu.h>
 #include <boruvka/alloc.h>
-#include "plan/plan.h"
+#include "plan/problem.h"
 #include "plan/succgen.h"
 
 #define NUM_STATES 20
@@ -71,32 +71,29 @@ static size_t findOpsSG(const plan_succ_gen_t *sg,
 
 TEST(testSuccGen)
 {
-    plan_t *plan;
+    plan_problem_t *prob;
     plan_succ_gen_t *sg;
     plan_operator_t **ops1, **ops2;
     plan_state_id_t sid;
     size_t ops_size, found1, found2, i, j;
     plan_state_t *state;
-    int res;
 
-    plan = planNew();
-    res = planLoadFromJsonFile(plan, "load-from-file.in1.json");
-    assertEquals(res, 0);
+    prob = planProblemFromJson("load-from-file.in1.json");
 
-    sg = planSuccGenNew(plan->op, plan->op_size);
+    sg = planSuccGenNew(prob->op, prob->op_size);
 
-    ops_size = plan->op_size;
+    ops_size = prob->op_size;
     ops1 = BOR_ALLOC_ARR(plan_operator_t *, ops_size);
     ops2 = BOR_ALLOC_ARR(plan_operator_t *, ops_size);
-    state = planStateNew(plan->state_pool);
+    state = planStateNew(prob->state_pool);
 
     for (i = 0; i < NUM_STATES; ++i){
         for (j = 0; j < 9; ++j){
             planStateSet(state, j, states[i][j]);
         }
 
-        sid = planStatePoolInsert(plan->state_pool, state);
-        found1 = findOpsLinear(plan->state_pool, plan->op, plan->op_size, sid, ops1);
+        sid = planStatePoolInsert(prob->state_pool, state);
+        found1 = findOpsLinear(prob->state_pool, prob->op, prob->op_size, sid, ops1);
         found2 = findOpsSG(sg, state, ops2, ops_size);
         assertEquals(found1, found2);
         if (found1 == found2){
@@ -108,10 +105,10 @@ TEST(testSuccGen)
 
     found2 = findOpsSG(sg, state, ops2, 2);
 
-    planStateDel(plan->state_pool, state);
+    planStateDel(prob->state_pool, state);
     BOR_FREE(ops1);
     BOR_FREE(ops2);
     planSuccGenDel(sg);
 
-    planDel(plan);
+    planProblemDel(prob);
 }

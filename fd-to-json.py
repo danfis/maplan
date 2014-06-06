@@ -57,8 +57,8 @@ def loadMutexGroup(data):
     data = data[2:]
     for i in range(count):
         var, val = [int(x) for x in data[0].split()]
-        if var in mutex_group:
-            raise Exception('{0} already in mutex_group'.format(var))
+        #if var in mutex_group:
+        #    raise Exception('{0} already in mutex_group'.format(var))
         mutex_group[var] = val
         data = data[1:]
 

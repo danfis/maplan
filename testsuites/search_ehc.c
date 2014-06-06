@@ -17,7 +17,7 @@ TEST(testSearchEHC)
 
     assertEquals(planSearchEHCRun(ehc, &path), 0);
     planPathPrint(&path, stdout);
-    assertEquals(planPathCost(&path), 28);
+    assertEquals(planPathCost(&path), 36);
 
     planPathFree(&path);
     planSearchEHCDel(ehc);

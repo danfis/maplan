@@ -15,15 +15,18 @@
 
 
 struct _plan_search_ehc_t {
-    plan_t *plan;
+    plan_t *plan;                    /*!< Structure with definition of
+                                          the problem */
     plan_state_space_t *state_space;
-    plan_list_lazy_fifo_t *list;
-    plan_heuristic_goalcount_t *heur;
-    plan_state_t *state;
-    plan_succ_gen_t *succ_gen;
-    plan_operator_t **succ_op;
-    unsigned best_heur;
-    plan_state_id_t goal_state;
+    plan_list_lazy_fifo_t *list;      /*!< List to keep track of the states */
+    plan_heuristic_goalcount_t *heur; /*!< Heuristic function */
+    plan_state_t *state;              /*!< Preallocated state structure */
+    plan_succ_gen_t *succ_gen;        /*!< Successor operator generator */
+    plan_operator_t **succ_op;        /*!< Preallocated array for successor
+                                           operators. */
+    unsigned best_heur;               /*!< Value of the best heuristic
+                                           value found so far */
+    plan_state_id_t goal_state;       /*!< The found state satisfying the goal */
 };
 typedef struct _plan_search_ehc_t plan_search_ehc_t;
 

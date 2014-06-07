@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <strings.h>
 #include <boruvka/hfunc.h>
 #include <boruvka/alloc.h>
@@ -517,6 +518,18 @@ void planStateZeroize(plan_state_t *state)
         state->val[i] = 0;
 }
 
+void planStateSet2(plan_state_t *state, int n, ...)
+{
+    va_list ap;
+    int i, val;
+
+    va_start(ap, n);
+    for (i = 0; i < n; ++i){
+        val = va_arg(ap, int);
+        state->val[i] = val;
+    }
+    va_end(ap);
+}
 
 
 

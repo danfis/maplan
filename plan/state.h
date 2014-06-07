@@ -200,6 +200,11 @@ _bor_inline void planStateSet(plan_state_t *state,
                               unsigned var, unsigned val);
 
 /**
+ * Sets first n variables to specified values.
+ */
+void planStateSet2(plan_state_t *state, int n, ...);
+
+/**
  * Returns number of variables in state.
  */
 _bor_inline size_t planStateSize(const plan_state_t *state);

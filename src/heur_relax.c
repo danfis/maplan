@@ -5,14 +5,13 @@
 
 #define FACT_SET_ADDED(fact) ((fact)->state |= 0x1)
 #define FACT_SET_OPEN(fact) ((fact)->state |= 0x2)
-#define FACT_SET_CLOSED(fact) ((fact)->state &= 0xd)
+#define FACT_SET_CLOSED(fact) ((fact)->state &= 0x5)
 #define FACT_SET_GOAL(fact) ((fact)->state |= 0x4)
-#define FACT_SET_GOAL_SAT(fact) ((fact)->state |= 0x8)
+#define FACT_UNSET_GOAL(fact) ((fact)->state &= 0x3)
 #define FACT_ADDED(fact) (((fact)->state & 0x1) == 0x1)
 #define FACT_OPEN(fact) (((fact)->state & 0x2) == 0x2)
 #define FACT_CLOSED(fact) (((fact)->state & 0x2) == 0x0)
 #define FACT_GOAL(fact) (((fact)->state & 0x4) == 0x4)
-#define FACT_GOAL_SAT(fact) (((fact)->state & 0x8) == 0x8)
 
 #define TYPE_ADD 0
 #define TYPE_MAX 1
@@ -333,8 +332,8 @@ static int relaxMainLoop(plan_heur_relax_t *heur, relax_t *r)
         fact = bor_container_of(heap_node, fact_t, heap);
         FACT_SET_CLOSED(fact);
 
-        if (FACT_GOAL(fact) && !FACT_GOAL_SAT(fact)){
-            FACT_SET_GOAL_SAT(fact);
+        if (FACT_GOAL(fact)){
+            FACT_UNSET_GOAL(fact);
             --r->goal_unsat;
             if (r->goal_unsat == 0)
                 return 0;

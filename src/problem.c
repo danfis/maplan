@@ -296,3 +296,56 @@ planLoadFromJsonFile_err:
     return -1;
 }
 
+void planProblemDump(const plan_problem_t *p, FILE *fout)
+{
+    size_t i, j;
+    plan_state_t *state;
+
+    state = planStateNew(p->state_pool);
+
+    for (i = 0; i < p->var_size; ++i){
+        fprintf(fout, "Var[%lu] range: %d, name: %s\n",
+                i, p->var[i].range, p->var[i].name);
+    }
+
+    planStatePoolGetState(p->state_pool, p->initial_state, state);
+    fprintf(fout, "Init:");
+    for (i = 0; i < p->var_size; ++i){
+        fprintf(fout, " %lu:%u", i, planStateGet(state, i));
+    }
+    fprintf(fout, "\n");
+
+    fprintf(fout, "Goal:");
+    for (i = 0; i < p->var_size; ++i){
+        if (planPartStateIsSet(p->goal, i)){
+            fprintf(fout, " %lu:%u", i, planPartStateGet(p->goal, i));
+        }else{
+            fprintf(fout, " %lu:X", i);
+        }
+    }
+    fprintf(fout, "\n");
+
+    for (i = 0; i < p->op_size; ++i){
+        fprintf(fout, "Op[%3lu]: ", i);
+        fprintf(fout, "Pre: ");
+        for (j = 0; j < p->var_size; ++j){
+            if (planPartStateIsSet(p->op[i].pre, j)){
+                fprintf(fout, " %lu:%u", j, planPartStateGet(p->op[i].pre, j));
+            }else{
+                fprintf(fout, " %lu:X", j);
+            }
+        }
+        fprintf(fout, "\n");
+        fprintf(fout, "         Post:");
+        for (j = 0; j < p->var_size; ++j){
+            if (planPartStateIsSet(p->op[i].eff, j)){
+                fprintf(fout, " %lu:%u", j, planPartStateGet(p->op[i].eff, j));
+            }else{
+                fprintf(fout, " %lu:X", j);
+            }
+        }
+        fprintf(fout, "\n");
+    }
+
+    planStateDel(p->state_pool, state);
+}

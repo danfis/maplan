@@ -33,6 +33,11 @@ void planProblemDel(plan_problem_t *problem);
 _bor_inline int planProblemCheckGoal(plan_problem_t *p,
                                      plan_state_id_t state_id);
 
+/**
+ * Dumps problem definition in text format.
+ * For debugging purposes.
+ */
+void planProblemDump(const plan_problem_t *p, FILE *fout);
 
 /**** INLINES ****/
 _bor_inline int planProblemCheckGoal(plan_problem_t *p,

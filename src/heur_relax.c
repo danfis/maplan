@@ -5,16 +5,19 @@
 
 #define FACT_SET_ADDED(fact) ((fact)->state |= 0x1)
 #define FACT_SET_OPEN(fact) ((fact)->state |= 0x2)
-#define FACT_SET_CLOSED(fact) ((fact)->state &= 0x5)
+#define FACT_SET_CLOSED(fact) ((fact)->state &= 0xd)
 #define FACT_SET_GOAL(fact) ((fact)->state |= 0x4)
-#define FACT_UNSET_GOAL(fact) ((fact)->state &= 0x3)
+#define FACT_SET_RELAXED_PLAN_VISITED(fact) ((fact)->state |= 0x8)
+#define FACT_UNSET_GOAL(fact) ((fact)->state &= 0xb)
 #define FACT_ADDED(fact) (((fact)->state & 0x1) == 0x1)
 #define FACT_OPEN(fact) (((fact)->state & 0x2) == 0x2)
 #define FACT_CLOSED(fact) (((fact)->state & 0x2) == 0x0)
 #define FACT_GOAL(fact) (((fact)->state & 0x4) == 0x4)
+#define FACT_RELAXED_PLAN_VISITED(fact) (((fact)->state & 0x8) == 0x8)
 
 #define TYPE_ADD 0
 #define TYPE_MAX 1
+#define TYPE_FF  2
 
 /**
  * Structure representing a single fact.
@@ -23,6 +26,7 @@ struct _fact_t {
     unsigned value;
     int id;
     int state;
+    int reached_by_op;
     bor_pairheap_node_t heap;
 };
 typedef struct _fact_t fact_t;
@@ -97,6 +101,11 @@ plan_heur_relax_t *planHeurRelaxAddNew(const plan_problem_t *prob)
 plan_heur_relax_t *planHeurRelaxMaxNew(const plan_problem_t *prob)
 {
     return planHeurRelaxNew(prob, TYPE_MAX);
+}
+
+plan_heur_relax_t *planHeurRelaxFFNew(const plan_problem_t *prob)
+{
+    return planHeurRelaxNew(prob, TYPE_FF);
 }
 
 
@@ -256,6 +265,7 @@ static void relaxAddInitState(plan_heur_relax_t *heur, relax_t *r,
         FACT_SET_ADDED(r->facts + id);
         FACT_SET_OPEN(r->facts + id);
         borPairHeapAdd(r->heap, &r->facts[id].heap);
+        r->facts[id].reached_by_op = -1;
     }
 }
 
@@ -273,6 +283,7 @@ static void relaxAddEffects(plan_heur_relax_t *heur, relax_t *r,
                     || r->facts[id].value > r->op_value[op_id]){
 
                 r->facts[id].value = r->op_value[op_id];
+                r->facts[id].reached_by_op = op_id;
                 if (FACT_OPEN(r->facts + id)){
                     borPairHeapDecreaseKey(r->heap, &r->facts[id].heap);
 
@@ -287,21 +298,14 @@ static void relaxAddEffects(plan_heur_relax_t *heur, relax_t *r,
     }
 }
 
-static unsigned relaxHeurOpValue(int type,
-                                 unsigned op_cost,
-                                 unsigned op_value,
-                                 unsigned fact_value)
+_bor_inline unsigned relaxHeurOpValue(int type,
+                                      unsigned op_cost,
+                                      unsigned op_value,
+                                      unsigned fact_value)
 {
-    if (type == TYPE_ADD)
+    if (type == TYPE_ADD || type == TYPE_FF)
         return op_value + fact_value;
     return BOR_MAX(op_cost + fact_value, op_value);
-}
-
-static unsigned relaxHeurValue(int type, unsigned value1, unsigned value2)
-{
-    if (type == TYPE_ADD)
-        return value1 + value2;
-    return BOR_MAX(value1, value2);
 }
 
 static void relaxProcessOp(plan_heur_relax_t *heur, relax_t *r,
@@ -349,7 +353,15 @@ static int relaxMainLoop(plan_heur_relax_t *heur, relax_t *r)
     return -1;
 }
 
-static unsigned relaxHeur(plan_heur_relax_t *heur, relax_t *r)
+
+_bor_inline unsigned relaxHeurValue(int type, unsigned value1, unsigned value2)
+{
+    if (type == TYPE_ADD)
+        return value1 + value2;
+    return BOR_MAX(value1, value2);
+}
+
+static unsigned relaxHeurAddMax(plan_heur_relax_t *heur, relax_t *r)
 {
     int i, id;
     unsigned h;
@@ -363,4 +375,64 @@ static unsigned relaxHeur(plan_heur_relax_t *heur, relax_t *r)
     }
 
     return h;
+}
+
+static void markRelaxedPlan(plan_heur_relax_t *heur, relax_t *r,
+                            int *relaxed_plan, int id)
+{
+    fact_t *fact = r->facts + id;
+    const plan_operator_t *op;
+    int i, id2;
+
+    if (!FACT_RELAXED_PLAN_VISITED(fact) && fact->reached_by_op != -1){
+        FACT_SET_RELAXED_PLAN_VISITED(fact);
+        op = heur->ops + fact->reached_by_op;
+
+        for (i = 0; i < heur->var_size; ++i){
+            if (planPartStateIsSet(op->pre, i)){
+                id2 = heur->val_id[i][planPartStateGet(op->pre, i)];
+                if (!FACT_RELAXED_PLAN_VISITED(r->facts + id2)
+                        && r->facts[id2].reached_by_op != -1){
+                    markRelaxedPlan(heur, r, relaxed_plan, id2);
+                }
+            }
+        }
+
+        relaxed_plan[fact->reached_by_op] = 1;
+    }
+}
+
+static unsigned relaxHeurFF(plan_heur_relax_t *heur, relax_t *r)
+{
+    int *relaxed_plan;
+    int i, id;
+    unsigned h = 0;
+
+    // TODO: port calloc to boruvka
+    relaxed_plan = (int *)calloc(heur->ops_size, sizeof(int));
+
+    for (i = 0; i < heur->var_size; ++i){
+        if (planPartStateIsSet(heur->goal, i)){
+            id = heur->val_id[i][planPartStateGet(heur->goal, i)];
+            markRelaxedPlan(heur, r, relaxed_plan, id);
+        }
+    }
+
+    for (i = 0; i < heur->ops_size; ++i){
+        if (relaxed_plan[i]){
+            h += heur->ops[i].cost;
+        }
+    }
+
+    BOR_FREE(relaxed_plan);
+    return h;
+}
+
+static unsigned relaxHeur(plan_heur_relax_t *heur, relax_t *r)
+{
+    if (heur->type == TYPE_ADD || heur->type == TYPE_MAX){
+        return relaxHeurAddMax(heur, r);
+    }else{ // heur->type == TYPE_FF
+        return relaxHeurFF(heur, r);
+    }
 }

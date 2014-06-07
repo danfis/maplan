@@ -326,8 +326,8 @@ void planProblemDump(const plan_problem_t *p, FILE *fout)
     fprintf(fout, "\n");
 
     for (i = 0; i < p->op_size; ++i){
-        fprintf(fout, "Op[%3lu]: ", i);
-        fprintf(fout, "Pre: ");
+        fprintf(fout, "Op[%3lu] %s\n", i, p->op[i].name);
+        fprintf(fout, "  Pre: ");
         for (j = 0; j < p->var_size; ++j){
             if (planPartStateIsSet(p->op[i].pre, j)){
                 fprintf(fout, " %lu:%u", j, planPartStateGet(p->op[i].pre, j));
@@ -336,7 +336,7 @@ void planProblemDump(const plan_problem_t *p, FILE *fout)
             }
         }
         fprintf(fout, "\n");
-        fprintf(fout, "         Post:");
+        fprintf(fout, "  Post:");
         for (j = 0; j < p->var_size; ++j){
             if (planPartStateIsSet(p->op[i].eff, j)){
                 fprintf(fout, " %lu:%u", j, planPartStateGet(p->op[i].eff, j));

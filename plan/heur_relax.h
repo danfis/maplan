@@ -39,6 +39,11 @@ plan_heur_relax_t *planHeurRelaxAddNew(const plan_problem_t *prob);
 plan_heur_relax_t *planHeurRelaxMaxNew(const plan_problem_t *prob);
 
 /**
+ * Creates an FF version of relaxation heuristics.
+ */
+plan_heur_relax_t *planHeurRelaxFFNew(const plan_problem_t *prob);
+
+/**
  * Deletes the heuristic object.
  */
 void planHeurRelaxDel(plan_heur_relax_t *h);

@@ -1,8 +1,8 @@
 #ifndef __PLAN_HEUR_RELAX_H__
 #define __PLAN_HEUR_RELAX_H__
 
-#include <plan/state.h>
-#include <plan/operator.h>
+#include <plan/problem.h>
+#include <plan/heur.h>
 
 
 /**
@@ -23,20 +23,20 @@ struct _plan_heur_relax_t {
     int *op_unsat;     /*!< Preinitialized counters of unsatisfied
                             preconditions per operator */
     int *op_value;     /*!< Preinitialized values of operators */
+
+    int type;
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
 /**
- * Creates a heuristic.
- * Note that it borrows the given pointer so be sure the heuristic is
- * deleted before the given partial state.
+ * Creates an ADD version of relaxation heuristics.
  */
-plan_heur_relax_t *planHeurRelaxNew(const plan_operator_t *ops,
-                                    size_t ops_size,
-                                    const plan_var_t *var,
-                                    size_t var_size,
-                                    const plan_part_state_t *goal);
+plan_heur_relax_t *planHeurRelaxAddNew(const plan_problem_t *prob);
 
+/**
+ * Creates an MAX version of relaxation heuristics.
+ */
+plan_heur_relax_t *planHeurRelaxMaxNew(const plan_problem_t *prob);
 
 /**
  * Deletes the heuristic object.

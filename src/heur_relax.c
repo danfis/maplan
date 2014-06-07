@@ -14,6 +14,9 @@
 #define FACT_GOAL(fact) (((fact)->state & 0x4) == 0x4)
 #define FACT_GOAL_SAT(fact) (((fact)->state & 0x8) == 0x8)
 
+#define TYPE_ADD 0
+#define TYPE_MAX 1
+
 /**
  * Structure representing a single fact.
  */
@@ -68,25 +71,33 @@ static int relaxMainLoop(plan_heur_relax_t *heur, relax_t *r);
 static unsigned relaxHeur(plan_heur_relax_t *heur, relax_t *r);
 
 
-plan_heur_relax_t *planHeurRelaxNew(const plan_operator_t *ops,
-                                    size_t ops_size,
-                                    const plan_var_t *var,
-                                    size_t var_size,
-                                    const plan_part_state_t *goal)
+static plan_heur_relax_t *planHeurRelaxNew(const plan_problem_t *prob,
+                                           int type)
 {
     plan_heur_relax_t *heur;
 
     heur = BOR_ALLOC(plan_heur_relax_t);
-    heur->ops      = ops;
-    heur->ops_size = ops_size;
-    heur->var      = var;
-    heur->var_size = var_size;
-    heur->goal     = goal;
+    heur->ops      = prob->op;
+    heur->ops_size = prob->op_size;
+    heur->var      = prob->var;
+    heur->var_size = prob->var_size;
+    heur->goal     = prob->goal;
+    heur->type     = type;
 
     valueIdInit(heur);
     precondInit(heur);
 
     return heur;
+}
+
+plan_heur_relax_t *planHeurRelaxAddNew(const plan_problem_t *prob)
+{
+    return planHeurRelaxNew(prob, TYPE_ADD);
+}
+
+plan_heur_relax_t *planHeurRelaxMaxNew(const plan_problem_t *prob)
+{
+    return planHeurRelaxNew(prob, TYPE_MAX);
 }
 
 
@@ -101,12 +112,11 @@ unsigned planHeurRelax(plan_heur_relax_t *heur,
                        const plan_state_t *state)
 {
     relax_t relax;
-    unsigned h = -1;
+    unsigned h = PLAN_HEUR_DEAD_END;
 
     relaxInit(heur, &relax);
     relaxAddInitState(heur, &relax, state);
     if (relaxMainLoop(heur, &relax) == 0){
-        // TODO: PLAN_HEUR_DEAD_END
         h = relaxHeur(heur, &relax);
     }
     relaxFree(heur, &relax);
@@ -278,11 +288,31 @@ static void relaxAddEffects(plan_heur_relax_t *heur, relax_t *r,
     }
 }
 
+static unsigned relaxHeurOpValue(int type,
+                                 unsigned op_cost,
+                                 unsigned op_value,
+                                 unsigned fact_value)
+{
+    if (type == TYPE_ADD)
+        return op_value + fact_value;
+    return BOR_MAX(op_cost + fact_value, op_value);
+}
+
+static unsigned relaxHeurValue(int type, unsigned value1, unsigned value2)
+{
+    if (type == TYPE_ADD)
+        return value1 + value2;
+    return BOR_MAX(value1, value2);
+}
+
 static void relaxProcessOp(plan_heur_relax_t *heur, relax_t *r,
                            int op_id, fact_t *fact)
 {
-    // TODO: Add/Max op
-    r->op_value[op_id] += fact->value;
+    // update operator value
+    r->op_value[op_id] = relaxHeurOpValue(heur->type,
+                                          heur->ops[op_id].cost,
+                                          r->op_value[op_id],
+                                          fact->value);
 
     // satisfy operator precondition
     r->op_unsat[op_id] = BOR_MAX(r->op_unsat[op_id] - 1, 0);
@@ -325,12 +355,11 @@ static unsigned relaxHeur(plan_heur_relax_t *heur, relax_t *r)
     int i, id;
     unsigned h;
 
-    // TODO: Add/Max op
     h = 0;
     for (i = 0; i < heur->var_size; ++i){
         if (planPartStateIsSet(heur->goal, i)){
             id = heur->val_id[i][planPartStateGet(heur->goal, i)];
-            h += r->facts[id].value;
+            h = relaxHeurValue(heur->type, h, r->facts[id].value);
         }
     }
 

@@ -22,15 +22,18 @@ CHECK_TS ?=
 
 TARGETS = test bench-ehc
 
-OBJS = main.o load-from-file.o state.o dataarr.o succgen.o statespace.o \
+OBJS = load-from-file.o state.o dataarr.o succgen.o statespace.o \
        search_ehc.o heur.o
 
 all: $(TARGETS)
 
-test: cu $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
+test: main.c cu $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $< $(OBJS) $(LDFLAGS)
 bench-ehc: bench-ehc.c ../libplan.a
 	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS)
+
+heur.c: ../plan/heur_relax.h
+	touch $@
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<

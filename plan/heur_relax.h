@@ -16,12 +16,13 @@ struct _plan_heur_relax_t {
     int var_size;
     const plan_part_state_t *goal;
 
-    int **val_id;     /*!< ID of each variable value (val_id[var][val]) */
-    int val_size;     /*!< Number of all values */
-    int **precond;
-    int *precond_size;
-    int *op_unsat;
-    int *op_value;
+    int **val_id;      /*!< ID of each variable value (val_id[var][val]) */
+    int val_size;      /*!< Number of all values */
+    int **precond;     /*!< Operator IDs indexed by precondition ID */
+    int *precond_size; /*!< Size of each subarray */
+    int *op_unsat;     /*!< Preinitialized counters of unsatisfied
+                            preconditions per operator */
+    int *op_value;     /*!< Preinitialized values of operators */
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 

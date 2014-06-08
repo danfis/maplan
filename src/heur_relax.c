@@ -230,7 +230,7 @@ static void relaxInit(plan_heur_relax_t *heur, relax_t *r)
     r->op_value = BOR_ALLOC_ARR(int, heur->ops_size);
     memcpy(r->op_value, heur->op_value, sizeof(int) * heur->ops_size);
 
-    r->facts = (fact_t *)calloc(heur->val_size, sizeof(fact_t));
+    r->facts = BOR_CALLOC_ARR(fact_t, heur->val_size);
 
     r->heap = borPairHeapNew(heapLT, NULL);
 
@@ -408,8 +408,7 @@ static unsigned relaxHeurFF(plan_heur_relax_t *heur, relax_t *r)
     int i, id;
     unsigned h = 0;
 
-    // TODO: port calloc to boruvka
-    relaxed_plan = (int *)calloc(heur->ops_size, sizeof(int));
+    relaxed_plan = BOR_CALLOC_ARR(int, heur->ops_size);
 
     for (i = 0; i < heur->var_size; ++i){
         if (planPartStateIsSet(heur->goal, i)){

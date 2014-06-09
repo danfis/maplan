@@ -15,14 +15,15 @@ void planHeurGoalCountDel(plan_heur_goalcount_t *h)
     BOR_FREE(h);
 }
 
-unsigned planHeurGoalCount(plan_heur_goalcount_t *h,
-                           const plan_state_t *state)
+plan_cost_t planHeurGoalCount(plan_heur_goalcount_t *h,
+                              const plan_state_t *state)
 {
-    size_t i;
-    unsigned var, val;
-    unsigned heur;
+    int i;
+    plan_var_id_t var;
+    plan_val_t val;
+    plan_cost_t heur;
 
-    heur = 0;
+    heur = PLAN_COST_ZERO;
     PLAN_PART_STATE_FOR_EACH(h->goal, i, var, val){
         if (val != planStateGet(state, var))
             ++heur;

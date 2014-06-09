@@ -5,14 +5,14 @@
  * Base building structure for a tree node of successor generator.
  */
 struct _plan_succ_gen_tree_t {
-    unsigned var;                       /*!< Decision variable */
+    plan_var_id_t var;                  /*!< Decision variable */
     plan_operator_t **ops;              /*!< List of immediate operators
                                              that are returned once this
                                              node is reached */
-    size_t ops_size;
+    int ops_size;
     struct _plan_succ_gen_tree_t **val; /*!< Subtrees indexed by the value
                                              of the decision variable */
-    size_t val_size;
+    int val_size;
     struct _plan_succ_gen_tree_t *def;  /*!< Default subtree containing
                                              operators without precondition
                                              on the decision variable */
@@ -20,31 +20,31 @@ struct _plan_succ_gen_tree_t {
 typedef struct _plan_succ_gen_tree_t plan_succ_gen_tree_t;
 
 /** Creates a new tree node (and recursively all subtrees) */
-static plan_succ_gen_tree_t *treeNew(unsigned start_var,
+static plan_succ_gen_tree_t *treeNew(plan_var_id_t start_var,
                                      plan_operator_t **ops,
-                                     size_t len);
+                                     int len);
 /** Recursively deletes a tree */
 static void treeDel(plan_succ_gen_tree_t *tree);
 
 /** Finds applicable operators to the given state */
-static size_t treeFind(const plan_succ_gen_tree_t *tree,
-                       const plan_state_t *state,
-                       plan_operator_t **op, size_t op_size);
+static int treeFind(const plan_succ_gen_tree_t *tree,
+                    const plan_state_t *state,
+                    plan_operator_t **op, int op_size);
 
 /** Set immediate operators to tree node */
 static void treeBuildSetOps(plan_succ_gen_tree_t *tree,
-                            plan_operator_t **ops, size_t len);
+                            plan_operator_t **ops, int len);
 /** Build default subtree */
-static size_t treeBuildDef(plan_succ_gen_tree_t *tree,
-                           unsigned var,
-                           plan_operator_t **ops, size_t len);
+static int treeBuildDef(plan_succ_gen_tree_t *tree,
+                        plan_var_id_t var,
+                        plan_operator_t **ops, int len);
 /** Prepare array of .val[] subtrees */
 static void treeBuildPrepareVal(plan_succ_gen_tree_t *tree,
-                                unsigned val);
+                                plan_val_t val);
 /** Build val subtree */
-static size_t treeBuildVal(plan_succ_gen_tree_t *tree,
-                           unsigned var,
-                           plan_operator_t **ops, size_t len);
+static int treeBuildVal(plan_succ_gen_tree_t *tree,
+                        plan_var_id_t var,
+                        plan_operator_t **ops, int len);
 
 /** Comparator for qsort which sorts operators by its variables and its
  *  values. */
@@ -53,11 +53,11 @@ static int opsSortCmp(const void *a, const void *b);
 
 
 
-plan_succ_gen_t *planSuccGenNew(plan_operator_t *op, size_t opsize)
+plan_succ_gen_t *planSuccGenNew(plan_operator_t *op, int opsize)
 {
     plan_succ_gen_t *sg;
     plan_operator_t **sorted_ops;
-    size_t i;
+    int i;
 
     // prepare array for sorting operators
     sorted_ops = BOR_ALLOC_ARR(plan_operator_t *, opsize);
@@ -83,9 +83,9 @@ void planSuccGenDel(plan_succ_gen_t *sg)
     BOR_FREE(sg);
 }
 
-size_t planSuccGenFind(const plan_succ_gen_t *sg,
-                       const plan_state_t *state,
-                       plan_operator_t **op, size_t op_size)
+int planSuccGenFind(const plan_succ_gen_t *sg,
+                    const plan_state_t *state,
+                    plan_operator_t **op, int op_size)
 {
     return treeFind(sg->root, state, op, op_size);
 }
@@ -99,9 +99,9 @@ static int opsSortCmp(const void *a, const void *b)
 {
     const plan_operator_t *opa = *(const plan_operator_t **)a;
     const plan_operator_t *opb = *(const plan_operator_t **)b;
-    size_t i, size = planPartStateSize(opa->pre);
+    int i, size = planPartStateSize(opa->pre);
     int aset, bset;
-    unsigned aval, bval;
+    plan_val_t aval, bval;
 
     for (i = 0; i < size; ++i){
         aset = planPartStateIsSet(opa->pre, i);
@@ -127,9 +127,9 @@ static int opsSortCmp(const void *a, const void *b)
 }
 
 static void treeBuildSetOps(plan_succ_gen_tree_t *tree,
-                            plan_operator_t **ops, size_t len)
+                            plan_operator_t **ops, int len)
 {
-    size_t i;
+    int i;
 
     if (tree->ops)
         BOR_FREE(tree->ops);
@@ -141,11 +141,11 @@ static void treeBuildSetOps(plan_succ_gen_tree_t *tree,
         tree->ops[i] = ops[i];
 }
 
-static size_t treeBuildDef(plan_succ_gen_tree_t *tree,
-                           unsigned var,
-                           plan_operator_t **ops, size_t len)
+static int treeBuildDef(plan_succ_gen_tree_t *tree,
+                        plan_var_id_t var,
+                        plan_operator_t **ops, int len)
 {
-    size_t size;
+    int size;
 
     for (size = 1;
          size < len && !planPartStateIsSet(ops[size]->pre, var);
@@ -158,9 +158,9 @@ static size_t treeBuildDef(plan_succ_gen_tree_t *tree,
 }
 
 static void treeBuildPrepareVal(plan_succ_gen_tree_t *tree,
-                                unsigned val)
+                                plan_val_t val)
 {
-    size_t i;
+    int i;
 
     tree->val_size = val + 1;
     tree->val = BOR_ALLOC_ARR(plan_succ_gen_tree_t *, tree->val_size);
@@ -169,12 +169,12 @@ static void treeBuildPrepareVal(plan_succ_gen_tree_t *tree,
         tree->val[i] = NULL;
 }
 
-static size_t treeBuildVal(plan_succ_gen_tree_t *tree,
-                           unsigned var,
-                           plan_operator_t **ops, size_t len)
+static int treeBuildVal(plan_succ_gen_tree_t *tree,
+                        plan_var_id_t var,
+                        plan_operator_t **ops, int len)
 {
-    size_t size;
-    unsigned val;
+    int size;
+    plan_val_t val;
 
     val = planPartStateGet(ops[0]->pre, var);
 
@@ -188,16 +188,16 @@ static size_t treeBuildVal(plan_succ_gen_tree_t *tree,
     return size;
 }
 
-static plan_succ_gen_tree_t *treeNew(unsigned start_var,
+static plan_succ_gen_tree_t *treeNew(plan_var_id_t start_var,
                                      plan_operator_t **ops,
-                                     size_t len)
+                                     int len)
 {
     plan_succ_gen_tree_t *tree;
-    unsigned var, num_vars;
-    size_t start;
+    plan_var_id_t var;
+    int num_vars, start;
 
     tree = BOR_ALLOC(plan_succ_gen_tree_t);
-    tree->var = -1;
+    tree->var = PLAN_VAR_ID_UNDEFINED;
     tree->ops = NULL;
     tree->ops_size = 0;
     tree->val = NULL;
@@ -245,7 +245,7 @@ static plan_succ_gen_tree_t *treeNew(unsigned start_var,
 
 static void treeDel(plan_succ_gen_tree_t *tree)
 {
-    size_t i;
+    int i;
 
     if (tree->ops)
         BOR_FREE(tree->ops);
@@ -263,12 +263,12 @@ static void treeDel(plan_succ_gen_tree_t *tree)
     BOR_FREE(tree);
 }
 
-static size_t treeFind(const plan_succ_gen_tree_t *tree,
-                       const plan_state_t *state,
-                       plan_operator_t **op, size_t op_size)
+static int treeFind(const plan_succ_gen_tree_t *tree,
+                    const plan_state_t *state,
+                    plan_operator_t **op, int op_size)
 {
-    size_t i, found = 0, size;
-    unsigned val;
+    int i, found = 0, size;
+    plan_val_t val;
 
     // insert all immediate operators
     if (tree->ops_size > 0){
@@ -280,7 +280,7 @@ static size_t treeFind(const plan_succ_gen_tree_t *tree,
     }
 
     // check whether this node should check on any variable value
-    if (tree->var != (unsigned)-1){
+    if (tree->var != PLAN_VAR_ID_UNDEFINED){
         // get corresponding value from state
         val = planStateGet(state, tree->var);
 

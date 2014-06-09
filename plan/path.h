@@ -41,6 +41,6 @@ void planPathPrint(const plan_path_t *path, FILE *fout);
 /**
  * Returns a cost of a full path.
  */
-unsigned planPathCost(const plan_path_t *path);
+plan_cost_t planPathCost(const plan_path_t *path);
 
 #endif /* __PLAN_PATH_H__ */

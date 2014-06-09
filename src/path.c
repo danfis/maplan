@@ -38,9 +38,9 @@ void planPathPrint(const plan_path_t *path, FILE *fout)
     }
 }
 
-unsigned planPathCost(const plan_path_t *path)
+plan_cost_t planPathCost(const plan_path_t *path)
 {
-    unsigned cost = 0;
+    plan_cost_t cost = PLAN_COST_ZERO;
     plan_path_op_t *op;
 
     BOR_LIST_FOR_EACH_ENTRY(path, plan_path_op_t, op, path){

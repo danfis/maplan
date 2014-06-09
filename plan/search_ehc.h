@@ -24,7 +24,7 @@ struct _plan_search_ehc_t {
     plan_succ_gen_t *succ_gen;       /*!< Successor operator generator */
     plan_operator_t **succ_op;       /*!< Preallocated array for successor
                                           operators. */
-    unsigned best_heur;              /*!< Value of the best heuristic
+    plan_cost_t best_heur;           /*!< Value of the best heuristic
                                           value found so far */
     plan_state_id_t goal_state;      /*!< The found state satisfying the goal */
 };

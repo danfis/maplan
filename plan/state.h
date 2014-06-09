@@ -7,19 +7,11 @@
 #include <boruvka/segmarr.h>
 #include <boruvka/htable.h>
 
+#include <plan/common.h>
 #include <plan/var.h>
 #include <plan/dataarr.h>
 
-/**
- * Type of a state ID which is used for reference into state pool.
- */
-typedef long plan_state_id_t;
-
-/**
- * Constant saying that no state was assigned.
- */
-#define PLAN_NO_STATE ((plan_state_id_t)-1)
-
+/** Forward declaration */
 struct _plan_state_packer_var_t;
 
 /**
@@ -27,8 +19,8 @@ struct _plan_state_packer_var_t;
  */
 struct _plan_state_packer_t {
     struct _plan_state_packer_var_t *vars;
-    size_t num_vars;
-    size_t bufsize;
+    int num_vars;
+    int bufsize;
 };
 typedef struct _plan_state_packer_t plan_state_packer_t;
 
@@ -37,11 +29,11 @@ typedef struct _plan_state_packer_t plan_state_packer_t;
  * Main struct managing all states and its corresponding informations.
  */
 struct _plan_state_pool_t {
-    size_t num_vars;        /*!< Num of variables per state */
+    int num_vars;        /*!< Num of variables per state */
 
     plan_state_packer_t *packer;
     plan_data_arr_t **data; /*!< Data arrays */
-    size_t data_size;       /*!< Number of data arrays */
+    int data_size;       /*!< Number of data arrays */
     bor_htable_t *htable;   /*!< Hash table for uniqueness of states. */
     size_t num_states;
 };
@@ -52,15 +44,15 @@ typedef struct _plan_state_pool_t plan_state_pool_t;
  * Struct containing "unpacked" state.
  */
 struct _plan_state_t {
-    unsigned *val;
-    size_t num_vars;
+    plan_val_t *val;
+    int num_vars;
 };
 typedef struct _plan_state_t plan_state_t;
 
 
 struct _plan_part_state_pair_t {
-    unsigned var;
-    unsigned val;
+    plan_var_id_t var;
+    plan_val_t val;
 };
 typedef struct _plan_part_state_pair_t plan_part_state_pair_t;
 
@@ -68,16 +60,16 @@ typedef struct _plan_part_state_pair_t plan_part_state_pair_t;
  * Struct representing partial state.
  */
 struct _plan_part_state_t {
-    unsigned *val; /*!< Array of unpacked values */
-    int *is_set;   /*!< Array of bool flags stating whether the
-                        corresponding value is set */
-    size_t num_vars;
+    plan_val_t *val; /*!< Array of unpacked values */
+    int *is_set;     /*!< Array of bool flags stating whether the
+                          corresponding value is set */
+    int num_vars;
 
     void *valbuf;  /*!< Buffer of packed values */
     void *maskbuf; /*!< Buffer of mask for values */
 
     plan_part_state_pair_t *vals; /*!< Unrolled values */
-    size_t vals_size;
+    int vals_size;
 };
 typedef struct _plan_part_state_t plan_part_state_t;
 
@@ -86,7 +78,7 @@ typedef struct _plan_part_state_t plan_part_state_t;
 /**
  * Initializes a new state pool.
  */
-plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size);
+plan_state_pool_t *planStatePoolNew(const plan_var_t *var, int var_size);
 
 /**
  * Frees previously allocated pool.
@@ -99,17 +91,17 @@ void planStatePoolDel(plan_state_pool_t *pool);
  * {init_data} (see dataarr.h).
  * The function returns ID by which the data array can be referenced later.
  */
-size_t planStatePoolDataReserve(plan_state_pool_t *pool,
-                                size_t element_size,
-                                plan_data_arr_el_init_fn init_fn,
-                                const void *init_data);
+int planStatePoolDataReserve(plan_state_pool_t *pool,
+                             size_t element_size,
+                             plan_data_arr_el_init_fn init_fn,
+                             const void *init_data);
 
 /**
  * Returns an element from data array that corresponds to the specified
  * state.
  */
 void *planStatePoolData(plan_state_pool_t *pool,
-                        size_t data_id,
+                        int data_id,
                         plan_state_id_t state_id);
 
 /**
@@ -157,7 +149,7 @@ plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
  * Creates a new object for packing states into binary buffers.
  */
 plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
-                                        size_t var_size);
+                                        int var_size);
 
 /**
  * Deletes a state packer object.
@@ -167,7 +159,7 @@ void planStatePackerDel(plan_state_packer_t *p);
 /**
  * Returns size of the buffer in bytes required for storing packed state.
  */
-_bor_inline size_t planStatePackerBufSize(const plan_state_packer_t *p);
+_bor_inline int planStatePackerBufSize(const plan_state_packer_t *p);
 
 /**
  * Pack the given state into provided buffer that must be at least
@@ -200,13 +192,15 @@ void planStateDel(plan_state_pool_t *pool, plan_state_t *state);
 /**
  * Returns value of the specified variable.
  */
-_bor_inline unsigned planStateGet(const plan_state_t *state, unsigned var);
+_bor_inline plan_val_t planStateGet(const plan_state_t *state,
+                                    plan_var_id_t var);
 
 /**
  * Sets value of the specified variable.
  */
 _bor_inline void planStateSet(plan_state_t *state,
-                              unsigned var, unsigned val);
+                              plan_var_id_t var,
+                              plan_val_t val);
 
 /**
  * Sets first n variables to specified values.
@@ -216,7 +210,7 @@ void planStateSet2(plan_state_t *state, int n, ...);
 /**
  * Returns number of variables in state.
  */
-_bor_inline size_t planStateSize(const plan_state_t *state);
+_bor_inline int planStateSize(const plan_state_t *state);
 
 /**
  * Zeroize all variable values.
@@ -240,23 +234,25 @@ void planPartStateDel(plan_state_pool_t *pool,
 /**
  * Returns number of variable the state consists of.
  */
-_bor_inline size_t planPartStateSize(const plan_part_state_t *state);
+_bor_inline int planPartStateSize(const plan_part_state_t *state);
 
 /**
  * Returns a value of a specified variable.
  */
-_bor_inline int planPartStateGet(const plan_part_state_t *state, unsigned var);
+_bor_inline plan_val_t planPartStateGet(const plan_part_state_t *state,
+                                        plan_var_id_t var);
 
 /**
  * Sets a value of a specified variable.
  */
-void planPartStateSet(plan_state_pool_t *pool,
-                      plan_part_state_t *state, unsigned var, unsigned val);
+void planPartStateSet(plan_state_pool_t *pool, plan_part_state_t *state,
+                      plan_var_id_t var, plan_val_t val);
 
 /**
  * Returns true if var's variable is set.
  */
-_bor_inline int planPartStateIsSet(const plan_part_state_t *state, unsigned var);
+_bor_inline int planPartStateIsSet(const plan_part_state_t *state,
+                                   plan_var_id_t var);
 
 /**
  * Macro for iterating over "unrolled" set values of partial state.
@@ -272,39 +268,43 @@ _bor_inline int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
 
 
 /**** INLINES ****/
-_bor_inline size_t planStatePackerBufSize(const plan_state_packer_t *p)
+_bor_inline int planStatePackerBufSize(const plan_state_packer_t *p)
 {
     return p->bufsize;
 }
 
 
-_bor_inline unsigned planStateGet(const plan_state_t *state, unsigned var)
+_bor_inline plan_val_t planStateGet(const plan_state_t *state,
+                                    plan_var_id_t var)
 {
     return state->val[var];
 }
 
 _bor_inline void planStateSet(plan_state_t *state,
-                              unsigned var, unsigned val)
+                              plan_var_id_t var,
+                              plan_val_t val)
 {
     state->val[var] = val;
 }
 
-_bor_inline size_t planStateSize(const plan_state_t *state)
+_bor_inline int planStateSize(const plan_state_t *state)
 {
     return state->num_vars;
 }
 
-_bor_inline size_t planPartStateSize(const plan_part_state_t *state)
+_bor_inline int planPartStateSize(const plan_part_state_t *state)
 {
     return state->num_vars;
 }
 
-_bor_inline int planPartStateGet(const plan_part_state_t *state, unsigned var)
+_bor_inline plan_val_t planPartStateGet(const plan_part_state_t *state,
+                                        plan_var_id_t var)
 {
     return state->val[var];
 }
 
-_bor_inline int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
+_bor_inline int planPartStateIsSet(const plan_part_state_t *state,
+                                   plan_var_id_t var)
 {
     return state->is_set[var];
 }

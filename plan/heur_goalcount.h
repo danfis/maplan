@@ -28,7 +28,7 @@ void planHeurGoalCountDel(plan_heur_goalcount_t *h);
 /**
  * Computes a heuristic value corresponding to the state.
  */
-unsigned planHeurGoalCount(plan_heur_goalcount_t *h,
-                           const plan_state_t *state);
+plan_cost_t planHeurGoalCount(plan_heur_goalcount_t *h,
+                              const plan_state_t *state);
 
 #endif /* __PLAN_HEUR_GOALCOUNT_H__ */

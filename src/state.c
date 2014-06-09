@@ -17,50 +17,39 @@ struct _plan_state_htable_t {
 };
 typedef struct _plan_state_htable_t plan_state_htable_t;
 
-/** Type of one word in buffer of packed variable values.
- *  Bear in mind that the word's size must be big enough to store the whole
- *  range of the biggest variable */
-typedef uint32_t packer_word_t;
-
-/** Number of bits in packed word */
-#define PACKER_WORD_BITS (8u * sizeof(packer_word_t))
-/** Word with only highest bit set (i.e., 0x80000...) */
-#define PACKER_WORD_SET_HI_BIT \
-    (((packer_word_t)1u) << (PACKER_WORD_BITS - 1u))
-/** Word with all bits set (i.e., 0xffff...) */
-#define PACKER_WORD_SET_ALL_BITS ((packer_word_t)-1)
 
 struct _plan_state_packer_var_t {
-    int bitlen;               /*!< Number of bits required to store a value */
-    packer_word_t shift;      /*!< Left shift size during packing */
-    packer_word_t mask;       /*!< Mask for packed values */
-    packer_word_t clear_mask; /*!< Clear mask for packed values (i.e., ~mask) */
-    int pos;                  /*!< Position of a word in buffer where
-                                   values are stored. */
+    int bitlen;                    /*!< Number of bits required to store a value */
+    plan_packer_word_t shift;      /*!< Left shift size during packing */
+    plan_packer_word_t mask;       /*!< Mask for packed values */
+    plan_packer_word_t clear_mask; /*!< Clear mask for packed values (i.e., ~mask) */
+    int pos;                       /*!< Position of a word in buffer where
+                                        values are stored. */
 };
 typedef struct _plan_state_packer_var_t plan_state_packer_var_t;
 
 /** Sets variable to value in packed state buffer */
 static void planStatePackerSet(plan_state_packer_t *packer,
-                               unsigned var, unsigned val,
+                               plan_var_id_t var,
+                               plan_val_t val,
                                void *buf);
 /** Sets mask (~0) corresponding to the variable in packed state buffer */
 static void planStatePackerSetMask(plan_state_packer_t *packer,
-                                   unsigned var, void *buf);
+                                   plan_var_id_t var, void *buf);
 /** Returns number of bits needed for storing all values in interval
  * [0,range). */
-static int packerBitsNeeded(int range);
+static int packerBitsNeeded(plan_val_t range);
 /** Comparator for sorting variables by their bit length */
 static int sortCmpVar(const void *a, const void *b);
 /** Constructs mask for variable */
-static packer_word_t packerVarMask(int bitlen, int shift);
+static plan_packer_word_t packerVarMask(int bitlen, int shift);
 /** Set variable into packed buffer */
 static void packerSetVar(const plan_state_packer_var_t *var,
-                         packer_word_t val,
+                         plan_packer_word_t val,
                          void *buffer);
 /** Retrieves a value of the variable from packed buffer */
-static unsigned packerGetVar(const plan_state_packer_var_t *var,
-                             const void *buffer);
+static plan_val_t packerGetVar(const plan_state_packer_var_t *var,
+                               const void *buffer);
 
 /** Returns true if the two given states are equal. */
 _bor_inline int planStateEq(const plan_state_pool_t *pool,
@@ -72,10 +61,10 @@ _bor_inline bor_htable_key_t planStateHash(const plan_state_pool_t *pool,
                                            plan_state_id_t sid);
 
 /** Performs bit operation c = a AND b. */
-static void bitAnd(const void *a, const void *b, size_t size, void *c);
+static void bitAnd(const void *a, const void *b, int size, void *c);
 /** Performs bit operator c = (a AND ~m) OR b. */
 static void bitApplyWithMask(const void *a, const void *m, const void *b,
-                             size_t size, void *c);
+                             int size, void *c);
 
 
 /** Callbacks for bor_htable_t */
@@ -101,9 +90,9 @@ static void printBin(const unsigned char *m, int size)
     }
 }
 
-plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size)
+plan_state_pool_t *planStatePoolNew(const plan_var_t *var, int var_size)
 {
-    size_t state_size;
+    int state_size;
     plan_state_pool_t *pool;
     void *state_init;
     plan_state_htable_t htable_init;
@@ -134,7 +123,7 @@ plan_state_pool_t *planStatePoolNew(const plan_var_t *var, size_t var_size)
 
 void planStatePoolDel(plan_state_pool_t *pool)
 {
-    size_t i;
+    int i;
 
     if (pool->htable)
         borHTableDel(pool->htable);
@@ -150,12 +139,12 @@ void planStatePoolDel(plan_state_pool_t *pool)
     BOR_FREE(pool);
 }
 
-size_t planStatePoolDataReserve(plan_state_pool_t *pool,
-                                size_t element_size,
-                                plan_data_arr_el_init_fn init_fn,
-                                const void *init_data)
+int planStatePoolDataReserve(plan_state_pool_t *pool,
+                             size_t element_size,
+                             plan_data_arr_el_init_fn init_fn,
+                             const void *init_data)
 {
-    size_t data_id;
+    int data_id;
 
     data_id = pool->data_size;
     ++pool->data_size;
@@ -167,7 +156,7 @@ size_t planStatePoolDataReserve(plan_state_pool_t *pool,
 }
 
 void *planStatePoolData(plan_state_pool_t *pool,
-                        size_t data_id,
+                        int data_id,
                         plan_state_id_t state_id)
 {
     if (data_id >= pool->data_size)
@@ -264,8 +253,7 @@ int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
 {
     void *statebuf;
     void *masked_state;
-    size_t size;
-    int cmp;
+    int size, cmp;
 
     if (sid >= pool->num_states)
         return 0;
@@ -338,10 +326,9 @@ plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
 
 /** State Packer **/
 plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
-                                        size_t var_size)
+                                        int var_size)
 {
-    size_t i, is_set;
-    int bitlen, wordpos;
+    int i, is_set, bitlen, wordpos;
     plan_state_packer_t *p;
     plan_state_packer_var_t **pvars;
 
@@ -368,10 +355,10 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
         bitlen = 0;
         for (i = 0; i < var_size; ++i){
             if (pvars[i]->pos == -1
-                    && pvars[i]->bitlen + bitlen <= PACKER_WORD_BITS){
+                    && pvars[i]->bitlen + bitlen <= PLAN_PACKER_WORD_BITS){
                 pvars[i]->pos = wordpos;
                 bitlen += pvars[i]->bitlen;
-                pvars[i]->shift = PACKER_WORD_BITS - bitlen;
+                pvars[i]->shift = PLAN_PACKER_WORD_BITS - bitlen;
                 pvars[i]->mask = packerVarMask(pvars[i]->bitlen,
                                                pvars[i]->shift);
                 pvars[i]->clear_mask = ~pvars[i]->mask;
@@ -380,14 +367,14 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
         }
     }
 
-    p->bufsize = sizeof(packer_word_t) * (wordpos + 1);
+    p->bufsize = sizeof(plan_packer_word_t) * (wordpos + 1);
 
     // free temporary array
     BOR_FREE(pvars);
 
     /*
     for (i = 0; i < var_size; ++i){
-        fprintf(stderr, "%d %d %d %d\n", (int)PACKER_WORD_BITS,
+        fprintf(stderr, "%d %d %d %d\n", (int)PLAN_PACKER_WORD_BITS,
                 p->vars[i].bitlen, p->vars[i].shift,
                 p->vars[i].pos);
     }
@@ -407,7 +394,7 @@ void planStatePackerPack(const plan_state_packer_t *p,
                          const plan_state_t *state,
                          void *buffer)
 {
-    size_t i;
+    int i;
     for (i = 0; i < p->num_vars; ++i){
         packerSetVar(p->vars + i, planStateGet(state, i), buffer);
     }
@@ -417,32 +404,33 @@ void planStatePackerUnpack(const plan_state_packer_t *p,
                            const void *buffer,
                            plan_state_t *state)
 {
-    size_t i;
+    int i;
     for (i = 0; i < p->num_vars; ++i){
         planStateSet(state, i, packerGetVar(p->vars + i, buffer));
     }
 }
 
 static void planStatePackerSet(plan_state_packer_t *packer,
-                               unsigned var, unsigned val,
+                               plan_var_id_t var,
+                               plan_val_t val,
                                void *buf)
 {
     packerSetVar(packer->vars + var, val, buf);
 }
 
 static void planStatePackerSetMask(plan_state_packer_t *packer,
-                                   unsigned var, void *_buf)
+                                   plan_var_id_t var, void *_buf)
 {
-    packer_word_t *buf = (packer_word_t *)_buf;
+    plan_packer_word_t *buf = (plan_packer_word_t *)_buf;
     buf[packer->vars[var].pos] |= packer->vars[var].mask;
 }
 
-static int packerBitsNeeded(int range)
+static int packerBitsNeeded(plan_val_t range)
 {
-    packer_word_t max_val = range - 1;
-    int num = PACKER_WORD_BITS;
+    plan_packer_word_t max_val = range - 1;
+    int num = PLAN_PACKER_WORD_BITS;
 
-    for (; !(max_val & PACKER_WORD_SET_HI_BIT); --num, max_val <<= 1);
+    for (; !(max_val & PLAN_PACKER_WORD_SET_HI_BIT); --num, max_val <<= 1);
     return num;
 }
 
@@ -459,31 +447,32 @@ static int sortCmpVar(const void *a, const void *b)
     }
 }
 
-static packer_word_t packerVarMask(int bitlen, int shift)
+static plan_packer_word_t packerVarMask(int bitlen, int shift)
 {
-    packer_word_t mask1, mask2;
+    plan_packer_word_t mask1, mask2;
 
-    mask1 = PACKER_WORD_SET_ALL_BITS << shift;
-    mask2 = PACKER_WORD_SET_ALL_BITS >> (PACKER_WORD_BITS - shift - bitlen);
+    mask1 = PLAN_PACKER_WORD_SET_ALL_BITS << shift;
+    mask2 = PLAN_PACKER_WORD_SET_ALL_BITS
+                >> (PLAN_PACKER_WORD_BITS - shift - bitlen);
     return mask1 & mask2;
 }
 
 static void packerSetVar(const plan_state_packer_var_t *var,
-                         packer_word_t val,
+                         plan_packer_word_t val,
                          void *buffer)
 {
-    packer_word_t *buf;
+    plan_packer_word_t *buf;
     val = (val << var->shift) & var->mask;
-    buf = ((packer_word_t *)buffer) + var->pos;
+    buf = ((plan_packer_word_t *)buffer) + var->pos;
     *buf = (*buf & var->clear_mask) | val;
 }
 
-static unsigned packerGetVar(const plan_state_packer_var_t *var,
-                             const void *buffer)
+static plan_val_t packerGetVar(const plan_state_packer_var_t *var,
+                               const void *buffer)
 {
-    packer_word_t val;
-    packer_word_t *buf;
-    buf = ((packer_word_t *)buffer) + var->pos;
+    plan_packer_word_t val;
+    plan_packer_word_t *buf;
+    buf = ((plan_packer_word_t *)buffer) + var->pos;
     val = *buf;
     val = (val & var->mask) >> var->shift;
     return val;
@@ -500,7 +489,7 @@ plan_state_t *planStateNew(plan_state_pool_t *pool)
 {
     plan_state_t *state;
     state = BOR_ALLOC(plan_state_t);
-    state->val = BOR_ALLOC_ARR(unsigned, pool->num_vars);
+    state->val = BOR_ALLOC_ARR(plan_val_t, pool->num_vars);
     state->num_vars = pool->num_vars;
     return state;
 }
@@ -513,7 +502,7 @@ void planStateDel(plan_state_pool_t *pool, plan_state_t *state)
 
 void planStateZeroize(plan_state_t *state)
 {
-    size_t i;
+    int i;
     for (i = 0; i < state->num_vars; ++i)
         state->val[i] = 0;
 }
@@ -540,11 +529,11 @@ void planStateSet2(plan_state_t *state, int n, ...)
 plan_part_state_t *planPartStateNew(plan_state_pool_t *pool)
 {
     plan_part_state_t *ps;
-    size_t i, size;
+    int i, size;
 
     ps = BOR_ALLOC(plan_part_state_t);
     ps->num_vars = pool->num_vars;
-    ps->val    = BOR_ALLOC_ARR(unsigned, pool->num_vars);
+    ps->val    = BOR_ALLOC_ARR(plan_val_t, pool->num_vars);
     ps->is_set = BOR_ALLOC_ARR(int, pool->num_vars);
 
     for (i = 0; i < pool->num_vars; ++i){
@@ -590,7 +579,9 @@ static int valsCmp(const void *_a, const void *_b)
 }
 
 void planPartStateSet(plan_state_pool_t *pool,
-                      plan_part_state_t *state, unsigned var, unsigned val)
+                      plan_part_state_t *state,
+                      plan_var_id_t var,
+                      plan_val_t val)
 {
     state->val[var] = val;
     state->is_set[var] = 1;
@@ -647,13 +638,13 @@ static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud)
     return planStateEq(pool, s1->state_id, s2->state_id);
 }
 
-static void bitAnd(const void *a, const void *b, size_t size, void *c)
+static void bitAnd(const void *a, const void *b, int size, void *c)
 {
     const uint32_t *a32, *b32;
     uint32_t *c32;
     const uint8_t *a8, *b8;
     uint8_t *c8;
-    size_t size32, size8;
+    int size32, size8;
 
     size32 = size / 4;
     a32 = a;
@@ -673,13 +664,13 @@ static void bitAnd(const void *a, const void *b, size_t size, void *c)
 }
 
 static void bitApplyWithMask(const void *a, const void *m, const void *b,
-                             size_t size, void *c)
+                             int size, void *c)
 {
     const uint32_t *a32, *b32, *m32;
     uint32_t *c32;
     const uint8_t *a8, *b8, *m8;
     uint8_t *c8;
-    size_t size32, size8;
+    int size32, size8;
 
     size32 = size / 4;
     a32 = a;

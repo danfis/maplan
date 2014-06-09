@@ -577,11 +577,6 @@ void planPartStateDel(plan_state_pool_t *pool,
     BOR_FREE(part_state);
 }
 
-int planPartStateGet(const plan_part_state_t *state, unsigned var)
-{
-    return state->val[var];
-}
-
 static int valsCmp(const void *_a, const void *_b)
 {
     const plan_part_state_pair_t *a = _a;
@@ -610,11 +605,6 @@ void planPartStateSet(plan_state_pool_t *pool,
     state->vals[state->vals_size - 1].var = var;
     state->vals[state->vals_size - 1].val = val;
     qsort(state->vals, state->vals_size, sizeof(plan_part_state_pair_t), valsCmp);
-}
-
-int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
-{
-    return state->is_set[var];
 }
 
 

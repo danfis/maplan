@@ -245,7 +245,7 @@ _bor_inline size_t planPartStateSize(const plan_part_state_t *state);
 /**
  * Returns a value of a specified variable.
  */
-int planPartStateGet(const plan_part_state_t *state, unsigned var);
+_bor_inline int planPartStateGet(const plan_part_state_t *state, unsigned var);
 
 /**
  * Sets a value of a specified variable.
@@ -256,7 +256,7 @@ void planPartStateSet(plan_state_pool_t *pool,
 /**
  * Returns true if var's variable is set.
  */
-int planPartStateIsSet(const plan_part_state_t *state, unsigned var);
+_bor_inline int planPartStateIsSet(const plan_part_state_t *state, unsigned var);
 
 /**
  * Macro for iterating over "unrolled" set values of partial state.
@@ -297,6 +297,16 @@ _bor_inline size_t planStateSize(const plan_state_t *state)
 _bor_inline size_t planPartStateSize(const plan_part_state_t *state)
 {
     return state->num_vars;
+}
+
+_bor_inline int planPartStateGet(const plan_part_state_t *state, unsigned var)
+{
+    return state->val[var];
+}
+
+_bor_inline int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
+{
+    return state->is_set[var];
 }
 
 #endif /* __PLAN_STATE_H__ */

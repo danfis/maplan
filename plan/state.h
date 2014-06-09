@@ -16,7 +16,7 @@
 typedef long plan_state_id_t;
 
 /**
- * TODO
+ * Constant saying that no state was assigned.
  */
 #define PLAN_NO_STATE ((plan_state_id_t)-1)
 
@@ -112,7 +112,7 @@ plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
                                     const plan_state_t *state);
 
 /**
- * TODO
+ * Returns state ID corresponding to the given state.
  */
 plan_state_id_t planStatePoolFind(plan_state_pool_t *pool,
                                   const plan_state_t *state);

@@ -559,8 +559,8 @@ plan_part_state_t *planPartStateNew(plan_state_pool_t *pool)
     bzero(ps->valbuf, size);
     bzero(ps->maskbuf, size);
 
-    ps->setvars = NULL;
-    ps->setvars_size = 0;
+    ps->vals = NULL;
+    ps->vals_size = 0;
 
     return ps;
 
@@ -573,7 +573,7 @@ void planPartStateDel(plan_state_pool_t *pool,
     BOR_FREE(part_state->is_set);
     BOR_FREE(part_state->valbuf);
     BOR_FREE(part_state->maskbuf);
-    BOR_FREE(part_state->setvars);
+    BOR_FREE(part_state->vals);
     BOR_FREE(part_state);
 }
 
@@ -582,14 +582,14 @@ int planPartStateGet(const plan_part_state_t *state, unsigned var)
     return state->val[var];
 }
 
-static int setVarsCmp(const void *_a, const void *_b)
+static int valsCmp(const void *_a, const void *_b)
 {
-    int *a = (int *)_a;
-    int *b = (int *)_b;
+    const plan_part_state_pair_t *a = _a;
+    const plan_part_state_pair_t *b = _b;
 
-    if (*a == *b)
+    if (a->var == b->var)
         return 0;
-    if (*a < *b)
+    if (a->var < b->var)
         return -1;
     return 1;
 }
@@ -603,11 +603,13 @@ void planPartStateSet(plan_state_pool_t *pool,
     planStatePackerSet(pool->packer, var, val, state->valbuf);
     planStatePackerSetMask(pool->packer, var, state->maskbuf);
 
-    ++state->setvars_size;
-    state->setvars = BOR_REALLOC_ARR(state->setvars, int,
-                                     state->setvars_size);
-    state->setvars[state->setvars_size - 1] = var;
-    qsort(state->setvars, state->setvars_size, sizeof(int), setVarsCmp);
+    ++state->vals_size;
+    state->vals = BOR_REALLOC_ARR(state->vals,
+                                  plan_part_state_pair_t,
+                                  state->vals_size);
+    state->vals[state->vals_size - 1].var = var;
+    state->vals[state->vals_size - 1].val = val;
+    qsort(state->vals, state->vals_size, sizeof(plan_part_state_pair_t), valsCmp);
 }
 
 int planPartStateIsSet(const plan_part_state_t *state, unsigned var)

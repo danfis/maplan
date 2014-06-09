@@ -58,6 +58,12 @@ struct _plan_state_t {
 typedef struct _plan_state_t plan_state_t;
 
 
+struct _plan_part_state_pair_t {
+    unsigned var;
+    unsigned val;
+};
+typedef struct _plan_part_state_pair_t plan_part_state_pair_t;
+
 /**
  * Struct representing partial state.
  */
@@ -70,8 +76,8 @@ struct _plan_part_state_t {
     void *valbuf;  /*!< Buffer of packed values */
     void *maskbuf; /*!< Buffer of mask for values */
 
-    int *setvars; /*!< Array of IDs of set variables */
-    size_t setvars_size;
+    plan_part_state_pair_t *vals; /*!< Unrolled values */
+    size_t vals_size;
 };
 typedef struct _plan_part_state_t plan_part_state_t;
 
@@ -256,11 +262,11 @@ int planPartStateIsSet(const plan_part_state_t *state, unsigned var);
  * Macro for iterating over "unrolled" set values of partial state.
  */
 #define PLAN_PART_STATE_FOR_EACH(part_state, tmpi, var, val) \
-    if ((part_state)->setvars_size > 0) \
+    if ((part_state)->vals_size > 0) \
     for ((tmpi) = 0; \
-         (tmpi) < (part_state)->setvars_size \
-            && ((var) = (part_state)->setvars[(tmpi)], \
-                (val) = planPartStateGet((part_state), (var)), 1); \
+         (tmpi) < (part_state)->vals_size \
+            && ((var) = (part_state)->vals[(tmpi)].var, \
+                (val) = (part_state)->vals[(tmpi)].val, 1); \
          ++(tmpi))
 
 

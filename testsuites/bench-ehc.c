@@ -8,9 +8,14 @@ int main(int argc, char *argv[])
     plan_path_t path;
     bor_timer_t timer;
 
+    if (argc != 2){
+        fprintf(stderr, "Usage: %s problem.json\n", argv[0]);
+        return -1;
+    }
+
     borTimerStart(&timer);
 
-    prob = planProblemFromJson("load-from-file.in2.json");
+    prob = planProblemFromJson(argv[1]);
 
     ehc = planSearchEHCNew(prob);
     planPathInit(&path);

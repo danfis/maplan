@@ -69,6 +69,9 @@ struct _plan_part_state_t {
 
     void *valbuf;  /*!< Buffer of packed values */
     void *maskbuf; /*!< Buffer of mask for values */
+
+    int *setvars; /*!< Array of IDs of set variables */
+    size_t setvars_size;
 };
 typedef struct _plan_part_state_t plan_part_state_t;
 
@@ -248,6 +251,17 @@ void planPartStateSet(plan_state_pool_t *pool,
  * Returns true if var's variable is set.
  */
 int planPartStateIsSet(const plan_part_state_t *state, unsigned var);
+
+/**
+ * Macro for iterating over "unrolled" set values of partial state.
+ */
+#define PLAN_PART_STATE_FOR_EACH(part_state, tmpi, var, val) \
+    if ((part_state)->setvars_size > 0) \
+    for ((tmpi) = 0; \
+         (tmpi) < (part_state)->setvars_size \
+            && ((var) = (part_state)->setvars[(tmpi)], \
+                (val) = planPartStateGet((part_state), (var)), 1); \
+         ++(tmpi))
 
 
 

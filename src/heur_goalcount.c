@@ -2,21 +2,24 @@
 
 #include "plan/heur_goalcount.h"
 
-static plan_cost_t planHeurGoalCount(void *h,
-                                     const plan_state_t *state);
+static plan_cost_t planHeurGoalCount(void *h, const plan_state_t *state);
+static void planHeurGoalCountDel(void *h);
 
 plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal)
 {
     plan_heur_goalcount_t *h;
     h = BOR_ALLOC(plan_heur_goalcount_t);
-    planHeurInit((plan_heur_t *)h, planHeurGoalCount);
+    planHeurInit(&h->heur,
+                 planHeurGoalCountDel,
+                 planHeurGoalCount);
     h->goal = goal;
     return &h->heur;
 }
 
-void planHeurGoalCountDel(plan_heur_t *h)
+static void planHeurGoalCountDel(void *_h)
 {
-    planHeurFree(h);
+    plan_heur_goalcount_t *h = _h;
+    planHeurFree(&h->heur);
     BOR_FREE(h);
 }
 

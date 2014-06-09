@@ -1,10 +1,13 @@
 #include <boruvka/timer.h>
 #include "plan/search_ehc.h"
+#include "plan/heur_goalcount.h"
+#include "plan/heur_relax.h"
 
 int main(int argc, char *argv[])
 {
     plan_problem_t *prob;
     plan_search_ehc_t *ehc;
+    plan_heur_t *heur;
     plan_path_t path;
     bor_timer_t timer;
 
@@ -17,7 +20,11 @@ int main(int argc, char *argv[])
 
     prob = planProblemFromJson(argv[1]);
 
-    ehc = planSearchEHCNew(prob);
+    //heur = planHeurGoalCountNew(prob->goal);
+    //heur = planHeurRelaxAddNew(prob);
+    heur = planHeurRelaxMaxNew(prob);
+    //heur = planHeurRelaxFFNew(prob);
+    ehc = planSearchEHCNew(prob, heur);
     planPathInit(&path);
 
     planSearchEHCRun(ehc, &path);
@@ -25,6 +32,7 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Path cost: %d\n", (int)planPathCost(&path));
 
     planPathFree(&path);
+    planHeurDel(heur);
     planSearchEHCDel(ehc);
     planProblemDel(prob);
 

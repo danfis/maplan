@@ -33,7 +33,8 @@ typedef struct _plan_search_ehc_t plan_search_ehc_t;
 /**
  * Creates a new instance of the Enforced Hill Climbing search algorithm.
  */
-plan_search_ehc_t *planSearchEHCNew(plan_problem_t *prob);
+plan_search_ehc_t *planSearchEHCNew(plan_problem_t *prob,
+                                    plan_heur_t *heur);
 
 /**
  * Frees all allocated resources.

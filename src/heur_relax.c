@@ -75,13 +75,17 @@ static plan_cost_t relaxHeur(plan_heur_relax_t *heur, relax_t *r);
 
 /** Main function that returns heuristic value. */
 static plan_cost_t planHeurRelax(void *heur, const plan_state_t *state);
+/** Delete method */
+static void planHeurRelaxDel(void *_heur);
 
 static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
 {
     plan_heur_relax_t *heur;
 
     heur = BOR_ALLOC(plan_heur_relax_t);
-    planHeurInit(&heur->heur, planHeurRelax);
+    planHeurInit(&heur->heur,
+                 planHeurRelaxDel,
+                 planHeurRelax);
     heur->ops      = prob->op;
     heur->ops_size = prob->op_size;
     heur->var      = prob->var;
@@ -111,9 +115,9 @@ plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob)
 }
 
 
-void planHeurRelaxDel(plan_heur_t *_heur)
+static void planHeurRelaxDel(void *_heur)
 {
-    plan_heur_relax_t *heur = (plan_heur_relax_t *)_heur;
+    plan_heur_relax_t *heur = _heur;
     valueIdFree(heur);
     precondFree(heur);
     planHeurFree(&heur->heur);

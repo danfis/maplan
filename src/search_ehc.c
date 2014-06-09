@@ -27,7 +27,8 @@ static void extractPath(plan_search_ehc_t *ehc,
                         plan_state_id_t goal_state,
                         plan_path_t *path);
 
-plan_search_ehc_t *planSearchEHCNew(plan_problem_t *prob)
+plan_search_ehc_t *planSearchEHCNew(plan_problem_t *prob,
+                                    plan_heur_t *heur)
 {
     plan_search_ehc_t *ehc;
 
@@ -35,7 +36,7 @@ plan_search_ehc_t *planSearchEHCNew(plan_problem_t *prob)
     ehc->prob = prob;
     ehc->state_space = planStateSpaceNew(prob->state_pool);
     ehc->list = planListLazyFifoNew();
-    ehc->heur = planHeurGoalCountNew(prob->goal);
+    ehc->heur = heur;
     ehc->state = planStateNew(prob->state_pool);
     ehc->succ_gen = planSuccGenNew(prob->op, prob->op_size);
     ehc->succ_op  = BOR_ALLOC_ARR(plan_operator_t *, prob->op_size);
@@ -52,8 +53,6 @@ void planSearchEHCDel(plan_search_ehc_t *ehc)
         BOR_FREE(ehc->succ_op);
     if (ehc->state)
         planStateDel(ehc->prob->state_pool, ehc->state);
-    if (ehc->heur)
-        planHeurGoalCountDel(ehc->heur);
     if (ehc->list)
         planListLazyFifoDel(ehc->list);
     if (ehc->state_space)

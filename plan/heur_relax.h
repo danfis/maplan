@@ -44,10 +44,5 @@ plan_heur_t *planHeurRelaxMaxNew(const plan_problem_t *prob);
  */
 plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob);
 
-/**
- * Deletes the heuristic object.
- */
-void planHeurRelaxDel(plan_heur_t *h);
-
 #endif /* __PLAN_HEUR_RELAX_H__ */
 

@@ -55,7 +55,7 @@ TEST(testHeurRelaxAdd)
     assertEquals(h, PLAN_HEUR_DEAD_END);
 
     planStateDel(p->state_pool, state);
-    planHeurRelaxDel(heur);
+    planHeurDel(heur);
     planSuccGenDel(succgen);
     planProblemDel(p);
 }
@@ -111,7 +111,7 @@ TEST(testHeurRelaxMax)
     assertEquals(h, PLAN_HEUR_DEAD_END);
 
     planStateDel(p->state_pool, state);
-    planHeurRelaxDel(heur);
+    planHeurDel(heur);
     planSuccGenDel(succgen);
     planProblemDel(p);
 }
@@ -167,7 +167,7 @@ TEST(testHeurRelaxFF)
     assertEquals(h, PLAN_HEUR_DEAD_END);
 
     planStateDel(p->state_pool, state);
-    planHeurRelaxDel(heur);
+    planHeurDel(heur);
     planSuccGenDel(succgen);
     planProblemDel(p);
 }

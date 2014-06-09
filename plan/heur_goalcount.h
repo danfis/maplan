@@ -21,9 +21,4 @@ typedef struct _plan_heur_goalcount_t plan_heur_goalcount_t;
  */
 plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal);
 
-/**
- * Deletes the heuristic object.
- */
-void planHeurGoalCountDel(plan_heur_t *h);
-
 #endif /* __PLAN_HEUR_GOALCOUNT_H__ */

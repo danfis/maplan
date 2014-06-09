@@ -7,12 +7,12 @@
 
 struct _plan_problem_t {
     plan_var_t *var;               /*!< Definitions of variables */
-    size_t var_size;               /*!< Number of variables */
+    int var_size;                  /*!< Number of variables */
     plan_state_pool_t *state_pool; /*!< Instance of state pool/registry */
     plan_state_id_t initial_state; /*!< State ID of the initial state */
     plan_part_state_t *goal;       /*!< Partial state representing goal */
     plan_operator_t *op;           /*!< Array of operators */
-    size_t op_size;                /*!< Number of operators */
+    int op_size;                   /*!< Number of operators */
 };
 typedef struct _plan_problem_t plan_problem_t;
 

@@ -10,7 +10,7 @@
 
 static void planProblemFree(plan_problem_t *plan)
 {
-    size_t i;
+    int i;
 
     if (plan->goal){
         planPartStateDel(plan->state_pool, plan->goal);
@@ -82,7 +82,7 @@ static int loadJsonVersion(plan_problem_t *plan, json_t *json)
 static int loadJsonVariable1(plan_var_t *var, json_t *json)
 {
     json_t *data, *jval;
-    int i;
+    plan_val_t i;
 
     data = json_object_get(json, "name");
     var->name = strdup(json_string_value(data));
@@ -109,7 +109,7 @@ static int loadJsonVariable1(plan_var_t *var, json_t *json)
 
 static int loadJsonVariable(plan_problem_t *plan, json_t *json)
 {
-    size_t i;
+    int i;
     json_t *json_var;
 
     // allocate array for variables
@@ -132,9 +132,9 @@ static int loadJsonVariable(plan_problem_t *plan, json_t *json)
 
 static int loadJsonInitialState(plan_problem_t *plan, json_t *json)
 {
-    size_t i, len;
+    int i, len;
     json_t *json_val;
-    unsigned val;
+    plan_val_t val;
     plan_state_t *state;
 
     // check we have correct size of the state
@@ -167,7 +167,8 @@ static int loadJsonGoal(plan_problem_t *plan, json_t *json)
 {
     const char *key;
     json_t *json_val;
-    unsigned var, val;
+    plan_var_id_t var;
+    plan_val_t val;
 
     // allocate a new state
     plan->goal = planPartStateNew(plan->state_pool);
@@ -185,7 +186,8 @@ static int loadJsonOperator1(plan_operator_t *op, json_t *json)
 {
     const char *key;
     json_t *data, *jprepost, *jpre, *jpost, *jprevail;
-    int var, pre, post;
+    plan_var_id_t var;
+    plan_val_t pre, post;
 
     data = json_object_get(json, "name");
     planOperatorSetName(op, json_string_value(data));
@@ -221,7 +223,7 @@ static int loadJsonOperator1(plan_operator_t *op, json_t *json)
 
 static int loadJsonOperator(plan_problem_t *plan, json_t *json)
 {
-    size_t i;
+    int i;
     json_t *json_op;
 
     // allocate array for operators
@@ -298,50 +300,50 @@ planLoadFromJsonFile_err:
 
 void planProblemDump(const plan_problem_t *p, FILE *fout)
 {
-    size_t i, j;
+    int i, j;
     plan_state_t *state;
 
     state = planStateNew(p->state_pool);
 
     for (i = 0; i < p->var_size; ++i){
-        fprintf(fout, "Var[%lu] range: %d, name: %s\n",
-                i, p->var[i].range, p->var[i].name);
+        fprintf(fout, "Var[%d] range: %d, name: %s\n",
+                i, (int)p->var[i].range, p->var[i].name);
     }
 
     planStatePoolGetState(p->state_pool, p->initial_state, state);
     fprintf(fout, "Init:");
     for (i = 0; i < p->var_size; ++i){
-        fprintf(fout, " %lu:%u", i, planStateGet(state, i));
+        fprintf(fout, " %d:%d", i, (int)planStateGet(state, i));
     }
     fprintf(fout, "\n");
 
     fprintf(fout, "Goal:");
     for (i = 0; i < p->var_size; ++i){
         if (planPartStateIsSet(p->goal, i)){
-            fprintf(fout, " %lu:%u", i, planPartStateGet(p->goal, i));
+            fprintf(fout, " %d:%d", i, (int)planPartStateGet(p->goal, i));
         }else{
-            fprintf(fout, " %lu:X", i);
+            fprintf(fout, " %d:X", i);
         }
     }
     fprintf(fout, "\n");
 
     for (i = 0; i < p->op_size; ++i){
-        fprintf(fout, "Op[%3lu] %s\n", i, p->op[i].name);
+        fprintf(fout, "Op[%3d] %s\n", i, p->op[i].name);
         fprintf(fout, "  Pre: ");
         for (j = 0; j < p->var_size; ++j){
             if (planPartStateIsSet(p->op[i].pre, j)){
-                fprintf(fout, " %lu:%u", j, planPartStateGet(p->op[i].pre, j));
+                fprintf(fout, " %d:%d", j, (int)planPartStateGet(p->op[i].pre, j));
             }else{
-                fprintf(fout, " %lu:X", j);
+                fprintf(fout, " %d:X", j);
             }
         }
         fprintf(fout, "\n");
         fprintf(fout, "  Post:");
         for (j = 0; j < p->var_size; ++j){
             if (planPartStateIsSet(p->op[i].eff, j)){
-                fprintf(fout, " %lu:%u", j, planPartStateGet(p->op[i].eff, j));
+                fprintf(fout, " %d:%u", j, (int)planPartStateGet(p->op[i].eff, j));
             }else{
-                fprintf(fout, " %lu:X", j);
+                fprintf(fout, " %d:X", j);
             }
         }
         fprintf(fout, "\n");

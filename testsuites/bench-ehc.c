@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 
     planSearchEHCRun(ehc, &path);
     planPathPrint(&path, stdout);
-    fprintf(stderr, "Path cost: %u\n", planPathCost(&path));
+    fprintf(stderr, "Path cost: %d\n", (int)planPathCost(&path));
 
     planPathFree(&path);
     planSearchEHCDel(ehc);

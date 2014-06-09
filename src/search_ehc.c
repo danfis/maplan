@@ -3,13 +3,13 @@
 #include "plan/search_ehc.h"
 
 /** Computes heuristic value of the given state. */
-static unsigned heuristic(plan_search_ehc_t *ehc,
-                          plan_state_id_t state_id);
+static plan_cost_t heuristic(plan_search_ehc_t *ehc,
+                             plan_state_id_t state_id);
 
 /** Fill ehc->succ_op[] with applicable operators in the given state.
  *  Returns how many operators were found. */
-static size_t findApplicableOperators(plan_search_ehc_t *ehc,
-                                      plan_state_id_t state_id);
+static int findApplicableOperators(plan_search_ehc_t *ehc,
+                                   plan_state_id_t state_id);
 
 /** Insert successor elements into the list. */
 static void addSuccessors(plan_search_ehc_t *ehc,
@@ -38,7 +38,7 @@ plan_search_ehc_t *planSearchEHCNew(plan_problem_t *prob)
     ehc->state = planStateNew(prob->state_pool);
     ehc->succ_gen = planSuccGenNew(prob->op, prob->op_size);
     ehc->succ_op  = BOR_ALLOC_ARR(plan_operator_t *, prob->op_size);
-    ehc->best_heur = -1;
+    ehc->best_heur = PLAN_COST_MAX;
     ehc->goal_state = PLAN_NO_STATE;
     return ehc;
 }
@@ -78,7 +78,7 @@ int planSearchEHCRun(plan_search_ehc_t *ehc, plan_path_t *path)
 
 static int planSearchEHCInit(plan_search_ehc_t *ehc)
 {
-    unsigned heur;
+    plan_cost_t heur;
     plan_state_space_node_t *node;
 
     // compute heuristic for the initial state
@@ -107,7 +107,7 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
     plan_state_space_node_t *cur_node;
-    unsigned cur_heur;
+    plan_cost_t cur_heur;
 
     // get the next node in list
     if (planListLazyFifoPop(ehc->list, &parent_state_id, &parent_op) != 0){
@@ -151,15 +151,15 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
     return 0;
 }
 
-static unsigned heuristic(plan_search_ehc_t *ehc,
-                          plan_state_id_t state_id)
+static plan_cost_t heuristic(plan_search_ehc_t *ehc,
+                             plan_state_id_t state_id)
 {
     planStatePoolGetState(ehc->prob->state_pool, state_id, ehc->state);
     return planHeurGoalCount(ehc->heur, ehc->state);
 }
 
-static size_t findApplicableOperators(plan_search_ehc_t *ehc,
-                                      plan_state_id_t state_id)
+static int findApplicableOperators(plan_search_ehc_t *ehc,
+                                   plan_state_id_t state_id)
 {
     // unroll the state into ehc->state struct
     planStatePoolGetState(ehc->prob->state_pool, state_id, ehc->state);
@@ -172,7 +172,7 @@ static size_t findApplicableOperators(plan_search_ehc_t *ehc,
 static void addSuccessors(plan_search_ehc_t *ehc,
                           plan_state_id_t cur_state_id)
 {
-    size_t i, op_size;
+    int i, op_size;
     plan_operator_t *op;
 
     // Store applicable operators in ehc->succ_op[]

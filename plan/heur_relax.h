@@ -51,8 +51,8 @@ void planHeurRelaxDel(plan_heur_relax_t *h);
 /**
  * Computes a heuristic value corresponding to the state.
  */
-unsigned planHeurRelax(plan_heur_relax_t *h,
-                       const plan_state_t *state);
+plan_cost_t planHeurRelax(plan_heur_relax_t *h,
+                          const plan_state_t *state);
 
 #endif /* __PLAN_HEUR_RELAX_H__ */
 

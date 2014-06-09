@@ -4,9 +4,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <plan/common.h>
+
 struct _plan_var_t {
     char *name;
-    int range;
+    plan_val_t range;
     char **fact_name;
     int axiom_layer;
 };

@@ -1,13 +1,14 @@
 #ifndef __PLAN_OPERATOR_H__
 #define __PLAN_OPERATOR_H__
 
+#include <plan/common.h>
 #include <plan/state.h>
 
 struct _plan_operator_t {
     plan_state_pool_t *state_pool;
     plan_part_state_t *pre; /*!< Precondition */
     plan_part_state_t *eff; /*!< Effect */
-    unsigned cost;
+    plan_cost_t cost;
     char *name;
 };
 typedef struct _plan_operator_t plan_operator_t;
@@ -17,11 +18,13 @@ void planOperatorInit(plan_operator_t *op, plan_state_pool_t *state_pool);
 void planOperatorFree(plan_operator_t *op);
 
 void planOperatorSetPrecondition(plan_operator_t *op,
-                                 unsigned var, unsigned val);
+                                 plan_var_id_t var,
+                                 plan_val_t val);
 void planOperatorSetEffect(plan_operator_t *op,
-                           unsigned var, unsigned val);
+                           plan_var_id_t var,
+                           plan_val_t val);
 void planOperatorSetName(plan_operator_t *op, const char *name);
-void planOperatorSetCost(plan_operator_t *op, unsigned cost);
+void planOperatorSetCost(plan_operator_t *op, plan_cost_t cost);
 
 /**
  * Applies the operator on the given state and store the resulting state

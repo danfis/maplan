@@ -8,7 +8,7 @@ void planOperatorInit(plan_operator_t *op, plan_state_pool_t *state_pool)
     op->pre = planPartStateNew(state_pool);
     op->eff = planPartStateNew(state_pool);
     op->name = NULL;
-    op->cost = 0;
+    op->cost = PLAN_COST_ZERO;
 }
 
 void planOperatorFree(plan_operator_t *op)
@@ -21,13 +21,15 @@ void planOperatorFree(plan_operator_t *op)
 
 
 void planOperatorSetPrecondition(plan_operator_t *op,
-                                 unsigned var, unsigned val)
+                                 plan_var_id_t var,
+                                 plan_val_t val)
 {
     planPartStateSet(op->state_pool, op->pre, var, val);
 }
 
 void planOperatorSetEffect(plan_operator_t *op,
-                           unsigned var, unsigned val)
+                           plan_var_id_t var,
+                           plan_val_t val)
 {
     planPartStateSet(op->state_pool, op->eff, var, val);
 }
@@ -35,7 +37,7 @@ void planOperatorSetEffect(plan_operator_t *op,
 void planOperatorSetName(plan_operator_t *op, const char *name)
 {
     const char *c;
-    size_t i;
+    int i;
 
     if (op->name)
         BOR_FREE(op->name);
@@ -47,7 +49,7 @@ void planOperatorSetName(plan_operator_t *op, const char *name)
     op->name[i] = 0;
 }
 
-void planOperatorSetCost(plan_operator_t *op, unsigned cost)
+void planOperatorSetCost(plan_operator_t *op, plan_cost_t cost)
 {
     op->cost = cost;
 }

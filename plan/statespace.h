@@ -14,9 +14,9 @@ struct _plan_state_space_node_t {
     plan_state_id_t state_id;        /*!< ID of the corresponding state */
     plan_state_id_t parent_state_id; /*!< ID of the parent state */
     plan_operator_t *op;             /*!< Creating operator */
-    unsigned cost;                   /*!< Cost of the path from the initial
+    plan_cost_t cost;                /*!< Cost of the path from the initial
                                           state to this state. */
-    unsigned heuristic;              /*!< Value of the heuristic */
+    plan_cost_t heuristic;           /*!< Value of the heuristic */
 
     /* private: */
     int state;                       /*!< One of PLAN_STATE_SPACE_NODE_*
@@ -26,7 +26,7 @@ typedef struct _plan_state_space_node_t plan_state_space_node_t;
 
 struct _plan_state_space_t {
     plan_state_pool_t *state_pool;
-    size_t data_id;
+    int data_id;
 };
 typedef struct _plan_state_space_t plan_state_space_t;
 
@@ -65,8 +65,8 @@ plan_state_space_node_t *planStateSpaceOpen2(plan_state_space_t *ss,
                                              plan_state_id_t state_id,
                                              plan_state_id_t parent_state_id,
                                              plan_operator_t *op,
-                                             unsigned cost,
-                                             unsigned heuristic);
+                                             plan_cost_t cost,
+                                             plan_cost_t heuristic);
 
 /**
  * Reopens a closed node.
@@ -84,8 +84,8 @@ plan_state_space_node_t *planStateSpaceReopen2(plan_state_space_t *ss,
                                                plan_state_id_t state_id,
                                                plan_state_id_t parent_state_id,
                                                plan_operator_t *op,
-                                               unsigned cost,
-                                               unsigned heuristic);
+                                               plan_cost_t cost,
+                                               plan_cost_t heuristic);
 
 /**
  * Closes open node.
@@ -158,7 +158,7 @@ _bor_inline int planStateSpaceNodeIsClosed(const plan_state_space_node_t *n)
 }
 
 _bor_inline int planStateSpaceNodeIsNew2(plan_state_space_t *ss,
-                                             plan_state_id_t state_id)
+                                         plan_state_id_t state_id)
 {
     plan_state_space_node_t *n;
     n = planStateSpaceNode(ss, state_id);
@@ -166,7 +166,7 @@ _bor_inline int planStateSpaceNodeIsNew2(plan_state_space_t *ss,
 }
 
 _bor_inline int planStateSpaceNodeIsOpen2(plan_state_space_t *ss,
-                                              plan_state_id_t state_id)
+                                          plan_state_id_t state_id)
 {
     plan_state_space_node_t *n;
     n = planStateSpaceNode(ss, state_id);
@@ -174,7 +174,7 @@ _bor_inline int planStateSpaceNodeIsOpen2(plan_state_space_t *ss,
 }
 
 _bor_inline int planStateSpaceNodeIsClosed2(plan_state_space_t *ss,
-                                                plan_state_id_t state_id)
+                                            plan_state_id_t state_id)
 {
     plan_state_space_node_t *n;
     n = planStateSpaceNode(ss, state_id);

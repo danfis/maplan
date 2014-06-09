@@ -38,12 +38,12 @@ static int sortOpsCmp(const void *a, const void *b)
     return 1;
 }
 
-static size_t findOpsLinear(const plan_state_pool_t *pool,
-                            plan_operator_t *op, size_t op_size,
-                            plan_state_id_t sid,
-                            plan_operator_t **op_out)
+static int findOpsLinear(const plan_state_pool_t *pool,
+                         plan_operator_t *op, int op_size,
+                         plan_state_id_t sid,
+                         plan_operator_t **op_out)
 {
-    size_t i, found;
+    int i, found;
 
     found = 0;
     for (i = 0; i < op_size; ++i){
@@ -56,12 +56,12 @@ static size_t findOpsLinear(const plan_state_pool_t *pool,
     return found;
 }
 
-static size_t findOpsSG(const plan_succ_gen_t *sg,
-                        const plan_state_t *state,
-                        plan_operator_t **ops,
-                        size_t ops_size)
+static int findOpsSG(const plan_succ_gen_t *sg,
+                     const plan_state_t *state,
+                     plan_operator_t **ops,
+                     int ops_size)
 {
-    size_t found;
+    int found;
 
     found = planSuccGenFind(sg, state, ops, ops_size);
     qsort(ops, BOR_MIN(found, ops_size), sizeof(plan_operator_t *), sortOpsCmp);
@@ -75,7 +75,7 @@ TEST(testSuccGen)
     plan_succ_gen_t *sg;
     plan_operator_t **ops1, **ops2;
     plan_state_id_t sid;
-    size_t ops_size, found1, found2, i, j;
+    int ops_size, found1, found2, i, j;
     plan_state_t *state;
 
     prob = planProblemFromJson("load-from-file.in1.json");

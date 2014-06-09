@@ -166,6 +166,7 @@ static void valueIdFree(plan_heur_relax_t *heur)
 static void precondInit(plan_heur_relax_t *heur)
 {
     int i, j, id;
+    unsigned var, val;
 
     // prepare precond array
     heur->precond = BOR_ALLOC_ARR(int *, heur->val_size);
@@ -184,16 +185,14 @@ static void precondInit(plan_heur_relax_t *heur)
         heur->op_unsat[i] = 0;
         heur->op_value[i] = heur->ops[i].cost;
 
-        for (j = 0; j < heur->var_size; ++j){
-            if (planPartStateIsSet(heur->ops[i].pre, j)){
-                id = heur->val_id[j][planPartStateGet(heur->ops[i].pre, j)];
-                ++heur->precond_size[id];
-                heur->precond[id] = BOR_REALLOC_ARR(heur->precond[id], int,
-                                                    heur->precond_size[id]);
-                heur->precond[id][heur->precond_size[id] - 1] = i;
+        PLAN_PART_STATE_FOR_EACH(heur->ops[i].pre, j, var, val){
+            id = heur->val_id[var][val];
+            ++heur->precond_size[id];
+            heur->precond[id] = BOR_REALLOC_ARR(heur->precond[id], int,
+                                                heur->precond_size[id]);
+            heur->precond[id][heur->precond_size[id] - 1] = i;
 
-                heur->op_unsat[i] += 1;
-            }
+            heur->op_unsat[i] += 1;
         }
     }
 }
@@ -223,6 +222,7 @@ static int heapLT(const bor_pairheap_node_t *a,
 static void relaxInit(plan_heur_relax_t *heur, relax_t *r)
 {
     int i, id;
+    unsigned var, val;
 
     r->op_unsat = BOR_ALLOC_ARR(int, heur->ops_size);
     memcpy(r->op_unsat, heur->op_unsat, sizeof(int) * heur->ops_size);
@@ -236,12 +236,10 @@ static void relaxInit(plan_heur_relax_t *heur, relax_t *r)
 
     // set fact goals
     r->goal_unsat = 0;
-    for (i = 0; i < heur->var_size; ++i){
-        if (planPartStateIsSet(heur->goal, i)){
-            id = heur->val_id[i][planPartStateGet(heur->goal, i)];
-            FACT_SET_GOAL(r->facts + id);
-            ++r->goal_unsat;
-        }
+    PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
+        id = heur->val_id[var][val];
+        FACT_SET_GOAL(r->facts + id);
+        ++r->goal_unsat;
     }
 }
 
@@ -274,25 +272,24 @@ static void relaxAddEffects(plan_heur_relax_t *heur, relax_t *r,
 {
     const plan_operator_t *op = heur->ops + op_id;
     int i, id;
+    unsigned var, val;
 
-    for (i = 0; i < heur->var_size; ++i){
-        if (planPartStateIsSet(op->eff, i)){
-            id = heur->val_id[i][planPartStateGet(op->eff, i)];
+    PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
+        id = heur->val_id[var][val];
 
-            if (!FACT_ADDED(r->facts + id)
-                    || r->facts[id].value > r->op_value[op_id]){
+        if (!FACT_ADDED(r->facts + id)
+                || r->facts[id].value > r->op_value[op_id]){
 
-                r->facts[id].value = r->op_value[op_id];
-                r->facts[id].reached_by_op = op_id;
-                if (FACT_OPEN(r->facts + id)){
-                    borPairHeapDecreaseKey(r->heap, &r->facts[id].heap);
+            r->facts[id].value = r->op_value[op_id];
+            r->facts[id].reached_by_op = op_id;
+            if (FACT_OPEN(r->facts + id)){
+                borPairHeapDecreaseKey(r->heap, &r->facts[id].heap);
 
-                }else{ // fact not in heap
-                    r->facts[id].id = id;
-                    FACT_SET_ADDED(r->facts + id);
-                    FACT_SET_OPEN(r->facts + id);
-                    borPairHeapAdd(r->heap, &r->facts[id].heap);
-                }
+            }else{ // fact not in heap
+                r->facts[id].id = id;
+                FACT_SET_ADDED(r->facts + id);
+                FACT_SET_OPEN(r->facts + id);
+                borPairHeapAdd(r->heap, &r->facts[id].heap);
             }
         }
     }
@@ -364,14 +361,12 @@ _bor_inline unsigned relaxHeurValue(int type, unsigned value1, unsigned value2)
 static unsigned relaxHeurAddMax(plan_heur_relax_t *heur, relax_t *r)
 {
     int i, id;
-    unsigned h;
+    unsigned h, var, val;
 
     h = 0;
-    for (i = 0; i < heur->var_size; ++i){
-        if (planPartStateIsSet(heur->goal, i)){
-            id = heur->val_id[i][planPartStateGet(heur->goal, i)];
-            h = relaxHeurValue(heur->type, h, r->facts[id].value);
-        }
+    PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
+        id = heur->val_id[var][val];
+        h = relaxHeurValue(heur->type, h, r->facts[id].value);
     }
 
     return h;
@@ -383,18 +378,17 @@ static void markRelaxedPlan(plan_heur_relax_t *heur, relax_t *r,
     fact_t *fact = r->facts + id;
     const plan_operator_t *op;
     int i, id2;
+    unsigned var, val;
 
     if (!FACT_RELAXED_PLAN_VISITED(fact) && fact->reached_by_op != -1){
         FACT_SET_RELAXED_PLAN_VISITED(fact);
         op = heur->ops + fact->reached_by_op;
 
-        for (i = 0; i < heur->var_size; ++i){
-            if (planPartStateIsSet(op->pre, i)){
-                id2 = heur->val_id[i][planPartStateGet(op->pre, i)];
-                if (!FACT_RELAXED_PLAN_VISITED(r->facts + id2)
-                        && r->facts[id2].reached_by_op != -1){
-                    markRelaxedPlan(heur, r, relaxed_plan, id2);
-                }
+        PLAN_PART_STATE_FOR_EACH(op->pre, i, var, val){
+            id2 = heur->val_id[var][val];
+            if (!FACT_RELAXED_PLAN_VISITED(r->facts + id2)
+                    && r->facts[id2].reached_by_op != -1){
+                markRelaxedPlan(heur, r, relaxed_plan, id2);
             }
         }
 
@@ -407,14 +401,13 @@ static unsigned relaxHeurFF(plan_heur_relax_t *heur, relax_t *r)
     int *relaxed_plan;
     int i, id;
     unsigned h = 0;
+    unsigned var, val;
 
     relaxed_plan = BOR_CALLOC_ARR(int, heur->ops_size);
 
-    for (i = 0; i < heur->var_size; ++i){
-        if (planPartStateIsSet(heur->goal, i)){
-            id = heur->val_id[i][planPartStateGet(heur->goal, i)];
-            markRelaxedPlan(heur, r, relaxed_plan, id);
-        }
+    PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
+        id = heur->val_id[var][val];
+        markRelaxedPlan(heur, r, relaxed_plan, id);
     }
 
     for (i = 0; i < heur->ops_size; ++i){

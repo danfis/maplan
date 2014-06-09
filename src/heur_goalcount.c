@@ -18,17 +18,14 @@ void planHeurGoalCountDel(plan_heur_goalcount_t *h)
 unsigned planHeurGoalCount(plan_heur_goalcount_t *h,
                            const plan_state_t *state)
 {
-    size_t i, size;
-    unsigned val;
+    size_t i;
+    unsigned var, val;
+    unsigned heur;
 
-    val = 0;
-    size = planPartStateSize(h->goal);
-    for (i = 0; i < size; ++i){
-        if (planPartStateIsSet(h->goal, i)
-                && planPartStateGet(h->goal, i) != planStateGet(state, i)){
-            ++val;
-        }
+    heur = 0;
+    PLAN_PART_STATE_FOR_EACH(h->goal, i, var, val){
+        if (val != planStateGet(state, var))
+            ++heur;
     }
-
-    return val;
+    return heur;
 }

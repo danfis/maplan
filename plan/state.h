@@ -58,6 +58,12 @@ struct _plan_state_t {
 typedef struct _plan_state_t plan_state_t;
 
 
+struct _plan_part_state_pair_t {
+    unsigned var;
+    unsigned val;
+};
+typedef struct _plan_part_state_pair_t plan_part_state_pair_t;
+
 /**
  * Struct representing partial state.
  */
@@ -69,6 +75,9 @@ struct _plan_part_state_t {
 
     void *valbuf;  /*!< Buffer of packed values */
     void *maskbuf; /*!< Buffer of mask for values */
+
+    plan_part_state_pair_t *vals; /*!< Unrolled values */
+    size_t vals_size;
 };
 typedef struct _plan_part_state_t plan_part_state_t;
 
@@ -236,7 +245,7 @@ _bor_inline size_t planPartStateSize(const plan_part_state_t *state);
 /**
  * Returns a value of a specified variable.
  */
-int planPartStateGet(const plan_part_state_t *state, unsigned var);
+_bor_inline int planPartStateGet(const plan_part_state_t *state, unsigned var);
 
 /**
  * Sets a value of a specified variable.
@@ -247,7 +256,18 @@ void planPartStateSet(plan_state_pool_t *pool,
 /**
  * Returns true if var's variable is set.
  */
-int planPartStateIsSet(const plan_part_state_t *state, unsigned var);
+_bor_inline int planPartStateIsSet(const plan_part_state_t *state, unsigned var);
+
+/**
+ * Macro for iterating over "unrolled" set values of partial state.
+ */
+#define PLAN_PART_STATE_FOR_EACH(part_state, tmpi, var, val) \
+    if ((part_state)->vals_size > 0) \
+    for ((tmpi) = 0; \
+         (tmpi) < (part_state)->vals_size \
+            && ((var) = (part_state)->vals[(tmpi)].var, \
+                (val) = (part_state)->vals[(tmpi)].val, 1); \
+         ++(tmpi))
 
 
 
@@ -277,6 +297,16 @@ _bor_inline size_t planStateSize(const plan_state_t *state)
 _bor_inline size_t planPartStateSize(const plan_part_state_t *state)
 {
     return state->num_vars;
+}
+
+_bor_inline int planPartStateGet(const plan_part_state_t *state, unsigned var)
+{
+    return state->val[var];
+}
+
+_bor_inline int planPartStateIsSet(const plan_part_state_t *state, unsigned var)
+{
+    return state->is_set[var];
 }
 
 #endif /* __PLAN_STATE_H__ */

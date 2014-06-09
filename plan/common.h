@@ -1,6 +1,7 @@
 #ifndef __PLAN_COMMON_H__
 #define __PLAN_COMMON_H__
 
+#include <limits.h>
 #include <boruvka/core.h>
 
 /**
@@ -55,6 +56,11 @@ typedef uint32_t plan_packer_word_t;
  * reachable).
  */
 #define PLAN_HEUR_DEAD_END ((plan_cost_t)-1)
+
+/**
+ * Maximal value of cost.
+ */
+#define PLAN_COST_MAX INT_MAX
 
 /**
  * Zero in plan_cost_t type.

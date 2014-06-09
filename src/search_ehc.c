@@ -38,7 +38,7 @@ plan_search_ehc_t *planSearchEHCNew(plan_problem_t *prob)
     ehc->state = planStateNew(prob->state_pool);
     ehc->succ_gen = planSuccGenNew(prob->op, prob->op_size);
     ehc->succ_op  = BOR_ALLOC_ARR(plan_operator_t *, prob->op_size);
-    ehc->best_heur = -1;
+    ehc->best_heur = PLAN_COST_MAX;
     ehc->goal_state = PLAN_NO_STATE;
     return ehc;
 }

@@ -110,7 +110,7 @@ plan_state_pool_t *planStatePoolNew(const plan_var_t *var, int var_size)
     pool->data[0] = planDataArrNew(state_size, 8196, NULL, state_init);
     BOR_FREE(state_init);
 
-    htable_init.state_id = -1;
+    htable_init.state_id = PLAN_NO_STATE;
     pool->data[1] = planDataArrNew(sizeof(plan_state_htable_t), 8196,
                                    NULL, &htable_init);
 

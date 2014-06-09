@@ -16,7 +16,7 @@ TEST(dataarrTest)
 
     memset(d, 1, 12);
 
-    arr = planDataArrNew(12, 8196, NULL, d);
+    arr = planDataArrNew(12, NULL, d);
     d2 = (char *)planDataArrGet(arr, 0);
     assertEquals(memcmp(d2, d, 12), 0);
 
@@ -33,7 +33,7 @@ TEST(dataarrTest)
 
     planDataArrDel(arr);
 
-    arr = planDataArrNew(12, 8196, elinit, (const void *)1UL);
+    arr = planDataArrNew(12, elinit, (const void *)1UL);
     d2 = (char *)planDataArrGet(arr, 0);
     assertEquals(memcmp(d2, d, 10), 0);
 

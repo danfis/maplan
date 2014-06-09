@@ -1,13 +1,20 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <boruvka/alloc.h>
 #include "plan/dataarr.h"
 
 
-plan_data_arr_t *planDataArrNew(size_t el_size, size_t segment_size,
+plan_data_arr_t *planDataArrNew(size_t el_size,
                                 plan_data_arr_el_init_fn init_fn,
                                 const void *init_data)
 {
     plan_data_arr_t *arr;
+    size_t segment_size;
+
+    // compute best segment size
+    segment_size = sysconf(_SC_PAGESIZE);
+    while (segment_size < el_size)
+        segment_size *= 2;
 
     arr = BOR_ALLOC(plan_data_arr_t);
     arr->arr = borSegmArrNew(el_size, segment_size);

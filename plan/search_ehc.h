@@ -4,7 +4,7 @@
 #include <plan/problem.h>
 #include <plan/statespace.h>
 #include <plan/succgen.h>
-#include <plan/heur_goalcount.h>
+#include <plan/heur.h>
 #include <plan/path.h>
 #include <plan/list_lazy_fifo.h>
 
@@ -19,7 +19,7 @@ struct _plan_search_ehc_t {
                                          the problem */
     plan_state_space_t *state_space;
     plan_list_lazy_fifo_t *list;     /*!< List to keep track of the states */
-    plan_heur_goalcount_t *heur;     /*!< Heuristic function */
+    plan_heur_t *heur;               /*!< Heuristic function */
     plan_state_t *state;             /*!< Preallocated state structure */
     plan_succ_gen_t *succ_gen;       /*!< Successor operator generator */
     plan_operator_t **succ_op;       /*!< Preallocated array for successor

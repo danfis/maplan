@@ -1,6 +1,7 @@
 #include <boruvka/alloc.h>
 
 #include "plan/search_ehc.h"
+#include "plan/heur_goalcount.h"
 
 /** Computes heuristic value of the given state. */
 static plan_cost_t heuristic(plan_search_ehc_t *ehc,
@@ -155,7 +156,7 @@ static plan_cost_t heuristic(plan_search_ehc_t *ehc,
                              plan_state_id_t state_id)
 {
     planStatePoolGetState(ehc->prob->state_pool, state_id, ehc->state);
-    return planHeurGoalCount(ehc->heur, ehc->state);
+    return planHeur(ehc->heur, ehc->state);
 }
 
 static int findApplicableOperators(plan_search_ehc_t *ehc,

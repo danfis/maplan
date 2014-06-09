@@ -10,6 +10,7 @@
  * ======================
  */
 struct _plan_heur_relax_t {
+    plan_heur_t heur;
     const plan_operator_t *ops;
     int ops_size;
     const plan_var_t *var;
@@ -31,28 +32,22 @@ typedef struct _plan_heur_relax_t plan_heur_relax_t;
 /**
  * Creates an ADD version of relaxation heuristics.
  */
-plan_heur_relax_t *planHeurRelaxAddNew(const plan_problem_t *prob);
+plan_heur_t *planHeurRelaxAddNew(const plan_problem_t *prob);
 
 /**
  * Creates an MAX version of relaxation heuristics.
  */
-plan_heur_relax_t *planHeurRelaxMaxNew(const plan_problem_t *prob);
+plan_heur_t *planHeurRelaxMaxNew(const plan_problem_t *prob);
 
 /**
  * Creates an FF version of relaxation heuristics.
  */
-plan_heur_relax_t *planHeurRelaxFFNew(const plan_problem_t *prob);
+plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob);
 
 /**
  * Deletes the heuristic object.
  */
-void planHeurRelaxDel(plan_heur_relax_t *h);
-
-/**
- * Computes a heuristic value corresponding to the state.
- */
-plan_cost_t planHeurRelax(plan_heur_relax_t *h,
-                          const plan_state_t *state);
+void planHeurRelaxDel(plan_heur_t *h);
 
 #endif /* __PLAN_HEUR_RELAX_H__ */
 

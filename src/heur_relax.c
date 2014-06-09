@@ -73,13 +73,15 @@ static int relaxMainLoop(plan_heur_relax_t *heur, relax_t *r);
 /** Computes final heuristic from the values computed in previous steps. */
 static plan_cost_t relaxHeur(plan_heur_relax_t *heur, relax_t *r);
 
+/** Main function that returns heuristic value. */
+static plan_cost_t planHeurRelax(void *heur, const plan_state_t *state);
 
-static plan_heur_relax_t *planHeurRelaxNew(const plan_problem_t *prob,
-                                           int type)
+static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
 {
     plan_heur_relax_t *heur;
 
     heur = BOR_ALLOC(plan_heur_relax_t);
+    planHeurInit(&heur->heur, planHeurRelax);
     heur->ops      = prob->op;
     heur->ops_size = prob->op_size;
     heur->var      = prob->var;
@@ -90,35 +92,37 @@ static plan_heur_relax_t *planHeurRelaxNew(const plan_problem_t *prob,
     valueIdInit(heur);
     precondInit(heur);
 
-    return heur;
+    return &heur->heur;
 }
 
-plan_heur_relax_t *planHeurRelaxAddNew(const plan_problem_t *prob)
+plan_heur_t *planHeurRelaxAddNew(const plan_problem_t *prob)
 {
     return planHeurRelaxNew(prob, TYPE_ADD);
 }
 
-plan_heur_relax_t *planHeurRelaxMaxNew(const plan_problem_t *prob)
+plan_heur_t *planHeurRelaxMaxNew(const plan_problem_t *prob)
 {
     return planHeurRelaxNew(prob, TYPE_MAX);
 }
 
-plan_heur_relax_t *planHeurRelaxFFNew(const plan_problem_t *prob)
+plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob)
 {
     return planHeurRelaxNew(prob, TYPE_FF);
 }
 
 
-void planHeurRelaxDel(plan_heur_relax_t *heur)
+void planHeurRelaxDel(plan_heur_t *_heur)
 {
+    plan_heur_relax_t *heur = (plan_heur_relax_t *)_heur;
     valueIdFree(heur);
     precondFree(heur);
+    planHeurFree(&heur->heur);
     BOR_FREE(heur);
 }
 
-plan_cost_t planHeurRelax(plan_heur_relax_t *heur,
-                          const plan_state_t *state)
+static plan_cost_t planHeurRelax(void *_heur, const plan_state_t *state)
 {
+    plan_heur_relax_t *heur = _heur;
     relax_t relax;
     plan_cost_t h = PLAN_HEUR_DEAD_END;
 

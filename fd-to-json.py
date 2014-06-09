@@ -128,6 +128,7 @@ def loadOperator(data, use_metric):
     assertTerm(data[0], 'begin_operator')
     data = data[1:]
 
+    print >>sys.stderr, data[0], use_metric
     operator = { 'name'     : data[0],
                  'prevail'  : {},
                  'pre_post' : {},
@@ -314,15 +315,25 @@ def main():
         print('Expected version {0}, got {1}. I don\'t know how to parse' \
               ' this version.')
 
+    print >>sys.stderr, 'loadMetric'
     data = loadMetric(data, json_data)
+    print >>sys.stderr, 'loadVariables'
     data = loadVariables(data, json_data)
+    print >>sys.stderr, 'loadMutexes'
     data = loadMutexes(data, json_data)
+    print >>sys.stderr, 'loadInitialState'
     data = loadInitialState(data, json_data)
+    print >>sys.stderr, 'loadGoal'
     data = loadGoal(data, json_data)
+    print >>sys.stderr, 'loadOperators'
     data = loadOperators(data, json_data)
+    print >>sys.stderr, 'loadAxioms'
     data = loadAxioms(data, json_data)
+    print >>sys.stderr, 'loadSuccessorGenerator'
     data = loadSuccessorGenerator(data, json_data)
+    print >>sys.stderr, 'loadDomainTransitionGraphs'
     data = loadDomainTransitionGraphs(data, json_data)
+    print >>sys.stderr, 'loadCausalGraph'
     data = loadCausalGraph(data, json_data)
 
     #print(json.dumps(json_data))

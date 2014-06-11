@@ -21,7 +21,7 @@ TEST(testSearchLazy)
 
     assertEquals(planSearchLazyRun(lazy, &path), 0);
     planPathPrint(&path, stdout);
-    assertEquals(planPathCost(&path), 36);
+    assertEquals(planPathCost(&path), 11);
 
     planPathFree(&path);
     planListLazyDel(list);

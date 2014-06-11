@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
 
     prob = planProblemFromJson(argv[1]);
 
-    //heur = planHeurGoalCountNew(prob->goal);
-    heur = planHeurRelaxAddNew(prob);
+    heur = planHeurGoalCountNew(prob->goal);
+    //heur = planHeurRelaxAddNew(prob);
     //heur = planHeurRelaxMaxNew(prob);
     //heur = planHeurRelaxFFNew(prob);
     lazy = planSearchLazyNew(prob, heur);

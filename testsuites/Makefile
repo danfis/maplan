@@ -22,8 +22,14 @@ CHECK_TS ?=
 
 TARGETS = test bench-ehc
 
-OBJS = load-from-file.o state.o dataarr.o succgen.o statespace.o \
-       search_ehc.o heur.o
+OBJS  = load-from-file.o
+OBJS += state.o
+OBJS += dataarr.o
+OBJS += succgen.o
+OBJS += statespace.o
+OBJS += search_ehc.o
+OBJS += heur.o
+OBJS += list_lazy.o
 
 all: $(TARGETS)
 

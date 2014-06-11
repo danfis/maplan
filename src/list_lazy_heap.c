@@ -79,5 +79,5 @@ static int heapLessThan(const bor_pairheap_node_t *_n1,
 {
     heap_node_t *n1 = bor_container_of(_n1, heap_node_t, heap);
     heap_node_t *n2 = bor_container_of(_n2, heap_node_t, heap);
-    return n1->cost < n2->cost;
+    return n1->cost <= n2->cost;
 }

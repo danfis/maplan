@@ -5,6 +5,7 @@
 #include "succgen.h"
 #include "statespace.h"
 #include "search_ehc.h"
+#include "search_lazy.h"
 #include "heur.h"
 #include "list_lazy.h"
 
@@ -15,6 +16,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSSuccGen),
     TEST_SUITE_ADD(TSStateSpace),
     TEST_SUITE_ADD(TSSearchEHC),
+    TEST_SUITE_ADD(TSSearchLazy),
     TEST_SUITE_ADD(TSHeur),
     TEST_SUITE_ADD(TSListLazy),
     TEST_SUITES_CLOSURE

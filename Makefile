@@ -41,6 +41,7 @@ OBJS += list_lazy_heap
 #OBJS += statespace_heap
 #OBJS += statespace_bucket
 OBJS += search_ehc
+OBJS += search_lazy
 OBJS += heur
 OBJS += heur_goalcount
 OBJS += heur_relax

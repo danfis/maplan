@@ -1,5 +1,14 @@
 #include <boruvka/alloc.h>
-#include "plan/list_lazy_bucket.h"
+#include "plan/dataarr.h"
+#include "plan/list_lazy.h"
+
+struct _plan_list_lazy_bucket_t {
+    plan_list_lazy_t list_lazy;
+    plan_data_arr_t *bucket;
+    long size;
+    plan_cost_t lowest_key;
+};
+typedef struct _plan_list_lazy_bucket_t plan_list_lazy_bucket_t;
 
 struct _node_t {
     plan_cost_t cost;
@@ -10,8 +19,18 @@ struct _node_t {
 typedef struct _node_t node_t;
 
 static void bucketInit(void *el, const void *userdata);
+static void planListLazyBucketDel(void *l);
+static void planListLazyBucketPush(void *l,
+                                   plan_cost_t cost,
+                                   plan_state_id_t parent_state_id,
+                                   plan_operator_t *op);
+static int planListLazyBucketPop(void *l,
+                                 plan_state_id_t *parent_state_id,
+                                 plan_operator_t **op);
+static void planListLazyBucketClear(void *l);
 
-plan_list_lazy_bucket_t *planListLazyBucketNew(void)
+
+plan_list_lazy_t *planListLazyBucketNew(void)
 {
     plan_list_lazy_bucket_t *b;
 
@@ -20,22 +39,31 @@ plan_list_lazy_bucket_t *planListLazyBucketNew(void)
     b->size = 0;
     b->lowest_key = 0;
 
-    return b;
+    planListLazyInit(&b->list_lazy,
+                     planListLazyBucketDel,
+                     planListLazyBucketPush,
+                     planListLazyBucketPop,
+                     planListLazyBucketClear);
+
+    return &b->list_lazy;
 }
 
-void planListLazyBucketDel(plan_list_lazy_bucket_t *l)
+static void planListLazyBucketDel(void *_l)
 {
+    plan_list_lazy_bucket_t *l = _l;
+    planListLazyFree(&l->list_lazy);
     planListLazyBucketClear(l);
     if (l->bucket)
         planDataArrDel(l->bucket);
     BOR_FREE(l);
 }
 
-void planListLazyBucketPush(plan_list_lazy_bucket_t *l,
-                            plan_cost_t cost,
-                            plan_state_id_t parent_state_id,
-                            plan_operator_t *op)
+static void planListLazyBucketPush(void *_l,
+                                   plan_cost_t cost,
+                                   plan_state_id_t parent_state_id,
+                                   plan_operator_t *op)
 {
+    plan_list_lazy_bucket_t *l = _l;
     node_t *n;
     bor_list_t *bucket;
 
@@ -53,10 +81,11 @@ void planListLazyBucketPush(plan_list_lazy_bucket_t *l,
         l->lowest_key = cost;
 }
 
-int planListLazyBucketPop(plan_list_lazy_bucket_t *l,
-                          plan_state_id_t *parent_state_id,
-                          plan_operator_t **op)
+static int planListLazyBucketPop(void *_l,
+                                 plan_state_id_t *parent_state_id,
+                                 plan_operator_t **op)
 {
+    plan_list_lazy_bucket_t *l = _l;
     bor_list_t *bucket, *item;
     node_t *node;
 
@@ -81,8 +110,9 @@ int planListLazyBucketPop(plan_list_lazy_bucket_t *l,
     return 0;
 }
 
-void planListLazyBucketClear(plan_list_lazy_bucket_t *l)
+static void planListLazyBucketClear(void *_l)
 {
+    plan_list_lazy_bucket_t *l = _l;
     plan_state_id_t sid;
     plan_operator_t *op;
     while (planListLazyBucketPop(l, &sid, &op) == 0);

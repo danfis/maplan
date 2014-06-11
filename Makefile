@@ -35,6 +35,7 @@ OBJS += dataarr
 OBJS += succgen
 OBJS += path
 OBJS += statespace
+OBJS += list_lazy
 OBJS += list_lazy_fifo
 OBJS += list_lazy_heap
 OBJS += list_lazy_bucket

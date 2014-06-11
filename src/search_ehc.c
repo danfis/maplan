@@ -1,7 +1,6 @@
 #include <boruvka/alloc.h>
 
 #include "plan/search_ehc.h"
-#include "plan/heur_goalcount.h"
 
 /** Computes heuristic value of the given state. */
 static plan_cost_t heuristic(plan_search_ehc_t *ehc,
@@ -54,7 +53,7 @@ void planSearchEHCDel(plan_search_ehc_t *ehc)
     if (ehc->state)
         planStateDel(ehc->prob->state_pool, ehc->state);
     if (ehc->list)
-        planListLazyFifoDel(ehc->list);
+        planListLazyDel(ehc->list);
     if (ehc->state_space)
         planStateSpaceDel(ehc->state_space);
     BOR_FREE(ehc);
@@ -110,7 +109,7 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
     plan_cost_t cur_heur;
 
     // get the next node in list
-    if (planListLazyFifoPop(ehc->list, &parent_state_id, &parent_op) != 0){
+    if (planListLazyPop(ehc->list, &parent_state_id, &parent_op) != 0){
         // we reached dead end
         return -1;
     }
@@ -142,7 +141,7 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
     // If the heuristic for the current state is the best so far, restart
     // EHC algorithm with an empty list.
     if (cur_heur < ehc->best_heur){
-        planListLazyFifoClear(ehc->list);
+        planListLazyClear(ehc->list);
         ehc->best_heur = cur_heur;
     }
 
@@ -181,7 +180,7 @@ static void addSuccessors(plan_search_ehc_t *ehc,
     // go trough all applicable operators
     for (i = 0; i < op_size; ++i){
         op = ehc->succ_op[i];
-        planListLazyFifoPush(ehc->list, cur_state_id, op);
+        planListLazyPush(ehc->list, 0, cur_state_id, op);
     }
 }
 

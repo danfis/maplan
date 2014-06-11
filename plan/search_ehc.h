@@ -6,7 +6,7 @@
 #include <plan/succgen.h>
 #include <plan/heur.h>
 #include <plan/path.h>
-#include <plan/list_lazy_fifo.h>
+#include <plan/list_lazy.h>
 
 /**
  * Enforced Hill Climbing Search
@@ -18,7 +18,7 @@ struct _plan_search_ehc_t {
     plan_problem_t *prob;            /*!< Structure with definition of
                                          the problem */
     plan_state_space_t *state_space;
-    plan_list_lazy_fifo_t *list;     /*!< List to keep track of the states */
+    plan_list_lazy_t *list;          /*!< List to keep track of the states */
     plan_heur_t *heur;               /*!< Heuristic function */
     plan_state_t *state;             /*!< Preallocated state structure */
     plan_succ_gen_t *succ_gen;       /*!< Successor operator generator */

@@ -6,7 +6,7 @@
 #include <plan/succgen.h>
 #include <plan/heur.h>
 #include <plan/path.h>
-#include <plan/list_lazy_heap.h>
+#include <plan/list_lazy.h>
 
 /**
  * Lazy Best First Search
@@ -18,7 +18,7 @@ struct _plan_search_lazy_t {
     plan_problem_t *prob;            /*!< Structure with definition of
                                          the problem */
     plan_state_space_t *state_space;
-    plan_list_lazy_heap_t *list;     /*!< List to keep track of the states */
+    plan_list_lazy_t *list;          /*!< List to keep track of the states */
     plan_heur_t *heur;               /*!< Heuristic function */
     plan_state_t *state;             /*!< Preallocated state structure */
     plan_succ_gen_t *succ_gen;       /*!< Successor operator generator */
@@ -32,7 +32,8 @@ typedef struct _plan_search_lazy_t plan_search_lazy_t;
  * Creates a new instance of the Lazy Best First Search algorithm.
  */
 plan_search_lazy_t *planSearchLazyNew(plan_problem_t *prob,
-                                      plan_heur_t *heur);
+                                      plan_heur_t *heur,
+                                      plan_list_lazy_t *list);
 
 /**
  * Frees all allocated resources.

@@ -2,7 +2,8 @@
 #include "plan/search_lazy.h"
 
 plan_search_lazy_t *planSearchLazyNew(plan_problem_t *prob,
-                                      plan_heur_t *heur)
+                                      plan_heur_t *heur,
+                                      plan_list_lazy_t *list)
 {
     plan_search_lazy_t *lazy;
 
@@ -10,7 +11,7 @@ plan_search_lazy_t *planSearchLazyNew(plan_problem_t *prob,
     lazy->prob = prob;
     lazy->heur = heur;
     lazy->state_space = planStateSpaceNew(prob->state_pool);
-    lazy->list = planListLazyHeapNew();
+    lazy->list = list;
     lazy->state = planStateNew(prob->state_pool);
     lazy->succ_gen = planSuccGenNew(prob->op, prob->op_size);
     lazy->succ_op  = BOR_ALLOC_ARR(plan_operator_t *, prob->op_size);
@@ -27,8 +28,6 @@ void planSearchLazyDel(plan_search_lazy_t *lazy)
         BOR_FREE(lazy->succ_op);
     if (lazy->state)
         planStateDel(lazy->prob->state_pool, lazy->state);
-    if (lazy->list)
-        planListLazyHeapDel(lazy->list);
     if (lazy->state_space)
         planStateSpaceDel(lazy->state_space);
     BOR_FREE(lazy);
@@ -43,7 +42,7 @@ static plan_cost_t heuristic(plan_search_lazy_t *lazy,
 
 static int planSearchLazyInit(plan_search_lazy_t *lazy)
 {
-    planListLazyHeapPush(lazy->list, 0, lazy->prob->initial_state, NULL);
+    planListLazyPush(lazy->list, 0, lazy->prob->initial_state, NULL);
     return 0;
 }
 
@@ -71,7 +70,7 @@ static void addSuccessors(plan_search_lazy_t *lazy,
     // go trough all applicable operators
     for (i = 0; i < op_size; ++i){
         op = lazy->succ_op[i];
-        planListLazyHeapPush(lazy->list, heur, cur_state_id, op);
+        planListLazyPush(lazy->list, heur, cur_state_id, op);
     }
 }
 
@@ -83,7 +82,7 @@ static int planSearchLazyStep(plan_search_lazy_t *lazy)
     plan_state_space_node_t *cur_node;
 
     // get next node from the list
-    if (planListLazyHeapPop(lazy->list, &parent_state_id, &parent_op) != 0){
+    if (planListLazyPop(lazy->list, &parent_state_id, &parent_op) != 0){
         // reached dead-end
         fprintf(stderr, "DEAD\n");
         return -1;

@@ -1,6 +1,8 @@
 #ifndef __PLAN_SEARCH_EHC_H__
 #define __PLAN_SEARCH_EHC_H__
 
+#include <boruvka/timer.h>
+#include <plan/search.h>
 #include <plan/problem.h>
 #include <plan/statespace.h>
 #include <plan/succgen.h>
@@ -13,8 +15,22 @@
  * ==============================
  */
 
+struct _plan_search_ehc_params_t {
+    plan_search_progress_fn progress_fn;
+    long progress_freq;
+
+    plan_problem_t *prob;
+    plan_heur_t *heur;
+};
+typedef struct _plan_search_ehc_params_t plan_search_ehc_params_t;
+
+void planSearchEHCParamsInit(plan_search_ehc_params_t *p);
 
 struct _plan_search_ehc_t {
+    plan_search_ehc_params_t params;
+    plan_search_stat_t stat;
+    bor_timer_t timer;
+
     plan_problem_t *prob;            /*!< Structure with definition of
                                          the problem */
     plan_state_space_t *state_space;
@@ -33,8 +49,7 @@ typedef struct _plan_search_ehc_t plan_search_ehc_t;
 /**
  * Creates a new instance of the Enforced Hill Climbing search algorithm.
  */
-plan_search_ehc_t *planSearchEHCNew(plan_problem_t *prob,
-                                    plan_heur_t *heur);
+plan_search_ehc_t *planSearchEHCNew(const plan_search_ehc_params_t *params);
 
 /**
  * Frees all allocated resources.
@@ -49,5 +64,6 @@ void planSearchEHCDel(plan_search_ehc_t *ehc);
  * argument.
  */
 int planSearchEHCRun(plan_search_ehc_t *ehc, plan_path_t *path);
+
 
 #endif /* __PLAN_SEARCH_EHC_H__ */

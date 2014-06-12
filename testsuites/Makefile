@@ -20,7 +20,7 @@ BENCH_CFLAGS += $(JANSSON_CFLAGS)
 CHECK_REG=cu/check-regressions
 CHECK_TS ?=
 
-TARGETS = test bench-ehc
+TARGETS = test bench-ehc bench-lazy
 
 OBJS  = load-from-file.o
 OBJS += state.o
@@ -28,6 +28,7 @@ OBJS += dataarr.o
 OBJS += succgen.o
 OBJS += statespace.o
 OBJS += search_ehc.o
+OBJS += search_lazy.o
 OBJS += heur.o
 OBJS += list_lazy.o
 
@@ -36,6 +37,8 @@ all: $(TARGETS)
 test: main.c cu $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $< $(OBJS) $(LDFLAGS)
 bench-ehc: bench-ehc.c ../libplan.a
+	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS)
+bench-lazy: bench-lazy.c ../libplan.a
 	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS)
 
 heur.c: ../plan/heur_relax.h

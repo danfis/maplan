@@ -1,0 +1,107 @@
+#ifndef __PLAN_LIST_LAZY_H__
+#define __PLAN_LIST_LAZY_H__
+
+#include <plan/state.h>
+#include <plan/operator.h>
+
+typedef void (*plan_list_lazy_del_fn)(void *);
+typedef void (*plan_list_lazy_push_fn)(void *, plan_cost_t cost,
+                                       plan_state_id_t parent_state_id,
+                                       plan_operator_t *op);
+typedef int (*plan_list_lazy_pop_fn)(void *,
+                                     plan_state_id_t *parent_state_id,
+                                     plan_operator_t **op);
+typedef void (*plan_list_lazy_clear_fn)(void *);
+
+struct _plan_list_lazy_t {
+    plan_list_lazy_del_fn del_fn;
+    plan_list_lazy_push_fn push_fn;
+    plan_list_lazy_pop_fn pop_fn;
+    plan_list_lazy_clear_fn clear_fn;
+};
+typedef struct _plan_list_lazy_t plan_list_lazy_t;
+
+/**
+ * Creates a new lazy fifo list.
+ * This list ignores cost argument in push() method.
+ */
+plan_list_lazy_t *planListLazyFifoNew(void);
+
+/**
+ * Creates a new lazy list based on heap.
+ */
+plan_list_lazy_t *planListLazyHeapNew(void);
+
+/**
+ * Creates a new bucket-based lazy list.
+ */
+plan_list_lazy_t *planListLazyBucketNew(void);
+
+/**
+ * Destroys the list.
+ */
+_bor_inline void planListLazyDel(plan_list_lazy_t *l);
+
+/**
+ * Inserts an element with the specified cost into the list.
+ */
+_bor_inline void planListLazyPush(plan_list_lazy_t *l,
+                                  plan_cost_t cost,
+                                  plan_state_id_t parent_state_id,
+                                  plan_operator_t *op);
+
+/**
+ * Pops the next element from the list that has the lowest cost.
+ * Returns 0 on success, -1 if the heap is empty.
+ */
+_bor_inline int planListLazyPop(plan_list_lazy_t *l,
+                                plan_state_id_t *parent_state_id,
+                                plan_operator_t **op);
+
+/**
+ * Empties the list.
+ */
+_bor_inline void planListLazyClear(plan_list_lazy_t *l);
+
+/**** INLINES ****/
+_bor_inline void planListLazyDel(plan_list_lazy_t *l)
+{
+    l->del_fn(l);
+}
+
+_bor_inline void planListLazyPush(plan_list_lazy_t *l,
+                                  plan_cost_t cost,
+                                  plan_state_id_t parent_state_id,
+                                  plan_operator_t *op)
+{
+    l->push_fn(l, cost, parent_state_id, op);
+}
+
+_bor_inline int planListLazyPop(plan_list_lazy_t *l,
+                                plan_state_id_t *parent_state_id,
+                                plan_operator_t **op)
+{
+    return l->pop_fn(l, parent_state_id, op);
+}
+
+_bor_inline void planListLazyClear(plan_list_lazy_t *l)
+{
+    l->clear_fn(l);
+}
+
+
+/**
+ * Initializes lazy list.
+ */
+void planListLazyInit(plan_list_lazy_t *l,
+                      plan_list_lazy_del_fn del_fn,
+                      plan_list_lazy_push_fn push_fn,
+                      plan_list_lazy_pop_fn pop_fn,
+                      plan_list_lazy_clear_fn clear_fn);
+
+/**
+ * Frees resources.
+ */
+void planListLazyFree(plan_list_lazy_t *l);
+
+#endif /* __PLAN_LIST_LAZY_H__ */

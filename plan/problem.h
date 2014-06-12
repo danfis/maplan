@@ -4,6 +4,7 @@
 #include <plan/var.h>
 #include <plan/state.h>
 #include <plan/operator.h>
+#include <plan/succgen.h>
 
 struct _plan_problem_t {
     plan_var_t *var;               /*!< Definitions of variables */
@@ -13,6 +14,7 @@ struct _plan_problem_t {
     plan_part_state_t *goal;       /*!< Partial state representing goal */
     plan_operator_t *op;           /*!< Array of operators */
     int op_size;                   /*!< Number of operators */
+    plan_succ_gen_t *succ_gen;     /*!< Successor generator */
 };
 typedef struct _plan_problem_t plan_problem_t;
 

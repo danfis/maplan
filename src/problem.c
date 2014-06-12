@@ -12,6 +12,9 @@ static void planProblemFree(plan_problem_t *plan)
 {
     int i;
 
+    if (plan->succ_gen)
+        planSuccGenDel(plan->succ_gen);
+
     if (plan->goal){
         planPartStateDel(plan->state_pool, plan->goal);
         plan->goal = NULL;
@@ -52,11 +55,14 @@ plan_problem_t *planProblemFromJson(const char *fn)
     p->op = NULL;
     p->op_size = 0;
     p->goal = NULL;
+    p->succ_gen = NULL;
 
     if (loadJson(p, fn) != 0){
         planProblemFree(p);
         return NULL;
     }
+
+    p->succ_gen = planSuccGenNew(p->op, p->op_size);
 
     return p;
 }

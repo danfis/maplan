@@ -29,7 +29,6 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
 
     ehc->list        = planListLazyFifoNew();
     ehc->heur        = params->heur;
-    ehc->state       = planStateNew(ehc->search.params.prob->state_pool);
     ehc->best_heur   = PLAN_COST_MAX;
 
     return &ehc->search;
@@ -40,8 +39,6 @@ static void planSearchEHCDel(void *_ehc)
     plan_search_ehc_t *ehc = _ehc;
 
     _planSearchFree(&ehc->search);
-    if (ehc->state)
-        planStateDel(ehc->search.params.prob->state_pool, ehc->state);
     if (ehc->list)
         planListLazyDel(ehc->list);
     BOR_FREE(ehc);
@@ -51,7 +48,6 @@ static int planSearchEHCInit(void *_ehc)
 {
     plan_search_ehc_t *ehc = _ehc;
     plan_cost_t heur;
-    plan_state_space_node_t *node;
 
     // compute heuristic for the initial state
     heur = _planSearchHeuristic(&ehc->search,
@@ -60,15 +56,12 @@ static int planSearchEHCInit(void *_ehc)
     ehc->best_heur = heur;
 
     // create a first node from the initial state
-    node = planStateSpaceOpen2(ehc->search.state_space,
-                               ehc->search.params.prob->initial_state,
-                               PLAN_NO_STATE, NULL, 0, heur);
-    planStateSpaceClose(ehc->search.state_space, node);
+    _planSearchNodeOpenClose(&ehc->search,
+                             ehc->search.params.prob->initial_state,
+                             PLAN_NO_STATE, NULL, 0, heur);
 
-    if (planProblemCheckGoal(ehc->search.params.prob,
+    if (_planSearchCheckGoal(&ehc->search,
                              ehc->search.params.prob->initial_state)){
-        _planSearchFoundSolution(&ehc->search,
-                                 ehc->search.params.prob->initial_state);
         return PLAN_SEARCH_FOUND;
     }
 
@@ -85,7 +78,6 @@ static int planSearchEHCStep(void *_ehc)
     plan_search_ehc_t *ehc = _ehc;
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
-    plan_state_space_node_t *cur_node;
     plan_cost_t cur_heur;
 
     // get the next node in list
@@ -97,7 +89,7 @@ static int planSearchEHCStep(void *_ehc)
 
     // Create a new state and check whether the state was already visited
     if (_planSearchNewState(&ehc->search, parent_op, parent_state_id,
-                            &cur_state_id, &cur_node) != 0)
+                            &cur_state_id, NULL) != 0)
         return PLAN_SEARCH_CONT;
 
     // compute heuristic value for the current node
@@ -105,16 +97,12 @@ static int planSearchEHCStep(void *_ehc)
 
     // open and close the node so we can trace the path from goal to the
     // initial state
-    cur_node = planStateSpaceOpen2(ehc->search.state_space, cur_state_id,
-                                   parent_state_id, parent_op,
-                                   0, cur_heur);
-    planStateSpaceClose(ehc->search.state_space, cur_node);
+    _planSearchNodeOpenClose(&ehc->search, cur_state_id, parent_state_id,
+                             parent_op, 0, cur_heur);
 
     // check if the current state is the goal
-    if (planProblemCheckGoal(ehc->search.params.prob, cur_state_id)){
-        _planSearchFoundSolution(&ehc->search, cur_state_id);
+    if (_planSearchCheckGoal(&ehc->search, cur_state_id))
         return PLAN_SEARCH_FOUND;
-    }
 
     // If the heuristic for the current state is the best so far, restart
     // EHC algorithm with an empty list.

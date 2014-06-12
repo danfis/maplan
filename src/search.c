@@ -116,13 +116,6 @@ void _planSearchReachedDeadEnd(plan_search_t *search)
     planSearchStatSetDeadEnd(&search->stat);
 }
 
-void _planSearchFoundSolution(plan_search_t *search,
-                              plan_state_id_t state_id)
-{
-    search->goal_state = state_id;
-    planSearchStatSetFoundSolution(&search->stat);
-}
-
 int _planSearchNewState(plan_search_t *search,
                         plan_operator_t *operator,
                         plan_state_id_t parent_state,
@@ -144,6 +137,32 @@ int _planSearchNewState(plan_search_t *search,
     if (planStateSpaceNodeIsNew(node))
         return 0;
     return -1;
+}
+
+void _planSearchNodeOpenClose(plan_search_t *search,
+                              plan_state_id_t state,
+                              plan_state_id_t parent_state,
+                              plan_operator_t *parent_op,
+                              plan_cost_t cost,
+                              plan_cost_t heur)
+{
+    plan_state_space_node_t *node;
+
+    node = planStateSpaceOpen2(search->state_space, state,
+                                   parent_state, parent_op,
+                                   cost, heur);
+    planStateSpaceClose(search->state_space, node);
+}
+
+int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id)
+{
+    if (planProblemCheckGoal(search->params.prob, state_id)){
+        search->goal_state = state_id;
+        planSearchStatSetFoundSolution(&search->stat);
+        return 1;
+    }
+
+    return 0;
 }
 
 void planSearchDel(plan_search_t *search)

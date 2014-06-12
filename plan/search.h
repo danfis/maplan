@@ -142,13 +142,6 @@ void _planSearchAddLazySuccessors(plan_search_t *search,
 void _planSearchReachedDeadEnd(plan_search_t *search);
 
 /**
- * Record the goal state.
- */
-void _planSearchFoundSolution(plan_search_t *search,
-                              plan_state_id_t state_id);
-
-
-/**
  * Creates a new state by application of the operator on the parent_state.
  * Returns 0 if the corresponding node is in NEW state, -1 otherwise.
  * The resulting state and node is returned via output arguments.\
@@ -158,6 +151,23 @@ int _planSearchNewState(plan_search_t *search,
                         plan_state_id_t parent_state,
                         plan_state_id_t *new_state_id,
                         plan_state_space_node_t **new_node);
+
+/**
+ * Open and close the state in one step.
+ */
+void _planSearchNodeOpenClose(plan_search_t *search,
+                              plan_state_id_t state,
+                              plan_state_id_t parent_state,
+                              plan_operator_t *parent_op,
+                              plan_cost_t cost,
+                              plan_cost_t heur);
+
+/**
+ * Returns true if the given state is the goal state.
+ * Also the goal state is recorded in stats and the goal state is
+ * remembered.
+ */
+int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id);
 
 /**** INLINES ****/
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)

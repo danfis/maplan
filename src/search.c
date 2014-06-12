@@ -38,11 +38,11 @@ void planSearchParamsInit(plan_search_params_t *params)
     bzero(params, sizeof(*params));
 }
 
-void planSearchInit(plan_search_t *search,
-                    const plan_search_params_t *params,
-                    plan_search_del_fn del_fn,
-                    plan_search_init_fn init_fn,
-                    plan_search_step_fn step_fn)
+void _planSearchInit(plan_search_t *search,
+                     const plan_search_params_t *params,
+                     plan_search_del_fn del_fn,
+                     plan_search_init_fn init_fn,
+                     plan_search_step_fn step_fn)
 {
     search->del_fn  = del_fn;
     search->init_fn = init_fn;
@@ -56,7 +56,7 @@ void planSearchInit(plan_search_t *search,
     search->goal_state  = PLAN_NO_STATE;
 }
 
-void planSearchFree(plan_search_t *search)
+void _planSearchFree(plan_search_t *search)
 {
     if (search->succ_op)
         BOR_FREE(search->succ_op);

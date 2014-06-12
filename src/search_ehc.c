@@ -35,10 +35,10 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
 
     ehc = BOR_ALLOC(plan_search_ehc_t);
 
-    planSearchInit(&ehc->search, &params->search,
-                   planSearchEHCDel,
-                   planSearchEHCInit,
-                   planSearchEHCStep);
+    _planSearchInit(&ehc->search, &params->search,
+                    planSearchEHCDel,
+                    planSearchEHCInit,
+                    planSearchEHCStep);
 
     ehc->list        = planListLazyFifoNew();
     ehc->heur        = params->heur;
@@ -52,7 +52,7 @@ static void planSearchEHCDel(void *_ehc)
 {
     plan_search_ehc_t *ehc = _ehc;
 
-    planSearchFree(&ehc->search);
+    _planSearchFree(&ehc->search);
     if (ehc->state)
         planStateDel(ehc->search.params.prob->state_pool, ehc->state);
     if (ehc->list)

@@ -1,10 +1,8 @@
 #ifndef __PLAN_SEARCH_EHC_H__
 #define __PLAN_SEARCH_EHC_H__
 
-#include <boruvka/timer.h>
 #include <plan/search.h>
 #include <plan/heur.h>
-#include <plan/path.h>
 #include <plan/list_lazy.h>
 
 /**
@@ -26,7 +24,6 @@ struct _plan_search_ehc_t {
 
     plan_list_lazy_t *list;          /*!< List to keep track of the states */
     plan_heur_t *heur;               /*!< Heuristic function */
-    plan_state_t *state;             /*!< Preallocated state structure */
     plan_cost_t best_heur;           /*!< Value of the best heuristic
                                           value found so far */
 };

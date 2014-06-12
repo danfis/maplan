@@ -6,10 +6,8 @@
 
 int main(int argc, char *argv[])
 {
-    plan_problem_t *prob;
-    plan_search_lazy_t *lazy;
-    plan_heur_t *heur;
-    plan_list_lazy_t *list;
+    plan_search_lazy_params_t params;
+    plan_search_t *lazy;
     plan_path_t path;
     bor_timer_t timer;
 
@@ -20,27 +18,29 @@ int main(int argc, char *argv[])
 
     borTimerStart(&timer);
 
-    prob = planProblemFromJson(argv[1]);
+    planSearchLazyParamsInit(&params);
 
-    heur = planHeurGoalCountNew(prob->goal);
+    params.search.prob = planProblemFromJson(argv[1]);
+
+    params.heur = planHeurGoalCountNew(params.search.prob->goal);
     //heur = planHeurRelaxAddNew(prob);
     //heur = planHeurRelaxMaxNew(prob);
     //heur = planHeurRelaxFFNew(prob);
 
-    list = planListLazyHeapNew();
+    params.list = planListLazyHeapNew();
 
-    lazy = planSearchLazyNew(prob, heur, list);
+    lazy = planSearchLazyNew(&params);
     planPathInit(&path);
 
-    planSearchLazyRun(lazy, &path);
+    planSearchRun(lazy, &path);
     planPathPrint(&path, stdout);
     fprintf(stderr, "Path cost: %d\n", (int)planPathCost(&path));
 
     planPathFree(&path);
-    planListLazyDel(list);
-    planHeurDel(heur);
-    planSearchLazyDel(lazy);
-    planProblemDel(prob);
+    planListLazyDel(params.list);
+    planHeurDel(params.heur);
+    planSearchDel(lazy);
+    planProblemDel(params.search.prob);
 
     borTimerStop(&timer);
     fprintf(stderr, "Elapsed Time: %.4f seconds\n",

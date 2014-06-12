@@ -1,85 +1,53 @@
 #include <boruvka/alloc.h>
 #include "plan/search_lazy.h"
 
-plan_search_lazy_t *planSearchLazyNew(plan_problem_t *prob,
-                                      plan_heur_t *heur,
-                                      plan_list_lazy_t *list)
+static void planSearchLazyDel(void *_lazy);
+static int planSearchLazyInit(void *_lazy);
+static int planSearchLazyStep(void *_lazy);
+
+void planSearchLazyParamsInit(plan_search_lazy_params_t *p)
+{
+    bzero(p, sizeof(*p));
+    planSearchParamsInit(&p->search);
+}
+
+plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
 {
     plan_search_lazy_t *lazy;
 
     lazy = BOR_ALLOC(plan_search_lazy_t);
-    lazy->prob = prob;
-    lazy->heur = heur;
-    lazy->state_space = planStateSpaceNew(prob->state_pool);
-    lazy->list = list;
-    lazy->state = planStateNew(prob->state_pool);
-    lazy->succ_gen = planSuccGenNew(prob->op, prob->op_size);
-    lazy->succ_op  = BOR_ALLOC_ARR(plan_operator_t *, prob->op_size);
-    lazy->goal_state = PLAN_NO_STATE;
+    _planSearchInit(&lazy->search, &params->search,
+                    planSearchLazyDel,
+                    planSearchLazyInit,
+                    planSearchLazyStep);
 
-    return lazy;
+    lazy->heur = params->heur;
+    lazy->list = params->list;
+
+    return &lazy->search;
 }
 
-void planSearchLazyDel(plan_search_lazy_t *lazy)
+static void planSearchLazyDel(void *_lazy)
 {
-    if (lazy->succ_gen)
-        planSuccGenDel(lazy->succ_gen);
-    if (lazy->succ_op)
-        BOR_FREE(lazy->succ_op);
-    if (lazy->state)
-        planStateDel(lazy->prob->state_pool, lazy->state);
-    if (lazy->state_space)
-        planStateSpaceDel(lazy->state_space);
+    plan_search_lazy_t *lazy = _lazy;
+    _planSearchFree(&lazy->search);
     BOR_FREE(lazy);
 }
 
-static plan_cost_t heuristic(plan_search_lazy_t *lazy,
-                             plan_state_id_t state_id)
+static int planSearchLazyInit(void *_lazy)
 {
-    planStatePoolGetState(lazy->prob->state_pool, state_id, lazy->state);
-    return planHeur(lazy->heur, lazy->state);
-}
-
-static int planSearchLazyInit(plan_search_lazy_t *lazy)
-{
-    planListLazyPush(lazy->list, 0, lazy->prob->initial_state, NULL);
+    plan_search_lazy_t *lazy = _lazy;
+    planListLazyPush(lazy->list, 0,
+                     lazy->search.params.prob->initial_state, NULL);
     return 0;
 }
 
-static int findApplicableOperators(plan_search_lazy_t *lazy,
-                                   plan_state_id_t state_id)
+static int planSearchLazyStep(void *_lazy)
 {
-    // unroll the state into lazy->state struct
-    planStatePoolGetState(lazy->prob->state_pool, state_id, lazy->state);
-
-    // get operators to get successors
-    return planSuccGenFind(lazy->succ_gen, lazy->state, lazy->succ_op,
-                           lazy->prob->op_size);
-}
-
-static void addSuccessors(plan_search_lazy_t *lazy,
-                          plan_state_id_t cur_state_id,
-                          plan_cost_t heur)
-{
-    int i, op_size;
-    plan_operator_t *op;
-
-    // Store applicable operators in lazy->succ_op[]
-    op_size = findApplicableOperators(lazy, cur_state_id);
-
-    // go trough all applicable operators
-    for (i = 0; i < op_size; ++i){
-        op = lazy->succ_op[i];
-        planListLazyPush(lazy->list, heur, cur_state_id, op);
-    }
-}
-
-static int planSearchLazyStep(plan_search_lazy_t *lazy)
-{
+    plan_search_lazy_t *lazy = _lazy;
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
     plan_cost_t cur_heur;
-    plan_state_space_node_t *cur_node;
 
     // get next node from the list
     if (planListLazyPop(lazy->list, &parent_state_id, &parent_op) != 0){
@@ -97,62 +65,25 @@ static int planSearchLazyStep(plan_search_lazy_t *lazy)
         cur_state_id = planOperatorApply(parent_op, parent_state_id);
     }
 
-
-    // get the node corresponding to the current state
-    cur_node = planStateSpaceNode(lazy->state_space, cur_state_id);
-
     // check whether the state was already visited
-    if (!planStateSpaceNodeIsNew(cur_node))
+    if (!planStateSpaceNodeIsNew2(lazy->search.state_space, cur_state_id))
         return 0;
 
     // compute heuristic value for the current node
-    cur_heur = heuristic(lazy, cur_state_id);
+    cur_heur = _planSearchHeuristic(&lazy->search, cur_state_id, lazy->heur);
 
     // open and close the node so we can trace the path from goal to the
     // initial state
-    cur_node = planStateSpaceOpen2(lazy->state_space, cur_state_id,
+    _planSearchNodeOpenClose(&lazy->search, cur_state_id,
                                    parent_state_id, parent_op,
                                    0, cur_heur);
-    planStateSpaceClose(lazy->state_space, cur_node);
 
     // check if the current state is the goal
-    if (planProblemCheckGoal(lazy->prob, cur_state_id)){
-        lazy->goal_state = cur_state_id;
-        return 1;
-    }
+    if (_planSearchCheckGoal(&lazy->search, cur_state_id))
+        return PLAN_SEARCH_FOUND;
 
-    addSuccessors(lazy, cur_state_id, cur_heur);
+    _planSearchAddLazySuccessors(&lazy->search, cur_state_id,
+                                 cur_heur, lazy->list);
 
-    return 0;
-}
-
-static void extractPath(plan_search_lazy_t *lazy,
-                        plan_state_id_t goal_state,
-                        plan_path_t *path)
-{
-    plan_state_space_node_t *node;
-
-    planPathInit(path);
-
-    node = planStateSpaceNode(lazy->state_space, goal_state);
-    while (node && node->op){
-        planPathPrepend(path, node->op);
-        node = planStateSpaceNode(lazy->state_space, node->parent_state_id);
-    }
-}
-
-int planSearchLazyRun(plan_search_lazy_t *lazy, plan_path_t *path)
-{
-    int res;
-
-    if ((res = planSearchLazyInit(lazy)) == 0){
-        while ((res = planSearchLazyStep(lazy)) == 0);
-    }
-
-    // Reached dead end:
-    if (res == -1)
-        return 1;
-
-    extractPath(lazy, lazy->goal_state, path);
     return 0;
 }

@@ -3,29 +3,30 @@
 #include "plan/heur_goalcount.h"
 #include "plan/list_lazy.h"
 
+#define DEF_JSON "../data/ma-benchmarks/depot/pfile1.json"
+
 TEST(testSearchLazy)
 {
-    plan_problem_t *prob;
-    plan_search_lazy_t *lazy;
-    plan_heur_t *heur;
-    plan_list_lazy_t *list;
+    plan_search_lazy_params_t params;
+    plan_search_t *lazy;
     plan_path_t path;
 
-    //prob = planProblemFromJson("load-from-file.in2.json");
-    prob = planProblemFromJson("../data/ma-benchmarks/depot/pfile1.json");
+    planSearchLazyParamsInit(&params);
 
-    heur = planHeurGoalCountNew(prob->goal);
-    list = planListLazyHeapNew();
-    lazy = planSearchLazyNew(prob, heur, list);
+    params.search.prob = planProblemFromJson(DEF_JSON);
+
+    params.heur = planHeurGoalCountNew(params.search.prob->goal);
+    params.list = planListLazyHeapNew();
+    lazy = planSearchLazyNew(&params);
     planPathInit(&path);
 
-    assertEquals(planSearchLazyRun(lazy, &path), 0);
+    assertEquals(planSearchRun(lazy, &path), PLAN_SEARCH_FOUND);
     planPathPrint(&path, stdout);
     assertEquals(planPathCost(&path), 11);
 
     planPathFree(&path);
-    planListLazyDel(list);
-    planHeurDel(heur);
-    planSearchLazyDel(lazy);
-    planProblemDel(prob);
+    planListLazyDel(params.list);
+    planHeurDel(params.heur);
+    planSearchDel(lazy);
+    planProblemDel(params.search.prob);
 }

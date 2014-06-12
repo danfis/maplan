@@ -77,10 +77,80 @@ plan_cost_t _planSearchHeuristic(plan_search_t *search,
     return planHeur(heur, search->state);
 }
 
+static int findApplicableOperators(plan_search_t *search,
+                                   plan_state_id_t state_id)
+{
+    // unroll the state into search->state struct
+    planStatePoolGetState(search->params.prob->state_pool,
+                          state_id, search->state);
+
+    // get operators to get successors
+    return planSuccGenFind(search->params.prob->succ_gen,
+                           search->state,
+                           search->succ_op,
+                           search->params.prob->op_size);
+}
+
+void _planSearchAddLazySuccessors(plan_search_t *search,
+                                  plan_state_id_t state_id,
+                                  plan_cost_t cost,
+                                  plan_list_lazy_t *list)
+{
+    int i, op_size;
+    plan_operator_t *op;
+
+    // Store applicable operators in search->succ_op[]
+    op_size = findApplicableOperators(search, state_id);
+
+    // go trough all applicable operators
+    for (i = 0; i < op_size; ++i){
+        op = search->succ_op[i];
+        planListLazyPush(list, cost, state_id, op);
+    }
+
+    planSearchStatIncExpandedStates(&search->stat);
+}
+
+void _planSearchReachedDeadEnd(plan_search_t *search)
+{
+    planSearchStatSetDeadEnd(&search->stat);
+}
+
+void _planSearchFoundSolution(plan_search_t *search,
+                              plan_state_id_t state_id)
+{
+    search->goal_state = state_id;
+    planSearchStatSetFoundSolution(&search->stat);
+}
+
+int _planSearchNewState(plan_search_t *search,
+                        plan_operator_t *operator,
+                        plan_state_id_t parent_state,
+                        plan_state_id_t *new_state_id,
+                        plan_state_space_node_t **new_node)
+{
+    plan_state_id_t state_id;
+    plan_state_space_node_t *node;
+
+    state_id = planOperatorApply(operator, parent_state);
+    node     = planStateSpaceNode(search->state_space, state_id);
+    planSearchStatIncGeneratedStates(&search->stat);
+
+    if (new_state_id)
+        *new_state_id = state_id;
+    if (new_node)
+        *new_node = node;
+
+    if (planStateSpaceNodeIsNew(node))
+        return 0;
+    return -1;
+}
+
 void planSearchDel(plan_search_t *search)
 {
     search->del_fn(search);
 }
+
 int planSearchRun(plan_search_t *search, plan_path_t *path)
 {
     int res;

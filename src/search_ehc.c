@@ -2,15 +2,6 @@
 
 #include "plan/search_ehc.h"
 
-/** Fill ehc->succ_op[] with applicable operators in the given state.
- *  Returns how many operators were found. */
-static int findApplicableOperators(plan_search_ehc_t *ehc,
-                                   plan_state_id_t state_id);
-
-/** Insert successor elements into the list. */
-static void addSuccessors(plan_search_ehc_t *ehc,
-                          plan_state_id_t cur_state_id);
-
 /** Frees allocated resorces */
 static void planSearchEHCDel(void *_ehc);
 /** Initializes search. This must be call exactly once. */
@@ -76,14 +67,17 @@ static int planSearchEHCInit(void *_ehc)
 
     if (planProblemCheckGoal(ehc->search.params.prob,
                              ehc->search.params.prob->initial_state)){
-        ehc->search.goal_state = ehc->search.params.prob->initial_state;
-        return 1;
+        _planSearchFoundSolution(&ehc->search,
+                                 ehc->search.params.prob->initial_state);
+        return PLAN_SEARCH_FOUND;
     }
 
     // add recepies for successor nodes into list
-    addSuccessors(ehc, ehc->search.params.prob->initial_state);
+    _planSearchAddLazySuccessors(&ehc->search,
+                                 ehc->search.params.prob->initial_state,
+                                 0, ehc->list);
 
-    return 0;
+    return PLAN_SEARCH_CONT;
 }
 
 static int planSearchEHCStep(void *_ehc)
@@ -97,18 +91,14 @@ static int planSearchEHCStep(void *_ehc)
     // get the next node in list
     if (planListLazyPop(ehc->list, &parent_state_id, &parent_op) != 0){
         // we reached dead end
-        planSearchStatSetDeadEnd(&ehc->search.stat);
-        return -1;
+        _planSearchReachedDeadEnd(&ehc->search);
+        return PLAN_SEARCH_DEAD_END;
     }
 
-    // create a new state
-    cur_state_id = planOperatorApply(parent_op, parent_state_id);
-    cur_node = planStateSpaceNode(ehc->search.state_space, cur_state_id);
-    planSearchStatIncGeneratedStates(&ehc->search.stat);
-
-    // check whether the state was already visited
-    if (!planStateSpaceNodeIsNew(cur_node))
-        return 0;
+    // Create a new state and check whether the state was already visited
+    if (_planSearchNewState(&ehc->search, parent_op, parent_state_id,
+                            &cur_state_id, &cur_node) != 0)
+        return PLAN_SEARCH_CONT;
 
     // compute heuristic value for the current node
     cur_heur = _planSearchHeuristic(&ehc->search, cur_state_id, ehc->heur);
@@ -122,9 +112,8 @@ static int planSearchEHCStep(void *_ehc)
 
     // check if the current state is the goal
     if (planProblemCheckGoal(ehc->search.params.prob, cur_state_id)){
-        ehc->search.goal_state = cur_state_id;
-        planSearchStatSetFoundSolution(&ehc->search.stat);
-        return 1;
+        _planSearchFoundSolution(&ehc->search, cur_state_id);
+        return PLAN_SEARCH_FOUND;
     }
 
     // If the heuristic for the current state is the best so far, restart
@@ -134,37 +123,7 @@ static int planSearchEHCStep(void *_ehc)
         ehc->best_heur = cur_heur;
     }
 
-    planSearchStatIncExpandedStates(&ehc->search.stat);
-    addSuccessors(ehc, cur_state_id);
+    _planSearchAddLazySuccessors(&ehc->search, cur_state_id, 0, ehc->list);
 
-    return 0;
-}
-
-static int findApplicableOperators(plan_search_ehc_t *ehc,
-                                   plan_state_id_t state_id)
-{
-    // unroll the state into ehc->state struct
-    planStatePoolGetState(ehc->search.params.prob->state_pool,
-                          state_id, ehc->state);
-
-    // get operators to get successors
-    return planSuccGenFind(ehc->search.params.prob->succ_gen,
-                           ehc->state, ehc->search.succ_op,
-                           ehc->search.params.prob->op_size);
-}
-
-static void addSuccessors(plan_search_ehc_t *ehc,
-                          plan_state_id_t cur_state_id)
-{
-    int i, op_size;
-    plan_operator_t *op;
-
-    // Store applicable operators in ehc->succ_op[]
-    op_size = findApplicableOperators(ehc, cur_state_id);
-
-    // go trough all applicable operators
-    for (i = 0; i < op_size; ++i){
-        op = ehc->search.succ_op[i];
-        planListLazyPush(ehc->list, 0, cur_state_id, op);
-    }
+    return PLAN_SEARCH_CONT;
 }

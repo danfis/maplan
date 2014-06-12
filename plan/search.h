@@ -4,6 +4,7 @@
 #include <plan/problem.h>
 #include <plan/statespace.h>
 #include <plan/heur.h>
+#include <plan/list_lazy.h>
 #include <plan/path.h>
 
 #define PLAN_SEARCH_CONT      0
@@ -127,6 +128,36 @@ plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_state_id_t state_id,
                                  plan_heur_t *heur);
 
+/**
+ * Adds state's successors to the lazy list with the specified cost.
+ */
+void _planSearchAddLazySuccessors(plan_search_t *search,
+                                  plan_state_id_t state_id,
+                                  plan_cost_t cost,
+                                  plan_list_lazy_t *list);
+
+/**
+ * Let the common structure know that a dead end was reached.
+ */
+void _planSearchReachedDeadEnd(plan_search_t *search);
+
+/**
+ * Record the goal state.
+ */
+void _planSearchFoundSolution(plan_search_t *search,
+                              plan_state_id_t state_id);
+
+
+/**
+ * Creates a new state by application of the operator on the parent_state.
+ * Returns 0 if the corresponding node is in NEW state, -1 otherwise.
+ * The resulting state and node is returned via output arguments.\
+ */
+int _planSearchNewState(plan_search_t *search,
+                        plan_operator_t *operator,
+                        plan_state_id_t parent_state,
+                        plan_state_id_t *new_state_id,
+                        plan_state_space_node_t **new_node);
 
 /**** INLINES ****/
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)

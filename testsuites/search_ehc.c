@@ -15,7 +15,7 @@ TEST(testSearchEHC)
     ehc = planSearchEHCNew(&params);
     planPathInit(&path);
 
-    assertEquals(planSearchRun(ehc, &path), 0);
+    assertEquals(planSearchRun(ehc, &path), PLAN_SEARCH_FOUND);
     planPathPrint(&path, stdout);
     assertEquals(planPathCost(&path), 36);
 

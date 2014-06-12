@@ -3,6 +3,7 @@
 
 #include <plan/problem.h>
 #include <plan/statespace.h>
+#include <plan/heur.h>
 #include <plan/path.h>
 
 #define PLAN_SEARCH_CONT      0
@@ -80,6 +81,7 @@ struct _plan_search_t {
     plan_search_stat_t stat;
 
     plan_state_space_t *state_space;
+    plan_state_t *state;             /*!< Preallocated state */
     plan_operator_t **succ_op;       /*!< Preallocated array for successor
                                           operators. */
     plan_state_id_t goal_state;      /*!< The found state satisfying the goal */
@@ -117,6 +119,13 @@ void _planSearchInit(plan_search_t *search,
  * Frees allocated resources.
  */
 void _planSearchFree(plan_search_t *search);
+
+/**
+ * Returns value of heuristics for the given state.
+ */
+plan_cost_t _planSearchHeuristic(plan_search_t *search,
+                                 plan_state_id_t state_id,
+                                 plan_heur_t *heur);
 
 
 /**** INLINES ****/

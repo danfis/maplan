@@ -2,10 +2,6 @@
 
 #include "plan/search_ehc.h"
 
-/** Computes heuristic value of the given state. */
-static plan_cost_t heuristic(plan_search_ehc_t *ehc,
-                             plan_state_id_t state_id);
-
 /** Fill ehc->succ_op[] with applicable operators in the given state.
  *  Returns how many operators were found. */
 static int findApplicableOperators(plan_search_ehc_t *ehc,
@@ -67,7 +63,9 @@ static int planSearchEHCInit(void *_ehc)
     plan_state_space_node_t *node;
 
     // compute heuristic for the initial state
-    heur = heuristic(ehc, ehc->search.params.prob->initial_state);
+    heur = _planSearchHeuristic(&ehc->search,
+                                ehc->search.params.prob->initial_state,
+                                ehc->heur);
     ehc->best_heur = heur;
 
     // create a first node from the initial state
@@ -113,7 +111,7 @@ static int planSearchEHCStep(void *_ehc)
         return 0;
 
     // compute heuristic value for the current node
-    cur_heur = heuristic(ehc, cur_state_id);
+    cur_heur = _planSearchHeuristic(&ehc->search, cur_state_id, ehc->heur);
 
     // open and close the node so we can trace the path from goal to the
     // initial state
@@ -140,15 +138,6 @@ static int planSearchEHCStep(void *_ehc)
     addSuccessors(ehc, cur_state_id);
 
     return 0;
-}
-
-static plan_cost_t heuristic(plan_search_ehc_t *ehc,
-                             plan_state_id_t state_id)
-{
-    planStatePoolGetState(ehc->search.params.prob->state_pool,
-                          state_id, ehc->state);
-    planSearchStatIncEvaluatedStates(&ehc->search.stat);
-    return planHeur(ehc->heur, ehc->state);
 }
 
 static int findApplicableOperators(plan_search_ehc_t *ehc,

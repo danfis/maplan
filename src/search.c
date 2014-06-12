@@ -193,7 +193,7 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
 
     if (search->params.progress_fn && res != PLAN_SEARCH_ABORT && steps != 0){
         updateStat(&search->stat, steps, &timer);
-        res = search->params.progress_fn(&search->stat);
+        search->params.progress_fn(&search->stat);
     }
 
     if (res == PLAN_SEARCH_FOUND){

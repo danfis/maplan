@@ -21,13 +21,13 @@ static int progress(const plan_search_stat_t *stat)
         fprintf(stderr, "Aborting...\n");
         return PLAN_SEARCH_ABORT;
     }
-    return PLAN_SEARCH_CONTINUE;
+    return PLAN_SEARCH_CONT;
 }
 
 int main(int argc, char *argv[])
 {
     plan_search_ehc_params_t params;
-    plan_search_ehc_t *ehc;
+    plan_search_t *ehc;
     plan_path_t path;
     bor_timer_t timer;
 
@@ -39,19 +39,19 @@ int main(int argc, char *argv[])
     borTimerStart(&timer);
 
     planSearchEHCParamsInit(&params);
-    params.progress_fn = progress;
-    params.progress_freq = 100000L;
+    params.search.progress_fn = progress;
+    params.search.progress_freq = 100000L;
 
-    params.prob = planProblemFromJson(argv[2]);
+    params.search.prob = planProblemFromJson(argv[2]);
 
     if (strcmp(argv[1], "gc") == 0){
-        params.heur = planHeurGoalCountNew(params.prob->goal);
+        params.heur = planHeurGoalCountNew(params.search.prob->goal);
     }else if (strcmp(argv[1], "add") == 0){
-        params.heur = planHeurRelaxAddNew(params.prob);
+        params.heur = planHeurRelaxAddNew(params.search.prob);
     }else if (strcmp(argv[1], "max") == 0){
-        params.heur = planHeurRelaxMaxNew(params.prob);
+        params.heur = planHeurRelaxMaxNew(params.search.prob);
     }else if (strcmp(argv[1], "ff") == 0){
-        params.heur = planHeurRelaxFFNew(params.prob);
+        params.heur = planHeurRelaxFFNew(params.search.prob);
     }else{
         fprintf(stderr, "Error: Invalid heuristic type\n");
         return -1;
@@ -60,14 +60,14 @@ int main(int argc, char *argv[])
     ehc = planSearchEHCNew(&params);
     planPathInit(&path);
 
-    planSearchEHCRun(ehc, &path);
+    planSearchRun(ehc, &path);
     planPathPrint(&path, stdout);
     fprintf(stderr, "Path cost: %d\n", (int)planPathCost(&path));
 
     planPathFree(&path);
     planHeurDel(params.heur);
-    planSearchEHCDel(ehc);
-    planProblemDel(params.prob);
+    planSearchDel(ehc);
+    planProblemDel(params.search.prob);
 
     borTimerStop(&timer);
     fprintf(stderr, "Elapsed Time: %.4f seconds\n",

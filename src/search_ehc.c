@@ -15,127 +15,82 @@ static int findApplicableOperators(plan_search_ehc_t *ehc,
 static void addSuccessors(plan_search_ehc_t *ehc,
                           plan_state_id_t cur_state_id);
 
+/** Frees allocated resorces */
+static void planSearchEHCDel(void *_ehc);
 /** Initializes search. This must be call exactly once. */
-static int planSearchEHCInit(plan_search_ehc_t *ehc);
+static int planSearchEHCInit(void *);
 /** Performes one step in the algorithm. */
-static int planSearchEHCStep(plan_search_ehc_t *ehc);
+static int planSearchEHCStep(void *);
 
-/** Extracts a path from the initial state to the goal state as found by
- *  EHC */
-static void extractPath(plan_search_ehc_t *ehc,
-                        plan_state_id_t goal_state,
-                        plan_path_t *path);
 
 void planSearchEHCParamsInit(plan_search_ehc_params_t *p)
 {
     bzero(p, sizeof(*p));
+    planSearchParamsInit(&p->search);
 }
 
-plan_search_ehc_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
+plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
 {
     plan_search_ehc_t *ehc;
 
     ehc = BOR_ALLOC(plan_search_ehc_t);
-    ehc->params = *params;
 
-    planSearchStatInit(&ehc->stat);
+    planSearchInit(&ehc->search, &params->search,
+                   planSearchEHCDel,
+                   planSearchEHCInit,
+                   planSearchEHCStep);
 
-    ehc->prob        = params->prob;
-    ehc->state_space = planStateSpaceNew(ehc->prob->state_pool);
     ehc->list        = planListLazyFifoNew();
     ehc->heur        = params->heur;
-    ehc->state       = planStateNew(ehc->prob->state_pool);
-    ehc->succ_gen    = planSuccGenNew(ehc->prob->op, ehc->prob->op_size);
-    ehc->succ_op     = BOR_ALLOC_ARR(plan_operator_t *, ehc->prob->op_size);
+    ehc->state       = planStateNew(ehc->search.params.prob->state_pool);
     ehc->best_heur   = PLAN_COST_MAX;
-    ehc->goal_state  = PLAN_NO_STATE;
 
-    return ehc;
+    return &ehc->search;
 }
 
-void planSearchEHCDel(plan_search_ehc_t *ehc)
+static void planSearchEHCDel(void *_ehc)
 {
-    if (ehc->succ_gen)
-        planSuccGenDel(ehc->succ_gen);
-    if (ehc->succ_op)
-        BOR_FREE(ehc->succ_op);
+    plan_search_ehc_t *ehc = _ehc;
+
+    planSearchFree(&ehc->search);
     if (ehc->state)
-        planStateDel(ehc->prob->state_pool, ehc->state);
+        planStateDel(ehc->search.params.prob->state_pool, ehc->state);
     if (ehc->list)
         planListLazyDel(ehc->list);
-    if (ehc->state_space)
-        planStateSpaceDel(ehc->state_space);
     BOR_FREE(ehc);
 }
 
-int planSearchEHCRun(plan_search_ehc_t *ehc, plan_path_t *path)
+static int planSearchEHCInit(void *_ehc)
 {
-    int res;
-    long steps = 0;
-
-    borTimerStart(&ehc->timer);
-    if ((res = planSearchEHCInit(ehc)) == 0){
-        while ((res = planSearchEHCStep(ehc)) == 0){
-            ++steps;
-            if (ehc->params.progress_fn
-                    && steps == ehc->params.progress_freq){
-                ehc->stat.steps += steps;
-
-                borTimerStop(&ehc->timer);
-                ehc->stat.elapsed_time = borTimerElapsedInSF(&ehc->timer);
-                planSearchStatUpdatePeakMemory(&ehc->stat);
-                if (ehc->params.progress_fn(&ehc->stat) != PLAN_SEARCH_CONTINUE){
-                    res = -1;
-                    break;
-                }
-                steps = 0;
-            }
-        }
-    }
-
-    if (ehc->params.progress_fn){
-        ehc->stat.steps += steps;
-        ehc->stat.elapsed_time = borTimerElapsedInSF(&ehc->timer);
-        planSearchStatUpdatePeakMemory(&ehc->stat);
-        ehc->params.progress_fn(&ehc->stat);
-    }
-
-    // Reached dead end:
-    if (res == -1)
-        return 1;
-
-    extractPath(ehc, ehc->goal_state, path);
-    return 0;
-}
-
-static int planSearchEHCInit(plan_search_ehc_t *ehc)
-{
+    plan_search_ehc_t *ehc = _ehc;
     plan_cost_t heur;
     plan_state_space_node_t *node;
 
     // compute heuristic for the initial state
-    heur = heuristic(ehc, ehc->prob->initial_state);
+    heur = heuristic(ehc, ehc->search.params.prob->initial_state);
     ehc->best_heur = heur;
 
     // create a first node from the initial state
-    node = planStateSpaceOpen2(ehc->state_space,
-                               ehc->prob->initial_state,
+    node = planStateSpaceOpen2(ehc->search.state_space,
+                               ehc->search.params.prob->initial_state,
                                PLAN_NO_STATE, NULL, 0, heur);
-    planStateSpaceClose(ehc->state_space, node);
+    planStateSpaceClose(ehc->search.state_space, node);
 
-    if (planProblemCheckGoal(ehc->prob, ehc->prob->initial_state)){
-        ehc->goal_state = ehc->prob->initial_state;
+    if (planProblemCheckGoal(ehc->search.params.prob,
+                             ehc->search.params.prob->initial_state)){
+        ehc->search.goal_state = ehc->search.params.prob->initial_state;
         return 1;
     }
 
     // add recepies for successor nodes into list
-    addSuccessors(ehc, ehc->prob->initial_state);
+    addSuccessors(ehc, ehc->search.params.prob->initial_state);
 
     return 0;
 }
 
-static int planSearchEHCStep(plan_search_ehc_t *ehc)
+static int planSearchEHCStep(void *_ehc)
 {
+    plan_search_ehc_t *ehc = _ehc;
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
     plan_state_space_node_t *cur_node;
@@ -144,14 +99,14 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
     // get the next node in list
     if (planListLazyPop(ehc->list, &parent_state_id, &parent_op) != 0){
         // we reached dead end
-        ehc->stat.dead_end = 1;
+        planSearchStatSetDeadEnd(&ehc->search.stat);
         return -1;
     }
 
     // create a new state
     cur_state_id = planOperatorApply(parent_op, parent_state_id);
-    cur_node = planStateSpaceNode(ehc->state_space, cur_state_id);
-    ++ehc->stat.generated_states;
+    cur_node = planStateSpaceNode(ehc->search.state_space, cur_state_id);
+    planSearchStatIncGeneratedStates(&ehc->search.stat);
 
     // check whether the state was already visited
     if (!planStateSpaceNodeIsNew(cur_node))
@@ -162,15 +117,15 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
 
     // open and close the node so we can trace the path from goal to the
     // initial state
-    cur_node = planStateSpaceOpen2(ehc->state_space, cur_state_id,
+    cur_node = planStateSpaceOpen2(ehc->search.state_space, cur_state_id,
                                    parent_state_id, parent_op,
                                    0, cur_heur);
-    planStateSpaceClose(ehc->state_space, cur_node);
+    planStateSpaceClose(ehc->search.state_space, cur_node);
 
     // check if the current state is the goal
-    if (planProblemCheckGoal(ehc->prob, cur_state_id)){
-        ehc->goal_state = cur_state_id;
-        ehc->stat.found_solution = 1;
+    if (planProblemCheckGoal(ehc->search.params.prob, cur_state_id)){
+        ehc->search.goal_state = cur_state_id;
+        planSearchStatSetFoundSolution(&ehc->search.stat);
         return 1;
     }
 
@@ -181,7 +136,7 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
         ehc->best_heur = cur_heur;
     }
 
-    ++ehc->stat.expanded_states;
+    planSearchStatIncExpandedStates(&ehc->search.stat);
     addSuccessors(ehc, cur_state_id);
 
     return 0;
@@ -190,8 +145,9 @@ static int planSearchEHCStep(plan_search_ehc_t *ehc)
 static plan_cost_t heuristic(plan_search_ehc_t *ehc,
                              plan_state_id_t state_id)
 {
-    planStatePoolGetState(ehc->prob->state_pool, state_id, ehc->state);
-    ++ehc->stat.evaluated_states;
+    planStatePoolGetState(ehc->search.params.prob->state_pool,
+                          state_id, ehc->state);
+    planSearchStatIncEvaluatedStates(&ehc->search.stat);
     return planHeur(ehc->heur, ehc->state);
 }
 
@@ -199,11 +155,13 @@ static int findApplicableOperators(plan_search_ehc_t *ehc,
                                    plan_state_id_t state_id)
 {
     // unroll the state into ehc->state struct
-    planStatePoolGetState(ehc->prob->state_pool, state_id, ehc->state);
+    planStatePoolGetState(ehc->search.params.prob->state_pool,
+                          state_id, ehc->state);
 
     // get operators to get successors
-    return planSuccGenFind(ehc->succ_gen, ehc->state, ehc->succ_op,
-                           ehc->prob->op_size);
+    return planSuccGenFind(ehc->search.params.prob->succ_gen,
+                           ehc->state, ehc->search.succ_op,
+                           ehc->search.params.prob->op_size);
 }
 
 static void addSuccessors(plan_search_ehc_t *ehc,
@@ -217,22 +175,7 @@ static void addSuccessors(plan_search_ehc_t *ehc,
 
     // go trough all applicable operators
     for (i = 0; i < op_size; ++i){
-        op = ehc->succ_op[i];
+        op = ehc->search.succ_op[i];
         planListLazyPush(ehc->list, 0, cur_state_id, op);
-    }
-}
-
-static void extractPath(plan_search_ehc_t *ehc,
-                        plan_state_id_t goal_state,
-                        plan_path_t *path)
-{
-    plan_state_space_node_t *node;
-
-    planPathInit(path);
-
-    node = planStateSpaceNode(ehc->state_space, goal_state);
-    while (node && node->op){
-        planPathPrepend(path, node->op);
-        node = planStateSpaceNode(ehc->state_space, node->parent_state_id);
     }
 }

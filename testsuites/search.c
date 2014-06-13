@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
     printf("Evaluated States: %ld\n", search->stat.evaluated_states);
     printf("Expanded States: %ld\n", search->stat.expanded_states);
     printf("Generated States: %ld\n", search->stat.generated_states);
-    printf("Peak Memory: %ld\n", search->stat.peak_memory);
+    printf("Peak Memory: %ld kb\n", search->stat.peak_memory);
 
     planPathFree(&path);
 

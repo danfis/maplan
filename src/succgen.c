@@ -123,7 +123,10 @@ static int opsSortCmp(const void *a, const void *b)
         }
     }
 
-    return 0;
+    // make the sort stable
+    if (opa < opb)
+        return -1;
+    return 1;
 }
 
 static void treeBuildSetOps(plan_succ_gen_tree_t *tree,

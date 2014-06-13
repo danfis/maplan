@@ -1,6 +1,12 @@
 #include <boruvka/alloc.h>
 
-#include "plan/heur_goalcount.h"
+#include "plan/heur.h"
+
+struct _plan_heur_goalcount_t {
+    plan_heur_t heur;
+    const plan_part_state_t *goal;
+};
+typedef struct _plan_heur_goalcount_t plan_heur_goalcount_t;
 
 static plan_cost_t planHeurGoalCount(void *h, const plan_state_t *state);
 static void planHeurGoalCountDel(void *h);

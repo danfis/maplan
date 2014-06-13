@@ -1,7 +1,7 @@
 #include <boruvka/alloc.h>
 #include <boruvka/list.h>
 #include <boruvka/pairheap.h>
-#include "plan/heur_relax.h"
+#include "plan/heur.h"
 
 #define FACT_SET_ADDED(fact) ((fact)->state |= 0x1u)
 #define FACT_SET_OPEN(fact) ((fact)->state |= 0x2u)
@@ -18,6 +18,27 @@
 #define TYPE_ADD 0
 #define TYPE_MAX 1
 #define TYPE_FF  2
+
+
+struct _plan_heur_relax_t {
+    plan_heur_t heur;
+    const plan_operator_t *ops;
+    int ops_size;
+    const plan_var_t *var;
+    int var_size;
+    const plan_part_state_t *goal;
+
+    int **val_id;      /*!< ID of each variable value (val_id[var][val]) */
+    int val_size;      /*!< Number of all values */
+    int **precond;     /*!< Operator IDs indexed by precondition ID */
+    int *precond_size; /*!< Size of each subarray */
+    int *op_unsat;     /*!< Preinitialized counters of unsatisfied
+                            preconditions per operator */
+    int *op_value;     /*!< Preinitialized values of operators */
+
+    int type;
+};
+typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
 /**
  * Structure representing a single fact.

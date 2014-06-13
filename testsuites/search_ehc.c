@@ -1,6 +1,5 @@
 #include <cu/cu.h>
 #include "plan/search_ehc.h"
-#include "plan/heur_goalcount.h"
 
 TEST(testSearchEHC)
 {

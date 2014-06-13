@@ -1,7 +1,6 @@
 #include <cu/cu.h>
 #include "plan/problem.h"
-#include "plan/heur_relax.h"
-#include "plan/succgen.h"
+#include "plan/heur.h"
 
 
 TEST(testHeurRelaxAdd)

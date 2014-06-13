@@ -2,7 +2,7 @@
 #define __PLAN_HEUR_H__
 
 #include <plan/common.h>
-#include <plan/state.h>
+#include <plan/problem.h>
 
 /**
  * Heuristic Function API
@@ -19,6 +19,41 @@ struct _plan_heur_t {
 typedef struct _plan_heur_t plan_heur_t;
 
 /**
+ * Creates a Goal Count Heuristic.
+ * Note that it borrows the given pointer so be sure the heuristic is
+ * deleted before the given partial state.
+ */
+plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal);
+
+/**
+ * Creates an ADD version of relaxation heuristics.
+ */
+plan_heur_t *planHeurRelaxAddNew(const plan_problem_t *prob);
+
+/**
+ * Creates an MAX version of relaxation heuristics.
+ */
+plan_heur_t *planHeurRelaxMaxNew(const plan_problem_t *prob);
+
+/**
+ * Creates an FF version of relaxation heuristics.
+ */
+plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob);
+
+/**
+ * Deletes heuristics object.
+ */
+void planHeurDel(plan_heur_t *heur);
+
+/**
+ * Returns a heuristic value.
+ */
+plan_cost_t planHeur(plan_heur_t *heur, const plan_state_t *state);
+
+
+
+
+/**
  * Initializes heuristics.
  * For internal use.
  */
@@ -31,15 +66,5 @@ void planHeurInit(plan_heur_t *heur,
  * For internal use.
  */
 void planHeurFree(plan_heur_t *heur);
-
-/**
- * Deletes heuristics object.
- */
-void planHeurDel(plan_heur_t *heur);
-
-/**
- * Returns a heuristic value.
- */
-plan_cost_t planHeur(plan_heur_t *heur, const plan_state_t *state);
 
 #endif /* __PLAN_HEUR_H__ */

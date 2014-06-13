@@ -1,8 +1,5 @@
 #include <boruvka/timer.h>
 #include "plan/search_lazy.h"
-#include "plan/heur_goalcount.h"
-#include "plan/heur_relax.h"
-#include "plan/list_lazy.h"
 
 int main(int argc, char *argv[])
 {
@@ -11,8 +8,8 @@ int main(int argc, char *argv[])
     plan_path_t path;
     bor_timer_t timer;
 
-    if (argc != 2){
-        fprintf(stderr, "Usage: %s problem.json\n", argv[0]);
+    if (argc != 4){
+        fprintf(stderr, "Usage: %s [gc|add|max|ff] [heap|bucket] problem.json\n", argv[0]);
         return -1;
     }
 
@@ -20,14 +17,30 @@ int main(int argc, char *argv[])
 
     planSearchLazyParamsInit(&params);
 
-    params.search.prob = planProblemFromJson(argv[1]);
+    params.search.prob = planProblemFromJson(argv[3]);
 
-    params.heur = planHeurGoalCountNew(params.search.prob->goal);
-    //heur = planHeurRelaxAddNew(prob);
-    //heur = planHeurRelaxMaxNew(prob);
-    //heur = planHeurRelaxFFNew(prob);
+    if (strcmp(argv[1], "gc") == 0){
+        params.heur = planHeurGoalCountNew(params.search.prob->goal);
+    }else if (strcmp(argv[1], "add") == 0){
+        params.heur = planHeurRelaxAddNew(params.search.prob);
+    }else if (strcmp(argv[1], "max") == 0){
+        params.heur = planHeurRelaxMaxNew(params.search.prob);
+    }else if (strcmp(argv[1], "ff") == 0){
+        params.heur = planHeurRelaxFFNew(params.search.prob);
+    }else{
+        fprintf(stderr, "Error: Invalid heuristic type\n");
+        return -1;
+    }
 
-    params.list = planListLazyHeapNew();
+    if (strcmp(argv[2], "heap") == 0){
+        params.list = planListLazyHeapNew();
+    }else if (strcmp(argv[2], "bucket") == 0){
+        params.list = planListLazyBucketNew();
+    }else{
+        fprintf(stderr, "Error: Invalid list type\n");
+        return -1;
+    }
+
 
     lazy = planSearchLazyNew(&params);
     planPathInit(&path);

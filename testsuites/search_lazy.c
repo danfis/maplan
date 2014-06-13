@@ -1,7 +1,5 @@
 #include <cu/cu.h>
 #include "plan/search_lazy.h"
-#include "plan/heur_goalcount.h"
-#include "plan/list_lazy.h"
 
 #define DEF_JSON "../data/ma-benchmarks/depot/pfile1.json"
 

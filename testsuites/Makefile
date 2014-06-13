@@ -41,9 +41,6 @@ bench-ehc: bench-ehc.c ../libplan.a
 bench-lazy: bench-lazy.c ../libplan.a
 	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS)
 
-heur.c: ../plan/heur_relax.h
-	touch $@
-
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 %.o: %.c

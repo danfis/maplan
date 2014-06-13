@@ -1,7 +1,5 @@
 #include <boruvka/timer.h>
 #include "plan/search_ehc.h"
-#include "plan/heur_goalcount.h"
-#include "plan/heur_relax.h"
 
 #define MAX_TIME (60 * 30) // 30 minutes
 #define MAX_MEM (1024 * 1024) // 1GB

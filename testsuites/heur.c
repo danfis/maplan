@@ -11,7 +11,7 @@ TEST(testHeurRelaxAdd)
     plan_state_t *state;
     plan_state_id_t sid;
     plan_succ_gen_t *succgen;
-    plan_operator_t *op;
+    plan_operator_t *op[3];
     plan_cost_t h;
 
     p = planProblemFromJson("load-from-file.in1.json");
@@ -26,29 +26,29 @@ TEST(testHeurRelaxAdd)
     h = planHeur(heur, state);
     assertEquals(h, 10);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, p->initial_state);
+    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
+    sid = planOperatorApply(op[0], p->initial_state);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 13);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, sid);
+    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
+    sid = planOperatorApply(op[1], sid);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 7);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, sid);
+    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
+    sid = planOperatorApply(op[1], sid);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 10);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, sid);
+    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
+    sid = planOperatorApply(op[0], sid);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
-    assertEquals(h, 7);
+    assertEquals(h, 8);
 
     planStateSet2(state, 9, 3, 1, 1, 1, 0, 0, 4, 3, 2);
     h = planHeur(heur, state);
@@ -67,7 +67,7 @@ TEST(testHeurRelaxMax)
     plan_state_t *state;
     plan_state_id_t sid;
     plan_succ_gen_t *succgen;
-    plan_operator_t *op;
+    plan_operator_t *op[2];
     plan_cost_t h;
 
     p = planProblemFromJson("load-from-file.in1.json");
@@ -82,26 +82,26 @@ TEST(testHeurRelaxMax)
     h = planHeur(heur, state);
     assertEquals(h, 5);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, p->initial_state);
+    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
+    sid = planOperatorApply(op[0], p->initial_state);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 5);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, sid);
+    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
+    sid = planOperatorApply(op[1], sid);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 4);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, sid);
+    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
+    sid = planOperatorApply(op[1], sid);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 4);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, sid);
+    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
+    sid = planOperatorApply(op[0], sid);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 3);
@@ -123,7 +123,7 @@ TEST(testHeurRelaxFF)
     plan_state_t *state;
     plan_state_id_t sid;
     plan_succ_gen_t *succgen;
-    plan_operator_t *op;
+    plan_operator_t *op[2];
     plan_cost_t h;
 
     p = planProblemFromJson("load-from-file.in1.json");
@@ -138,26 +138,26 @@ TEST(testHeurRelaxFF)
     h = planHeur(heur, state);
     assertEquals(h, 6);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, p->initial_state);
+    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
+    sid = planOperatorApply(op[0], p->initial_state);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 6);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, sid);
+    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
+    sid = planOperatorApply(op[1], sid);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 5);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, sid);
+    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
+    sid = planOperatorApply(op[0], sid);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 6);
 
-    assertTrue(planSuccGenFind(succgen, state, &op, 1) > 0);
-    sid = planOperatorApply(op, sid);
+    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
+    sid = planOperatorApply(op[0], sid);
     planStatePoolGetState(p->state_pool, sid, state);
     h = planHeur(heur, state);
     assertEquals(h, 6);

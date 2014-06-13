@@ -17,7 +17,7 @@ TEST(testSearchEHC)
 
     assertEquals(planSearchRun(ehc, &path), PLAN_SEARCH_FOUND);
     planPathPrint(&path, stdout);
-    assertEquals(planPathCost(&path), 36);
+    assertEquals(planPathCost(&path), 38);
 
     planPathFree(&path);
     planHeurDel(params.heur);

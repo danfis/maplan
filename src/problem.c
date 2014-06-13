@@ -62,8 +62,6 @@ plan_problem_t *planProblemFromJson(const char *fn)
         return NULL;
     }
 
-    p->succ_gen = planSuccGenNew(p->op, p->op_size);
-
     return p;
 }
 
@@ -264,7 +262,7 @@ static int loadJsonData(plan_problem_t *plan, json_t *root,
 
 static int loadJson(plan_problem_t *plan, const char *filename)
 {
-    json_t *json;
+    json_t *json, *jsuccgen;
     json_error_t json_err;
 
     // open JSON data from file
@@ -295,6 +293,8 @@ static int loadJson(plan_problem_t *plan, const char *filename)
     //loadJsonData(plan, json, "domain_transition_graph",
     //             loadJsonDomainTransitionGrah);
 
+    jsuccgen = json_object_get(json, "successor_generator");
+    plan->succ_gen = planSuccGenFromJson(jsuccgen, plan->op);
 
     json_decref(json);
     return 0;

@@ -1,6 +1,7 @@
 #ifndef __PLAN_SUCCGEN_H__
 #define __PLAN_SUCCGEN_H__
 
+#include <jansson.h>
 #include <plan/operator.h>
 
 struct _plan_succ_gen_tree_t;
@@ -19,6 +20,11 @@ typedef struct _plan_succ_gen_t plan_succ_gen_t;
  * Creates a new successor generator for the given operators.
  */
 plan_succ_gen_t *planSuccGenNew(plan_operator_t *op, int opsize);
+
+/**
+ * Loads successor generator from JSON definition.
+ */
+plan_succ_gen_t *planSuccGenFromJson(json_t *data, plan_operator_t *op);
 
 /**
  * Deletes successor generator.

@@ -1,7 +1,5 @@
 #include <cu/cu.h>
-#include "plan/statespace_fifo.h"
-#include "plan/statespace_heap.h"
-#include "plan/statespace_bucket.h"
+#include "plan/statespace.h"
 
 TEST(testStateSpace)
 {

@@ -225,7 +225,7 @@ static int heapLT(const bor_pairheap_node_t *a,
 {
     const fact_t *f1 = bor_container_of(a, const fact_t, heap);
     const fact_t *f2 = bor_container_of(b, const fact_t, heap);
-    return f1->value < f2->value;
+    return f1->value <= f2->value;
 }
 
 static void relaxInit(plan_heur_relax_t *heur, relax_t *r)

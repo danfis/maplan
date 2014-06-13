@@ -20,3 +20,4 @@ test-cd-ode.meas
 tmp.hdf5.h5
 bench-ehc
 bench-lazy
+search

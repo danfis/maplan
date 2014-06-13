@@ -15,6 +15,7 @@ LDFLAGS += $(JANSSON_LDFLAGS)
 BENCH_CFLAGS = -O3 -pipe -march=corei7
 BENCH_CFLAGS += -I./ -I../
 BENCH_CFLAGS += -I../../boruvka
+BENCH_CFLAGS += -I../../opts
 BENCH_CFLAGS += $(JANSSON_CFLAGS)
 
 CHECK_REG=cu/check-regressions
@@ -41,7 +42,7 @@ bench-ehc: bench-ehc.c ../libplan.a
 bench-lazy: bench-lazy.c ../libplan.a
 	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS)
 search: search.c ../libplan.a
-	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS)
+	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS) -L../../opts -lopts
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<

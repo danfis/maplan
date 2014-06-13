@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
 
     planPathFree(&path);
 
-    //planSearchDel(search);
+    planSearchDel(search);
     planHeurDel(heur);
     planListLazyDel(list);
     planProblemDel(prob);

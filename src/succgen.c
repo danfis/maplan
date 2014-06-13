@@ -23,6 +23,12 @@ typedef struct _plan_succ_gen_tree_t plan_succ_gen_tree_t;
 static plan_succ_gen_tree_t *treeNew(plan_var_id_t start_var,
                                      plan_operator_t **ops,
                                      int len);
+
+/** Creates a new tree from the json data */
+static plan_succ_gen_tree_t *treeFromJson(json_t *data,
+                                          plan_operator_t *ops,
+                                          int *num_ops);
+
 /** Recursively deletes a tree */
 static void treeDel(plan_succ_gen_tree_t *tree);
 
@@ -72,6 +78,15 @@ plan_succ_gen_t *planSuccGenNew(plan_operator_t *op, int opsize)
     sg->num_operators = opsize;
 
     BOR_FREE(sorted_ops);
+    return sg;
+}
+
+plan_succ_gen_t *planSuccGenFromJson(json_t *data, plan_operator_t *op)
+{
+    plan_succ_gen_t *sg;
+    sg = BOR_ALLOC(plan_succ_gen_t);
+    sg->num_operators = 0;
+    sg->root = treeFromJson(data, op, &sg->num_operators);
     return sg;
 }
 
@@ -246,6 +261,71 @@ static plan_succ_gen_tree_t *treeNew(plan_var_id_t start_var,
     return tree;
 }
 
+static void treeSetOperatorsFromJson(plan_succ_gen_tree_t *tree,
+                                     json_t *arr, plan_operator_t *ops,
+                                     int *num_ops)
+{
+    json_t *val;
+    int i;
+
+    if (json_array_size(arr) == 0)
+        return;
+
+    tree->ops_size = json_array_size(arr);
+    tree->ops = BOR_ALLOC_ARR(plan_operator_t *, tree->ops_size);
+    for (i = 0; i < tree->ops_size; ++i){
+        val = json_array_get(arr, i);
+        tree->ops[i] = &ops[json_integer_value(val)];
+        *num_ops += 1;
+    }
+}
+
+static plan_succ_gen_tree_t *treeFromJson(json_t *data,
+                                          plan_operator_t *ops,
+                                          int *num_ops)
+{
+    plan_succ_gen_tree_t *tree;
+    json_t *jdefault, *joperators, *jswitch, *val;
+    const char *key;
+
+    tree = BOR_ALLOC(plan_succ_gen_tree_t);
+    tree->var = PLAN_VAR_ID_UNDEFINED;
+    tree->ops = NULL;
+    tree->ops_size = 0;
+    tree->val = NULL;
+    tree->val_size = 0;
+    tree->def = NULL;
+
+    if (json_is_array(data)){
+        treeSetOperatorsFromJson(tree, data, ops, num_ops);
+        return tree;
+    }
+
+    val = json_object_get(data, "var");
+    tree->var = json_integer_value(val);
+
+    jdefault = json_object_get(data, "default");
+    if (json_is_object(jdefault)){
+        tree->def = treeFromJson(jdefault, ops, num_ops);
+    }else if (json_is_array(jdefault) && json_array_size(jdefault) > 0){
+        fprintf(stderr, "ERROR: json default is an array?!\n");
+    }
+
+    joperators = json_object_get(data, "operators");
+    treeSetOperatorsFromJson(tree, joperators, ops, num_ops);
+
+    jswitch = json_object_get(data, "switch");
+    tree->val_size = json_object_size(jswitch);
+    tree->val = BOR_CALLOC_ARR(plan_succ_gen_tree_t *, tree->val_size);
+    json_object_foreach(jswitch, key, val){
+        if (json_is_array(val) && json_array_size(val) == 0)
+            continue;
+        tree->val[atoi(key)] = treeFromJson(val, ops, num_ops);
+    }
+
+    return tree;
+}
+
 static void treeDel(plan_succ_gen_tree_t *tree)
 {
     int i;
@@ -287,16 +367,16 @@ static int treeFind(const plan_succ_gen_tree_t *tree,
         // get corresponding value from state
         val = planStateGet(state, tree->var);
 
-        // use default tree if present
-        if (tree->def){
-            size = BOR_MAX(0, (int)op_size - (int)found);
-            found += treeFind(tree->def, state, op + found, size);
-        }
-
         // and use tree corresponding to the value if present
         if (val < tree->val_size && tree->val[val]){
             size = BOR_MAX(0, (int)op_size - (int)found);
             found += treeFind(tree->val[val], state, op + found, size);
+        }
+
+        // use default tree if present
+        if (tree->def){
+            size = BOR_MAX(0, (int)op_size - (int)found);
+            found += treeFind(tree->def, state, op + found, size);
         }
     }
 

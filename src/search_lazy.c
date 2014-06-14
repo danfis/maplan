@@ -56,6 +56,8 @@ static int planSearchLazyStep(void *_lazy)
         return -1;
     }
 
+    planSearchStatIncExpandedStates(&lazy->search.stat);
+
     if (parent_op == NULL){
         // use parent state as current state
         cur_state_id = parent_state_id;

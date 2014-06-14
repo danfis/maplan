@@ -87,12 +87,22 @@ static int loadJsonVariable1(plan_var_t *var, json_t *json)
 {
     json_t *data, *jval;
     plan_val_t i;
+    int range;
 
     data = json_object_get(json, "name");
     var->name = strdup(json_string_value(data));
 
     data = json_object_get(json, "range");
-    var->range = json_integer_value(data);
+    range = json_integer_value(data);
+    var->range = range;
+
+    if ((int)var->range != range){
+        fprintf(stderr, "Error: Could not load variable %s, because the\n"
+                        "range can't be stored in %d bytes long variable.\n"
+                        "Change definition of plan_val_t and recompile.\n",
+                        var->name, (int)sizeof(var->range));
+        return -1;
+    }
 
     data = json_object_get(json, "layer");
     var->axiom_layer = json_integer_value(data);
@@ -191,7 +201,7 @@ static int loadJsonOperator1(plan_operator_t *op, json_t *json)
     const char *key;
     json_t *data, *jprepost, *jpre, *jpost, *jprevail;
     plan_var_id_t var;
-    plan_val_t pre, post;
+    int pre, post;
 
     data = json_object_get(json, "name");
     planOperatorSetName(op, json_string_value(data));

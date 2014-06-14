@@ -11,7 +11,7 @@ static char *def_list = "heap";
 static char *def_heur = "goalcount";
 static int max_time = 60 * 30; // 30 minutes
 static int max_mem = 1024 * 1024; // 1GB
-static int progress_freq = 100000;
+static int progress_freq = 10000;
 
 static int readOpts(int argc, char *argv[])
 {
@@ -203,6 +203,8 @@ int main(int argc, char *argv[])
 
     borTimerStop(&timer);
     printf("Overall Time: %f s\n", borTimerElapsedInSF(&timer));
+
+    optsClear();
 
     return 0;
 }

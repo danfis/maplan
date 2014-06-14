@@ -106,9 +106,8 @@ void _planSearchAddLazySuccessors(plan_search_t *search,
     for (i = 0; i < op_size; ++i){
         op = search->succ_op[i];
         planListLazyPush(list, cost, state_id, op);
+        planSearchStatIncGeneratedStates(&search->stat);
     }
-
-    planSearchStatIncExpandedStates(&search->stat);
 }
 
 void _planSearchReachedDeadEnd(plan_search_t *search)
@@ -127,7 +126,6 @@ int _planSearchNewState(plan_search_t *search,
 
     state_id = planOperatorApply(operator, parent_state);
     node     = planStateSpaceNode(search->state_space, state_id);
-    planSearchStatIncGeneratedStates(&search->stat);
 
     if (new_state_id)
         *new_state_id = state_id;

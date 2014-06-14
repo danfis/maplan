@@ -27,7 +27,7 @@ typedef int plan_cost_t;
 /**
  * Type of a state ID which is used for reference into state pool.
  */
-typedef long plan_state_id_t;
+typedef int plan_state_id_t;
 
 /**
  * Type of one word in buffer of packed variable values.

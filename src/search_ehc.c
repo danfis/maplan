@@ -87,6 +87,8 @@ static int planSearchEHCStep(void *_ehc)
         return PLAN_SEARCH_DEAD_END;
     }
 
+    planSearchStatIncExpandedStates(&ehc->search.stat);
+
     // Create a new state and check whether the state was already visited
     if (_planSearchNewState(&ehc->search, parent_op, parent_state_id,
                             &cur_state_id, NULL) != 0)

@@ -9,6 +9,7 @@ static char *def_problem = NULL;
 static char *def_search = "ehc";
 static char *def_list = "heap";
 static char *def_heur = "goalcount";
+static char *plan_output_fn = NULL;
 static int max_time = 60 * 30; // 30 minutes
 static int max_mem = 1024 * 1024; // 1GB
 static int progress_freq = 10000;
@@ -27,6 +28,8 @@ static int readOpts(int argc, char *argv[])
                 "Define list type [heap|bucket] (default: heap)");
     optsAddDesc("heur", 'H', OPTS_STR, &def_heur, NULL,
                 "Define heuristic [goalcount|add|max|ff] (default: goalcount)");
+    optsAddDesc("plan-output", 'o', OPTS_STR, &plan_output_fn, NULL,
+                "Path where to write resulting plan.");
     optsAddDesc("max-time", 0x0, OPTS_INT, &max_time, NULL,
                 "Maximal time the search can spent on finding solution in"
                 " seconds. (default: 30 minutes).");
@@ -93,6 +96,7 @@ int main(int argc, char *argv[])
     plan_path_t path;
     bor_timer_t timer;
     int res;
+    FILE *fout;
 
     if (readOpts(argc, argv) != 0){
         usage(argv[0]);
@@ -175,8 +179,20 @@ int main(int argc, char *argv[])
     planPathInit(&path);
     res = planSearchRun(search, &path);
     if (res == PLAN_SEARCH_FOUND){
-        printf("Solution found:\n");
-        planPathPrint(&path, stdout);
+        printf("Solution found.\n");
+
+        if (plan_output_fn != NULL){
+            fout = fopen(plan_output_fn, "w");
+            if (fout != NULL){
+                planPathPrint(&path, fout);
+                fclose(fout);
+                printf("Plan written to `%s'\n", plan_output_fn);
+            }else{
+                fprintf(stderr, "Error: Could not plan write to `%s'\n",
+                        plan_output_fn);
+            }
+        }
+
         printf("Path Cost: %d\n", (int)planPathCost(&path));
 
     }else if (res == PLAN_SEARCH_DEAD_END){

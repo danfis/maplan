@@ -102,11 +102,11 @@ TEST(testListLazyBucket)
     assertEquals(op, (plan_operator_t *)0x2);
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);
-    assertEquals(sid, 5);
+    assertEquals(sid, 8);
     assertEquals(op, NULL);
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);
-    assertEquals(sid, 8);
+    assertEquals(sid, 5);
     assertEquals(op, NULL);
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);

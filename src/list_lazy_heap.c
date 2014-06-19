@@ -89,19 +89,15 @@ static int planListLazyHeapPop(void *_l,
     return 0;
 }
 
+static void clearFn(bor_pairheap_node_t *pn, void *_)
+{
+    heap_node_t *n = bor_container_of(pn, heap_node_t, heap);
+    BOR_FREE(n);
+}
 static void planListLazyHeapClear(void *_l)
 {
-    // TODO: This can be done more efficiently, but requires changes in
-    //       boruvka/pairheap
     plan_list_lazy_heap_t *l = _l;
-    bor_pairheap_node_t *heap_node;
-    heap_node_t *n;
-
-    while (!borPairHeapEmpty(l->heap)){
-        heap_node = borPairHeapExtractMin(l->heap);
-        n = bor_container_of(heap_node, heap_node_t, heap);
-        BOR_FREE(n);
-    }
+    borPairHeapClear(l->heap, clearFn, NULL);
 }
 
 

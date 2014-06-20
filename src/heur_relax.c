@@ -1,6 +1,6 @@
 #include <boruvka/alloc.h>
 #include <boruvka/list.h>
-#include <boruvka/pairheap.h>
+#include <boruvka/bucketheap.h>
 #include "plan/heur.h"
 
 #define FACT_SET_ADDED(fact) ((fact)->state |= 0x1u)
@@ -48,7 +48,7 @@ struct _fact_t {
     int id;
     unsigned state;
     int reached_by_op;
-    bor_pairheap_node_t heap;
+    bor_bucketheap_node_t heap;
 };
 typedef struct _fact_t fact_t;
 
@@ -59,7 +59,7 @@ struct _relax_t {
     int *op_unsat;
     plan_cost_t *op_value;
     fact_t *facts;
-    bor_pairheap_t *heap;
+    bor_bucketheap_t *heap;
     int goal_unsat;
 };
 typedef struct _relax_t relax_t;
@@ -71,11 +71,6 @@ static void valueIdFree(plan_heur_relax_t *heur);
 /** Initializes and frees .precond and .op_* structures */
 static void precondInit(plan_heur_relax_t *heur);
 static void precondFree(plan_heur_relax_t *heur);
-
-/** Comparator for heap */
-static int heapLT(const bor_pairheap_node_t *a,
-                  const bor_pairheap_node_t *b,
-                  void *_);
 
 /** Initializes main structure for computing relaxed solution. */
 static void relaxInit(plan_heur_relax_t *heur, relax_t *r);
@@ -240,15 +235,6 @@ static void precondFree(plan_heur_relax_t *heur)
 }
 
 
-static int heapLT(const bor_pairheap_node_t *a,
-                  const bor_pairheap_node_t *b,
-                  void *_)
-{
-    const fact_t *f1 = bor_container_of(a, const fact_t, heap);
-    const fact_t *f2 = bor_container_of(b, const fact_t, heap);
-    return f1->value <= f2->value;
-}
-
 static void relaxInit(plan_heur_relax_t *heur, relax_t *r)
 {
     int i, id;
@@ -263,7 +249,7 @@ static void relaxInit(plan_heur_relax_t *heur, relax_t *r)
 
     r->facts = BOR_CALLOC_ARR(fact_t, heur->val_size);
 
-    r->heap = borPairHeapNew(heapLT, NULL);
+    r->heap = borBucketHeapNew();
 
     // set fact goals
     r->goal_unsat = 0;
@@ -276,7 +262,7 @@ static void relaxInit(plan_heur_relax_t *heur, relax_t *r)
 
 static void relaxFree(plan_heur_relax_t *heur, relax_t *r)
 {
-    borPairHeapDel(r->heap);
+    borBucketHeapDel(r->heap);
     BOR_FREE(r->facts);
     BOR_FREE(r->op_value);
     BOR_FREE(r->op_unsat);
@@ -293,7 +279,7 @@ static void relaxAddInitState(plan_heur_relax_t *heur, relax_t *r,
         r->facts[id].id = id;
         FACT_SET_ADDED(r->facts + id);
         FACT_SET_OPEN(r->facts + id);
-        borPairHeapAdd(r->heap, &r->facts[id].heap);
+        borBucketHeapAdd(r->heap, r->facts[id].value, &r->facts[id].heap);
         r->facts[id].reached_by_op = -1;
     }
 }
@@ -315,13 +301,15 @@ static void relaxAddEffects(plan_heur_relax_t *heur, relax_t *r,
             r->facts[id].value = r->op_value[op_id];
             r->facts[id].reached_by_op = op_id;
             if (FACT_OPEN(r->facts + id)){
-                borPairHeapDecreaseKey(r->heap, &r->facts[id].heap);
+                borBucketHeapDecreaseKey(r->heap, &r->facts[id].heap,
+                                         r->facts[id].value);
 
             }else{ // fact not in heap
                 r->facts[id].id = id;
                 FACT_SET_ADDED(r->facts + id);
                 FACT_SET_OPEN(r->facts + id);
-                borPairHeapAdd(r->heap, &r->facts[id].heap);
+                borBucketHeapAdd(r->heap, r->facts[id].value,
+                                 &r->facts[id].heap);
             }
         }
     }
@@ -356,12 +344,12 @@ static void relaxProcessOp(plan_heur_relax_t *heur, relax_t *r,
 
 static int relaxMainLoop(plan_heur_relax_t *heur, relax_t *r)
 {
-    bor_pairheap_node_t *heap_node;
+    bor_bucketheap_node_t *heap_node;
     fact_t *fact;
     int i, size, *precond;
 
-    while (!borPairHeapEmpty(r->heap)){
-        heap_node = borPairHeapExtractMin(r->heap);
+    while (!borBucketHeapEmpty(r->heap)){
+        heap_node = borBucketHeapExtractMin(r->heap, NULL);
         fact = bor_container_of(heap_node, fact_t, heap);
         FACT_SET_CLOSED(fact);
 

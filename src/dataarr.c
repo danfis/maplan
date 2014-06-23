@@ -13,6 +13,7 @@ plan_data_arr_t *planDataArrNew(size_t el_size,
 
     // compute best segment size
     segment_size = sysconf(_SC_PAGESIZE);
+    segment_size *= 128;
     while (segment_size < el_size)
         segment_size *= 2;
 

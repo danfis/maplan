@@ -38,6 +38,11 @@ plan_list_lazy_t *planListLazyHeapNew(void);
 plan_list_lazy_t *planListLazyBucketNew(void);
 
 /**
+ * Lazy list based on multi-map.
+ */
+plan_list_lazy_t *planListLazyMultiMapNew(void);
+
+/**
  * Destroys the list.
  */
 _bor_inline void planListLazyDel(plan_list_lazy_t *l);

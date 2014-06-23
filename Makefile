@@ -39,6 +39,7 @@ OBJS += list_lazy
 OBJS += list_lazy_fifo
 OBJS += list_lazy_heap
 OBJS += list_lazy_bucket
+OBJS += list_lazy_multimap
 #OBJS += statespace_fifo
 #OBJS += statespace_heap
 #OBJS += statespace_bucket

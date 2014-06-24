@@ -1,10 +1,7 @@
 #include <boruvka/alloc.h>
 #include <boruvka/list.h>
 #include <boruvka/bucketheap.h>
-#include <boruvka/timer.h>
 #include "plan/heur.h"
-
-static float p1 = 0.f, p2 = 0.f, p3 = 0.f;
 
 struct _bucket_t {
     int *value;
@@ -128,6 +125,14 @@ struct _ctx_t {
 typedef struct _ctx_t ctx_t;
 
 
+struct _val_to_id_t {
+    int **val_id;
+    int var_size;
+    int val_size;
+};
+typedef struct _val_to_id_t val_to_id_t;
+
+
 struct _plan_heur_relax_t {
     plan_heur_t heur;
     const plan_operator_t *ops;
@@ -136,10 +141,9 @@ struct _plan_heur_relax_t {
     int var_size;
     const plan_part_state_t *goal;
 
-    int *val_id;      /*!< ID of each variable value (val_id[var][val]) */
-    int val_max;
+    val_to_id_t vid;
+
     int **op_fact_id;
-    int val_size;      /*!< Number of all values */
     int **precond;     /*!< Operator IDs indexed by precondition ID */
     int *precond_size; /*!< Size of each subarray */
     int *op_unsat;     /*!< Preinitialized counters of unsatisfied
@@ -152,6 +156,16 @@ struct _plan_heur_relax_t {
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
+
+/** Initializes struct for translating variable value to fact ID */
+static void valToIdInit(val_to_id_t *vid,
+                        const plan_var_t *var, int var_size);
+/** Frees val_to_id_t resources */
+static void valToIdFree(val_to_id_t *vid);
+/** Translates variable value to fact ID */
+_bor_inline int valToId(val_to_id_t *vid, plan_var_id_t var, plan_val_t val);
+/** Returns number of fact IDs */
+_bor_inline int valToIdSize(val_to_id_t *vid);
 
 /** Initializes and frees .val_id[] structure */
 static void valueIdInit(plan_heur_relax_t *heur);
@@ -181,6 +195,7 @@ static plan_cost_t planHeurRelax(void *heur, const plan_state_t *state);
 /** Delete method */
 static void planHeurRelaxDel(void *_heur);
 
+
 static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
 {
     plan_heur_relax_t *heur;
@@ -196,6 +211,7 @@ static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
     heur->goal     = prob->goal;
     heur->type     = type;
 
+    valToIdInit(&heur->vid, heur->var, heur->var_size);
     valueIdInit(heur);
     precondInit(heur);
 
@@ -224,16 +240,14 @@ static void planHeurRelaxDel(void *_heur)
     valueIdFree(heur);
     precondFree(heur);
     planHeurFree(&heur->heur);
+    valToIdFree(&heur->vid);
     BOR_FREE(heur);
 }
 
-static float tm = 0.f;
 static plan_cost_t planHeurRelax(void *_heur, const plan_state_t *state)
 {
     plan_heur_relax_t *heur = _heur;
     plan_cost_t h = PLAN_HEUR_DEAD_END;
-    bor_timer_t tt;
-    //borTimerStart(&tt);
 
     ctxInit(heur);
     ctxAddInitState(heur, state);
@@ -242,9 +256,6 @@ static plan_cost_t planHeurRelax(void *_heur, const plan_state_t *state)
     }
     ctxFree(heur);
 
-    //borTimerStop(&tt);
-    //tm += borTimerElapsedInSF(&tt);
-    //fprintf(stderr, "AddTime: %f\n", tm);
     return h;
 }
 
@@ -252,28 +263,16 @@ static plan_cost_t planHeurRelax(void *_heur, const plan_state_t *state)
 
 static void valueIdInit(plan_heur_relax_t *heur)
 {
-    int i, j, id;
+    int i, j;
     plan_var_id_t var;
     plan_val_t val;
-
-    heur->val_max = 0;
-    for (id = 0, i = 0; i < heur->var_size; ++i){
-        if (heur->var[i].range > heur->val_max)
-            heur->val_max = heur->var[i].range;
-    }
-
-    // allocate the array corresponding to the variables
-    heur->val_size = heur->var_size * heur->val_max;
-    heur->val_id = BOR_ALLOC_ARR(int, heur->val_size);
-    for (i = 0; i < heur->val_size; ++i)
-        heur->val_id[i] = i;
 
     heur->op_fact_id = BOR_ALLOC_ARR(int *, heur->ops_size);
     for (i = 0; i < heur->ops_size; ++i){
         heur->op_fact_id[i] = BOR_ALLOC_ARR(int,
                 heur->ops[i].eff->vals_size);
         PLAN_PART_STATE_FOR_EACH(heur->ops[i].eff, j, var, val){
-            heur->op_fact_id[i][j] = (var * heur->val_max) + val;
+            heur->op_fact_id[i][j] = valToId(&heur->vid, var, val);
         }
     }
 }
@@ -282,8 +281,6 @@ static void valueIdFree(plan_heur_relax_t *heur)
 {
     int i;
 
-    BOR_FREE(heur->val_id);
-
     for (i = 0; i < heur->ops_size; ++i)
         BOR_FREE(heur->op_fact_id[i]);
     BOR_FREE(heur->op_fact_id);
@@ -291,14 +288,15 @@ static void valueIdFree(plan_heur_relax_t *heur)
 
 static void precondInit(plan_heur_relax_t *heur)
 {
-    int i, j, id;
+    int i, j, id, size;
     plan_var_id_t var;
     plan_val_t val;
 
     // prepare precond array
-    heur->precond = BOR_ALLOC_ARR(int *, heur->val_size);
-    heur->precond_size = BOR_ALLOC_ARR(int, heur->val_size);
-    for (i = 0; i < heur->val_size; ++i){
+    size = valToIdSize(&heur->vid);
+    heur->precond = BOR_ALLOC_ARR(int *, size);
+    heur->precond_size = BOR_ALLOC_ARR(int, size);
+    for (i = 0; i < size; ++i){
         heur->precond_size[i] = 0;
         heur->precond[i] = NULL;
     }
@@ -313,7 +311,7 @@ static void precondInit(plan_heur_relax_t *heur)
         heur->op_value[i] = heur->ops[i].cost;
 
         PLAN_PART_STATE_FOR_EACH(heur->ops[i].pre, j, var, val){
-            id = (var * heur->val_max) + val;
+            id = valToId(&heur->vid, var, val);
             ++heur->precond_size[id];
             heur->precond[id] = BOR_REALLOC_ARR(heur->precond[id], int,
                                                 heur->precond_size[id]);
@@ -325,13 +323,14 @@ static void precondInit(plan_heur_relax_t *heur)
 
     heur->ctx.op_unsat = BOR_ALLOC_ARR(int, heur->ops_size);
     heur->ctx.op_value = BOR_ALLOC_ARR(plan_cost_t, heur->ops_size);
-    heur->ctx.facts    = BOR_ALLOC_ARR(fact_t, heur->val_size);
+    heur->ctx.facts    = BOR_ALLOC_ARR(fact_t, valToIdSize(&heur->vid));
 }
 
 static void precondFree(plan_heur_relax_t *heur)
 {
-    int i;
-    for (i = 0; i < heur->val_size; ++i){
+    int i, size;
+    size = valToIdSize(&heur->vid);
+    for (i = 0; i < size; ++i){
         BOR_FREE(heur->precond[i]);
     }
     BOR_FREE(heur->precond);
@@ -352,7 +351,7 @@ static void ctxInit(plan_heur_relax_t *heur)
 
     memcpy(heur->ctx.op_unsat, heur->op_unsat, sizeof(int) * heur->ops_size);
     memcpy(heur->ctx.op_value, heur->op_value, sizeof(plan_cost_t) * heur->ops_size);
-    bzero(heur->ctx.facts, sizeof(fact_t) * heur->val_size);
+    bzero(heur->ctx.facts, sizeof(fact_t) * valToIdSize(&heur->vid));
 
     heur->ctx.heap = borBucketHeapNew();
     bheapInit(&heur->ctx.bheap);
@@ -360,7 +359,7 @@ static void ctxInit(plan_heur_relax_t *heur)
     // set fact goals
     heur->ctx.goal_unsat = 0;
     PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
-        id = (var * heur->val_max) + val;
+        id = valToId(&heur->vid, var, val);
         FACT_SET_GOAL(heur->ctx.facts + id);
         ++heur->ctx.goal_unsat;
     }
@@ -379,8 +378,7 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
 
     // insert all facts from the initial state into priority queue
     for (i = 0; i < heur->var_size; ++i){
-        //id = heur->val_id[i][planStateGet(state, i)];
-        id = (i * heur->val_max) + planStateGet(state, i);
+        id = valToId(&heur->vid, i, planStateGet(state, i));
         //heur->ctx.facts[id].id = id;
         FACT_SET_ADDED(heur->ctx.facts + id);
         //FACT_SET_OPEN(heur->ctx.facts + id);
@@ -397,10 +395,7 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
 {
     const plan_operator_t *op = heur->ops + op_id;
     int i, id;
-    plan_var_id_t var;
-    plan_val_t val;
     fact_t *fact;
-    bor_timer_t tt;
     int *eff_facts, eff_facts_len;
     int op_value = heur->ctx.op_value[op_id];
 
@@ -409,7 +404,6 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
     eff_facts_len = op->eff->vals_size;
     for (i = 0; i < eff_facts_len; ++i){
     //PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
-        //id = heur->val_id[var][val];
         id = eff_facts[i];
         fact = heur->ctx.facts + id;
 
@@ -470,44 +464,29 @@ static void ctxProcessOp(plan_heur_relax_t *heur, int op_id, fact_t *fact)
 
 static int ctxMainLoop(plan_heur_relax_t *heur)
 {
-    bor_bucketheap_node_t *heap_node;
     fact_t *fact;
     int i, size, *precond, id;
-    bor_timer_t tt;
 
-    //while (!borBucketHeapEmpty(heur->ctx.heap)){
     while (!bheapEmpty(&heur->ctx.bheap)){
-        //borTimerStart(&tt);
-        /*
-        heap_node = borBucketHeapExtractMin(heur->ctx.heap, NULL);
-        fact = bor_container_of(heap_node, fact_t, heap);
-        */
         id = bheapPop(&heur->ctx.bheap);
         fact = heur->ctx.facts + id;
         FACT_SET_CLOSED(fact);
-        //borTimerStop(&tt);
-        //p1 += borTimerElapsedInSF(&tt);
 
         if (FACT_GOAL(fact)){
             FACT_UNSET_GOAL(fact);
             --heur->ctx.goal_unsat;
             if (heur->ctx.goal_unsat == 0){
-                //fprintf(stderr, "Add p1/2/3: %f %f %f\n", p1, p2, p3);
                 return 0;
             }
         }
 
-        //borTimerStart(&tt);
         size = heur->precond_size[id];
         precond = heur->precond[id];
         for (i = 0; i < size; ++i){
             ctxProcessOp(heur, precond[i], fact);
         }
-        //borTimerStop(&tt);
-        //p2 += borTimerElapsedInSF(&tt);
     }
 
-    //fprintf(stderr, "Add p1/2: %f %f\n", p1, p2);
     return -1;
 }
 
@@ -530,7 +509,7 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur)
 
     h = PLAN_COST_ZERO;
     PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
-        id = (var * heur->val_max) + val;
+        id = valToId(&heur->vid, var, val);
         h = relaxHeurValue(heur->type, h, heur->ctx.facts[id].value);
     }
 
@@ -550,7 +529,7 @@ static void markRelaxedPlan(plan_heur_relax_t *heur, int *relaxed_plan, int id)
         op = heur->ops + fact->reached_by_op;
 
         PLAN_PART_STATE_FOR_EACH(op->pre, i, var, val){
-            id2 = (var * heur->val_max) + val;
+            id2 = valToId(&heur->vid, var, val);
             if (!FACT_RELAXED_PLAN_VISITED(heur->ctx.facts + id2)
                     && heur->ctx.facts[id2].reached_by_op != -1){
                 markRelaxedPlan(heur, relaxed_plan, id2);
@@ -572,7 +551,7 @@ static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur)
     relaxed_plan = BOR_CALLOC_ARR(int, heur->ops_size);
 
     PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
-        id = (var * heur->val_max) + val;
+        id = valToId(&heur->vid, var, val);
         markRelaxedPlan(heur, relaxed_plan, id);
     }
 
@@ -593,4 +572,46 @@ static plan_cost_t ctxHeur(plan_heur_relax_t *heur)
     }else{ // heur->type == TYPE_FF
         return relaxHeurFF(heur);
     }
+}
+
+
+static void valToIdInit(val_to_id_t *vid,
+                        const plan_var_t *var, int var_size)
+{
+    int i, j, id;
+
+    // allocate the array corresponding to the variables
+    vid->val_id = BOR_ALLOC_ARR(int *, var_size);
+
+    for (id = 0, i = 0; i < var_size; ++i){
+        // allocate array for variable's values
+        vid->val_id[i] = BOR_ALLOC_ARR(int, var[i].range);
+
+        // fill values with IDs
+        for (j = 0; j < var[i].range; ++j)
+            vid->val_id[i][j] = id++;
+    }
+
+    // remember number of values
+    vid->val_size = id;
+    vid->var_size = var_size;
+}
+
+static void valToIdFree(val_to_id_t *vid)
+{
+    int i;
+    for (i = 0; i < vid->var_size; ++i)
+        BOR_FREE(vid->val_id[i]);
+    BOR_FREE(vid->val_id);
+}
+
+_bor_inline int valToId(val_to_id_t *vid,
+                        plan_var_id_t var, plan_val_t val)
+{
+    return vid->val_id[var][val];
+}
+
+_bor_inline int valToIdSize(val_to_id_t *vid)
+{
+    return vid->val_size;
 }

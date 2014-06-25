@@ -102,6 +102,13 @@ int bheapEmpty(bheap_t *h)
 
 /** Forward declaration */
 typedef struct _op_t op_t;
+typedef struct _fact_t fact_t;
+
+struct _op_eff_t {
+    op_t *op;
+    fact_t *fact;
+};
+typedef struct _op_eff_t op_eff_t;
 
 /**
  * Structure representing a single fact (proposition).
@@ -114,16 +121,16 @@ struct _fact_t {
     int id;
     op_t **precond;
     int precond_size;
+    op_eff_t *eff;
+    int eff_size;
 };
-typedef struct _fact_t fact_t;
 
 struct _op_t {
     int unsat;         /*!< Number of unsatisfied preconditions */
     plan_cost_t value; /*!< Current value associated with the operator */
 
+    plan_cost_t cost;
     const plan_operator_t *op; /*!< Pointer to the actual operator */
-    fact_t **eff; /*!< Array of effect facts */
-    int eff_size; /*!< Number of effect facts */
     int num_precond; /*!< Number of preconditions */
 };
 
@@ -208,7 +215,7 @@ _bor_inline int valToIdSize(val_to_id_t *vid)
 
 static void dataInit(plan_heur_relax_t *heur)
 {
-    int i, j, id;
+    int i, j, id, eff_i;
     plan_var_id_t var;
     plan_val_t val;
     fact_t *fact;
@@ -218,8 +225,10 @@ static void dataInit(plan_heur_relax_t *heur)
     heur->fact = BOR_ALLOC_ARR(fact_t, heur->fact_size);
     for (i = 0; i < heur->fact_size; ++i){
         heur->fact[i].id = i;
-        heur->fact[i].precond = 0;
+        heur->fact[i].precond = NULL;
         heur->fact[i].precond_size = 0;
+        heur->fact[i].eff = NULL;
+        heur->fact[i].eff_size = 0;
     }
 
     // Initialize operators
@@ -227,9 +236,8 @@ static void dataInit(plan_heur_relax_t *heur)
     heur->op = BOR_ALLOC_ARR(op_t, heur->op_size);
     for (i = 0; i < heur->op_size; ++i){
         heur->op[i].num_precond = 0;
+        heur->op[i].cost = heur->ops[i].cost;
         heur->op[i].op = heur->ops + i;
-        heur->op[i].eff = NULL;
-        heur->op[i].eff_size = 0;
     }
 
     // create mapping between precondition and operator
@@ -247,12 +255,19 @@ static void dataInit(plan_heur_relax_t *heur)
     }
 
     // unroll all effects
-    for (i = 0; i < heur->op_size; ++i){
-        heur->op[i].eff_size = heur->ops[i].eff->vals_size;
-        heur->op[i].eff = BOR_ALLOC_ARR(fact_t *, heur->op[i].eff_size);
-        PLAN_PART_STATE_FOR_EACH(heur->ops[i].eff, j, var, val){
-            id = valToId(&heur->val_to_id, var, val);
-            heur->op[i].eff[j] = heur->fact + id;
+    for (id = 0; id < heur->fact_size; ++id){
+        fact = heur->fact + id;
+        for (i = 0; i < fact->precond_size; ++i)
+            fact->eff_size += fact->precond[i]->op->eff->vals_size;
+        fact->eff = BOR_ALLOC_ARR(op_eff_t, fact->eff_size);
+
+        eff_i = 0;
+        for (i = 0; i < fact->precond_size; ++i){
+            PLAN_PART_STATE_FOR_EACH(fact->precond[i]->op->eff, j, var, val){
+                fact->eff[eff_i].op = fact->precond[i];
+                fact->eff[eff_i].fact = heur->fact + valToId(&heur->val_to_id, var, val);
+                ++eff_i;
+            }
         }
     }
 }
@@ -261,12 +276,12 @@ void dataFree(plan_heur_relax_t *heur)
 {
     int i;
 
-    for (i = 0; i < heur->fact_size; ++i)
+    for (i = 0; i < heur->fact_size; ++i){
         BOR_FREE(heur->fact[i].precond);
+        BOR_FREE(heur->fact[i].eff);
+    }
     BOR_FREE(heur->fact);
 
-    for (i = 0; i < heur->op_size; ++i)
-        BOR_FREE(heur->op[i].eff);
     BOR_FREE(heur->op);
 }
 
@@ -324,11 +339,11 @@ static void init(plan_heur_relax_t *heur, const plan_state_t *state)
 
     for (i = 0; i < heur->op_size; ++i){
         heur->op[i].unsat = heur->op[i].num_precond;
-        heur->op[i].value = 0;
+        heur->op[i].value = heur->op[i].cost;
     }
 
     for (i = 0; i < heur->fact_size; ++i){
-        heur->fact[i].value = 0;
+        heur->fact[i].value = -1;
         heur->fact[i].state = 0;
         heur->fact[i].reached_by = NULL;
     }
@@ -369,6 +384,7 @@ _bor_inline plan_cost_t opValue(int type,
     return BOR_MAX(op_cost + fact_value, op_value);
 }
 
+/*
 static void addEffects(plan_heur_relax_t *heur, op_t *op)
 {
     int i;
@@ -395,11 +411,13 @@ static void processOp(plan_heur_relax_t *heur,
         addEffects(heur, op);
     }
 }
+*/
 
 static int mainLoop(plan_heur_relax_t *heur)
 {
     int i, id, value;
-    fact_t *fact;
+    fact_t *fact, *f;
+    op_t *op;
 
     while (!bheapEmpty(&heur->bheap)){
         id = bheapPop(&heur->bheap, &value);
@@ -416,8 +434,29 @@ static int mainLoop(plan_heur_relax_t *heur)
             }
         }
 
+        /*
         for (i = 0; i < fact->precond_size; ++i){
             processOp(heur, fact->precond[i], fact);
+        }
+        */
+        for (i = 0; i < fact->precond_size; ++i){
+            op = fact->precond[i];
+            op->value = opValue(heur->type, op->cost,
+                                op->value, fact->value);
+
+            op->unsat = BOR_MAX(op->unsat - 1, 0);
+        }
+
+        for (i = 0; i < fact->eff_size; ++i){
+            op = fact->eff[i].op;
+            if (op->unsat == 0){
+                f = fact->eff[i].fact;
+                if (f->value == -1 || f->value > op->value){
+                    f->value = op->value;
+                    f->reached_by = op;
+                    bheapPush(&heur->bheap, f->value, f->id);
+                }
+            }
         }
     }
     return -1;

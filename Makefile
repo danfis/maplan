@@ -49,6 +49,7 @@ OBJS += search_lazy
 OBJS += heur
 OBJS += heur_goalcount
 OBJS += heur_relax
+#OBJS += heur_relax2
 
 BIN_TARGETS =
 

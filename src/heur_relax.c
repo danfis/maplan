@@ -116,7 +116,6 @@ typedef struct _op_t op_t;
  */
 struct _ctx_t {
     bheap_t bheap;
-    int goal_unsat;
 };
 typedef struct _ctx_t ctx_t;
 
@@ -154,6 +153,7 @@ struct _plan_heur_relax_t {
     int op_size;
 
     int goal_unsat_init;
+    int goal_unsat;
 
     ctx_t ctx;
 };
@@ -371,7 +371,7 @@ static void ctxInit(plan_heur_relax_t *heur)
 
     bheapInit(&heur->ctx.bheap);
 
-    heur->ctx.goal_unsat = heur->goal_unsat_init;
+    heur->goal_unsat = heur->goal_unsat_init;
 }
 
 static void ctxFree(plan_heur_relax_t *heur)
@@ -461,8 +461,8 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
 
         if (FACT_GOAL(fact)){
             FACT_UNSET_GOAL(fact);
-            --heur->ctx.goal_unsat;
-            if (heur->ctx.goal_unsat == 0){
+            --heur->goal_unsat;
+            if (heur->goal_unsat == 0){
                 return 0;
             }
         }

@@ -85,12 +85,6 @@ int bheapEmpty(bheap_t *h)
     return h->size == 0;
 }
 
-#define FACT_SET_GOAL(fact) ((fact)->state |= 0x4u)
-#define FACT_SET_RELAXED_PLAN_VISITED(fact) ((fact)->state |= 0x8u)
-#define FACT_UNSET_GOAL(fact) ((fact)->state &= 0xbu)
-#define FACT_GOAL(fact) (((fact)->state & 0x4u) == 0x4u)
-#define FACT_RELAXED_PLAN_VISITED(fact) (((fact)->state & 0x8u) == 0x8u)
-
 #define TYPE_ADD 0
 #define TYPE_MAX 1
 #define TYPE_FF  2
@@ -100,8 +94,9 @@ int bheapEmpty(bheap_t *h)
  */
 struct _fact_t {
     plan_cost_t value;
-    unsigned state;
     int reached_by_op;
+    unsigned goal:1;
+    unsigned relaxed_plan_visited:1;
 };
 typedef struct _fact_t fact_t;
 
@@ -326,14 +321,15 @@ static void precondInit(plan_heur_relax_t *heur)
     for (i = 0; i < heur->fact_size; ++i){
         fact = heur->fact_init + i;
         fact->value = -1;
-        fact->state = 0;
         fact->reached_by_op = -1;
+        fact->goal = 0;
+        fact->relaxed_plan_visited = 0;
     }
 
     heur->goal_unsat_init = 0;
     PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
         id = valToId(&heur->vid, var, val);
-        FACT_SET_GOAL(heur->fact_init + id);
+        heur->fact_init[id].goal = 1;
         ++heur->goal_unsat_init;
     }
 }
@@ -450,8 +446,8 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
         if (fact->value != value)
             continue;
 
-        if (FACT_GOAL(fact)){
-            FACT_UNSET_GOAL(fact);
+        if (fact->goal){
+            fact->goal = 0;
             --heur->goal_unsat;
             if (heur->goal_unsat == 0){
                 return 0;
@@ -502,13 +498,13 @@ static void markRelaxedPlan(plan_heur_relax_t *heur, int *relaxed_plan, int id)
     plan_var_id_t var;
     plan_val_t val;
 
-    if (!FACT_RELAXED_PLAN_VISITED(fact) && fact->reached_by_op != -1){
-        FACT_SET_RELAXED_PLAN_VISITED(fact);
+    if (!fact->relaxed_plan_visited && fact->reached_by_op != -1){
+        fact->relaxed_plan_visited = 1;
         op = heur->ops + fact->reached_by_op;
 
         PLAN_PART_STATE_FOR_EACH(op->pre, i, var, val){
             id2 = valToId(&heur->vid, var, val);
-            if (!FACT_RELAXED_PLAN_VISITED(heur->fact + id2)
+            if (!heur->fact[id2].relaxed_plan_visited
                     && heur->fact[id2].reached_by_op != -1){
                 markRelaxedPlan(heur, relaxed_plan, id2);
             }

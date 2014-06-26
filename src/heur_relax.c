@@ -156,8 +156,8 @@ struct _plan_heur_relax_t {
     precond_t *precond; /*!< Operators for which the corresponding fact is
                              precondition -- the size of this array equals
                              to .fact_size */
-    int **eff;
-    int *eff_size;
+    eff_t *eff;         /*!< Unrolled effects of operators. Size of this
+                             array equals to .ops_size */
 
     fact_t *fact_init;
     fact_t *fact;
@@ -284,16 +284,14 @@ static void valueIdInit(plan_heur_relax_t *heur)
     int i, j;
     plan_var_id_t var;
     plan_val_t val;
+    eff_t *eff;
 
-    heur->eff = BOR_ALLOC_ARR(int *, heur->ops_size);
-    heur->eff_size = BOR_ALLOC_ARR(int, heur->ops_size);
-    for (i = 0; i < heur->ops_size; ++i){
-        heur->eff[i] = BOR_ALLOC_ARR(int,
-                heur->ops[i].eff->vals_size);
-        heur->eff_size[i] = 0;
+    eff = heur->eff = BOR_ALLOC_ARR(eff_t, heur->ops_size);
+    for (i = 0; i < heur->ops_size; ++i, ++eff){
+        eff->size = heur->ops[i].eff->vals_size;
+        eff->fact = BOR_ALLOC_ARR(int, eff->size);
         PLAN_PART_STATE_FOR_EACH(heur->ops[i].eff, j, var, val){
-            heur->eff[i][j] = valToId(&heur->vid, var, val);
-            ++heur->eff_size[i];
+            eff->fact[j] = valToId(&heur->vid, var, val);
         }
     }
 }
@@ -303,9 +301,8 @@ static void valueIdFree(plan_heur_relax_t *heur)
     int i;
 
     for (i = 0; i < heur->ops_size; ++i)
-        BOR_FREE(heur->eff[i]);
+        BOR_FREE(heur->eff[i].fact);
     BOR_FREE(heur->eff);
-    BOR_FREE(heur->eff_size);
 }
 
 static void precondInit(plan_heur_relax_t *heur)
@@ -424,8 +421,8 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
     int *eff_facts, eff_facts_len;
     int op_value = heur->op[op_id].value;
 
-    eff_facts = heur->eff[op_id];
-    eff_facts_len = heur->eff_size[op_id];
+    eff_facts = heur->eff[op_id].fact;
+    eff_facts_len = heur->eff[op_id].size;
     for (i = 0; i < eff_facts_len; ++i){
         id = eff_facts[i];
         fact = heur->fact + id;

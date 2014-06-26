@@ -16,6 +16,16 @@
 #define PLAN_BUCKET_QUEUE_SIZE 1024
 
 /**
+ * Initial size of one bucket in bucket-queue.
+ */
+#define PLAN_BUCKET_QUEUE_BUCKET_INIT_SIZE 32
+
+/**
+ * Expansion factor of a bucket.
+ */
+#define PLAN_BUCKET_QUEUE_BUCKET_EXPANSION_FACTOR 2
+
+/**
  * Bucket for storing int values.
  */
 struct _plan_prioqueue_bucket_t {
@@ -45,7 +55,13 @@ struct _plan_heap_queue_t {
 };
 typedef struct _plan_heap_queue_t plan_heap_queue_t;
 
-typedef plan_bucket_queue_t plan_prio_queue_t;
+
+struct _plan_prio_queue_t {
+    plan_bucket_queue_t bucket_queue;
+    plan_heap_queue_t heap_queue;
+    int bucket;
+};
+typedef struct _plan_prio_queue_t plan_prio_queue_t;
 
 /**
  * Initializes priority queue.
@@ -80,9 +96,18 @@ _bor_inline int planBucketQueueEmpty(const plan_bucket_queue_t *q)
     return q->size == 0;
 }
 
+_bor_inline int planHeapQueueEmpty(const plan_heap_queue_t *q)
+{
+    return borPairHeapEmpty(q->heap);
+}
+
 _bor_inline int planPrioQueueEmpty(const plan_prio_queue_t *q)
 {
-    return planBucketQueueEmpty(q);
+    if (q->bucket){
+        return planBucketQueueEmpty(&q->bucket_queue);
+    }else{
+        return planHeapQueueEmpty(&q->heap_queue);
+    }
 }
 
 #endif /* __PLAN_PRIOQUEUE_H__ */

@@ -40,7 +40,7 @@ plan_list_lazy_t *planListLazyBucketNew(void);
 /**
  * Lazy list based on multi-map.
  */
-plan_list_lazy_t *planListLazyMultiMapNew(void);
+plan_list_lazy_t *planListLazyMapNew(void);
 
 /**
  * Destroys the list.

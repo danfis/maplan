@@ -87,7 +87,7 @@ struct _plan_heur_relax_t {
     int goal_unsat;      /*!< Counter of unsatisfied goals */
     eff_t goal;          /*!< Copied goal in terms of fact ID */
 
-    plan_bucket_queue_t queue;
+    plan_prio_queue_t queue;
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
@@ -417,12 +417,12 @@ static void ctxInit(plan_heur_relax_t *heur)
     memcpy(heur->op, heur->op_init, sizeof(op_t) * heur->op_size);
     memcpy(heur->fact, heur->fact_init, sizeof(fact_t) * heur->fact_size);
     heur->goal_unsat = heur->goal_unsat_init;
-    planBucketQueueInit(&heur->queue);
+    planPrioQueueInit(&heur->queue);
 }
 
 static void ctxFree(plan_heur_relax_t *heur)
 {
-    planBucketQueueFree(&heur->queue);
+    planPrioQueueFree(&heur->queue);
 }
 
 static void ctxAddInitState(plan_heur_relax_t *heur,
@@ -435,7 +435,7 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
     for (i = 0; i < len; ++i){
         id = valToId(&heur->vid, i, planStateGet(state, i));
         heur->fact[id].value = 0;
-        planBucketQueuePush(&heur->queue, heur->fact[id].value, id);
+        planPrioQueuePush(&heur->queue, heur->fact[id].value, id);
         heur->fact[id].reached_by_op = -1;
     }
 }
@@ -456,7 +456,7 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
         if (fact->value == -1 || fact->value > op_value){
             fact->value = op_value;
             fact->reached_by_op = op_id;
-            planBucketQueuePush(&heur->queue, fact->value, id);
+            planPrioQueuePush(&heur->queue, fact->value, id);
         }
     }
 }
@@ -493,8 +493,8 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
     int i, size, *precond, id;
     plan_cost_t value;
 
-    while (!planBucketQueueEmpty(&heur->queue)){
-        id = planBucketQueuePop(&heur->queue, &value);
+    while (!planPrioQueueEmpty(&heur->queue)){
+        id = planPrioQueuePop(&heur->queue, &value);
         fact = heur->fact + id;
         if (fact->value != value)
             continue;

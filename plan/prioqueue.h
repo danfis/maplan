@@ -1,6 +1,8 @@
 #ifndef __PLAN_PRIOQUEUE_H__
 #define __PLAN_PRIOQUEUE_H__
 
+#include <boruvka/pairheap.h>
+
 /**
  * Adaptive Priority Queue
  * ========================
@@ -35,37 +37,52 @@ struct _plan_bucket_queue_t {
 };
 typedef struct _plan_bucket_queue_t plan_bucket_queue_t;
 
+/**
+ * Heap-based priority queue.
+ */
+struct _plan_heap_queue_t {
+    bor_pairheap_t *heap;
+};
+typedef struct _plan_heap_queue_t plan_heap_queue_t;
+
+typedef plan_bucket_queue_t plan_prio_queue_t;
 
 /**
- * Initializes bucket-based priority queue.
+ * Initializes priority queue.
  */
-void planBucketQueueInit(plan_bucket_queue_t *q);
+void planPrioQueueInit(plan_prio_queue_t *q);
 
 /**
  * Frees allocated resources.
  */
-void planBucketQueueFree(plan_bucket_queue_t *q);
+void planPrioQueueFree(plan_prio_queue_t *q);
 
 /**
  * Inserts an element into queue.
  */
-void planBucketQueuePush(plan_bucket_queue_t *q, int key, int value);
+void planPrioQueuePush(plan_prio_queue_t *q, int key, int value);
 
 /**
  * Removes and returns the lowest element.
  */
-int planBucketQueuePop(plan_bucket_queue_t *q, int *key);
+int planPrioQueuePop(plan_prio_queue_t *q, int *key);
 
 /**
  * Returns true if the queue is empty.
  */
-_bor_inline int planBucketQueueEmpty(const plan_bucket_queue_t *q);
+_bor_inline int planPrioQueueEmpty(const plan_prio_queue_t *q);
+
 
 
 /**** INLINES ****/
 _bor_inline int planBucketQueueEmpty(const plan_bucket_queue_t *q)
 {
     return q->size == 0;
+}
+
+_bor_inline int planPrioQueueEmpty(const plan_prio_queue_t *q)
+{
+    return planBucketQueueEmpty(q);
 }
 
 #endif /* __PLAN_PRIOQUEUE_H__ */

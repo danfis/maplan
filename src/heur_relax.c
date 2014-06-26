@@ -150,8 +150,8 @@ struct _plan_heur_relax_t {
     int *init_op_value;     /*!< Preinitialized values of operators */
     fact_t *init_fact;
 
-    fact_t *facts;
-    int facts_size;
+    fact_t *fact;
+    int fact_size;
 
     int type;
 
@@ -328,11 +328,11 @@ static void precondInit(plan_heur_relax_t *heur)
     heur->ctx.op_unsat = BOR_ALLOC_ARR(int, heur->ops_size);
     heur->ctx.op_value = BOR_ALLOC_ARR(plan_cost_t, heur->ops_size);
 
-    heur->facts_size = valToIdSize(&heur->vid);
-    heur->init_fact  = BOR_ALLOC_ARR(fact_t, heur->facts_size);
-    heur->facts      = BOR_ALLOC_ARR(fact_t, heur->facts_size);
+    heur->fact_size = valToIdSize(&heur->vid);
+    heur->init_fact = BOR_ALLOC_ARR(fact_t, heur->fact_size);
+    heur->fact      = BOR_ALLOC_ARR(fact_t, heur->fact_size);
 
-    for (i = 0; i < heur->facts_size; ++i){
+    for (i = 0; i < heur->fact_size; ++i){
         fact = heur->init_fact + i;
         fact->value = -1;
         fact->state = 0;
@@ -352,8 +352,8 @@ static void precondFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->init_op_unsat);
     BOR_FREE(heur->init_op_value);
     BOR_FREE(heur->init_fact);
-    if (heur->facts)
-        BOR_FREE(heur->facts);
+    if (heur->fact)
+        BOR_FREE(heur->fact);
     BOR_FREE(heur->ctx.op_value);
     BOR_FREE(heur->ctx.op_unsat);
 }
@@ -372,7 +372,7 @@ static void ctxInit(plan_heur_relax_t *heur)
     */
     memcpy(heur->ctx.op_unsat, heur->init_op_unsat, sizeof(int) * heur->ops_size);
     memcpy(heur->ctx.op_value, heur->init_op_value, sizeof(plan_cost_t) * heur->ops_size);
-    memcpy(heur->facts, heur->init_fact, sizeof(fact_t) * heur->facts_size);
+    memcpy(heur->fact, heur->init_fact, sizeof(fact_t) * heur->fact_size);
 
     //heur->ctx.heap = borBucketHeapNew();
     bheapInit(&heur->ctx.bheap);
@@ -381,7 +381,7 @@ static void ctxInit(plan_heur_relax_t *heur)
     heur->ctx.goal_unsat = 0;
     PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
         id = valToId(&heur->vid, var, val);
-        FACT_SET_GOAL(heur->facts + id);
+        FACT_SET_GOAL(heur->fact + id);
         ++heur->ctx.goal_unsat;
     }
 }
@@ -401,13 +401,13 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
     for (i = 0; i < heur->var_size; ++i){
         id = valToId(&heur->vid, i, planStateGet(state, i));
         //heur->facts[id].id = id;
-        heur->facts[id].value = 0;
-        bheapPush(&heur->ctx.bheap, heur->facts[id].value, id);
+        heur->fact[id].value = 0;
+        bheapPush(&heur->ctx.bheap, heur->fact[id].value, id);
         /*
         borBucketHeapAdd(heur->ctx.heap, heur->facts[id].value,
                          &heur->facts[id].heap);
         */
-        heur->facts[id].reached_by_op = -1;
+        heur->fact[id].reached_by_op = -1;
     }
 }
 
@@ -423,7 +423,7 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
     eff_facts_len = op->eff->vals_size;
     for (i = 0; i < eff_facts_len; ++i){
         id = eff_facts[i];
-        fact = heur->facts + id;
+        fact = heur->fact + id;
 
         if (fact->value == -1 || fact->value > op_value){
             fact->value = op_value;
@@ -467,7 +467,7 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
 
     while (!bheapEmpty(&heur->ctx.bheap)){
         id = bheapPop(&heur->ctx.bheap, &value);
-        fact = heur->facts + id;
+        fact = heur->fact + id;
         if (fact->value != value)
             continue;
 
@@ -509,7 +509,7 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur)
     h = PLAN_COST_ZERO;
     PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
         id = valToId(&heur->vid, var, val);
-        h = relaxHeurValue(heur->type, h, heur->facts[id].value);
+        h = relaxHeurValue(heur->type, h, heur->fact[id].value);
     }
 
     return h;
@@ -517,7 +517,7 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur)
 
 static void markRelaxedPlan(plan_heur_relax_t *heur, int *relaxed_plan, int id)
 {
-    fact_t *fact = heur->facts + id;
+    fact_t *fact = heur->fact + id;
     const plan_operator_t *op;
     int i, id2;
     plan_var_id_t var;
@@ -529,8 +529,8 @@ static void markRelaxedPlan(plan_heur_relax_t *heur, int *relaxed_plan, int id)
 
         PLAN_PART_STATE_FOR_EACH(op->pre, i, var, val){
             id2 = valToId(&heur->vid, var, val);
-            if (!FACT_RELAXED_PLAN_VISITED(heur->facts + id2)
-                    && heur->facts[id2].reached_by_op != -1){
+            if (!FACT_RELAXED_PLAN_VISITED(heur->fact + id2)
+                    && heur->fact[id2].reached_by_op != -1){
                 markRelaxedPlan(heur, relaxed_plan, id2);
             }
         }

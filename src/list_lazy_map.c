@@ -18,47 +18,47 @@ struct _keynode_t {
 typedef struct _keynode_t keynode_t;
 
 /** A main structure */
-struct _plan_list_lazy_multimap_t {
+struct _plan_list_lazy_map_t {
     plan_list_lazy_t list;    /*!< Parent class */
     bor_splaytree_int_t tree; /*!< Instance of a tree */
     keynode_t *pre_keynode;   /*!< Preinitialized key-node */
 };
-typedef struct _plan_list_lazy_multimap_t plan_list_lazy_multimap_t;
+typedef struct _plan_list_lazy_map_t plan_list_lazy_map_t;
 
-static void planListLazyMultiMapDel(void *);
-static void planListLazyMultiMapPush(void *,
-                                     plan_cost_t cost,
-                                     plan_state_id_t parent_state_id,
-                                     plan_operator_t *op);
-static int planListLazyMultiMapPop(void *,
-                                   plan_state_id_t *parent_state_id,
-                                   plan_operator_t **op);
-static void planListLazyMultiMapClear(void *);
+static void planListLazyMapDel(void *);
+static void planListLazyMapPush(void *,
+                                plan_cost_t cost,
+                                plan_state_id_t parent_state_id,
+                                plan_operator_t *op);
+static int planListLazyMapPop(void *,
+                              plan_state_id_t *parent_state_id,
+                              plan_operator_t **op);
+static void planListLazyMapClear(void *);
 
 
-plan_list_lazy_t *planListLazyMultiMapNew(void)
+plan_list_lazy_t *planListLazyMapNew(void)
 {
-    plan_list_lazy_multimap_t *l;
+    plan_list_lazy_map_t *l;
 
-    l = BOR_ALLOC(plan_list_lazy_multimap_t);
+    l = BOR_ALLOC(plan_list_lazy_map_t);
     borSplayTreeIntInit(&l->tree);
 
     l->pre_keynode = BOR_ALLOC(keynode_t);
     borFifoInit(&l->pre_keynode->fifo, sizeof(node_t));
 
     planListLazyInit(&l->list,
-                     planListLazyMultiMapDel,
-                     planListLazyMultiMapPush,
-                     planListLazyMultiMapPop,
-                     planListLazyMultiMapClear);
+                     planListLazyMapDel,
+                     planListLazyMapPush,
+                     planListLazyMapPop,
+                     planListLazyMapClear);
 
     return &l->list;
 }
 
-static void planListLazyMultiMapDel(void *_l)
+static void planListLazyMapDel(void *_l)
 {
-    plan_list_lazy_multimap_t *l = _l;
-    planListLazyMultiMapClear(l);
+    plan_list_lazy_map_t *l = _l;
+    planListLazyMapClear(l);
     if (l->pre_keynode){
         borFifoFree(&l->pre_keynode->fifo);
         BOR_FREE(l->pre_keynode);
@@ -67,12 +67,12 @@ static void planListLazyMultiMapDel(void *_l)
     BOR_FREE(l);
 }
 
-static void planListLazyMultiMapPush(void *_l,
-                                     plan_cost_t cost,
-                                     plan_state_id_t parent_state_id,
-                                     plan_operator_t *op)
+static void planListLazyMapPush(void *_l,
+                                plan_cost_t cost,
+                                plan_state_id_t parent_state_id,
+                                plan_operator_t *op)
 {
-    plan_list_lazy_multimap_t *l = _l;
+    plan_list_lazy_map_t *l = _l;
     node_t n;
     keynode_t *keynode;
     bor_splaytree_int_node_t *kn;
@@ -98,11 +98,11 @@ static void planListLazyMultiMapPush(void *_l,
     borFifoPush(&keynode->fifo, &n);
 }
 
-static int planListLazyMultiMapPop(void *_l,
-                                   plan_state_id_t *parent_state_id,
-                                   plan_operator_t **op)
+static int planListLazyMapPop(void *_l,
+                              plan_state_id_t *parent_state_id,
+                              plan_operator_t **op)
 {
-    plan_list_lazy_multimap_t *l = _l;
+    plan_list_lazy_map_t *l = _l;
     node_t *n;
     keynode_t *keynode;
     bor_splaytree_int_node_t *kn;
@@ -132,9 +132,9 @@ static int planListLazyMultiMapPop(void *_l,
     return 0;
 }
 
-static void planListLazyMultiMapClear(void *_l)
+static void planListLazyMapClear(void *_l)
 {
-    plan_list_lazy_multimap_t *l = _l;
+    plan_list_lazy_map_t *l = _l;
     bor_splaytree_int_node_t *kn, *tmp;
     keynode_t *keynode;
 

@@ -186,6 +186,12 @@ _bor_inline int valToId(val_to_id_t *vid, plan_var_id_t var, plan_val_t val);
 /** Returns number of fact IDs */
 _bor_inline int valToIdSize(val_to_id_t *vid);
 
+/** Initializes and frees .fact* structures */
+static void factInit(plan_heur_relax_t *heur,
+                     const plan_part_state_t *goal);
+static void factFree(plan_heur_relax_t *heur);
+
+
 /** Initializes and frees .val_id[] structure */
 static void valueIdInit(plan_heur_relax_t *heur);
 static void valueIdFree(plan_heur_relax_t *heur);
@@ -231,6 +237,9 @@ static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
     heur->type     = type;
 
     valToIdInit(&heur->vid, heur->var, heur->var_size);
+    factInit(heur, prob->goal);
+
+
     valueIdInit(heur);
     precondInit(heur);
 
@@ -256,7 +265,9 @@ plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob)
 static void planHeurRelaxDel(void *_heur)
 {
     plan_heur_relax_t *heur = _heur;
+    factFree(heur);
     valueIdFree(heur);
+
     precondFree(heur);
     planHeurFree(&heur->heur);
     valToIdFree(&heur->vid);
@@ -306,12 +317,51 @@ static void valueIdFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->eff);
 }
 
+
+
+static void factInit(plan_heur_relax_t *heur,
+                     const plan_part_state_t *goal)
+{
+    int i, id;
+    fact_t *fact;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    // prepare fact arrays
+    heur->fact_size = valToIdSize(&heur->vid);
+    heur->fact_init = BOR_ALLOC_ARR(fact_t, heur->fact_size);
+    heur->fact      = BOR_ALLOC_ARR(fact_t, heur->fact_size);
+
+    // set up initial values
+    for (i = 0; i < heur->fact_size; ++i){
+        fact = heur->fact_init + i;
+        fact->value = -1;
+        fact->reached_by_op = -1;
+        fact->goal = 0;
+        fact->relaxed_plan_visited = 0;
+    }
+
+    // set up goal
+    heur->goal_unsat_init = 0;
+    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
+        id = valToId(&heur->vid, var, val);
+        heur->fact_init[id].goal = 1;
+        ++heur->goal_unsat_init;
+    }
+}
+
+static void factFree(plan_heur_relax_t *heur)
+{
+    BOR_FREE(heur->fact_init);
+    BOR_FREE(heur->fact);
+}
+
+
 static void precondInit(plan_heur_relax_t *heur)
 {
     int i, j, id, size;
     plan_var_id_t var;
     plan_val_t val;
-    fact_t *fact;
 
     // prepare precond array
     size = valToIdSize(&heur->vid);
@@ -344,25 +394,6 @@ static void precondInit(plan_heur_relax_t *heur)
     }
 
 
-    // prepare fact arrays
-    heur->fact_size = valToIdSize(&heur->vid);
-    heur->fact_init = BOR_ALLOC_ARR(fact_t, heur->fact_size);
-    heur->fact      = BOR_ALLOC_ARR(fact_t, heur->fact_size);
-
-    for (i = 0; i < heur->fact_size; ++i){
-        fact = heur->fact_init + i;
-        fact->value = -1;
-        fact->reached_by_op = -1;
-        fact->goal = 0;
-        fact->relaxed_plan_visited = 0;
-    }
-
-    heur->goal_unsat_init = 0;
-    PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
-        id = valToId(&heur->vid, var, val);
-        heur->fact_init[id].goal = 1;
-        ++heur->goal_unsat_init;
-    }
 }
 
 static void precondFree(plan_heur_relax_t *heur)
@@ -375,9 +406,6 @@ static void precondFree(plan_heur_relax_t *heur)
 
     BOR_FREE(heur->op_init);
     BOR_FREE(heur->op);
-
-    BOR_FREE(heur->fact_init);
-    BOR_FREE(heur->fact);
 }
 
 

@@ -338,7 +338,6 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
     p->vars = BOR_ALLOC_ARR(plan_state_packer_var_t, p->num_vars);
 
     pvars = BOR_ALLOC_ARR(plan_state_packer_var_t *, p->num_vars);
-    
 
     for (i = 0; i < var_size; ++i){
         p->vars[i].bitlen = packerBitsNeeded(var[i].range);

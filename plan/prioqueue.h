@@ -40,10 +40,9 @@ typedef struct _plan_prioqueue_bucket_t plan_prioqueue_bucket_t;
  */
 struct _plan_bucket_queue_t {
     plan_prioqueue_bucket_t *bucket; /*!< Array of buckets */
-    int bucket_size;                     /*!< Number of buckets */
-    int lowest_key;                      /*!< Lowest key so far */
-    int size;                            /*!< Number of elements stored in
-                                              queue */
+    int bucket_size;                 /*!< Number of buckets */
+    int lowest_key;                  /*!< Lowest key so far */
+    int size;                        /*!< Number of elements stored in queue */
 };
 typedef struct _plan_bucket_queue_t plan_bucket_queue_t;
 

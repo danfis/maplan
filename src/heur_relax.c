@@ -131,6 +131,8 @@ typedef struct _val_to_id_t val_to_id_t;
 
 struct _plan_heur_relax_t {
     plan_heur_t heur;
+    int type;
+
     const plan_operator_t *ops;
     int ops_size;
     const plan_var_t *var;
@@ -143,7 +145,7 @@ struct _plan_heur_relax_t {
     int **precond;     /*!< Operator IDs indexed by precondition ID */
     int *precond_size; /*!< Size of each subarray */
 
-    fact_t *init_fact;
+    fact_t *fact_init;
     fact_t *fact;
     int fact_size;
 
@@ -151,7 +153,7 @@ struct _plan_heur_relax_t {
     op_t *op;
     int op_size;
 
-    int type;
+    int goal_unsat_init;
 
     ctx_t ctx;
 };
@@ -327,14 +329,21 @@ static void precondInit(plan_heur_relax_t *heur)
 
     // TODO
     heur->fact_size = valToIdSize(&heur->vid);
-    heur->init_fact = BOR_ALLOC_ARR(fact_t, heur->fact_size);
+    heur->fact_init = BOR_ALLOC_ARR(fact_t, heur->fact_size);
     heur->fact      = BOR_ALLOC_ARR(fact_t, heur->fact_size);
 
     for (i = 0; i < heur->fact_size; ++i){
-        fact = heur->init_fact + i;
+        fact = heur->fact_init + i;
         fact->value = -1;
         fact->state = 0;
         fact->reached_by_op = -1;
+    }
+
+    heur->goal_unsat_init = 0;
+    PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
+        id = valToId(&heur->vid, var, val);
+        FACT_SET_GOAL(heur->fact_init + id);
+        ++heur->goal_unsat_init;
     }
 }
 
@@ -349,7 +358,7 @@ static void precondFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->precond_size);
     BOR_FREE(heur->op_init);
     BOR_FREE(heur->op);
-    BOR_FREE(heur->init_fact);
+    BOR_FREE(heur->fact_init);
     if (heur->fact)
         BOR_FREE(heur->fact);
 }
@@ -357,28 +366,12 @@ static void precondFree(plan_heur_relax_t *heur)
 
 static void ctxInit(plan_heur_relax_t *heur)
 {
-    int i, id;
-    plan_var_id_t var;
-    plan_val_t val;
-
-    /*
-    for (i = 0; i < heur->ops_size; ++i){
-        heur->ctx.op_unsat[i] = heur->ops[i].pre->vals_size;
-    }
-    */
     memcpy(heur->op, heur->op_init, sizeof(op_t) * heur->op_size);
-    memcpy(heur->fact, heur->init_fact, sizeof(fact_t) * heur->fact_size);
+    memcpy(heur->fact, heur->fact_init, sizeof(fact_t) * heur->fact_size);
 
-    //heur->ctx.heap = borBucketHeapNew();
     bheapInit(&heur->ctx.bheap);
 
-    // set fact goals
-    heur->ctx.goal_unsat = 0;
-    PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
-        id = valToId(&heur->vid, var, val);
-        FACT_SET_GOAL(heur->fact + id);
-        ++heur->ctx.goal_unsat;
-    }
+    heur->ctx.goal_unsat = heur->goal_unsat_init;
 }
 
 static void ctxFree(plan_heur_relax_t *heur)

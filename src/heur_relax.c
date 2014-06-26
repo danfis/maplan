@@ -106,7 +106,7 @@ struct _fact_t {
 typedef struct _fact_t fact_t;
 
 struct _op_t {
-    int op_unsat;
+    int unsat;
     plan_cost_t value;
 };
 typedef struct _op_t op_t;
@@ -115,9 +115,6 @@ typedef struct _op_t op_t;
  * Context for relaxation algorithm.
  */
 struct _ctx_t {
-    int *op_unsat;
-    plan_cost_t *op_value;
-    bor_bucketheap_t *heap;
     bheap_t bheap;
     int goal_unsat;
 };
@@ -145,13 +142,14 @@ struct _plan_heur_relax_t {
     int **op_fact_id;
     int **precond;     /*!< Operator IDs indexed by precondition ID */
     int *precond_size; /*!< Size of each subarray */
-    int *init_op_unsat;     /*!< Preinitialized counters of unsatisfied
-                            preconditions per operator */
-    int *init_op_value;     /*!< Preinitialized values of operators */
-    fact_t *init_fact;
 
+    fact_t *init_fact;
     fact_t *fact;
     int fact_size;
+
+    op_t *op_init;
+    op_t *op;
+    int op_size;
 
     int type;
 
@@ -305,14 +303,15 @@ static void precondInit(plan_heur_relax_t *heur)
         heur->precond[i] = NULL;
     }
 
-    // prepare initialization arrays
-    heur->init_op_unsat = BOR_ALLOC_ARR(int, heur->ops_size);
-    heur->init_op_value = BOR_ALLOC_ARR(plan_cost_t, heur->ops_size);
+    // TODO
+    heur->op_size = heur->ops_size;
+    heur->op = BOR_ALLOC_ARR(op_t, heur->op_size);
+    heur->op_init = BOR_ALLOC_ARR(op_t, heur->op_size);
 
     // create mapping between precondition and operator
     for (i = 0; i < heur->ops_size; ++i){
-        heur->init_op_unsat[i] = 0;
-        heur->init_op_value[i] = heur->ops[i].cost;
+        heur->op_init[i].unsat = 0;
+        heur->op_init[i].value = heur->ops[i].cost;
 
         PLAN_PART_STATE_FOR_EACH(heur->ops[i].pre, j, var, val){
             id = valToId(&heur->vid, var, val);
@@ -321,13 +320,12 @@ static void precondInit(plan_heur_relax_t *heur)
                                                 heur->precond_size[id]);
             heur->precond[id][heur->precond_size[id] - 1] = i;
 
-            heur->init_op_unsat[i] += 1;
+            heur->op_init[i].unsat += 1;
         }
     }
 
-    heur->ctx.op_unsat = BOR_ALLOC_ARR(int, heur->ops_size);
-    heur->ctx.op_value = BOR_ALLOC_ARR(plan_cost_t, heur->ops_size);
 
+    // TODO
     heur->fact_size = valToIdSize(&heur->vid);
     heur->init_fact = BOR_ALLOC_ARR(fact_t, heur->fact_size);
     heur->fact      = BOR_ALLOC_ARR(fact_t, heur->fact_size);
@@ -349,13 +347,11 @@ static void precondFree(plan_heur_relax_t *heur)
     }
     BOR_FREE(heur->precond);
     BOR_FREE(heur->precond_size);
-    BOR_FREE(heur->init_op_unsat);
-    BOR_FREE(heur->init_op_value);
+    BOR_FREE(heur->op_init);
+    BOR_FREE(heur->op);
     BOR_FREE(heur->init_fact);
     if (heur->fact)
         BOR_FREE(heur->fact);
-    BOR_FREE(heur->ctx.op_value);
-    BOR_FREE(heur->ctx.op_unsat);
 }
 
 
@@ -370,8 +366,7 @@ static void ctxInit(plan_heur_relax_t *heur)
         heur->ctx.op_unsat[i] = heur->ops[i].pre->vals_size;
     }
     */
-    memcpy(heur->ctx.op_unsat, heur->init_op_unsat, sizeof(int) * heur->ops_size);
-    memcpy(heur->ctx.op_value, heur->init_op_value, sizeof(plan_cost_t) * heur->ops_size);
+    memcpy(heur->op, heur->op_init, sizeof(op_t) * heur->op_size);
     memcpy(heur->fact, heur->init_fact, sizeof(fact_t) * heur->fact_size);
 
     //heur->ctx.heap = borBucketHeapNew();
@@ -417,7 +412,7 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
     int i, id;
     fact_t *fact;
     int *eff_facts, eff_facts_len;
-    int op_value = heur->ctx.op_value[op_id];
+    int op_value = heur->op[op_id].value;
 
     eff_facts = heur->op_fact_id[op_id];
     eff_facts_len = op->eff->vals_size;
@@ -446,15 +441,15 @@ _bor_inline plan_cost_t relaxHeurOpValue(int type,
 static void ctxProcessOp(plan_heur_relax_t *heur, int op_id, fact_t *fact)
 {
     // update operator value
-    heur->ctx.op_value[op_id] = relaxHeurOpValue(heur->type,
-                                                 heur->ops[op_id].cost,
-                                                 heur->ctx.op_value[op_id],
-                                                 fact->value);
+    heur->op[op_id].value = relaxHeurOpValue(heur->type,
+                                             heur->ops[op_id].cost,
+                                             heur->op[op_id].value,
+                                             fact->value);
 
     // satisfy operator precondition
-    heur->ctx.op_unsat[op_id] = BOR_MAX(heur->ctx.op_unsat[op_id] - 1, 0);
+    heur->op[op_id].unsat = BOR_MAX(heur->op[op_id].unsat - 1, 0);
 
-    if (heur->ctx.op_unsat[op_id] == 0){
+    if (heur->op[op_id].unsat == 0){
         ctxAddEffects(heur, op_id);
     }
 }

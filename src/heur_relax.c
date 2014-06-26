@@ -111,15 +111,6 @@ struct _op_t {
 };
 typedef struct _op_t op_t;
 
-/**
- * Context for relaxation algorithm.
- */
-struct _ctx_t {
-    bheap_t bheap;
-};
-typedef struct _ctx_t ctx_t;
-
-
 struct _val_to_id_t {
     int **val_id;
     int var_size;
@@ -155,7 +146,7 @@ struct _plan_heur_relax_t {
     int goal_unsat_init;
     int goal_unsat;
 
-    ctx_t ctx;
+    bheap_t bheap;
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
@@ -369,7 +360,7 @@ static void ctxInit(plan_heur_relax_t *heur)
     memcpy(heur->op, heur->op_init, sizeof(op_t) * heur->op_size);
     memcpy(heur->fact, heur->fact_init, sizeof(fact_t) * heur->fact_size);
 
-    bheapInit(&heur->ctx.bheap);
+    bheapInit(&heur->bheap);
 
     heur->goal_unsat = heur->goal_unsat_init;
 }
@@ -377,7 +368,7 @@ static void ctxInit(plan_heur_relax_t *heur)
 static void ctxFree(plan_heur_relax_t *heur)
 {
     //borBucketHeapDel(heur->ctx.heap);
-    bheapFree(&heur->ctx.bheap);
+    bheapFree(&heur->bheap);
 }
 
 static void ctxAddInitState(plan_heur_relax_t *heur,
@@ -390,7 +381,7 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
         id = valToId(&heur->vid, i, planStateGet(state, i));
         //heur->facts[id].id = id;
         heur->fact[id].value = 0;
-        bheapPush(&heur->ctx.bheap, heur->fact[id].value, id);
+        bheapPush(&heur->bheap, heur->fact[id].value, id);
         /*
         borBucketHeapAdd(heur->ctx.heap, heur->facts[id].value,
                          &heur->facts[id].heap);
@@ -416,7 +407,7 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
         if (fact->value == -1 || fact->value > op_value){
             fact->value = op_value;
             fact->reached_by_op = op_id;
-            bheapPush(&heur->ctx.bheap, fact->value, id);
+            bheapPush(&heur->bheap, fact->value, id);
         }
     }
 }
@@ -453,8 +444,8 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
     int i, size, *precond, id;
     plan_cost_t value;
 
-    while (!bheapEmpty(&heur->ctx.bheap)){
-        id = bheapPop(&heur->ctx.bheap, &value);
+    while (!bheapEmpty(&heur->bheap)){
+        id = bheapPop(&heur->bheap, &value);
         fact = heur->fact + id;
         if (fact->value != value)
             continue;

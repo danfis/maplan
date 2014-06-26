@@ -412,6 +412,9 @@ static void precondFree(plan_heur_relax_t *heur)
     for (i = 0; i < heur->fact_size; ++i)
         BOR_FREE(heur->precond[i].op);
     BOR_FREE(heur->precond);
+
+    for (i = 0; i < heur->op_size; ++i)
+        BOR_FREE(heur->op_precond[i].fact);
     BOR_FREE(heur->op_precond);
 }
 

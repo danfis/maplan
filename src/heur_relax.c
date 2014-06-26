@@ -105,6 +105,12 @@ struct _fact_t {
 };
 typedef struct _fact_t fact_t;
 
+struct _op_t {
+    int op_unsat;
+    plan_cost_t value;
+};
+typedef struct _op_t op_t;
+
 /**
  * Context for relaxation algorithm.
  */
@@ -142,6 +148,8 @@ struct _plan_heur_relax_t {
     int *init_op_unsat;     /*!< Preinitialized counters of unsatisfied
                             preconditions per operator */
     int *init_op_value;     /*!< Preinitialized values of operators */
+    fact_t *init_fact;
+
     fact_t *facts;
     int facts_size;
 
@@ -286,6 +294,7 @@ static void precondInit(plan_heur_relax_t *heur)
     int i, j, id, size;
     plan_var_id_t var;
     plan_val_t val;
+    fact_t *fact;
 
     // prepare precond array
     size = valToIdSize(&heur->vid);
@@ -320,7 +329,15 @@ static void precondInit(plan_heur_relax_t *heur)
     heur->ctx.op_value = BOR_ALLOC_ARR(plan_cost_t, heur->ops_size);
 
     heur->facts_size = valToIdSize(&heur->vid);
+    heur->init_fact  = BOR_ALLOC_ARR(fact_t, heur->facts_size);
     heur->facts      = BOR_ALLOC_ARR(fact_t, heur->facts_size);
+
+    for (i = 0; i < heur->facts_size; ++i){
+        fact = heur->init_fact + i;
+        fact->value = -1;
+        fact->state = 0;
+        fact->reached_by_op = -1;
+    }
 }
 
 static void precondFree(plan_heur_relax_t *heur)
@@ -334,6 +351,7 @@ static void precondFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->precond_size);
     BOR_FREE(heur->init_op_unsat);
     BOR_FREE(heur->init_op_value);
+    BOR_FREE(heur->init_fact);
     if (heur->facts)
         BOR_FREE(heur->facts);
     BOR_FREE(heur->ctx.op_value);
@@ -346,7 +364,6 @@ static void ctxInit(plan_heur_relax_t *heur)
     int i, id;
     plan_var_id_t var;
     plan_val_t val;
-    fact_t *fact;
 
     /*
     for (i = 0; i < heur->ops_size; ++i){
@@ -355,12 +372,7 @@ static void ctxInit(plan_heur_relax_t *heur)
     */
     memcpy(heur->ctx.op_unsat, heur->init_op_unsat, sizeof(int) * heur->ops_size);
     memcpy(heur->ctx.op_value, heur->init_op_value, sizeof(plan_cost_t) * heur->ops_size);
-    for (i = 0; i < heur->facts_size; ++i){
-        fact = heur->facts + i;
-        fact->value = -1;
-        fact->state = 0;
-        fact->reached_by_op = -1;
-    }
+    memcpy(heur->facts, heur->init_fact, sizeof(fact_t) * heur->facts_size);
 
     //heur->ctx.heap = borBucketHeapNew();
     bheapInit(&heur->ctx.bheap);

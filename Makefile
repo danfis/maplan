@@ -40,16 +40,12 @@ OBJS += list_lazy_fifo
 OBJS += list_lazy_heap
 OBJS += list_lazy_bucket
 OBJS += list_lazy_multimap
-#OBJS += statespace_fifo
-#OBJS += statespace_heap
-#OBJS += statespace_bucket
 OBJS += search
 OBJS += search_ehc
 OBJS += search_lazy
 OBJS += heur
 OBJS += heur_goalcount
 OBJS += heur_relax
-#OBJS += heur_relax2
 
 BIN_TARGETS =
 

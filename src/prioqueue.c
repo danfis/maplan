@@ -3,15 +3,6 @@
 #include <boruvka/alloc.h>
 #include "plan/prioqueue.h"
 
-
-struct _heap_bucket_t {
-    int key;
-    bor_pairheap_node_t node;
-
-    plan_prioqueue_bucket_t bucket;
-};
-typedef struct _heap_bucket_t heap_bucket_t;
-
 struct _heap_node_t {
     int key;
     int value;

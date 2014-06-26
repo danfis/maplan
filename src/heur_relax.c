@@ -293,6 +293,48 @@ static plan_cost_t planHeurRelax(void *_heur, const plan_state_t *state)
 }
 
 
+
+static void valToIdInit(val_to_id_t *vid,
+                        const plan_var_t *var, int var_size)
+{
+    int i, j, id;
+
+    // allocate the array corresponding to the variables
+    vid->val_id = BOR_ALLOC_ARR(int *, var_size);
+
+    for (id = 0, i = 0; i < var_size; ++i){
+        // allocate array for variable's values
+        vid->val_id[i] = BOR_ALLOC_ARR(int, var[i].range);
+
+        // fill values with IDs
+        for (j = 0; j < var[i].range; ++j)
+            vid->val_id[i][j] = id++;
+    }
+
+    // remember number of values
+    vid->val_size = id;
+    vid->var_size = var_size;
+}
+
+static void valToIdFree(val_to_id_t *vid)
+{
+    int i;
+    for (i = 0; i < vid->var_size; ++i)
+        BOR_FREE(vid->val_id[i]);
+    BOR_FREE(vid->val_id);
+}
+
+_bor_inline int valToId(val_to_id_t *vid,
+                        plan_var_id_t var, plan_val_t val)
+{
+    return vid->val_id[var][val];
+}
+
+_bor_inline int valToIdSize(val_to_id_t *vid)
+{
+    return vid->val_size;
+}
+
 static void goalInit(plan_heur_relax_t *heur,
                      const plan_part_state_t *goal)
 {
@@ -636,46 +678,4 @@ static plan_cost_t ctxHeur(plan_heur_relax_t *heur)
     }else{ // heur->type == TYPE_FF
         return relaxHeurFF(heur);
     }
-}
-
-
-static void valToIdInit(val_to_id_t *vid,
-                        const plan_var_t *var, int var_size)
-{
-    int i, j, id;
-
-    // allocate the array corresponding to the variables
-    vid->val_id = BOR_ALLOC_ARR(int *, var_size);
-
-    for (id = 0, i = 0; i < var_size; ++i){
-        // allocate array for variable's values
-        vid->val_id[i] = BOR_ALLOC_ARR(int, var[i].range);
-
-        // fill values with IDs
-        for (j = 0; j < var[i].range; ++j)
-            vid->val_id[i][j] = id++;
-    }
-
-    // remember number of values
-    vid->val_size = id;
-    vid->var_size = var_size;
-}
-
-static void valToIdFree(val_to_id_t *vid)
-{
-    int i;
-    for (i = 0; i < vid->var_size; ++i)
-        BOR_FREE(vid->val_id[i]);
-    BOR_FREE(vid->val_id);
-}
-
-_bor_inline int valToId(val_to_id_t *vid,
-                        plan_var_id_t var, plan_val_t val)
-{
-    return vid->val_id[var][val];
-}
-
-_bor_inline int valToIdSize(val_to_id_t *vid)
-{
-    return vid->val_size;
 }

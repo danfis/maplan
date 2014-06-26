@@ -18,6 +18,7 @@ typedef struct _keynode_t keynode_t;
 struct _plan_list_lazy_multimap_t {
     plan_list_lazy_t list;
     bor_splaytree_int_t tree;
+    keynode_t *pre_keynode;   /*!< Preinitialized key-node */
 };
 typedef struct _plan_list_lazy_multimap_t plan_list_lazy_multimap_t;
 
@@ -39,6 +40,9 @@ plan_list_lazy_t *planListLazyMultiMapNew(void)
     l = BOR_ALLOC(plan_list_lazy_multimap_t);
     borSplayTreeIntInit(&l->tree);
 
+    l->pre_keynode = BOR_ALLOC(keynode_t);
+    borFifoInit(&l->pre_keynode->fifo, sizeof(node_t));
+
     planListLazyInit(&l->list,
                      planListLazyMultiMapDel,
                      planListLazyMultiMapPush,
@@ -52,6 +56,10 @@ static void planListLazyMultiMapDel(void *_l)
 {
     plan_list_lazy_multimap_t *l = _l;
     planListLazyMultiMapClear(l);
+    if (l->pre_keynode){
+        borFifoFree(&l->pre_keynode->fifo);
+        BOR_FREE(l->pre_keynode);
+    }
     borSplayTreeIntFree(&l->tree);
     BOR_FREE(l);
 }
@@ -66,12 +74,12 @@ static void planListLazyMultiMapPush(void *_l,
     keynode_t *keynode;
     bor_splaytree_int_node_t *kn;
 
-    keynode = BOR_ALLOC(keynode_t);
-    borFifoInit(&keynode->fifo, sizeof(node_t));
-    kn = borSplayTreeIntInsert(&l->tree, cost, &keynode->tree);
-    if (kn != NULL){
-        borFifoFree(&keynode->fifo);
-        BOR_FREE(keynode);
+    kn = borSplayTreeIntInsert(&l->tree, cost, &l->pre_keynode->tree);
+    if (kn == NULL){
+        keynode = l->pre_keynode;
+        l->pre_keynode = BOR_ALLOC(keynode_t);
+        borFifoInit(&l->pre_keynode->fifo, sizeof(node_t));
+    }else if (kn != NULL){
         keynode = bor_container_of(kn, keynode_t, tree);
     }
 

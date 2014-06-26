@@ -139,9 +139,9 @@ struct _plan_heur_relax_t {
     int **op_fact_id;
     int **precond;     /*!< Operator IDs indexed by precondition ID */
     int *precond_size; /*!< Size of each subarray */
-    int *op_unsat;     /*!< Preinitialized counters of unsatisfied
+    int *init_op_unsat;     /*!< Preinitialized counters of unsatisfied
                             preconditions per operator */
-    int *op_value;     /*!< Preinitialized values of operators */
+    int *init_op_value;     /*!< Preinitialized values of operators */
     fact_t *facts;
     int facts_size;
 
@@ -297,13 +297,13 @@ static void precondInit(plan_heur_relax_t *heur)
     }
 
     // prepare initialization arrays
-    heur->op_unsat = BOR_ALLOC_ARR(int, heur->ops_size);
-    heur->op_value = BOR_ALLOC_ARR(plan_cost_t, heur->ops_size);
+    heur->init_op_unsat = BOR_ALLOC_ARR(int, heur->ops_size);
+    heur->init_op_value = BOR_ALLOC_ARR(plan_cost_t, heur->ops_size);
 
     // create mapping between precondition and operator
     for (i = 0; i < heur->ops_size; ++i){
-        heur->op_unsat[i] = 0;
-        heur->op_value[i] = heur->ops[i].cost;
+        heur->init_op_unsat[i] = 0;
+        heur->init_op_value[i] = heur->ops[i].cost;
 
         PLAN_PART_STATE_FOR_EACH(heur->ops[i].pre, j, var, val){
             id = valToId(&heur->vid, var, val);
@@ -312,7 +312,7 @@ static void precondInit(plan_heur_relax_t *heur)
                                                 heur->precond_size[id]);
             heur->precond[id][heur->precond_size[id] - 1] = i;
 
-            heur->op_unsat[i] += 1;
+            heur->init_op_unsat[i] += 1;
         }
     }
 
@@ -332,8 +332,8 @@ static void precondFree(plan_heur_relax_t *heur)
     }
     BOR_FREE(heur->precond);
     BOR_FREE(heur->precond_size);
-    BOR_FREE(heur->op_unsat);
-    BOR_FREE(heur->op_value);
+    BOR_FREE(heur->init_op_unsat);
+    BOR_FREE(heur->init_op_value);
     if (heur->facts)
         BOR_FREE(heur->facts);
     BOR_FREE(heur->ctx.op_value);
@@ -353,8 +353,8 @@ static void ctxInit(plan_heur_relax_t *heur)
         heur->ctx.op_unsat[i] = heur->ops[i].pre->vals_size;
     }
     */
-    memcpy(heur->ctx.op_unsat, heur->op_unsat, sizeof(int) * heur->ops_size);
-    memcpy(heur->ctx.op_value, heur->op_value, sizeof(plan_cost_t) * heur->ops_size);
+    memcpy(heur->ctx.op_unsat, heur->init_op_unsat, sizeof(int) * heur->ops_size);
+    memcpy(heur->ctx.op_value, heur->init_op_value, sizeof(plan_cost_t) * heur->ops_size);
     for (i = 0; i < heur->facts_size; ++i){
         fact = heur->facts + i;
         fact->value = -1;

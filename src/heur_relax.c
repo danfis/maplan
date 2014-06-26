@@ -108,6 +108,7 @@ typedef struct _fact_t fact_t;
 struct _op_t {
     int unsat;         /*!< Number of unsatisfied preconditions */
     plan_cost_t value; /*!< Value assigned to the operator */
+    plan_cost_t cost;  /*!< Cost of the operator */
 };
 typedef struct _op_t op_t;
 
@@ -159,16 +160,16 @@ struct _plan_heur_relax_t {
     eff_t *eff;         /*!< Unrolled effects of operators. Size of this
                              array equals to .ops_size */
 
-    fact_t *fact_init;
-    fact_t *fact;
-    int fact_size;
+    fact_t *fact_init;  /*!< Initialization values for facts */
+    fact_t *fact;       /*!< List of facts */
+    int fact_size;      /*!< Number of the facts */
 
-    op_t *op_init;
-    op_t *op;
-    int op_size;
+    op_t *op_init;      /*!< Initialization values for operators */
+    op_t *op;           /*!< List of operators */
+    int op_size;        /*!< Number of operators */
 
-    int goal_unsat_init;
-    int goal_unsat;
+    int goal_unsat_init; /*!< Number of unsatisfied goal variables */
+    int goal_unsat;     /*!< Counter of unsatisfied goals */
 
     bheap_t bheap;
 };
@@ -329,6 +330,7 @@ static void precondInit(plan_heur_relax_t *heur)
     for (i = 0; i < heur->ops_size; ++i){
         heur->op_init[i].unsat = 0;
         heur->op_init[i].value = heur->ops[i].cost;
+        heur->op_init[i].cost  = heur->ops[i].cost;
 
         PLAN_PART_STATE_FOR_EACH(heur->ops[i].pre, j, var, val){
             id = valToId(&heur->vid, var, val);
@@ -403,13 +405,8 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
     // insert all facts from the initial state into priority queue
     for (i = 0; i < heur->var_size; ++i){
         id = valToId(&heur->vid, i, planStateGet(state, i));
-        //heur->facts[id].id = id;
         heur->fact[id].value = 0;
         bheapPush(&heur->bheap, heur->fact[id].value, id);
-        /*
-        borBucketHeapAdd(heur->ctx.heap, heur->facts[id].value,
-                         &heur->facts[id].heap);
-        */
         heur->fact[id].reached_by_op = -1;
     }
 }
@@ -449,7 +446,7 @@ static void ctxProcessOp(plan_heur_relax_t *heur, int op_id, fact_t *fact)
 {
     // update operator value
     heur->op[op_id].value = relaxHeurOpValue(heur->type,
-                                             heur->ops[op_id].cost,
+                                             heur->op[op_id].cost,
                                              heur->op[op_id].value,
                                              fact->value);
 

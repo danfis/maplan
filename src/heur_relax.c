@@ -126,9 +126,10 @@ struct _plan_heur_relax_t {
 
     val_to_id_t vid;
 
-    int **op_fact_id;
     int **precond;     /*!< Operator IDs indexed by precondition ID */
     int *precond_size; /*!< Size of each subarray */
+    int **eff;
+    int *eff_size;
 
     fact_t *fact_init;
     fact_t *fact;
@@ -256,12 +257,15 @@ static void valueIdInit(plan_heur_relax_t *heur)
     plan_var_id_t var;
     plan_val_t val;
 
-    heur->op_fact_id = BOR_ALLOC_ARR(int *, heur->ops_size);
+    heur->eff = BOR_ALLOC_ARR(int *, heur->ops_size);
+    heur->eff_size = BOR_ALLOC_ARR(int, heur->ops_size);
     for (i = 0; i < heur->ops_size; ++i){
-        heur->op_fact_id[i] = BOR_ALLOC_ARR(int,
+        heur->eff[i] = BOR_ALLOC_ARR(int,
                 heur->ops[i].eff->vals_size);
+        heur->eff_size[i] = 0;
         PLAN_PART_STATE_FOR_EACH(heur->ops[i].eff, j, var, val){
-            heur->op_fact_id[i][j] = valToId(&heur->vid, var, val);
+            heur->eff[i][j] = valToId(&heur->vid, var, val);
+            ++heur->eff_size[i];
         }
     }
 }
@@ -271,8 +275,9 @@ static void valueIdFree(plan_heur_relax_t *heur)
     int i;
 
     for (i = 0; i < heur->ops_size; ++i)
-        BOR_FREE(heur->op_fact_id[i]);
-    BOR_FREE(heur->op_fact_id);
+        BOR_FREE(heur->eff[i]);
+    BOR_FREE(heur->eff);
+    BOR_FREE(heur->eff_size);
 }
 
 static void precondInit(plan_heur_relax_t *heur)
@@ -388,14 +393,13 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
 
 static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
 {
-    const plan_operator_t *op = heur->ops + op_id;
     int i, id;
     fact_t *fact;
     int *eff_facts, eff_facts_len;
     int op_value = heur->op[op_id].value;
 
-    eff_facts = heur->op_fact_id[op_id];
-    eff_facts_len = op->eff->vals_size;
+    eff_facts = heur->eff[op_id];
+    eff_facts_len = heur->eff_size[op_id];
     for (i = 0; i < eff_facts_len; ++i){
         id = eff_facts[i];
         fact = heur->fact + id;

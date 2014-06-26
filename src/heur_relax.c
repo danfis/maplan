@@ -2,88 +2,7 @@
 #include <boruvka/list.h>
 #include <boruvka/bucketheap.h>
 #include "plan/heur.h"
-
-struct _bucket_t {
-    int *value;
-    int size;
-    int alloc;
-};
-typedef struct _bucket_t bucket_t;
-
-struct _bheap_t {
-    bucket_t *bucket;
-    int bucket_size;
-    int lowest_key;
-    int size;
-};
-typedef struct _bheap_t bheap_t;
-
-void bheapInit(bheap_t *h)
-{
-    h->bucket_size = 1024;
-    h->bucket = BOR_ALLOC_ARR(bucket_t, h->bucket_size);
-    bzero(h->bucket, sizeof(bucket_t) * h->bucket_size);
-    h->lowest_key = 1025;
-    h->size = 0;
-}
-
-void bheapFree(bheap_t *h)
-{
-    int i;
-
-    for (i = 0; i < h->bucket_size; ++i){
-        if (h->bucket[i].value)
-            BOR_FREE(h->bucket[i].value);
-    }
-    BOR_FREE(h->bucket);
-}
-
-void bheapPush(bheap_t *h, int key, int value)
-{
-    bucket_t *bucket;
-
-    if (key > 1024){
-        fprintf(stderr, "EPIC FAIL: :)\n");
-        exit(-1);
-    }
-
-    bucket = h->bucket + key;
-    if (bucket->value == NULL){
-        bucket->alloc = 64;
-        bucket->value = BOR_ALLOC_ARR(int, bucket->alloc);
-    }else if (bucket->size + 1 > bucket->alloc){
-        bucket->alloc *= 2;
-        bucket->value = BOR_REALLOC_ARR(bucket->value,
-                                        int, bucket->alloc);
-    }
-    bucket->value[bucket->size++] = value;
-    ++h->size;
-
-    if (key < h->lowest_key)
-        h->lowest_key = key;
-}
-
-int bheapPop(bheap_t *h, int *key)
-{
-    bucket_t *bucket;
-    int val;
-
-    bucket = h->bucket + h->lowest_key;
-    while (bucket->size == 0){
-        ++h->lowest_key;
-        bucket += 1;
-    }
-
-    val = bucket->value[--bucket->size];
-    *key = h->lowest_key;
-    --h->size;
-    return val;
-}
-
-int bheapEmpty(bheap_t *h)
-{
-    return h->size == 0;
-}
+#include "plan/prioqueue.h"
 
 #define TYPE_ADD 0
 #define TYPE_MAX 1
@@ -168,7 +87,7 @@ struct _plan_heur_relax_t {
     int goal_unsat;      /*!< Counter of unsatisfied goals */
     eff_t goal;          /*!< Copied goal in terms of fact ID */
 
-    bheap_t bheap;
+    plan_bucket_queue_t queue;
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
@@ -497,16 +416,13 @@ static void ctxInit(plan_heur_relax_t *heur)
 {
     memcpy(heur->op, heur->op_init, sizeof(op_t) * heur->op_size);
     memcpy(heur->fact, heur->fact_init, sizeof(fact_t) * heur->fact_size);
-
-    bheapInit(&heur->bheap);
-
     heur->goal_unsat = heur->goal_unsat_init;
+    planBucketQueueInit(&heur->queue);
 }
 
 static void ctxFree(plan_heur_relax_t *heur)
 {
-    //borBucketHeapDel(heur->ctx.heap);
-    bheapFree(&heur->bheap);
+    planBucketQueueFree(&heur->queue);
 }
 
 static void ctxAddInitState(plan_heur_relax_t *heur,
@@ -519,7 +435,7 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
     for (i = 0; i < len; ++i){
         id = valToId(&heur->vid, i, planStateGet(state, i));
         heur->fact[id].value = 0;
-        bheapPush(&heur->bheap, heur->fact[id].value, id);
+        planBucketQueuePush(&heur->queue, heur->fact[id].value, id);
         heur->fact[id].reached_by_op = -1;
     }
 }
@@ -540,7 +456,7 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
         if (fact->value == -1 || fact->value > op_value){
             fact->value = op_value;
             fact->reached_by_op = op_id;
-            bheapPush(&heur->bheap, fact->value, id);
+            planBucketQueuePush(&heur->queue, fact->value, id);
         }
     }
 }
@@ -577,8 +493,8 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
     int i, size, *precond, id;
     plan_cost_t value;
 
-    while (!bheapEmpty(&heur->bheap)){
-        id = bheapPop(&heur->bheap, &value);
+    while (!planBucketQueueEmpty(&heur->queue)){
+        id = planBucketQueuePop(&heur->queue, &value);
         fact = heur->fact + id;
         if (fact->value != value)
             continue;

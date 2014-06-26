@@ -146,10 +146,6 @@ struct _plan_heur_relax_t {
     plan_heur_t heur;
     int type;
 
-    const plan_var_t *var;
-    int var_size;
-    const plan_part_state_t *goal;
-
     val_to_id_t vid;
 
     precond_t *precond; /*!< Operators for which the corresponding fact is
@@ -169,7 +165,8 @@ struct _plan_heur_relax_t {
     int op_size;        /*!< Number of operators */
 
     int goal_unsat_init; /*!< Number of unsatisfied goal variables */
-    int goal_unsat;     /*!< Counter of unsatisfied goals */
+    int goal_unsat;      /*!< Counter of unsatisfied goals */
+    eff_t goal;          /*!< Copied goal in terms of fact ID */
 
     bheap_t bheap;
 };
@@ -186,6 +183,10 @@ _bor_inline int valToId(val_to_id_t *vid, plan_var_id_t var, plan_val_t val);
 /** Returns number of fact IDs */
 _bor_inline int valToIdSize(val_to_id_t *vid);
 
+/** Initializes and frees .goal structure */
+static void goalInit(plan_heur_relax_t *heur,
+                     const plan_part_state_t *goal);
+static void goalFree(plan_heur_relax_t *heur);
 /** Initializes and frees .fact* structures */
 static void factInit(plan_heur_relax_t *heur,
                      const plan_part_state_t *goal);
@@ -234,12 +235,10 @@ static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
     planHeurInit(&heur->heur,
                  planHeurRelaxDel,
                  planHeurRelax);
-    heur->var      = prob->var;
-    heur->var_size = prob->var_size;
-    heur->goal     = prob->goal;
-    heur->type     = type;
+    heur->type = type;
 
-    valToIdInit(&heur->vid, heur->var, heur->var_size);
+    valToIdInit(&heur->vid, prob->var, prob->var_size);
+    goalInit(heur, prob->goal);
     factInit(heur, prob->goal);
     opInit(heur, prob->op, prob->op_size);
     precondInit(heur, prob->op, prob->op_size);
@@ -271,6 +270,7 @@ static void planHeurRelaxDel(void *_heur)
     precondFree(heur);
     opFree(heur);
     factFree(heur);
+    goalFree(heur);
     valToIdFree(&heur->vid);
 
     planHeurFree(&heur->heur);
@@ -293,6 +293,26 @@ static plan_cost_t planHeurRelax(void *_heur, const plan_state_t *state)
 }
 
 
+static void goalInit(plan_heur_relax_t *heur,
+                     const plan_part_state_t *goal)
+{
+    int i, id;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    heur->goal.size = goal->vals_size;
+    heur->goal.fact = BOR_ALLOC_ARR(int, heur->goal.size);
+    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
+        id = valToId(&heur->vid, var, val);
+        heur->goal.fact[i] = id;
+    }
+}
+
+static void goalFree(plan_heur_relax_t *heur)
+{
+    if (heur->goal.fact)
+        BOR_FREE(heur->goal.fact);
+}
 
 static void factInit(plan_heur_relax_t *heur,
                      const plan_part_state_t *goal)
@@ -447,10 +467,11 @@ static void ctxFree(plan_heur_relax_t *heur)
 static void ctxAddInitState(plan_heur_relax_t *heur,
                             const plan_state_t *state)
 {
-    int i, id;
+    int i, id, len;
 
     // insert all facts from the initial state into priority queue
-    for (i = 0; i < heur->var_size; ++i){
+    len = planStateSize(state);
+    for (i = 0; i < len; ++i){
         id = valToId(&heur->vid, i, planStateGet(state, i));
         heur->fact[id].value = 0;
         bheapPush(&heur->bheap, heur->fact[id].value, id);
@@ -549,12 +570,10 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur)
 {
     int i, id;
     plan_cost_t h;
-    plan_var_id_t var;
-    plan_val_t val;
 
     h = PLAN_COST_ZERO;
-    PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
-        id = valToId(&heur->vid, var, val);
+    for (i = 0; i < heur->goal.size; ++i){
+        id = heur->goal.fact[i];
         h = relaxHeurValue(heur->type, h, heur->fact[id].value);
     }
 
@@ -589,13 +608,11 @@ static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur)
     int *relaxed_plan;
     int i, id;
     plan_cost_t h = PLAN_COST_ZERO;
-    plan_var_id_t var;
-    plan_val_t val;
 
     relaxed_plan = BOR_CALLOC_ARR(int, heur->op_size);
 
-    PLAN_PART_STATE_FOR_EACH(heur->goal, i, var, val){
-        id = valToId(&heur->vid, var, val);
+    for (i = 0; i < heur->goal.size; ++i){
+        id = heur->goal.fact[i];
         markRelaxedPlan(heur, relaxed_plan, id);
     }
 

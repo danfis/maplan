@@ -123,8 +123,7 @@ static void opPrecondInit(plan_heur_relax_t *heur,
                           const plan_operator_t *ops, int ops_size);
 static void opPrecondFree(plan_heur_relax_t *heur);
 /** Initializes and frees .precond structures */
-static void precondInit(plan_heur_relax_t *heur,
-                        const plan_operator_t *ops, int ops_size);
+static void precondInit(plan_heur_relax_t *heur);
 static void precondFree(plan_heur_relax_t *heur);
 
 
@@ -164,9 +163,9 @@ static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
     goalInit(heur, prob->goal);
     factInit(heur, prob->goal);
     opInit(heur, prob->op, prob->op_size);
-    precondInit(heur, prob->op, prob->op_size);
     opPrecondInit(heur, prob->op, prob->op_size);
     effInit(heur, prob->op, prob->op_size);
+    precondInit(heur);
 
     return &heur->heur;
 }
@@ -190,9 +189,9 @@ plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob)
 static void planHeurRelaxDel(void *_heur)
 {
     plan_heur_relax_t *heur = _heur;
+    precondFree(heur);
     effFree(heur);
     opPrecondFree(heur);
-    precondFree(heur);
     opFree(heur);
     factFree(heur);
     goalFree(heur);
@@ -341,38 +340,6 @@ static void opFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->op);
 }
 
-static void precondInit(plan_heur_relax_t *heur,
-                        const plan_operator_t *ops, int ops_size)
-{
-    int i, j, id, size;
-    plan_var_id_t var;
-    plan_val_t val;
-
-    // prepare precond array
-    size = valToIdSize(&heur->vid);
-    heur->precond = BOR_CALLOC_ARR(precond_t, size);
-
-    // create mapping between precondition (fact) and operator
-    for (i = 0; i < ops_size; ++i){
-        PLAN_PART_STATE_FOR_EACH(ops[i].pre, j, var, val){
-            id = valToId(&heur->vid, var, val);
-            ++heur->precond[id].size;
-            heur->precond[id].op = BOR_REALLOC_ARR(heur->precond[id].op, int,
-                                                   heur->precond[id].size);
-            heur->precond[id].op[heur->precond[id].size - 1] = i;
-        }
-    }
-}
-
-static void precondFree(plan_heur_relax_t *heur)
-{
-    int i;
-
-    for (i = 0; i < heur->fact_size; ++i)
-        BOR_FREE(heur->precond[i].op);
-    BOR_FREE(heur->precond);
-}
-
 static void effInit(plan_heur_relax_t *heur,
                     const plan_operator_t *ops, int ops_size)
 {
@@ -426,6 +393,36 @@ static void opPrecondFree(plan_heur_relax_t *heur)
     for (i = 0; i < heur->op_size; ++i)
         BOR_FREE(heur->op_precond[i].fact);
     BOR_FREE(heur->op_precond);
+}
+
+static void precondInit(plan_heur_relax_t *heur)
+{
+    int i, opi, fact_id;
+    eff_t *pre, *pre_end;
+    precond_t *precond;
+
+    heur->precond = BOR_CALLOC_ARR(precond_t, valToIdSize(&heur->vid));
+
+    pre_end = heur->op_precond + heur->op_size;
+    for (pre = heur->op_precond, opi = 0; pre < pre_end; ++pre, ++opi){
+        for (i = 0; i < pre->size; ++i){
+            fact_id = pre->fact[i];
+            precond = heur->precond + fact_id;
+
+            ++precond->size;
+            precond->op = BOR_REALLOC_ARR(precond->op, int, precond->size);
+            precond->op[precond->size - 1] = opi;
+        }
+    }
+}
+
+static void precondFree(plan_heur_relax_t *heur)
+{
+    int i;
+
+    for (i = 0; i < heur->fact_size; ++i)
+        BOR_FREE(heur->precond[i].op);
+    BOR_FREE(heur->precond);
 }
 
 

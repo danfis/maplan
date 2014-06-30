@@ -19,11 +19,16 @@ SEARCH = (
     ['-s', 'lazy', '-l', 'bucket', '-H', 'add'],
     ['-s', 'lazy', '-l', 'bucket', '-H', 'max'],
     ['-s', 'lazy', '-l', 'bucket', '-H', 'ff'],
-    ['-s', 'lazy', '-l', 'map', '-H', 'goalcount'],
 
-    ['-s', 'lazy', '-l', 'map', '-H', 'add'],
-    ['-s', 'lazy', '-l', 'map', '-H', 'max'],
-    ['-s', 'lazy', '-l', 'map', '-H', 'ff'],
+    ['-s', 'lazy', '-l', 'rbtree', '-H', 'goalcount'],
+    ['-s', 'lazy', '-l', 'rbtree', '-H', 'add'],
+    ['-s', 'lazy', '-l', 'rbtree', '-H', 'max'],
+    ['-s', 'lazy', '-l', 'rbtree', '-H', 'ff'],
+
+    ['-s', 'lazy', '-l', 'splaytree', '-H', 'goalcount'],
+    ['-s', 'lazy', '-l', 'splaytree', '-H', 'add'],
+    ['-s', 'lazy', '-l', 'splaytree', '-H', 'max'],
+    ['-s', 'lazy', '-l', 'splaytree', '-H', 'ff'],
 )
 
 META_DIR = '/storage/praha1/home/danfis/libplan-output/'

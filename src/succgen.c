@@ -368,7 +368,7 @@ static int treeFind(const plan_succ_gen_tree_t *tree,
         val = planStateGet(state, tree->var);
 
         // and use tree corresponding to the value if present
-        if (val < tree->val_size && tree->val[val]){
+        if (val != PLAN_VAL_UNDEFINED && val < tree->val_size && tree->val[val]){
             size = BOR_MAX(0, (int)op_size - (int)found);
             found += treeFind(tree->val[val], state, op + found, size);
         }

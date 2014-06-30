@@ -71,9 +71,9 @@ struct _plan_heur_relax_t {
                              precondition -- the size of this array equals
                              to .fact_size */
     eff_t *eff;         /*!< Unrolled effects of operators. Size of this
-                             array equals to .ops_size */
-    eff_t *op_precond;  /*!< Precondition facts of operaots. Size of this
-                             array is .ops_size */
+                             array equals to .op_size */
+    eff_t *op_precond;  /*!< Precondition facts of operators. Size of this
+                             array is .op_size */
 
     fact_t *fact_init;  /*!< Initialization values for facts */
     fact_t *fact;       /*!< List of facts */
@@ -114,14 +114,25 @@ static void factFree(plan_heur_relax_t *heur);
 static void opInit(plan_heur_relax_t *heur,
                    const plan_operator_t *ops, int ops_size);
 static void opFree(plan_heur_relax_t *heur);
-/** Initializes and frees .precond structures */
-static void precondInit(plan_heur_relax_t *heur,
-                        const plan_operator_t *ops, int ops_size);
-static void precondFree(plan_heur_relax_t *heur);
 /** Initializes and frees .eff* structures */
 static void effInit(plan_heur_relax_t *heur,
                     const plan_operator_t *ops, int ops_size);
 static void effFree(plan_heur_relax_t *heur);
+/** Initializes and frees .precond structures */
+static void opPrecondInit(plan_heur_relax_t *heur,
+                          const plan_operator_t *ops, int ops_size);
+static void opPrecondFree(plan_heur_relax_t *heur);
+/** Removes fact id from specified position */
+static void effRemoveId(eff_t *eff, int pos);
+/** Remove same effects where its cost is higher */
+static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
+                              plan_cost_t ref_cost, plan_cost_t op_cost);
+/** Simplifies internal representation of operators so that there are no
+ *  two operators applicable in the same time with the same effect. */
+static void opSimplify(plan_heur_relax_t *heur, const plan_problem_t *prob);
+/** Initializes and frees .precond structures */
+static void precondInit(plan_heur_relax_t *heur);
+static void precondFree(plan_heur_relax_t *heur);
 
 
 /** Initializes main structure for computing relaxed solution. */
@@ -160,8 +171,10 @@ static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
     goalInit(heur, prob->goal);
     factInit(heur, prob->goal);
     opInit(heur, prob->op, prob->op_size);
-    precondInit(heur, prob->op, prob->op_size);
+    opPrecondInit(heur, prob->op, prob->op_size);
     effInit(heur, prob->op, prob->op_size);
+    opSimplify(heur, prob);
+    precondInit(heur);
 
     return &heur->heur;
 }
@@ -185,8 +198,9 @@ plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob)
 static void planHeurRelaxDel(void *_heur)
 {
     plan_heur_relax_t *heur = _heur;
-    effFree(heur);
     precondFree(heur);
+    effFree(heur);
+    opPrecondFree(heur);
     opFree(heur);
     factFree(heur);
     goalFree(heur);
@@ -335,50 +349,6 @@ static void opFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->op);
 }
 
-static void precondInit(plan_heur_relax_t *heur,
-                        const plan_operator_t *ops, int ops_size)
-{
-    int i, j, id, size;
-    plan_var_id_t var;
-    plan_val_t val;
-
-    // prepare precond array
-    size = valToIdSize(&heur->vid);
-    heur->precond = BOR_CALLOC_ARR(precond_t, size);
-
-    // prepare op_precond array
-    heur->op_precond = BOR_ALLOC_ARR(eff_t, ops_size);
-
-    // create mapping between precondition (fact) and operator
-    for (i = 0; i < ops_size; ++i){
-        heur->op_precond[i].size = ops[i].pre->vals_size;
-        heur->op_precond[i].fact = BOR_ALLOC_ARR(int, heur->op_precond[i].size);
-
-        PLAN_PART_STATE_FOR_EACH(ops[i].pre, j, var, val){
-            id = valToId(&heur->vid, var, val);
-            ++heur->precond[id].size;
-            heur->precond[id].op = BOR_REALLOC_ARR(heur->precond[id].op, int,
-                                                   heur->precond[id].size);
-            heur->precond[id].op[heur->precond[id].size - 1] = i;
-
-            heur->op_precond[i].fact[j] = id;
-        }
-    }
-}
-
-static void precondFree(plan_heur_relax_t *heur)
-{
-    int i;
-
-    for (i = 0; i < heur->fact_size; ++i)
-        BOR_FREE(heur->precond[i].op);
-    BOR_FREE(heur->precond);
-
-    for (i = 0; i < heur->op_size; ++i)
-        BOR_FREE(heur->op_precond[i].fact);
-    BOR_FREE(heur->op_precond);
-}
-
 static void effInit(plan_heur_relax_t *heur,
                     const plan_operator_t *ops, int ops_size)
 {
@@ -406,6 +376,152 @@ static void effFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->eff);
 }
 
+static void opPrecondInit(plan_heur_relax_t *heur,
+                          const plan_operator_t *ops, int ops_size)
+{
+    int i, j, id;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    heur->op_precond = BOR_ALLOC_ARR(eff_t, ops_size);
+    for (i = 0; i < ops_size; ++i){
+        heur->op_precond[i].size = ops[i].pre->vals_size;
+        heur->op_precond[i].fact = BOR_ALLOC_ARR(int, heur->op_precond[i].size);
+
+        PLAN_PART_STATE_FOR_EACH(ops[i].pre, j, var, val){
+            id = valToId(&heur->vid, var, val);
+            heur->op_precond[i].fact[j] = id;
+        }
+    }
+}
+
+static void opPrecondFree(plan_heur_relax_t *heur)
+{
+    int i;
+
+    for (i = 0; i < heur->op_size; ++i)
+        BOR_FREE(heur->op_precond[i].fact);
+    BOR_FREE(heur->op_precond);
+}
+
+static void effRemoveId(eff_t *eff, int pos)
+{
+    int i;
+    for (i = pos + 1; i < eff->size; ++i)
+        eff->fact[i - 1] = eff->fact[i];
+    --eff->size;
+}
+
+static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
+                              plan_cost_t ref_cost, plan_cost_t op_cost)
+{
+    int ref_i, op_i;
+    int ref_id, op_id;
+
+    // We assume both .fact[] array are sorted in ascending order and the
+    // arrays are kept this way.
+    for (ref_i = 0, op_i = 0; ref_i < ref_eff->size && op_i < op_eff->size;){
+        ref_id = ref_eff->fact[ref_i];
+        op_id  = op_eff->fact[op_i];
+
+        if (ref_id == op_id){
+            // Both operators have same effect -- remove the one with
+            // higher cost and keep the array of facts in ascending order
+            if (op_cost <= ref_cost){
+                effRemoveId(ref_eff, ref_i);
+                ++op_i;
+            }else{
+                effRemoveId(op_eff, op_i);
+                ++ref_i;
+            }
+
+        }else if (ref_id < op_id){
+            ++ref_i;
+
+        }else{
+            ++op_i;
+        }
+    }
+}
+
+static void opSimplify(plan_heur_relax_t *heur, const plan_problem_t *prob)
+{
+    int i, ref_i, op_i;
+    plan_operator_t *ref_op; // reference operator
+    plan_operator_t **ops;   // list of operators applicable in ref_op->pre
+    int ops_size;            // number of applicable operators
+    plan_state_t *state;     // pre-allocated state
+
+    // Allocate array for applicable operators
+    ops = BOR_ALLOC_ARR(plan_operator_t *, heur->op_size);
+    // Pre-allocate state
+    state = planStateNew(prob->state_pool);
+
+    for (ref_i = 0; ref_i < heur->op_size; ++ref_i){
+        ref_op = prob->op + ref_i;
+
+        // skip operators with no effects
+        if (heur->eff[ref_i].size == 0)
+            continue;
+
+        // convert preconditions of reference operator to a state
+        planPartStateToState(ref_op->pre, state);
+
+        // get all applicable operators
+        ops_size = planSuccGenFind(prob->succ_gen, state, ops, heur->op_size);
+
+        for (i = 0; i < ops_size; ++i){
+            // don't compare two identical operators
+            if (ref_op == ops[i])
+                continue;
+
+            // compute id of the operator
+            op_i = ((unsigned long)ops[i] - (unsigned long)prob->op)
+                        / sizeof(plan_operator_t);
+
+            // simplify effects, if possible delete in reference operator
+            opSimplifyEffects(heur->eff + ref_i, heur->eff + op_i,
+                              ref_op->cost, ops[i]->cost);
+        }
+    }
+
+    // Free allocated resources
+    planStateDel(prob->state_pool, state);
+    BOR_FREE(ops);
+}
+
+static void precondInit(plan_heur_relax_t *heur)
+{
+    int i, opi, fact_id;
+    eff_t *pre, *pre_end;
+    precond_t *precond;
+
+    heur->precond = BOR_CALLOC_ARR(precond_t, valToIdSize(&heur->vid));
+
+    pre_end = heur->op_precond + heur->op_size;
+    for (pre = heur->op_precond, opi = 0; pre < pre_end; ++pre, ++opi){
+        if (heur->eff[opi].size == 0)
+            continue;
+
+        for (i = 0; i < pre->size; ++i){
+            fact_id = pre->fact[i];
+            precond = heur->precond + fact_id;
+
+            ++precond->size;
+            precond->op = BOR_REALLOC_ARR(precond->op, int, precond->size);
+            precond->op[precond->size - 1] = opi;
+        }
+    }
+}
+
+static void precondFree(plan_heur_relax_t *heur)
+{
+    int i;
+
+    for (i = 0; i < heur->fact_size; ++i)
+        BOR_FREE(heur->precond[i].op);
+    BOR_FREE(heur->precond);
+}
 
 
 

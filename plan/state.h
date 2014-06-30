@@ -255,6 +255,14 @@ _bor_inline int planPartStateIsSet(const plan_part_state_t *state,
                                    plan_var_id_t var);
 
 /**
+ * Converts partial state to a state.
+ * All non-set value of partial state will be set to PLAN_VAL_UNDEFINED in
+ * the full state.
+ */
+void planPartStateToState(const plan_part_state_t *part_state,
+                          plan_state_t *state);
+
+/**
  * Macro for iterating over "unrolled" set values of partial state.
  */
 #define PLAN_PART_STATE_FOR_EACH(part_state, tmpi, var, val) \

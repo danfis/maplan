@@ -597,6 +597,19 @@ void planPartStateSet(plan_state_pool_t *pool,
     qsort(state->vals, state->vals_size, sizeof(plan_part_state_pair_t), valsCmp);
 }
 
+void planPartStateToState(const plan_part_state_t *part_state,
+                          plan_state_t *state)
+{
+    int i;
+
+    for (i = 0; i < part_state->num_vars; ++i){
+        if (part_state->is_set[i]){
+            planStateSet(state, i, part_state->val[i]);
+        }else{
+            planStateSet(state, i, PLAN_VAL_UNDEFINED);
+        }
+    }
+}
 
 
 

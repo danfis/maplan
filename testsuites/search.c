@@ -25,7 +25,7 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("search", 's', OPTS_STR, &def_search, NULL,
                 "Define search algorithm [ehc|lazy] (default: ehc)");
     optsAddDesc("list", 'l', OPTS_STR, &def_list, NULL,
-                "Define list type [heap|bucket|map] (default: heap)");
+                "Define list type [heap|bucket|rbtree|splaytree] (default: heap)");
     optsAddDesc("heur", 'H', OPTS_STR, &def_heur, NULL,
                 "Define heuristic [goalcount|add|max|ff] (default: goalcount)");
     optsAddDesc("plan-output", 'o', OPTS_STR, &plan_output_fn, NULL,
@@ -131,8 +131,10 @@ int main(int argc, char *argv[])
         list = planListLazyHeapNew();
     }else if (strcmp(def_list, "bucket") == 0){
         list = planListLazyBucketNew();
-    }else if (strcmp(def_list, "map") == 0){
-        list = planListLazyMapNew();
+    }else if (strcmp(def_list, "rbtree") == 0){
+        list = planListLazyRBTreeNew();
+    }else if (strcmp(def_list, "splaytree") == 0){
+        list = planListLazySplayTreeNew();
     }else{
         fprintf(stderr, "Error: Invalid list type\n");
         return -1;

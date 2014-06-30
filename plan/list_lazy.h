@@ -38,9 +38,14 @@ plan_list_lazy_t *planListLazyHeapNew(void);
 plan_list_lazy_t *planListLazyBucketNew(void);
 
 /**
- * Lazy list based on multi-map.
+ * Lazy list based on red-black tree
  */
-plan_list_lazy_t *planListLazyMapNew(void);
+plan_list_lazy_t *planListLazyRBTreeNew(void);
+
+/**
+ * Lazy list based on red-black tree
+ */
+plan_list_lazy_t *planListLazySplayTreeNew(void);
 
 /**
  * Destroys the list.

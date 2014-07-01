@@ -20,8 +20,8 @@ void planSearchStatInit(plan_search_stat_t *stat)
     stat->expanded_states = 0L;
     stat->generated_states = 0L;
     stat->peak_memory = 0L;
-    stat->found_solution = 0;
-    stat->dead_end = 0;
+    stat->found = 0;
+    stat->not_found = 0;
 }
 
 void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat)
@@ -112,7 +112,7 @@ void _planSearchAddLazySuccessors(plan_search_t *search,
 
 void _planSearchReachedDeadEnd(plan_search_t *search)
 {
-    planSearchStatSetDeadEnd(&search->stat);
+    planSearchStatSetNotFound(&search->stat);
 }
 
 int _planSearchNewState(plan_search_t *search,

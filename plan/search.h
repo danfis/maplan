@@ -7,10 +7,34 @@
 #include <plan/list_lazy.h>
 #include <plan/path.h>
 
-#define PLAN_SEARCH_CONT      0
-#define PLAN_SEARCH_FOUND     1
-#define PLAN_SEARCH_DEAD_END -1
-#define PLAN_SEARCH_ABORT    -2
+/** Forward declaration */
+typedef struct _plan_search_t plan_search_t;
+
+/**
+ * Search Algorithms
+ * ==================
+ */
+
+/**
+ * Status that search can (and should) continue. Mostly for internal use.
+ */
+#define PLAN_SEARCH_CONT       0
+
+/**
+ * Status signaling that a solution was found.
+ */
+#define PLAN_SEARCH_FOUND      1
+
+/**
+ * No solution was found.
+ */
+#define PLAN_SEARCH_NOT_FOUND -1
+
+/**
+ * The search process was aborted from outside, e.g., from progress
+ * callback.
+ */
+#define PLAN_SEARCH_ABORT     -2
 
 /**
  * Struct for statistics from search.
@@ -22,8 +46,8 @@ struct _plan_search_stat_t {
     long expanded_states;
     long generated_states;
     long peak_memory;
-    int found_solution;
-    int dead_end;
+    int found;
+    int not_found;
 };
 typedef struct _plan_search_stat_t plan_search_stat_t;
 
@@ -31,17 +55,6 @@ typedef struct _plan_search_stat_t plan_search_stat_t;
  * Initializes stat struct.
  */
 void planSearchStatInit(plan_search_stat_t *stat);
-
-/**
- * Updates .peak_memory value of stat structure.
- */
-void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat);
-
-_bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat);
-_bor_inline void planSearchStatIncExpandedStates(plan_search_stat_t *stat);
-_bor_inline void planSearchStatIncGeneratedStates(plan_search_stat_t *stat);
-_bor_inline void planSearchStatSetFoundSolution(plan_search_stat_t *stat);
-_bor_inline void planSearchStatSetDeadEnd(plan_search_stat_t *stat);
 
 
 /**
@@ -64,10 +77,134 @@ struct _plan_search_params_t {
 };
 typedef struct _plan_search_params_t plan_search_params_t;
 
+
+/**
+ * Enforced Hill Climbing Search Algorithm
+ * ----------------------------------------
+ */
+struct _plan_search_ehc_params_t {
+    plan_search_params_t search; /*!< Common parameters */
+
+    plan_heur_t *heur; /*!< Heuristic function that ought to be used */
+};
+typedef struct _plan_search_ehc_params_t plan_search_ehc_params_t;
+
+/**
+ * Initializes parameters of EHC algorithm.
+ */
+void planSearchEHCParamsInit(plan_search_ehc_params_t *p);
+
+/**
+ * Creates a new instance of the Enforced Hill Climbing search algorithm.
+ */
+plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params);
+
+
+
+/**
+ * Lazy Best First Search Algorithm
+ * ---------------------------------
+ */
+struct _plan_search_lazy_params_t {
+    plan_search_params_t search; /*!< Common parameters */
+
+    plan_heur_t *heur;      /*!< Heuristic function that ought to be used */
+    plan_list_lazy_t *list; /*!< Lazy list that will be used. */
+};
+typedef struct _plan_search_lazy_params_t plan_search_lazy_params_t;
+
+/**
+ * Initializes parameters of Lazy algorithm.
+ */
+void planSearchLazyParamsInit(plan_search_lazy_params_t *p);
+
+/**
+ * Creates a new instance of the Lazy Best First Search algorithm.
+ */
+plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params);
+
+
+
+/**
+ * Common Functions
+ * -----------------
+ */
+
+/**
+ * Deletes search object.
+ */
+void planSearchDel(plan_search_t *search);
+
+/**
+ * Searches for the path from the initial state to the goal as defined via
+ * parameters.
+ * Returns PLAN_SEARCH_FOUND if the solution was found and in this case the
+ * path is returned via path argument.
+ * If the plan was not found, PLAN_SEARCH_NOT_FOUND is returned.
+ * If the search progress was aborted by the "progess" callback,
+ * PLAN_SEARCH_ABORT is returned.
+ */
+int planSearchRun(plan_search_t *search, plan_path_t *path);
+
+
+
+
+/**
+ * Internals
+ * ----------
+ */
+
+/**
+ * Initializes common parameters.
+ * This should be called from all *ParamsInit() functions of particular
+ * algorithms.
+ */
 void planSearchParamsInit(plan_search_params_t *params);
 
+/**
+ * Updates .peak_memory value of stat structure.
+ */
+void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat);
+
+/**
+ * Increments number of evaluated states by one.
+ */
+_bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat);
+
+/**
+ * Increments number of expanded states by one.
+ */
+_bor_inline void planSearchStatIncExpandedStates(plan_search_stat_t *stat);
+
+/**
+ * Increments number of generated states by one.
+ */
+_bor_inline void planSearchStatIncGeneratedStates(plan_search_stat_t *stat);
+
+/**
+ * Set "found" flag which means that solution was found.
+ */
+_bor_inline void planSearchStatSetFoundSolution(plan_search_stat_t *stat);
+
+/**
+ * Sets "not_found" flag meaning no solution was found.
+ */
+_bor_inline void planSearchStatSetNotFound(plan_search_stat_t *stat);
+
+
+/**
+ * Algorithm's method that frees all resources.
+ */
 typedef void (*plan_search_del_fn)(void *);
+
+/**
+ * Initialize algorithm -- first step of algorithm.
+ */
 typedef int (*plan_search_init_fn)(void *);
+
+/**
+ * Perform one step of algorithm.
+ */
 typedef int (*plan_search_step_fn)(void *);
 
 /**
@@ -87,23 +224,6 @@ struct _plan_search_t {
                                           operators. */
     plan_state_id_t goal_state;      /*!< The found state satisfying the goal */
 };
-typedef struct _plan_search_t plan_search_t;
-
-/**
- * Deletes search object.
- */
-void planSearchDel(plan_search_t *search);
-
-/**
- * Searches for the path from the initial state to the goal as defined via
- * parameters.
- * Returns PLAN_SEARCH_FOUND if the solution was found and in this case the
- * path is returned via path argument.
- * If the plan was not found, PLAN_SEARCH_DEAD_END is returned.
- * If the search progress was aborted by the "progess" callback,
- * PLAN_SEARCH_ABORT is returned.
- */
-int planSearchRun(plan_search_t *search, plan_path_t *path);
 
 
 
@@ -187,12 +307,12 @@ _bor_inline void planSearchStatIncGeneratedStates(plan_search_stat_t *stat)
 
 _bor_inline void planSearchStatSetFoundSolution(plan_search_stat_t *stat)
 {
-    stat->found_solution = 1;
+    stat->found = 1;
 }
 
-_bor_inline void planSearchStatSetDeadEnd(plan_search_stat_t *stat)
+_bor_inline void planSearchStatSetNotFound(plan_search_stat_t *stat)
 {
-    stat->dead_end = 1;
+    stat->not_found = 1;
 }
 
 #endif /* __PLAN_SEARCH_H__ */

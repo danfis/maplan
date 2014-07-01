@@ -82,6 +82,9 @@ int planMACommQueueSendToAll(plan_ma_comm_queue_t *comm,
     int i;
 
     for (i = 0; i < comm->pool.node_size; ++i){
+        if (i == comm->node_id)
+            continue;
+
         if (planMACommQueueSendToNode(comm, i, msg) != 0)
             return -1;
     }
@@ -105,6 +108,9 @@ int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
     msg_buf_t buf;
     plan_ma_comm_queue_node_t *node;
 
+    if (node_id == comm->node_id)
+        return -1;
+
     buf.size = plan_multi_agent_msg__get_packed_size(msg);
     buf.buf = BOR_ALLOC_ARR(uint8_t, buf.size);
     plan_multi_agent_msg__pack(msg, buf.buf);
@@ -120,7 +126,7 @@ int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
     pthread_mutex_unlock(&node->lock);
 
     // unblock waiting thread
-    sem_wait(&node->full);
+    sem_post(&node->full);
 
     return 0;
 }
@@ -167,5 +173,6 @@ static PlanMultiAgentMsg *recv(plan_ma_comm_queue_t *comm, int block)
 
     // unpack message and return it
     msg = plan_multi_agent_msg__unpack(NULL, size, packed);
+    BOR_FREE(packed);
     return msg;
 }

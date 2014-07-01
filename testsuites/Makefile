@@ -11,6 +11,7 @@ CFLAGS += -I../../boruvka
 CFLAGS += $(JANSSON_CFLAGS)
 LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -L../../boruvka -lboruvka -pthread
 LDFLAGS += $(JANSSON_LDFLAGS)
+LDFLAGS += $(PROTOBUF_LDFLAGS)
 
 BENCH_CFLAGS = -O3 -pipe -march=corei7
 #BENCH_CFLAGS += -g
@@ -33,6 +34,7 @@ OBJS += search_ehc.o
 OBJS += search_lazy.o
 OBJS += heur.o
 OBJS += list_lazy.o
+OBJS += t_ma_comm_queue.o
 
 all: $(TARGETS)
 
@@ -41,6 +43,8 @@ test: main.c cu $(OBJS)
 search: search.c ../libplan.a
 	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS) -L../../opts -lopts
 
+t_ma_comm_queue.o: t_ma_comm_queue.c
+	$(CC) $(CFLAGS) -I../src -c -o $@ $<
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 %.o: %.c

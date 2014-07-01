@@ -30,6 +30,8 @@ void *thRun(void *_th)
 
     for (i = 0; i < NUM_NODES - 1; ++i){
         msg = planMACommQueueRecvBlock(th->queue);
+        assertNotEquals(msg, NULL);
+
         if (msg){
             assertTrue(planMAMsgIsPublicState(msg));
             planMAMsgGetPublicState(msg, agent_name, 3, state, 10, &cost, &heuristic);

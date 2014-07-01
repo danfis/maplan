@@ -5,7 +5,7 @@
 #include <semaphore.h>
 #include <boruvka/fifo.h>
 
-#include "ma_msg.pb-c.h"
+#include <plan/ma_comm.h>
 
 /** Forward declarations */
 typedef struct _plan_ma_comm_queue_pool_t plan_ma_comm_queue_pool_t;
@@ -54,14 +54,14 @@ plan_ma_comm_queue_t *planMACommQueue(plan_ma_comm_queue_pool_t *pool,
  * Returns 0 on success.
  */
 int planMACommQueueSendToAll(plan_ma_comm_queue_t *comm,
-                             const PlanMultiAgentMsg *msg);
+                             const plan_ma_msg_t *msg);
 
 /**
  * Sends the message to an arbiter.
  * Returns 0 on success.
  */
 int planMACommQueueSendToArbiter(plan_ma_comm_queue_t *comm,
-                                 const PlanMultiAgentMsg *msg);
+                                 const plan_ma_msg_t *msg);
 
 /**
  * Sends the message to the specified node.
@@ -69,18 +69,18 @@ int planMACommQueueSendToArbiter(plan_ma_comm_queue_t *comm,
  */
 int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
                               int node_id,
-                              const PlanMultiAgentMsg *msg);
+                              const plan_ma_msg_t *msg);
 
 /**
  * Receives a next message in non-blocking mode.
  * It is caller's responsibility to destroy the returned message.
  */
-PlanMultiAgentMsg *planMACommQueueRecv(plan_ma_comm_queue_t *comm);
+plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_queue_t *comm);
 
 /**
  * Receives a next message in blocking mode.
  * It is caller's responsibility to destroy the returned message.
  */
-PlanMultiAgentMsg *planMACommQueueRecvBlock(plan_ma_comm_queue_t *comm);
+plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_queue_t *comm);
 
 #endif /* __PLAN_MA_COMM_QUEUE_H__ */

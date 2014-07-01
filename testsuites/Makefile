@@ -12,6 +12,7 @@ CFLAGS += $(JANSSON_CFLAGS)
 LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -L../../boruvka -lboruvka -pthread
 LDFLAGS += $(JANSSON_LDFLAGS)
 LDFLAGS += $(PROTOBUF_LDFLAGS)
+LDFLAGS += -lstdc++
 
 BENCH_CFLAGS = -O3 -pipe -march=corei7
 #BENCH_CFLAGS += -g

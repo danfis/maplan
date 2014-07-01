@@ -1,6 +1,6 @@
 #include <cu/cu.h>
 #include <stdio.h>
-#include "ma_comm_queue.h"
+#include "plan/ma_comm_queue.h"
 
 #define NUM_NODES 3
 
@@ -14,6 +14,7 @@ typedef struct _th_t th_t;
 void *thRun(void *_th)
 {
     th_t *th = _th;
+    /*
     PlanMultiAgentMsg msg = PLAN_MULTI_AGENT_MSG__INIT;
     PlanMultiAgentMsg *msg_in;
     int i;
@@ -27,6 +28,7 @@ void *thRun(void *_th)
             plan_multi_agent_msg__free_unpacked(msg_in, NULL);
         }
     }
+    */
 
     return NULL;
 }

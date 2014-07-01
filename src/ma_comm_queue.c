@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <boruvka/alloc.h>
 
-#include "ma_comm_queue.h"
+#include "plan/ma_comm_queue.h"
 
 struct _msg_buf_t {
     uint8_t *buf;
@@ -11,7 +11,7 @@ struct _msg_buf_t {
 typedef struct _msg_buf_t msg_buf_t;
 
 /** Recieve message in blocking or non-blocking mode */
-static PlanMultiAgentMsg *recv(plan_ma_comm_queue_t *comm, int block);
+static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block);
 
 plan_ma_comm_queue_pool_t *planMACommQueuePoolNew(int num_nodes)
 {
@@ -77,7 +77,7 @@ plan_ma_comm_queue_t *planMACommQueue(plan_ma_comm_queue_pool_t *pool,
 }
 
 int planMACommQueueSendToAll(plan_ma_comm_queue_t *comm,
-                             const PlanMultiAgentMsg *msg)
+                             const plan_ma_msg_t *msg)
 {
     int i;
 
@@ -93,7 +93,7 @@ int planMACommQueueSendToAll(plan_ma_comm_queue_t *comm,
 }
 
 int planMACommQueueSendToArbiter(plan_ma_comm_queue_t *comm,
-                                 const PlanMultiAgentMsg *msg)
+                                 const plan_ma_msg_t *msg)
 {
     if (comm->node_id == 0)
         return -1;
@@ -103,7 +103,7 @@ int planMACommQueueSendToArbiter(plan_ma_comm_queue_t *comm,
 
 int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
                               int node_id,
-                              const PlanMultiAgentMsg *msg)
+                              const plan_ma_msg_t *msg)
 {
     msg_buf_t buf;
     plan_ma_comm_queue_node_t *node;
@@ -111,9 +111,7 @@ int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
     if (node_id == comm->node_id)
         return -1;
 
-    buf.size = plan_multi_agent_msg__get_packed_size(msg);
-    buf.buf = BOR_ALLOC_ARR(uint8_t, buf.size);
-    plan_multi_agent_msg__pack(msg, buf.buf);
+    buf.buf = planMAMsgPacked(msg, &buf.size);
 
     node = comm->pool.node + node_id;
 
@@ -131,24 +129,24 @@ int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
     return 0;
 }
 
-PlanMultiAgentMsg *planMACommQueueRecv(plan_ma_comm_queue_t *comm)
+plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_queue_t *comm)
 {
     return recv(comm, 0);
 }
 
-PlanMultiAgentMsg *planMACommQueueRecvBlock(plan_ma_comm_queue_t *comm)
+plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_queue_t *comm)
 {
     return recv(comm, 1);
 }
 
 
-static PlanMultiAgentMsg *recv(plan_ma_comm_queue_t *comm, int block)
+static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block)
 {
     plan_ma_comm_queue_node_t *node = comm->pool.node + comm->node_id;
     msg_buf_t *buf;
     uint8_t *packed;
     size_t size;
-    PlanMultiAgentMsg *msg;
+    plan_ma_msg_t *msg;
 
     if (block){
         // wait for available messages
@@ -172,7 +170,8 @@ static PlanMultiAgentMsg *recv(plan_ma_comm_queue_t *comm, int block)
     sem_post(&node->empty);
 
     // unpack message and return it
-    msg = plan_multi_agent_msg__unpack(NULL, size, packed);
+    msg = planMAMsgUnpacked(packed, size);
     BOR_FREE(packed);
+
     return msg;
 }

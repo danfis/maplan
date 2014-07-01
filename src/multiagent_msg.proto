@@ -1,0 +1,31 @@
+message MultiAgentMsgPathOperator {
+    required string name = 1;
+    required int32 cost = 2;
+}
+
+message MultiAgentMsg {
+    enum Type {
+        /** Private: */
+        _TERMINATE         = 0x100;
+        _TERMINATE_REQUEST = 0x101;
+        _TERMINATE_ACK     = 0x102;
+
+        TERMINATE       = 0x001;
+        PUBLIC_STATE    = 0x002;
+        TRACE_PATH      = 0x003;
+        TRACE_PATH_DONE = 0x004;
+    }
+
+    required Type type = 1;
+    required string agent_name = 2;
+
+    optional bytes state = 10;
+    optional int32 cost = 11;
+    optional int32 real_cost = 12;
+    optional int32 heuristic = 13;
+
+    optional bytes init_state = 20;
+    repeated MultiAgentMsgPathOperator path = 21;
+    optional bytes path_first_state = 22;
+    optional string trace_path_initiator = 23;
+}

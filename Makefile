@@ -48,6 +48,7 @@ OBJS += heur
 OBJS += heur_goalcount
 OBJS += heur_relax
 OBJS += prioqueue
+OBJS += multiagent_msg.pb-c
 
 BIN_TARGETS =
 
@@ -77,6 +78,9 @@ bin/%.o: bin/%.c bin/%.h
 
 examples/%: examples/%.c libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+
+src/multiagent_msg.pb-c.c: src/multiagent_msg.proto
+	$(PROTOC) --c_out=. $<
 
 .objs/%.pic.o: src/%.c plan/%.h plan/config.h
 	$(CC) -fPIC $(CFLAGS) -c -o $@ $<
@@ -160,6 +164,8 @@ help:
 	@echo "    CONFIG_FLAGS      = $(CONFIG_FLAGS)"
 	@echo "    JANSSON_CFLAGS    = $(JANSSON_CFLAGS)"
 	@echo "    JANSSON_LDFLAGS   = $(JANSSON_LDFLAGS)"
+	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
+	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
 	@echo "    PYTHON_CFLAGS     = $(PYTHON_CFLAGS)"
 	@echo "    PYTHON_LDFLAGS    = $(PYTHON_LDFLAGS)"
 

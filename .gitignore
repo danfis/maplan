@@ -6,3 +6,4 @@
 config.h
 fd-*
 Makefile.local
+src/multiagent_msg.pb-c.*

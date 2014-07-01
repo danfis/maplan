@@ -8,6 +8,7 @@ PYTHON2 ?= python2
 PYTHON3 ?= python3
 CYTHON  ?= cython
 SCAN_BUILD ?= scan-build
+PROTOC ?= protoc-c
 
 PYTHON_CONFIG ?= python-config
 
@@ -83,6 +84,8 @@ LDFLAGS += $(SYSTEM_LDFLAGS)
 
 JANSSON_CFLAGS ?= $(shell pkg-config --cflags jansson)
 JANSSON_LDFLAGS ?= $(shell pkg-config --libs jansson)
+PROTOBUF_CFLAGS ?= $(shell pkg-config --cflags libprotobuf-c)
+PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs libprotobuf-c)
 PYTHON_CFLAGS  ?= $(shell $(PYTHON_CONFIG) --includes)
 PYTHON_LDFLAGS ?= $(shell $(PYTHON_CONFIG) --libs)
 

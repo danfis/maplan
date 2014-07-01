@@ -41,6 +41,7 @@ void planMAMsgSetPublicState(plan_ma_msg_t *_msg,
                              int heuristic)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    msg->set_type(PlanMAMsg::PUBLIC_STATE);
     msg->set_agent_name(agent_name);
     msg->set_state(state, state_size);
     msg->set_cost(cost);
@@ -63,6 +64,7 @@ void planMAMsgGetPublicState(const plan_ma_msg_t *_msg,
     size_t st_size;
 
     strncpy(agent_name, msg->agent_name().c_str(), agent_name_size);
+    agent_name[agent_name_size - 1] = 0x0;
 
     st_size = BOR_MIN(state_size, msg->state().size());
     memcpy(state, msg->state().data(), st_size);

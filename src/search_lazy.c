@@ -1,5 +1,14 @@
 #include <boruvka/alloc.h>
-#include "plan/search_lazy.h"
+
+#include "plan/search.h"
+
+struct _plan_search_lazy_t {
+    plan_search_t search;
+
+    plan_list_lazy_t *list;          /*!< List to keep track of the states */
+    plan_heur_t *heur;               /*!< Heuristic function */
+};
+typedef struct _plan_search_lazy_t plan_search_lazy_t;
 
 static void planSearchLazyDel(void *_lazy);
 static int planSearchLazyInit(void *_lazy);
@@ -39,7 +48,7 @@ static int planSearchLazyInit(void *_lazy)
     plan_search_lazy_t *lazy = _lazy;
     planListLazyPush(lazy->list, 0,
                      lazy->search.params.prob->initial_state, NULL);
-    return 0;
+    return PLAN_SEARCH_CONT;
 }
 
 static int planSearchLazyStep(void *_lazy)
@@ -52,8 +61,7 @@ static int planSearchLazyStep(void *_lazy)
     // get next node from the list
     if (planListLazyPop(lazy->list, &parent_state_id, &parent_op) != 0){
         // reached dead-end
-        fprintf(stderr, "DEAD\n");
-        return -1;
+        return PLAN_SEARCH_NOT_FOUND;
     }
 
     planSearchStatIncExpandedStates(&lazy->search.stat);
@@ -69,7 +77,7 @@ static int planSearchLazyStep(void *_lazy)
 
     // check whether the state was already visited
     if (!planStateSpaceNodeIsNew2(lazy->search.state_space, cur_state_id))
-        return 0;
+        return PLAN_SEARCH_CONT;
 
     // compute heuristic value for the current node
     cur_heur = _planSearchHeuristic(&lazy->search, cur_state_id, lazy->heur);
@@ -87,5 +95,5 @@ static int planSearchLazyStep(void *_lazy)
     _planSearchAddLazySuccessors(&lazy->search, cur_state_id,
                                  cur_heur, lazy->list);
 
-    return 0;
+    return PLAN_SEARCH_CONT;
 }

@@ -1,5 +1,5 @@
 #include <cu/cu.h>
-#include "plan/search_ehc.h"
+#include "plan/search.h"
 
 TEST(testSearchEHC)
 {

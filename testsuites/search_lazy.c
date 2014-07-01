@@ -1,5 +1,5 @@
 #include <cu/cu.h>
-#include "plan/search_lazy.h"
+#include "plan/search.h"
 
 #define DEF_JSON "../data/ma-benchmarks/depot/pfile1.json"
 

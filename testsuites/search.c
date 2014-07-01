@@ -1,8 +1,7 @@
 #include <boruvka/timer.h>
 #include <plan/search.h>
 #include <plan/heur.h>
-#include <plan/search_ehc.h>
-#include <plan/search_lazy.h>
+#include <plan/search.h>
 #include <opts.h>
 
 static char *def_problem = NULL;
@@ -62,12 +61,12 @@ static void usage(const char *progname)
 static int progress(const plan_search_stat_t *stat)
 {
     fprintf(stderr, "[%.3f s, %ld kb] %ld steps, %ld evaluated,"
-                    " %ld expanded, %ld generated, dead-end: %d,"
-                    " found-solution: %d\n",
+                    " %ld expanded, %ld generated, not-found: %d,"
+                    " found: %d\n",
             stat->elapsed_time, stat->peak_memory,
             stat->steps, stat->evaluated_states, stat->expanded_states,
             stat->generated_states,
-            stat->dead_end, stat->found_solution);
+            stat->not_found, stat->found);
 
     if (stat->elapsed_time > max_time){
         fprintf(stderr, "Abort: Exceeded max-time.\n");
@@ -199,7 +198,7 @@ int main(int argc, char *argv[])
 
         printf("Path Cost: %d\n", (int)planPathCost(&path));
 
-    }else if (res == PLAN_SEARCH_DEAD_END){
+    }else if (res == PLAN_SEARCH_NOT_FOUND){
         printf("Solution NOT found.");
 
     }else if (res == PLAN_SEARCH_ABORT){

@@ -1,6 +1,16 @@
 #include <boruvka/alloc.h>
 
-#include "plan/search_ehc.h"
+#include "plan/search.h"
+
+struct _plan_search_ehc_t {
+    plan_search_t search;
+
+    plan_list_lazy_t *list;          /*!< List to keep track of the states */
+    plan_heur_t *heur;               /*!< Heuristic function */
+    plan_cost_t best_heur;           /*!< Value of the best heuristic
+                                          value found so far */
+};
+typedef struct _plan_search_ehc_t plan_search_ehc_t;
 
 /** Frees allocated resorces */
 static void planSearchEHCDel(void *_ehc);
@@ -84,7 +94,7 @@ static int planSearchEHCStep(void *_ehc)
     if (planListLazyPop(ehc->list, &parent_state_id, &parent_op) != 0){
         // we reached dead end
         _planSearchReachedDeadEnd(&ehc->search);
-        return PLAN_SEARCH_DEAD_END;
+        return PLAN_SEARCH_NOT_FOUND;
     }
 
     planSearchStatIncExpandedStates(&ehc->search.stat);

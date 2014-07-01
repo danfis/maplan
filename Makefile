@@ -48,7 +48,8 @@ OBJS += heur
 OBJS += heur_goalcount
 OBJS += heur_relax
 OBJS += prioqueue
-OBJS += multiagent_msg.pb-c
+OBJS += ma_msg.pb-c
+OBJS += ma_comm_queue
 
 BIN_TARGETS =
 
@@ -79,7 +80,9 @@ bin/%.o: bin/%.c bin/%.h
 examples/%: examples/%.c libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
-src/multiagent_msg.pb-c.c: src/multiagent_msg.proto
+src/ma_comm_queue.c: src/ma_msg.pb-c.c
+	touch $@
+src/ma_msg.pb-c.c: src/ma_msg.proto
 	$(PROTOC) --c_out=. $<
 
 .objs/%.pic.o: src/%.c plan/%.h plan/config.h

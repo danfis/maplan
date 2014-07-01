@@ -1,9 +1,9 @@
-message MultiAgentMsgPathOperator {
+message PlanMultiAgentMsgPathOperator {
     required string name = 1;
     required int32 cost = 2;
 }
 
-message MultiAgentMsg {
+message PlanMultiAgentMsg {
     enum Type {
         /** Private: */
         _TERMINATE         = 0x100;
@@ -25,7 +25,7 @@ message MultiAgentMsg {
     optional int32 heuristic = 13;
 
     optional bytes init_state = 20;
-    repeated MultiAgentMsgPathOperator path = 21;
+    repeated PlanMultiAgentMsgPathOperator path = 21;
     optional bytes path_first_state = 22;
     optional string trace_path_initiator = 23;
 }

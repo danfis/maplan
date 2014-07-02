@@ -531,7 +531,7 @@ static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
     char *name;
     size_t name_size;
     ssize_t name_len;
-    int i, len, var, val, cond, pre, post, cost;
+    int i, len, var, cond, pre, post, cost;
 
     if (fdAssert(fin, "begin_operator") != 0)
         return -1;
@@ -551,7 +551,7 @@ static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
     if (fscanf(fin, "%d", &len) != 1)
         return -1;
     for (i = 0; i < len; ++i){
-        if (fscanf(fin, "%d %d", &var, &val) != 2)
+        if (fscanf(fin, "%d %d", &var, &pre) != 2)
             return -1;
         planOperatorSetPrecondition(op, var, pre);
     }

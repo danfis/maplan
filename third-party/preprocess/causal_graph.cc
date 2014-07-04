@@ -38,23 +38,23 @@ bool g_do_not_prune_variables = false;
 void CausalGraph::weigh_graph_from_ops(const vector<Variable *> &,
                                        const vector<Operator> &operators,
                                        const vector<pair<Variable *, int> > &) {
-    for (int i = 0; i < operators.size(); i++) {
+    for (size_t i = 0; i < operators.size(); i++) {
         const vector<Operator::Prevail> &prevail = operators[i].get_prevail();
         const vector<Operator::PrePost> &pre_post = operators[i].get_pre_post();
         vector<Variable *> source_vars;
-        for (int j = 0; j < prevail.size(); j++)
+        for (size_t j = 0; j < prevail.size(); j++)
             source_vars.push_back(prevail[j].var);
-        for (int j = 0; j < pre_post.size(); j++)
+        for (size_t j = 0; j < pre_post.size(); j++)
             if (pre_post[j].pre != -1)
                 source_vars.push_back(pre_post[j].var);
 
-        for (int k = 0; k < pre_post.size(); k++) {
+        for (size_t k = 0; k < pre_post.size(); k++) {
             Variable *curr_target = pre_post[k].var;
             if (pre_post[k].is_conditional_effect)
-                for (int l = 0; l < pre_post[k].effect_conds.size(); l++)
+                for (size_t l = 0; l < pre_post[k].effect_conds.size(); l++)
                     source_vars.push_back(pre_post[k].effect_conds[l].var);
 
-            for (int j = 0; j < source_vars.size(); j++) {
+            for (size_t j = 0; j < source_vars.size(); j++) {
                 Variable *curr_source = source_vars[j];
                 WeightedSuccessors &weighted_succ = weighted_graph[curr_source];
 
@@ -81,13 +81,13 @@ void CausalGraph::weigh_graph_from_ops(const vector<Variable *> &,
 void CausalGraph::weigh_graph_from_axioms(const vector<Variable *> &,
                                           const vector<Axiom> &axioms,
                                           const vector<pair<Variable *, int> > &) {
-    for (int i = 0; i < axioms.size(); i++) {
+    for (size_t i = 0; i < axioms.size(); i++) {
         const vector<Axiom::Condition> &conds = axioms[i].get_conditions();
         vector<Variable *> source_vars;
-        for (int j = 0; j < conds.size(); j++)
+        for (size_t j = 0; j < conds.size(); j++)
             source_vars.push_back(conds[j].var);
 
-        for (int j = 0; j < source_vars.size(); j++) {
+        for (size_t j = 0; j < source_vars.size(); j++) {
             Variable *curr_source = source_vars[j];
             WeightedSuccessors &weighted_succ = weighted_graph[curr_source];
             // only one target var: the effect var of axiom[i]
@@ -115,7 +115,7 @@ CausalGraph::CausalGraph(const vector<Variable *> &the_variables,
 
     : variables(the_variables), operators(the_operators), axioms(the_axioms),
       goals(the_goals), acyclic(false) {
-    for (int i = 0; i < variables.size(); i++)
+    for (size_t i = 0; i < variables.size(); i++)
         weighted_graph[variables[i]] = WeightedSuccessors();
     weigh_graph_from_ops(variables, operators, goals);
     weigh_graph_from_axioms(variables, axioms, goals);
@@ -148,22 +148,22 @@ CausalGraph::CausalGraph(const vector<Variable *> &the_variables,
 
 void CausalGraph::calculate_topological_pseudo_sort(const Partition &sccs) {
     map<Variable *, int> goal_map;
-    for (int i = 0; i < goals.size(); i++)
+    for (size_t i = 0; i < goals.size(); i++)
         goal_map[goals[i].first] = goals[i].second;
-    for (int scc_no = 0; scc_no < sccs.size(); scc_no++) {
+    for (size_t scc_no = 0; scc_no < sccs.size(); scc_no++) {
         const vector<Variable *> &curr_scc = sccs[scc_no];
         if (curr_scc.size() > 1) {
             // component needs to be turned into acyclic subgraph
 
             // Map variables to indices in the strongly connected component.
             map<Variable *, int> variableToIndex;
-            for (int i = 0; i < curr_scc.size(); i++)
+            for (size_t i = 0; i < curr_scc.size(); i++)
                 variableToIndex[curr_scc[i]] = i;
 
             // Compute subgraph induced by curr_scc and convert the successor
             // representation from a map to a vector.
             vector<vector<pair<int, int> > > subgraph;
-            for (int i = 0; i < curr_scc.size(); i++) {
+            for (size_t i = 0; i < curr_scc.size(); i++) {
                 // For each variable in component only list edges inside component.
                 WeightedSuccessors &all_edges = weighted_graph[curr_scc[i]];
                 vector<pair<int, int> > subgraph_edges;
@@ -186,7 +186,7 @@ void CausalGraph::calculate_topological_pseudo_sort(const Partition &sccs) {
             }
 
             vector<int> order = MaxDAG(subgraph).get_result();
-            for (int i = 0; i < order.size(); i++) {
+            for (size_t i = 0; i < order.size(); i++) {
                 ordering.push_back(curr_scc[order[i]]);
             }
         } else {
@@ -197,7 +197,7 @@ void CausalGraph::calculate_topological_pseudo_sort(const Partition &sccs) {
 
 void CausalGraph::get_strongly_connected_components(Partition &result) {
     map<Variable *, int> variableToIndex;
-    for (int i = 0; i < variables.size(); i++)
+    for (size_t i = 0; i < variables.size(); i++)
         variableToIndex[variables[i]] = i;
 
     vector<vector<int> > unweighted_graph;
@@ -215,15 +215,15 @@ void CausalGraph::get_strongly_connected_components(Partition &result) {
     vector<vector<int> > int_result = SCC(unweighted_graph).get_result();
 
     result.clear();
-    for (int i = 0; i < int_result.size(); i++) {
+    for (size_t i = 0; i < int_result.size(); i++) {
         vector<Variable *> component;
-        for (int j = 0; j < int_result[i].size(); j++)
+        for (size_t j = 0; j < int_result[i].size(); j++)
             component.push_back(variables[int_result[i][j]]);
         result.push_back(component);
     }
 }
 void CausalGraph::calculate_important_vars() {
-    for (int i = 0; i < goals.size(); i++) {
+    for (size_t i = 0; i < goals.size(); i++) {
         if (!goals[i].first->is_necessary()) {
             //cout << "var " << goals[i].first->get_name() <<" is directly neccessary."
             // << endl;
@@ -238,7 +238,7 @@ void CausalGraph::calculate_important_vars() {
         if (ordering[i]->is_necessary() || g_do_not_prune_variables)
             new_ordering.push_back(ordering[i]);
     ordering = new_ordering;
-    for (int i = 0; i < ordering.size(); i++) {
+    for (size_t i = 0; i < ordering.size(); i++) {
         ordering[i]->set_level(i);
     }
     cout << ordering.size() << " variables of " << old_size << " necessary" << endl;
@@ -310,7 +310,7 @@ const {
             number_of_succ[source_var->get_level()] = num;
         }
     }
-    for (int i = 0; i < ordered_vars.size(); i++) {
+    for (size_t i = 0; i < ordered_vars.size(); i++) {
         WeightedSuccessors *curr = succs[i];
         // print number of variables influenced by variable i
         outfile << number_of_succ[i] << endl;

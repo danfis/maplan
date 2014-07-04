@@ -7,7 +7,7 @@ MutexGroup::MutexGroup(istream &in, const vector<Variable *> &variables) {
     int size;
     check_magic(in, "begin_mutex_group");
     in >> size;
-    for (size_t i = 0; i < size; ++i) {
+    for (int i = 0; i < size; ++i) {
         int var_no, value;
         in >> var_no >> value;
         facts.push_back(make_pair(variables[var_no], value));
@@ -41,7 +41,7 @@ void MutexGroup::generate_cpp_input(ofstream &outfile) const {
 
 void MutexGroup::strip_unimportant_facts() {
     int new_index = 0;
-    for (int i = 0; i < facts.size(); i++) {
+    for (size_t i = 0; i < facts.size(); i++) {
         if (facts[i].first->get_level() != -1)
             facts[new_index++] = facts[i];
     }
@@ -51,7 +51,7 @@ void MutexGroup::strip_unimportant_facts() {
 bool MutexGroup::is_redundant() const {
     // Only mutex groups that talk about two or more different
     // finite-domain variables are interesting.
-    for (int i = 1; i < facts.size(); ++i)
+    for (size_t i = 1; i < facts.size(); ++i)
         if (facts[i].first != facts[i - 1].first)
             return false;
     return true;
@@ -60,7 +60,7 @@ bool MutexGroup::is_redundant() const {
 void strip_mutexes(vector<MutexGroup> &mutexes) {
     int old_count = mutexes.size();
     int new_index = 0;
-    for (int i = 0; i < mutexes.size(); i++) {
+    for (size_t i = 0; i < mutexes.size(); i++) {
         mutexes[i].strip_unimportant_facts();
         if (!mutexes[i].is_redundant())
             mutexes[new_index++] = mutexes[i];

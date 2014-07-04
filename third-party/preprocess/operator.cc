@@ -43,14 +43,14 @@ Operator::Operator(istream &in, const vector<Variable *> &variables) {
 void Operator::dump() const {
     cout << name << ":" << endl;
     cout << "prevail:";
-    for (int i = 0; i < prevail.size(); i++)
+    for (size_t i = 0; i < prevail.size(); i++)
         cout << "  " << prevail[i].var->get_name() << " := " << prevail[i].prev;
     cout << endl;
     cout << "pre-post:";
-    for (int i = 0; i < pre_post.size(); i++) {
+    for (size_t i = 0; i < pre_post.size(); i++) {
         if (pre_post[i].is_conditional_effect) {
             cout << "  if (";
-            for (int j = 0; j < pre_post[i].effect_conds.size(); j++)
+            for (size_t j = 0; j < pre_post[i].effect_conds.size(); j++)
                 cout << pre_post[i].effect_conds[j].var->get_name() << " := " <<
                 pre_post[i].effect_conds[j].cond;
             cout << ") then";
@@ -63,7 +63,7 @@ void Operator::dump() const {
 
 int Operator::get_encoding_size() const {
     int size = 1 + prevail.size();
-    for (int i = 0; i < pre_post.size(); i++) {
+    for (size_t i = 0; i < pre_post.size(); i++) {
         size += 1 + pre_post[i].effect_conds.size();
         if (pre_post[i].pre != -1)
             size += 1;
@@ -73,7 +73,7 @@ int Operator::get_encoding_size() const {
 
 void Operator::strip_unimportant_effects() {
     int new_index = 0;
-    for (int i = 0; i < pre_post.size(); i++) {
+    for (size_t i = 0; i < pre_post.size(); i++) {
         if (pre_post[i].var->get_level() != -1)
             pre_post[new_index++] = pre_post[i];
     }
@@ -87,7 +87,7 @@ bool Operator::is_redundant() const {
 void strip_operators(vector<Operator> &operators) {
     int old_count = operators.size();
     int new_index = 0;
-    for (int i = 0; i < operators.size(); i++) {
+    for (size_t i = 0; i < operators.size(); i++) {
         operators[i].strip_unimportant_effects();
         if (!operators[i].is_redundant())
             operators[new_index++] = operators[i];
@@ -102,17 +102,17 @@ void Operator::generate_cpp_input(ofstream &outfile) const {
     outfile << name << endl;
 
     outfile << prevail.size() << endl;
-    for (int i = 0; i < prevail.size(); i++) {
+    for (size_t i = 0; i < prevail.size(); i++) {
         assert(prevail[i].var->get_level() != -1);
         if (prevail[i].var->get_level() != -1)
             outfile << prevail[i].var->get_level() << " " << prevail[i].prev << endl;
     }
 
     outfile << pre_post.size() << endl;
-    for (int i = 0; i < pre_post.size(); i++) {
+    for (size_t i = 0; i < pre_post.size(); i++) {
         assert(pre_post[i].var->get_level() != -1);
         outfile << pre_post[i].effect_conds.size();
-        for (int j = 0; j < pre_post[i].effect_conds.size(); j++)
+        for (size_t j = 0; j < pre_post[i].effect_conds.size(); j++)
             outfile << " " << pre_post[i].effect_conds[j].var->get_level()
                     << " " << pre_post[i].effect_conds[j].cond;
         outfile << " " << pre_post[i].var->get_level()

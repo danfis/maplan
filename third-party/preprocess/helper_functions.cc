@@ -89,7 +89,7 @@ void read_goal(istream &in, const vector<Variable *> &variables,
 
 void dump_goal(const vector<pair<Variable *, int> > &goals) {
     cout << "Goal Conditions:" << endl;
-    for (int i = 0; i < goals.size(); i++)
+    for (size_t i = 0; i < goals.size(); i++)
         cout << "  " << goals[i].first->get_name() << ": "
              << goals[i].second << endl;
 }
@@ -135,22 +135,22 @@ void dump_preprocessed_problem_description(const vector<Variable *> &variables,
                                            const vector<Operator> &operators,
                                            const vector<Axiom> &axioms) {
     cout << "Variables (" << variables.size() << "):" << endl;
-    for (int i = 0; i < variables.size(); i++)
+    for (size_t i = 0; i < variables.size(); i++)
         variables[i]->dump();
 
     cout << "Initial State:" << endl;
     initial_state.dump();
     dump_goal(goals);
 
-    for (int i = 0; i < operators.size(); i++)
+    for (size_t i = 0; i < operators.size(); i++)
         operators[i].dump();
-    for (int i = 0; i < axioms.size(); i++)
+    for (size_t i = 0; i < axioms.size(); i++)
         axioms[i].dump();
 }
 
 void dump_DTGs(const vector<Variable *> &ordering,
                vector<DomainTransitionGraph> &transition_graphs) {
-    for (int i = 0; i < transition_graphs.size(); i++) {
+    for (size_t i = 0; i < transition_graphs.size(); i++) {
         cout << "Domain transition graph for " << ordering[i]->get_name() << ":" << endl;
         transition_graphs[i].dump();
     }
@@ -182,11 +182,11 @@ void generate_cpp_input(bool /*solvable_in_poly_time*/,
     outfile << "end_metric" << endl;
 
     outfile << ordered_vars.size() << endl;
-    for (int i = 0; i < ordered_vars.size(); i++)
+    for (size_t i = 0; i < ordered_vars.size(); i++)
         ordered_vars[i]->generate_cpp_input(outfile);
 
     outfile << mutexes.size() << endl;
-    for (int i = 0; i < mutexes.size(); i++)
+    for (size_t i = 0; i < mutexes.size(); i++)
         mutexes[i].generate_cpp_input(outfile);
 
     int var_count = ordered_vars.size();
@@ -197,7 +197,7 @@ void generate_cpp_input(bool /*solvable_in_poly_time*/,
 
     vector<int> ordered_goal_values;
     ordered_goal_values.resize(var_count, -1);
-    for (int i = 0; i < goals.size(); i++) {
+    for (size_t i = 0; i < goals.size(); i++) {
         int var_index = goals[i].first->get_level();
         ordered_goal_values[var_index] = goals[i].second;
     }
@@ -209,11 +209,11 @@ void generate_cpp_input(bool /*solvable_in_poly_time*/,
     outfile << "end_goal" << endl;
 
     outfile << operators.size() << endl;
-    for (int i = 0; i < operators.size(); i++)
+    for (size_t i = 0; i < operators.size(); i++)
         operators[i].generate_cpp_input(outfile);
 
     outfile << axioms.size() << endl;
-    for (int i = 0; i < axioms.size(); i++)
+    for (size_t i = 0; i < axioms.size(); i++)
         axioms[i].generate_cpp_input(outfile);
 
     outfile << "begin_SG" << endl;

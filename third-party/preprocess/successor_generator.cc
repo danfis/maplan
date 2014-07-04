@@ -73,7 +73,7 @@ GeneratorSwitch::GeneratorSwitch(Variable *switch_variable,
 }
 
 GeneratorSwitch::~GeneratorSwitch() {
-    for (int i = 0; i < generator_for_value.size(); i++)
+    for (size_t i = 0; i < generator_for_value.size(); i++)
         delete generator_for_value[i];
     delete default_generator;
 }
@@ -139,14 +139,14 @@ SuccessorGenerator::SuccessorGenerator(const vector<Variable *> &variables,
     // We need the iterators to conditions to be stable:
     conditions.reserve(operators.size());
     list<int> all_operator_indices;
-    for (int i = 0; i < operators.size(); i++) {
+    for (size_t i = 0; i < operators.size(); i++) {
         const Operator *op = &operators[i];
         Condition cond;
-        for (int j = 0; j < op->get_prevail().size(); j++) {
+        for (size_t j = 0; j < op->get_prevail().size(); j++) {
             Operator::Prevail prev = op->get_prevail()[j];
             cond.push_back(make_pair(prev.var, prev.prev));
         }
-        for (int j = 0; j < op->get_pre_post().size(); j++) {
+        for (size_t j = 0; j < op->get_pre_post().size(); j++) {
             Operator::PrePost pre_post = op->get_pre_post()[j];
             if (pre_post.pre != -1)
                 cond.push_back(make_pair(pre_post.var, pre_post.pre));
@@ -170,7 +170,7 @@ GeneratorBase *SuccessorGenerator::construct_recursive(int switch_var_no,
 
     while (true) {
         // Test if no further switch is necessary (or possible).
-        if (switch_var_no == varOrder.size())
+        if (switch_var_no == (int)varOrder.size())
             return new GeneratorLeaf(op_indices);
 
         Variable *switch_var = varOrder[switch_var_no];
@@ -186,10 +186,10 @@ GeneratorBase *SuccessorGenerator::construct_recursive(int switch_var_no,
         while (!op_indices.empty()) {
             int op_index = op_indices.front();
             op_indices.pop_front();
-            assert(op_index >= 0 && op_index < next_condition_by_op.size());
+            assert(op_index >= 0 && op_index < (int)next_condition_by_op.size());
             Condition::const_iterator &cond_iter = next_condition_by_op[op_index];
             assert(cond_iter - conditions[op_index].begin() >= 0);
-            assert(cond_iter - conditions[op_index].begin() <= conditions[op_index].size());
+            assert(cond_iter - conditions[op_index].begin() <= (int)conditions[op_index].size());
             if (cond_iter == conditions[op_index].end()) {
                 var_is_interesting = true;
                 applicable_ops_indices.push_back(op_index);

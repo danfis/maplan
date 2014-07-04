@@ -76,7 +76,7 @@ int main(int argc, const char **) {
     // Output some task statistics
     int facts = 0;
     int derived_vars = 0;
-    for (int i = 0; i < ordering.size(); i++) {
+    for (size_t i = 0; i < ordering.size(); i++) {
         facts += ordering[i]->get_range();
         if (ordering[i]->is_derived())
             derived_vars++;
@@ -87,13 +87,13 @@ int main(int argc, const char **) {
     // Calculate the problem size
     int task_size = ordering.size() + facts + goals.size();
 
-    for (int i = 0; i < mutexes.size(); i++)
+    for (size_t i = 0; i < mutexes.size(); i++)
         task_size += mutexes[i].get_encoding_size();
 
-    for (int i = 0; i < operators.size(); i++)
+    for (size_t i = 0; i < operators.size(); i++)
         task_size += operators[i].get_encoding_size();
 
-    for (int i = 0; i < axioms.size(); i++)
+    for (size_t i = 0; i < axioms.size(); i++)
         task_size += axioms[i].get_encoding_size();
 
     cout << "Preprocessor task size: " << task_size << endl;

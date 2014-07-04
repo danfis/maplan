@@ -1,5 +1,7 @@
 -include ../../Makefile.include
 
+#CXXFLAGS += -Werror
+
 CXX_OBJS  = axiom
 CXX_OBJS += causal_graph
 CXX_OBJS += domain_transition_graph

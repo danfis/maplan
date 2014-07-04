@@ -646,6 +646,8 @@ def parse_args():
     argparser.add_argument(
         "--relaxed", dest="generate_relaxed_task", action="store_true",
         help="output relaxed task (no delete effects)")
+    argparser.add_argument("--output", "-o", dest="output_file",
+                           default="output.sas", nargs="?")
     return argparser.parse_args()
 
 
@@ -668,11 +670,13 @@ def main():
                 if effect.literal.negated:
                     del action.effects[index]
 
+    output_file = args.output_file
+
     sas_task = pddl_to_sas(task)
     dump_statistics(sas_task)
 
     with timers.timing("Writing output"):
-        with open("output.sas", "w") as output_file:
+        with open(output_file, "w") as output_file:
             sas_task.output(output_file)
     print("Done! %s" % timer)
 

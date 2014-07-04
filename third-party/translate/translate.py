@@ -415,7 +415,8 @@ def dump_task(init, goals, actions, axioms, axiom_layer_dict):
 def translate_task(strips_to_sas, ranges, translation_key,
                    mutex_dict, mutex_ranges, mutex_key,
                    init, goals,
-                   actions, axioms, metric, implied_facts):
+                   actions, axioms, metric, implied_facts,
+                   agents):
     with timers.timing("Processing axioms", block=True):
         axioms, axiom_init, axiom_layer_dict = axiom_rules.handle_axioms(
             actions, axioms, goals)
@@ -471,7 +472,7 @@ def translate_task(strips_to_sas, ranges, translation_key,
     variables = sas_tasks.SASVariables(ranges, axiom_layers, translation_key)
     mutexes = [sas_tasks.SASMutexGroup(group) for group in mutex_key]
     return sas_tasks.SASTask(variables, mutexes, init, goal,
-                             operators, axioms, metric)
+                             operators, axioms, metric, agents)
 
 
 def unsolvable_sas_task(msg):
@@ -536,7 +537,7 @@ def pddl_to_sas(task):
             strips_to_sas, ranges, translation_key,
             mutex_dict, mutex_ranges, mutex_key,
             task.init, goal_list, actions, axioms, task.use_min_cost_metric,
-            implied_facts)
+            implied_facts, task.agents)
 
     print("%d effect conditions simplified" %
           simplified_effect_condition_counter)
@@ -641,6 +642,8 @@ def parse_args():
     argparser.add_argument(
         "task", help="path to task pddl file")
     argparser.add_argument(
+        "addl", nargs="?", help="path to agent definition .addl file")
+    argparser.add_argument(
         "--relaxed", dest="generate_relaxed_task", action="store_true",
         help="output relaxed task (no delete effects)")
     return argparser.parse_args()
@@ -651,7 +654,9 @@ def main():
 
     timer = timers.Timer()
     with timers.timing("Parsing", True):
-        task = pddl.open(task_filename=args.task, domain_filename=args.domain)
+        task = pddl.open(task_filename=args.task,
+                         domain_filename=args.domain,
+                         addl_filename=args.addl)
 
     with timers.timing("Normalizing task"):
         normalize.normalize(task)

@@ -11,6 +11,9 @@ class Variable {
     int layer;
     int level;
     bool necessary;
+    vector<bool> value_public;
+    // true if an agent use the value as a precondition or an effect
+    vector<vector<bool> > agent_use;
 public:
     Variable(istream &in);
     void set_level(int level);
@@ -24,6 +27,19 @@ public:
     void generate_cpp_input(ofstream &outfile) const;
     void dump() const;
     string get_fact_name(int value) const {return values[value]; }
+
+    bool is_value_public(int value) const
+        { return value_public[value]; }
+    void set_value_public(int value, bool pub = true)
+        { value_public[value] = pub; }
+    void set_num_agents(int num);
+    void set_agent_use(int value, int agent)
+        { agent_use[value][agent] = true; }
+    bool is_value_used_by_agent(int value, int agent) const
+        { return agent_use[value][agent]; }
+    int get_num_agent_use(int value);
+
+    void reorderValues(std::vector<int> &translate);
 };
 
 #endif

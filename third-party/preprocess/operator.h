@@ -33,8 +33,8 @@ public:
                                                                     post(po), effect_conds(ecs) {is_conditional_effect = true; }
     };
 
-private:
     string name;
+    string owner;
     vector<Prevail> prevail;    // var, val
     vector<PrePost> pre_post; // var, old-val, new-val
     int cost;
@@ -50,7 +50,14 @@ public:
     int get_cost() const {return cost; }
     string get_name() const {return name; }
     const vector<Prevail> &get_prevail() const {return prevail; }
+    vector<Prevail> &get_prevail() {return prevail; }
     const vector<PrePost> &get_pre_post() const {return pre_post; }
+    vector<PrePost> &get_pre_post() {return pre_post; }
+
+    void set_owner(const std::string &o)
+        { owner = o; }
+    const std::string &get_owner() const
+        { return owner; }
 };
 
 extern void strip_operators(vector<Operator> &operators);

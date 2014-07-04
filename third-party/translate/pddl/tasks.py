@@ -12,7 +12,9 @@ from . import f_expression
 
 class Task(object):
     def __init__(self, domain_name, task_name, requirements,
-                 types, objects, predicates, functions, init, goal, actions, axioms, use_metric):
+                 types, objects, predicates, functions, init, goal, actions, axioms, use_metric,
+                 agents = []):
+
         self.domain_name = domain_name
         self.task_name = task_name
         self.requirements = requirements
@@ -26,6 +28,7 @@ class Task(object):
         self.axioms = axioms
         self.axiom_counter = 0
         self.use_min_cost_metric = use_metric
+        self.agents = agents
 
     def add_axiom(self, parameters, condition):
         name = "new-axiom@%d" % self.axiom_counter
@@ -36,10 +39,14 @@ class Task(object):
         return axiom
 
     @staticmethod
-    def parse(domain_pddl, task_pddl):
+    def parse(domain_pddl, task_pddl, task_addl = None):
         domain_name, domain_requirements, types, constants, predicates, functions, actions, axioms \
                      = parse_domain(domain_pddl)
         task_name, task_domain_name, task_requirements, objects, init, goal, use_metric = parse_task(task_pddl)
+
+        agents = []
+        if task_addl:
+            agents = parse_agents(task_addl)
 
         assert domain_name == task_domain_name
         requirements = Requirements(sorted(set(
@@ -53,7 +60,8 @@ class Task(object):
         init += [conditions.Atom("=", (obj.name, obj.name)) for obj in objects]
 
         return Task(domain_name, task_name, requirements, types, objects,
-                    predicates, functions, init, goal, actions, axioms, use_metric)
+                    predicates, functions, init, goal, actions, axioms, use_metric,
+                    agents)
 
     def dump(self):
         print("Problem %s: %s [%s]" % (
@@ -250,6 +258,15 @@ def parse_task(task_pddl):
 
     for entry in iterator:
         assert False, entry
+
+def parse_agents(addl):
+    agents = []
+
+    assert addl[0] == 'define'
+    for d in addl[1:]:
+        if d[0] == ':agents':
+            agents = d[1:]
+    return agents
 
 def check_atom_consistency(atom, same_truth_value, other_truth_value, atom_is_true=True):
     if atom in other_truth_value:

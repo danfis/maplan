@@ -18,6 +18,9 @@ public:
     int get_encoding_size() const;
     void generate_cpp_input(ofstream &outfile) const;
     void dump() const;
+
+    vector<pair<const Variable *, int> > &get_facts()
+        { return facts; }
 };
 
 extern void strip_mutexes(vector<MutexGroup> &mutexes);

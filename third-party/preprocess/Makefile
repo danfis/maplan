@@ -13,6 +13,7 @@ CXX_OBJS += scc
 CXX_OBJS += state
 CXX_OBJS += successor_generator
 CXX_OBJS += variable
+CXX_OBJS += agent
 CXX_OBJS += planner
 
 CXX_OBJS := $(foreach obj,$(CXX_OBJS),.objs/$(obj).cxx.o)

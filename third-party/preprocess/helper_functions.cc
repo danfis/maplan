@@ -110,6 +110,19 @@ void read_axioms(istream &in, const vector<Variable *> &variables,
         axioms.push_back(Axiom(in, variables));
 }
 
+void read_agents(istream &in, vector<std::string> &agents)
+{
+    int count;
+    check_magic(in, "begin_agents");
+    in >> count;
+    for (int i = 0; i < count; i++){
+        std::string agent;
+        in >> agent;
+        agents.push_back(agent);
+    }
+    check_magic(in, "end_agents");
+}
+
 void read_preprocessed_problem_description(istream &in,
                                            bool &metric,
                                            vector<Variable> &internal_variables,
@@ -118,7 +131,8 @@ void read_preprocessed_problem_description(istream &in,
                                            State &initial_state,
                                            vector<pair<Variable *, int> > &goals,
                                            vector<Operator> &operators,
-                                           vector<Axiom> &axioms) {
+                                           vector<Axiom> &axioms,
+                                           vector<std::string> &agents) {
     read_and_verify_version(in);
     read_metric(in, metric);
     read_variables(in, internal_variables, variables);
@@ -127,6 +141,7 @@ void read_preprocessed_problem_description(istream &in,
     read_goal(in, variables, goals);
     read_operators(in, variables, operators);
     read_axioms(in, variables, axioms);
+    read_agents(in, agents);
 }
 
 void dump_preprocessed_problem_description(const vector<Variable *> &variables,
@@ -166,12 +181,14 @@ void generate_cpp_input(bool /*solvable_in_poly_time*/,
                         const vector<Axiom> &axioms,
                         const SuccessorGenerator &sg,
                         const vector<DomainTransitionGraph> transition_graphs,
-                        const CausalGraph &cg) {
+                        const CausalGraph &cg,
+                        const Agent *agent,
+                        const std::string &out_fn) {
     /* NOTE: solvable_in_poly_time flag is no longer included in output,
        since the planner doesn't handle it specially any more anyway. */
 
     ofstream outfile;
-    outfile.open("output", ios::out);
+    outfile.open(out_fn.c_str(), ios::out);
 
     outfile << "begin_version" << endl;
     outfile << PRE_FILE_VERSION << endl;
@@ -229,6 +246,10 @@ void generate_cpp_input(bool /*solvable_in_poly_time*/,
     outfile << "begin_CG" << endl;
     cg.generate_cpp_input(outfile, ordered_vars);
     outfile << "end_CG" << endl;
+
+    if (agent){
+        agent->generate_cpp_input(outfile);
+    }
 
     outfile.close();
 }

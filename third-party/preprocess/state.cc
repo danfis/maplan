@@ -17,6 +17,11 @@ int State::operator[](Variable *var) const {
     return values.find(var)->second;
 }
 
+void State::set_value(Variable *var, int value)
+{
+    values[var] = value;
+}
+
 void State::dump() const {
     for (map<Variable *, int>::const_iterator it = values.begin();
          it != values.end(); ++it)

@@ -15,6 +15,7 @@
 #include "operator.h"
 #include "axiom.h"
 #include "variable.h"
+#include "agent.h"
 #include <iostream>
 using namespace std;
 
@@ -28,6 +29,8 @@ int main(int argc, const char **) {
     vector<Operator> operators;
     vector<Axiom> axioms;
     vector<DomainTransitionGraph> transition_graphs;
+    vector<std::string> agent_names;
+    std::vector<Agent> agents;
 
     if (argc != 1) {
         cout << "*** do not perform relevance analysis ***" << endl;
@@ -35,7 +38,8 @@ int main(int argc, const char **) {
     }
 
     read_preprocessed_problem_description
-        (cin, metric, internal_variables, variables, mutexes, initial_state, goals, operators, axioms);
+        (cin, metric, internal_variables, variables, mutexes,
+         initial_state, goals, operators, axioms, agent_names);
     //dump_preprocessed_problem_description
     //  (variables, initial_state, goals, operators, axioms);
 
@@ -102,6 +106,22 @@ int main(int argc, const char **) {
     generate_cpp_input(solveable_in_poly_time, ordering, metric,
                        mutexes, initial_state, goals,
                        operators, axioms, successor_generator,
-                       transition_graphs, causal_graph);
+                       transition_graphs, causal_graph, 0x0,
+                       "output");
+
+
+    if (agent_names.size() > 1){
+        agentsCreate(agent_names, variables, operators, goals, agents);
+        //changeValueOrdering(variables, operators, initial_state, goals,
+        //                    mutexes);
+    }
+
+    for (size_t i = 0; i < agents.size(); ++i){
+        std::string fn = agents[i].name + ".sas";
+        generate_cpp_input(solveable_in_poly_time, ordering, metric,
+                           mutexes, initial_state, goals,
+                           operators, axioms, successor_generator,
+                           transition_graphs, causal_graph, &agents[i], fn);
+    }
     cout << "done" << endl << endl;
 }

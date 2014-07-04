@@ -5,7 +5,7 @@ SAS_FILE_VERSION = 3
 
 class SASTask:
     def __init__(self, variables, mutexes, init, goal,
-                 operators, axioms, metric):
+                 operators, axioms, metric, agents):
         self.variables = variables
         self.mutexes = mutexes
         self.init = init
@@ -13,6 +13,8 @@ class SASTask:
         self.operators = sorted(operators, key=lambda op: (op.name, op.prevail, op.pre_post))
         self.axioms = sorted(axioms, key=lambda axiom: (axiom.condition, axiom.effect))
         self.metric = metric
+        self.agents = agents
+
     def output(self, stream):
         print("begin_version", file=stream)
         print(SAS_FILE_VERSION, file=stream)
@@ -32,6 +34,13 @@ class SASTask:
         print(len(self.axioms), file=stream)
         for axiom in self.axioms:
             axiom.output(stream)
+
+        print("begin_agents", file=stream)
+        print(len(self.agents), file=stream)
+        for agent in self.agents:
+            print(agent, file=stream)
+        print("end_agents", file=stream)
+
     def get_encoding_size(self):
         task_size = 0
         task_size += self.variables.get_encoding_size()

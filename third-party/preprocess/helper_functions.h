@@ -5,6 +5,7 @@
 #include "variable.h"
 #include "successor_generator.h"
 #include "causal_graph.h"
+#include "agent.h"
 
 #include <string>
 #include <vector>
@@ -27,7 +28,8 @@ void read_preprocessed_problem_description(istream &in,
                                            State &initial_state,
                                            vector<pair<Variable *, int> > &goals,
                                            vector<Operator> &operators,
-                                           vector<Axiom> &axioms);
+                                           vector<Axiom> &axioms,
+                                           vector<std::string> &agents);
 
 //void dump_everything
 void dump_preprocessed_problem_description(const vector<Variable *> &variables,
@@ -48,7 +50,9 @@ void generate_cpp_input(bool causal_graph_acyclic,
                         const vector<Axiom> &axioms,
                         const SuccessorGenerator &sg,
                         const vector<DomainTransitionGraph> transition_graphs,
-                        const CausalGraph &cg);
+                        const CausalGraph &cg,
+                        const Agent *agent,
+                        const std::string &out_fn);
 void check_magic(istream &in, string magic);
 
 #endif

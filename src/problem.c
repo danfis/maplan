@@ -42,13 +42,8 @@ static void planProblemFree(plan_problem_t *plan)
     plan->op_size = 0;
 }
 
-static int loadJson(plan_problem_t *plan, const char *filename);
-
-plan_problem_t *planProblemFromJson(const char *fn)
+static void planProblemInit(plan_problem_t *p)
 {
-    plan_problem_t *p;
-
-    p = BOR_ALLOC(plan_problem_t);
     p->var = NULL;
     p->var_size = 0;
     p->state_pool = NULL;
@@ -56,9 +51,37 @@ plan_problem_t *planProblemFromJson(const char *fn)
     p->op_size = 0;
     p->goal = NULL;
     p->succ_gen = NULL;
+}
+
+static int loadJson(plan_problem_t *plan, const char *filename);
+static int loadFD(plan_problem_t *plan, const char *filename);
+
+plan_problem_t *planProblemFromJson(const char *fn)
+{
+    plan_problem_t *p;
+
+    p = BOR_ALLOC(plan_problem_t);
+    planProblemInit(p);
 
     if (loadJson(p, fn) != 0){
         planProblemFree(p);
+        BOR_FREE(p);
+        return NULL;
+    }
+
+    return p;
+}
+
+plan_problem_t *planProblemFromFD(const char *fn)
+{
+    plan_problem_t *p;
+
+    p = BOR_ALLOC(plan_problem_t);
+    planProblemInit(p);
+
+    if (loadFD(p, fn) != 0){
+        planProblemFree(p);
+        BOR_FREE(p);
         return NULL;
     }
 
@@ -313,6 +336,345 @@ planLoadFromJsonFile_err:
     json_decref(json);
     return -1;
 }
+
+
+static int fdAssert(FILE *fin, const char *str)
+{
+    char read_s[1024];
+    if (fscanf(fin, "%s", read_s) != 1)
+        return -1;
+    if (strcmp(read_s, str) != 0)
+        return -1;
+    return 0;
+}
+
+static int fdVersion(plan_problem_t *plan, FILE *fin)
+{
+    int version;
+
+    if (fdAssert(fin, "begin_version") != 0)
+        return -1;
+
+    if (fscanf(fin, "%d", &version) != 1)
+        return -1;
+
+    if (version != 3){
+        fprintf(stderr, "Error: Unknown version.\n");
+        return -1;
+    }
+
+    if (fdAssert(fin, "end_version") != 0)
+        return -1;
+
+    return 0;
+}
+
+static int fdMetric(FILE *fin)
+{
+    int val;
+
+    if (fdAssert(fin, "begin_metric") != 0)
+        return -1;
+    if (fscanf(fin, "%d", &val) != 1)
+        return -1;
+    if (fdAssert(fin, "end_metric") != 0)
+        return -1;
+    return val;
+}
+
+static int fdVar1(plan_var_t *var, FILE *fin)
+{
+    plan_val_t i;
+    char sval[1024], *fact_name;
+    size_t size;
+    ssize_t fact_name_len;
+    int layer, range;
+
+    if (fdAssert(fin, "begin_variable") != 0)
+        return -1;
+    if (fscanf(fin, "%s %d %d", sval, &layer, &range) != 3)
+        return -1;
+
+    var->name = strdup(sval);
+    var->axiom_layer = layer;
+    var->range = range;
+
+    if ((int)var->range != range){
+        fprintf(stderr, "Error: Could not load variable %s, because the\n"
+                        "range can't be stored in %d bytes long variable.\n"
+                        "Change definition of plan_val_t and recompile.\n",
+                        var->name, (int)sizeof(var->range));
+        return -1;
+    }
+
+    var->fact_name = BOR_ALLOC_ARR(char *, var->range);
+    size = 0;
+    fact_name = NULL;
+    getline(&fact_name, &size, fin);
+    for (i = 0; i < var->range; ++i){
+        fact_name_len = getline(&fact_name, &size, fin);
+        if (fact_name_len > 1){
+            fact_name[fact_name_len - 1] = 0x0;
+            var->fact_name[i] = strdup(fact_name);
+        }else{
+            var->fact_name[i] = strdup("");
+        }
+    }
+
+    if (fact_name != NULL)
+        free(fact_name);
+
+    if (fdAssert(fin, "end_variable") != 0)
+        return -1;
+
+    return 0;
+}
+
+static int fdVars(plan_problem_t *plan, FILE *fin)
+{
+    int i, num_vars;
+
+    if (fscanf(fin, "%d", &num_vars) != 1)
+        return -1;
+
+    plan->var_size = num_vars;
+    plan->var = BOR_ALLOC_ARR(plan_var_t, plan->var_size);
+    for (i = 0; i < plan->var_size; ++i){
+        planVarInit(plan->var + i);
+    }
+
+    for (i = 0; i < plan->var_size; ++i){
+        fdVar1(plan->var + i, fin);
+    }
+
+    // create state pool
+    plan->state_pool = planStatePoolNew(plan->var, plan->var_size);
+
+    return 0;
+}
+
+static int fdMutexes(plan_problem_t *plan, FILE *fin)
+{
+    int i, j, len;
+    int num_facts, var, val;
+
+    if (fscanf(fin, "%d", &len) != 1)
+        return -1;
+
+    for (i = 0; i < len; ++i){
+        if (fdAssert(fin, "begin_mutex_group") != 0)
+            return -1;
+        if (fscanf(fin, "%d", &num_facts) != 1)
+            return -1;
+
+        for (j = 0; j < num_facts; ++j){
+            if (fscanf(fin, "%d %d", &var, &val) != 2)
+                return -1;
+        }
+
+        if (fdAssert(fin, "end_mutex_group") != 0)
+            return -1;
+    }
+
+    return 0;
+}
+
+static int fdInitState(plan_problem_t *plan, FILE *fin)
+{
+    plan_state_t *state;
+    int var, val;
+
+    if (fdAssert(fin, "begin_state") != 0)
+        return -1;
+
+    state = planStateNew(plan->state_pool);
+    for (var = 0; var < plan->var_size; ++var){
+        if (fscanf(fin, "%d", &val) != 1)
+            return -1;
+        planStateSet(state, var, val);
+    }
+    plan->initial_state = planStatePoolInsert(plan->state_pool, state);
+
+    planStateDel(plan->state_pool, state);
+
+    if (fdAssert(fin, "end_state") != 0)
+        return -1;
+
+    return 0;
+}
+
+static int fdGoal(plan_problem_t *plan, FILE *fin)
+{
+    int i, len, var, val;
+
+    if (fdAssert(fin, "begin_goal") != 0)
+        return -1;
+
+    if (fscanf(fin, "%d", &len) != 1)
+        return -1;
+
+    plan->goal = planPartStateNew(plan->state_pool);
+    for (i = 0; i < len; ++i){
+        if (fscanf(fin, "%d %d", &var, &val) != 2)
+            return -1;
+        planPartStateSet(plan->state_pool, plan->goal, var, val);
+    }
+
+    if (fdAssert(fin, "end_goal") != 0)
+        return -1;
+
+    return 0;
+}
+
+static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
+{
+    char *name;
+    size_t name_size;
+    ssize_t name_len;
+    int i, len, var, cond, pre, post, cost;
+
+    if (fdAssert(fin, "begin_operator") != 0)
+        return -1;
+
+    name = NULL;
+    name_size = 0;
+    getline(&name, &name_size, fin);
+    name_len = getline(&name, &name_size, fin);
+    if (name_len > 0)
+        name[name_len - 1] = 0x0;
+    op->name = strdup(name);
+
+    if (name)
+        free(name);
+
+    // prevail
+    if (fscanf(fin, "%d", &len) != 1)
+        return -1;
+    for (i = 0; i < len; ++i){
+        if (fscanf(fin, "%d %d", &var, &pre) != 2)
+            return -1;
+        planOperatorSetPrecondition(op, var, pre);
+    }
+
+    // pre-post
+    if (fscanf(fin, "%d", &len) != 1)
+        return -1;
+    for (i = 0; i < len; ++i){
+        if (fscanf(fin, "%d", &cond) != 1)
+            return -1;
+        if (cond > 0){
+            fprintf(stderr, "Error: Don't know how to handle operator"
+                            " effect precondition.\n");
+            return -1;
+        }
+
+        if (fscanf(fin, "%d %d %d", &var, &pre, &post) != 3)
+            return -1;
+
+        if (pre != -1)
+            planOperatorSetPrecondition(op, var, pre);
+        planOperatorSetEffect(op, var, post);
+    }
+
+    if (fscanf(fin, "%d", &cost) != 1)
+        return -1;
+    op->cost = (use_metric ? cost : 1);
+
+    if (fdAssert(fin, "end_operator") != 0)
+        return -1;
+
+    return 0;
+}
+
+static int fdOperators(plan_problem_t *plan, FILE *fin, int use_metric)
+{
+    int i, num_ops;
+
+    if (fscanf(fin, "%d", &num_ops) != 1)
+        return -1;
+
+    plan->op_size = num_ops;
+    plan->op = BOR_ALLOC_ARR(plan_operator_t, plan->op_size);
+    for (i = 0; i < plan->op_size; ++i){
+        planOperatorInit(plan->op + i, plan->state_pool);
+    }
+
+    for (i = 0; i < num_ops; ++i){
+        if (fdOperator(plan->op + i, fin, use_metric) != 0)
+            return -1;
+    }
+
+    return 0;
+}
+
+static int fdAxioms(plan_problem_t *plan, FILE *fin)
+{
+    int i, len;
+    char *line;
+    size_t line_size;
+    ssize_t line_len;
+
+    if (fscanf(fin, "%d", &len) != 1)
+        return -1;
+
+    line = NULL;
+    line_size = 0;
+    for (i = 0; i < len; ++i){
+        while (1){
+            line_len = getline(&line, &line_size, fin);
+            if (line_len > 1){
+                line[line_len - 1] = 0;
+                if (strcmp(line, "end_operator") == 0)
+                    break;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int loadFD(plan_problem_t *plan, const char *filename)
+{
+    FILE *fin;
+    int use_metric;
+
+    fin = fopen(filename, "r");
+    if (fin == NULL){
+        fprintf(stderr, "Error: Could not read `%s'.\n", filename);
+        return -1;
+    }
+
+    if (fdVersion(plan, fin) != 0)
+        return -1;
+    if ((use_metric = fdMetric(fin)) < 0)
+        return -1;
+    if (fdVars(plan, fin) != 0)
+        return -1;
+    if (fdMutexes(plan, fin) != 0)
+        return -1;
+    if (fdInitState(plan, fin) != 0)
+        return -1;
+    if (fdGoal(plan, fin) != 0)
+        return -1;
+    if (fdOperators(plan, fin, use_metric) != 0)
+        return -1;
+    if (fdAxioms(plan, fin) != 0)
+        return -1;
+
+    if (fdAssert(fin, "begin_SG") != 0)
+        return -1;
+    plan->succ_gen = planSuccGenFromFD(fin, plan->var, plan->op);
+    if (fdAssert(fin, "end_SG") != 0)
+        return -1;
+    // domain transition graph
+    // causal graph
+
+    fclose(fin);
+
+    return 0;
+}
+
+
 
 void planProblemDump(const plan_problem_t *p, FILE *fout)
 {

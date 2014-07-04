@@ -5,6 +5,7 @@
 #include <opts.h>
 
 static char *def_problem = NULL;
+static char *def_fd_problem = NULL;
 static char *def_search = "ehc";
 static char *def_list = "heap";
 static char *def_heur = "goalcount";
@@ -21,6 +22,8 @@ static int readOpts(int argc, char *argv[])
                 "Print this help.");
     optsAddDesc("problem", 'p', OPTS_STR, &def_problem, NULL,
                 "Path to the .json problem definition.");
+    optsAddDesc("fd", 'f', OPTS_STR, &def_fd_problem, NULL,
+                "Path to the FD's .sas problem definition.");
     optsAddDesc("search", 's', OPTS_STR, &def_search, NULL,
                 "Define search algorithm [ehc|lazy] (default: ehc)");
     optsAddDesc("list", 'l', OPTS_STR, &def_list, NULL,
@@ -42,8 +45,8 @@ static int readOpts(int argc, char *argv[])
     if (help)
         return -1;
 
-    if (def_problem == NULL){
-        fprintf(stderr, "Error: Problem must be defined (-p).\n");
+    if (def_problem == NULL && def_fd_problem == NULL){
+        fprintf(stderr, "Error: Problem must be defined (-p or -f).\n");
         return -1;
     }
 
@@ -85,7 +88,7 @@ static int progress(const plan_search_stat_t *stat)
 
 int main(int argc, char *argv[])
 {
-    plan_problem_t *prob;
+    plan_problem_t *prob = NULL;
     plan_list_lazy_t *list;
     plan_heur_t *heur;
     plan_search_t *search;
@@ -112,7 +115,11 @@ int main(int argc, char *argv[])
     printf("Max Mem: %d kb\n", max_mem);
     printf("\n");
 
-    prob = planProblemFromJson(def_problem);
+    if (def_problem){
+        prob = planProblemFromJson(def_problem);
+    }else if (def_fd_problem){
+        prob = planProblemFromFD(def_fd_problem);
+    }
     if (prob == NULL){
         return -1;
     }

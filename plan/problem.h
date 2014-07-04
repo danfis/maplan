@@ -25,6 +25,11 @@ typedef struct _plan_problem_t plan_problem_t;
 plan_problem_t *planProblemFromJson(const char *fn);
 
 /**
+ * Loads planning problem from the json file.
+ */
+plan_problem_t *planProblemFromFD(const char *fn);
+
+/**
  * Free all allocated resources.
  */
 void planProblemDel(plan_problem_t *problem);

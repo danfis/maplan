@@ -27,6 +27,13 @@ plan_succ_gen_t *planSuccGenNew(plan_operator_t *op, int opsize);
 plan_succ_gen_t *planSuccGenFromJson(json_t *data, plan_operator_t *op);
 
 /**
+ * Loads successor generator from FD definition.
+ */
+plan_succ_gen_t *planSuccGenFromFD(FILE *fin,
+                                   const plan_var_t *vars,
+                                   plan_operator_t *op);
+
+/**
  * Deletes successor generator.
  */
 void planSuccGenDel(plan_succ_gen_t *sg);

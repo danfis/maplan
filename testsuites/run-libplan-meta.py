@@ -33,10 +33,11 @@ SEARCH = (
 
 META_DIR = '/storage/praha1/home/danfis/libplan-output/'
 
+
 META_RUN = '''#!/bin/bash
 #PBS -l nodes=1:ppn=1:xeon:debian7:nfs4:cl_luna:nodecpus16
 #PBS -l walltime=3h
-#PBS -l mem=8gb
+#PBS -l mem=5gb
 #PBS -l scratch=400mb:local
 
 PROBLEM_SAS="/storage/praha1/home/danfis/libplan/data/ma-benchmarks/{sas}"
@@ -50,15 +51,15 @@ trap "cp $WORK_LOGFILE $LOGFILE.0; rm -r $SCRATCHDIR" TERM EXIT
 cp $PROBLEM_SAS $SCRATCHDIR/sas
 
 echo '==RUN {search} ==' >$WORK_LOGFILE
-$BIN {search} --max-mem 4000000 -p $SCRATCHDIR/sas >>$WORK_LOGFILE 2>&1
+$BIN {search} --max-mem 4000000 -f $SCRATCHDIR/sas >>$WORK_LOGFILE 2>&1
 echo '==RUN {search} ==' >>$WORK_LOGFILE
-$BIN {search} --max-mem 4000000 -p $SCRATCHDIR/sas >>$WORK_LOGFILE 2>&1
+$BIN {search} --max-mem 4000000 -f $SCRATCHDIR/sas >>$WORK_LOGFILE 2>&1
 echo '==RUN {search} ==' >>$WORK_LOGFILE
-$BIN {search} --max-mem 4000000 -p $SCRATCHDIR/sas >>$WORK_LOGFILE 2>&1
+$BIN {search} --max-mem 4000000 -f $SCRATCHDIR/sas >>$WORK_LOGFILE 2>&1
 echo '==RUN {search} ==' >>$WORK_LOGFILE
-$BIN {search} --max-mem 4000000 -p $SCRATCHDIR/sas >>$WORK_LOGFILE 2>&1
+$BIN {search} --max-mem 4000000 -f $SCRATCHDIR/sas >>$WORK_LOGFILE 2>&1
 echo '==RUN {search} ==' >>$WORK_LOGFILE
-$BIN {search} --max-mem 4000000 -p $SCRATCHDIR/sas >>$WORK_LOGFILE 2>&1
+$BIN {search} --max-mem 4000000 -f $SCRATCHDIR/sas >>$WORK_LOGFILE 2>&1
 
 cp $WORK_LOGFILE $LOGFILE
 '''
@@ -74,9 +75,9 @@ def loadSasDir(domain, dr):
     sas = []
 
     files = os.listdir(dr)
-    files = filter(lambda x: x[-5:] == '.json', files)
+    files = filter(lambda x: x[-4:] == '.sas', files)
     for f in files:
-        problem = f[:-5]
+        problem = f[:-4]
         sfile = domain + '/' + f
         sas += [Sas(domain, problem, sfile)]
 
@@ -96,7 +97,7 @@ def run(sas):
     for i in range(len(SEARCH)):
         workdir = '{0}/{1}/{2}/search-{3}'
         workdir = workdir.format(META_DIR, sas.domain, sas.problem, i)
-        cmd = 'ssh meta-brno \'mkdir -p {0}\''.format(workdir)
+        cmd = 'ssh meta-plzen \'mkdir -p {0}\''.format(workdir)
         print('CMD:', cmd)
         os.system(cmd)
 
@@ -105,16 +106,16 @@ def run(sas):
                                  sas = sas.sas)
         with open('/tmp/run.sh', 'w') as fout:
             fout.write(run_sh)
-        cmd = 'scp /tmp/run.sh meta-brno:{0}/run.sh'.format(workdir)
+        cmd = 'scp /tmp/run.sh meta-plzen:{0}/run.sh'.format(workdir)
         print('CMD:', cmd)
         os.system(cmd)
 
-        cmd = 'ssh meta-brno \'cd {0} && qsub run.sh\''.format(workdir)
+        cmd = 'ssh meta-plzen \'cd {0} && qsub run.sh\''.format(workdir)
         print('CMD:', cmd)
         os.system(cmd)
 
 def main(topdir):
-    cmd = 'ssh meta-brno \'rm -rf {0}\''.format(META_DIR)
+    cmd = 'ssh meta-plzen \'rm -rf {0}\''.format(META_DIR)
     print('CMD:', cmd)
     os.system(cmd)
 

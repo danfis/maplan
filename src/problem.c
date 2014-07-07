@@ -633,6 +633,37 @@ static int fdAxioms(plan_problem_t *plan, FILE *fin)
     return 0;
 }
 
+static int fdDomainTransitionGraph(plan_problem_t *plan, FILE *fin)
+{
+    char *line = NULL;
+    size_t size = 0;
+    int i;
+
+    // Ignore domain transition graph -- just skip it
+    for (i = 0; i < plan->var_size; ++i){
+        if (fdAssert(fin, "begin_DTG") != 0)
+            return -1;
+
+        while (getline(&line, &size, fin) > 0
+                && strcmp(line, "end_DTG\n") != 0);
+    }
+
+    return 0;
+}
+
+static int fdCausalGraph(plan_problem_t *plan, FILE *fin)
+{
+    char *line = NULL;
+    size_t size = 0;
+
+    // Skip causal graph for now.
+    if (fdAssert(fin, "begin_CG") != 0)
+        return -1;
+    while (getline(&line, &size, fin) > 0
+            && strcmp(line, "end_CG\n") != 0);
+    return 0;
+}
+
 static int loadFD(plan_problem_t *plan, const char *filename)
 {
     FILE *fin;
@@ -666,8 +697,11 @@ static int loadFD(plan_problem_t *plan, const char *filename)
     plan->succ_gen = planSuccGenFromFD(fin, plan->var, plan->op);
     if (fdAssert(fin, "end_SG") != 0)
         return -1;
-    // domain transition graph
-    // causal graph
+
+    if (fdDomainTransitionGraph(plan, fin) != 0)
+        return -1;
+    if (fdCausalGraph(plan, fin) != 0)
+        return -1;
 
     fclose(fin);
 

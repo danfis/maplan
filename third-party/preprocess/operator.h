@@ -34,7 +34,7 @@ public:
     };
 
     string name;
-    string owner;
+    int owner;
     vector<Prevail> prevail;    // var, val
     vector<PrePost> pre_post; // var, old-val, new-val
     int cost;
@@ -54,10 +54,8 @@ public:
     const vector<PrePost> &get_pre_post() const {return pre_post; }
     vector<PrePost> &get_pre_post() {return pre_post; }
 
-    void set_owner(const std::string &o)
-        { owner = o; }
-    const std::string &get_owner() const
-        { return owner; }
+    void set_owner(int o) { owner = o; }
+    int get_owner() const { return owner; }
 };
 
 extern void strip_operators(vector<Operator> &operators);

@@ -16,7 +16,7 @@ void splitOperators(std::vector<Operator> &ops,
             if (op->get_name().find(agent.name) != std::string::npos){
                 agent.ops.push_back(op);
                 agent.ops_ids.push_back(i);
-                op->set_owner(agent.name);
+                op->set_owner(agent.id);
                 inserted++;
             }
         }
@@ -27,7 +27,7 @@ void splitOperators(std::vector<Operator> &ops,
             for (size_t j = 0; j < agents.size(); ++j){
                 agents[j].ops.push_back(op);
                 agents[j].ops_ids.push_back(i);
-                op->set_owner("ALL");
+                op->set_owner(-1);
             }
         }
     }

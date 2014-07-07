@@ -182,7 +182,7 @@ void generate_cpp_input(bool /*solvable_in_poly_time*/,
                         const SuccessorGenerator &sg,
                         const vector<DomainTransitionGraph> transition_graphs,
                         const CausalGraph &cg,
-                        const Agent *agent,
+                        const vector<Agent> *agents,
                         const std::string &out_fn) {
     /* NOTE: solvable_in_poly_time flag is no longer included in output,
        since the planner doesn't handle it specially any more anyway. */
@@ -247,8 +247,11 @@ void generate_cpp_input(bool /*solvable_in_poly_time*/,
     cg.generate_cpp_input(outfile, ordered_vars);
     outfile << "end_CG" << endl;
 
-    if (agent){
-        agent->generate_cpp_input(outfile);
+    if (agents){
+        for (size_t i = 0; i < agents->size(); ++i){
+            const Agent &agent = (*agents)[i];
+            agent.generate_cpp_input(outfile);
+        }
     }
 
     outfile.close();

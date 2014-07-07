@@ -103,25 +103,24 @@ int main(int argc, const char **) {
     cout << "Preprocessor task size: " << task_size << endl;
 
     cout << "Writing output..." << endl;
-    generate_cpp_input(solveable_in_poly_time, ordering, metric,
-                       mutexes, initial_state, goals,
-                       operators, axioms, successor_generator,
-                       transition_graphs, causal_graph, 0x0,
-                       "output");
 
 
     if (agent_names.size() > 1){
         agentsCreate(agent_names, variables, operators, goals, agents);
         //changeValueOrdering(variables, operators, initial_state, goals,
         //                    mutexes);
-    }
-
-    for (size_t i = 0; i < agents.size(); ++i){
-        std::string fn = agents[i].name + ".sas";
         generate_cpp_input(solveable_in_poly_time, ordering, metric,
                            mutexes, initial_state, goals,
                            operators, axioms, successor_generator,
-                           transition_graphs, causal_graph, &agents[i], fn);
+                           transition_graphs, causal_graph, &agents,
+                           "output");
+    }else{
+        generate_cpp_input(solveable_in_poly_time, ordering, metric,
+                           mutexes, initial_state, goals,
+                           operators, axioms, successor_generator,
+                           transition_graphs, causal_graph, 0x0,
+                           "output");
     }
+
     cout << "done" << endl << endl;
 }

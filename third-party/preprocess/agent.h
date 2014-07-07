@@ -9,11 +9,13 @@
 struct Agent {
     std::string name;
     int id;
-    vector<Operator *> public_ops;
+    vector<int> public_ops;  /*!< IDs of public operators */
+    vector<int> private_ops; /*!< IDs of private operators */
     vector<Operator *> send_public_ops;
-    vector<Operator *> private_ops;
     vector<Operator> projected_ops;
-    vector<Operator *> ops;
+    vector<Operator *> ops; /*!< Array of operators assigned to this agent */
+    vector<int> ops_ids;    /*!< IDs of corresponding operators in .ops[]
+                                 array */
 
     void generate_cpp_input(ofstream &outfile) const;
 };

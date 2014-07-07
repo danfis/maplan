@@ -51,7 +51,7 @@ void generate_cpp_input(bool causal_graph_acyclic,
                         const SuccessorGenerator &sg,
                         const vector<DomainTransitionGraph> transition_graphs,
                         const CausalGraph &cg,
-                        const Agent *agent,
+                        const vector<Agent> *agents,
                         const std::string &out_fn);
 void check_magic(istream &in, string magic);
 

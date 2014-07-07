@@ -15,6 +15,7 @@ void splitOperators(std::vector<Operator> &ops,
             Agent &agent = agents[j];
             if (op->get_name().find(agent.name) != std::string::npos){
                 agent.ops.push_back(op);
+                agent.ops_ids.push_back(i);
                 op->set_owner(agent.name);
                 inserted++;
             }
@@ -25,6 +26,7 @@ void splitOperators(std::vector<Operator> &ops,
             // agents
             for (size_t j = 0; j < agents.size(); ++j){
                 agents[j].ops.push_back(op);
+                agents[j].ops_ids.push_back(i);
                 op->set_owner("ALL");
             }
         }
@@ -139,10 +141,10 @@ void setPublicOps(std::vector<Agent> &agents)
         std::cerr << "Agent " << agent.name << std::endl;
         for (size_t i = 0; i < agent.ops.size(); ++i){
             if (operatorUsePublicValue(*agent.ops[i])){
-                agent.public_ops.push_back(agent.ops[i]);
+                agent.public_ops.push_back(agent.ops_ids[i]);
                 //std::cerr << "Pub Op: " << agent.ops[i]->get_name() << std::endl;
             }else{
-                agent.private_ops.push_back(agent.ops[i]);
+                agent.private_ops.push_back(agent.ops_ids[i]);
                 //std::cerr << "Pri Op: " << agent.ops[i]->get_name() << std::endl;
             }
 
@@ -332,18 +334,19 @@ void Agent::generate_cpp_input(ofstream &outfile) const
 {
     outfile << "begin_agent" << endl;
     outfile << name << endl;
+    outfile << id << endl;
 
     outfile << "begin_agent_private_operators" << endl;
     outfile << private_ops.size() << endl;
     for (size_t i = 0; i < private_ops.size(); ++i){
-        private_ops[i]->generate_cpp_input(outfile);
+        outfile << private_ops[i] << endl;
     }
     outfile << "end_agent_private_operators" << endl;
 
     outfile << "begin_agent_public_operators" << endl;
     outfile << public_ops.size() << endl;
     for (size_t i = 0; i < public_ops.size(); ++i){
-        public_ops[i]->generate_cpp_input(outfile);
+        outfile << public_ops[i] << endl;
     }
     outfile << "end_agent_public_operators" << endl;
 

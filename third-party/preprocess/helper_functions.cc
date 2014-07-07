@@ -248,6 +248,7 @@ void generate_cpp_input(bool /*solvable_in_poly_time*/,
     outfile << "end_CG" << endl;
 
     if (agents){
+        outfile << agents->size() << endl;
         for (size_t i = 0; i < agents->size(); ++i){
             const Agent &agent = (*agents)[i];
             agent.generate_cpp_input(outfile);

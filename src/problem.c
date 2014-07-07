@@ -55,6 +55,9 @@ static void planProblemInit(plan_problem_t *p)
 
 static int loadJson(plan_problem_t *plan, const char *filename);
 static int loadFD(plan_problem_t *plan, const char *filename);
+static int loadAgentFD(const char *fn,
+                       plan_problem_agent_t **agents,
+                       int *num_agents);
 
 plan_problem_t *planProblemFromJson(const char *fn)
 {
@@ -86,6 +89,13 @@ plan_problem_t *planProblemFromFD(const char *fn)
     }
 
     return p;
+}
+
+int planProblemAgentFromFD(const char *fn,
+                           plan_problem_agent_t **agents,
+                           int *num_agents)
+{
+    return loadAgentFD(fn, agents, num_agents);
 }
 
 void planProblemDel(plan_problem_t *plan)
@@ -664,16 +674,130 @@ static int fdCausalGraph(plan_problem_t *plan, FILE *fin)
     return 0;
 }
 
-static int loadFD(plan_problem_t *plan, const char *filename)
+static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
 {
-    FILE *fin;
-    int use_metric;
+    int i;
+    plan_state_t *state;
+    plan_var_id_t var;
+    plan_val_t val;
 
-    fin = fopen(filename, "r");
-    if (fin == NULL){
-        fprintf(stderr, "Error: Could not read `%s'.\n", filename);
-        return -1;
+    planProblemInit(dst);
+
+    dst->var_size = src->var_size;
+    dst->var = BOR_ALLOC_ARR(plan_var_t, src->var_size);
+    for (i = 0; i < src->var_size; ++i){
+        planVarCopy(dst->var + i, src->var + i);
     }
+
+    if (!src->state_pool)
+        return;
+
+    dst->state_pool = planStatePoolNew(dst->var, dst->var_size);
+
+    state = planStateNew(src->state_pool);
+    planStatePoolGetState(src->state_pool, src->initial_state, state);
+    dst->initial_state = planStatePoolInsert(dst->state_pool, state);
+    planStateDel(src->state_pool, state);
+
+    dst->goal = planPartStateNew(dst->state_pool);
+    PLAN_PART_STATE_FOR_EACH(src->goal, i, var, val){
+        planPartStateSet(dst->state_pool, dst->goal, var, val);
+    }
+
+    dst->op_size = 0;
+    dst->op = NULL;
+    dst->succ_gen = NULL;
+}
+
+static int agentLoadOperators(plan_problem_t *prob,
+                              const plan_operator_t *src_op,
+                              FILE *fin, int private)
+{
+    int i, op_id, ins_from;
+
+    ins_from = prob->op_size;
+
+    if (fscanf(fin, "%d", &prob->op_size) != 1)
+        return -1;
+    prob->op = BOR_REALLOC_ARR(prob->op, plan_operator_t, prob->op_size);
+
+    for (i = 0; i < prob->op_size; ++i){
+        if (fscanf(fin, "%d", &op_id) != 1)
+            return -1;
+
+        planOperatorInit(prob->op + ins_from, prob->state_pool);
+        planOperatorCopy(prob->op + ins_from, src_op + op_id);
+    }
+
+    return 0;
+}
+
+static int fdAgents(const plan_problem_t *prob, FILE *fin,
+                    plan_problem_agent_t **agents_out, int *num_agents_out)
+{
+    plan_problem_agent_t *agents;
+    plan_problem_agent_t *agent;
+    int i, opi, num_agents;
+    char name[1024];
+
+    if (fscanf(fin, "%d", &num_agents) != 1)
+        return 0;
+
+    agents = BOR_ALLOC_ARR(plan_problem_agent_t, num_agents);
+
+    for (i = 0; i < num_agents; ++i){
+        agent = agents + i;
+        agentInitProblem(&agent->prob, prob);
+
+        if (fscanf(fin, "%s %d", name, &agents[i].id) != 2)
+            return -1;
+        agents[i].name = strdup(name);
+
+        if (fdAssert(fin, "begin_agent_private_operators") != 0)
+            return -1;
+        agentLoadOperators(&agent->prob, prob->op, fin, 1);
+        if (fdAssert(fin, "end_agent_private_operators") != 0)
+            return -1;
+
+        if (fdAssert(fin, "begin_agent_public_operators") != 0)
+            return -1;
+        agentLoadOperators(&agent->prob, prob->op, fin, 0);
+        if (fdAssert(fin, "end_agent_public_operators") != 0)
+            return -1;
+
+        agent->prob.succ_gen = planSuccGenNew(agent->prob.op,
+                                              agent->prob.op_size);
+
+
+        if (fdAssert(fin, "begin_agent_projected_operators") != 0)
+            return -1;
+
+        if (fscanf(fin, "%d", &agent->projected_op_size) != 1)
+            return -1;
+        agent->projected_op = BOR_ALLOC_ARR(plan_operator_t,
+                                            agent->projected_op_size);
+        for (opi = 0; opi < agent->projected_op_size; ++opi){
+            planOperatorInit(agent->projected_op + opi, agent->prob.state_pool);
+            fdOperator(agent->projected_op + opi, fin, 1);
+
+            // TODO
+            char owner[1024];
+            if (fscanf(fin, "%s", owner) != 1)
+                return -1;
+        }
+
+        if (fdAssert(fin, "end_agent_projected_operators") != 0)
+            return -1;
+    }
+
+    *num_agents_out = num_agents;
+    *agents_out = agents;
+    return 0;
+}
+
+static int loadFDBase(plan_problem_t *plan, FILE *fin)
+{
+    int use_metric;
 
     if (fdVersion(plan, fin) != 0)
         return -1;
@@ -698,10 +822,53 @@ static int loadFD(plan_problem_t *plan, const char *filename)
     if (fdAssert(fin, "end_SG") != 0)
         return -1;
 
-    if (fdDomainTransitionGraph(plan, fin) != 0)
+    return 0;
+}
+
+static int loadFD(plan_problem_t *plan, const char *filename)
+{
+    FILE *fin;
+
+    fin = fopen(filename, "r");
+    if (fin == NULL){
+        fprintf(stderr, "Error: Could not read `%s'.\n", filename);
         return -1;
-    if (fdCausalGraph(plan, fin) != 0)
+    }
+
+    if (loadFDBase(plan, fin) != 0)
         return -1;
+
+    fclose(fin);
+
+    return 0;
+}
+
+static int loadAgentFD(const char *filename,
+                       plan_problem_agent_t **agents,
+                       int *num_agents)
+{
+    FILE *fin;
+    plan_problem_t prob;
+
+    fin = fopen(filename, "r");
+    if (fin == NULL){
+        fprintf(stderr, "Error: Could not read `%s'.\n", filename);
+        return -1;
+    }
+
+    planProblemInit(&prob);
+
+    if (loadFDBase(&prob, fin) != 0)
+        return -1;
+
+    if (fdDomainTransitionGraph(&prob, fin) != 0)
+        return -1;
+    if (fdCausalGraph(&prob, fin) != 0)
+        return -1;
+    if (fdAgents(&prob, fin, agents, num_agents) != 0)
+        return -1;
+
+    planProblemFree(&prob);
 
     fclose(fin);
 

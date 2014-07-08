@@ -34,7 +34,7 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
  */
 void planMAMsgSetPublicState(plan_ma_msg_t *msg,
                              const char *agent_name,
-                             void *state, size_t state_size,
+                             const void *state, size_t state_size,
                              int cost,
                              int heuristic);
 

@@ -62,7 +62,7 @@ check: all
 
 check-valgrind: all
 	valgrind -q --leak-check=full --show-reachable=yes --trace-children=yes \
-             --error-limit=no \
+             --error-limit=no --suppressions=valgrind-suppress.supp \
              ./test $(CHECK_TS)
 
 check-valgrind-gen-suppressions: all

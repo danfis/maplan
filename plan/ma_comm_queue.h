@@ -83,4 +83,11 @@ plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_queue_t *comm);
  */
 plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_queue_t *comm);
 
+/**
+ * Returns number of peers.
+ */
+_bor_inline int planMACommQueueNumPeers(const plan_ma_comm_queue_t *comm)
+{
+    return comm->pool.node_size - 1;
+}
 #endif /* __PLAN_MA_COMM_QUEUE_H__ */

@@ -16,7 +16,7 @@ void *thRun(void *_th)
     th_t *th = _th;
     plan_ma_msg_t *msg;
     int i;
-    char agent_name[3];
+    int agent_id;
     char state[10];
     int cost, heuristic;
     int got_msg[NUM_NODES];
@@ -24,7 +24,7 @@ void *thRun(void *_th)
     bzero(got_msg, sizeof(int) * NUM_NODES);
 
     msg = planMAMsgNew();
-    planMAMsgSetPublicState(msg, "agent", "aa", 2, th->id, 2 * th->id);
+    planMAMsgSetPublicState(msg, 0, "aa", 2, th->id, 2 * th->id);
     planMACommQueueSendToAll(th->queue, msg);
     planMAMsgDel(msg);
 
@@ -34,8 +34,8 @@ void *thRun(void *_th)
 
         if (msg){
             assertTrue(planMAMsgIsPublicState(msg));
-            planMAMsgGetPublicState(msg, agent_name, 3, state, 10, &cost, &heuristic);
-            assertEquals(strcmp(agent_name, "ag"), 0);
+            planMAMsgGetPublicState(msg, &agent_id, state, 10, &cost, &heuristic);
+            assertEquals(agent_id, 0);
             assertEquals(2 * cost, heuristic);
             got_msg[cost] += 1;
             planMAMsgDel(msg);

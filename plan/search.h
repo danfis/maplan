@@ -218,6 +218,16 @@ _bor_inline const void *planSearchPackedState(const plan_search_t *search,
                                               plan_state_id_t state_id);
 
 /**
+ * Tries to inject a new (packed) state into state space and probably also
+ * into open-list (depends on algorithm).
+ * Returns its state ID if successful or PLAN_NO_STATE otherwise.
+ */
+plan_state_id_t planSearchInjectState(plan_search_t *search,
+                                      const void *packed_state,
+                                      int cost,
+                                      int heuristic);
+
+/**
  * Internals
  * ----------
  */
@@ -276,12 +286,23 @@ typedef int (*plan_search_init_fn)(void *);
 typedef int (*plan_search_step_fn)(void *, plan_search_step_change_t *change);
 
 /**
+ * Inject the given state into open-list and performs another needed
+ * operations with the state.
+ * Returns 0 on success.
+ */
+typedef int (*plan_search_inject_state_fn)(void *search,
+                                           plan_state_id_t state_id,
+                                           int cost,
+                                           int heuristic);
+
+/**
  * Common base struct for all search algorithms.
  */
 struct _plan_search_t {
     plan_search_del_fn del_fn;
     plan_search_init_fn init_fn;
     plan_search_step_fn step_fn;
+    plan_search_inject_state_fn inject_state_fn;
 
     plan_search_params_t params;
     plan_search_stat_t stat;

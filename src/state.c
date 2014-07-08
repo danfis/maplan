@@ -169,6 +169,8 @@ void *planStatePoolData(plan_state_pool_t *pool,
 plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
                                     const plan_state_t *state)
 {
+    // TODO: Refactor with planStatePoolInsertPacked() and
+    // planStatePoolFind()
     plan_state_id_t sid;
     plan_state_htable_t *htable;
     bor_list_t *hstate;
@@ -181,6 +183,43 @@ plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
     // allocate a new state and initialize it with the given values
     statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
     planStatePackerPack(pool->packer, state, statebuf);
+
+    // allocate and initialize hash table element
+    htable = planDataArrGet(pool->data[DATA_HTABLE], sid);
+    htable->state_id = sid;
+
+    // insert it into hash table
+    hstate = borHTableInsertUnique(pool->htable, &htable->htable);
+
+    if (hstate == NULL){
+        // NULL is returned if the element was inserted into table, so
+        // increase number of elements in the pool
+        ++pool->num_states;
+        return sid;
+
+    }else{
+        // If the non-NULL was returned, it means that the same state was
+        // already in hash table.
+        hfound = HTABLE_STATE(hstate);
+        return hfound->state_id;
+    }
+}
+
+plan_state_id_t planStatePoolInsertPacked(plan_state_pool_t *pool,
+                                          const void *packed_state)
+{
+    plan_state_id_t sid;
+    plan_state_htable_t *htable;
+    bor_list_t *hstate;
+    const plan_state_htable_t *hfound;
+    void *statebuf;
+
+    // determine state ID
+    sid = pool->num_states;
+
+    // allocate a new state and initialize it with the given values
+    statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
+    memcpy(statebuf, packed_state, planStatePackerBufSize(pool->packer));
 
     // allocate and initialize hash table element
     htable = planDataArrGet(pool->data[DATA_HTABLE], sid);

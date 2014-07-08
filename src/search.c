@@ -231,6 +231,34 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     return res;
 }
 
+plan_state_id_t planSearchInjectState(plan_search_t *search,
+                                      const void *packed_state,
+                                      int cost,
+                                      int heuristic)
+{
+    plan_state_id_t state_id;
+    plan_state_space_node_t *node;
+
+    // Check whether the injection is supported by the actual algorithm.
+    if (!search->inject_state_fn)
+        return PLAN_NO_STATE;
+
+    // Create a new state and check whether it is really a new state.
+    // TODO: Mayber it would be better to check the existence of the state
+    //       not trough node by directly in state-pool.
+    state_id = planStatePoolInsertPacked(search->state_pool, packed_state);
+    node     = planStateSpaceNode(search->state_space, state_id);
+
+    if (planStateSpaceNodeIsNew(node)){
+        // Call search algorithm specific code needed for injection.
+        if (search->inject_state_fn(search, state_id, cost, heuristic) != 0)
+            return PLAN_NO_STATE;
+        return state_id;
+    }
+    return PLAN_NO_STATE;
+}
+
+
 static void updateStat(plan_search_stat_t *stat,
                        long steps,
                        bor_timer_t *timer)

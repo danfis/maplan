@@ -39,10 +39,7 @@ static void sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
                             statebuf, agent->packed_state_size,
                             node->cost, node->heuristic);
     res = planMACommQueueSendToAll(agent->comm, msg);
-    fprintf(stderr, "[%d] Send: %d\n", agent->prob->id, res);
     planMAMsgDel(msg);
-
-    fprintf(stderr, "[%d] Closed: %d\n", agent->prob->id, planStateSpaceNodeIsClosed(node));
 }
 
 int planMAAgentRun(plan_ma_agent_t *agent)
@@ -58,8 +55,20 @@ int planMAAgentRun(plan_ma_agent_t *agent)
     res = planSearchInitStep(search);
     while (res == PLAN_SEARCH_CONT){
         while ((msg = planMACommQueueRecv(agent->comm)) != NULL){
-            fprintf(stderr, "[%d] RECV: %d\n", agent->prob->id,
-                    planMAMsgIsPublicState(msg));
+            if (planMAMsgIsPublicState(msg)){
+                char agent_name[1024];
+                size_t agent_name_size = 1024;
+                char state[1024];
+                size_t state_size = 1024;
+                int cost, heuristic;
+
+                planMAMsgGetPublicState(msg, agent_name, agent_name_size,
+                                        state, state_size,
+                                        &cost, &heuristic);
+                planSearchInjectState(agent->search, state,
+                                      cost, heuristic);
+            }
+
             planMAMsgDel(msg);
         }
 

@@ -113,6 +113,12 @@ plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
                                     const plan_state_t *state);
 
 /**
+ * Same as planStatePoolInsert() but packed state is accepted as input.
+ */
+plan_state_id_t planStatePoolInsertPacked(plan_state_pool_t *pool,
+                                          const void *packed_state);
+
+/**
  * Returns state ID corresponding to the given state.
  */
 plan_state_id_t planStatePoolFind(plan_state_pool_t *pool,

@@ -9,7 +9,7 @@ TEST(testSearchEHC)
 
     planSearchEHCParamsInit(&params);
 
-    params.search.prob = planProblemFromJson("load-from-file.in2.json");
+    params.search.prob = planProblemFromFD("load-from-file.in2.sas");
     params.heur = planHeurGoalCountNew(params.search.prob->goal);
     ehc = planSearchEHCNew(&params);
     planPathInit(&path);

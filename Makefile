@@ -109,6 +109,7 @@ src/ma_msg.pb.cc: src/ma_msg.proto
 
 clean:
 	rm -f $(OBJS)
+	rm -f $(CXX_OBJS)
 	rm -f .objs/*.o
 	rm -f $(TARGETS)
 	rm -f $(BIN_TARGETS)

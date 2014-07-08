@@ -4,7 +4,6 @@
 #include <plan/search.h>
 #include <opts.h>
 
-static char *def_problem = NULL;
 static char *def_fd_problem = NULL;
 static char *def_search = "ehc";
 static char *def_list = "heap";
@@ -20,8 +19,6 @@ static int readOpts(int argc, char *argv[])
 
     optsAddDesc("help", 'h', OPTS_NONE, &help, NULL,
                 "Print this help.");
-    optsAddDesc("problem", 'p', OPTS_STR, &def_problem, NULL,
-                "Path to the .json problem definition.");
     optsAddDesc("fd", 'f', OPTS_STR, &def_fd_problem, NULL,
                 "Path to the FD's .sas problem definition.");
     optsAddDesc("search", 's', OPTS_STR, &def_search, NULL,
@@ -45,7 +42,7 @@ static int readOpts(int argc, char *argv[])
     if (help)
         return -1;
 
-    if (def_problem == NULL && def_fd_problem == NULL){
+    if (def_fd_problem == NULL){
         fprintf(stderr, "Error: Problem must be defined (-p or -f).\n");
         return -1;
     }
@@ -107,7 +104,7 @@ int main(int argc, char *argv[])
 
     borTimerStart(&timer);
 
-    printf("Problem: %s\n", def_problem);
+    printf("Problem: %s\n", def_fd_problem);
     printf("Search: %s\n", def_search);
     printf("List: %s\n", def_list);
     printf("Heur: %s\n", def_heur);
@@ -115,9 +112,7 @@ int main(int argc, char *argv[])
     printf("Max Mem: %d kb\n", max_mem);
     printf("\n");
 
-    if (def_problem){
-        prob = planProblemFromJson(def_problem);
-    }else if (def_fd_problem){
+    if (def_fd_problem){
         prob = planProblemFromFD(def_fd_problem);
     }
     if (prob == NULL){

@@ -7,3 +7,5 @@ config.h
 fd-*
 Makefile.local
 src/ma_msg.pb.*
+__pycache__
+third-party/preprocess/preprocess

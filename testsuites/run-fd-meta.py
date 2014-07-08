@@ -26,7 +26,7 @@ META_DIR = '/storage/praha1/home/danfis/fd-output/'
 META_RUN = '''#!/bin/bash
 #PBS -l nodes=1:ppn=1:xeon:debian7:nfs4:cl_luna:nodecpus16
 #PBS -l walltime=2h
-#PBS -l mem=8gb
+#PBS -l mem=5gb
 #PBS -l scratch=400mb:local
 
 PROBLEM_SAS="/storage/praha1/home/danfis/libplan/data/ma-benchmarks/{sas}"
@@ -86,7 +86,7 @@ def run(sas):
     for i in range(len(FD_SEARCH)):
         workdir = '{0}/{1}/{2}/search-{3}'
         workdir = workdir.format(META_DIR, sas.domain, sas.problem, i)
-        cmd = 'ssh meta-brno \'mkdir -p {0}\''.format(workdir)
+        cmd = 'ssh meta-plzen \'mkdir -p {0}\''.format(workdir)
         print('CMD:', cmd)
         os.system(cmd)
 
@@ -95,16 +95,16 @@ def run(sas):
                                  sas = sas.sas)
         with open('/tmp/run.sh', 'w') as fout:
             fout.write(run_sh)
-        cmd = 'scp /tmp/run.sh meta-brno:{0}/run.sh'.format(workdir)
+        cmd = 'scp /tmp/run.sh meta-plzen:{0}/run.sh'.format(workdir)
         print('CMD:', cmd)
         os.system(cmd)
 
-        cmd = 'ssh meta-brno \'cd {0} && qsub run.sh\''.format(workdir)
+        cmd = 'ssh meta-plzen \'cd {0} && qsub run.sh\''.format(workdir)
         print('CMD:', cmd)
         os.system(cmd)
 
 def main(topdir):
-    cmd = 'ssh meta-brno \'rm -rf {0}\''.format(META_DIR)
+    cmd = 'ssh meta-plzen \'rm -rf {0}\''.format(META_DIR)
     print('CMD:', cmd)
     os.system(cmd)
 

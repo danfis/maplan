@@ -1,3 +1,4 @@
+#include <string.h>
 #include <boruvka/alloc.h>
 #include "plan/var.h"
 
@@ -24,3 +25,16 @@ void planVarFree(plan_var_t *plan)
     }
 }
 
+void planVarCopy(plan_var_t *dst, const plan_var_t *src)
+{
+    int i;
+
+    dst->name = strdup(src->name);
+    dst->range = src->range;
+    dst->fact_name = BOR_ALLOC_ARR(char *, dst->range);
+    for (i = 0; i < dst->range; ++i){
+        dst->fact_name[i] = strdup(src->fact_name[i]);
+    }
+
+    dst->axiom_layer = src->axiom_layer;
+}

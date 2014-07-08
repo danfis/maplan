@@ -14,8 +14,8 @@ LDFLAGS += $(JANSSON_LDFLAGS)
 LDFLAGS += $(PROTOBUF_LDFLAGS)
 LDFLAGS += -lstdc++
 
-BENCH_CFLAGS = -O3 -pipe -march=corei7
-#BENCH_CFLAGS += -g
+#BENCH_CFLAGS = -O3 -pipe -march=corei7
+BENCH_CFLAGS += -g
 BENCH_CFLAGS += -I./ -I../
 BENCH_CFLAGS += -I../../boruvka
 BENCH_CFLAGS += -I../../opts

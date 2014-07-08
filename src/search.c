@@ -24,6 +24,11 @@ void planSearchStatInit(plan_search_stat_t *stat)
     stat->not_found = 0;
 }
 
+void planSearchRunCBInit(plan_search_run_cb_t *runcb)
+{
+    bzero(runcb, sizeof(*runcb));
+}
+
 void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat)
 {
     struct rusage usg;
@@ -150,6 +155,9 @@ void _planSearchNodeOpenClose(plan_search_t *search,
                                    parent_state, parent_op,
                                    cost, heur);
     planStateSpaceClose(search->state_space, node);
+    if (search->run_cb.node_closed){
+        search->run_cb.node_closed(node, search->run_cb.data);
+    }
 }
 
 int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id)
@@ -199,6 +207,17 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     }
 
     return res;
+}
+
+plan_search_run_cb_t planSearchGetRunCB(const plan_search_t *search)
+{
+    return search->run_cb;
+}
+
+void planSearchSetRunCB(plan_search_t *search,
+                        const plan_search_run_cb_t *runcb)
+{
+    search->run_cb = *runcb;
 }
 
 static void updateStat(plan_search_stat_t *stat,

@@ -65,6 +65,27 @@ void planSearchStatInit(plan_search_stat_t *stat);
  */
 typedef int (*plan_search_progress_fn)(const plan_search_stat_t *stat);
 
+
+/**
+ * Callback called each time a node is closed.
+ */
+typedef void (*plan_search_run_node_closed)(plan_state_space_node_t *node,
+                                            void *data);
+
+/**
+ * Callbacks used during a run of the search algorithm.
+ */
+struct _plan_search_run_cb_t {
+    plan_search_run_node_closed node_closed;
+    void *data;
+};
+typedef struct _plan_search_run_cb_t plan_search_run_cb_t;
+
+/**
+ * Initializes a callback structure as empty.
+ */
+void planSearchRunCBInit(plan_search_run_cb_t *runcb);
+
 /**
  * Common parameters for all search algorithms.
  */
@@ -146,7 +167,16 @@ void planSearchDel(plan_search_t *search);
  */
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
+/**
+ * Returns currently set run callbacks.
+ */
+plan_search_run_cb_t planSearchGetRunCB(const plan_search_t *search);
 
+/**
+ * Set up run callbacks.
+ */
+void planSearchSetRunCB(plan_search_t *search,
+                        const plan_search_run_cb_t *runcb);
 
 
 /**
@@ -217,6 +247,7 @@ struct _plan_search_t {
 
     plan_search_params_t params;
     plan_search_stat_t stat;
+    plan_search_run_cb_t run_cb;
 
     plan_state_space_t *state_space;
     plan_state_t *state;             /*!< Preallocated state */

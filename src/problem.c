@@ -350,8 +350,7 @@ static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
         if (fscanf(fin, "%d", &cond) != 1)
             return -1;
         if (cond > 0){
-            fprintf(stderr, "Error: Don't know how to handle operator"
-                            " effect precondition.\n");
+            fprintf(stderr, "Error: Effect preconditions are not supported.\n");
             return -1;
         }
 
@@ -403,6 +402,11 @@ static int fdAxioms(plan_problem_t *plan, FILE *fin)
 
     if (fscanf(fin, "%d", &len) != 1)
         return -1;
+
+    if (len > 0){
+        fprintf(stderr, "Error: Axioms are not supported!\n");
+        return -1;
+    }
 
     line = NULL;
     line_size = 0;

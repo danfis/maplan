@@ -23,17 +23,12 @@ void planMAAgentDel(plan_ma_agent_t *agent)
 }
 
 
-static void nodeClosed(plan_state_space_node_t *node, void *_agent)
+static void sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
 {
-    plan_ma_agent_t *agent = _agent;
     plan_ma_msg_t *msg;
     const void *statebuf;
     size_t state_size;
     int res;
-
-    // we are interested only into public operators
-    if (!node->op || planOperatorIsPrivate(node->op))
-        return;
 
     statebuf = planStatePoolGetPackedState(agent->prob->prob.state_pool,
                                            node->state_id);
@@ -56,17 +51,14 @@ static void nodeClosed(plan_state_space_node_t *node, void *_agent)
 int planMAAgentRun(plan_ma_agent_t *agent)
 {
     plan_search_t *search = agent->search;
-    plan_search_run_cb_t orig_run_cb = planSearchGetRunCB(search);
-    plan_search_run_cb_t run_cb;
+    plan_search_step_change_t step_change;
+    plan_state_space_node_t *node;
     plan_ma_msg_t *msg;
-    int res;
+    int res, i;
 
-    planSearchRunCBInit(&run_cb);
-    run_cb.node_closed = nodeClosed;
-    run_cb.data = agent;
-    planSearchSetRunCB(search, &run_cb);
+    planSearchStepChangeInit(&step_change);
 
-    res = search->init_fn(search);
+    res = planSearchInitStep(search);
     while (res == PLAN_SEARCH_CONT){
         while ((msg = planMACommQueueRecv(agent->comm)) != NULL){
             fprintf(stderr, "[%d] RECV: %d\n", agent->prob->id,
@@ -74,11 +66,20 @@ int planMAAgentRun(plan_ma_agent_t *agent)
             planMAMsgDel(msg);
         }
 
-        res = search->step_fn(search);
+        // perform one step of algorithm
+        res = planSearchStep(search, &step_change);
+
+        // Check all closed nodes and send the states created by public
+        // operator to the peers.
+        for (i = 0; i < step_change.closed_node_size; ++i){
+            node = step_change.closed_node[i];
+            if (node->op && !planOperatorIsPrivate(node->op)){
+                sendNode(agent, node);
+            }
+        }
     }
 
-    planSearchSetRunCB(search, &orig_run_cb);
-
+    planSearchStepChangeFree(&step_change);
     fprintf(stderr, "res: %d\n", res);
     return res;
 }

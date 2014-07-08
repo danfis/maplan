@@ -24,9 +24,34 @@ void planSearchStatInit(plan_search_stat_t *stat)
     stat->not_found = 0;
 }
 
-void planSearchRunCBInit(plan_search_run_cb_t *runcb)
+void planSearchStepChangeInit(plan_search_step_change_t *step_change)
 {
-    bzero(runcb, sizeof(*runcb));
+    bzero(step_change, sizeof(*step_change));
+}
+
+void planSearchStepChangeFree(plan_search_step_change_t *step_change)
+{
+    if (step_change->closed_node)
+        BOR_FREE(step_change->closed_node);
+    bzero(step_change, sizeof(*step_change));
+}
+
+void planSearchStepChangeReset(plan_search_step_change_t *step_change)
+{
+    step_change->closed_node_size = 0;
+}
+
+void planSearchStepChangeAddClosedNode(plan_search_step_change_t *sc,
+                                       plan_state_space_node_t *node)
+{
+    if (sc->closed_node_size + 1 > sc->closed_node_alloc){
+        sc->closed_node_alloc = sc->closed_node_size + 1;
+        sc->closed_node = BOR_REALLOC_ARR(sc->closed_node,
+                                          plan_state_space_node_t *,
+                                          sc->closed_node_alloc);
+    }
+
+    sc->closed_node[sc->closed_node_size++] = node;
 }
 
 void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat)
@@ -142,12 +167,12 @@ int _planSearchNewState(plan_search_t *search,
     return -1;
 }
 
-void _planSearchNodeOpenClose(plan_search_t *search,
-                              plan_state_id_t state,
-                              plan_state_id_t parent_state,
-                              plan_operator_t *parent_op,
-                              plan_cost_t cost,
-                              plan_cost_t heur)
+plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
+                                                  plan_state_id_t state,
+                                                  plan_state_id_t parent_state,
+                                                  plan_operator_t *parent_op,
+                                                  plan_cost_t cost,
+                                                  plan_cost_t heur)
 {
     plan_state_space_node_t *node;
 
@@ -155,9 +180,7 @@ void _planSearchNodeOpenClose(plan_search_t *search,
                                    parent_state, parent_op,
                                    cost, heur);
     planStateSpaceClose(search->state_space, node);
-    if (search->run_cb.node_closed){
-        search->run_cb.node_closed(node, search->run_cb.data);
-    }
+    return node;
 }
 
 int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id)
@@ -186,7 +209,7 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
 
     res = search->init_fn(search);
     while (res == PLAN_SEARCH_CONT){
-        res = search->step_fn(search);
+        res = search->step_fn(search, NULL);
 
         ++steps;
         if (search->params.progress_fn
@@ -207,17 +230,6 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     }
 
     return res;
-}
-
-plan_search_run_cb_t planSearchGetRunCB(const plan_search_t *search)
-{
-    return search->run_cb;
-}
-
-void planSearchSetRunCB(plan_search_t *search,
-                        const plan_search_run_cb_t *runcb)
-{
-    search->run_cb = *runcb;
 }
 
 static void updateStat(plan_search_stat_t *stat,

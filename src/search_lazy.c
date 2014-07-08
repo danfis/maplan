@@ -12,7 +12,8 @@ typedef struct _plan_search_lazy_t plan_search_lazy_t;
 
 static void planSearchLazyDel(void *_lazy);
 static int planSearchLazyInit(void *_lazy);
-static int planSearchLazyStep(void *_lazy);
+static int planSearchLazyStep(void *_lazy,
+                              plan_search_step_change_t *change);
 
 void planSearchLazyParamsInit(plan_search_lazy_params_t *p)
 {
@@ -51,12 +52,17 @@ static int planSearchLazyInit(void *_lazy)
     return PLAN_SEARCH_CONT;
 }
 
-static int planSearchLazyStep(void *_lazy)
+static int planSearchLazyStep(void *_lazy,
+                              plan_search_step_change_t *change)
 {
     plan_search_lazy_t *lazy = _lazy;
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
     plan_cost_t cur_heur;
+    plan_state_space_node_t *node;
+
+    if (change)
+        planSearchStepChangeReset(change);
 
     // get next node from the list
     if (planListLazyPop(lazy->list, &parent_state_id, &parent_op) != 0){
@@ -84,9 +90,11 @@ static int planSearchLazyStep(void *_lazy)
 
     // open and close the node so we can trace the path from goal to the
     // initial state
-    _planSearchNodeOpenClose(&lazy->search, cur_state_id,
-                                   parent_state_id, parent_op,
-                                   0, cur_heur);
+    node = _planSearchNodeOpenClose(&lazy->search, cur_state_id,
+                                    parent_state_id, parent_op,
+                                    0, cur_heur);
+    if (change)
+        planSearchStepChangeAddClosedNode(change, node);
 
     // check if the current state is the goal
     if (_planSearchCheckGoal(&lazy->search, cur_state_id))

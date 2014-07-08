@@ -17,7 +17,7 @@ static void planSearchEHCDel(void *_ehc);
 /** Initializes search. This must be call exactly once. */
 static int planSearchEHCInit(void *);
 /** Performes one step in the algorithm. */
-static int planSearchEHCStep(void *);
+static int planSearchEHCStep(void *, plan_search_step_change_t *change);
 
 
 void planSearchEHCParamsInit(plan_search_ehc_params_t *p)
@@ -83,12 +83,16 @@ static int planSearchEHCInit(void *_ehc)
     return PLAN_SEARCH_CONT;
 }
 
-static int planSearchEHCStep(void *_ehc)
+static int planSearchEHCStep(void *_ehc, plan_search_step_change_t *change)
 {
     plan_search_ehc_t *ehc = _ehc;
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
     plan_cost_t cur_heur;
+    plan_state_space_node_t *node;
+
+    if (change)
+        planSearchStepChangeReset(change);
 
     // get the next node in list
     if (planListLazyPop(ehc->list, &parent_state_id, &parent_op) != 0){
@@ -109,8 +113,11 @@ static int planSearchEHCStep(void *_ehc)
 
     // open and close the node so we can trace the path from goal to the
     // initial state
-    _planSearchNodeOpenClose(&ehc->search, cur_state_id, parent_state_id,
-                             parent_op, 0, cur_heur);
+    node = _planSearchNodeOpenClose(&ehc->search,
+                                    cur_state_id, parent_state_id,
+                                    parent_op, 0, cur_heur);
+    if (change)
+        planSearchStepChangeAddClosedNode(change, node);
 
     // check if the current state is the goal
     if (_planSearchCheckGoal(&ehc->search, cur_state_id))

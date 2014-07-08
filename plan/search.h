@@ -58,6 +58,41 @@ void planSearchStatInit(plan_search_stat_t *stat);
 
 
 /**
+ * Structure with record of changes made during one step of search
+ * algorithm (see planSearchStep()).
+ */
+struct _plan_search_step_change_t {
+    plan_state_space_node_t **closed_node; /*!< Closed nodes */
+    int closed_node_size;                  /*!< Number of closed nodes */
+    int closed_node_alloc;                 /*!< Allocated space */
+};
+typedef struct _plan_search_step_change_t plan_search_step_change_t;
+
+/**
+ * Initializes plan_search_step_change_t structure.
+ */
+void planSearchStepChangeInit(plan_search_step_change_t *step_change);
+
+/**
+ * Frees all resources allocated within plan_search_step_change_t
+ * structure.
+ */
+void planSearchStepChangeFree(plan_search_step_change_t *step_change);
+
+/**
+ * Reset record of the structure.
+ */
+void planSearchStepChangeReset(plan_search_step_change_t *step_change);
+
+/**
+ * Add record about one closed node.
+ */
+void planSearchStepChangeAddClosedNode(plan_search_step_change_t *step_change,
+                                       plan_state_space_node_t *node);
+
+
+
+/**
  * Callback for progress monitoring.
  * The function should return PLAN_SEARCH_CONT if the process should
  * continue after this callback, or PLAN_SEARCH_ABORT if the process
@@ -71,20 +106,6 @@ typedef int (*plan_search_progress_fn)(const plan_search_stat_t *stat);
  */
 typedef void (*plan_search_run_node_closed)(plan_state_space_node_t *node,
                                             void *data);
-
-/**
- * Callbacks used during a run of the search algorithm.
- */
-struct _plan_search_run_cb_t {
-    plan_search_run_node_closed node_closed;
-    void *data;
-};
-typedef struct _plan_search_run_cb_t plan_search_run_cb_t;
-
-/**
- * Initializes a callback structure as empty.
- */
-void planSearchRunCBInit(plan_search_run_cb_t *runcb);
 
 /**
  * Common parameters for all search algorithms.
@@ -168,15 +189,19 @@ void planSearchDel(plan_search_t *search);
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
 /**
- * Returns currently set run callbacks.
+ * Performs initial step which should be insertion of the initial state.
+ * Returns PLAN_SEARCH_CONT or PLAN_SEARCH_FOUND.
  */
-plan_search_run_cb_t planSearchGetRunCB(const plan_search_t *search);
+_bor_inline int planSearchInitStep(plan_search_t *search);
 
 /**
- * Set up run callbacks.
+ * Performs one step in search.
+ * Returns one of PLAN_SEARCH_{CONT,FOUND,NOT_FOUND,ABORT}.
+ * If {change} is non-NULL it is filled with record of changes made during
+ * that step.
  */
-void planSearchSetRunCB(plan_search_t *search,
-                        const plan_search_run_cb_t *runcb);
+_bor_inline int planSearchStep(plan_search_t *search,
+                               plan_search_step_change_t *change);
 
 
 /**
@@ -235,7 +260,7 @@ typedef int (*plan_search_init_fn)(void *);
 /**
  * Perform one step of algorithm.
  */
-typedef int (*plan_search_step_fn)(void *);
+typedef int (*plan_search_step_fn)(void *, plan_search_step_change_t *change);
 
 /**
  * Common base struct for all search algorithms.
@@ -247,7 +272,6 @@ struct _plan_search_t {
 
     plan_search_params_t params;
     plan_search_stat_t stat;
-    plan_search_run_cb_t run_cb;
 
     plan_state_space_t *state_space;
     plan_state_t *state;             /*!< Preallocated state */
@@ -306,12 +330,12 @@ int _planSearchNewState(plan_search_t *search,
 /**
  * Open and close the state in one step.
  */
-void _planSearchNodeOpenClose(plan_search_t *search,
-                              plan_state_id_t state,
-                              plan_state_id_t parent_state,
-                              plan_operator_t *parent_op,
-                              plan_cost_t cost,
-                              plan_cost_t heur);
+plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
+                                                  plan_state_id_t state,
+                                                  plan_state_id_t parent_state,
+                                                  plan_operator_t *parent_op,
+                                                  plan_cost_t cost,
+                                                  plan_cost_t heur);
 
 /**
  * Returns true if the given state is the goal state.
@@ -321,6 +345,17 @@ void _planSearchNodeOpenClose(plan_search_t *search,
 int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id);
 
 /**** INLINES ****/
+_bor_inline int planSearchInitStep(plan_search_t *search)
+{
+    return search->init_fn(search);
+}
+
+_bor_inline int planSearchStep(plan_search_t *search,
+                               plan_search_step_change_t *change)
+{
+    return search->step_fn(search, change);
+}
+
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)
 {
     ++stat->evaluated_states;

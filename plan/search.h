@@ -205,6 +205,19 @@ _bor_inline int planSearchStep(plan_search_t *search,
 
 
 /**
+ * Returns size of the packed state.
+ * This function is here just for convenience.
+ */
+_bor_inline int planSearchPackedStateSize(const plan_search_t *search);
+
+/**
+ * Returns packed state corresponding to the given state id.
+ * Just for convenience.
+ */
+_bor_inline const void *planSearchPackedState(const plan_search_t *search,
+                                              plan_state_id_t state_id);
+
+/**
  * Internals
  * ----------
  */
@@ -355,6 +368,17 @@ _bor_inline int planSearchStep(plan_search_t *search,
                                plan_search_step_change_t *change)
 {
     return search->step_fn(search, change);
+}
+
+_bor_inline int planSearchPackedStateSize(const plan_search_t *search)
+{
+    return planStatePackerBufSize(search->state_pool->packer);
+}
+
+_bor_inline const void *planSearchPackedState(const plan_search_t *search,
+                                              plan_state_id_t state_id)
+{
+    return planStatePoolGetPackedState(search->state_pool, state_id);
 }
 
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)

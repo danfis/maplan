@@ -8,6 +8,8 @@ struct _plan_ma_agent_t {
     plan_problem_agent_t *prob;
     plan_search_t *search;
     plan_ma_comm_queue_t *comm;
+    size_t packed_state_size;
+
     pthread_t thread;
 };
 typedef struct _plan_ma_agent_t plan_ma_agent_t;

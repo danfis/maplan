@@ -11,6 +11,7 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
     agent->prob = prob;
     agent->search = search;
     agent->comm = comm;
+    agent->packed_state_size = planSearchPackedStateSize(search);
 
     return agent;
 }
@@ -27,19 +28,15 @@ static void sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
 {
     plan_ma_msg_t *msg;
     const void *statebuf;
-    size_t state_size;
     int res;
 
-    statebuf = planStatePoolGetPackedState(agent->prob->prob.state_pool,
-                                           node->state_id);
+    statebuf = planSearchPackedState(agent->search, node->state_id);
     if (statebuf == NULL)
         return;
-    // TODO
-    state_size = planStatePackerBufSize(agent->prob->prob.state_pool->packer);
 
     msg = planMAMsgNew();
     planMAMsgSetPublicState(msg, agent->prob->name,
-                            statebuf, state_size,
+                            statebuf, agent->packed_state_size,
                             node->cost, node->heuristic);
     res = planMACommQueueSendToAll(agent->comm, msg);
     fprintf(stderr, "[%d] Send: %d\n", agent->prob->id, res);

@@ -28,7 +28,6 @@ struct _plan_problem_agent_t {
 };
 typedef struct _plan_problem_agent_t plan_problem_agent_t;
 
-
 /**
  * Loads planning problem from the json file.
  */
@@ -40,16 +39,22 @@ plan_problem_t *planProblemFromJson(const char *fn);
 plan_problem_t *planProblemFromFD(const char *fn);
 
 /**
+ * Free all allocated resources.
+ */
+void planProblemDel(plan_problem_t *problem);
+
+/**
  * Load agent problem definitions from the specified file.
  * Returns 0 on success, -1 otherwise.
  */
 int planProblemAgentFromFD(const char *fn,
                            plan_problem_agent_t **agents,
                            int *num_agents);
+
 /**
- * Free all allocated resources.
+ * Free allocated resources "in-place".
  */
-void planProblemDel(plan_problem_t *problem);
+void planProblemAgentFree(plan_problem_agent_t *problem);
 
 /**
  * Returns true if the given state is the goal.

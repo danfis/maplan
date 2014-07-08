@@ -91,6 +91,12 @@ plan_problem_t *planProblemFromFD(const char *fn)
     return p;
 }
 
+void planProblemDel(plan_problem_t *plan)
+{
+    planProblemFree(plan);
+    BOR_FREE(plan);
+}
+
 int planProblemAgentFromFD(const char *fn,
                            plan_problem_agent_t **agents,
                            int *num_agents)
@@ -98,10 +104,20 @@ int planProblemAgentFromFD(const char *fn,
     return loadAgentFD(fn, agents, num_agents);
 }
 
-void planProblemDel(plan_problem_t *plan)
+void planProblemAgentFree(plan_problem_agent_t *ag)
 {
-    planProblemFree(plan);
-    BOR_FREE(plan);
+    int i;
+
+    planProblemFree(&ag->prob);
+    if (ag->name)
+        BOR_FREE(ag->name);
+
+    if (ag->projected_op){
+        for (i = 0; i < ag->projected_op_size; ++i){
+            planOperatorFree(ag->projected_op + i);
+        }
+        BOR_FREE(ag->projected_op);
+    }
 }
 
 
@@ -658,6 +674,9 @@ static int fdDomainTransitionGraph(plan_problem_t *plan, FILE *fin)
                 && strcmp(line, "end_DTG\n") != 0);
     }
 
+    if (line)
+        free(line);
+
     return 0;
 }
 
@@ -671,6 +690,9 @@ static int fdCausalGraph(plan_problem_t *plan, FILE *fin)
         return -1;
     while (getline(&line, &size, fin) > 0
             && strcmp(line, "end_CG\n") != 0);
+    if (line)
+        free(line);
+
     return 0;
 }
 
@@ -713,20 +735,22 @@ static int agentLoadOperators(plan_problem_t *prob,
                               const plan_operator_t *src_op,
                               FILE *fin, int private)
 {
-    int i, op_id, ins_from;
+    int i, op_size, op_id, ins_from;
 
     ins_from = prob->op_size;
 
-    if (fscanf(fin, "%d", &prob->op_size) != 1)
+    if (fscanf(fin, "%d", &op_size) != 1)
         return -1;
+    prob->op_size += op_size;
     prob->op = BOR_REALLOC_ARR(prob->op, plan_operator_t, prob->op_size);
 
-    for (i = 0; i < prob->op_size; ++i){
+    for (i = 0; i < op_size; ++i){
         if (fscanf(fin, "%d", &op_id) != 1)
             return -1;
 
         planOperatorInit(prob->op + ins_from, prob->state_pool);
         planOperatorCopy(prob->op + ins_from, src_op + op_id);
+        ++ins_from;
     }
 
     return 0;
@@ -737,7 +761,7 @@ static int fdAgents(const plan_problem_t *prob, FILE *fin,
 {
     plan_problem_agent_t *agents;
     plan_problem_agent_t *agent;
-    int i, opi, num_agents;
+    int i, opi, num_agents, owner;
     char name[1024];
 
     if (fscanf(fin, "%d", &num_agents) != 1)
@@ -746,6 +770,10 @@ static int fdAgents(const plan_problem_t *prob, FILE *fin,
     agents = BOR_ALLOC_ARR(plan_problem_agent_t, num_agents);
 
     for (i = 0; i < num_agents; ++i){
+        if (fdAssert(fin, "begin_agent") != 0)
+            return -1;
+
+
         agent = agents + i;
         agentInitProblem(&agent->prob, prob);
 
@@ -780,13 +808,15 @@ static int fdAgents(const plan_problem_t *prob, FILE *fin,
             planOperatorInit(agent->projected_op + opi, agent->prob.state_pool);
             fdOperator(agent->projected_op + opi, fin, 1);
 
-            // TODO
-            char owner[1024];
-            if (fscanf(fin, "%s", owner) != 1)
+            if (fscanf(fin, "%d", &owner) != 1)
                 return -1;
+            planOperatorSetOwner(agent->projected_op + opi, owner);
         }
 
         if (fdAssert(fin, "end_agent_projected_operators") != 0)
+            return -1;
+
+        if (fdAssert(fin, "end_agent") != 0)
             return -1;
     }
 

@@ -11,6 +11,7 @@ struct _plan_operator_t {
     plan_cost_t cost;
     char *name;
     int is_private;
+    int owner;
 };
 typedef struct _plan_operator_t plan_operator_t;
 
@@ -21,6 +22,8 @@ void planOperatorCopy(plan_operator_t *dst, const plan_operator_t *src);
 
 _bor_inline void planOperatorSetPrivate(plan_operator_t *op);
 _bor_inline int planOperatorIsPrivate(const plan_operator_t *op);
+_bor_inline void planOperatorSetOwner(plan_operator_t *op, int owner);
+_bor_inline int planOperatorOwner(const plan_operator_t *op);
 
 void planOperatorSetPrecondition(plan_operator_t *op,
                                  plan_var_id_t var,
@@ -49,6 +52,16 @@ _bor_inline void planOperatorSetPrivate(plan_operator_t *op)
 _bor_inline int planOperatorIsPrivate(const plan_operator_t *op)
 {
     return op->is_private;
+}
+
+_bor_inline void planOperatorSetOwner(plan_operator_t *op, int owner)
+{
+    op->owner = owner;
+}
+
+_bor_inline int planOperatorOwner(const plan_operator_t *op)
+{
+    return op->owner;
 }
 
 #endif /* __PLAN_OPERATOR_H__ */

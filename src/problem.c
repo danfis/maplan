@@ -97,14 +97,23 @@ void planProblemDel(plan_problem_t *plan)
     BOR_FREE(plan);
 }
 
-int planProblemAgentFromFD(const char *fn,
-                           plan_problem_agent_t **agents,
-                           int *num_agents)
+plan_problem_agents_t *planProblemAgentsFromFD(const char *fn)
 {
-    return loadAgentFD(fn, agents, num_agents);
+    plan_problem_agents_t *agents;
+
+    agents = BOR_ALLOC(plan_problem_agents_t);
+    agents->agent = NULL;
+    agents->agent_size = 0;
+
+    if (loadAgentFD(fn, &agents->agent, &agents->agent_size) != 0){
+        BOR_FREE(agents);
+        return NULL;
+    }
+
+    return agents;
 }
 
-void planProblemAgentFree(plan_problem_agent_t *ag)
+static void agentFree(plan_problem_agent_t *ag)
 {
     int i;
 
@@ -118,6 +127,18 @@ void planProblemAgentFree(plan_problem_agent_t *ag)
         }
         BOR_FREE(ag->projected_op);
     }
+}
+
+void planProblemAgentsDel(plan_problem_agents_t *agents)
+{
+    int i;
+
+    for (i = 0; i < agents->agent_size; ++i){
+        agentFree(agents->agent + i);
+    }
+    if (agents->agent)
+        BOR_FREE(agents->agent);
+    BOR_FREE(agents);
 }
 
 

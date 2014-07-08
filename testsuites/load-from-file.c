@@ -284,20 +284,18 @@ TEST(testLoadFromFD2)
 
 TEST(testLoadAgentFromFD)
 {
-    plan_problem_agent_t *ap;
+    plan_problem_agents_t *agents;
     plan_problem_t *p;
     plan_state_t *initial_state;
-    int api, ap_size;
-    int res;
+    int api;
 
-    res = planProblemAgentFromFD("../data/ma-benchmarks/depot/pfile1.asas",
-                                 &ap, &ap_size);
-    assertEquals(res, 0);
-    if (res != 0)
+    agents = planProblemAgentsFromFD("../data/ma-benchmarks/depot/pfile1.asas");
+    assertNotEquals(agents, NULL);
+    if (agents == NULL)
         return;
 
-    for (api = 0; api < ap_size; ++api){
-        p = &ap[api].prob;
+    for (api = 0; api < agents->agent_size; ++api){
+        p = &agents->agent[api].prob;
 
         assertEquals(p->var_size, 14);
         assertEquals(p->var[0].range, 3);
@@ -366,7 +364,5 @@ TEST(testLoadAgentFromFD)
         assertTrue(planPartStateIsSet(p->goal, 13));
     }
 
-    for (api = 0; api < ap_size; ++api){
-        planProblemAgentFree(ap + api);
-    }
+    planProblemAgentsDel(agents);
 }

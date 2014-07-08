@@ -771,6 +771,8 @@ static int agentLoadOperators(plan_problem_t *prob,
 
         planOperatorInit(prob->op + ins_from, prob->state_pool);
         planOperatorCopy(prob->op + ins_from, src_op + op_id);
+        if (private)
+            planOperatorSetPrivate(prob->op + ins_from);
         ++ins_from;
     }
 

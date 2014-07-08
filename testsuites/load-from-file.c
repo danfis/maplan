@@ -289,6 +289,8 @@ TEST(testLoadAgentFromFD)
     plan_state_t *initial_state;
     int api;
 
+    agents = planProblemAgentsFromFD("../data/ma-benchmarks/depot/pfile1.sas");
+    assertEquals(agents, NULL);
     agents = planProblemAgentsFromFD("../data/ma-benchmarks/depot/pfile1.asas");
     assertNotEquals(agents, NULL);
     if (agents == NULL)

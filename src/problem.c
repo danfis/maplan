@@ -923,6 +923,9 @@ static int loadAgentFD(const char *filename,
 
     fclose(fin);
 
+    if (*num_agents == 0)
+        return -1;
+
     return 0;
 }
 

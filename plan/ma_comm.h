@@ -20,6 +20,11 @@ plan_ma_msg_t *planMAMsgNew(void);
 void planMAMsgDel(plan_ma_msg_t *msg);
 
 /**
+ * Returns type as integer -- just for testing.
+ */
+int planMAMsgType(const plan_ma_msg_t *msg);
+
+/**
  * Returns heap-allocated packed message and its size.
  */
 void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);

@@ -17,8 +17,6 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
     return agent;
 }
 
-
-
 void planMAAgentDel(plan_ma_agent_t *agent)
 {
     if (agent->packed_state)
@@ -26,12 +24,15 @@ void planMAAgentDel(plan_ma_agent_t *agent)
     BOR_FREE(agent);
 }
 
-
 static int sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
 {
     plan_ma_msg_t *msg;
     const void *statebuf;
     int res;
+
+    // We are interested only in the states created by public operator
+    if (!node->op || planOperatorIsPrivate(node->op))
+        return -2;
 
     statebuf = planSearchPackedState(agent->search, node->state_id);
     if (statebuf == NULL)
@@ -76,7 +77,7 @@ static void sendTerminateAck(plan_ma_agent_t *agent)
 static void terminate(plan_ma_agent_t *agent)
 {
     plan_ma_msg_t *msg;
-    int count;
+    int count, ack;
 
     if (agent->comm->arbiter){
         // If this is arbiter just send TERMINATE signal and wait for ACK
@@ -110,21 +111,57 @@ static void terminate(plan_ma_agent_t *agent)
         planMAMsgDel(msg);
 
         // 2. Wait for TERMINATE
-        while ((msg = planMACommQueueRecvBlock(agent->comm)) != NULL){
+        ack = 0;
+        while (!ack && (msg = planMACommQueueRecvBlock(agent->comm)) != NULL){
             if (planMAMsgIsTerminate(msg)){
                 // 3. Send TERMINATE_ACK
                 sendTerminateAck(agent);
+                ack = 1;
             }
             planMAMsgDel(msg);
         }
     }
 }
 
+static int processMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
+{
+    int res = PLAN_SEARCH_CONT;
+
+    if (planMAMsgIsPublicState(msg)){
+        injectPublicState(agent, msg);
+        res = PLAN_SEARCH_CONT;
+
+    }else if (planMAMsgIsTerminateType(msg)){
+        if (agent->comm->arbiter){
+            // The arbiter should ignore all signals except
+            // TERMINATE_REQUEST because TERMINATE is allowed to send
+            // only arbiter itself and TERMINATE_ACK should be received
+            // in terminate() method.
+            if (planMAMsgIsTerminateRequest(msg)){
+                terminate(agent);
+            }
+
+        }else{
+            // The non-arbiter node should accept only TERMINATE
+            // signal, send ACK to him and pretend to the caller that
+            // this node is about to terminate.
+            if (planMAMsgIsTerminate(msg)){
+                sendTerminateAck(agent);
+            }
+        }
+
+        res = PLAN_SEARCH_ABORT;
+    }
+
+    planMAMsgDel(msg);
+
+    return res;
+}
+
 int planMAAgentRun(plan_ma_agent_t *agent)
 {
     plan_search_t *search = agent->search;
     plan_search_step_change_t step_change;
-    plan_state_space_node_t *node;
     plan_ma_msg_t *msg;
     int res, i;
 
@@ -132,40 +169,19 @@ int planMAAgentRun(plan_ma_agent_t *agent)
 
     res = planSearchInitStep(search);
     while (res == PLAN_SEARCH_CONT){
+        // Process all pending messages
         while ((msg = planMACommQueueRecv(agent->comm)) != NULL){
-            if (planMAMsgIsPublicState(msg)){
-                injectPublicState(agent, msg);
-
-            }else if (planMAMsgIsTerminateType(msg)){
-                if (agent->comm->arbiter){
-                    // The arbiter should ignore all signals except
-                    // TERMINATE_REQUEST because TERMINATE is allowed to send
-                    // only arbiter itself and TERMINATE_ACK should be received
-                    // in terminate() method.
-                    if (planMAMsgIsTerminateRequest(msg)){
-                        terminate(agent);
-                        res = PLAN_SEARCH_NOT_FOUND;
-                    }
-
-                }else{
-                    // The non-arbiter node should accept only TERMINATE
-                    // signal, send ACK to him and pretend to the caller that
-                    // this node is about to terminate.
-                    if (planMAMsgIsTerminate(msg)){
-                        sendTerminateAck(agent);
-                        res = PLAN_SEARCH_NOT_FOUND;
-                    }
-                }
-            }
-
-            planMAMsgDel(msg);
+            res = processMsg(agent, msg);
         }
 
+        // Again check the status because the message could change it
         if (res != PLAN_SEARCH_CONT)
             break;
 
-        // perform one step of algorithm
+        // Perform one step of algorithm.
         res = planSearchStep(search, &step_change);
+
+        // If the solution was found, terminate agent cluster and exit.
         if (res == PLAN_SEARCH_FOUND){
             terminate(agent);
             break;
@@ -174,15 +190,21 @@ int planMAAgentRun(plan_ma_agent_t *agent)
         // Check all closed nodes and send the states created by public
         // operator to the peers.
         for (i = 0; i < step_change.closed_node_size; ++i){
-            node = step_change.closed_node[i];
-            if (node->op && !planOperatorIsPrivate(node->op)){
-                sendNode(agent, node);
+            sendNode(agent, step_change.closed_node[i]);
+        }
+
+        // If this agent reached dead-end, wait either for terminate signal
+        // or for some public state it can continue from.
+        if (res == PLAN_SEARCH_NOT_FOUND){
+            fprintf(stderr, "[%d] Going to block\n", agent->comm->node_id);
+            if ((msg = planMACommQueueRecvBlock(agent->comm)) != NULL){
+                res = processMsg(agent, msg);
             }
         }
     }
 
     planSearchStepChangeFree(&step_change);
-    fprintf(stderr, "res: %d\n", res);
+    fprintf(stderr, "[%d] res: %d\n", agent->comm->node_id, res);
     return res;
 }
 

@@ -12,15 +12,13 @@ message PlanMAMsgPathOperator {
 
 message PlanMAMsg {
     enum Type {
-        /** Private: */
         TERMINATE         = 0x100;
         TERMINATE_REQUEST = 0x101;
         TERMINATE_ACK     = 0x102;
 
-        //TERMINATE       = 0x001;
-        PUBLIC_STATE    = 0x002;
-        TRACE_PATH      = 0x003;
-        TRACE_PATH_DONE = 0x004;
+        PUBLIC_STATE      = 0x001;
+        TRACE_PATH        = 0x002;
+        TRACE_PATH_DONE   = 0x003;
     }
 
     required Type type = 1;

@@ -16,6 +16,12 @@ void planMAMsgDel(plan_ma_msg_t *_msg)
     delete msg;
 }
 
+int planMAMsgType(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type();
+}
+
 void *planMAMsgPacked(const plan_ma_msg_t *_msg, size_t *size)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);

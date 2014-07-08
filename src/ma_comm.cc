@@ -72,3 +72,49 @@ void planMAMsgGetPublicState(const plan_ma_msg_t *_msg, int *agent_id,
     *heuristic = public_state.heuristic();
 }
 
+void planMAMsgSetTerminate(plan_ma_msg_t *_msg)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    msg->set_type(PlanMAMsg::TERMINATE);
+}
+
+int planMaMsgIsTerminate(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type() == PlanMAMsg::TERMINATE;
+}
+
+void planMAMsgSetTerminateRequest(plan_ma_msg_t *_msg)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    msg->set_type(PlanMAMsg::TERMINATE_REQUEST);
+}
+
+int planMaMsgIsTerminateRequest(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type() == PlanMAMsg::TERMINATE_REQUEST;
+}
+
+void planMAMsgSetTerminateAck(plan_ma_msg_t *_msg)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    msg->set_type(PlanMAMsg::TERMINATE_ACK);
+}
+
+int planMaMsgIsTerminateAck(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type() == PlanMAMsg::TERMINATE_ACK;
+}
+
+int planMaMsgIsTerminateType(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    unsigned type = msg->type();
+
+    if ((type & 0x100u) == 0x100u)
+        return 1;
+    return 0;
+}
+

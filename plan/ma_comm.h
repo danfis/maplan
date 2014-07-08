@@ -48,6 +48,41 @@ void planMAMsgGetPublicState(const plan_ma_msg_t *msg, int *agent_id,
                              void *state, size_t state_size,
                              int *cost, int *heuristic);
 
+/**
+ * Sets message as type TERMINATE
+ */
+void planMAMsgSetTerminate(plan_ma_msg_t *msg);
+
+/**
+ * Returns if the message is of type TERMINATE
+ */
+int planMaMsgIsTerminate(const plan_ma_msg_t *msg);
+
+/**
+ * Sets message as TERMINATE_REQUEST
+ */
+void planMAMsgSetTerminateRequest(plan_ma_msg_t *msg);
+
+/**
+ * Returns if the message is of type TERMINATE_REQUEST
+ */
+int planMaMsgIsTerminateRequest(const plan_ma_msg_t *msg);
+
+/**
+ * Sets message as TERMINATE_ACK
+ */
+void planMAMsgSetTerminateAck(plan_ma_msg_t *msg);
+
+/**
+ * Returns if the message is of type TERMINATE_ACK
+ */
+int planMaMsgIsTerminateAck(const plan_ma_msg_t *msg);
+
+/**
+ * Returns true if the message one of TERMINATE_* type.
+ */
+int planMaMsgIsTerminateType(const plan_ma_msg_t *msg);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

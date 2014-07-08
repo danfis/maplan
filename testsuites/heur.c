@@ -13,7 +13,7 @@ TEST(testHeurRelaxAdd)
     plan_operator_t *op[3];
     plan_cost_t h;
 
-    p = planProblemFromJson("load-from-file.in1.json");
+    p = planProblemFromFD("load-from-file.in1.sas");
     succgen = planSuccGenNew(p->op, p->op_size);
     //planProblemDump(p, stderr);
 
@@ -69,7 +69,7 @@ TEST(testHeurRelaxMax)
     plan_operator_t *op[2];
     plan_cost_t h;
 
-    p = planProblemFromJson("load-from-file.in1.json");
+    p = planProblemFromFD("load-from-file.in1.sas");
     succgen = planSuccGenNew(p->op, p->op_size);
     //planProblemDump(p, stderr);
 
@@ -125,7 +125,7 @@ TEST(testHeurRelaxFF)
     plan_operator_t *op[2];
     plan_cost_t h;
 
-    p = planProblemFromJson("load-from-file.in1.json");
+    p = planProblemFromFD("load-from-file.in1.sas");
     succgen = planSuccGenNew(p->op, p->op_size);
     //planProblemDump(p, stderr);
 

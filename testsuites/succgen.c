@@ -78,7 +78,7 @@ TEST(testSuccGen)
     int ops_size, found1, found2, i, j;
     plan_state_t *state;
 
-    prob = planProblemFromJson("load-from-file.in1.json");
+    prob = planProblemFromFD("load-from-file.in1.sas");
 
     sg = planSuccGenNew(prob->op, prob->op_size);
 

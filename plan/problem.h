@@ -37,11 +37,6 @@ typedef struct _plan_problem_agents_t plan_problem_agents_t;
 /**
  * Loads planning problem from the json file.
  */
-plan_problem_t *planProblemFromJson(const char *fn);
-
-/**
- * Loads planning problem from the json file.
- */
 plan_problem_t *planProblemFromFD(const char *fn);
 
 /**

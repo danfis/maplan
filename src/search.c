@@ -81,8 +81,9 @@ void _planSearchInit(plan_search_t *search,
 
     planSearchStatInit(&search->stat);
 
-    search->state_space = planStateSpaceNew(params->prob->state_pool);
-    search->state       = planStateNew(params->prob->state_pool);
+    search->state_pool  = params->prob->state_pool;
+    search->state_space = planStateSpaceNew(search->state_pool);
+    search->state       = planStateNew(search->state_pool);
     search->succ_op     = BOR_ALLOC_ARR(plan_operator_t *, params->prob->op_size);
     search->goal_state  = PLAN_NO_STATE;
 }
@@ -92,7 +93,7 @@ void _planSearchFree(plan_search_t *search)
     if (search->succ_op)
         BOR_FREE(search->succ_op);
     if (search->state)
-        planStateDel(search->params.prob->state_pool, search->state);
+        planStateDel(search->state_pool, search->state);
     if (search->state_space)
         planStateSpaceDel(search->state_space);
 }
@@ -101,8 +102,7 @@ plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_state_id_t state_id,
                                  plan_heur_t *heur)
 {
-    planStatePoolGetState(search->params.prob->state_pool,
-                          state_id, search->state);
+    planStatePoolGetState(search->state_pool, state_id, search->state);
     planSearchStatIncEvaluatedStates(&search->stat);
     return planHeur(heur, search->state);
 }
@@ -111,8 +111,7 @@ static int findApplicableOperators(plan_search_t *search,
                                    plan_state_id_t state_id)
 {
     // unroll the state into search->state struct
-    planStatePoolGetState(search->params.prob->state_pool,
-                          state_id, search->state);
+    planStatePoolGetState(search->state_pool, state_id, search->state);
 
     // get operators to get successors
     return planSuccGenFind(search->params.prob->succ_gen,

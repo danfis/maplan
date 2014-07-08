@@ -273,6 +273,7 @@ struct _plan_search_t {
     plan_search_params_t params;
     plan_search_stat_t stat;
 
+    plan_state_pool_t *state_pool;   /*!< State pool from params.prob */
     plan_state_space_t *state_space;
     plan_state_t *state;             /*!< Preallocated state */
     plan_operator_t **succ_op;       /*!< Preallocated array for successor

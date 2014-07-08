@@ -127,6 +127,13 @@ void planStatePoolGetState(const plan_state_pool_t *pool,
                            plan_state_t *state);
 
 /**
+ * Returns pointer to the internally managed packed state corresponding to
+ * the given state ID.
+ */
+const void *planStatePoolGetPackedState(const plan_state_pool_t*pool,
+                                        plan_state_id_t sid);
+
+/**
  * Returns if the given partial state is subset of a state identified by
  * its ID.
  */

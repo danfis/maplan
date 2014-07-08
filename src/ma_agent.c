@@ -12,6 +12,7 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
     agent->search = search;
     agent->comm = comm;
     agent->packed_state_size = planSearchPackedStateSize(search);
+    agent->packed_state = BOR_ALLOC_ARR(char, agent->packed_state_size);
 
     return agent;
 }
@@ -20,11 +21,13 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
 
 void planMAAgentDel(plan_ma_agent_t *agent)
 {
+    if (agent->packed_state)
+        BOR_FREE(agent->packed_state);
     BOR_FREE(agent);
 }
 
 
-static void sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
+static int sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
 {
     plan_ma_msg_t *msg;
     const void *statebuf;
@@ -32,14 +35,32 @@ static void sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
 
     statebuf = planSearchPackedState(agent->search, node->state_id);
     if (statebuf == NULL)
-        return;
+        return -1;
 
     msg = planMAMsgNew();
-    planMAMsgSetPublicState(msg, agent->prob->name,
+    planMAMsgSetPublicState(msg, agent->prob->id,
                             statebuf, agent->packed_state_size,
                             node->cost, node->heuristic);
     res = planMACommQueueSendToAll(agent->comm, msg);
     planMAMsgDel(msg);
+
+    return res;
+}
+
+static void injectPublicState(plan_ma_agent_t *agent,
+                              plan_ma_msg_t *msg)
+{
+    int agent_id;
+    int cost, heuristic;
+
+    planMAMsgGetPublicState(msg, &agent_id,
+                            agent->packed_state,
+                            agent->packed_state_size,
+                            &cost, &heuristic);
+
+    planSearchInjectState(agent->search, agent->packed_state,
+                          cost, heuristic);
+    // TODO: Insert message into register associated with state_id
 }
 
 int planMAAgentRun(plan_ma_agent_t *agent)
@@ -56,17 +77,7 @@ int planMAAgentRun(plan_ma_agent_t *agent)
     while (res == PLAN_SEARCH_CONT){
         while ((msg = planMACommQueueRecv(agent->comm)) != NULL){
             if (planMAMsgIsPublicState(msg)){
-                char agent_name[1024];
-                size_t agent_name_size = 1024;
-                char state[1024];
-                size_t state_size = 1024;
-                int cost, heuristic;
-
-                planMAMsgGetPublicState(msg, agent_name, agent_name_size,
-                                        state, state_size,
-                                        &cost, &heuristic);
-                planSearchInjectState(agent->search, state,
-                                      cost, heuristic);
+                injectPublicState(agent, msg);
             }
 
             planMAMsgDel(msg);

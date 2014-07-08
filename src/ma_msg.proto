@@ -1,3 +1,10 @@
+message PlanMAMsgPublicState {
+    required int32 agent_id = 1;
+    required bytes state = 2;
+    required int32 cost = 3;
+    required int32 heuristic = 4;
+};
+
 message PlanMAMsgPathOperator {
     required string name = 1;
     required int32 cost = 2;
@@ -17,12 +24,8 @@ message PlanMAMsg {
     }
 
     required Type type = 1;
-    required string agent_name = 2;
 
-    optional bytes state = 10;
-    optional int32 cost = 11;
-    optional int32 real_cost = 12;
-    optional int32 heuristic = 13;
+    optional PlanMAMsgPublicState public_state = 2;
 
     optional bytes init_state = 20;
     repeated PlanMAMsgPathOperator path = 21;

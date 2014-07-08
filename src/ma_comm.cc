@@ -34,18 +34,19 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
     return msg;
 }
 
-void planMAMsgSetPublicState(plan_ma_msg_t *_msg,
-                             const char *agent_name,
+void planMAMsgSetPublicState(plan_ma_msg_t *_msg, int agent_id,
                              const void *state, size_t state_size,
-                             int cost,
-                             int heuristic)
+                             int cost, int heuristic)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgPublicState *public_state;
+
     msg->set_type(PlanMAMsg::PUBLIC_STATE);
-    msg->set_agent_name(agent_name);
-    msg->set_state(state, state_size);
-    msg->set_cost(cost);
-    msg->set_heuristic(heuristic);
+    public_state = msg->mutable_public_state();
+    public_state->set_agent_id(agent_id);
+    public_state->set_state(state, state_size);
+    public_state->set_cost(cost);
+    public_state->set_heuristic(heuristic);
 }
 
 int planMAMsgIsPublicState(const plan_ma_msg_t *_msg)
@@ -54,22 +55,20 @@ int planMAMsgIsPublicState(const plan_ma_msg_t *_msg)
     return msg->type() == PlanMAMsg::PUBLIC_STATE;
 }
 
-void planMAMsgGetPublicState(const plan_ma_msg_t *_msg,
-                             char *agent_name, size_t agent_name_size,
+void planMAMsgGetPublicState(const plan_ma_msg_t *_msg, int *agent_id,
                              void *state, size_t state_size,
-                             int *cost,
-                             int *heuristic)
+                             int *cost, int *heuristic)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
     size_t st_size;
 
-    strncpy(agent_name, msg->agent_name().c_str(), agent_name_size);
-    agent_name[agent_name_size - 1] = 0x0;
+    const PlanMAMsgPublicState &public_state = msg->public_state();
+    *agent_id = public_state.agent_id();
 
-    st_size = BOR_MIN(state_size, msg->state().size());
-    memcpy(state, msg->state().data(), st_size);
+    st_size = BOR_MIN(state_size, public_state.state().size());
+    memcpy(state, public_state.state().data(), st_size);
 
-    *cost      = msg->cost();
-    *heuristic = msg->heuristic();
+    *cost      = public_state.cost();
+    *heuristic = public_state.heuristic();
 }
 

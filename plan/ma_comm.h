@@ -32,11 +32,9 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 /**
  * Set public-state type of message.
  */
-void planMAMsgSetPublicState(plan_ma_msg_t *msg,
-                             const char *agent_name,
+void planMAMsgSetPublicState(plan_ma_msg_t *msg, int agent_id,
                              const void *state, size_t state_size,
-                             int cost,
-                             int heuristic);
+                             int cost, int heuristic);
 
 /**
  * Returns true if the message is of type public-state.
@@ -46,11 +44,9 @@ int planMAMsgIsPublicState(const plan_ma_msg_t *msg);
 /**
  * Retrieves values from public-state message.
  */
-void planMAMsgGetPublicState(const plan_ma_msg_t *msg,
-                             char *agent_name, size_t agent_name_size,
+void planMAMsgGetPublicState(const plan_ma_msg_t *msg, int *agent_id,
                              void *state, size_t state_size,
-                             int *cost,
-                             int *heuristic);
+                             int *cost, int *heuristic);
 
 #ifdef __cplusplus
 } /* extern "C" */

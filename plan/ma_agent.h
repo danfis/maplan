@@ -5,6 +5,12 @@
 #include <plan/ma_comm_queue.h>
 
 
+struct _plan_ma_agent_path_op_t {
+    char *name;
+    plan_cost_t cost;
+};
+typedef struct _plan_ma_agent_path_op_t plan_ma_agent_path_op_t;
+
 struct _plan_ma_agent_t {
     plan_problem_agent_t *prob;
     plan_search_t *search;
@@ -16,6 +22,10 @@ struct _plan_ma_agent_t {
     void *packed_state;         /*!< Prepared buffer packed state */
     size_t packed_state_size;   /*!< Number of bytes required for packed
                                      state */
+
+    plan_ma_agent_path_op_t *path;
+    int path_size;
+    int terminated;
 
     pthread_t thread;
 };

@@ -1,13 +1,27 @@
 message PlanMAMsgPublicState {
     required int32 agent_id = 1;
     required bytes state = 2;
-    required int32 cost = 3;
-    required int32 heuristic = 4;
+    required int32 state_id = 3;
+    required int32 cost = 4;
+    required int32 heuristic = 5;
 };
 
 message PlanMAMsgPathOperator {
+    // Name of the operator
     required string name = 1;
+    // Cost of the operator
     required int32 cost = 2;
+}
+
+message PlanMAMsgTracePath {
+    // The agent who started the trace path operation
+    required int32 origin_agent_id = 1;
+    // State from which the back tracing should start
+    required int32 state_id = 2;
+    // The path traced so far
+    repeated PlanMAMsgPathOperator path = 3;
+    // True if the tracing is done
+    required bool done = 4;
 }
 
 message PlanMAMsg {
@@ -18,15 +32,10 @@ message PlanMAMsg {
 
         PUBLIC_STATE      = 0x001;
         TRACE_PATH        = 0x002;
-        TRACE_PATH_DONE   = 0x003;
     }
 
     required Type type = 1;
 
     optional PlanMAMsgPublicState public_state = 2;
-
-    optional bytes init_state = 20;
-    repeated PlanMAMsgPathOperator path = 21;
-    optional bytes path_first_state = 22;
-    optional string trace_path_initiator = 23;
+    optional PlanMAMsgTracePath trace_path = 3;
 }

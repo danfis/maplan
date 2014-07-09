@@ -4,6 +4,7 @@
 struct _pub_state_data_t {
     int agent_id;
     plan_cost_t cost;
+    plan_state_id_t state_id;
 };
 typedef struct _pub_state_data_t pub_state_data_t;
 
@@ -35,13 +36,30 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
     agent->packed_state_size = planStatePackerBufSize(agent->state_pool->packer);
     agent->packed_state = BOR_ALLOC_ARR(char, agent->packed_state_size);
 
+    agent->path = NULL;
+    agent->path_size = 0;
+    agent->terminated = 0;
+
     return agent;
+}
+
+static void agentFreePath(plan_ma_agent_path_op_t *path, int path_size)
+{
+    int i;
+
+    for (i = 0; i < path_size; ++i){
+        if (path[i].name)
+            BOR_FREE(path[i].name);
+    }
+    BOR_FREE(path);
 }
 
 void planMAAgentDel(plan_ma_agent_t *agent)
 {
     if (agent->packed_state)
         BOR_FREE(agent->packed_state);
+    if (agent->path)
+        agentFreePath(agent->path, agent->path_size);
     BOR_FREE(agent);
 }
 
@@ -62,6 +80,7 @@ static int sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
     msg = planMAMsgNew();
     planMAMsgSetPublicState(msg, agent->prob->id,
                             statebuf, agent->packed_state_size,
+                            node->state_id,
                             node->cost, node->heuristic);
     res = planMACommQueueSendToAll(agent->comm, msg);
     planMAMsgDel(msg);
@@ -76,11 +95,13 @@ static void injectPublicState(plan_ma_agent_t *agent,
     int cost, heuristic;
     pub_state_data_t *pub_state_data;
     plan_state_id_t state_id;
+    int remote_state_id;
 
     // Unroll data from the message
     planMAMsgGetPublicState(msg, &agent_id,
                             agent->packed_state,
                             agent->packed_state_size,
+                            &remote_state_id,
                             &cost, &heuristic);
 
     // Insert packed state into state-pool if not already inserted
@@ -100,6 +121,7 @@ static void injectPublicState(plan_ma_agent_t *agent,
     if (pub_state_data->cost > cost){
         pub_state_data->agent_id = agent_id;
         pub_state_data->cost     = cost;
+        pub_state_data->state_id = remote_state_id;
     }
 
     // Inject state into search algorithm
@@ -120,6 +142,9 @@ static void terminate(plan_ma_agent_t *agent)
 {
     plan_ma_msg_t *msg;
     int count, ack;
+
+    if (agent->terminated)
+        return;
 
     if (agent->comm->arbiter){
         // If this is arbiter just send TERMINATE signal and wait for ACK
@@ -163,6 +188,149 @@ static void terminate(plan_ma_agent_t *agent)
             planMAMsgDel(msg);
         }
     }
+
+    agent->terminated = 1;
+}
+
+static int backTrackPath(plan_search_t *search, plan_state_id_t from_state,
+                         plan_path_t *path)
+{
+    planSearchBackTrackPathFrom(search, from_state, path);
+    if (planPathEmpty(path)){
+        fprintf(stderr, "Error: Could not trace any portion of the"
+                        " path.\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+static void updateTracedPath(plan_ma_msg_t *msg, plan_path_t *path)
+{
+    plan_path_op_t *op;
+    bor_list_t *lst;
+
+    for (lst = borListPrev(path); lst != path; lst = borListPrev(lst)){
+        op = BOR_LIST_ENTRY(lst, plan_path_op_t, path);
+        planMAMsgTracePathAddOperator(msg, op->op->name, op->op->cost);
+    }
+}
+
+/** Updates message with the traced path and return the agent where the
+ *  message should be sent.
+ *  If the message shouldn't be sent to any agent -1 is returned in case of
+ *  error or -2 if tracing is done. */
+static int updateTracePathMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
+{
+    plan_path_t path;
+    plan_state_id_t from_state;
+    plan_path_op_t *first_op;
+    pub_state_data_t *pub_state;
+    int target_agent_id;
+
+    fprintf(stderr, "[%d]: RECV TRACE_PATH\n", agent->comm->node_id);
+
+    // Early exit if the path was already traced
+    if (planMAMsgTracePathIsDone(msg))
+        return -2;
+
+    fprintf(stderr, "[%d]: NOT DONE\n", agent->comm->node_id);
+
+    // Get state from which start back-tracking
+    from_state = planMAMsgTracePathStateId(msg);
+
+    // Back-track path and handle possible error
+    planPathInit(&path);
+    if (backTrackPath(agent->search, from_state, &path) != 0){
+        return -1;
+    }
+
+    // Update trace path message by adding all operators in reverse
+    // order
+    updateTracedPath(msg, &path);
+
+    // Check if we don't have the full path already
+    first_op = planPathFirstOp(&path);
+    if (first_op->from_state == 0){
+        // If traced the path to the initial state -- set the traced
+        // path as done.
+        planMAMsgTracePathSetDone(msg);
+        target_agent_id = -2;
+
+    }else{
+        // Retrieve public-state related data for the first state in path
+        pub_state = planStatePoolData(agent->state_pool,
+                                      agent->pub_state_reg_id,
+                                      first_op->from_state);
+        if (pub_state->agent_id == -1){
+            fprintf(stderr, "Error: Trace-back of the path end up in"
+                            " non-public state which also isn't the"
+                            " initial state!\n");
+            return -1;
+        }
+
+        planMAMsgTracePathSetStateId(msg, pub_state->state_id);
+        target_agent_id = pub_state->agent_id;
+    }
+
+    planPathFree(&path);
+
+    return target_agent_id;
+}
+
+static void readMsgPath(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
+{
+    int i, len, cost;
+    const char *name;
+
+    // get number of operators in path
+    len = planMAMsgTracePathNumOperators(msg);
+
+    // allocate memory for the path
+    if (agent->path)
+        agentFreePath(agent->path, agent->path_size);
+    agent->path_size = len;
+    agent->path = BOR_ALLOC_ARR(plan_ma_agent_path_op_t, agent->path_size);
+
+    // copy path to the internal structure
+    for (i = len - 1; i >= 0; --i){
+        name = planMAMsgTracePathOperator(msg, i, &cost);
+        agent->path[i].name = strdup(name);
+        agent->path[i].cost = cost;
+    }
+}
+
+static int processTracePath(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
+{
+    int res, origin_agent;
+
+    res = updateTracePathMsg(agent, msg);
+    if (res >= 0){
+        planMACommQueueSendToNode(agent->comm, res, msg);
+        return PLAN_SEARCH_CONT;
+
+    }else if (res == -1){
+        return PLAN_SEARCH_ABORT;
+
+    }else if (res == -2){
+        origin_agent = planMAMsgTracePathOriginAgent(msg);
+
+        if (origin_agent != agent->comm->node_id){
+            // If this is not the original agent sent the result to the
+            // original agent
+            planMACommQueueSendToNode(agent->comm, origin_agent, msg);
+            return PLAN_SEARCH_CONT;
+
+        }else{
+            // If we have received the full traced path which we
+            // originated, read the path to the internal structure and
+            // report found solution.
+            readMsgPath(agent, msg);
+            return PLAN_SEARCH_FOUND;
+        }
+    }
+
+    return PLAN_SEARCH_ABORT;
 }
 
 static int processMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
@@ -181,23 +349,61 @@ static int processMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
             // in terminate() method.
             if (planMAMsgIsTerminateRequest(msg)){
                 terminate(agent);
+                res = PLAN_SEARCH_ABORT;
             }
 
         }else{
             // The non-arbiter node should accept only TERMINATE
-            // signal, send ACK to him and pretend to the caller that
-            // this node is about to terminate.
+            // signal and send ACK to him.
             if (planMAMsgIsTerminate(msg)){
                 sendTerminateAck(agent);
+                agent->terminated = 1;
+                res = PLAN_SEARCH_ABORT;
             }
         }
 
-        res = PLAN_SEARCH_ABORT;
+    }else if (planMAMsgIsTracePath(msg)){
+        res = processTracePath(agent, msg);
     }
 
     planMAMsgDel(msg);
 
     return res;
+}
+
+static void tracePath(plan_ma_agent_t *agent)
+{
+    plan_ma_msg_t *msg;
+    int res;
+
+    fprintf(stderr, "[%d] Trace path\n", agent->comm->node_id);
+    // Construct trace-path message and fake it as it were we received this
+    // message and we should process it
+    msg = planMAMsgNew();
+    planMAMsgSetTracePath(msg, agent->comm->node_id);
+    planMAMsgTracePathSetStateId(msg, agent->search->goal_state);
+
+    // Process that message as if it were just received
+    res = processTracePath(agent, msg);
+    planMAMsgDel(msg);
+
+    // We have found solution, so exit early
+    if (res != PLAN_SEARCH_CONT)
+        return;
+
+    // Wait for trace-path response or terminate signal
+    while ((msg = planMACommQueueRecvBlock(agent->comm)) != NULL){
+        fprintf(stderr, "[%d] got msg %d\n", agent->comm->node_id,
+                planMAMsgType(msg));
+        if (planMAMsgIsTracePath(msg) || planMAMsgIsTerminateType(msg)){
+            res = processMsg(agent, msg);
+            fprintf(stderr, "[%d] msg-res: %d\n", agent->comm->node_id, res);
+            if (res != PLAN_SEARCH_CONT)
+                break;
+        }else{
+            planMAMsgDel(msg);
+        }
+    }
 }
 
 int planMAAgentRun(plan_ma_agent_t *agent)
@@ -225,6 +431,7 @@ int planMAAgentRun(plan_ma_agent_t *agent)
 
         // If the solution was found, terminate agent cluster and exit.
         if (res == PLAN_SEARCH_FOUND){
+            tracePath(agent);
             terminate(agent);
             break;
         }

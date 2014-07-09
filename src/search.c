@@ -231,6 +231,19 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     return res;
 }
 
+void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path)
+{
+    if (search->goal_state != PLAN_NO_STATE)
+        planSearchBackTrackPathFrom(search, search->goal_state, path);
+}
+
+void planSearchBackTrackPathFrom(plan_search_t *search,
+                                 plan_state_id_t from_state,
+                                 plan_path_t *path)
+{
+    extractPath(search->state_space, from_state, path);
+}
+
 
 static void updateStat(plan_search_stat_t *stat,
                        long steps,
@@ -254,7 +267,8 @@ static void extractPath(plan_state_space_t *state_space,
 
     node = planStateSpaceNode(state_space, goal_state);
     while (node && node->op){
-        planPathPrepend(path, node->op);
+        planPathPrepend(path, node->op,
+                        node->parent_state_id, node->state_id);
         node = planStateSpaceNode(state_space, node->parent_state_id);
     }
 }

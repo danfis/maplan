@@ -39,6 +39,7 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
  */
 void planMAMsgSetPublicState(plan_ma_msg_t *msg, int agent_id,
                              const void *state, size_t state_size,
+                             int state_id,
                              int cost, int heuristic);
 
 /**
@@ -51,6 +52,7 @@ int planMAMsgIsPublicState(const plan_ma_msg_t *msg);
  */
 void planMAMsgGetPublicState(const plan_ma_msg_t *msg, int *agent_id,
                              void *state, size_t state_size,
+                             int *state_id,
                              int *cost, int *heuristic);
 
 /**
@@ -87,6 +89,60 @@ int planMAMsgIsTerminateAck(const plan_ma_msg_t *msg);
  * Returns true if the message one of TERMINATE_* type.
  */
 int planMAMsgIsTerminateType(const plan_ma_msg_t *msg);
+
+/**
+ * Initializes message as TRACE_PATH
+ */
+void planMAMsgSetTracePath(plan_ma_msg_t *msg, int origin_agent_id);
+
+/**
+ * Sets the state from which tracing should continue
+ */
+void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg,
+                                  int state_id);
+
+/**
+ * Adds operator to the path
+ */
+void planMAMsgTracePathAddOperator(plan_ma_msg_t *msg,
+                                   const char *name,
+                                   int cost);
+
+/**
+ * Sets tracing as done
+ */
+void planMAMsgTracePathSetDone(plan_ma_msg_t *msg);
+
+/**
+ * Returns true if the message is TRACE_PATH message.
+ */
+int planMAMsgIsTracePath(const plan_ma_msg_t *msg);
+
+/**
+ * Returns true if the path tracing is done.
+ */
+int planMAMsgTracePathIsDone(const plan_ma_msg_t *msg);
+
+/**
+ * Returns ID of the agent who started tracing.
+ */
+int planMAMsgTracePathOriginAgent(const plan_ma_msg_t *msg);
+
+/**
+ * Returns state_id from the trace path message.
+ */
+int planMAMsgTracePathStateId(const plan_ma_msg_t *msg);
+
+/**
+ * Returns number of operators stored in path.
+ */
+int planMAMsgTracePathNumOperators(const plan_ma_msg_t *msg);
+
+/**
+ * Returns i'th operator from path and its cost.
+ */
+const char *planMAMsgTracePathOperator(const plan_ma_msg_t *msg, int i,
+                                       int *cost);
 
 #ifdef __cplusplus
 } /* extern "C" */

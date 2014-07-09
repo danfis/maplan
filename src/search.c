@@ -233,8 +233,8 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
 
 plan_state_id_t planSearchInjectState(plan_search_t *search,
                                       const void *packed_state,
-                                      int cost,
-                                      int heuristic)
+                                      plan_cost_t cost,
+                                      plan_cost_t heuristic)
 {
     plan_state_id_t state_id;
     plan_state_space_node_t *node;

@@ -224,8 +224,8 @@ _bor_inline const void *planSearchPackedState(const plan_search_t *search,
  */
 plan_state_id_t planSearchInjectState(plan_search_t *search,
                                       const void *packed_state,
-                                      int cost,
-                                      int heuristic);
+                                      plan_cost_t cost,
+                                      plan_cost_t heuristic);
 
 /**
  * Internals

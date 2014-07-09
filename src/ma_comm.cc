@@ -124,3 +124,73 @@ int planMAMsgIsTerminateType(const plan_ma_msg_t *_msg)
     return 0;
 }
 
+void planMAMsgSetTracePath(plan_ma_msg_t *_msg, int origin_agent_id)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgTracePath *trace_path;
+
+    msg->set_type(PlanMAMsg::TRACE_PATH);
+    trace_path = msg->mutable_trace_path();
+    trace_path->set_origin_agent_id(origin_agent_id);
+    trace_path->set_done(false);
+}
+
+void planMAMsgTracePathSetState(plan_ma_msg_t *_msg,
+                                void *state, size_t state_size)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgTracePath *trace_path;
+
+    trace_path = msg->mutable_trace_path();
+    trace_path->set_state(state, state_size);
+}
+
+void planMAMsgTracePathAddOperator(plan_ma_msg_t *_msg,
+                                   const char *name,
+                                   int cost)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgTracePath *trace_path;
+    PlanMAMsgPathOperator *op;
+
+    trace_path = msg->mutable_trace_path();
+    op = trace_path->add_path();
+    op->set_name(name);
+    op->set_cost(cost);
+}
+
+void planMAMsgTracePathSetDone(plan_ma_msg_t *_msg)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgTracePath *trace_path;
+
+    trace_path = msg->mutable_trace_path();
+    trace_path->set_done(true);
+}
+
+int planMAMsgIsTracePath(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type() == PlanMAMsg::TRACE_PATH;
+}
+
+int planMAMsgTracePathIsDone(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgTracePath &trace_path = msg->trace_path();
+    return trace_path.done();
+}
+
+int planMAMsgTracePathOriginAgent(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgTracePath &trace_path = msg->trace_path();
+    return trace_path.origin_agent_id();
+}
+
+const void *planMAMsgTracePathState(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgTracePath &trace_path = msg->trace_path();
+    return trace_path.state().data();
+}

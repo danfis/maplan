@@ -88,6 +88,49 @@ int planMAMsgIsTerminateAck(const plan_ma_msg_t *msg);
  */
 int planMAMsgIsTerminateType(const plan_ma_msg_t *msg);
 
+/**
+ * Initializes message as TRACE_PATH
+ */
+void planMAMsgSetTracePath(plan_ma_msg_t *msg, int origin_agent_id);
+
+/**
+ * Sets the state from which tracing should continue
+ */
+void planMAMsgTracePathSetState(plan_ma_msg_t *msg,
+                                void *state, size_t state_size);
+
+/**
+ * Adds operator to the path
+ */
+void planMAMsgTracePathAddOperator(plan_ma_msg_t *msg,
+                                   const char *name,
+                                   int cost);
+
+/**
+ * Sets tracing as done
+ */
+void planMAMsgTracePathSetDone(plan_ma_msg_t *msg);
+
+/**
+ * Returns true if the message is TRACE_PATH message.
+ */
+int planMAMsgIsTracePath(const plan_ma_msg_t *msg);
+
+/**
+ * Returns true if the path tracing is done.
+ */
+int planMAMsgTracePathIsDone(const plan_ma_msg_t *msg);
+
+/**
+ * Returns ID of the agent who started tracing.
+ */
+int planMAMsgTracePathOriginAgent(const plan_ma_msg_t *msg);
+
+/**
+ * Returns pointer to the state from which the tracing should start.
+ */
+const void *planMAMsgTracePathState(const plan_ma_msg_t *msg);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

@@ -292,8 +292,8 @@ typedef int (*plan_search_step_fn)(void *, plan_search_step_change_t *change);
  */
 typedef int (*plan_search_inject_state_fn)(void *search,
                                            plan_state_id_t state_id,
-                                           int cost,
-                                           int heuristic);
+                                           plan_cost_t cost,
+                                           plan_cost_t heuristic);
 
 /**
  * Common base struct for all search algorithms.

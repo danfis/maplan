@@ -20,7 +20,7 @@ static int planSearchEHCInit(void *);
 static int planSearchEHCStep(void *, plan_search_step_change_t *change);
 /** Injects a new state into open-list */
 static int planSearchEHCInjectState(void *, plan_state_id_t state_id,
-                                    int cost, int heuristic);
+                                    plan_cost_t cost, plan_cost_t heuristic);
 
 
 void planSearchEHCParamsInit(plan_search_ehc_params_t *p)
@@ -141,14 +141,14 @@ static int planSearchEHCStep(void *_ehc, plan_search_step_change_t *change)
 }
 
 static int planSearchEHCInjectState(void *_ehc, plan_state_id_t state_id,
-                                    int cost, int heuristic)
+                                    plan_cost_t cost, plan_cost_t heuristic)
 {
     plan_search_ehc_t *ehc = _ehc;
     plan_cost_t heur;
 
     heur = _planSearchHeuristic(&ehc->search, state_id, ehc->heur);
     _planSearchNodeOpenClose(&ehc->search, state_id,
-                             PLAN_NO_STATE, NULL, 0, heur);
-    _planSearchAddLazySuccessors(&ehc->search, state_id, 0, ehc->list);
+                             PLAN_NO_STATE, NULL, cost, heur);
+    _planSearchAddLazySuccessors(&ehc->search, state_id, cost, ehc->list);
     return 0;
 }

@@ -4,6 +4,7 @@
 struct _pub_state_data_t {
     int agent_id;
     plan_cost_t cost;
+    plan_state_id_t state_id;
 };
 typedef struct _pub_state_data_t pub_state_data_t;
 
@@ -62,6 +63,7 @@ static int sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
     msg = planMAMsgNew();
     planMAMsgSetPublicState(msg, agent->prob->id,
                             statebuf, agent->packed_state_size,
+                            node->state_id,
                             node->cost, node->heuristic);
     res = planMACommQueueSendToAll(agent->comm, msg);
     planMAMsgDel(msg);
@@ -76,11 +78,13 @@ static void injectPublicState(plan_ma_agent_t *agent,
     int cost, heuristic;
     pub_state_data_t *pub_state_data;
     plan_state_id_t state_id;
+    int remote_state_id;
 
     // Unroll data from the message
     planMAMsgGetPublicState(msg, &agent_id,
                             agent->packed_state,
                             agent->packed_state_size,
+                            &remote_state_id,
                             &cost, &heuristic);
 
     // Insert packed state into state-pool if not already inserted
@@ -100,6 +104,7 @@ static void injectPublicState(plan_ma_agent_t *agent,
     if (pub_state_data->cost > cost){
         pub_state_data->agent_id = agent_id;
         pub_state_data->cost     = cost;
+        pub_state_data->state_id = remote_state_id;
     }
 
     // Inject state into search algorithm
@@ -193,11 +198,151 @@ static int processMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
         }
 
         res = PLAN_SEARCH_ABORT;
+
+    }else if (planMAMsgIsTracePath(msg)){
+        fprintf(stderr, "[%d]: RECV TRACE_PATH\n", agent->comm->node_id);
+
+        if (!planMAMsgTracePathIsDone(msg)){
+            fprintf(stderr, "[%d]: NOT DONE\n", agent->comm->node_id);
+            plan_path_t path;
+            plan_state_id_t from_state;
+            plan_path_op_t *first_op, *op;
+            pub_state_data_t *pub_state;
+            bor_list_t *lst;
+            int origin_agent;
+
+            from_state = planMAMsgTracePathStateId(msg);
+
+            planPathInit(&path);
+            planSearchBackTrackPathFrom(agent->search, from_state, &path);
+
+            if (planPathEmpty(&path)){
+                fprintf(stderr, "Error: Could not trace any portion of the"
+                                " path. Exiting...\n");
+                planMAMsgDel(msg);
+                terminate(agent);
+                return PLAN_SEARCH_ABORT;
+            }
+
+            // Update trace path message by adding all operators in reverse
+            // order
+            for (lst = borListPrev(&path); lst != &path; lst = borListPrev(lst)){
+                op = BOR_LIST_ENTRY(lst, plan_path_op_t, path);
+                planMAMsgTracePathAddOperator(msg, op->op->name, op->op->cost);
+            }
+
+            // Check if we don't have the full path already
+            first_op = planPathFirstOp(&path);
+            if (first_op->from_state == 0){
+                origin_agent = planMAMsgTracePathOriginAgent(msg);
+                planMAMsgTracePathSetDone(msg);
+                if (origin_agent == agent->comm->node_id){
+                    fprintf(stdout, "[%d] Found path1\n", agent->comm->node_id);
+                    res = PLAN_SEARCH_FOUND;
+                }else{
+                    planMACommQueueSendToNode(agent->comm, origin_agent, msg);
+                }
+
+            }else{
+                // Retrieve public-state related data for the first state in path
+                pub_state = planStatePoolData(agent->state_pool,
+                                              agent->pub_state_reg_id,
+                                              first_op->from_state);
+                if (pub_state->agent_id == -1){
+                    fprintf(stderr, "Error: Trace-back of the path end up in"
+                                    " non-public state which also isn't the"
+                                    " initial state!\n");
+                    planMAMsgDel(msg);
+                    return PLAN_SEARCH_ABORT;
+                }
+
+                // Send the message to the right agent
+                planMACommQueueSendToNode(agent->comm, pub_state->agent_id, msg);
+            }
+
+            planPathFree(&path);
+
+
+        }else{
+            fprintf(stderr, "[%d]: DONE\n", agent->comm->node_id);
+            // TODO: Read the path somehow
+            res = PLAN_SEARCH_FOUND;
+        }
     }
 
     planMAMsgDel(msg);
 
     return res;
+}
+
+static void tracePath(plan_ma_agent_t *agent)
+{
+    plan_path_t path;
+    plan_path_op_t *first_op, *op;
+    bor_list_t *lst;
+    plan_ma_msg_t *msg;
+    pub_state_data_t *pub_state;
+    int res;
+
+    // First trace-back the first portion of the path
+    // Note that we are assuming that the goal-state is local!
+    // TODO: Move path to agent structure
+    planPathInit(&path);
+    planSearchBackTrackPath(agent->search, &path);
+
+    if (planPathEmpty(&path)){
+        fprintf(stderr, "Error: Could not trace any portion of the path.");
+        return;
+    }
+
+    // Check if we don't have the full path already
+    first_op = planPathFirstOp(&path);
+    if (first_op->from_state == 0){
+        fprintf(stdout, "[%d] Found path:\n", agent->comm->node_id);
+        planPathPrint(&path, stdout);
+
+    }else{
+        // Retrieve public-state related data for the first state in path
+        pub_state = planStatePoolData(agent->state_pool,
+                                      agent->pub_state_reg_id,
+                                      first_op->from_state);
+        if (pub_state->agent_id == -1){
+            fprintf(stderr, "Error: Trace-back of the path end up in"
+                            " non-public state which also isn't the"
+                            " initial state!\n");
+            return;
+        }
+
+        // Construct TRACE_PATH message
+        msg = planMAMsgNew();
+        planMAMsgSetTracePath(msg, agent->comm->node_id);
+        planMAMsgTracePathSetStateId(msg, pub_state->state_id);
+
+        // Add all operators in path in reverse order
+        for (lst = borListPrev(&path); lst != &path; lst = borListPrev(lst)){
+            op = BOR_LIST_ENTRY(lst, plan_path_op_t, path);
+            planMAMsgTracePathAddOperator(msg, op->op->name, op->op->cost);
+        }
+
+        // Send the message to the right agent
+        planMACommQueueSendToNode(agent->comm, pub_state->agent_id, msg);
+
+        planMAMsgDel(msg);
+    }
+
+    planPathFree(&path);
+
+    // Wait for trace-path response or terminate signal
+    while ((msg = planMACommQueueRecvBlock(agent->comm)) != NULL){
+        if (planMAMsgIsTracePath(msg)
+                || planMAMsgIsTerminateType(msg)){
+            res = processMsg(agent, msg);
+            if (res != PLAN_SEARCH_CONT)
+                break;
+        }else{
+            planMAMsgDel(msg);
+        }
+    }
 }
 
 int planMAAgentRun(plan_ma_agent_t *agent)
@@ -225,6 +370,7 @@ int planMAAgentRun(plan_ma_agent_t *agent)
 
         // If the solution was found, terminate agent cluster and exit.
         if (res == PLAN_SEARCH_FOUND){
+            tracePath(agent);
             terminate(agent);
             break;
         }

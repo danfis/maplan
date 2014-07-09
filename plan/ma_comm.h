@@ -39,6 +39,7 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
  */
 void planMAMsgSetPublicState(plan_ma_msg_t *msg, int agent_id,
                              const void *state, size_t state_size,
+                             int state_id,
                              int cost, int heuristic);
 
 /**
@@ -51,6 +52,7 @@ int planMAMsgIsPublicState(const plan_ma_msg_t *msg);
  */
 void planMAMsgGetPublicState(const plan_ma_msg_t *msg, int *agent_id,
                              void *state, size_t state_size,
+                             int *state_id,
                              int *cost, int *heuristic);
 
 /**
@@ -96,8 +98,8 @@ void planMAMsgSetTracePath(plan_ma_msg_t *msg, int origin_agent_id);
 /**
  * Sets the state from which tracing should continue
  */
-void planMAMsgTracePathSetState(plan_ma_msg_t *msg,
-                                void *state, size_t state_size);
+void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg,
+                                  int state_id);
 
 /**
  * Adds operator to the path
@@ -127,9 +129,9 @@ int planMAMsgTracePathIsDone(const plan_ma_msg_t *msg);
 int planMAMsgTracePathOriginAgent(const plan_ma_msg_t *msg);
 
 /**
- * Returns pointer to the state from which the tracing should start.
+ * Returns state_id from the trace path message.
  */
-const void *planMAMsgTracePathState(const plan_ma_msg_t *msg);
+int planMAMsgTracePathStateId(const plan_ma_msg_t *msg);
 
 #ifdef __cplusplus
 } /* extern "C" */

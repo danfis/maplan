@@ -189,6 +189,20 @@ void planSearchDel(plan_search_t *search);
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
 /**
+ * Extracts path from initial state to the goal state (if was found) using
+ * back-tracking from the goal state.
+ */
+void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path);
+
+/**
+ * Simliar to planSearchBackTrackPath() but starting state for
+ * back-tracking is specified.
+ */
+void planSearchBackTrackPathFrom(plan_search_t *search,
+                                 plan_state_id_t from_state,
+                                 plan_path_t *path);
+
+/**
  * Performs initial step which should be insertion of the initial state.
  * Returns PLAN_SEARCH_CONT or PLAN_SEARCH_FOUND.
  */

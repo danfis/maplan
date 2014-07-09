@@ -42,6 +42,7 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
 
 void planMAMsgSetPublicState(plan_ma_msg_t *_msg, int agent_id,
                              const void *state, size_t state_size,
+                             int state_id,
                              int cost, int heuristic)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
@@ -51,6 +52,7 @@ void planMAMsgSetPublicState(plan_ma_msg_t *_msg, int agent_id,
     public_state = msg->mutable_public_state();
     public_state->set_agent_id(agent_id);
     public_state->set_state(state, state_size);
+    public_state->set_state_id(state_id);
     public_state->set_cost(cost);
     public_state->set_heuristic(heuristic);
 }
@@ -63,6 +65,7 @@ int planMAMsgIsPublicState(const plan_ma_msg_t *_msg)
 
 void planMAMsgGetPublicState(const plan_ma_msg_t *_msg, int *agent_id,
                              void *state, size_t state_size,
+                             int *state_id,
                              int *cost, int *heuristic)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
@@ -73,6 +76,7 @@ void planMAMsgGetPublicState(const plan_ma_msg_t *_msg, int *agent_id,
 
     st_size = BOR_MIN(state_size, public_state.state().size());
     memcpy(state, public_state.state().data(), st_size);
+    *state_id = public_state.state_id();
 
     *cost      = public_state.cost();
     *heuristic = public_state.heuristic();
@@ -135,14 +139,14 @@ void planMAMsgSetTracePath(plan_ma_msg_t *_msg, int origin_agent_id)
     trace_path->set_done(false);
 }
 
-void planMAMsgTracePathSetState(plan_ma_msg_t *_msg,
-                                void *state, size_t state_size)
+void planMAMsgTracePathSetStateId(plan_ma_msg_t *_msg,
+                                  int state_id)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
     PlanMAMsgTracePath *trace_path;
 
     trace_path = msg->mutable_trace_path();
-    trace_path->set_state(state, state_size);
+    trace_path->set_state_id(state_id);
 }
 
 void planMAMsgTracePathAddOperator(plan_ma_msg_t *_msg,
@@ -188,9 +192,9 @@ int planMAMsgTracePathOriginAgent(const plan_ma_msg_t *_msg)
     return trace_path.origin_agent_id();
 }
 
-const void *planMAMsgTracePathState(const plan_ma_msg_t *_msg)
+int planMAMsgTracePathStateId(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
     const PlanMAMsgTracePath &trace_path = msg->trace_path();
-    return trace_path.state().data();
+    return trace_path.state_id();
 }

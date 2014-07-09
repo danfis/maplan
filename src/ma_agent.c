@@ -1,12 +1,47 @@
 #include <boruvka/alloc.h>
 #include "plan/ma_agent.h"
 
+/** Reference data for the received public states */
 struct _pub_state_data_t {
-    int agent_id;
-    plan_cost_t cost;
-    plan_state_id_t state_id;
+    int agent_id;             /*!< ID of the source agent */
+    plan_cost_t cost;         /*!< Cost of the path to this state as found
+                                   by the remote agent. */
+    plan_state_id_t state_id; /*!< ID of the state in remote agent's state
+                                   pool. This is used for back-tracking. */
 };
 typedef struct _pub_state_data_t pub_state_data_t;
+
+/** Frees allocated agent path */
+static void agentFreePath(plan_ma_agent_path_op_t *path, int path_size);
+/** Send the given node to all peers as public state */
+static int sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node);
+/** Injects public state corresponding to the message to the search
+ *  algorithm */
+static void injectPublicState(plan_ma_agent_t *agent, plan_ma_msg_t *msg);
+/** Sends TERMINATE_ACK to the arbiter */
+static void sendTerminateAck(plan_ma_agent_t *agent);
+/** Performs terminate operation. */
+static void terminate(plan_ma_agent_t *agent);
+/** Back tracks path from the specified state */
+static int backTrackPath(plan_search_t *search, plan_state_id_t from_state,
+                         plan_path_t *path);
+/** Updates path in the given message with operators in the path */
+static void updateTracedPath(plan_path_t *path, plan_ma_msg_t *msg);
+/** Updates message with the traced path and return the agent where the
+ *  message should be sent.
+ *  If the message shouldn't be sent to any agent -1 is returned in case of
+ *  error or -2 if tracing is done. */
+static int updateTracePathMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg);
+/** Reads path stored in message into internal storage */
+static void readMsgPath(plan_ma_agent_t *agent, plan_ma_msg_t *msg);
+/** Process trace-path type message and returns PLAN_SEARCH_* status */
+static int processTracePath(plan_ma_agent_t *agent, plan_ma_msg_t *msg);
+/** Process one message and returns PLAN_SEARCH_* status */
+static int processMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg);
+/** Performs trace-path operation, it is assumed that agent->search has
+ *  found the solution. */
+static void tracePath(plan_ma_agent_t *agent);
+
 
 plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
                                 plan_search_t *search,
@@ -43,6 +78,68 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
     return agent;
 }
 
+void planMAAgentDel(plan_ma_agent_t *agent)
+{
+    if (agent->packed_state)
+        BOR_FREE(agent->packed_state);
+    if (agent->path)
+        agentFreePath(agent->path, agent->path_size);
+    BOR_FREE(agent);
+}
+
+int planMAAgentRun(plan_ma_agent_t *agent)
+{
+    plan_search_t *search = agent->search;
+    plan_search_step_change_t step_change;
+    plan_ma_msg_t *msg;
+    int res, i;
+
+    planSearchStepChangeInit(&step_change);
+
+    res = planSearchInitStep(search);
+    while (res == PLAN_SEARCH_CONT){
+        // Process all pending messages
+        while ((msg = planMACommQueueRecv(agent->comm)) != NULL){
+            res = processMsg(agent, msg);
+        }
+
+        // Again check the status because the message could change it
+        if (res != PLAN_SEARCH_CONT)
+            break;
+
+        // Perform one step of algorithm.
+        res = planSearchStep(search, &step_change);
+
+        // If the solution was found, terminate agent cluster and exit.
+        if (res == PLAN_SEARCH_FOUND){
+            tracePath(agent);
+            terminate(agent);
+            break;
+        }
+
+        // Check all closed nodes and send the states created by public
+        // operator to the peers.
+        for (i = 0; i < step_change.closed_node_size; ++i){
+            sendNode(agent, step_change.closed_node[i]);
+        }
+
+        // If this agent reached dead-end, wait either for terminate signal
+        // or for some public state it can continue from.
+        if (res == PLAN_SEARCH_NOT_FOUND){
+            fprintf(stderr, "[%d] Going to block\n", agent->comm->node_id);
+            if ((msg = planMACommQueueRecvBlock(agent->comm)) != NULL){
+                res = processMsg(agent, msg);
+            }
+        }
+    }
+
+    planSearchStepChangeFree(&step_change);
+    fprintf(stderr, "[%d] res: %d\n", agent->comm->node_id, res);
+    return res;
+}
+
+
+
 static void agentFreePath(plan_ma_agent_path_op_t *path, int path_size)
 {
     int i;
@@ -52,15 +149,6 @@ static void agentFreePath(plan_ma_agent_path_op_t *path, int path_size)
             BOR_FREE(path[i].name);
     }
     BOR_FREE(path);
-}
-
-void planMAAgentDel(plan_ma_agent_t *agent)
-{
-    if (agent->packed_state)
-        BOR_FREE(agent->packed_state);
-    if (agent->path)
-        agentFreePath(agent->path, agent->path_size);
-    BOR_FREE(agent);
 }
 
 static int sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
@@ -88,8 +176,7 @@ static int sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
     return res;
 }
 
-static void injectPublicState(plan_ma_agent_t *agent,
-                              plan_ma_msg_t *msg)
+static void injectPublicState(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
 {
     int agent_id;
     int cost, heuristic;
@@ -205,7 +292,7 @@ static int backTrackPath(plan_search_t *search, plan_state_id_t from_state,
     return 0;
 }
 
-static void updateTracedPath(plan_ma_msg_t *msg, plan_path_t *path)
+static void updateTracedPath(plan_path_t *path, plan_ma_msg_t *msg)
 {
     plan_path_op_t *op;
     bor_list_t *lst;
@@ -247,7 +334,7 @@ static int updateTracePathMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
 
     // Update trace path message by adding all operators in reverse
     // order
-    updateTracedPath(msg, &path);
+    updateTracedPath(&path, msg);
 
     // Check if we don't have the full path already
     first_op = planPathFirstOp(&path);
@@ -404,56 +491,5 @@ static void tracePath(plan_ma_agent_t *agent)
             planMAMsgDel(msg);
         }
     }
-}
-
-int planMAAgentRun(plan_ma_agent_t *agent)
-{
-    plan_search_t *search = agent->search;
-    plan_search_step_change_t step_change;
-    plan_ma_msg_t *msg;
-    int res, i;
-
-    planSearchStepChangeInit(&step_change);
-
-    res = planSearchInitStep(search);
-    while (res == PLAN_SEARCH_CONT){
-        // Process all pending messages
-        while ((msg = planMACommQueueRecv(agent->comm)) != NULL){
-            res = processMsg(agent, msg);
-        }
-
-        // Again check the status because the message could change it
-        if (res != PLAN_SEARCH_CONT)
-            break;
-
-        // Perform one step of algorithm.
-        res = planSearchStep(search, &step_change);
-
-        // If the solution was found, terminate agent cluster and exit.
-        if (res == PLAN_SEARCH_FOUND){
-            tracePath(agent);
-            terminate(agent);
-            break;
-        }
-
-        // Check all closed nodes and send the states created by public
-        // operator to the peers.
-        for (i = 0; i < step_change.closed_node_size; ++i){
-            sendNode(agent, step_change.closed_node[i]);
-        }
-
-        // If this agent reached dead-end, wait either for terminate signal
-        // or for some public state it can continue from.
-        if (res == PLAN_SEARCH_NOT_FOUND){
-            fprintf(stderr, "[%d] Going to block\n", agent->comm->node_id);
-            if ((msg = planMACommQueueRecvBlock(agent->comm)) != NULL){
-                res = processMsg(agent, msg);
-            }
-        }
-    }
-
-    planSearchStepChangeFree(&step_change);
-    fprintf(stderr, "[%d] res: %d\n", agent->comm->node_id, res);
-    return res;
 }
 

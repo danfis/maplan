@@ -8,6 +8,8 @@ struct _plan_ma_agent_t {
     plan_problem_agent_t *prob;
     plan_search_t *search;
     plan_ma_comm_queue_t *comm;
+
+    plan_state_pool_t *state_pool; /*!< State pool from .prob */
     void *packed_state;         /*!< Prepared buffer packed state */
     size_t packed_state_size;   /*!< Number of bytes required for packed
                                      state */

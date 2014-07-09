@@ -7,10 +7,18 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
 {
     plan_ma_agent_t *agent;
 
+    if (search->state_pool != prob->prob.state_pool){
+        fprintf(stderr, "Error: Search algorithm uses different state"
+                        " pool/registry than the agent. This is not right!\n");
+        return NULL;
+    }
+
     agent = BOR_ALLOC(plan_ma_agent_t);
     agent->prob = prob;
     agent->search = search;
     agent->comm = comm;
+
+    agent->state_pool = agent->prob->prob.state_pool;
     agent->packed_state_size = planSearchPackedStateSize(search);
     agent->packed_state = BOR_ALLOC_ARR(char, agent->packed_state_size);
 

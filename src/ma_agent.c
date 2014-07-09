@@ -69,7 +69,6 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
                                                        NULL, &msg_init);
 
     agent->packed_state_size = planStatePackerBufSize(agent->state_pool->packer);
-    agent->packed_state = BOR_ALLOC_ARR(char, agent->packed_state_size);
 
     agent->path = NULL;
     agent->path_size = 0;
@@ -80,8 +79,6 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
 
 void planMAAgentDel(plan_ma_agent_t *agent)
 {
-    if (agent->packed_state)
-        BOR_FREE(agent->packed_state);
     if (agent->path)
         agentFreePath(agent->path, agent->path_size);
     BOR_FREE(agent);
@@ -178,22 +175,19 @@ static int sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
 
 static void injectPublicState(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
 {
-    int agent_id;
     int cost, heuristic;
     pub_state_data_t *pub_state_data;
     plan_state_id_t state_id;
-    int remote_state_id;
+    const void *packed_state;
 
     // Unroll data from the message
-    planMAMsgGetPublicState(msg, &agent_id,
-                            agent->packed_state,
-                            agent->packed_state_size,
-                            &remote_state_id,
-                            &cost, &heuristic);
+    packed_state = planMAMsgPublicStateStateBuf(msg);
+    cost         = planMAMsgPublicStateCost(msg);
+    heuristic    = planMAMsgPublicStateHeur(msg);
 
     // Insert packed state into state-pool if not already inserted
     state_id = planStatePoolInsertPacked(agent->state_pool,
-                                         agent->packed_state);
+                                         packed_state);
 
     // Get public state reference data
     pub_state_data = planStatePoolData(agent->state_pool,
@@ -206,9 +200,9 @@ static void injectPublicState(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
     // current one. This means that either the state is brand new or the
     // previously inserted state had bigger cost.
     if (pub_state_data->cost > cost){
-        pub_state_data->agent_id = agent_id;
+        pub_state_data->agent_id = planMAMsgPublicStateAgent(msg);
         pub_state_data->cost     = cost;
-        pub_state_data->state_id = remote_state_id;
+        pub_state_data->state_id = planMAMsgPublicStateStateId(msg);
     }
 
     // Inject state into search algorithm

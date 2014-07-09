@@ -17,7 +17,6 @@ void *thRun(void *_th)
     plan_ma_msg_t *msg;
     int i;
     int agent_id;
-    char state[10];
     int cost, heuristic;
     int state_id;
     int got_msg[NUM_NODES];
@@ -35,7 +34,10 @@ void *thRun(void *_th)
 
         if (msg){
             assertTrue(planMAMsgIsPublicState(msg));
-            planMAMsgGetPublicState(msg, &agent_id, state, 10, &state_id, &cost, &heuristic);
+            agent_id  = planMAMsgPublicStateAgent(msg);
+            state_id  = planMAMsgPublicStateStateId(msg);
+            cost      = planMAMsgPublicStateCost(msg);
+            heuristic = planMAMsgPublicStateHeur(msg);
             assertEquals(agent_id, 0);
             assertEquals(state_id, 1);
             assertEquals(2 * cost, heuristic);

@@ -63,6 +63,41 @@ int planMAMsgIsPublicState(const plan_ma_msg_t *_msg)
     return msg->type() == PlanMAMsg::PUBLIC_STATE;
 }
 
+int planMAMsgPublicStateAgent(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgPublicState &public_state = msg->public_state();
+    return public_state.agent_id();
+}
+
+const void *planMAMsgPublicStateStateBuf(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgPublicState &public_state = msg->public_state();
+    return public_state.state().data();
+}
+
+int planMAMsgPublicStateStateId(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgPublicState &public_state = msg->public_state();
+    return public_state.state_id();
+}
+
+int planMAMsgPublicStateCost(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgPublicState &public_state = msg->public_state();
+    return public_state.cost();
+}
+
+int planMAMsgPublicStateHeur(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgPublicState &public_state = msg->public_state();
+    return public_state.heuristic();
+}
+
 void planMAMsgGetPublicState(const plan_ma_msg_t *_msg, int *agent_id,
                              void *state, size_t state_size,
                              int *state_id,

@@ -48,12 +48,30 @@ void planMAMsgSetPublicState(plan_ma_msg_t *msg, int agent_id,
 int planMAMsgIsPublicState(const plan_ma_msg_t *msg);
 
 /**
- * Retrieves values from public-state message.
+ * Returns agent_id of the source agent.
  */
-void planMAMsgGetPublicState(const plan_ma_msg_t *msg, int *agent_id,
-                             void *state, size_t state_size,
-                             int *state_id,
-                             int *cost, int *heuristic);
+int planMAMsgPublicStateAgent(const plan_ma_msg_t *msg);
+
+/**
+ * Returns pointer to the state buffer.
+ */
+const void *planMAMsgPublicStateStateBuf(const plan_ma_msg_t *msg);
+
+/**
+ * Returns state-id of the state in the source agent's pool.
+ */
+int planMAMsgPublicStateStateId(const plan_ma_msg_t *msg);
+
+/**
+ * Returns cost of the path from initial state to this state as computed by
+ * remote agent.
+ */
+int planMAMsgPublicStateCost(const plan_ma_msg_t *msg);
+
+/**
+ * Returns heuristic value computed by the remote agent.
+ */
+int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg);
 
 /**
  * Sets message as type TERMINATE

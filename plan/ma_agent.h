@@ -21,7 +21,6 @@ struct _plan_ma_agent_t {
     plan_state_pool_t *state_pool; /*!< State pool from .prob */
     int pub_state_reg_id;          /*!< ID of the registry that associates
                                         received public state with state-id. */
-    void *packed_state;            /*!< Prepared buffer packed state */
     size_t packed_state_size;      /*!< Number of bytes required for packed
                                         state */
     plan_ma_agent_path_op_t *path; /*!< Path found by the agent */

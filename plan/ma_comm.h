@@ -133,6 +133,17 @@ int planMAMsgTracePathOriginAgent(const plan_ma_msg_t *msg);
  */
 int planMAMsgTracePathStateId(const plan_ma_msg_t *msg);
 
+/**
+ * Returns number of operators stored in path.
+ */
+int planMAMsgTracePathNumOperators(const plan_ma_msg_t *msg);
+
+/**
+ * Returns i'th operator from path and its cost.
+ */
+const char *planMAMsgTracePathOperator(const plan_ma_msg_t *msg, int i,
+                                       int *cost);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

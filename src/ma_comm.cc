@@ -198,3 +198,22 @@ int planMAMsgTracePathStateId(const plan_ma_msg_t *_msg)
     const PlanMAMsgTracePath &trace_path = msg->trace_path();
     return trace_path.state_id();
 }
+
+int planMAMsgTracePathNumOperators(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgTracePath &trace_path = msg->trace_path();
+    return trace_path.path_size();
+}
+
+const char *planMAMsgTracePathOperator(const plan_ma_msg_t *_msg, int i,
+                                       int *cost)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgTracePath &trace_path = msg->trace_path();
+    const PlanMAMsgPathOperator &op = trace_path.path(i);
+
+    if (cost)
+        *cost = op.cost();
+    return op.name().c_str();
+}

@@ -1,11 +1,18 @@
 #include <boruvka/alloc.h>
 #include "plan/ma_agent.h"
 
+struct _msg_data_t {
+    int agent_id;
+    plan_cost_t cost;
+};
+typedef struct _msg_data_t msg_data_t;
+
 plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
                                 plan_search_t *search,
                                 plan_ma_comm_queue_t *comm)
 {
     plan_ma_agent_t *agent;
+    msg_data_t msg_init;
 
     if (search->state_pool != prob->prob.state_pool){
         fprintf(stderr, "Error: Search algorithm uses different state"
@@ -19,6 +26,12 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
     agent->comm = comm;
 
     agent->state_pool = agent->prob->prob.state_pool;
+    msg_init.agent_id = -1;
+    msg_init.cost = PLAN_COST_MAX;
+    agent->msg_registry = planStatePoolDataReserve(agent->state_pool,
+                                                   sizeof(msg_data_t),
+                                                   NULL, &msg_init);
+
     agent->packed_state_size = planSearchPackedStateSize(search);
     agent->packed_state = BOR_ALLOC_ARR(char, agent->packed_state_size);
 
@@ -61,15 +74,25 @@ static void injectPublicState(plan_ma_agent_t *agent,
 {
     int agent_id;
     int cost, heuristic;
+    msg_data_t *msg_data;
+    plan_state_id_t state_id;
 
     planMAMsgGetPublicState(msg, &agent_id,
                             agent->packed_state,
                             agent->packed_state_size,
                             &cost, &heuristic);
 
-    planSearchInjectState(agent->search, agent->packed_state,
-                          cost, heuristic);
-    // TODO: Insert message into register associated with state_id
+    state_id = planSearchInjectState(agent->search, agent->packed_state,
+                                     cost, heuristic);
+    if (state_id != PLAN_NO_STATE){
+        // Associate message with state ID
+        // TODO: This whole section must change
+        msg_data = planStatePoolData(agent->state_pool, agent->msg_registry,
+                                     state_id);
+
+        msg_data->agent_id = agent_id;
+        msg_data->cost = cost;
+    }
 }
 
 static void sendTerminateAck(plan_ma_agent_t *agent)

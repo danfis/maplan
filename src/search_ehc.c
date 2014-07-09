@@ -145,10 +145,24 @@ static int planSearchEHCInjectState(void *_ehc, plan_state_id_t state_id,
 {
     plan_search_ehc_t *ehc = _ehc;
     plan_cost_t heur;
+    plan_state_space_node_t *node;
 
-    heur = _planSearchHeuristic(&ehc->search, state_id, ehc->heur);
-    _planSearchNodeOpenClose(&ehc->search, state_id,
-                             PLAN_NO_STATE, NULL, cost, heur);
-    _planSearchAddLazySuccessors(&ehc->search, state_id, cost, ehc->list);
+    // Retrieve node corresponding to the state
+    node = planStateSpaceNode(ehc->search.state_space, state_id);
+
+    // If the node was not discovered yet insert it into open-list
+    if (planStateSpaceNodeIsNew(node)){
+        // Compute heuristic value
+        heur = _planSearchHeuristic(&ehc->search, state_id, ehc->heur);
+
+        // Set node to closed state with appropriate cost and heuristic
+        // value
+        _planSearchNodeOpenClose(&ehc->search, state_id,
+                                 PLAN_NO_STATE, NULL, cost, heur);
+
+        // Add node's successor to the open-list
+        _planSearchAddLazySuccessors(&ehc->search, state_id, cost, ehc->list);
+    }
+
     return 0;
 }

@@ -32,7 +32,7 @@ plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
                                                        sizeof(pub_state_data_t),
                                                        NULL, &msg_init);
 
-    agent->packed_state_size = planSearchPackedStateSize(search);
+    agent->packed_state_size = planStatePackerBufSize(agent->state_pool->packer);
     agent->packed_state = BOR_ALLOC_ARR(char, agent->packed_state_size);
 
     return agent;
@@ -55,7 +55,7 @@ static int sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
     if (!node->op || planOperatorIsPrivate(node->op))
         return -2;
 
-    statebuf = planSearchPackedState(agent->search, node->state_id);
+    statebuf = planStatePoolGetPackedState(agent->state_pool, node->state_id);
     if (statebuf == NULL)
         return -1;
 
@@ -77,23 +77,33 @@ static void injectPublicState(plan_ma_agent_t *agent,
     pub_state_data_t *pub_state_data;
     plan_state_id_t state_id;
 
+    // Unroll data from the message
     planMAMsgGetPublicState(msg, &agent_id,
                             agent->packed_state,
                             agent->packed_state_size,
                             &cost, &heuristic);
 
-    state_id = planSearchInjectState(agent->search, agent->packed_state,
-                                     cost, heuristic);
-    if (state_id != PLAN_NO_STATE){
-        // Associate message with state ID
-        // TODO: This whole section must change
-        pub_state_data = planStatePoolData(agent->state_pool,
-                                           agent->pub_state_reg_id,
-                                           state_id);
+    // Insert packed state into state-pool if not already inserted
+    state_id = planStatePoolInsertPacked(agent->state_pool,
+                                         agent->packed_state);
 
+    // Get public state reference data
+    pub_state_data = planStatePoolData(agent->state_pool,
+                                       agent->pub_state_reg_id,
+                                       state_id);
+
+    // This state was already inserted in past, so set the reference
+    // data only if the cost is smaller
+    // Set the reference data only if the new cost is smaller than the
+    // current one. This means that either the state is brand new or the
+    // previously inserted state had bigger cost.
+    if (pub_state_data->cost > cost){
         pub_state_data->agent_id = agent_id;
-        pub_state_data->cost = cost;
+        pub_state_data->cost     = cost;
     }
+
+    // Inject state into search algorithm
+    planSearchInjectState(agent->search, state_id, cost, heuristic);
 }
 
 static void sendTerminateAck(plan_ma_agent_t *agent)

@@ -203,27 +203,12 @@ _bor_inline int planSearchInitStep(plan_search_t *search);
 _bor_inline int planSearchStep(plan_search_t *search,
                                plan_search_step_change_t *change);
 
-
 /**
- * Returns size of the packed state.
- * This function is here just for convenience.
+ * Request for injection of the state into open-list.
+ * Returns 0 if the state was injected, -1 otherwise.
  */
-_bor_inline int planSearchPackedStateSize(const plan_search_t *search);
-
-/**
- * Returns packed state corresponding to the given state id.
- * Just for convenience.
- */
-_bor_inline const void *planSearchPackedState(const plan_search_t *search,
-                                              plan_state_id_t state_id);
-
-/**
- * Tries to inject a new (packed) state into state space and probably also
- * into open-list (depends on algorithm).
- * Returns its state ID if successful or PLAN_NO_STATE otherwise.
- */
-plan_state_id_t planSearchInjectState(plan_search_t *search,
-                                      const void *packed_state,
+_bor_inline int planSearchInjectState(plan_search_t *search,
+                                      plan_state_id_t state_id,
                                       plan_cost_t cost,
                                       plan_cost_t heuristic);
 
@@ -391,16 +376,17 @@ _bor_inline int planSearchStep(plan_search_t *search,
     return search->step_fn(search, change);
 }
 
-_bor_inline int planSearchPackedStateSize(const plan_search_t *search)
+_bor_inline int planSearchInjectState(plan_search_t *search,
+                                      plan_state_id_t state_id,
+                                      plan_cost_t cost,
+                                      plan_cost_t heuristic)
 {
-    return planStatePackerBufSize(search->state_pool->packer);
+    if (!search->inject_state_fn)
+        return -1;
+    return search->inject_state_fn(search, state_id, cost, heuristic);
 }
 
-_bor_inline const void *planSearchPackedState(const plan_search_t *search,
-                                              plan_state_id_t state_id)
-{
-    return planStatePoolGetPackedState(search->state_pool, state_id);
-}
+
 
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)
 {

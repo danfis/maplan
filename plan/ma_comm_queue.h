@@ -5,7 +5,7 @@
 #include <semaphore.h>
 #include <boruvka/fifo.h>
 
-#include <plan/ma_comm.h>
+#include <plan/ma_msg.h>
 
 /** Forward declarations */
 typedef struct _plan_ma_comm_queue_pool_t plan_ma_comm_queue_pool_t;

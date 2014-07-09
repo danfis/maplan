@@ -1,6 +1,6 @@
 #include <boruvka/alloc.h>
 
-#include "plan/ma_comm.h"
+#include "plan/ma_msg.h"
 #include "ma_msg.pb.h"
 
 plan_ma_msg_t *planMAMsgNew(void)

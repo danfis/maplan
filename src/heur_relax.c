@@ -159,7 +159,11 @@ static plan_cost_t planHeurRelax(void *heur, const plan_state_t *state);
 static void planHeurRelaxDel(void *_heur);
 
 
-static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
+static plan_heur_t *planHeurRelaxNew(int type,
+                                     const plan_var_t *var, int var_size,
+                                     const plan_part_state_t *goal,
+                                     const plan_operator_t *op, int op_size,
+                                     const plan_succ_gen_t *succ_gen)
 {
     plan_heur_relax_t *heur;
 
@@ -169,13 +173,13 @@ static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
                  planHeurRelax);
     heur->type = type;
 
-    valToIdInit(&heur->vid, prob->var, prob->var_size);
-    goalInit(heur, prob->goal);
-    factInit(heur, prob->goal);
-    opInit(heur, prob->op, prob->op_size);
-    opPrecondInit(heur, prob->op, prob->op_size);
-    effInit(heur, prob->op, prob->op_size);
-    opSimplify(heur, prob->op, prob->succ_gen);
+    valToIdInit(&heur->vid, var, var_size);
+    goalInit(heur, goal);
+    factInit(heur, goal);
+    opInit(heur, op, op_size);
+    opPrecondInit(heur, op, op_size);
+    effInit(heur, op, op_size);
+    opSimplify(heur, op, succ_gen);
     precondInit(heur);
 
     return &heur->heur;
@@ -183,17 +187,29 @@ static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
 
 plan_heur_t *planHeurRelaxAddNew(const plan_problem_t *prob)
 {
-    return planHeurRelaxNew(prob, TYPE_ADD);
+    return planHeurRelaxNew(TYPE_ADD,
+                            prob->var, prob->var_size,
+                            prob->goal,
+                            prob->op, prob->op_size,
+                            prob->succ_gen);
 }
 
 plan_heur_t *planHeurRelaxMaxNew(const plan_problem_t *prob)
 {
-    return planHeurRelaxNew(prob, TYPE_MAX);
+    return planHeurRelaxNew(TYPE_MAX,
+                            prob->var, prob->var_size,
+                            prob->goal,
+                            prob->op, prob->op_size,
+                            prob->succ_gen);
 }
 
 plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob)
 {
-    return planHeurRelaxNew(prob, TYPE_FF);
+    return planHeurRelaxNew(TYPE_FF,
+                            prob->var, prob->var_size,
+                            prob->goal,
+                            prob->op, prob->op_size,
+                            prob->succ_gen);
 }
 
 

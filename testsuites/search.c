@@ -144,11 +144,14 @@ int main(int argc, char *argv[])
     if (strcmp(def_heur, "goalcount") == 0){
         heur = planHeurGoalCountNew(prob->goal);
     }else if (strcmp(def_heur, "add") == 0){
-        heur = planHeurRelaxAddNew(prob);
+        heur = planHeurRelaxAddNew(prob->var, prob->var_size, prob->goal,
+                                   prob->op, prob->op_size, prob->succ_gen);
     }else if (strcmp(def_heur, "max") == 0){
-        heur = planHeurRelaxMaxNew(prob);
+        heur = planHeurRelaxMaxNew(prob->var, prob->var_size, prob->goal,
+                                   prob->op, prob->op_size, prob->succ_gen);
     }else if (strcmp(def_heur, "ff") == 0){
-        heur = planHeurRelaxFFNew(prob);
+        heur = planHeurRelaxFFNew(prob->var, prob->var_size, prob->goal,
+                                  prob->op, prob->op_size, prob->succ_gen);
     }else{
         fprintf(stderr, "Error: Invalid heuristic type\n");
         return -1;

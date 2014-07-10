@@ -47,7 +47,9 @@ int main(int argc, char *argv[])
     queue_pool = planMACommQueuePoolNew(prob->agent_size);
 
     for (i = 0; i < prob->agent_size; ++i){
-        heur[i] = planHeurRelaxAddNew(&prob->agent[i].prob);
+        plan_problem_t *p = &prob->agent[i].prob;
+        heur[i] = planHeurRelaxAddNew(p->var, p->var_size, p->goal,
+                                      p->op, p->op_size, p->succ_gen);
 
         planSearchEHCParamsInit(&ehc_params);
         ehc_params.heur = heur[i];

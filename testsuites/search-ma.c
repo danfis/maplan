@@ -17,8 +17,10 @@ int main(int argc, char *argv[])
 {
     plan_problem_agents_t *prob = NULL;
     plan_heur_t **heur;
+    plan_list_lazy_t **list;
     plan_search_t **search;
     plan_search_ehc_params_t ehc_params;
+    plan_search_lazy_params_t lazy_params;
     plan_ma_comm_queue_pool_t *queue_pool;
     plan_ma_agent_t **agent;
     bor_tasks_t *tasks;
@@ -41,6 +43,7 @@ int main(int argc, char *argv[])
     }
 
     heur   = BOR_ALLOC_ARR(plan_heur_t *, prob->agent_size);
+    list   = BOR_ALLOC_ARR(plan_list_lazy_t *, prob->agent_size);
     search = BOR_ALLOC_ARR(plan_search_t *, prob->agent_size);
     agent  = BOR_ALLOC_ARR(plan_ma_agent_t *, prob->agent_size);
 
@@ -52,11 +55,18 @@ int main(int argc, char *argv[])
                                       prob->agent[i].projected_op,
                                       prob->agent[i].projected_op_size,
                                       NULL);
+        list[i] = planListLazySplayTreeNew();
 
         planSearchEHCParamsInit(&ehc_params);
         ehc_params.heur = heur[i];
         ehc_params.search.prob = &prob->agent[i].prob;
-        search[i] = planSearchEHCNew(&ehc_params);
+
+        planSearchLazyParamsInit(&lazy_params);
+        lazy_params.heur = heur[i];
+        lazy_params.list = list[i];
+        lazy_params.search.prob = &prob->agent[i].prob;
+        //search[i] = planSearchEHCNew(&ehc_params);
+        search[i] = planSearchLazyNew(&lazy_params);
 
         agent[i] = planMAAgentNew(prob->agent + i, search[i],
                                   planMACommQueue(queue_pool, i));
@@ -72,6 +82,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < prob->agent_size; ++i){
         planMAAgentDel(agent[i]);
         planSearchDel(search[i]);
+        planListLazyDel(list[i]);
         planHeurDel(heur[i]);
     }
 
@@ -79,6 +90,7 @@ int main(int argc, char *argv[])
 
     BOR_FREE(agent);
     BOR_FREE(search);
+    BOR_FREE(list);
     BOR_FREE(heur);
 
     planProblemAgentsDel(prob);

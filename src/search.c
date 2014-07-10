@@ -72,11 +72,13 @@ void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
                      plan_search_init_fn init_fn,
-                     plan_search_step_fn step_fn)
+                     plan_search_step_fn step_fn,
+                     plan_search_inject_state_fn inject_state_fn)
 {
     search->del_fn  = del_fn;
     search->init_fn = init_fn;
     search->step_fn = step_fn;
+    search->inject_state_fn = inject_state_fn;
     search->params = *params;
 
     planSearchStatInit(&search->stat);
@@ -137,6 +139,36 @@ void _planSearchAddLazySuccessors(plan_search_t *search,
         planListLazyPush(list, cost, state_id, op);
         planSearchStatIncGeneratedStates(&search->stat);
     }
+}
+
+int _planSearchLazyInjectState(plan_search_t *search,
+                               plan_heur_t *heur,
+                               plan_list_lazy_t *list,
+                               plan_state_id_t state_id,
+                               plan_cost_t cost, plan_cost_t heur_val)
+{
+    plan_state_space_node_t *node;
+
+    // Retrieve node corresponding to the state
+    node = planStateSpaceNode(search->state_space, state_id);
+
+    // If the node was not discovered yet insert it into open-list
+    if (planStateSpaceNodeIsNew(node)){
+        // Compute heuristic value
+        if (heur){
+            heur_val = _planSearchHeuristic(search, state_id, heur);
+        }
+
+        // Set node to closed state with appropriate cost and heuristic
+        // value
+        _planSearchNodeOpenClose(search, state_id,
+                                 PLAN_NO_STATE, NULL, cost, heur_val);
+
+        // Add node's successor to the open-list
+        _planSearchAddLazySuccessors(search, state_id, cost, list);
+    }
+
+    return 0;
 }
 
 void _planSearchReachedDeadEnd(plan_search_t *search)

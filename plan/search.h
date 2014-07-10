@@ -323,7 +323,8 @@ void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
                      plan_search_init_fn init_fn,
-                     plan_search_step_fn step_fn);
+                     plan_search_step_fn step_fn,
+                     plan_search_inject_state_fn inject_state_fn);
 
 /**
  * Frees allocated resources.
@@ -344,6 +345,16 @@ void _planSearchAddLazySuccessors(plan_search_t *search,
                                   plan_state_id_t state_id,
                                   plan_cost_t cost,
                                   plan_list_lazy_t *list);
+
+/**
+ * Generalization for lazy search algorithms.
+ * Injects given state into open-list if the node wasn't discovered yet.
+ */
+int _planSearchLazyInjectState(plan_search_t *search,
+                               plan_heur_t *heur,
+                               plan_list_lazy_t *list,
+                               plan_state_id_t state_id,
+                               plan_cost_t cost, plan_cost_t heur_val);
 
 /**
  * Let the common structure know that a dead end was reached.

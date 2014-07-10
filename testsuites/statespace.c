@@ -72,7 +72,7 @@ TEST(testStateSpace)
     assertEquals(planStateSpaceClose(sspace, nodeins[0]), 0);
     assertNotEquals(planStateSpaceClose(sspace, nodeins[0]), 0);
 
-    planStateDel(pool, state);
+    planStateDel(state);
     planStateSpaceDel(sspace);
     planStatePoolDel(pool);
 }

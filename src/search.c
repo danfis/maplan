@@ -93,7 +93,7 @@ void _planSearchFree(plan_search_t *search)
     if (search->succ_op)
         BOR_FREE(search->succ_op);
     if (search->state)
-        planStateDel(search->state_pool, search->state);
+        planStateDel(search->state);
     if (search->state_space)
         planStateSpaceDel(search->state_space);
 }

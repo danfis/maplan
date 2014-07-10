@@ -105,7 +105,7 @@ TEST(testSuccGen)
 
     found2 = findOpsSG(sg, state, ops2, 2);
 
-    planStateDel(prob->state_pool, state);
+    planStateDel(state);
     BOR_FREE(ops1);
     BOR_FREE(ops2);
     planSuccGenDel(sg);

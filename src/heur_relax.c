@@ -492,7 +492,7 @@ static void opSimplify(plan_heur_relax_t *heur,
     }
 
     // Free allocated resources
-    planStateDel(state_pool, state);
+    planStateDel(state);
     BOR_FREE(ops);
 }
 

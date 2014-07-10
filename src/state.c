@@ -531,7 +531,7 @@ static plan_val_t packerGetVar(const plan_state_packer_var_t *var,
 
 
 /** State **/
-plan_state_t *planStateNew(plan_state_pool_t *pool)
+plan_state_t *planStateNew(const plan_state_pool_t *pool)
 {
     plan_state_t *state;
     state = BOR_ALLOC(plan_state_t);
@@ -540,7 +540,7 @@ plan_state_t *planStateNew(plan_state_pool_t *pool)
     return state;
 }
 
-void planStateDel(plan_state_pool_t *pool, plan_state_t *state)
+void planStateDel(plan_state_t *state)
 {
     BOR_FREE(state->val);
     BOR_FREE(state);

@@ -195,12 +195,12 @@ void planStatePackerUnpack(const plan_state_packer_t *p,
  * Creates a new struct representing state.
  * Note that by calling this function no state is inserted into pool!
  */
-plan_state_t *planStateNew(plan_state_pool_t *pool);
+plan_state_t *planStateNew(const plan_state_pool_t *pool);
 
 /**
  * Destroyes previously created state struct.
  */
-void planStateDel(plan_state_pool_t *pool, plan_state_t *state);
+void planStateDel(plan_state_t *state);
 
 /**
  * Returns value of the specified variable.

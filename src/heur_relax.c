@@ -163,9 +163,16 @@ static plan_heur_t *planHeurRelaxNew(int type,
                                      const plan_var_t *var, int var_size,
                                      const plan_part_state_t *goal,
                                      const plan_operator_t *op, int op_size,
-                                     const plan_succ_gen_t *succ_gen)
+                                     const plan_succ_gen_t *_succ_gen)
 {
     plan_heur_relax_t *heur;
+    plan_succ_gen_t *succ_gen;
+
+    if (_succ_gen){
+        succ_gen = (plan_succ_gen_t *)_succ_gen;
+    }else{
+        succ_gen = planSuccGenNew(op, op_size);
+    }
 
     heur = BOR_ALLOC(plan_heur_relax_t);
     planHeurInit(&heur->heur,
@@ -181,6 +188,9 @@ static plan_heur_t *planHeurRelaxNew(int type,
     effInit(heur, op, op_size);
     opSimplify(heur, op, succ_gen);
     precondInit(heur);
+
+    if (!_succ_gen)
+        planSuccGenDel(succ_gen);
 
     return &heur->heur;
 }

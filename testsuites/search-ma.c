@@ -49,7 +49,9 @@ int main(int argc, char *argv[])
     for (i = 0; i < prob->agent_size; ++i){
         plan_problem_t *p = &prob->agent[i].prob;
         heur[i] = planHeurRelaxAddNew(p->var, p->var_size, p->goal,
-                                      p->op, p->op_size, p->succ_gen);
+                                      prob->agent[i].projected_op,
+                                      prob->agent[i].projected_op_size,
+                                      NULL);
 
         planSearchEHCParamsInit(&ehc_params);
         ehc_params.heur = heur[i];

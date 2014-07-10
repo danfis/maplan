@@ -64,7 +64,7 @@ static int opsSortCmp(const void *a, const void *b);
 
 
 
-plan_succ_gen_t *planSuccGenNew(plan_operator_t *op, int opsize)
+plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize)
 {
     plan_succ_gen_t *sg;
     plan_operator_t **sorted_ops;
@@ -73,7 +73,7 @@ plan_succ_gen_t *planSuccGenNew(plan_operator_t *op, int opsize)
     // prepare array for sorting operators
     sorted_ops = BOR_ALLOC_ARR(plan_operator_t *, opsize);
     for (i = 0; i < opsize; ++i)
-        sorted_ops[i] = op + i;
+        sorted_ops[i] = (plan_operator_t *)(op + i);
 
     // Sort operators by values of preconditions.
     qsort(sorted_ops, opsize, sizeof(plan_operator_t *), opsSortCmp);

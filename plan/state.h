@@ -236,13 +236,12 @@ void planStateZeroize(plan_state_t *state);
 /**
  * Creates a partial state.
  */
-plan_part_state_t *planPartStateNew(plan_state_pool_t *pool);
+plan_part_state_t *planPartStateNew(const plan_state_pool_t *pool);
 
 /**
  * Destroys a partial state.
  */
-void planPartStateDel(plan_state_pool_t *pool,
-                      plan_part_state_t *part_state);
+void planPartStateDel(plan_part_state_t *part_state);
 
 /**
  * Returns number of variable the state consists of.

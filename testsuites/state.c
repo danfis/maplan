@@ -318,9 +318,9 @@ TEST(testStatePreEff)
 
 
     planStateDel(state);
-    planPartStateDel(pool, parts[0]);
-    planPartStateDel(pool, parts[1]);
-    planPartStateDel(pool, parts[2]);
-    planPartStateDel(pool, parts[3]);
+    planPartStateDel(parts[0]);
+    planPartStateDel(parts[1]);
+    planPartStateDel(parts[2]);
+    planPartStateDel(parts[3]);
     planStatePoolDel(pool);
 }

@@ -572,7 +572,7 @@ void planStateSet2(plan_state_t *state, int n, ...)
 
 /** Partial State **/
 
-plan_part_state_t *planPartStateNew(plan_state_pool_t *pool)
+plan_part_state_t *planPartStateNew(const plan_state_pool_t *pool)
 {
     plan_part_state_t *ps;
     int i, size;
@@ -601,8 +601,7 @@ plan_part_state_t *planPartStateNew(plan_state_pool_t *pool)
 
 }
 
-void planPartStateDel(plan_state_pool_t *pool,
-                      plan_part_state_t *part_state)
+void planPartStateDel(plan_part_state_t *part_state)
 {
     BOR_FREE(part_state->val);
     BOR_FREE(part_state->is_set);

@@ -16,7 +16,7 @@ static void planProblemFree(plan_problem_t *plan)
         planSuccGenDel(plan->succ_gen);
 
     if (plan->goal){
-        planPartStateDel(plan->state_pool, plan->goal);
+        planPartStateDel(plan->goal);
         plan->goal = NULL;
     }
 

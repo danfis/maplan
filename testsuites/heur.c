@@ -17,7 +17,8 @@ TEST(testHeurRelaxAdd)
     succgen = planSuccGenNew(p->op, p->op_size);
     //planProblemDump(p, stderr);
 
-    heur = planHeurRelaxAddNew(p);
+    heur = planHeurRelaxAddNew(p->var, p->var_size, p->goal,
+                               p->op, p->op_size, p->succ_gen);
 
     state = planStateNew(p->state_pool);
     planStatePoolGetState(p->state_pool, p->initial_state, state);
@@ -73,7 +74,8 @@ TEST(testHeurRelaxMax)
     succgen = planSuccGenNew(p->op, p->op_size);
     //planProblemDump(p, stderr);
 
-    heur = planHeurRelaxMaxNew(p);
+    heur = planHeurRelaxMaxNew(p->var, p->var_size, p->goal,
+                               p->op, p->op_size, p->succ_gen);
 
     state = planStateNew(p->state_pool);
     planStatePoolGetState(p->state_pool, p->initial_state, state);
@@ -129,7 +131,8 @@ TEST(testHeurRelaxFF)
     succgen = planSuccGenNew(p->op, p->op_size);
     //planProblemDump(p, stderr);
 
-    heur = planHeurRelaxFFNew(p);
+    heur = planHeurRelaxFFNew(p->var, p->var_size, p->goal,
+                              p->op, p->op_size, p->succ_gen);
 
     state = planStateNew(p->state_pool);
     planStatePoolGetState(p->state_pool, p->initial_state, state);

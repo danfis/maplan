@@ -39,12 +39,12 @@ TEST(testLoadFromFD)
 
     planStateDel(initial_state);
 
-    assertEquals(planPartStateGet(p->goal, 0), 0);
-    assertEquals(planPartStateGet(p->goal, 1), 0);
-    assertEquals(planPartStateGet(p->goal, 2), 0);
-    assertEquals(planPartStateGet(p->goal, 3), 0);
-    assertEquals(planPartStateGet(p->goal, 4), 0);
-    assertEquals(planPartStateGet(p->goal, 5), 0);
+    assertEquals(planPartStateGet(p->goal, 0), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 1), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 2), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 3), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 4), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 5), PLAN_VAL_UNDEFINED);
     assertEquals(planPartStateGet(p->goal, 6), 1);
     assertEquals(planPartStateGet(p->goal, 7), 1);
     assertEquals(planPartStateGet(p->goal, 8), 3);
@@ -62,11 +62,11 @@ TEST(testLoadFromFD)
     assertEquals(p->op_size, 32);
     assertEquals(p->op[0].cost, 1);
     assertEquals(strcmp(p->op[0].name, "pick-up a"), 0);
-    assertEquals(planPartStateGet(p->op[0].eff, 0), 0);
+    assertEquals(planPartStateGet(p->op[0].eff, 0), PLAN_VAL_UNDEFINED);
     assertEquals(planPartStateGet(p->op[0].eff, 2), 1);
     assertEquals(planPartStateGet(p->op[0].eff, 5), 1);
     assertEquals(planPartStateGet(p->op[0].eff, 6), 0);
-    assertEquals(planPartStateGet(p->op[0].pre, 0), 0);
+    assertEquals(planPartStateGet(p->op[0].pre, 0), PLAN_VAL_UNDEFINED);
     assertEquals(planPartStateGet(p->op[0].pre, 2), 0);
     assertEquals(planPartStateGet(p->op[0].pre, 5), 0);
     assertEquals(planPartStateGet(p->op[0].pre, 6), 4);
@@ -76,15 +76,15 @@ TEST(testLoadFromFD)
     assertTrue(planPartStateIsSet(p->op[5].eff, 1));
     assertEquals(planPartStateGet(p->op[5].eff, 5), 0);
     assertTrue(planPartStateIsSet(p->op[5].eff, 5));
-    assertEquals(planPartStateGet(p->op[5].eff, 6), 0);
+    assertEquals(planPartStateGet(p->op[5].eff, 6), PLAN_VAL_UNDEFINED);
     assertFalse(planPartStateIsSet(p->op[5].eff, 6));
     assertEquals(planPartStateGet(p->op[5].pre, 0), 0);
     assertTrue(planPartStateIsSet(p->op[5].pre, 0));
-    assertEquals(planPartStateGet(p->op[5].pre, 1), 0);
+    assertEquals(planPartStateGet(p->op[5].pre, 1), PLAN_VAL_UNDEFINED);
     assertFalse(planPartStateIsSet(p->op[5].pre, 1));
-    assertEquals(planPartStateGet(p->op[5].pre, 5), 0);
+    assertEquals(planPartStateGet(p->op[5].pre, 5), PLAN_VAL_UNDEFINED);
     assertFalse(planPartStateIsSet(p->op[5].pre, 5));
-    assertEquals(planPartStateGet(p->op[5].pre, 6), 0);
+    assertEquals(planPartStateGet(p->op[5].pre, 6), PLAN_VAL_UNDEFINED);
     assertFalse(planPartStateIsSet(p->op[5].pre, 6));
 
     planProblemDel(p);
@@ -138,18 +138,18 @@ TEST(testLoadFromFD2)
 
     planStateDel(initial_state);
 
-    assertEquals(planPartStateGet(p->goal, 0), 0);
-    assertEquals(planPartStateGet(p->goal, 1), 0);
-    assertEquals(planPartStateGet(p->goal, 2), 0);
-    assertEquals(planPartStateGet(p->goal, 3), 0);
-    assertEquals(planPartStateGet(p->goal, 4), 0);
-    assertEquals(planPartStateGet(p->goal, 5), 0);
-    assertEquals(planPartStateGet(p->goal, 6), 0);
-    assertEquals(planPartStateGet(p->goal, 7), 0);
-    assertEquals(planPartStateGet(p->goal, 8), 0);
-    assertEquals(planPartStateGet(p->goal, 9), 0);
-    assertEquals(planPartStateGet(p->goal, 10), 0);
-    assertEquals(planPartStateGet(p->goal, 11), 0);
+    assertEquals(planPartStateGet(p->goal, 0), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 1), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 2), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 3), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 4), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 5), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 6), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 7), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 8), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 9), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 10), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(p->goal, 11), PLAN_VAL_UNDEFINED);
     assertEquals(planPartStateGet(p->goal, 12), 8);
     assertEquals(planPartStateGet(p->goal, 13), 7);
 
@@ -249,17 +249,17 @@ TEST(testLoadAgentFromFD)
 
         planStateDel(initial_state);
 
-        assertEquals(planPartStateGet(p->goal, 0), 0);
-        assertEquals(planPartStateGet(p->goal, 1), 0);
-        assertEquals(planPartStateGet(p->goal, 2), 0);
+        assertEquals(planPartStateGet(p->goal, 0), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 1), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 2), PLAN_VAL_UNDEFINED);
         assertEquals(planPartStateGet(p->goal, 3), 0);
-        assertEquals(planPartStateGet(p->goal, 4), 0);
-        assertEquals(planPartStateGet(p->goal, 5), 0);
-        assertEquals(planPartStateGet(p->goal, 6), 0);
-        assertEquals(planPartStateGet(p->goal, 7), 0);
-        assertEquals(planPartStateGet(p->goal, 8), 0);
-        assertEquals(planPartStateGet(p->goal, 9), 0);
-        assertEquals(planPartStateGet(p->goal, 10), 0);
+        assertEquals(planPartStateGet(p->goal, 4), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 5), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 6), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 7), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 8), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 9), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 10), PLAN_VAL_UNDEFINED);
         assertEquals(planPartStateGet(p->goal, 11), 0);
         assertEquals(planPartStateGet(p->goal, 12), 0);
 

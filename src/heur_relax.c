@@ -131,8 +131,7 @@ static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
  *  two operators applicable in the same time with the same effect. */
 static void opSimplify(plan_heur_relax_t *heur,
                        const plan_operator_t *op,
-                       const plan_succ_gen_t *succ_gen,
-                       plan_state_pool_t *state_pool);
+                       const plan_succ_gen_t *succ_gen);
 /** Initializes and frees .precond structures */
 static void precondInit(plan_heur_relax_t *heur);
 static void precondFree(plan_heur_relax_t *heur);
@@ -160,9 +159,20 @@ static plan_cost_t planHeurRelax(void *heur, const plan_state_t *state);
 static void planHeurRelaxDel(void *_heur);
 
 
-static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
+static plan_heur_t *planHeurRelaxNew(int type,
+                                     const plan_var_t *var, int var_size,
+                                     const plan_part_state_t *goal,
+                                     const plan_operator_t *op, int op_size,
+                                     const plan_succ_gen_t *_succ_gen)
 {
     plan_heur_relax_t *heur;
+    plan_succ_gen_t *succ_gen;
+
+    if (_succ_gen){
+        succ_gen = (plan_succ_gen_t *)_succ_gen;
+    }else{
+        succ_gen = planSuccGenNew(op, op_size);
+    }
 
     heur = BOR_ALLOC(plan_heur_relax_t);
     planHeurInit(&heur->heur,
@@ -170,31 +180,46 @@ static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
                  planHeurRelax);
     heur->type = type;
 
-    valToIdInit(&heur->vid, prob->var, prob->var_size);
-    goalInit(heur, prob->goal);
-    factInit(heur, prob->goal);
-    opInit(heur, prob->op, prob->op_size);
-    opPrecondInit(heur, prob->op, prob->op_size);
-    effInit(heur, prob->op, prob->op_size);
-    opSimplify(heur, prob->op, prob->succ_gen, prob->state_pool);
+    valToIdInit(&heur->vid, var, var_size);
+    goalInit(heur, goal);
+    factInit(heur, goal);
+    opInit(heur, op, op_size);
+    opPrecondInit(heur, op, op_size);
+    effInit(heur, op, op_size);
+    opSimplify(heur, op, succ_gen);
     precondInit(heur);
+
+    if (!_succ_gen)
+        planSuccGenDel(succ_gen);
 
     return &heur->heur;
 }
 
-plan_heur_t *planHeurRelaxAddNew(const plan_problem_t *prob)
+plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
+                                 const plan_part_state_t *goal,
+                                 const plan_operator_t *op, int op_size,
+                                 const plan_succ_gen_t *succ_gen)
 {
-    return planHeurRelaxNew(prob, TYPE_ADD);
+    return planHeurRelaxNew(TYPE_ADD, var, var_size, goal,
+                            op, op_size, succ_gen);
 }
 
-plan_heur_t *planHeurRelaxMaxNew(const plan_problem_t *prob)
+plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
+                                 const plan_part_state_t *goal,
+                                 const plan_operator_t *op, int op_size,
+                                 const plan_succ_gen_t *succ_gen)
 {
-    return planHeurRelaxNew(prob, TYPE_MAX);
+    return planHeurRelaxNew(TYPE_MAX, var, var_size, goal,
+                            op, op_size, succ_gen);
 }
 
-plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob)
+plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
+                                const plan_part_state_t *goal,
+                                const plan_operator_t *op, int op_size,
+                                const plan_succ_gen_t *succ_gen)
 {
-    return planHeurRelaxNew(prob, TYPE_FF);
+    return planHeurRelaxNew(TYPE_FF, var, var_size, goal,
+                            op, op_size, succ_gen);
 }
 
 
@@ -449,19 +474,15 @@ static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
 
 static void opSimplify(plan_heur_relax_t *heur,
                        const plan_operator_t *op,
-                       const plan_succ_gen_t *succ_gen,
-                       plan_state_pool_t *state_pool)
+                       const plan_succ_gen_t *succ_gen)
 {
     int i, ref_i, op_i;
     const plan_operator_t *ref_op; // reference operator
     plan_operator_t **ops;   // list of operators applicable in ref_op->pre
     int ops_size;            // number of applicable operators
-    plan_state_t *state;     // pre-allocated state
 
     // Allocate array for applicable operators
     ops = BOR_ALLOC_ARR(plan_operator_t *, heur->op_size);
-    // Pre-allocate state
-    state = planStateNew(state_pool);
 
     for (ref_i = 0; ref_i < heur->op_size; ++ref_i){
         ref_op = op + ref_i;
@@ -470,11 +491,8 @@ static void opSimplify(plan_heur_relax_t *heur,
         if (heur->eff[ref_i].size == 0)
             continue;
 
-        // convert preconditions of reference operator to a state
-        planPartStateToState(ref_op->pre, state);
-
         // get all applicable operators
-        ops_size = planSuccGenFind(succ_gen, state, ops, heur->op_size);
+        ops_size = planSuccGenFindPart(succ_gen, ref_op->pre, ops, heur->op_size);
 
         for (i = 0; i < ops_size; ++i){
             // don't compare two identical operators
@@ -491,8 +509,6 @@ static void opSimplify(plan_heur_relax_t *heur,
         }
     }
 
-    // Free allocated resources
-    planStateDel(state);
     BOR_FREE(ops);
 }
 

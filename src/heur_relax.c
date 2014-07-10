@@ -131,8 +131,7 @@ static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
  *  two operators applicable in the same time with the same effect. */
 static void opSimplify(plan_heur_relax_t *heur,
                        const plan_operator_t *op,
-                       const plan_succ_gen_t *succ_gen,
-                       plan_state_pool_t *state_pool);
+                       const plan_succ_gen_t *succ_gen);
 /** Initializes and frees .precond structures */
 static void precondInit(plan_heur_relax_t *heur);
 static void precondFree(plan_heur_relax_t *heur);
@@ -176,7 +175,7 @@ static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
     opInit(heur, prob->op, prob->op_size);
     opPrecondInit(heur, prob->op, prob->op_size);
     effInit(heur, prob->op, prob->op_size);
-    opSimplify(heur, prob->op, prob->succ_gen, prob->state_pool);
+    opSimplify(heur, prob->op, prob->succ_gen);
     precondInit(heur);
 
     return &heur->heur;
@@ -449,19 +448,15 @@ static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
 
 static void opSimplify(plan_heur_relax_t *heur,
                        const plan_operator_t *op,
-                       const plan_succ_gen_t *succ_gen,
-                       plan_state_pool_t *state_pool)
+                       const plan_succ_gen_t *succ_gen)
 {
     int i, ref_i, op_i;
     const plan_operator_t *ref_op; // reference operator
     plan_operator_t **ops;   // list of operators applicable in ref_op->pre
     int ops_size;            // number of applicable operators
-    plan_state_t *state;     // pre-allocated state
 
     // Allocate array for applicable operators
     ops = BOR_ALLOC_ARR(plan_operator_t *, heur->op_size);
-    // Pre-allocate state
-    state = planStateNew(state_pool);
 
     for (ref_i = 0; ref_i < heur->op_size; ++ref_i){
         ref_op = op + ref_i;
@@ -470,11 +465,8 @@ static void opSimplify(plan_heur_relax_t *heur,
         if (heur->eff[ref_i].size == 0)
             continue;
 
-        // convert preconditions of reference operator to a state
-        planPartStateToState(ref_op->pre, state);
-
         // get all applicable operators
-        ops_size = planSuccGenFind(succ_gen, state, ops, heur->op_size);
+        ops_size = planSuccGenFindPart(succ_gen, ref_op->pre, ops, heur->op_size);
 
         for (i = 0; i < ops_size; ++i){
             // don't compare two identical operators
@@ -491,8 +483,6 @@ static void opSimplify(plan_heur_relax_t *heur,
         }
     }
 
-    // Free allocated resources
-    planStateDel(state);
     BOR_FREE(ops);
 }
 

@@ -52,6 +52,13 @@ int planSuccGenFind(const plan_succ_gen_t *sg,
                     const plan_state_t *state,
                     plan_operator_t **op, int op_size);
 
+/**
+ * Same as planSuccGenFind() but uses partial state instead of full state.
+ */
+int planSuccGenFindPart(const plan_succ_gen_t *sg,
+                        const plan_part_state_t *part_state,
+                        plan_operator_t **op, int op_size);
+
 
 /**** INLINES ****/
 _bor_inline int planSuccGenNumOperators(const plan_succ_gen_t *sg)

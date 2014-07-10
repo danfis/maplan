@@ -583,7 +583,7 @@ plan_part_state_t *planPartStateNew(const plan_state_pool_t *pool)
     ps->is_set = BOR_ALLOC_ARR(int, pool->num_vars);
 
     for (i = 0; i < pool->num_vars; ++i){
-        ps->val[i] = 0;
+        ps->val[i] = PLAN_VAL_UNDEFINED;
         ps->is_set[i] = 0;
     }
 
@@ -646,15 +646,8 @@ void planPartStateSet(plan_state_pool_t *pool,
 void planPartStateToState(const plan_part_state_t *part_state,
                           plan_state_t *state)
 {
-    int i;
-
-    for (i = 0; i < part_state->num_vars; ++i){
-        if (part_state->is_set[i]){
-            planStateSet(state, i, part_state->val[i]);
-        }else{
-            planStateSet(state, i, PLAN_VAL_UNDEFINED);
-        }
-    }
+    memcpy(state->val, part_state->val,
+           sizeof(plan_val_t) * part_state->num_vars);
 }
 
 

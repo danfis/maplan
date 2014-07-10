@@ -124,6 +124,15 @@ int planSuccGenFind(const plan_succ_gen_t *sg,
     return treeFind(sg->root, vals, op, op_size);
 }
 
+int planSuccGenFindPart(const plan_succ_gen_t *sg,
+                        const plan_part_state_t *part_state,
+                        plan_operator_t **op, int op_size)
+{
+    plan_val_t vals[part_state->num_vars];
+    memcpy(vals, part_state->val, sizeof(plan_val_t) * part_state->num_vars);
+    return treeFind(sg->root, vals, op, op_size);
+}
+
 
 
 

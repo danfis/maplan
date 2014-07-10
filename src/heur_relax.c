@@ -129,7 +129,10 @@ static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
                               plan_cost_t ref_cost, plan_cost_t op_cost);
 /** Simplifies internal representation of operators so that there are no
  *  two operators applicable in the same time with the same effect. */
-static void opSimplify(plan_heur_relax_t *heur, const plan_problem_t *prob);
+static void opSimplify(plan_heur_relax_t *heur,
+                       const plan_operator_t *op,
+                       const plan_succ_gen_t *succ_gen,
+                       plan_state_pool_t *state_pool);
 /** Initializes and frees .precond structures */
 static void precondInit(plan_heur_relax_t *heur);
 static void precondFree(plan_heur_relax_t *heur);
@@ -173,7 +176,7 @@ static plan_heur_t *planHeurRelaxNew(const plan_problem_t *prob, int type)
     opInit(heur, prob->op, prob->op_size);
     opPrecondInit(heur, prob->op, prob->op_size);
     effInit(heur, prob->op, prob->op_size);
-    opSimplify(heur, prob);
+    opSimplify(heur, prob->op, prob->succ_gen, prob->state_pool);
     precondInit(heur);
 
     return &heur->heur;
@@ -444,10 +447,13 @@ static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
     }
 }
 
-static void opSimplify(plan_heur_relax_t *heur, const plan_problem_t *prob)
+static void opSimplify(plan_heur_relax_t *heur,
+                       const plan_operator_t *op,
+                       const plan_succ_gen_t *succ_gen,
+                       plan_state_pool_t *state_pool)
 {
     int i, ref_i, op_i;
-    plan_operator_t *ref_op; // reference operator
+    const plan_operator_t *ref_op; // reference operator
     plan_operator_t **ops;   // list of operators applicable in ref_op->pre
     int ops_size;            // number of applicable operators
     plan_state_t *state;     // pre-allocated state
@@ -455,10 +461,10 @@ static void opSimplify(plan_heur_relax_t *heur, const plan_problem_t *prob)
     // Allocate array for applicable operators
     ops = BOR_ALLOC_ARR(plan_operator_t *, heur->op_size);
     // Pre-allocate state
-    state = planStateNew(prob->state_pool);
+    state = planStateNew(state_pool);
 
     for (ref_i = 0; ref_i < heur->op_size; ++ref_i){
-        ref_op = prob->op + ref_i;
+        ref_op = op + ref_i;
 
         // skip operators with no effects
         if (heur->eff[ref_i].size == 0)
@@ -468,7 +474,7 @@ static void opSimplify(plan_heur_relax_t *heur, const plan_problem_t *prob)
         planPartStateToState(ref_op->pre, state);
 
         // get all applicable operators
-        ops_size = planSuccGenFind(prob->succ_gen, state, ops, heur->op_size);
+        ops_size = planSuccGenFind(succ_gen, state, ops, heur->op_size);
 
         for (i = 0; i < ops_size; ++i){
             // don't compare two identical operators
@@ -476,7 +482,7 @@ static void opSimplify(plan_heur_relax_t *heur, const plan_problem_t *prob)
                 continue;
 
             // compute id of the operator
-            op_i = ((unsigned long)ops[i] - (unsigned long)prob->op)
+            op_i = ((unsigned long)ops[i] - (unsigned long)op)
                         / sizeof(plan_operator_t);
 
             // simplify effects, if possible delete in reference operator
@@ -486,7 +492,7 @@ static void opSimplify(plan_heur_relax_t *heur, const plan_problem_t *prob)
     }
 
     // Free allocated resources
-    planStateDel(prob->state_pool, state);
+    planStateDel(state);
     BOR_FREE(ops);
 }
 

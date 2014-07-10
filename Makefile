@@ -50,9 +50,10 @@ OBJS += heur_goalcount
 OBJS += heur_relax
 OBJS += prioqueue
 OBJS += ma_comm_queue
+OBJS += ma_agent
 
 CXX_OBJS  = ma_msg.pb
-CXX_OBJS += ma_comm
+CXX_OBJS += ma_msg
 
 BIN_TARGETS =
 

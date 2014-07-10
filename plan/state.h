@@ -113,6 +113,12 @@ plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
                                     const plan_state_t *state);
 
 /**
+ * Same as planStatePoolInsert() but packed state is accepted as input.
+ */
+plan_state_id_t planStatePoolInsertPacked(plan_state_pool_t *pool,
+                                          const void *packed_state);
+
+/**
  * Returns state ID corresponding to the given state.
  */
 plan_state_id_t planStatePoolFind(plan_state_pool_t *pool,
@@ -125,6 +131,13 @@ plan_state_id_t planStatePoolFind(plan_state_pool_t *pool,
 void planStatePoolGetState(const plan_state_pool_t *pool,
                            plan_state_id_t sid,
                            plan_state_t *state);
+
+/**
+ * Returns pointer to the internally managed packed state corresponding to
+ * the given state ID.
+ */
+const void *planStatePoolGetPackedState(const plan_state_pool_t*pool,
+                                        plan_state_id_t sid);
 
 /**
  * Returns if the given partial state is subset of a state identified by
@@ -182,12 +195,12 @@ void planStatePackerUnpack(const plan_state_packer_t *p,
  * Creates a new struct representing state.
  * Note that by calling this function no state is inserted into pool!
  */
-plan_state_t *planStateNew(plan_state_pool_t *pool);
+plan_state_t *planStateNew(const plan_state_pool_t *pool);
 
 /**
  * Destroyes previously created state struct.
  */
-void planStateDel(plan_state_pool_t *pool, plan_state_t *state);
+void planStateDel(plan_state_t *state);
 
 /**
  * Returns value of the specified variable.
@@ -223,13 +236,12 @@ void planStateZeroize(plan_state_t *state);
 /**
  * Creates a partial state.
  */
-plan_part_state_t *planPartStateNew(plan_state_pool_t *pool);
+plan_part_state_t *planPartStateNew(const plan_state_pool_t *pool);
 
 /**
  * Destroys a partial state.
  */
-void planPartStateDel(plan_state_pool_t *pool,
-                      plan_part_state_t *part_state);
+void planPartStateDel(plan_part_state_t *part_state);
 
 /**
  * Returns number of variable the state consists of.

@@ -16,7 +16,7 @@ static void planProblemFree(plan_problem_t *plan)
         planSuccGenDel(plan->succ_gen);
 
     if (plan->goal){
-        planPartStateDel(plan->state_pool, plan->goal);
+        planPartStateDel(plan->goal);
         plan->goal = NULL;
     }
 
@@ -282,7 +282,7 @@ static int fdInitState(plan_problem_t *plan, FILE *fin)
     }
     plan->initial_state = planStatePoolInsert(plan->state_pool, state);
 
-    planStateDel(plan->state_pool, state);
+    planStateDel(state);
 
     if (fdAssert(fin, "end_state") != 0)
         return -1;
@@ -484,7 +484,7 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
     state = planStateNew(src->state_pool);
     planStatePoolGetState(src->state_pool, src->initial_state, state);
     dst->initial_state = planStatePoolInsert(dst->state_pool, state);
-    planStateDel(src->state_pool, state);
+    planStateDel(state);
 
     dst->goal = planPartStateNew(dst->state_pool);
     PLAN_PART_STATE_FOR_EACH(src->goal, i, var, val){

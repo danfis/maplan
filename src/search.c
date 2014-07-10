@@ -24,6 +24,36 @@ void planSearchStatInit(plan_search_stat_t *stat)
     stat->not_found = 0;
 }
 
+void planSearchStepChangeInit(plan_search_step_change_t *step_change)
+{
+    bzero(step_change, sizeof(*step_change));
+}
+
+void planSearchStepChangeFree(plan_search_step_change_t *step_change)
+{
+    if (step_change->closed_node)
+        BOR_FREE(step_change->closed_node);
+    bzero(step_change, sizeof(*step_change));
+}
+
+void planSearchStepChangeReset(plan_search_step_change_t *step_change)
+{
+    step_change->closed_node_size = 0;
+}
+
+void planSearchStepChangeAddClosedNode(plan_search_step_change_t *sc,
+                                       plan_state_space_node_t *node)
+{
+    if (sc->closed_node_size + 1 > sc->closed_node_alloc){
+        sc->closed_node_alloc = sc->closed_node_size + 1;
+        sc->closed_node = BOR_REALLOC_ARR(sc->closed_node,
+                                          plan_state_space_node_t *,
+                                          sc->closed_node_alloc);
+    }
+
+    sc->closed_node[sc->closed_node_size++] = node;
+}
+
 void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat)
 {
     struct rusage usg;
@@ -51,8 +81,9 @@ void _planSearchInit(plan_search_t *search,
 
     planSearchStatInit(&search->stat);
 
-    search->state_space = planStateSpaceNew(params->prob->state_pool);
-    search->state       = planStateNew(params->prob->state_pool);
+    search->state_pool  = params->prob->state_pool;
+    search->state_space = planStateSpaceNew(search->state_pool);
+    search->state       = planStateNew(search->state_pool);
     search->succ_op     = BOR_ALLOC_ARR(plan_operator_t *, params->prob->op_size);
     search->goal_state  = PLAN_NO_STATE;
 }
@@ -62,7 +93,7 @@ void _planSearchFree(plan_search_t *search)
     if (search->succ_op)
         BOR_FREE(search->succ_op);
     if (search->state)
-        planStateDel(search->params.prob->state_pool, search->state);
+        planStateDel(search->state);
     if (search->state_space)
         planStateSpaceDel(search->state_space);
 }
@@ -71,8 +102,7 @@ plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_state_id_t state_id,
                                  plan_heur_t *heur)
 {
-    planStatePoolGetState(search->params.prob->state_pool,
-                          state_id, search->state);
+    planStatePoolGetState(search->state_pool, state_id, search->state);
     planSearchStatIncEvaluatedStates(&search->stat);
     return planHeur(heur, search->state);
 }
@@ -81,8 +111,7 @@ static int findApplicableOperators(plan_search_t *search,
                                    plan_state_id_t state_id)
 {
     // unroll the state into search->state struct
-    planStatePoolGetState(search->params.prob->state_pool,
-                          state_id, search->state);
+    planStatePoolGetState(search->state_pool, state_id, search->state);
 
     // get operators to get successors
     return planSuccGenFind(search->params.prob->succ_gen,
@@ -137,19 +166,20 @@ int _planSearchNewState(plan_search_t *search,
     return -1;
 }
 
-void _planSearchNodeOpenClose(plan_search_t *search,
-                              plan_state_id_t state,
-                              plan_state_id_t parent_state,
-                              plan_operator_t *parent_op,
-                              plan_cost_t cost,
-                              plan_cost_t heur)
+plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
+                                                  plan_state_id_t state,
+                                                  plan_state_id_t parent_state,
+                                                  plan_operator_t *parent_op,
+                                                  plan_cost_t cost,
+                                                  plan_cost_t heur)
 {
     plan_state_space_node_t *node;
 
     node = planStateSpaceOpen2(search->state_space, state,
-                                   parent_state, parent_op,
-                                   cost, heur);
+                               parent_state, parent_op,
+                               cost, heur);
     planStateSpaceClose(search->state_space, node);
+    return node;
 }
 
 int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id)
@@ -178,7 +208,7 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
 
     res = search->init_fn(search);
     while (res == PLAN_SEARCH_CONT){
-        res = search->step_fn(search);
+        res = search->step_fn(search, NULL);
 
         ++steps;
         if (search->params.progress_fn
@@ -200,6 +230,20 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
 
     return res;
 }
+
+void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path)
+{
+    if (search->goal_state != PLAN_NO_STATE)
+        planSearchBackTrackPathFrom(search, search->goal_state, path);
+}
+
+void planSearchBackTrackPathFrom(plan_search_t *search,
+                                 plan_state_id_t from_state,
+                                 plan_path_t *path)
+{
+    extractPath(search->state_space, from_state, path);
+}
+
 
 static void updateStat(plan_search_stat_t *stat,
                        long steps,
@@ -223,7 +267,8 @@ static void extractPath(plan_state_space_t *state_space,
 
     node = planStateSpaceNode(state_space, goal_state);
     while (node && node->op){
-        planPathPrepend(path, node->op);
+        planPathPrepend(path, node->op,
+                        node->parent_state_id, node->state_id);
         node = planStateSpaceNode(state_space, node->parent_state_id);
     }
 }

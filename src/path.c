@@ -19,12 +19,15 @@ void planPathFree(plan_path_t *path)
     }
 }
 
-void planPathPrepend(plan_path_t *path, plan_operator_t *op)
+void planPathPrepend(plan_path_t *path, plan_operator_t *op,
+                     plan_state_id_t from, plan_state_id_t to)
 {
     plan_path_op_t *path_op;
 
     path_op = BOR_ALLOC(plan_path_op_t);
     path_op->op = op;
+    path_op->from_state = from;
+    path_op->to_state = to;
     borListInit(&path_op->path);
     borListPrepend(path, &path_op->path);
 }

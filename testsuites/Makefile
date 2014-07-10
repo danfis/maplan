@@ -14,8 +14,8 @@ LDFLAGS += $(JANSSON_LDFLAGS)
 LDFLAGS += $(PROTOBUF_LDFLAGS)
 LDFLAGS += -lstdc++
 
-BENCH_CFLAGS = -O3 -pipe -march=corei7
-#BENCH_CFLAGS += -g
+#BENCH_CFLAGS = -O3 -pipe -march=corei7
+BENCH_CFLAGS += -g
 BENCH_CFLAGS += -I./ -I../
 BENCH_CFLAGS += -I../../boruvka
 BENCH_CFLAGS += -I../../opts
@@ -24,7 +24,7 @@ BENCH_CFLAGS += $(JANSSON_CFLAGS)
 CHECK_REG=cu/check-regressions
 CHECK_TS ?=
 
-TARGETS = test search
+TARGETS = test search search-ma
 
 OBJS  = load-from-file.o
 OBJS += state.o
@@ -42,6 +42,8 @@ all: $(TARGETS)
 test: main.c cu $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $< $(OBJS) $(LDFLAGS)
 search: search.c ../libplan.a
+	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS) -L../../opts -lopts
+search-ma: search-ma.c ../libplan.a
 	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS) -L../../opts -lopts
 
 t_ma_comm_queue.o: t_ma_comm_queue.c

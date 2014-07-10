@@ -58,12 +58,54 @@ void planSearchStatInit(plan_search_stat_t *stat);
 
 
 /**
+ * Structure with record of changes made during one step of search
+ * algorithm (see planSearchStep()).
+ */
+struct _plan_search_step_change_t {
+    plan_state_space_node_t **closed_node; /*!< Closed nodes */
+    int closed_node_size;                  /*!< Number of closed nodes */
+    int closed_node_alloc;                 /*!< Allocated space */
+};
+typedef struct _plan_search_step_change_t plan_search_step_change_t;
+
+/**
+ * Initializes plan_search_step_change_t structure.
+ */
+void planSearchStepChangeInit(plan_search_step_change_t *step_change);
+
+/**
+ * Frees all resources allocated within plan_search_step_change_t
+ * structure.
+ */
+void planSearchStepChangeFree(plan_search_step_change_t *step_change);
+
+/**
+ * Reset record of the structure.
+ */
+void planSearchStepChangeReset(plan_search_step_change_t *step_change);
+
+/**
+ * Add record about one closed node.
+ */
+void planSearchStepChangeAddClosedNode(plan_search_step_change_t *step_change,
+                                       plan_state_space_node_t *node);
+
+
+
+/**
  * Callback for progress monitoring.
  * The function should return PLAN_SEARCH_CONT if the process should
  * continue after this callback, or PLAN_SEARCH_ABORT if the process
  * should be stopped.
  */
 typedef int (*plan_search_progress_fn)(const plan_search_stat_t *stat);
+
+
+/**
+ * Callback called each time a node is closed.
+ */
+typedef void (*plan_search_run_node_closed)(plan_state_space_node_t *node,
+                                            void *data);
 
 /**
  * Common parameters for all search algorithms.
@@ -146,8 +188,43 @@ void planSearchDel(plan_search_t *search);
  */
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
+/**
+ * Extracts path from initial state to the goal state (if was found) using
+ * back-tracking from the goal state.
+ */
+void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path);
 
+/**
+ * Simliar to planSearchBackTrackPath() but starting state for
+ * back-tracking is specified.
+ */
+void planSearchBackTrackPathFrom(plan_search_t *search,
+                                 plan_state_id_t from_state,
+                                 plan_path_t *path);
 
+/**
+ * Performs initial step which should be insertion of the initial state.
+ * Returns PLAN_SEARCH_CONT or PLAN_SEARCH_FOUND.
+ */
+_bor_inline int planSearchInitStep(plan_search_t *search);
+
+/**
+ * Performs one step in search.
+ * Returns one of PLAN_SEARCH_{CONT,FOUND,NOT_FOUND,ABORT}.
+ * If {change} is non-NULL it is filled with record of changes made during
+ * that step.
+ */
+_bor_inline int planSearchStep(plan_search_t *search,
+                               plan_search_step_change_t *change);
+
+/**
+ * Request for injection of the state into open-list.
+ * Returns 0 if the state was injected, -1 otherwise.
+ */
+_bor_inline int planSearchInjectState(plan_search_t *search,
+                                      plan_state_id_t state_id,
+                                      plan_cost_t cost,
+                                      plan_cost_t heuristic);
 
 /**
  * Internals
@@ -205,7 +282,17 @@ typedef int (*plan_search_init_fn)(void *);
 /**
  * Perform one step of algorithm.
  */
-typedef int (*plan_search_step_fn)(void *);
+typedef int (*plan_search_step_fn)(void *, plan_search_step_change_t *change);
+
+/**
+ * Inject the given state into open-list and performs another needed
+ * operations with the state.
+ * Returns 0 on success.
+ */
+typedef int (*plan_search_inject_state_fn)(void *search,
+                                           plan_state_id_t state_id,
+                                           plan_cost_t cost,
+                                           plan_cost_t heuristic);
 
 /**
  * Common base struct for all search algorithms.
@@ -214,10 +301,12 @@ struct _plan_search_t {
     plan_search_del_fn del_fn;
     plan_search_init_fn init_fn;
     plan_search_step_fn step_fn;
+    plan_search_inject_state_fn inject_state_fn;
 
     plan_search_params_t params;
     plan_search_stat_t stat;
 
+    plan_state_pool_t *state_pool;   /*!< State pool from params.prob */
     plan_state_space_t *state_space;
     plan_state_t *state;             /*!< Preallocated state */
     plan_operator_t **succ_op;       /*!< Preallocated array for successor
@@ -275,12 +364,12 @@ int _planSearchNewState(plan_search_t *search,
 /**
  * Open and close the state in one step.
  */
-void _planSearchNodeOpenClose(plan_search_t *search,
-                              plan_state_id_t state,
-                              plan_state_id_t parent_state,
-                              plan_operator_t *parent_op,
-                              plan_cost_t cost,
-                              plan_cost_t heur);
+plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
+                                                  plan_state_id_t state,
+                                                  plan_state_id_t parent_state,
+                                                  plan_operator_t *parent_op,
+                                                  plan_cost_t cost,
+                                                  plan_cost_t heur);
 
 /**
  * Returns true if the given state is the goal state.
@@ -290,6 +379,29 @@ void _planSearchNodeOpenClose(plan_search_t *search,
 int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id);
 
 /**** INLINES ****/
+_bor_inline int planSearchInitStep(plan_search_t *search)
+{
+    return search->init_fn(search);
+}
+
+_bor_inline int planSearchStep(plan_search_t *search,
+                               plan_search_step_change_t *change)
+{
+    return search->step_fn(search, change);
+}
+
+_bor_inline int planSearchInjectState(plan_search_t *search,
+                                      plan_state_id_t state_id,
+                                      plan_cost_t cost,
+                                      plan_cost_t heuristic)
+{
+    if (!search->inject_state_fn)
+        return -1;
+    return search->inject_state_fn(search, state_id, cost, heuristic);
+}
+
+
+
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)
 {
     ++stat->evaluated_states;

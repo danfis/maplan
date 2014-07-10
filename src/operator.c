@@ -16,8 +16,8 @@ void planOperatorFree(plan_operator_t *op)
 {
     if (op->name)
         BOR_FREE(op->name);
-    planPartStateDel(op->state_pool, op->pre);
-    planPartStateDel(op->state_pool, op->eff);
+    planPartStateDel(op->pre);
+    planPartStateDel(op->eff);
 }
 
 void planOperatorCopy(plan_operator_t *dst, const plan_operator_t *src)

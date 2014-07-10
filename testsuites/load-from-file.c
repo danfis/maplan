@@ -37,7 +37,7 @@ TEST(testLoadFromFD)
     assertEquals(planStateGet(initial_state, 7), 1);
     assertEquals(planStateGet(initial_state, 8), 4);
 
-    planStateDel(p->state_pool, initial_state);
+    planStateDel(initial_state);
 
     assertEquals(planPartStateGet(p->goal, 0), 0);
     assertEquals(planPartStateGet(p->goal, 1), 0);
@@ -136,7 +136,7 @@ TEST(testLoadFromFD2)
     assertEquals(planStateGet(initial_state, 12), 7);
     assertEquals(planStateGet(initial_state, 13), 6);
 
-    planStateDel(p->state_pool, initial_state);
+    planStateDel(initial_state);
 
     assertEquals(planPartStateGet(p->goal, 0), 0);
     assertEquals(planPartStateGet(p->goal, 1), 0);
@@ -247,7 +247,7 @@ TEST(testLoadAgentFromFD)
         assertEquals(planStateGet(initial_state, 11), 1);
         assertEquals(planStateGet(initial_state, 12), 1);
 
-        planStateDel(p->state_pool, initial_state);
+        planStateDel(initial_state);
 
         assertEquals(planPartStateGet(p->goal, 0), 0);
         assertEquals(planPartStateGet(p->goal, 1), 0);

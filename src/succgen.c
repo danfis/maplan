@@ -39,7 +39,7 @@ static void treeDel(plan_succ_gen_tree_t *tree);
 
 /** Finds applicable operators to the given state */
 static int treeFind(const plan_succ_gen_tree_t *tree,
-                    const plan_state_t *state,
+                    plan_val_t *vals,
                     plan_operator_t **op, int op_size);
 
 /** Set immediate operators to tree node */
@@ -118,7 +118,10 @@ int planSuccGenFind(const plan_succ_gen_t *sg,
                     const plan_state_t *state,
                     plan_operator_t **op, int op_size)
 {
-    return treeFind(sg->root, state, op, op_size);
+    // Use variable-length array to speed it up.
+    plan_val_t vals[state->num_vars];
+    memcpy(vals, state->val, sizeof(plan_val_t) * state->num_vars);
+    return treeFind(sg->root, vals, op, op_size);
 }
 
 
@@ -451,7 +454,7 @@ static void treeDel(plan_succ_gen_tree_t *tree)
 }
 
 static int treeFind(const plan_succ_gen_tree_t *tree,
-                    const plan_state_t *state,
+                    plan_val_t *vals,
                     plan_operator_t **op, int op_size)
 {
     int i, found = 0, size;
@@ -469,18 +472,18 @@ static int treeFind(const plan_succ_gen_tree_t *tree,
     // check whether this node should check on any variable value
     if (tree->var != PLAN_VAR_ID_UNDEFINED){
         // get corresponding value from state
-        val = planStateGet(state, tree->var);
+        val = vals[tree->var];
 
         // and use tree corresponding to the value if present
         if (val != PLAN_VAL_UNDEFINED && val < tree->val_size && tree->val[val]){
             size = BOR_MAX(0, (int)op_size - (int)found);
-            found += treeFind(tree->val[val], state, op + found, size);
+            found += treeFind(tree->val[val], vals, op + found, size);
         }
 
         // use default tree if present
         if (tree->def){
             size = BOR_MAX(0, (int)op_size - (int)found);
-            found += treeFind(tree->def, state, op + found, size);
+            found += treeFind(tree->def, vals, op + found, size);
         }
     }
 

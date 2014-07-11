@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     }
 
     planPathInit(&path);
-    planMARun(prob->agent_size, prob->agent, search, &path);
+    planMARun(prob->agent_size, search, &path);
     planPathFree(&path);
 
     for (i = 0; i < prob->agent_size; ++i){

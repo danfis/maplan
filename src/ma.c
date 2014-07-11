@@ -8,8 +8,7 @@ static void taskRun(int id, void *_agent, const bor_tasks_thinfo_t *thinfo)
     planMAAgentRun(agent);
 }
 
-int planMARun(int agent_size, plan_problem_agent_t *agent_prob,
-              plan_search_t **search, plan_path_t *path)
+int planMARun(int agent_size, plan_search_t **search, plan_path_t *path)
 {
     bor_tasks_t *tasks;
     plan_ma_comm_queue_pool_t *queue_pool;
@@ -21,8 +20,7 @@ int planMARun(int agent_size, plan_problem_agent_t *agent_prob,
 
     // create agent nodes
     for (i = 0; i < agent_size; ++i){
-        agents[i] = planMAAgentNew(agent_prob + i, search[i],
-                                   planMACommQueue(queue_pool, i));
+        agents[i] = planMAAgentNew(search[i], planMACommQueue(queue_pool, i));
     }
 
     // run agents in parallel

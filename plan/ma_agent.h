@@ -15,7 +15,6 @@ struct _plan_ma_agent_path_op_t {
 typedef struct _plan_ma_agent_path_op_t plan_ma_agent_path_op_t;
 
 struct _plan_ma_agent_t {
-    plan_problem_agent_t *prob;    /*!< Problem definition */
     plan_search_t *search;         /*!< Instance of search algorithm */
     plan_ma_comm_queue_t *comm;    /*!< Communication queue */
     plan_state_pool_t *state_pool; /*!< State pool from .prob */
@@ -33,8 +32,7 @@ typedef struct _plan_ma_agent_t plan_ma_agent_t;
 /**
  * Creates a multi-agent node.
  */
-plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
-                                plan_search_t *search,
+plan_ma_agent_t *planMAAgentNew(plan_search_t *search,
                                 plan_ma_comm_queue_t *comm);
 
 /**

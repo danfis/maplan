@@ -43,25 +43,17 @@ static int processMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg);
 static void tracePath(plan_ma_agent_t *agent);
 
 
-plan_ma_agent_t *planMAAgentNew(plan_problem_agent_t *prob,
-                                plan_search_t *search,
+plan_ma_agent_t *planMAAgentNew(plan_search_t *search,
                                 plan_ma_comm_queue_t *comm)
 {
     plan_ma_agent_t *agent;
     pub_state_data_t msg_init;
 
-    if (search->state_pool != prob->prob.state_pool){
-        fprintf(stderr, "Error: Search algorithm uses different state"
-                        " pool/registry than the agent. This is not right!\n");
-        return NULL;
-    }
-
     agent = BOR_ALLOC(plan_ma_agent_t);
-    agent->prob = prob;
     agent->search = search;
     agent->comm = comm;
 
-    agent->state_pool = agent->prob->prob.state_pool;
+    agent->state_pool = search->state_pool;
     msg_init.agent_id = -1;
     msg_init.cost = PLAN_COST_MAX;
     agent->pub_state_reg_id = planStatePoolDataReserve(agent->state_pool,
@@ -163,7 +155,7 @@ static int sendNode(plan_ma_agent_t *agent, plan_state_space_node_t *node)
         return -1;
 
     msg = planMAMsgNew();
-    planMAMsgSetPublicState(msg, agent->prob->id,
+    planMAMsgSetPublicState(msg, agent->comm->node_id,
                             statebuf, agent->packed_state_size,
                             node->state_id,
                             node->cost, node->heuristic);

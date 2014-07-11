@@ -150,7 +150,7 @@ void planMAAgentGetPath(const plan_ma_agent_t *agent,
 }
 
 
-void planMAAgentPathDel(plan_ma_agent_path_op_t *path, int path_size)
+void planMAAgentPathFree(plan_ma_agent_path_op_t *path, int path_size)
 {
     agentFreePath(path, path_size);
 }

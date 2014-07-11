@@ -64,6 +64,9 @@ int main(int argc, char *argv[])
         for (i = 0; i < path_size; ++i){
             fprintf(stdout, "(%s)\n", path[i].name);
         }
+
+        if (path)
+            planMAAgentPathFree(path, path_size);
     }
 
     for (i = 0; i < prob->agent_size; ++i){

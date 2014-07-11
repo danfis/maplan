@@ -57,6 +57,6 @@ void planMAAgentGetPath(const plan_ma_agent_t *agent,
 /**
  * Frees allocated path
  */
-void planMAAgentPathDel(plan_ma_agent_path_op_t *path, int path_size);
+void planMAAgentPathFree(plan_ma_agent_path_op_t *path, int path_size);
 
 #endif /* __PLAN_MA_AGENT_H__ */

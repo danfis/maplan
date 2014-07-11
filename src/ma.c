@@ -34,6 +34,8 @@ int planMARun(int agent_size, plan_search_t **search,
     borTasksDel(tasks);
 
     // retrieve results
+    *path_size = 0;
+    *path = NULL;
     for (i = 0; i < agent_size; ++i){
         if (agents[i]->found){
             res = PLAN_SEARCH_FOUND;

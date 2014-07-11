@@ -380,7 +380,7 @@ static int updateTracePathMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
 
 static void readMsgPath(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
 {
-    int i, len, cost;
+    int i, ins, len, cost;
     const char *name;
 
     // get number of operators in path
@@ -393,10 +393,10 @@ static void readMsgPath(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
     agent->path = BOR_ALLOC_ARR(plan_ma_agent_path_op_t, agent->path_size);
 
     // copy path to the internal structure
-    for (i = len - 1; i >= 0; --i){
+    for (ins = 0, i = len - 1; i >= 0; --i, ++ins){
         name = planMAMsgTracePathOperator(msg, i, &cost);
-        agent->path[i].name = strdup(name);
-        agent->path[i].cost = cost;
+        agent->path[ins].name = strdup(name);
+        agent->path[ins].cost = cost;
     }
 }
 

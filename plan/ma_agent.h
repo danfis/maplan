@@ -24,6 +24,7 @@ struct _plan_ma_agent_t {
                                         state */
     plan_ma_agent_path_op_t *path; /*!< Path found by the agent */
     int path_size;                 /*!< Number of operators in the path */
+    int found;                     /*!< True if solution was found */
     int terminated;                /*!< True if the agent was already
                                         terminated */
 };
@@ -44,5 +45,18 @@ void planMAAgentDel(plan_ma_agent_t *agent);
  * Runs multi-agent node in the current thread.
  */
 int planMAAgentRun(plan_ma_agent_t *agent);
+
+/**
+ * Returns found path via output arguments. The memory is allocated on
+ * heap.
+ */
+void planMAAgentGetPath(const plan_ma_agent_t *agent,
+                        plan_ma_agent_path_op_t **path,
+                        int *path_size);
+
+/**
+ * Frees allocated path
+ */
+void planMAAgentPathDel(plan_ma_agent_path_op_t *path, int path_size);
 
 #endif /* __PLAN_MA_AGENT_H__ */

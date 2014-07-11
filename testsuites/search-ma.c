@@ -12,7 +12,8 @@ int main(int argc, char *argv[])
     plan_search_t **search;
     plan_search_ehc_params_t ehc_params;
     plan_search_lazy_params_t lazy_params;
-    plan_path_t path;
+    plan_ma_agent_path_op_t *path;
+    int path_size;
     bor_timer_t timer;
     int i, res;
     FILE *fout;
@@ -57,9 +58,13 @@ int main(int argc, char *argv[])
         search[i] = planSearchLazyNew(&lazy_params);
     }
 
-    planPathInit(&path);
-    planMARun(prob->agent_size, search, &path);
-    planPathFree(&path);
+    res = planMARun(prob->agent_size, search, &path, &path_size);
+    if (res == PLAN_SEARCH_FOUND){
+        //fprintf(stdout, "Solution found.\n");
+        for (i = 0; i < path_size; ++i){
+            fprintf(stdout, "(%s)\n", path[i].name);
+        }
+    }
 
     for (i = 0; i < prob->agent_size; ++i){
         planSearchDel(search[i]);

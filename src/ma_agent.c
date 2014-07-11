@@ -40,7 +40,7 @@ static int processTracePath(plan_ma_agent_t *agent, plan_ma_msg_t *msg);
 static int processMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg);
 /** Performs trace-path operation, it is assumed that agent->search has
  *  found the solution. */
-static void tracePath(plan_ma_agent_t *agent);
+static int tracePath(plan_ma_agent_t *agent);
 
 
 plan_ma_agent_t *planMAAgentNew(plan_search_t *search,
@@ -64,6 +64,7 @@ plan_ma_agent_t *planMAAgentNew(plan_search_t *search,
 
     agent->path = NULL;
     agent->path_size = 0;
+    agent->found = 0;
     agent->terminated = 0;
 
     return agent;
@@ -101,7 +102,8 @@ int planMAAgentRun(plan_ma_agent_t *agent)
 
         // If the solution was found, terminate agent cluster and exit.
         if (res == PLAN_SEARCH_FOUND){
-            tracePath(agent);
+            if (tracePath(agent) == PLAN_SEARCH_FOUND)
+                agent->found = 1;
             terminate(agent);
             break;
         }
@@ -127,6 +129,31 @@ int planMAAgentRun(plan_ma_agent_t *agent)
     return res;
 }
 
+void planMAAgentGetPath(const plan_ma_agent_t *agent,
+                        plan_ma_agent_path_op_t **path,
+                        int *path_size)
+{
+    int i;
+
+    if (agent->path_size == 0){
+        *path = NULL;
+        *path_size = 0;
+        return;
+    }
+
+    *path_size = agent->path_size;
+    *path = BOR_ALLOC_ARR(plan_ma_agent_path_op_t, agent->path_size);
+    for (i = 0; i < agent->path_size; ++i){
+        (*path)[i].name = strdup(agent->path[i].name);
+        (*path)[i].cost = agent->path[i].cost;
+    }
+}
+
+
+void planMAAgentPathDel(plan_ma_agent_path_op_t *path, int path_size)
+{
+    agentFreePath(path, path_size);
+}
 
 
 static void agentFreePath(plan_ma_agent_path_op_t *path, int path_size)
@@ -444,7 +471,7 @@ static int processMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
     return res;
 }
 
-static void tracePath(plan_ma_agent_t *agent)
+static int tracePath(plan_ma_agent_t *agent)
 {
     plan_ma_msg_t *msg;
     int res;
@@ -462,7 +489,7 @@ static void tracePath(plan_ma_agent_t *agent)
 
     // We have found solution, so exit early
     if (res != PLAN_SEARCH_CONT)
-        return;
+        return res;
 
     // Wait for trace-path response or terminate signal
     while ((msg = planMACommQueueRecvBlock(agent->comm)) != NULL){
@@ -477,5 +504,7 @@ static void tracePath(plan_ma_agent_t *agent)
             planMAMsgDel(msg);
         }
     }
+
+    return res;
 }
 

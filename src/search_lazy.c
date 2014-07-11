@@ -5,8 +5,10 @@
 struct _plan_search_lazy_t {
     plan_search_t search;
 
-    plan_list_lazy_t *list;          /*!< List to keep track of the states */
-    plan_heur_t *heur;               /*!< Heuristic function */
+    plan_list_lazy_t *list; /*!< List to keep track of the states */
+    int list_del;           /*!< True if .list should be deleted */
+    plan_heur_t *heur;      /*!< Heuristic function */
+    int heur_del;           /*!< True if .heur should be deleted */
 };
 typedef struct _plan_search_lazy_t plan_search_lazy_t;
 
@@ -34,8 +36,10 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
                     planSearchLazyStep,
                     planSearchLazyInjectState);
 
-    lazy->heur = params->heur;
-    lazy->list = params->list;
+    lazy->heur     = params->heur;
+    lazy->heur_del = params->heur_del;
+    lazy->list     = params->list;
+    lazy->list_del = params->list_del;
 
     return &lazy->search;
 }
@@ -44,6 +48,10 @@ static void planSearchLazyDel(void *_lazy)
 {
     plan_search_lazy_t *lazy = _lazy;
     _planSearchFree(&lazy->search);
+    if (lazy->heur_del)
+        planHeurDel(lazy->heur);
+    if (lazy->list_del)
+        planListLazyDel(lazy->list);
     BOR_FREE(lazy);
 }
 

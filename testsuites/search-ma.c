@@ -9,8 +9,6 @@
 int main(int argc, char *argv[])
 {
     plan_problem_agents_t *prob = NULL;
-    plan_heur_t **heur;
-    plan_list_lazy_t **list;
     plan_search_t **search;
     plan_search_ehc_params_t ehc_params;
     plan_search_lazy_params_t lazy_params;
@@ -33,25 +31,27 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    heur   = BOR_ALLOC_ARR(plan_heur_t *, prob->agent_size);
-    list   = BOR_ALLOC_ARR(plan_list_lazy_t *, prob->agent_size);
     search = BOR_ALLOC_ARR(plan_search_t *, prob->agent_size);
 
     for (i = 0; i < prob->agent_size; ++i){
         plan_problem_t *p = &prob->agent[i].prob;
-        heur[i] = planHeurRelaxAddNew(p->var, p->var_size, p->goal,
-                                      prob->agent[i].projected_op,
-                                      prob->agent[i].projected_op_size,
-                                      NULL);
-        list[i] = planListLazySplayTreeNew();
+        plan_heur_t *heur;
+        heur = planHeurRelaxAddNew(p->var, p->var_size, p->goal,
+                                   prob->agent[i].projected_op,
+                                   prob->agent[i].projected_op_size,
+                                   NULL);
 
+        /*
         planSearchEHCParamsInit(&ehc_params);
         ehc_params.heur = heur[i];
         ehc_params.search.prob = &prob->agent[i].prob;
+        */
 
         planSearchLazyParamsInit(&lazy_params);
-        lazy_params.heur = heur[i];
-        lazy_params.list = list[i];
+        lazy_params.heur = heur;
+        lazy_params.heur_del = 1;
+        lazy_params.list = planListLazySplayTreeNew();
+        lazy_params.list_del = 1;
         lazy_params.search.prob = &prob->agent[i].prob;
         //search[i] = planSearchEHCNew(&ehc_params);
         search[i] = planSearchLazyNew(&lazy_params);
@@ -63,13 +63,9 @@ int main(int argc, char *argv[])
 
     for (i = 0; i < prob->agent_size; ++i){
         planSearchDel(search[i]);
-        planListLazyDel(list[i]);
-        planHeurDel(heur[i]);
     }
 
     BOR_FREE(search);
-    BOR_FREE(list);
-    BOR_FREE(heur);
 
     planProblemAgentsDel(prob);
 

@@ -5,10 +5,10 @@
 struct _plan_search_ehc_t {
     plan_search_t search;
 
-    plan_list_lazy_t *list;          /*!< List to keep track of the states */
-    plan_heur_t *heur;               /*!< Heuristic function */
-    plan_cost_t best_heur;           /*!< Value of the best heuristic
-                                          value found so far */
+    plan_list_lazy_t *list; /*!< List to keep track of the states */
+    plan_heur_t *heur;      /*!< Heuristic function */
+    int heur_del;           /*!< True if .heur should be deleted */
+    plan_cost_t best_heur;  /*!< Value of the best heuristic value found so far */
 };
 typedef struct _plan_search_ehc_t plan_search_ehc_t;
 
@@ -43,6 +43,7 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
 
     ehc->list        = planListLazyFifoNew();
     ehc->heur        = params->heur;
+    ehc->heur_del    = params->heur_del;
     ehc->best_heur   = PLAN_COST_MAX;
 
     return &ehc->search;
@@ -55,6 +56,8 @@ static void planSearchEHCDel(void *_ehc)
     _planSearchFree(&ehc->search);
     if (ehc->list)
         planListLazyDel(ehc->list);
+    if (ehc->heur_del)
+        planHeurDel(ehc->heur);
     BOR_FREE(ehc);
 }
 

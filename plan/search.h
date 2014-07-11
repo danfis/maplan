@@ -128,6 +128,8 @@ struct _plan_search_ehc_params_t {
     plan_search_params_t search; /*!< Common parameters */
 
     plan_heur_t *heur; /*!< Heuristic function that ought to be used */
+    int heur_del;      /*!< True if .heur should be deleted in
+                            planSearchDel() */
 };
 typedef struct _plan_search_ehc_params_t plan_search_ehc_params_t;
 
@@ -151,7 +153,11 @@ struct _plan_search_lazy_params_t {
     plan_search_params_t search; /*!< Common parameters */
 
     plan_heur_t *heur;      /*!< Heuristic function that ought to be used */
+    int heur_del;           /*!< True if .heur should be deleted in
+                                 planSearchDel() */
     plan_list_lazy_t *list; /*!< Lazy list that will be used. */
+    int list_del;           /*!< True if .list should be deleted in
+                                 planSearchDel() */
 };
 typedef struct _plan_search_lazy_params_t plan_search_lazy_params_t;
 

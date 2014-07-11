@@ -4,14 +4,7 @@
 #include <plan/search.h>
 #include <plan/heur.h>
 #include <plan/search.h>
-#include <plan/ma_agent.h>
-
-void taskRun(int id, void *_agent, const bor_tasks_thinfo_t *thinfo)
-{
-    plan_ma_agent_t *agent = _agent;
-    planMAAgentRun(agent);
-}
-
+#include <plan/ma.h>
 
 int main(int argc, char *argv[])
 {
@@ -21,9 +14,7 @@ int main(int argc, char *argv[])
     plan_search_t **search;
     plan_search_ehc_params_t ehc_params;
     plan_search_lazy_params_t lazy_params;
-    plan_ma_comm_queue_pool_t *queue_pool;
-    plan_ma_agent_t **agent;
-    bor_tasks_t *tasks;
+    plan_path_t path;
     bor_timer_t timer;
     int i, res;
     FILE *fout;
@@ -45,9 +36,6 @@ int main(int argc, char *argv[])
     heur   = BOR_ALLOC_ARR(plan_heur_t *, prob->agent_size);
     list   = BOR_ALLOC_ARR(plan_list_lazy_t *, prob->agent_size);
     search = BOR_ALLOC_ARR(plan_search_t *, prob->agent_size);
-    agent  = BOR_ALLOC_ARR(plan_ma_agent_t *, prob->agent_size);
-
-    queue_pool = planMACommQueuePoolNew(prob->agent_size);
 
     for (i = 0; i < prob->agent_size; ++i){
         plan_problem_t *p = &prob->agent[i].prob;
@@ -67,28 +55,18 @@ int main(int argc, char *argv[])
         lazy_params.search.prob = &prob->agent[i].prob;
         //search[i] = planSearchEHCNew(&ehc_params);
         search[i] = planSearchLazyNew(&lazy_params);
-
-        agent[i] = planMAAgentNew(prob->agent + i, search[i],
-                                  planMACommQueue(queue_pool, i));
     }
 
-    tasks = borTasksNew(prob->agent_size);
-    for (i = 0; i < prob->agent_size; ++i){
-        borTasksAdd(tasks, taskRun, i, agent[i]);
-    }
-    borTasksRun(tasks);
-    borTasksDel(tasks);
+    planPathInit(&path);
+    planMARun(prob->agent_size, prob->agent, search, &path);
+    planPathFree(&path);
 
     for (i = 0; i < prob->agent_size; ++i){
-        planMAAgentDel(agent[i]);
         planSearchDel(search[i]);
         planListLazyDel(list[i]);
         planHeurDel(heur[i]);
     }
 
-    planMACommQueuePoolDel(queue_pool);
-
-    BOR_FREE(agent);
     BOR_FREE(search);
     BOR_FREE(list);
     BOR_FREE(heur);

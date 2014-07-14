@@ -1,6 +1,8 @@
 #ifndef __PLAN_SEARCH_H__
 #define __PLAN_SEARCH_H__
 
+#include <boruvka/timer.h>
+
 #include <plan/problem.h>
 #include <plan/statespace.h>
 #include <plan/heur.h>

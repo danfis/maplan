@@ -32,6 +32,29 @@ static plan_list_lazy_t *listLazyCreate(const char *name)
     return list;
 }
 
+static plan_heur_t *heurCreate(const char *name,
+                               const plan_var_t *var, int var_size,
+                               const plan_part_state_t *goal,
+                               const plan_operator_t *op, int op_size,
+                               const plan_succ_gen_t *succ_gen)
+{
+    plan_heur_t *heur = NULL;
+
+    if (strcmp(name, "goalcount") == 0){
+        heur = planHeurGoalCountNew(goal);
+    }else if (strcmp(name, "add") == 0){
+        heur = planHeurRelaxAddNew(var, var_size, goal, op, op_size, succ_gen);
+    }else if (strcmp(name, "max") == 0){
+        heur = planHeurRelaxMaxNew(var, var_size, goal, op, op_size, succ_gen);
+    }else if (strcmp(name, "ff") == 0){
+        heur = planHeurRelaxFFNew(var, var_size, goal, op, op_size, succ_gen);
+    }else{
+        fprintf(stderr, "Error: Invalid heuristic type: `%s'\n", name);
+    }
+
+    return heur;
+}
+
 static int readOpts(int argc, char *argv[])
 {
     int help;
@@ -150,21 +173,10 @@ int main(int argc, char *argv[])
     if ((list = listLazyCreate(def_list)) == NULL)
         return -1;
 
-    if (strcmp(def_heur, "goalcount") == 0){
-        heur = planHeurGoalCountNew(prob->goal);
-    }else if (strcmp(def_heur, "add") == 0){
-        heur = planHeurRelaxAddNew(prob->var, prob->var_size, prob->goal,
-                                   prob->op, prob->op_size, prob->succ_gen);
-    }else if (strcmp(def_heur, "max") == 0){
-        heur = planHeurRelaxMaxNew(prob->var, prob->var_size, prob->goal,
-                                   prob->op, prob->op_size, prob->succ_gen);
-    }else if (strcmp(def_heur, "ff") == 0){
-        heur = planHeurRelaxFFNew(prob->var, prob->var_size, prob->goal,
-                                  prob->op, prob->op_size, prob->succ_gen);
-    }else{
-        fprintf(stderr, "Error: Invalid heuristic type\n");
+    heur = heurCreate(def_heur, prob->var, prob->var_size, prob->goal,
+                      prob->op, prob->op_size, prob->succ_gen);
+    if (heur == NULL)
         return -1;
-    }
 
     if (strcmp(def_search, "ehc") == 0){
         planSearchEHCParamsInit(&ehc_params);

@@ -175,8 +175,6 @@ help:
 	@echo "    CXXFLAGS          = $(CXXFLAGS)"
 	@echo "    LDFLAGS           = $(LDFLAGS)"
 	@echo "    CONFIG_FLAGS      = $(CONFIG_FLAGS)"
-	@echo "    JANSSON_CFLAGS    = $(JANSSON_CFLAGS)"
-	@echo "    JANSSON_LDFLAGS   = $(JANSSON_LDFLAGS)"
 	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
 	@echo "    PYTHON_CFLAGS     = $(PYTHON_CFLAGS)"

@@ -2,13 +2,15 @@
 #include <plan/search.h>
 #include <plan/heur.h>
 #include <plan/search.h>
+#include <plan/ma.h>
 #include <opts.h>
 
 static char *def_fd_problem = NULL;
 static char *def_ma_problem = NULL;
 static char *def_search = "ehc";
-static char *def_list = "heap";
+static char *def_list = "splaytree";
 static char *def_heur = "goalcount";
+static char *def_ma_heur_op = "projected";
 static char *plan_output_fn = NULL;
 static int max_time = 60 * 30; // 30 minutes
 static int max_mem = 1024 * 1024; // 1GB
@@ -21,16 +23,19 @@ static int readOpts(int argc, char *argv[])
 
     optsAddDesc("help", 'h', OPTS_NONE, &help, NULL,
                 "Print this help.");
-    optsAddDesc("fd", 'f', OPTS_STR, &def_fd_problem, NULL,
+    optsAddDesc("fd", 0x0, OPTS_STR, &def_fd_problem, NULL,
                 "Path to the FD's .sas problem definition.");
     optsAddDesc("ma", 0x0, OPTS_STR, &def_ma_problem, NULL,
                 "Path to definition of multi-agent problem.");
     optsAddDesc("search", 's', OPTS_STR, &def_search, NULL,
                 "Define search algorithm [ehc|lazy] (default: ehc)");
     optsAddDesc("list", 'l', OPTS_STR, &def_list, NULL,
-                "Define list type [heap|bucket|rbtree|splaytree] (default: heap)");
+                "Define list type [heap|bucket|rbtree|splaytree] (default: splaytree)");
     optsAddDesc("heur", 'H', OPTS_STR, &def_heur, NULL,
                 "Define heuristic [goalcount|add|max|ff] (default: goalcount)");
+    optsAddDesc("ma-heur-op", 0x0, OPTS_STR, &def_ma_heur_op, NULL,
+                "Which type of operators are used for heuristic"
+                " [global,projected,local] (default: projected)");
     optsAddDesc("plan-output", 'o', OPTS_STR, &plan_output_fn, NULL,
                 "Path where to write resulting plan.");
     optsAddDesc("max-time", 0x0, OPTS_INT, &max_time, NULL,
@@ -47,7 +52,7 @@ static int readOpts(int argc, char *argv[])
         return -1;
 
     if (def_fd_problem == NULL && def_ma_problem == NULL){
-        fprintf(stderr, "Error: Problem must be defined (-f or --ma).\n");
+        fprintf(stderr, "Error: Problem must be defined (--fd or --ma).\n");
         return -1;
     }
 
@@ -201,59 +206,17 @@ static void printProblem(const plan_problem_t *prob,
 }
 
 
-
-int main(int argc, char *argv[])
+static int runSingleThread(plan_problem_t *prob)
 {
-    plan_problem_t *prob = NULL;
-    plan_problem_agents_t *ma_prob = NULL;
     plan_search_t *search;
     plan_path_t path;
-    bor_timer_t timer;
-    int res;
     FILE *fout;
-
-    if (readOpts(argc, argv) != 0){
-        usage(argv[0]);
-        return -1;
-    }
-
-    borTimerStart(&timer);
-
-    printf("FD Problem: %s\n", def_fd_problem);
-    printf("MA Problem: %s\n", def_ma_problem);
-    printf("Search: %s\n", def_search);
-    printf("List: %s\n", def_list);
-    printf("Heur: %s\n", def_heur);
-    printf("Max Time: %d s\n", max_time);
-    printf("Max Mem: %d kb\n", max_mem);
-    printf("\n");
-
-    if (def_fd_problem){
-        prob = planProblemFromFD(def_fd_problem);
-    }else if (def_ma_problem){
-        ma_prob = planProblemAgentsFromFD(def_ma_problem);
-    }
-
-    if (prob != NULL){
-        printProblem(prob, NULL);
-    }else if (ma_prob != NULL){
-        printProblem(&ma_prob->prob, ma_prob);
-    }else{
-        return -1;
-    }
-
-    borTimerStop(&timer);
-    printf("Loading Time: %f s\n", borTimerElapsedInSF(&timer));
-    printf("\n");
-    return 0;
+    int res;
 
     search = searchCreate(def_search, def_heur, def_list, prob,
                           prob->op, prob->op_size, prob->succ_gen);
     if (search == NULL)
         return -1;
-
-    borTimerStop(&timer);
-    printf("Init Time: %f s\n", borTimerElapsedInSF(&timer));
 
     planPathInit(&path);
     res = planSearchRun(search, &path);
@@ -292,7 +255,146 @@ int main(int argc, char *argv[])
     planPathFree(&path);
 
     planSearchDel(search);
-    planProblemDel(prob);
+
+    return 0;
+}
+
+static int runMA(plan_problem_agents_t *ma_prob)
+{
+    plan_search_t *search[ma_prob->agent_size];
+    plan_operator_t *heur_op;
+    int heur_op_size;
+    plan_succ_gen_t *heur_succ_gen;
+    plan_ma_agent_path_op_t *path = NULL;
+    int path_size = 0;
+    int i, res;
+    plan_cost_t cost;
+    FILE *fout;
+
+    for (i = 0; i < ma_prob->agent_size; ++i){
+        if (strcmp(def_ma_heur_op, "global") == 0){
+            heur_op       = ma_prob->prob.op;
+            heur_op_size  = ma_prob->prob.op_size;
+            heur_succ_gen = ma_prob->prob.succ_gen;
+
+        }else if (strcmp(def_ma_heur_op, "projected") == 0){
+            heur_op       = ma_prob->agent[i].projected_op;
+            heur_op_size  = ma_prob->agent[i].projected_op_size;
+            heur_succ_gen = NULL;
+
+        }else if (strcmp(def_ma_heur_op, "local") == 0){
+            heur_op       = ma_prob->agent[i].prob.op;
+            heur_op_size  = ma_prob->agent[i].prob.op_size;
+            heur_succ_gen = ma_prob->agent[i].prob.succ_gen;
+
+        }else{
+            return -1;
+        }
+
+        search[i] = searchCreate(def_search, def_heur, def_list,
+                                 &ma_prob->agent[i].prob,
+                                 heur_op, heur_op_size, heur_succ_gen);
+        if (search[i] == NULL)
+            return -1;
+    }
+
+    res = planMARun(ma_prob->agent_size, search, &path, &path_size);
+    if (res == PLAN_SEARCH_FOUND){
+        printf("Solution found.\n");
+
+        if (plan_output_fn != NULL){
+            fout = fopen(plan_output_fn, "w");
+            if (fout != NULL){
+                for (i = 0; i < path_size; ++i){
+                    fprintf(fout, "(%s)\n", path[i].name);
+                }
+                fclose(fout);
+                printf("Plan written to `%s'\n", plan_output_fn);
+
+            }else{
+                fprintf(stderr, "Error: Could not plan write to `%s'\n",
+                        plan_output_fn);
+            }
+        }
+
+        cost = 0;
+        for (i = 0; i < path_size; ++i)
+            cost += path[i].cost;
+        printf("Path Cost: %d\n", (int)cost);
+
+        if (path)
+            planMAAgentPathFree(path, path_size);
+
+    }else if (res == PLAN_SEARCH_NOT_FOUND){
+        printf("Solution NOT found.");
+
+    }else if (res == PLAN_SEARCH_ABORT){
+        printf("Search Aborted.");
+    }
+
+    for (i = 0; i < ma_prob->agent_size; ++i){
+        planSearchDel(search[i]);
+    }
+
+    return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    plan_problem_t *prob = NULL;
+    plan_problem_agents_t *ma_prob = NULL;
+    bor_timer_t timer;
+    int res;
+
+    if (readOpts(argc, argv) != 0){
+        usage(argv[0]);
+        return -1;
+    }
+
+    borTimerStart(&timer);
+
+    printf("FD Problem: %s\n", def_fd_problem);
+    printf("MA Problem: %s\n", def_ma_problem);
+    printf("Search: %s\n", def_search);
+    printf("List: %s\n", def_list);
+    printf("Heur: %s\n", def_heur);
+    printf("Max Time: %d s\n", max_time);
+    printf("Max Mem: %d kb\n", max_mem);
+    printf("MA heuristic operators: %s\n", def_ma_heur_op);
+    printf("\n");
+
+    if (def_fd_problem){
+        prob = planProblemFromFD(def_fd_problem);
+    }else if (def_ma_problem){
+        ma_prob = planProblemAgentsFromFD(def_ma_problem);
+    }
+
+    if (prob != NULL){
+        printProblem(prob, NULL);
+    }else if (ma_prob != NULL){
+        printProblem(&ma_prob->prob, ma_prob);
+    }else{
+        return -1;
+    }
+
+    borTimerStop(&timer);
+    printf("Loading Time: %f s\n", borTimerElapsedInSF(&timer));
+    printf("\n");
+
+    if (prob){
+        if ((res = runSingleThread(prob)) != 0)
+            return res;
+
+    }else if (ma_prob){
+        if ((res = runMA(ma_prob)) != 0)
+            return res;
+    }
+
+    if (prob){
+        planProblemDel(prob);
+    }else if (ma_prob){
+        planProblemAgentsDel(ma_prob);
+    }
 
     borTimerStop(&timer);
     printf("Overall Time: %f s\n", borTimerElapsedInSF(&timer));

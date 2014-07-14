@@ -77,13 +77,13 @@ static int progress(const plan_search_stat_t *stat)
             stat->generated_states,
             stat->not_found, stat->found);
 
-    if (stat->elapsed_time > max_time){
+    if (max_time > 0 && stat->elapsed_time > max_time){
         fprintf(stderr, "Abort: Exceeded max-time.\n");
         printf("Abort: Exceeded max-time.\n");
         return PLAN_SEARCH_ABORT;
     }
 
-    if (stat->peak_memory > max_mem){
+    if (max_mem > 0 && stat->peak_memory > max_mem){
         fprintf(stderr, "Abort: Exceeded max-mem.\n");
         printf("Abort: Exceeded max-mem.\n");
         return PLAN_SEARCH_ABORT;

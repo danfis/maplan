@@ -22,6 +22,7 @@ SO_VERSION = 0
 
 CFLAGS += -I. -I../boruvka/
 CFLAGS += $(JANSSON_CFLAGS)
+CXXFLAGS += -I. -I../boruvka/
 LDFLAGS += -L. -lplan -L../boruvka -lboruvka -lm -lrt
 LDFLAGS += $(JANSSON_LDFLAGS)
 
@@ -48,12 +49,19 @@ OBJS += heur
 OBJS += heur_goalcount
 OBJS += heur_relax
 OBJS += prioqueue
+OBJS += ma_comm_queue
+OBJS += ma_agent
+OBJS += ma
+
+CXX_OBJS  = ma_msg.pb
+CXX_OBJS += ma_msg
 
 BIN_TARGETS =
 
 
 OBJS_PIC    := $(foreach obj,$(OBJS),.objs/$(obj).pic.o)
 OBJS 		:= $(foreach obj,$(OBJS),.objs/$(obj).o)
+CXX_OBJS	:= $(foreach obj,$(CXX_OBJS),.objs/$(obj).cxx.o)
 BIN_TARGETS := $(foreach target,$(BIN_TARGETS),bin/$(target))
 
 
@@ -63,8 +71,8 @@ endif
 
 all: $(TARGETS)
 
-libplan.a: $(OBJS)
-	ar cr $@ $(OBJS)
+libplan.a: $(OBJS) $(CXX_OBJS)
+	ar cr $@ $(OBJS) $(CXX_OBJS)
 	ranlib $@
 
 plan/config.h: plan/config.h.m4
@@ -78,6 +86,9 @@ bin/%.o: bin/%.c bin/%.h
 examples/%: examples/%.c libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
+src/ma_msg.pb.cc: src/ma_msg.proto
+	cd src && $(PROTOC) --cpp_out=. ma_msg.proto
+
 .objs/%.pic.o: src/%.c plan/%.h plan/config.h
 	$(CC) -fPIC $(CFLAGS) -c -o $@ $<
 .objs/%.pic.o: src/%.c plan/config.h
@@ -88,6 +99,11 @@ examples/%: examples/%.c libplan.a
 .objs/%.o: src/%.c plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+.objs/%.cxx.o: src/%.cc plan/%.h plan/config.h
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+.objs/%.cxx.o: src/%.cc plan/config.h
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 
 %.h: plan/config.h
 %.c: plan/config.h
@@ -95,6 +111,7 @@ examples/%: examples/%.c libplan.a
 
 clean:
 	rm -f $(OBJS)
+	rm -f $(CXX_OBJS)
 	rm -f .objs/*.o
 	rm -f $(TARGETS)
 	rm -f $(BIN_TARGETS)
@@ -158,8 +175,8 @@ help:
 	@echo "    CXXFLAGS          = $(CXXFLAGS)"
 	@echo "    LDFLAGS           = $(LDFLAGS)"
 	@echo "    CONFIG_FLAGS      = $(CONFIG_FLAGS)"
-	@echo "    JANSSON_CFLAGS    = $(JANSSON_CFLAGS)"
-	@echo "    JANSSON_LDFLAGS   = $(JANSSON_LDFLAGS)"
+	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
+	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
 	@echo "    PYTHON_CFLAGS     = $(PYTHON_CFLAGS)"
 	@echo "    PYTHON_LDFLAGS    = $(PYTHON_LDFLAGS)"
 

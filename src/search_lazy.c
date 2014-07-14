@@ -5,14 +5,19 @@
 struct _plan_search_lazy_t {
     plan_search_t search;
 
-    plan_list_lazy_t *list;          /*!< List to keep track of the states */
-    plan_heur_t *heur;               /*!< Heuristic function */
+    plan_list_lazy_t *list; /*!< List to keep track of the states */
+    int list_del;           /*!< True if .list should be deleted */
+    plan_heur_t *heur;      /*!< Heuristic function */
+    int heur_del;           /*!< True if .heur should be deleted */
 };
 typedef struct _plan_search_lazy_t plan_search_lazy_t;
 
 static void planSearchLazyDel(void *_lazy);
 static int planSearchLazyInit(void *_lazy);
-static int planSearchLazyStep(void *_lazy);
+static int planSearchLazyStep(void *_lazy,
+                              plan_search_step_change_t *change);
+static int planSearchLazyInjectState(void *, plan_state_id_t state_id,
+                                     plan_cost_t cost, plan_cost_t heuristic);
 
 void planSearchLazyParamsInit(plan_search_lazy_params_t *p)
 {
@@ -28,10 +33,13 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
     _planSearchInit(&lazy->search, &params->search,
                     planSearchLazyDel,
                     planSearchLazyInit,
-                    planSearchLazyStep);
+                    planSearchLazyStep,
+                    planSearchLazyInjectState);
 
-    lazy->heur = params->heur;
-    lazy->list = params->list;
+    lazy->heur     = params->heur;
+    lazy->heur_del = params->heur_del;
+    lazy->list     = params->list;
+    lazy->list_del = params->list_del;
 
     return &lazy->search;
 }
@@ -40,6 +48,10 @@ static void planSearchLazyDel(void *_lazy)
 {
     plan_search_lazy_t *lazy = _lazy;
     _planSearchFree(&lazy->search);
+    if (lazy->heur_del)
+        planHeurDel(lazy->heur);
+    if (lazy->list_del)
+        planListLazyDel(lazy->list);
     BOR_FREE(lazy);
 }
 
@@ -51,12 +63,17 @@ static int planSearchLazyInit(void *_lazy)
     return PLAN_SEARCH_CONT;
 }
 
-static int planSearchLazyStep(void *_lazy)
+static int planSearchLazyStep(void *_lazy,
+                              plan_search_step_change_t *change)
 {
     plan_search_lazy_t *lazy = _lazy;
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
     plan_cost_t cur_heur;
+    plan_state_space_node_t *node;
+
+    if (change)
+        planSearchStepChangeReset(change);
 
     // get next node from the list
     if (planListLazyPop(lazy->list, &parent_state_id, &parent_op) != 0){
@@ -84,9 +101,11 @@ static int planSearchLazyStep(void *_lazy)
 
     // open and close the node so we can trace the path from goal to the
     // initial state
-    _planSearchNodeOpenClose(&lazy->search, cur_state_id,
-                                   parent_state_id, parent_op,
-                                   0, cur_heur);
+    node = _planSearchNodeOpenClose(&lazy->search, cur_state_id,
+                                    parent_state_id, parent_op,
+                                    0, cur_heur);
+    if (change)
+        planSearchStepChangeAddClosedNode(change, node);
 
     // check if the current state is the goal
     if (_planSearchCheckGoal(&lazy->search, cur_state_id))
@@ -96,4 +115,12 @@ static int planSearchLazyStep(void *_lazy)
                                  cur_heur, lazy->list);
 
     return PLAN_SEARCH_CONT;
+}
+
+static int planSearchLazyInjectState(void *_lazy, plan_state_id_t state_id,
+                                     plan_cost_t cost, plan_cost_t heuristic)
+{
+    plan_search_lazy_t *lazy = _lazy;
+    return _planSearchLazyInjectState(&lazy->search, lazy->heur, lazy->list,
+                                      state_id, cost, heuristic);
 }

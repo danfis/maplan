@@ -1,0 +1,1404 @@
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf8internal21InitShutdownFunctionsEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf8internal10OnShutdownEPFvvE
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf8internal21InitShutdownFunctionsEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf8internal10OnShutdownEPFvvE
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKcSt4pairIKS2_PFvRKSsEESaIS9_ESt10_Select1stIS9_EN6google8protobuf5streqENSE_4hashIS2_EENS_8__detail18_Mod_range_hashingENSI_20_Default_ranged_hashENSI_20_Prime_rehash_policyELb0ELb0ELb1EE16_M_insert_bucketERKS9_mm
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKcSt4pairIKS2_PFvRKSsEESaIS9_ESt10_Select1stIS9_EN6google8protobuf5streqENSE_4hashIS2_EENS_8__detail18_Mod_range_hashingENSI_20_Default_ranged_hashENSI_20_Prime_rehash_policyELb0ELb0ELb1EE16_M_insert_bucketERKS9_mm
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt6vectorIPFvvESaIS1_EE13_M_insert_auxEN9__gnu_cxx17__normal_iteratorIPS1_S3_EERKS1_
+   fun:_ZN6google8protobuf8internal10OnShutdownEPFvvE
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs4_Rep8_M_cloneERKSaIcEm
+   fun:_ZNSsC1ERKSs
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf8internal5MutexC1Ev
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf8internal5MutexC1Ev
+   fun:_ZN6google8protobuf8internal21InitShutdownFunctionsEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf8internal10OnShutdownEPFvvE
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf8internal5MutexC1Ev
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InitGeneratedMessageFactoryEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_EPSt18_Rb_tree_node_baseSD_RKS5_
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE16_M_insert_uniqueERKS5_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_EPSt18_Rb_tree_node_baseSD_RKS5_
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE16_M_insert_uniqueERKS5_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE9AddSymbolERKSsS6_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_EPSt18_Rb_tree_node_baseSD_RKS5_
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE16_M_insert_uniqueERKS5_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs4_Rep8_M_cloneERKSaIcEm
+   fun:_ZNSsC1ERKSs
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs4_Rep8_M_cloneERKSaIcEm
+   fun:_ZNSs7reserveEm
+   fun:_ZNSs6appendERKSs
+   fun:_ZStplIcSt11char_traitsIcESaIcEESbIT_T0_T1_ERKS6_S8_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableISsSsSaISsESt9_IdentityISsESt8equal_toISsEN6google8protobuf4hashISsEENS_8__detail18_Mod_range_hashingENSA_20_Default_ranged_hashENSA_20_Prime_rehash_policyELb0ELb1ELb1EE19_M_allocate_bucketsEm.isra.776
+   fun:_ZN6google8protobuf14DescriptorPool6TablesC1Ev
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKN6google8protobuf10DescriptorES5_SaIS5_ESt9_IdentityIS5_ESt8equal_toIS5_ENS2_4hashIS5_EENS_8__detail18_Mod_range_hashingENSD_20_Default_ranged_hashENSD_20_Prime_rehash_policyELb0ELb1ELb1EE19_M_allocate_bucketsEm.isra.778
+   fun:_ZN6google8protobuf14DescriptorPool6TablesC1Ev
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKcSt4pairIKS2_N6google8protobuf12_GLOBAL__N_16SymbolEESaIS9_ESt10_Select1stIS9_ENS6_5streqENS6_4hashIS2_EENS_8__detail18_Mod_range_hashingENSG_20_Default_ranged_hashENSG_20_Prime_rehash_policyELb0ELb0ELb1EE19_M_allocate_bucketsEm.isra.77
+   fun:_ZN6google8protobuf14DescriptorPool6TablesC1Ev
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKcSt4pairIKS2_PKN6google8protobuf14FileDescriptorEESaISA_ESt10_Select1stISA_ENS6_5streqENS6_4hashIS2_EENS_8__detail18_Mod_range_hashingENSH_20_Default_ranged_hashENSH_20_Prime_rehash_policyELb0ELb0ELb1EE19_M_allocate_bucketsEm.isra.782
+   fun:_ZN6google8protobuf14DescriptorPool6TablesC1Ev
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKcSt4pairIKS2_PFvRKSsEESaIS9_ESt10_Select1stIS9_EN6google8protobuf5streqENSE_4hashIS2_EENS_8__detail18_Mod_range_hashingENSI_20_Default_ranged_hashENSI_20_Prime_rehash_policyELb0ELb0ELb1EE19_M_allocate_bucketsEm.isra.77
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InitGeneratedMessageFactoryEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKN6google8protobuf10DescriptorESt4pairIKS5_PKNS2_7MessageEESaISB_ESt10_Select1stISB_ESt8equal_toIS5_ENS2_4hashIS5_EENS_8__detail18_Mod_range_hashingENSJ_20_Default_ranged_hashENSJ_20_Prime_rehash_policyELb0ELb0ELb1EE19_M_allocate_bucketsEm.isra.81
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InitGeneratedMessageFactoryEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InitGeneratedMessageFactoryEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_EPSt18_Rb_tree_node_baseSD_RKS5_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE9AddSymbolERKSsS6_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_EPSt18_Rb_tree_node_baseSD_RKS5_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE9AddSymbolERKSsS6_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs4_Rep8_M_cloneERKSaIcEm
+   fun:_ZNSs7reserveEm
+   fun:_ZNSs6appendERKSs
+   fun:_ZStplIcSt11char_traitsIcESaIcEESbIT_T0_T1_ERKS6_S8_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf8internal21InitShutdownFunctionsEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf8internal10OnShutdownEPFvvE
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf8internal21InitShutdownFunctionsEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf8internal10OnShutdownEPFvvE
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKcSt4pairIKS2_PFvRKSsEESaIS9_ESt10_Select1stIS9_EN6google8protobuf5streqENSE_4hashIS2_EENS_8__detail18_Mod_range_hashingENSI_20_Default_ranged_hashENSI_20_Prime_rehash_policyELb0ELb0ELb1EE16_M_insert_bucketERKS9_mm
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKcSt4pairIKS2_PFvRKSsEESaIS9_ESt10_Select1stIS9_EN6google8protobuf5streqENSE_4hashIS2_EENS_8__detail18_Mod_range_hashingENSI_20_Default_ranged_hashENSI_20_Prime_rehash_policyELb0ELb0ELb1EE16_M_insert_bucketERKS9_mm
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt6vectorIPFvvESaIS1_EE13_M_insert_auxEN9__gnu_cxx17__normal_iteratorIPS1_S3_EERKS1_
+   fun:_ZN6google8protobuf8internal10OnShutdownEPFvvE
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs4_Rep8_M_cloneERKSaIcEm
+   fun:_ZNSsC1ERKSs
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf8internal5MutexC1Ev
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf8internal5MutexC1Ev
+   fun:_ZN6google8protobuf8internal21InitShutdownFunctionsEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf8internal10OnShutdownEPFvvE
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf8internal5MutexC1Ev
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InitGeneratedMessageFactoryEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_EPSt18_Rb_tree_node_baseSD_RKS5_
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE16_M_insert_uniqueERKS5_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_EPSt18_Rb_tree_node_baseSD_RKS5_
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE16_M_insert_uniqueERKS5_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE9AddSymbolERKSsS6_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_EPSt18_Rb_tree_node_baseSD_RKS5_
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE16_M_insert_uniqueERKS5_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs4_Rep8_M_cloneERKSaIcEm
+   fun:_ZNSsC1ERKSs
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs4_Rep8_M_cloneERKSaIcEm
+   fun:_ZNSs7reserveEm
+   fun:_ZNSs6appendERKSs
+   fun:_ZStplIcSt11char_traitsIcESaIcEESbIT_T0_T1_ERKS6_S8_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableISsSsSaISsESt9_IdentityISsESt8equal_toISsEN6google8protobuf4hashISsEENS_8__detail18_Mod_range_hashingENSA_20_Default_ranged_hashENSA_20_Prime_rehash_policyELb0ELb1ELb1EE19_M_allocate_bucketsEm.isra.776
+   fun:_ZN6google8protobuf14DescriptorPool6TablesC1Ev
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKN6google8protobuf10DescriptorES5_SaIS5_ESt9_IdentityIS5_ESt8equal_toIS5_ENS2_4hashIS5_EENS_8__detail18_Mod_range_hashingENSD_20_Default_ranged_hashENSD_20_Prime_rehash_policyELb0ELb1ELb1EE19_M_allocate_bucketsEm.isra.778
+   fun:_ZN6google8protobuf14DescriptorPool6TablesC1Ev
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKcSt4pairIKS2_N6google8protobuf12_GLOBAL__N_16SymbolEESaIS9_ESt10_Select1stIS9_ENS6_5streqENS6_4hashIS2_EENS_8__detail18_Mod_range_hashingENSG_20_Default_ranged_hashENSG_20_Prime_rehash_policyELb0ELb0ELb1EE19_M_allocate_bucketsEm.isra.77
+   fun:_ZN6google8protobuf14DescriptorPool6TablesC1Ev
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKcSt4pairIKS2_PKN6google8protobuf14FileDescriptorEESaISA_ESt10_Select1stISA_ENS6_5streqENS6_4hashIS2_EENS_8__detail18_Mod_range_hashingENSH_20_Default_ranged_hashENSH_20_Prime_rehash_policyELb0ELb0ELb1EE19_M_allocate_bucketsEm.isra.782
+   fun:_ZN6google8protobuf14DescriptorPool6TablesC1Ev
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKcSt4pairIKS2_PFvRKSsEESaIS9_ESt10_Select1stIS9_EN6google8protobuf5streqENSE_4hashIS2_EENS_8__detail18_Mod_range_hashingENSI_20_Default_ranged_hashENSI_20_Prime_rehash_policyELb0ELb0ELb1EE19_M_allocate_bucketsEm.isra.77
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InitGeneratedMessageFactoryEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt3tr110_HashtableIPKN6google8protobuf10DescriptorESt4pairIKS5_PKNS2_7MessageEESaISB_ESt10_Select1stISB_ESt8equal_toIS5_ENS2_4hashIS5_EENS_8__detail18_Mod_range_hashingENSJ_20_Default_ranged_hashENSJ_20_Prime_rehash_policyELb0ELb0ELb1EE19_M_allocate_bucketsEm.isra.81
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InitGeneratedMessageFactoryEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InitGeneratedMessageFactoryEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14MessageFactory29InternalRegisterGeneratedFileEPKcPFvRKSsE
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_EPSt18_Rb_tree_node_baseSD_RKS5_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE9AddSymbolERKSsS6_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_Z33protobuf_AddDesc_ma_5fmsg_2eprotov
+   fun:_ZN44StaticDescriptorInitializer_ma_5fmsg_2eprotoC1Ev
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I__Z36protobuf_AssignDesc_ma_5fmsg_2eprotov
+   fun:__libc_csu_init
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN6google8protobuf14DescriptorPoolC1EPNS0_18DescriptorDatabaseEPNS1_14ErrorCollectorE
+   fun:_ZN6google8protobuf12_GLOBAL__N_1L17InitGeneratedPoolEv
+   fun:_ZN6google8protobuf8internal16FunctionClosure03RunEv
+   fun:_ZN6google8protobuf18GoogleOnceInitImplEPlPNS0_7ClosureE
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsS0_IPKviEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_EPSt18_Rb_tree_node_baseSD_RKS5_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE9AddSymbolERKSsS6_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/lib64/ld-2.18.so
+   obj:*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs4_Rep8_M_cloneERKSaIcEm
+   fun:_ZNSs7reserveEm
+   fun:_ZNSs6appendERKSs
+   fun:_ZStplIcSt11char_traitsIcESaIcEESbIT_T0_T1_ERKS6_S8_
+   fun:_ZN6google8protobuf24SimpleDescriptorDatabase15DescriptorIndexISt4pairIPKviEE7AddFileERKNS0_19FileDescriptorProtoES6_
+   fun:_ZN6google8protobuf25EncodedDescriptorDatabase3AddEPKvi
+   fun:_ZN6google8protobuf14DescriptorPool24InternalAddGeneratedFileEPKvi
+   fun:_ZN6google8protobuf55protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eprotoEv
+   fun:call_init.part.0
+   fun:_dl_init
+}

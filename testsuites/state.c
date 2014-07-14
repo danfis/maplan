@@ -104,7 +104,7 @@ TEST(testStateBasic)
     assertEquals(planStateGet(state, 3), 2);
 
 
-    planStateDel(pool, state);
+    planStateDel(state);
     planStatePoolDel(pool);
 
     planVarFree(vars + 0);
@@ -317,10 +317,10 @@ TEST(testStatePreEff)
 
 
 
-    planStateDel(pool, state);
-    planPartStateDel(pool, parts[0]);
-    planPartStateDel(pool, parts[1]);
-    planPartStateDel(pool, parts[2]);
-    planPartStateDel(pool, parts[3]);
+    planStateDel(state);
+    planPartStateDel(parts[0]);
+    planPartStateDel(parts[1]);
+    planPartStateDel(parts[2]);
+    planPartStateDel(parts[3]);
     planStatePoolDel(pool);
 }

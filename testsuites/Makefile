@@ -11,18 +11,13 @@ CFLAGS += -I../../boruvka
 CFLAGS += $(JANSSON_CFLAGS)
 LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -L../../boruvka -lboruvka -pthread
 LDFLAGS += $(JANSSON_LDFLAGS)
-
-BENCH_CFLAGS = -O3 -pipe -march=corei7
-#BENCH_CFLAGS += -g
-BENCH_CFLAGS += -I./ -I../
-BENCH_CFLAGS += -I../../boruvka
-BENCH_CFLAGS += -I../../opts
-BENCH_CFLAGS += $(JANSSON_CFLAGS)
+LDFLAGS += $(PROTOBUF_LDFLAGS)
+LDFLAGS += -lstdc++
 
 CHECK_REG=cu/check-regressions
 CHECK_TS ?=
 
-TARGETS = test search
+TARGETS = test
 
 OBJS  = load-from-file.o
 OBJS += state.o
@@ -33,6 +28,7 @@ OBJS += search_ehc.o
 OBJS += search_lazy.o
 OBJS += heur.o
 OBJS += list_lazy.o
+OBJS += t_ma_comm_queue.o
 
 all: $(TARGETS)
 
@@ -57,7 +53,7 @@ check: all
 
 check-valgrind: all
 	valgrind -q --leak-check=full --show-reachable=yes --trace-children=yes \
-             --error-limit=no \
+             --error-limit=no --suppressions=valgrind-suppress.supp \
              ./test $(CHECK_TS)
 
 check-valgrind-gen-suppressions: all
@@ -77,4 +73,3 @@ clean:
 	rm -f $(BENCH_HEAP)
 
 .PHONY: all clean check check-valgrind cu
-	

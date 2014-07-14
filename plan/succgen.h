@@ -19,12 +19,7 @@ typedef struct _plan_succ_gen_t plan_succ_gen_t;
 /**
  * Creates a new successor generator for the given operators.
  */
-plan_succ_gen_t *planSuccGenNew(plan_operator_t *op, int opsize);
-
-/**
- * Loads successor generator from JSON definition.
- */
-plan_succ_gen_t *planSuccGenFromJson(json_t *data, plan_operator_t *op);
+plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize);
 
 /**
  * Loads successor generator from FD definition.
@@ -51,6 +46,13 @@ _bor_inline int planSuccGenNumOperators(const plan_succ_gen_t *sg);
 int planSuccGenFind(const plan_succ_gen_t *sg,
                     const plan_state_t *state,
                     plan_operator_t **op, int op_size);
+
+/**
+ * Same as planSuccGenFind() but uses partial state instead of full state.
+ */
+int planSuccGenFindPart(const plan_succ_gen_t *sg,
+                        const plan_part_state_t *part_state,
+                        plan_operator_t **op, int op_size);
 
 
 /**** INLINES ****/

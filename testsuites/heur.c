@@ -13,11 +13,12 @@ TEST(testHeurRelaxAdd)
     plan_operator_t *op[3];
     plan_cost_t h;
 
-    p = planProblemFromJson("load-from-file.in1.json");
+    p = planProblemFromFD("load-from-file.in1.sas");
     succgen = planSuccGenNew(p->op, p->op_size);
     //planProblemDump(p, stderr);
 
-    heur = planHeurRelaxAddNew(p);
+    heur = planHeurRelaxAddNew(p->var, p->var_size, p->goal,
+                               p->op, p->op_size, p->succ_gen);
 
     state = planStateNew(p->state_pool);
     planStatePoolGetState(p->state_pool, p->initial_state, state);
@@ -53,7 +54,7 @@ TEST(testHeurRelaxAdd)
     h = planHeur(heur, state);
     assertEquals(h, PLAN_HEUR_DEAD_END);
 
-    planStateDel(p->state_pool, state);
+    planStateDel(state);
     planHeurDel(heur);
     planSuccGenDel(succgen);
     planProblemDel(p);
@@ -69,11 +70,12 @@ TEST(testHeurRelaxMax)
     plan_operator_t *op[2];
     plan_cost_t h;
 
-    p = planProblemFromJson("load-from-file.in1.json");
+    p = planProblemFromFD("load-from-file.in1.sas");
     succgen = planSuccGenNew(p->op, p->op_size);
     //planProblemDump(p, stderr);
 
-    heur = planHeurRelaxMaxNew(p);
+    heur = planHeurRelaxMaxNew(p->var, p->var_size, p->goal,
+                               p->op, p->op_size, p->succ_gen);
 
     state = planStateNew(p->state_pool);
     planStatePoolGetState(p->state_pool, p->initial_state, state);
@@ -109,7 +111,7 @@ TEST(testHeurRelaxMax)
     h = planHeur(heur, state);
     assertEquals(h, PLAN_HEUR_DEAD_END);
 
-    planStateDel(p->state_pool, state);
+    planStateDel(state);
     planHeurDel(heur);
     planSuccGenDel(succgen);
     planProblemDel(p);
@@ -125,11 +127,12 @@ TEST(testHeurRelaxFF)
     plan_operator_t *op[2];
     plan_cost_t h;
 
-    p = planProblemFromJson("load-from-file.in1.json");
+    p = planProblemFromFD("load-from-file.in1.sas");
     succgen = planSuccGenNew(p->op, p->op_size);
     //planProblemDump(p, stderr);
 
-    heur = planHeurRelaxFFNew(p);
+    heur = planHeurRelaxFFNew(p->var, p->var_size, p->goal,
+                              p->op, p->op_size, p->succ_gen);
 
     state = planStateNew(p->state_pool);
     planStatePoolGetState(p->state_pool, p->initial_state, state);
@@ -165,7 +168,7 @@ TEST(testHeurRelaxFF)
     h = planHeur(heur, state);
     assertEquals(h, PLAN_HEUR_DEAD_END);
 
-    planStateDel(p->state_pool, state);
+    planStateDel(state);
     planHeurDel(heur);
     planSuccGenDel(succgen);
     planProblemDel(p);

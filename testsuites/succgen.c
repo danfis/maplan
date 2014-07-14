@@ -78,7 +78,7 @@ TEST(testSuccGen)
     int ops_size, found1, found2, i, j;
     plan_state_t *state;
 
-    prob = planProblemFromJson("load-from-file.in1.json");
+    prob = planProblemFromFD("load-from-file.in1.sas");
 
     sg = planSuccGenNew(prob->op, prob->op_size);
 
@@ -105,7 +105,7 @@ TEST(testSuccGen)
 
     found2 = findOpsSG(sg, state, ops2, 2);
 
-    planStateDel(prob->state_pool, state);
+    planStateDel(state);
     BOR_FREE(ops1);
     BOR_FREE(ops2);
     planSuccGenDel(sg);

@@ -16,6 +16,7 @@ typedef struct _plan_var_t plan_var_t;
 
 void planVarInit(plan_var_t *plan);
 void planVarFree(plan_var_t *plan);
+void planVarCopy(plan_var_t *dst, const plan_var_t *src);
 
 #endif /* __PLAN_VAR_H__ */
 

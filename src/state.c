@@ -169,6 +169,8 @@ void *planStatePoolData(plan_state_pool_t *pool,
 plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
                                     const plan_state_t *state)
 {
+    // TODO: Refactor with planStatePoolInsertPacked() and
+    // planStatePoolFind()
     plan_state_id_t sid;
     plan_state_htable_t *htable;
     bor_list_t *hstate;
@@ -181,6 +183,43 @@ plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
     // allocate a new state and initialize it with the given values
     statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
     planStatePackerPack(pool->packer, state, statebuf);
+
+    // allocate and initialize hash table element
+    htable = planDataArrGet(pool->data[DATA_HTABLE], sid);
+    htable->state_id = sid;
+
+    // insert it into hash table
+    hstate = borHTableInsertUnique(pool->htable, &htable->htable);
+
+    if (hstate == NULL){
+        // NULL is returned if the element was inserted into table, so
+        // increase number of elements in the pool
+        ++pool->num_states;
+        return sid;
+
+    }else{
+        // If the non-NULL was returned, it means that the same state was
+        // already in hash table.
+        hfound = HTABLE_STATE(hstate);
+        return hfound->state_id;
+    }
+}
+
+plan_state_id_t planStatePoolInsertPacked(plan_state_pool_t *pool,
+                                          const void *packed_state)
+{
+    plan_state_id_t sid;
+    plan_state_htable_t *htable;
+    bor_list_t *hstate;
+    const plan_state_htable_t *hfound;
+    void *statebuf;
+
+    // determine state ID
+    sid = pool->num_states;
+
+    // allocate a new state and initialize it with the given values
+    statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
+    memcpy(statebuf, packed_state, planStatePackerBufSize(pool->packer));
 
     // allocate and initialize hash table element
     htable = planDataArrGet(pool->data[DATA_HTABLE], sid);
@@ -245,6 +284,14 @@ void planStatePoolGetState(const plan_state_pool_t *pool,
 
     statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
     planStatePackerUnpack(pool->packer, statebuf, state);
+}
+
+const void *planStatePoolGetPackedState(const plan_state_pool_t*pool,
+                                        plan_state_id_t sid)
+{
+    if (sid >= pool->num_states)
+        return NULL;
+    return planDataArrGet(pool->data[DATA_STATE], sid);
 }
 
 int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
@@ -484,7 +531,7 @@ static plan_val_t packerGetVar(const plan_state_packer_var_t *var,
 
 
 /** State **/
-plan_state_t *planStateNew(plan_state_pool_t *pool)
+plan_state_t *planStateNew(const plan_state_pool_t *pool)
 {
     plan_state_t *state;
     state = BOR_ALLOC(plan_state_t);
@@ -493,7 +540,7 @@ plan_state_t *planStateNew(plan_state_pool_t *pool)
     return state;
 }
 
-void planStateDel(plan_state_pool_t *pool, plan_state_t *state)
+void planStateDel(plan_state_t *state)
 {
     BOR_FREE(state->val);
     BOR_FREE(state);
@@ -525,7 +572,7 @@ void planStateSet2(plan_state_t *state, int n, ...)
 
 /** Partial State **/
 
-plan_part_state_t *planPartStateNew(plan_state_pool_t *pool)
+plan_part_state_t *planPartStateNew(const plan_state_pool_t *pool)
 {
     plan_part_state_t *ps;
     int i, size;
@@ -536,7 +583,7 @@ plan_part_state_t *planPartStateNew(plan_state_pool_t *pool)
     ps->is_set = BOR_ALLOC_ARR(int, pool->num_vars);
 
     for (i = 0; i < pool->num_vars; ++i){
-        ps->val[i] = 0;
+        ps->val[i] = PLAN_VAL_UNDEFINED;
         ps->is_set[i] = 0;
     }
 
@@ -554,8 +601,7 @@ plan_part_state_t *planPartStateNew(plan_state_pool_t *pool)
 
 }
 
-void planPartStateDel(plan_state_pool_t *pool,
-                      plan_part_state_t *part_state)
+void planPartStateDel(plan_part_state_t *part_state)
 {
     BOR_FREE(part_state->val);
     BOR_FREE(part_state->is_set);
@@ -600,15 +646,8 @@ void planPartStateSet(plan_state_pool_t *pool,
 void planPartStateToState(const plan_part_state_t *part_state,
                           plan_state_t *state)
 {
-    int i;
-
-    for (i = 0; i < part_state->num_vars; ++i){
-        if (part_state->is_set[i]){
-            planStateSet(state, i, part_state->val[i]);
-        }else{
-            planStateSet(state, i, PLAN_VAL_UNDEFINED);
-        }
-    }
+    memcpy(state->val, part_state->val,
+           sizeof(plan_val_t) * part_state->num_vars);
 }
 
 

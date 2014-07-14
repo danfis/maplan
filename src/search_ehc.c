@@ -5,10 +5,10 @@
 struct _plan_search_ehc_t {
     plan_search_t search;
 
-    plan_list_lazy_t *list;          /*!< List to keep track of the states */
-    plan_heur_t *heur;               /*!< Heuristic function */
-    plan_cost_t best_heur;           /*!< Value of the best heuristic
-                                          value found so far */
+    plan_list_lazy_t *list; /*!< List to keep track of the states */
+    plan_heur_t *heur;      /*!< Heuristic function */
+    int heur_del;           /*!< True if .heur should be deleted */
+    plan_cost_t best_heur;  /*!< Value of the best heuristic value found so far */
 };
 typedef struct _plan_search_ehc_t plan_search_ehc_t;
 
@@ -17,7 +17,10 @@ static void planSearchEHCDel(void *_ehc);
 /** Initializes search. This must be call exactly once. */
 static int planSearchEHCInit(void *);
 /** Performes one step in the algorithm. */
-static int planSearchEHCStep(void *);
+static int planSearchEHCStep(void *, plan_search_step_change_t *change);
+/** Injects a new state into open-list */
+static int planSearchEHCInjectState(void *, plan_state_id_t state_id,
+                                    plan_cost_t cost, plan_cost_t heuristic);
 
 
 void planSearchEHCParamsInit(plan_search_ehc_params_t *p)
@@ -35,10 +38,12 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
     _planSearchInit(&ehc->search, &params->search,
                     planSearchEHCDel,
                     planSearchEHCInit,
-                    planSearchEHCStep);
+                    planSearchEHCStep,
+                    planSearchEHCInjectState);
 
     ehc->list        = planListLazyFifoNew();
     ehc->heur        = params->heur;
+    ehc->heur_del    = params->heur_del;
     ehc->best_heur   = PLAN_COST_MAX;
 
     return &ehc->search;
@@ -51,6 +56,8 @@ static void planSearchEHCDel(void *_ehc)
     _planSearchFree(&ehc->search);
     if (ehc->list)
         planListLazyDel(ehc->list);
+    if (ehc->heur_del)
+        planHeurDel(ehc->heur);
     BOR_FREE(ehc);
 }
 
@@ -83,12 +90,16 @@ static int planSearchEHCInit(void *_ehc)
     return PLAN_SEARCH_CONT;
 }
 
-static int planSearchEHCStep(void *_ehc)
+static int planSearchEHCStep(void *_ehc, plan_search_step_change_t *change)
 {
     plan_search_ehc_t *ehc = _ehc;
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
     plan_cost_t cur_heur;
+    plan_state_space_node_t *node;
+
+    if (change)
+        planSearchStepChangeReset(change);
 
     // get the next node in list
     if (planListLazyPop(ehc->list, &parent_state_id, &parent_op) != 0){
@@ -109,8 +120,11 @@ static int planSearchEHCStep(void *_ehc)
 
     // open and close the node so we can trace the path from goal to the
     // initial state
-    _planSearchNodeOpenClose(&ehc->search, cur_state_id, parent_state_id,
-                             parent_op, 0, cur_heur);
+    node = _planSearchNodeOpenClose(&ehc->search,
+                                    cur_state_id, parent_state_id,
+                                    parent_op, 0, cur_heur);
+    if (change)
+        planSearchStepChangeAddClosedNode(change, node);
 
     // check if the current state is the goal
     if (_planSearchCheckGoal(&ehc->search, cur_state_id))
@@ -126,4 +140,12 @@ static int planSearchEHCStep(void *_ehc)
     _planSearchAddLazySuccessors(&ehc->search, cur_state_id, 0, ehc->list);
 
     return PLAN_SEARCH_CONT;
+}
+
+static int planSearchEHCInjectState(void *_ehc, plan_state_id_t state_id,
+                                    plan_cost_t cost, plan_cost_t heuristic)
+{
+    plan_search_ehc_t *ehc = _ehc;
+    return _planSearchLazyInjectState(&ehc->search, ehc->heur, ehc->list,
+                                      state_id, cost, heuristic);
 }

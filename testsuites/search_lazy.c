@@ -1,7 +1,7 @@
 #include <cu/cu.h>
 #include "plan/search.h"
 
-#define DEF_JSON "../data/ma-benchmarks/depot/pfile1.json"
+#define DEF_JSON "../data/ma-benchmarks/depot/pfile1.sas"
 
 TEST(testSearchLazy)
 {
@@ -11,7 +11,7 @@ TEST(testSearchLazy)
 
     planSearchLazyParamsInit(&params);
 
-    params.search.prob = planProblemFromJson(DEF_JSON);
+    params.search.prob = planProblemFromFD(DEF_JSON);
 
     params.heur = planHeurGoalCountNew(params.search.prob->goal);
     params.list = planListLazyHeapNew();

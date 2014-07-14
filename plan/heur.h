@@ -27,18 +27,33 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal);
 
 /**
  * Creates an ADD version of relaxation heuristics.
+ * If succ_gen is NULL, a new successor generator is created internally
+ * from the given operators.
  */
-plan_heur_t *planHeurRelaxAddNew(const plan_problem_t *prob);
+plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
+                                 const plan_part_state_t *goal,
+                                 const plan_operator_t *op, int op_size,
+                                 const plan_succ_gen_t *succ_gen);
 
 /**
  * Creates an MAX version of relaxation heuristics.
+ * If succ_gen is NULL, a new successor generator is created internally
+ * from the given operators.
  */
-plan_heur_t *planHeurRelaxMaxNew(const plan_problem_t *prob);
+plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
+                                 const plan_part_state_t *goal,
+                                 const plan_operator_t *op, int op_size,
+                                 const plan_succ_gen_t *succ_gen);
 
 /**
  * Creates an FF version of relaxation heuristics.
+ * If succ_gen is NULL, a new successor generator is created internally
+ * from the given operators.
  */
-plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *prob);
+plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
+                                const plan_part_state_t *goal,
+                                const plan_operator_t *op, int op_size,
+                                const plan_succ_gen_t *succ_gen);
 
 /**
  * Deletes heuristics object.

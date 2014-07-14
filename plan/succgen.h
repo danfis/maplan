@@ -22,11 +22,6 @@ typedef struct _plan_succ_gen_t plan_succ_gen_t;
 plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize);
 
 /**
- * Loads successor generator from JSON definition.
- */
-plan_succ_gen_t *planSuccGenFromJson(json_t *data, plan_operator_t *op);
-
-/**
  * Loads successor generator from FD definition.
  */
 plan_succ_gen_t *planSuccGenFromFD(FILE *fin,

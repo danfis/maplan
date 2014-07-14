@@ -143,7 +143,7 @@ static plan_search_t *searchCreate(const char *search_name,
                                    const plan_operator_t *op, int op_size,
                                    const plan_succ_gen_t *succ_gen)
 {
-    plan_search_t *search;
+    plan_search_t *search = NULL;
     plan_search_params_t *params;
     plan_search_ehc_params_t ehc_params;
     plan_search_lazy_params_t lazy_params;

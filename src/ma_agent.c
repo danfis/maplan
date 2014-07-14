@@ -94,7 +94,8 @@ int planMAAgentRun(plan_ma_agent_t *agent)
     res = planSearchInitStep(search);
     while (res == PLAN_SEARCH_CONT){
         // Process all pending messages
-        while ((msg = planMACommQueueRecv(agent->comm)) != NULL){
+        while (res == PLAN_SEARCH_CONT
+                    && (msg = planMACommQueueRecv(agent->comm)) != NULL){
             res = processMsg(agent, msg);
         }
 
@@ -138,7 +139,6 @@ int planMAAgentRun(plan_ma_agent_t *agent)
         // If this agent reached dead-end, wait either for terminate signal
         // or for some public state it can continue from.
         if (res == PLAN_SEARCH_NOT_FOUND){
-            fprintf(stderr, "[%d] Going to block\n", agent->comm->node_id);
             if ((msg = planMACommQueueRecvBlock(agent->comm)) != NULL){
                 res = processMsg(agent, msg);
             }
@@ -153,7 +153,6 @@ int planMAAgentRun(plan_ma_agent_t *agent)
     }
 
     planSearchStepChangeFree(&step_change);
-    fprintf(stderr, "[%d] res: %d\n", agent->comm->node_id, res);
     return res;
 }
 
@@ -356,13 +355,9 @@ static int updateTracePathMsg(plan_ma_agent_t *agent, plan_ma_msg_t *msg)
     pub_state_data_t *pub_state;
     int target_agent_id;
 
-    fprintf(stderr, "[%d]: RECV TRACE_PATH\n", agent->comm->node_id);
-
     // Early exit if the path was already traced
     if (planMAMsgTracePathIsDone(msg))
         return -2;
-
-    fprintf(stderr, "[%d]: NOT DONE\n", agent->comm->node_id);
 
     // Get state from which start back-tracking
     from_state = planMAMsgTracePathStateId(msg);
@@ -504,7 +499,6 @@ static int tracePath(plan_ma_agent_t *agent)
     plan_ma_msg_t *msg;
     int res;
 
-    fprintf(stderr, "[%d] Trace path\n", agent->comm->node_id);
     // Construct trace-path message and fake it as it were we received this
     // message and we should process it
     msg = planMAMsgNew();
@@ -521,11 +515,8 @@ static int tracePath(plan_ma_agent_t *agent)
 
     // Wait for trace-path response or terminate signal
     while ((msg = planMACommQueueRecvBlock(agent->comm)) != NULL){
-        fprintf(stderr, "[%d] got msg %d\n", agent->comm->node_id,
-                planMAMsgType(msg));
         if (planMAMsgIsTracePath(msg) || planMAMsgIsTerminateType(msg)){
             res = processMsg(agent, msg);
-            fprintf(stderr, "[%d] msg-res: %d\n", agent->comm->node_id, res);
             if (res != PLAN_SEARCH_CONT)
                 break;
         }else{

@@ -238,10 +238,10 @@ static int runSingleThread(plan_problem_t *prob)
         printf("Path Cost: %d\n", (int)planPathCost(&path));
 
     }else if (res == PLAN_SEARCH_NOT_FOUND){
-        printf("Solution NOT found.");
+        printf("Solution NOT found.\n");
 
     }else if (res == PLAN_SEARCH_ABORT){
-        printf("Search Aborted.");
+        printf("Search Aborted.\n");
     }
 
     printf("\n");
@@ -326,10 +326,10 @@ static int runMA(plan_problem_agents_t *ma_prob)
             planMAAgentPathFree(path, path_size);
 
     }else if (res == PLAN_SEARCH_NOT_FOUND){
-        printf("Solution NOT found.");
+        printf("Solution NOT found.\n");
 
     }else if (res == PLAN_SEARCH_ABORT){
-        printf("Search Aborted.");
+        printf("Search Aborted.\n");
     }
 
     for (i = 0; i < ma_prob->agent_size; ++i){

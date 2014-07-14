@@ -4,10 +4,6 @@
 
 #include "plan/search.h"
 
-static void updateStat(plan_search_stat_t *stat,
-                       long steps,
-                       bor_timer_t *timer);
-
 static void extractPath(plan_state_space_t *state_space,
                         plan_state_id_t goal_state,
                         plan_path_t *path);
@@ -243,16 +239,17 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
         res = search->step_fn(search, NULL);
 
         ++steps;
-        if (search->params.progress_fn
-                && steps == search->params.progress_freq){
-            updateStat(&search->stat, steps, &timer);
+        if (res == PLAN_SEARCH_CONT
+                && search->params.progress_fn
+                && steps >= search->params.progress_freq){
+            _planUpdateStat(&search->stat, steps, &timer);
             res = search->params.progress_fn(&search->stat);
             steps = 0;
         }
     }
 
     if (search->params.progress_fn && res != PLAN_SEARCH_ABORT && steps != 0){
-        updateStat(&search->stat, steps, &timer);
+        _planUpdateStat(&search->stat, steps, &timer);
         search->params.progress_fn(&search->stat);
     }
 
@@ -277,9 +274,8 @@ void planSearchBackTrackPathFrom(plan_search_t *search,
 }
 
 
-static void updateStat(plan_search_stat_t *stat,
-                       long steps,
-                       bor_timer_t *timer)
+void _planUpdateStat(plan_search_stat_t *stat,
+                     long steps, bor_timer_t *timer)
 {
     stat->steps += steps;
 

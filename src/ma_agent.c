@@ -1,4 +1,5 @@
 #include <boruvka/alloc.h>
+#include <boruvka/timer.h>
 #include "plan/ma_agent.h"
 
 /** Reference data for the received public states */
@@ -83,8 +84,12 @@ int planMAAgentRun(plan_ma_agent_t *agent)
     plan_search_step_change_t step_change;
     plan_ma_msg_t *msg;
     int res, i;
+    long steps = 0L;
+    bor_timer_t timer;
 
     planSearchStepChangeInit(&step_change);
+
+    borTimerStart(&timer);
 
     res = planSearchInitStep(search);
     while (res == PLAN_SEARCH_CONT){
@@ -99,6 +104,21 @@ int planMAAgentRun(plan_ma_agent_t *agent)
 
         // Perform one step of algorithm.
         res = planSearchStep(search, &step_change);
+        ++steps;
+
+        // call progress callback
+        if (res == PLAN_SEARCH_CONT
+                && search->params.progress_fn
+                && steps >= search->params.progress_freq){
+            _planUpdateStat(&search->stat, steps, &timer);
+            res = search->params.progress_fn(&search->stat);
+            steps = 0;
+        }
+
+        if (res == PLAN_SEARCH_ABORT){
+            terminate(agent);
+            break;
+        }
 
         // If the solution was found, terminate agent cluster and exit.
         if (res == PLAN_SEARCH_FOUND){
@@ -122,6 +142,12 @@ int planMAAgentRun(plan_ma_agent_t *agent)
                 res = processMsg(agent, msg);
             }
         }
+    }
+
+    // call last progress callback
+    if (search->params.progress_fn && res != PLAN_SEARCH_ABORT && steps != 0L){
+        _planUpdateStat(&search->stat, steps, &timer);
+        search->params.progress_fn(&search->stat);
     }
 
     planSearchStepChangeFree(&step_change);

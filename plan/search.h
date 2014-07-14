@@ -389,6 +389,12 @@ plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
                                                   plan_cost_t heur);
 
 /**
+ * Updates part of statistics.
+ */
+void _planUpdateStat(plan_search_stat_t *stat,
+                     long steps, bor_timer_t *timer);
+
+/**
  * Returns true if the given state is the goal state.
  * Also the goal state is recorded in stats and the goal state is
  * remembered.

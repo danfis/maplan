@@ -16,7 +16,7 @@ TARGETS = search
 
 all: $(TARGETS)
 
-search: search.c
+search: search.c ../libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 .PHONY: all

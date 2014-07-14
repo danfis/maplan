@@ -41,6 +41,9 @@ int main(int argc, char *argv[])
                                    prob->agent[i].projected_op,
                                    prob->agent[i].projected_op_size,
                                    NULL);
+        heur = planHeurRelaxAddNew(p->var, p->var_size, p->goal,
+                                   prob->prob.op, prob->prob.op_size,
+                                   prob->prob.succ_gen);
 
         /*
         planSearchEHCParamsInit(&ehc_params);

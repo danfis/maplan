@@ -13,6 +13,25 @@ static int max_time = 60 * 30; // 30 minutes
 static int max_mem = 1024 * 1024; // 1GB
 static int progress_freq = 10000;
 
+static plan_list_lazy_t *listLazyCreate(const char *name)
+{
+    plan_list_lazy_t *list = NULL;
+
+    if (strcmp(name, "heap") == 0){
+        list = planListLazyHeapNew();
+    }else if (strcmp(name, "bucket") == 0){
+        list = planListLazyBucketNew();
+    }else if (strcmp(name, "rbtree") == 0){
+        list = planListLazyRBTreeNew();
+    }else if (strcmp(name, "splaytree") == 0){
+        list = planListLazySplayTreeNew();
+    }else{
+        fprintf(stderr, "Error: Invalid list type: `%s'\n", name);
+    }
+
+    return list;
+}
+
 static int readOpts(int argc, char *argv[])
 {
     int help;
@@ -128,18 +147,8 @@ int main(int argc, char *argv[])
     printf("Loading Time: %f s\n", borTimerElapsedInSF(&timer));
     printf("\n");
 
-    if (strcmp(def_list, "heap") == 0){
-        list = planListLazyHeapNew();
-    }else if (strcmp(def_list, "bucket") == 0){
-        list = planListLazyBucketNew();
-    }else if (strcmp(def_list, "rbtree") == 0){
-        list = planListLazyRBTreeNew();
-    }else if (strcmp(def_list, "splaytree") == 0){
-        list = planListLazySplayTreeNew();
-    }else{
-        fprintf(stderr, "Error: Invalid list type\n");
+    if ((list = listLazyCreate(def_list)) == NULL)
         return -1;
-    }
 
     if (strcmp(def_heur, "goalcount") == 0){
         heur = planHeurGoalCountNew(prob->goal);

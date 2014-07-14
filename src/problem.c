@@ -54,9 +54,7 @@ static void planProblemInit(plan_problem_t *p)
 }
 
 static int loadFD(plan_problem_t *plan, const char *filename);
-static int loadAgentFD(const char *fn,
-                       plan_problem_agent_t **agents,
-                       int *num_agents);
+static int loadAgentFD(plan_problem_agents_t *agents, const char *fn);
 
 plan_problem_t *planProblemFromFD(const char *fn)
 {
@@ -88,7 +86,7 @@ plan_problem_agents_t *planProblemAgentsFromFD(const char *fn)
     agents->agent = NULL;
     agents->agent_size = 0;
 
-    if (loadAgentFD(fn, &agents->agent, &agents->agent_size) != 0){
+    if (loadAgentFD(agents, fn) != 0){
         BOR_FREE(agents);
         return NULL;
     }
@@ -115,6 +113,8 @@ static void agentFree(plan_problem_agent_t *ag)
 void planProblemAgentsDel(plan_problem_agents_t *agents)
 {
     int i;
+
+    planProblemFree(&agents->prob);
 
     for (i = 0; i < agents->agent_size; ++i){
         agentFree(agents->agent + i);
@@ -640,12 +640,10 @@ static int loadFD(plan_problem_t *plan, const char *filename)
     return 0;
 }
 
-static int loadAgentFD(const char *filename,
-                       plan_problem_agent_t **agents,
-                       int *num_agents)
+static int loadAgentFD(plan_problem_agents_t *aprob,
+                       const char *filename)
 {
     FILE *fin;
-    plan_problem_t prob;
 
     fin = fopen(filename, "r");
     if (fin == NULL){
@@ -653,23 +651,21 @@ static int loadAgentFD(const char *filename,
         return -1;
     }
 
-    planProblemInit(&prob);
+    planProblemInit(&aprob->prob);
 
-    if (loadFDBase(&prob, fin) != 0)
-        return -1;
-
-    if (fdDomainTransitionGraph(&prob, fin) != 0)
-        return -1;
-    if (fdCausalGraph(&prob, fin) != 0)
-        return -1;
-    if (fdAgents(&prob, fin, agents, num_agents) != 0)
+    if (loadFDBase(&aprob->prob, fin) != 0)
         return -1;
 
-    planProblemFree(&prob);
+    if (fdDomainTransitionGraph(&aprob->prob, fin) != 0)
+        return -1;
+    if (fdCausalGraph(&aprob->prob, fin) != 0)
+        return -1;
+    if (fdAgents(&aprob->prob, fin, &aprob->agent, &aprob->agent_size) != 0)
+        return -1;
 
     fclose(fin);
 
-    if (*num_agents == 0)
+    if (aprob->agent_size == 0)
         return -1;
 
     return 0;

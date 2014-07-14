@@ -29,6 +29,7 @@ struct _plan_problem_agent_t {
 typedef struct _plan_problem_agent_t plan_problem_agent_t;
 
 struct _plan_problem_agents_t {
+    plan_problem_t prob;
     plan_problem_agent_t *agent;
     int agent_size;
 };

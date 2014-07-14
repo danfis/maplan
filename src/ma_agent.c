@@ -111,7 +111,8 @@ int planMAAgentRun(plan_ma_agent_t *agent)
                 && search->params.progress_fn
                 && steps >= search->params.progress_freq){
             _planUpdateStat(&search->stat, steps, &timer);
-            res = search->params.progress_fn(&search->stat);
+            res = search->params.progress_fn(&search->stat,
+                                             search->params.progress_data);
             steps = 0;
         }
 
@@ -147,7 +148,8 @@ int planMAAgentRun(plan_ma_agent_t *agent)
     // call last progress callback
     if (search->params.progress_fn && res != PLAN_SEARCH_ABORT && steps != 0L){
         _planUpdateStat(&search->stat, steps, &timer);
-        search->params.progress_fn(&search->stat);
+        search->params.progress_fn(&search->stat,
+                                   search->params.progress_data);
     }
 
     planSearchStepChangeFree(&step_change);

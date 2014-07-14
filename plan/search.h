@@ -100,7 +100,8 @@ void planSearchStepChangeAddClosedNode(plan_search_step_change_t *step_change,
  * continue after this callback, or PLAN_SEARCH_ABORT if the process
  * should be stopped.
  */
-typedef int (*plan_search_progress_fn)(const plan_search_stat_t *stat);
+typedef int (*plan_search_progress_fn)(const plan_search_stat_t *stat,
+                                       void *userdata);
 
 
 /**
@@ -116,6 +117,7 @@ struct _plan_search_params_t {
     plan_search_progress_fn progress_fn; /*!< Callback for monitoring */
     long progress_freq;                  /*!< Frequence of calling
                                               .progress_fn as number of steps. */
+    void *progress_data;
 
     plan_problem_t *prob; /*!< Problem definition */
 };

@@ -67,8 +67,12 @@ static void usage(const char *progname)
     fprintf(stderr, "\n");
 }
 
-static int progress(const plan_search_stat_t *stat)
+static int progress(const plan_search_stat_t *stat, void *data)
 {
+    if (data != NULL){
+        fprintf(stderr, "%02d::", *(int *)data);
+    }
+
     fprintf(stderr, "[%.3f s, %ld kb] %ld steps, %ld evaluated,"
                     " %ld expanded, %ld generated, not-found: %d,"
                     " found: %d\n",
@@ -141,7 +145,8 @@ static plan_search_t *searchCreate(const char *search_name,
                                    const char *list_name,
                                    plan_problem_t *prob,
                                    const plan_operator_t *op, int op_size,
-                                   const plan_succ_gen_t *succ_gen)
+                                   const plan_succ_gen_t *succ_gen,
+                                   void *progress_data)
 {
     plan_search_t *search = NULL;
     plan_search_params_t *params;
@@ -170,6 +175,7 @@ static plan_search_t *searchCreate(const char *search_name,
 
     params->progress_fn = progress;
     params->progress_freq = progress_freq;
+    params->progress_data = progress_data;
     params->prob = prob;
 
     if (strcmp(def_search, "ehc") == 0){
@@ -214,7 +220,7 @@ static int runSingleThread(plan_problem_t *prob)
     int res;
 
     search = searchCreate(def_search, def_heur, def_list, prob,
-                          prob->op, prob->op_size, prob->succ_gen);
+                          prob->op, prob->op_size, prob->succ_gen, NULL);
     if (search == NULL)
         return -1;
 
@@ -262,6 +268,7 @@ static int runSingleThread(plan_problem_t *prob)
 static int runMA(plan_problem_agents_t *ma_prob)
 {
     plan_search_t *search[ma_prob->agent_size];
+    int agent_id[ma_prob->agent_size];
     plan_operator_t *heur_op;
     int heur_op_size;
     plan_succ_gen_t *heur_succ_gen;
@@ -272,6 +279,8 @@ static int runMA(plan_problem_agents_t *ma_prob)
     FILE *fout;
 
     for (i = 0; i < ma_prob->agent_size; ++i){
+        agent_id[i] = i;
+
         if (strcmp(def_ma_heur_op, "global") == 0){
             heur_op       = ma_prob->prob.op;
             heur_op_size  = ma_prob->prob.op_size;
@@ -293,7 +302,8 @@ static int runMA(plan_problem_agents_t *ma_prob)
 
         search[i] = searchCreate(def_search, def_heur, def_list,
                                  &ma_prob->agent[i].prob,
-                                 heur_op, heur_op_size, heur_succ_gen);
+                                 heur_op, heur_op_size, heur_succ_gen,
+                                 &agent_id[i]);
         if (search[i] == NULL)
             return -1;
     }

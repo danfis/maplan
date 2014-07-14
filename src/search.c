@@ -243,14 +243,16 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
                 && search->params.progress_fn
                 && steps >= search->params.progress_freq){
             _planUpdateStat(&search->stat, steps, &timer);
-            res = search->params.progress_fn(&search->stat);
+            res = search->params.progress_fn(&search->stat,
+                                             search->params.progress_data);
             steps = 0;
         }
     }
 
     if (search->params.progress_fn && res != PLAN_SEARCH_ABORT && steps != 0){
         _planUpdateStat(&search->stat, steps, &timer);
-        search->params.progress_fn(&search->stat);
+        search->params.progress_fn(&search->stat,
+                                   search->params.progress_data);
     }
 
     if (res == PLAN_SEARCH_FOUND){

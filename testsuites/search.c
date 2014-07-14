@@ -5,6 +5,7 @@
 #include <opts.h>
 
 static char *def_fd_problem = NULL;
+static char *def_ma_problem = NULL;
 static char *def_search = "ehc";
 static char *def_list = "heap";
 static char *def_heur = "goalcount";
@@ -22,6 +23,8 @@ static int readOpts(int argc, char *argv[])
                 "Print this help.");
     optsAddDesc("fd", 'f', OPTS_STR, &def_fd_problem, NULL,
                 "Path to the FD's .sas problem definition.");
+    optsAddDesc("ma", 0x0, OPTS_STR, &def_ma_problem, NULL,
+                "Path to definition of multi-agent problem.");
     optsAddDesc("search", 's', OPTS_STR, &def_search, NULL,
                 "Define search algorithm [ehc|lazy] (default: ehc)");
     optsAddDesc("list", 'l', OPTS_STR, &def_list, NULL,
@@ -43,8 +46,8 @@ static int readOpts(int argc, char *argv[])
     if (help)
         return -1;
 
-    if (def_fd_problem == NULL){
-        fprintf(stderr, "Error: Problem must be defined (-p or -f).\n");
+    if (def_fd_problem == NULL && def_ma_problem == NULL){
+        fprintf(stderr, "Error: Problem must be defined (-f or --ma).\n");
         return -1;
     }
 
@@ -173,12 +176,36 @@ static plan_search_t *searchCreate(const char *search_name,
     return search;
 }
 
+static void printProblem(const plan_problem_t *prob,
+                         const plan_problem_agents_t *ma_prob)
+{
+    int i;
+
+    printf("Num variables: %d\n", prob->var_size);
+    printf("Num operators: %d\n", prob->op_size);
+    printf("Bytes per state: %d\n",
+           planStatePackerBufSize(prob->state_pool->packer));
+    printf("Size of state id: %d\n", (int)sizeof(plan_state_id_t));
+    if (ma_prob){
+        printf("Num agents: %d\n", ma_prob->agent_size);
+        for (i = 0; i < ma_prob->agent_size; ++i){
+            printf("Agent[%d]\n", i);
+            printf("    name: %s\n", ma_prob->agent[i].name);
+            printf("    num operators: %d\n",
+                    ma_prob->agent[i].prob.op_size);
+            printf("    projected operators: %d\n",
+                    ma_prob->agent[i].projected_op_size);
+        }
+    }
+    printf("\n");
+}
 
 
 
 int main(int argc, char *argv[])
 {
     plan_problem_t *prob = NULL;
+    plan_problem_agents_t *ma_prob = NULL;
     plan_search_t *search;
     plan_path_t path;
     bor_timer_t timer;
@@ -192,7 +219,8 @@ int main(int argc, char *argv[])
 
     borTimerStart(&timer);
 
-    printf("Problem: %s\n", def_fd_problem);
+    printf("FD Problem: %s\n", def_fd_problem);
+    printf("MA Problem: %s\n", def_ma_problem);
     printf("Search: %s\n", def_search);
     printf("List: %s\n", def_list);
     printf("Heur: %s\n", def_heur);
@@ -202,19 +230,22 @@ int main(int argc, char *argv[])
 
     if (def_fd_problem){
         prob = planProblemFromFD(def_fd_problem);
+    }else if (def_ma_problem){
+        ma_prob = planProblemAgentsFromFD(def_ma_problem);
     }
-    if (prob == NULL){
+
+    if (prob != NULL){
+        printProblem(prob, NULL);
+    }else if (ma_prob != NULL){
+        printProblem(&ma_prob->prob, ma_prob);
+    }else{
         return -1;
     }
 
-    printf("Num variables: %d\n", prob->var_size);
-    printf("Num operators: %d\n", prob->op_size);
-    printf("Bytes per state: %d\n",
-           planStatePackerBufSize(prob->state_pool->packer));
-    printf("Size of state id: %d\n", (int)sizeof(plan_state_id_t));
     borTimerStop(&timer);
     printf("Loading Time: %f s\n", borTimerElapsedInSF(&timer));
     printf("\n");
+    return 0;
 
     search = searchCreate(def_search, def_heur, def_list, prob,
                           prob->op, prob->op_size, prob->succ_gen);

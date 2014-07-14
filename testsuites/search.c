@@ -13,47 +13,6 @@ static int max_time = 60 * 30; // 30 minutes
 static int max_mem = 1024 * 1024; // 1GB
 static int progress_freq = 10000;
 
-static plan_list_lazy_t *listLazyCreate(const char *name)
-{
-    plan_list_lazy_t *list = NULL;
-
-    if (strcmp(name, "heap") == 0){
-        list = planListLazyHeapNew();
-    }else if (strcmp(name, "bucket") == 0){
-        list = planListLazyBucketNew();
-    }else if (strcmp(name, "rbtree") == 0){
-        list = planListLazyRBTreeNew();
-    }else if (strcmp(name, "splaytree") == 0){
-        list = planListLazySplayTreeNew();
-    }else{
-        fprintf(stderr, "Error: Invalid list type: `%s'\n", name);
-    }
-
-    return list;
-}
-
-static plan_heur_t *heurCreate(const char *name,
-                               const plan_var_t *var, int var_size,
-                               const plan_part_state_t *goal,
-                               const plan_operator_t *op, int op_size,
-                               const plan_succ_gen_t *succ_gen)
-{
-    plan_heur_t *heur = NULL;
-
-    if (strcmp(name, "goalcount") == 0){
-        heur = planHeurGoalCountNew(goal);
-    }else if (strcmp(name, "add") == 0){
-        heur = planHeurRelaxAddNew(var, var_size, goal, op, op_size, succ_gen);
-    }else if (strcmp(name, "max") == 0){
-        heur = planHeurRelaxMaxNew(var, var_size, goal, op, op_size, succ_gen);
-    }else if (strcmp(name, "ff") == 0){
-        heur = planHeurRelaxFFNew(var, var_size, goal, op, op_size, succ_gen);
-    }else{
-        fprintf(stderr, "Error: Invalid heuristic type: `%s'\n", name);
-    }
-
-    return heur;
-}
 
 static int readOpts(int argc, char *argv[])
 {
@@ -125,15 +84,102 @@ static int progress(const plan_search_stat_t *stat)
     return PLAN_SEARCH_CONT;
 }
 
+static plan_list_lazy_t *listLazyCreate(const char *name)
+{
+    plan_list_lazy_t *list = NULL;
+
+    if (strcmp(name, "heap") == 0){
+        list = planListLazyHeapNew();
+    }else if (strcmp(name, "bucket") == 0){
+        list = planListLazyBucketNew();
+    }else if (strcmp(name, "rbtree") == 0){
+        list = planListLazyRBTreeNew();
+    }else if (strcmp(name, "splaytree") == 0){
+        list = planListLazySplayTreeNew();
+    }else{
+        fprintf(stderr, "Error: Invalid list type: `%s'\n", name);
+    }
+
+    return list;
+}
+
+static plan_heur_t *heurCreate(const char *name,
+                               plan_problem_t *prob,
+                               const plan_operator_t *op, int op_size,
+                               const plan_succ_gen_t *succ_gen)
+{
+    plan_heur_t *heur = NULL;
+
+    if (strcmp(name, "goalcount") == 0){
+        heur = planHeurGoalCountNew(prob->goal);
+    }else if (strcmp(name, "add") == 0){
+        heur = planHeurRelaxAddNew(prob->var, prob->var_size,
+                                   prob->goal, op, op_size, succ_gen);
+    }else if (strcmp(name, "max") == 0){
+        heur = planHeurRelaxMaxNew(prob->var, prob->var_size,
+                                   prob->goal, op, op_size, succ_gen);
+    }else if (strcmp(name, "ff") == 0){
+        heur = planHeurRelaxFFNew(prob->var, prob->var_size,
+                                  prob->goal, op, op_size, succ_gen);
+    }else{
+        fprintf(stderr, "Error: Invalid heuristic type: `%s'\n", name);
+    }
+
+    return heur;
+}
+
+static plan_search_t *searchCreate(const char *search_name,
+                                   const char *heur_name,
+                                   const char *list_name,
+                                   plan_problem_t *prob,
+                                   const plan_operator_t *op, int op_size,
+                                   const plan_succ_gen_t *succ_gen)
+{
+    plan_search_t *search;
+    plan_search_params_t *params;
+    plan_search_ehc_params_t ehc_params;
+    plan_search_lazy_params_t lazy_params;
+
+    if (strcmp(search_name, "ehc") == 0){
+        planSearchEHCParamsInit(&ehc_params);
+        ehc_params.heur = heurCreate(heur_name, prob, op, op_size, succ_gen);
+        ehc_params.heur_del = 1;
+        params = &ehc_params.search;
+
+    }else if (strcmp(search_name, "lazy") == 0){
+        planSearchLazyParamsInit(&lazy_params);
+        lazy_params.heur = heurCreate(heur_name, prob, op, op_size, succ_gen);
+        lazy_params.heur_del = 1;
+        lazy_params.list = listLazyCreate(list_name);
+        lazy_params.list_del = 1;
+        params = &lazy_params.search;
+
+    }else{
+        fprintf(stderr, "Error: Unkown search algorithm: `%s'\n",
+                search_name);
+        return NULL;
+    }
+
+    params->progress_fn = progress;
+    params->progress_freq = progress_freq;
+    params->prob = prob;
+
+    if (strcmp(def_search, "ehc") == 0){
+        search = planSearchEHCNew(&ehc_params);
+    }else if (strcmp(def_search, "lazy") == 0){
+        search = planSearchLazyNew(&lazy_params);
+    }
+
+    return search;
+}
+
+
+
+
 int main(int argc, char *argv[])
 {
     plan_problem_t *prob = NULL;
-    plan_list_lazy_t *list;
-    plan_heur_t *heur;
     plan_search_t *search;
-    plan_search_ehc_params_t ehc_params;
-    plan_search_lazy_params_t lazy_params;
-    plan_search_params_t *params;
     plan_path_t path;
     bor_timer_t timer;
     int res;
@@ -170,37 +216,10 @@ int main(int argc, char *argv[])
     printf("Loading Time: %f s\n", borTimerElapsedInSF(&timer));
     printf("\n");
 
-    if ((list = listLazyCreate(def_list)) == NULL)
+    search = searchCreate(def_search, def_heur, def_list, prob,
+                          prob->op, prob->op_size, prob->succ_gen);
+    if (search == NULL)
         return -1;
-
-    heur = heurCreate(def_heur, prob->var, prob->var_size, prob->goal,
-                      prob->op, prob->op_size, prob->succ_gen);
-    if (heur == NULL)
-        return -1;
-
-    if (strcmp(def_search, "ehc") == 0){
-        planSearchEHCParamsInit(&ehc_params);
-        ehc_params.heur = heur;
-        params = &ehc_params.search;
-    }else if (strcmp(def_search, "lazy") == 0){
-        planSearchLazyParamsInit(&lazy_params);
-        lazy_params.heur = heur;
-        lazy_params.list = list;
-        params = &lazy_params.search;
-    }else{
-        fprintf(stderr, "Error: Unkown search algorithm.\n");
-        return -1;
-    }
-
-    params->progress_fn = progress;
-    params->progress_freq = progress_freq;
-    params->prob = prob;
-
-    if (strcmp(def_search, "ehc") == 0){
-        search = planSearchEHCNew(&ehc_params);
-    }else if (strcmp(def_search, "lazy") == 0){
-        search = planSearchLazyNew(&lazy_params);
-    }
 
     borTimerStop(&timer);
     printf("Init Time: %f s\n", borTimerElapsedInSF(&timer));
@@ -242,8 +261,6 @@ int main(int argc, char *argv[])
     planPathFree(&path);
 
     planSearchDel(search);
-    planHeurDel(heur);
-    planListLazyDel(list);
     planProblemDel(prob);
 
     borTimerStop(&timer);

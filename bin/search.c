@@ -343,6 +343,13 @@ static int runMA(plan_problem_agents_t *ma_prob)
     }
 
     for (i = 0; i < ma_prob->agent_size; ++i){
+        printf("Agent[%d] stats:\n", i);
+        printf("    Search Time: %f\n", search[i]->stat.elapsed_time);
+        printf("    Steps: %ld\n", search[i]->stat.steps);
+        printf("    Evaluated States: %ld\n", search[i]->stat.evaluated_states);
+        printf("    Expanded States: %ld\n", search[i]->stat.expanded_states);
+        printf("    Generated States: %ld\n", search[i]->stat.generated_states);
+        printf("    Peak Memory: %ld kb\n", search[i]->stat.peak_memory);
         planSearchDel(search[i]);
     }
 

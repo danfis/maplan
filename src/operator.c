@@ -186,8 +186,8 @@ void planOperatorCondEffSimplify(plan_operator_t *op)
                 continue;
 
             if (planPartStateIsSubset(e2->pre, e1->pre, op->state_pool)){
-                // Extend effects of e1
-                PLAN_PART_STATE_FOR_EACH(e1->eff, tmpi, var, val){
+                // Extend effects of e1 by effects of e2
+                PLAN_PART_STATE_FOR_EACH(e2->eff, tmpi, var, val){
                     planPartStateSet(op->state_pool, e1->eff, var, val);
                 }
 

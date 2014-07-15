@@ -39,7 +39,7 @@ void planOperatorSetCost(plan_operator_t *op, plan_cost_t cost);
  * into state pool it has reference to. The ID of the resulting state is
  * returned.
  */
-plan_state_id_t planOperatorApply(plan_operator_t *op,
+plan_state_id_t planOperatorApply(const plan_operator_t *op,
                                   plan_state_id_t state_id);
 
 

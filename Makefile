@@ -116,6 +116,7 @@ clean:
 	rm -f $(TARGETS)
 	rm -f $(BIN_TARGETS)
 	rm -f plan/config.h
+	if [ -d bin ]; then $(MAKE) -C bin clean; fi;
 	if [ -d testsuites ]; then $(MAKE) -C testsuites clean; fi;
 	if [ -d doc ]; then $(MAKE) -C doc clean; fi;
 	

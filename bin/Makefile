@@ -19,4 +19,7 @@ all: $(TARGETS)
 search: search.c ../libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
+clean:
+	rm -f $(TARGETS)
+
 .PHONY: all

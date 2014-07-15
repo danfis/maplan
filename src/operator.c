@@ -136,16 +136,82 @@ int planOperatorAddCondEff(plan_operator_t *op)
     return op->cond_eff_size - 1;
 }
 
-void planOperatorCondEffPreSet(plan_operator_t *op, int cond_eff,
+void planOperatorCondEffSetPre(plan_operator_t *op, int cond_eff,
                                plan_var_id_t var, plan_val_t val)
 {
     planPartStateSet(op->state_pool, op->cond_eff[cond_eff].pre, var, val);
 }
 
-void planOperatorCondEffEffSet(plan_operator_t *op, int cond_eff,
+void planOperatorCondEffSetEff(plan_operator_t *op, int cond_eff,
                                plan_var_id_t var, plan_val_t val)
 {
     planPartStateSet(op->state_pool, op->cond_eff[cond_eff].eff, var, val);
+}
+
+static int condEffSimplifyCmp(const void *a, const void *b)
+{
+    const plan_operator_cond_eff_t *e1 = a;
+    const plan_operator_cond_eff_t *e2 = b;
+    return e2->pre->vals_size - e1->pre->vals_size;
+}
+
+void planOperatorCondEffSimplify(plan_operator_t *op)
+{
+    plan_operator_cond_eff_t *e1, *e2;
+    int i, j, tmpi, cond_eff_size;
+    plan_operator_cond_eff_t *cond_eff;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    if (op->cond_eff_size == 0)
+        return;
+
+    // Sort conditional effects so the first are the effects with more
+    // preconditions (which means also more restrictive preconditions)
+    qsort(op->cond_eff, op->cond_eff_size,
+          sizeof(plan_operator_cond_eff_t),
+          condEffSimplifyCmp);
+
+    cond_eff_size = op->cond_eff_size;
+
+    // Try to merge all conditional effects
+    for (i = 0; i < op->cond_eff_size - 1; ++i){
+        e1 = op->cond_eff + i;
+        if (e1->pre == NULL)
+            continue;
+
+        for (j = i + 1; j < op->cond_eff_size; ++j){
+            e2 = op->cond_eff + j;
+            if (e2->pre == NULL)
+                continue;
+
+            if (planPartStateIsSubset(e2->pre, e1->pre, op->state_pool)){
+                // Extend effects of e1
+                PLAN_PART_STATE_FOR_EACH(e1->eff, tmpi, var, val){
+                    planPartStateSet(op->state_pool, e1->eff, var, val);
+                }
+
+                // and destroy e2
+                planOperatorCondEffFree(e2);
+                e2->pre = e2->eff = NULL;
+                --cond_eff_size;
+            }
+        }
+    }
+
+    if (cond_eff_size < op->cond_eff_size){
+        // If some cond effect was deleted the array must be reassigned
+        cond_eff = BOR_ALLOC_ARR(plan_operator_cond_eff_t, cond_eff_size);
+        for (i = 0, j = 0; i < op->cond_eff_size; ++i){
+            if (op->cond_eff[i].pre != NULL){
+                cond_eff[j++] = op->cond_eff[i];
+            }
+        }
+
+        BOR_FREE(op->cond_eff);
+        op->cond_eff = cond_eff;
+        op->cond_eff_size = cond_eff_size;
+    }
 }
 
 plan_state_id_t planOperatorApply(const plan_operator_t *op,

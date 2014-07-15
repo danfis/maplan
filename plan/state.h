@@ -275,15 +275,22 @@ void planPartStateToState(const plan_part_state_t *part_state,
                           plan_state_t *state);
 
 /**
+ * Returns true if part_state1 is subset of part_state2.
+ */
+int planPartStateIsSubset(const plan_part_state_t *part_state1,
+                          const plan_part_state_t *part_state2,
+                          const plan_state_pool_t *state_pool);
+
+/**
  * Macro for iterating over "unrolled" set values of partial state.
  */
-#define PLAN_PART_STATE_FOR_EACH(part_state, tmpi, var, val) \
-    if ((part_state)->vals_size > 0) \
-    for ((tmpi) = 0; \
-         (tmpi) < (part_state)->vals_size \
-            && ((var) = (part_state)->vals[(tmpi)].var, \
-                (val) = (part_state)->vals[(tmpi)].val, 1); \
-         ++(tmpi))
+#define PLAN_PART_STATE_FOR_EACH(__part_state, __tmpi, __var, __val) \
+    if ((__part_state)->vals_size > 0) \
+    for ((__tmpi) = 0; \
+         (__tmpi) < (__part_state)->vals_size \
+            && ((__var) = (__part_state)->vals[(__tmpi)].var, \
+                (__val) = (__part_state)->vals[(__tmpi)].val, 1); \
+         ++(__tmpi))
 
 
 

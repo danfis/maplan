@@ -50,14 +50,19 @@ int planOperatorAddCondEff(plan_operator_t *op);
 /**
  * Sets precondition of a conditional effect.
  */
-void planOperatorCondEffPreSet(plan_operator_t *op, int cond_eff,
+void planOperatorCondEffSetPre(plan_operator_t *op, int cond_eff,
                                plan_var_id_t var, plan_val_t val);
 
 /**
  * Sets effect of a conditional effect.
  */
-void planOperatorCondEffEffSet(plan_operator_t *op, int cond_eff,
+void planOperatorCondEffSetEff(plan_operator_t *op, int cond_eff,
                                plan_var_id_t var, plan_val_t val);
+
+/**
+ * Simplify conditional effects.
+ */
+void planOperatorCondEffSimplify(plan_operator_t *op);
 
 /**
  * Applies the operator on the given state and store the resulting state

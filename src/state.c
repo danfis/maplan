@@ -615,6 +615,23 @@ void planPartStateToState(const plan_part_state_t *part_state,
            sizeof(plan_val_t) * part_state->num_vars);
 }
 
+int planPartStateIsSubset(const plan_part_state_t *ps1,
+                          const plan_part_state_t *ps2,
+                          const plan_state_pool_t *pool)
+{
+    int size = planStatePackerBufSize(pool->packer);
+    char buf[size];
+
+    bitAnd(ps1->maskbuf, ps2->maskbuf, size, buf);
+    if (memcmp(buf, ps1->maskbuf, size) != 0)
+        return 0;
+
+    bitAnd(ps1->valbuf, ps2->valbuf, size, buf);
+    if (memcmp(buf, ps1->valbuf, size) != 0)
+        return 0;
+
+    return 1;
+}
 
 
 

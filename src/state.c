@@ -290,7 +290,8 @@ int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
 }
 
 plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
-                                            const plan_part_state_t *part_state,
+                                            const void *maskbuf,
+                                            const void *valbuf,
                                             plan_state_id_t sid)
 {
     void *statebuf, *newstate;
@@ -311,7 +312,7 @@ plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
     newstate = planDataArrGet(pool->data[DATA_STATE], newid);
 
     // apply partial state to the buffer of the new state
-    bitApplyWithMask(statebuf, part_state->maskbuf, part_state->valbuf,
+    bitApplyWithMask(statebuf, maskbuf, valbuf,
                      planStatePackerBufSize(pool->packer), newstate);
 
     // hash table struct correspodning to the new state and set it up

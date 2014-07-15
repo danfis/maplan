@@ -148,15 +148,14 @@ int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
                                    plan_state_id_t sid);
 
 /**
- * Applies partial state to the state identified by its ID and saves the
- * resulting state into state pool.
+ * Applies maks and value from a partial state to the state identified by
+ * its ID and saves the resulting state into state pool.
  * The ID of the resulting state is returned.
  */
 plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
-                                            const plan_part_state_t *part_state,
+                                            const void *maskbuf,
+                                            const void *valbuf,
                                             plan_state_id_t sid);
-
-
 
 /**
  * Creates a new object for packing states into binary buffers.

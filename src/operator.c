@@ -214,8 +214,63 @@ void planOperatorCondEffSimplify(plan_operator_t *op)
     }
 }
 
+/** Bit operator: a = a | b */
+_bor_inline void bitOr(void *a, const void *b, int size)
+{
+    uint32_t *a32;
+    const uint32_t *b32;
+    uint8_t *a8;
+    const uint8_t *b8;
+    int size32, size8;
+
+    size32 = size / 4;
+    a32 = a;
+    b32 = b;
+    for (; size32 != 0; --size32, ++a32, ++b32){
+        *a32 |= *b32;
+    }
+
+    size8 = size % 4;
+    a8 = (uint8_t *)a32;
+    b8 = (uint8_t *)b32;
+    for (; size8 != 0; --size8, ++a8, ++b8){
+        *a8 |= *b8;
+    }
+}
+
 plan_state_id_t planOperatorApply(const plan_operator_t *op,
                                   plan_state_id_t state_id)
 {
-    return planStatePoolApplyPartState(op->state_pool, op->eff, state_id);
+    if (op->cond_eff_size == 0){
+        // Use faster branch for non-conditional effects
+        return planStatePoolApplyPartState(op->state_pool,
+                                           op->eff->maskbuf,
+                                           op->eff->valbuf,
+                                           state_id);
+
+    }else{
+        int size = planStatePackerBufSize(op->state_pool->packer);
+        char *maskbuf[size];
+        char *valbuf[size];
+        int i;
+
+        // Initialize mask and value by non-conditional effects.
+        memcpy(maskbuf, op->eff->maskbuf, size);
+        memcpy(valbuf, op->eff->valbuf, size);
+
+        // Test conditional effects
+        for (i = 0; i < op->cond_eff_size; ++i){
+            if (planStatePoolPartStateIsSubset(op->state_pool,
+                                               op->cond_eff[i].pre,
+                                               state_id)){
+                // If condition associated with the effect holds, extend
+                // mask and value buffers accordingly.
+                bitOr(maskbuf, op->cond_eff[i].eff->maskbuf, size);
+                bitOr(valbuf, op->cond_eff[i].eff->valbuf, size);
+            }
+        }
+
+        return planStatePoolApplyPartState(op->state_pool, maskbuf, valbuf,
+                                           state_id);
+    }
 }

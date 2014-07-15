@@ -71,25 +71,6 @@ static void bitApplyWithMask(const void *a, const void *m, const void *b,
 static bor_htable_key_t htableHash(const bor_list_t *key, void *ud);
 static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud);
 
-static void printBin(const unsigned char *m, int size)
-{
-    int i, j;
-    unsigned char c;
-
-    for (i = 0; i < size; ++i){
-        c = m[i];
-
-        for (j = 0; j < 8; ++j){
-            if (c & 0x80){
-                fprintf(stderr, "1");
-            }else{
-                fprintf(stderr, "0");
-            }
-            c = c << 1;
-        }
-    }
-}
-
 plan_state_pool_t *planStatePoolNew(const plan_var_t *var, int var_size)
 {
     int state_size;
@@ -197,8 +178,6 @@ _bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
 plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
                                     const plan_state_t *state)
 {
-    // TODO: Refactor with planStatePoolInsertPacked() and
-    // planStatePoolFind()
     plan_state_id_t sid;
     void *statebuf;
 

@@ -81,7 +81,13 @@ struct _plan_heur_relax_t {
 
     op_t *op_init;      /*!< Initialization values for operators */
     op_t *op;           /*!< List of operators */
+    int *op_id;         /*!< Mapping between index in .op[] and actual
+                             index of operator. This is here because of
+                             conditional effects. Note that .op_id[i] != i
+                             only for i >= .actual_op_size */
     int op_size;        /*!< Number of operators */
+    int actual_op_size; /*!< The actual number of operators (op_size
+                             without conditional effects) */
 
     int goal_unsat_init; /*!< Number of unsatisfied goal variables */
     int goal_unsat;      /*!< Counter of unsatisfied goals */
@@ -114,15 +120,15 @@ static void factFree(plan_heur_relax_t *heur);
 static void opInit(plan_heur_relax_t *heur,
                    const plan_operator_t *ops, int ops_size);
 static void opFree(plan_heur_relax_t *heur);
+/** Initializes and frees .precond structures. */
+static void opPrecondInit(plan_heur_relax_t *heur,
+                          const plan_operator_t *ops, int ops_size);
+static void opPrecondFree(plan_heur_relax_t *heur);
 /** Initializes and frees .eff* structures */
 static void effInit(plan_heur_relax_t *heur,
                     const plan_operator_t *ops, int ops_size);
 static void effFree(plan_heur_relax_t *heur);
-/** Initializes and frees .precond structures */
-static void opPrecondInit(plan_heur_relax_t *heur,
-                          const plan_operator_t *ops, int ops_size);
-static void opPrecondFree(plan_heur_relax_t *heur);
-/** Removes fact id from specified position */
+/** Removes fact id from specified position. */
 static void effRemoveId(eff_t *eff, int pos);
 /** Remove same effects where its cost is higher */
 static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
@@ -357,17 +363,44 @@ static void factFree(plan_heur_relax_t *heur)
 static void opInit(plan_heur_relax_t *heur,
                    const plan_operator_t *ops, int ops_size)
 {
-    int i;
+    int i, j, cond_eff_size;
+    int cond_eff_ins;
+    plan_operator_cond_eff_t *cond_eff;
+
+    // determine number of conditional effects in operators
+    cond_eff_size = 0;
+    for (i = 0; i < ops_size; ++i){
+        cond_eff_size += ops[i].cond_eff_size;
+    }
 
     // prepare operator arrays
-    heur->op_size = ops_size;
+    heur->op_size = ops_size + cond_eff_size;
+    heur->actual_op_size = ops_size;
     heur->op = BOR_ALLOC_ARR(op_t, heur->op_size);
     heur->op_init = BOR_ALLOC_ARR(op_t, heur->op_size);
+    heur->op_id = BOR_ALLOC_ARR(int, heur->op_size);
+
+    // Determine starting position for insertion of conditional effects.
+    // The conditional effects are inserted as a (somehow virtual)
+    // operators at the end of the heur->op array.
+    cond_eff_ins = ops_size;
 
     for (i = 0; i < ops_size; ++i){
         heur->op_init[i].unsat = ops[i].pre->vals_size;
         heur->op_init[i].value = ops[i].cost;
         heur->op_init[i].cost  = ops[i].cost;
+        heur->op_id[i] = i;
+
+        // Insert conditional effects
+        for (j = 0; j < ops[i].cond_eff_size; ++j){
+            cond_eff = ops[i].cond_eff + j;
+            heur->op_init[cond_eff_ins].unsat  = cond_eff->pre->vals_size;
+            heur->op_init[cond_eff_ins].unsat += ops[i].pre->vals_size;
+            heur->op_init[cond_eff_ins].value = ops[i].cost;
+            heur->op_init[cond_eff_ins].cost  = ops[i].cost;
+            heur->op_id[cond_eff_ins] = i;
+            ++cond_eff_ins;
+        }
     }
 }
 
@@ -375,50 +408,65 @@ static void opFree(plan_heur_relax_t *heur)
 {
     BOR_FREE(heur->op_init);
     BOR_FREE(heur->op);
+    BOR_FREE(heur->op_id);
 }
 
-static void effInit(plan_heur_relax_t *heur,
-                    const plan_operator_t *ops, int ops_size)
+static void opPrecondCondEffInit(plan_heur_relax_t *heur, eff_t *precond,
+                                 const plan_operator_t *op,
+                                 const plan_operator_cond_eff_t *cond_eff)
 {
-    int i, j;
+    int i, size, id;
     plan_var_id_t var;
     plan_val_t val;
-    eff_t *eff;
+    const plan_part_state_t *op_pre, *cond_eff_pre;
 
-    eff = heur->eff = BOR_ALLOC_ARR(eff_t, ops_size);
-    for (i = 0; i < ops_size; ++i, ++eff){
-        eff->size = ops[i].eff->vals_size;
-        eff->fact = BOR_ALLOC_ARR(int, eff->size);
-        PLAN_PART_STATE_FOR_EACH(ops[i].eff, j, var, val){
-            eff->fact[j] = valToId(&heur->vid, var, val);
+    op_pre = op->pre;
+    cond_eff_pre = cond_eff->pre;
+
+    precond->size = op_pre->vals_size + cond_eff_pre->vals_size;
+    precond->fact = BOR_ALLOC_ARR(int, precond->size);
+
+    size = planPartStateSize(cond_eff_pre);
+    for (i = 0, var = 0; var < size; ++var){
+        if (planPartStateIsSet(op_pre, var)){
+            val = planPartStateGet(op_pre, var);
+            id = valToId(&heur->vid, var, val);
+            precond->fact[i++] = id;
+
+        }else if (planPartStateIsSet(cond_eff_pre, var)){
+            val = planPartStateGet(cond_eff_pre, var);
+            id = valToId(&heur->vid, var, val);
+            precond->fact[i++] = id;
         }
     }
-}
-
-static void effFree(plan_heur_relax_t *heur)
-{
-    int i;
-
-    for (i = 0; i < heur->op_size; ++i)
-        BOR_FREE(heur->eff[i].fact);
-    BOR_FREE(heur->eff);
 }
 
 static void opPrecondInit(plan_heur_relax_t *heur,
                           const plan_operator_t *ops, int ops_size)
 {
-    int i, j, id;
+    int i, j, id, cond_eff_ins;
     plan_var_id_t var;
     plan_val_t val;
+    eff_t *precond;
 
-    heur->op_precond = BOR_ALLOC_ARR(eff_t, ops_size);
-    for (i = 0; i < ops_size; ++i){
-        heur->op_precond[i].size = ops[i].pre->vals_size;
-        heur->op_precond[i].fact = BOR_ALLOC_ARR(int, heur->op_precond[i].size);
+    precond = heur->op_precond = BOR_ALLOC_ARR(eff_t, heur->op_size);
+
+    // The conditional effects are after "ordinary" operators
+    cond_eff_ins = ops_size;
+
+    for (i = 0; i < ops_size; ++i, ++precond){
+        precond->size = ops[i].pre->vals_size;
+        precond->fact = BOR_ALLOC_ARR(int, precond->size);
 
         PLAN_PART_STATE_FOR_EACH(ops[i].pre, j, var, val){
             id = valToId(&heur->vid, var, val);
-            heur->op_precond[i].fact[j] = id;
+            precond->fact[j] = id;
+        }
+
+        for (j = 0; j < ops[i].cond_eff_size; ++j){
+            opPrecondCondEffInit(heur, heur->op_precond + cond_eff_ins,
+                                 ops + i, ops[i].cond_eff + j);
+            ++cond_eff_ins;
         }
     }
 }
@@ -430,6 +478,71 @@ static void opPrecondFree(plan_heur_relax_t *heur)
     for (i = 0; i < heur->op_size; ++i)
         BOR_FREE(heur->op_precond[i].fact);
     BOR_FREE(heur->op_precond);
+}
+
+static void effCondEffInit(plan_heur_relax_t *heur, eff_t *eff,
+                           const plan_operator_t *op,
+                           const plan_operator_cond_eff_t *cond_eff)
+{
+    int j;
+    plan_var_id_t var, size;
+    plan_val_t val;
+    const plan_part_state_t *op_eff, *cond_eff_eff;
+
+    op_eff = op->eff;
+    cond_eff_eff = cond_eff->eff;
+
+    eff->size = op_eff->vals_size + cond_eff_eff->vals_size;
+    eff->fact = BOR_ALLOC_ARR(int, eff->size);
+    size = planPartStateSize(op_eff);
+    for (j = 0, var = 0; var < size; ++var){
+        if (planPartStateIsSet(op_eff, var)){
+            val = planPartStateGet(op_eff, var);
+            eff->fact[j++] = valToId(&heur->vid, var, val);
+
+        }else if (planPartStateIsSet(cond_eff_eff, var)){
+            val = planPartStateGet(cond_eff_eff, var);
+            eff->fact[j++] = valToId(&heur->vid, var, val);
+        }
+    }
+}
+
+static void effInit(plan_heur_relax_t *heur,
+                    const plan_operator_t *ops, int ops_size)
+{
+    int i, j, cond_eff_ins;
+    plan_var_id_t var;
+    plan_val_t val;
+    eff_t *eff;
+
+    eff = heur->eff = BOR_ALLOC_ARR(eff_t, heur->op_size);
+
+    // Conditional effects are after all operators
+    cond_eff_ins = ops_size;
+
+    // First insert effects ignoring conditional effects
+    for (i = 0; i < ops_size; ++i, ++eff){
+        eff->size = ops[i].eff->vals_size;
+        eff->fact = BOR_ALLOC_ARR(int, eff->size);
+        PLAN_PART_STATE_FOR_EACH(ops[i].eff, j, var, val){
+            eff->fact[j] = valToId(&heur->vid, var, val);
+        }
+
+        for (j = 0; j < ops[i].cond_eff_size; ++j){
+            effCondEffInit(heur, heur->eff + cond_eff_ins,
+                           ops + i, ops[i].cond_eff + j);
+            ++cond_eff_ins;
+        }
+    }
+}
+
+static void effFree(plan_heur_relax_t *heur)
+{
+    int i;
+
+    for (i = 0; i < heur->op_size; ++i)
+        BOR_FREE(heur->eff[i].fact);
+    BOR_FREE(heur->eff);
 }
 
 static void effRemoveId(eff_t *eff, int pos)
@@ -485,7 +598,7 @@ static void opSimplify(plan_heur_relax_t *heur,
     ops = BOR_ALLOC_ARR(plan_operator_t *, heur->op_size);
 
     for (ref_i = 0; ref_i < heur->op_size; ++ref_i){
-        ref_op = op + ref_i;
+        ref_op = op + heur->op_id[ref_i];
 
         // skip operators with no effects
         if (heur->eff[ref_i].size == 0)
@@ -698,7 +811,7 @@ static void markRelaxedPlan(plan_heur_relax_t *heur, int *relaxed_plan, int id)
             }
         }
 
-        relaxed_plan[fact->reached_by_op] = 1;
+        relaxed_plan[heur->op_id[fact->reached_by_op]] = 1;
     }
 }
 
@@ -708,14 +821,14 @@ static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur)
     int i, id;
     plan_cost_t h = PLAN_COST_ZERO;
 
-    relaxed_plan = BOR_CALLOC_ARR(int, heur->op_size);
+    relaxed_plan = BOR_CALLOC_ARR(int, heur->actual_op_size);
 
     for (i = 0; i < heur->goal.size; ++i){
         id = heur->goal.fact[i];
         markRelaxedPlan(heur, relaxed_plan, id);
     }
 
-    for (i = 0; i < heur->op_size; ++i){
+    for (i = 0; i < heur->actual_op_size; ++i){
         if (relaxed_plan[i]){
             h += heur->op[i].cost;
         }

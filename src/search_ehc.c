@@ -130,14 +130,16 @@ static int planSearchEHCStep(void *_ehc, plan_search_step_change_t *change)
     if (_planSearchCheckGoal(&ehc->search, cur_state_id))
         return PLAN_SEARCH_FOUND;
 
-    // If the heuristic for the current state is the best so far, restart
-    // EHC algorithm with an empty list.
-    if (cur_heur < ehc->best_heur){
-        planListLazyClear(ehc->list);
-        ehc->best_heur = cur_heur;
-    }
+    if (cur_heur != PLAN_HEUR_DEAD_END){
+        // If the heuristic for the current state is the best so far, restart
+        // EHC algorithm with an empty list.
+        if (cur_heur < ehc->best_heur){
+            planListLazyClear(ehc->list);
+            ehc->best_heur = cur_heur;
+        }
 
-    _planSearchAddLazySuccessors(&ehc->search, cur_state_id, 0, ehc->list);
+        _planSearchAddLazySuccessors(&ehc->search, cur_state_id, 0, ehc->list);
+    }
 
     return PLAN_SEARCH_CONT;
 }

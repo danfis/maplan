@@ -289,9 +289,10 @@ int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
     return cmp == 0;
 }
 
-plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
-                                            const plan_part_state_t *part_state,
-                                            plan_state_id_t sid)
+plan_state_id_t planStatePoolApplyPartState2(plan_state_pool_t *pool,
+                                             const void *maskbuf,
+                                             const void *valbuf,
+                                             plan_state_id_t sid)
 {
     void *statebuf, *newstate;
     plan_state_id_t newid;
@@ -311,7 +312,7 @@ plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
     newstate = planDataArrGet(pool->data[DATA_STATE], newid);
 
     // apply partial state to the buffer of the new state
-    bitApplyWithMask(statebuf, part_state->maskbuf, part_state->valbuf,
+    bitApplyWithMask(statebuf, maskbuf, valbuf,
                      planStatePackerBufSize(pool->packer), newstate);
 
     // hash table struct correspodning to the new state and set it up
@@ -615,7 +616,35 @@ void planPartStateToState(const plan_part_state_t *part_state,
            sizeof(plan_val_t) * part_state->num_vars);
 }
 
+int planPartStateIsSubset(const plan_part_state_t *ps1,
+                          const plan_part_state_t *ps2,
+                          const plan_state_pool_t *pool)
+{
+    int size = planStatePackerBufSize(pool->packer);
+    char buf[size];
 
+    bitAnd(ps1->maskbuf, ps2->maskbuf, size, buf);
+    if (memcmp(buf, ps1->maskbuf, size) != 0)
+        return 0;
+
+    bitAnd(ps1->valbuf, ps2->valbuf, size, buf);
+    if (memcmp(buf, ps1->valbuf, size) != 0)
+        return 0;
+
+    return 1;
+}
+
+int planPartStateEq(const plan_part_state_t *ps1,
+                    const plan_part_state_t *ps2,
+                    const plan_state_pool_t *pool)
+{
+    int size = planStatePackerBufSize(pool->packer);
+
+    if (memcmp(ps1->maskbuf, ps2->maskbuf, size) == 0
+            && memcmp(ps1->valbuf, ps2->valbuf, size) == 0)
+        return 1;
+    return 0;
+}
 
 
 

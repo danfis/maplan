@@ -318,7 +318,8 @@ static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
     char *name;
     size_t name_size;
     ssize_t name_len;
-    int i, len, var, cond, pre, post, cost;
+    int i, len, var, cond, ci, pre, post, cost;
+    int cond_eff_id = 0;
 
     if (fdAssert(fin, "begin_operator") != 0)
         return -1;
@@ -350,8 +351,12 @@ static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
         if (fscanf(fin, "%d", &cond) != 1)
             return -1;
         if (cond > 0){
-            fprintf(stderr, "Error: Effect preconditions are not supported.\n");
-            return -1;
+            cond_eff_id = planOperatorAddCondEff(op);
+            for (ci = 0; ci < cond; ++ci){
+                if (fscanf(fin, "%d %d", &var, &pre) != 2)
+                    return -1;
+                planOperatorCondEffSetPre(op, cond_eff_id, var, pre);
+            }
         }
 
         if (fscanf(fin, "%d %d %d", &var, &pre, &post) != 3)
@@ -359,8 +364,15 @@ static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
 
         if (pre != -1)
             planOperatorSetPrecondition(op, var, pre);
-        planOperatorSetEffect(op, var, post);
+
+        if (cond == 0){
+            planOperatorSetEffect(op, var, post);
+        }else{
+            planOperatorCondEffSetEff(op, cond_eff_id, var, post);
+        }
     }
+
+    planOperatorCondEffSimplify(op);
 
     if (fscanf(fin, "%d", &cost) != 1)
         return -1;
@@ -665,8 +677,10 @@ static int loadAgentFD(plan_problem_agents_t *aprob,
 
     fclose(fin);
 
-    if (aprob->agent_size == 0)
+    if (aprob->agent_size == 0){
+        planProblemFree(&aprob->prob);
         return -1;
+    }
 
     return 0;
 }

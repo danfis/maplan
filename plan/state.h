@@ -148,15 +148,22 @@ int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
                                    plan_state_id_t sid);
 
 /**
- * Applies partial state to the state identified by its ID and saves the
- * resulting state into state pool.
+ * Applies the partial state to the state identified by its ID and saves
+ * the resulting state into state pool.
  * The ID of the resulting state is returned.
  */
-plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
-                                            const plan_part_state_t *part_state,
+_bor_inline plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
+                                                        const plan_part_state_t *part_state,
+                                                        plan_state_id_t sid);
+
+/**
+ * Same as planStatePoolApplyPartState() but uses "unrolled" mask and value
+ * buffers from part-state directly.
+ */
+plan_state_id_t planStatePoolApplyPartState2(plan_state_pool_t *pool,
+                                            const void *maskbuf,
+                                            const void *valbuf,
                                             plan_state_id_t sid);
-
-
 
 /**
  * Creates a new object for packing states into binary buffers.
@@ -275,19 +282,41 @@ void planPartStateToState(const plan_part_state_t *part_state,
                           plan_state_t *state);
 
 /**
+ * Returns true if part_state1 is subset of part_state2.
+ */
+int planPartStateIsSubset(const plan_part_state_t *part_state1,
+                          const plan_part_state_t *part_state2,
+                          const plan_state_pool_t *state_pool);
+
+/**
+ * Returns true if the given part-states equal.
+ */
+int planPartStateEq(const plan_part_state_t *part_state1,
+                    const plan_part_state_t *part_state2,
+                    const plan_state_pool_t *state_pool);
+
+/**
  * Macro for iterating over "unrolled" set values of partial state.
  */
-#define PLAN_PART_STATE_FOR_EACH(part_state, tmpi, var, val) \
-    if ((part_state)->vals_size > 0) \
-    for ((tmpi) = 0; \
-         (tmpi) < (part_state)->vals_size \
-            && ((var) = (part_state)->vals[(tmpi)].var, \
-                (val) = (part_state)->vals[(tmpi)].val, 1); \
-         ++(tmpi))
+#define PLAN_PART_STATE_FOR_EACH(__part_state, __tmpi, __var, __val) \
+    if ((__part_state)->vals_size > 0) \
+    for ((__tmpi) = 0; \
+         (__tmpi) < (__part_state)->vals_size \
+            && ((__var) = (__part_state)->vals[(__tmpi)].var, \
+                (__val) = (__part_state)->vals[(__tmpi)].val, 1); \
+         ++(__tmpi))
 
 
 
 /**** INLINES ****/
+_bor_inline plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
+                                                        const plan_part_state_t *part_state,
+                                                        plan_state_id_t sid)
+{
+    return planStatePoolApplyPartState2(pool, part_state->maskbuf,
+                                        part_state->valbuf, sid);
+}
+
 _bor_inline int planStatePackerBufSize(const plan_state_packer_t *p)
 {
     return p->bufsize;

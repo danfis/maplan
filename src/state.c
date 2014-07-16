@@ -289,10 +289,10 @@ int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
     return cmp == 0;
 }
 
-plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
-                                            const void *maskbuf,
-                                            const void *valbuf,
-                                            plan_state_id_t sid)
+plan_state_id_t planStatePoolApplyPartState2(plan_state_pool_t *pool,
+                                             const void *maskbuf,
+                                             const void *valbuf,
+                                             plan_state_id_t sid)
 {
     void *statebuf, *newstate;
     plan_state_id_t newid;

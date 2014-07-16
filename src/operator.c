@@ -243,10 +243,7 @@ plan_state_id_t planOperatorApply(const plan_operator_t *op,
 {
     if (op->cond_eff_size == 0){
         // Use faster branch for non-conditional effects
-        return planStatePoolApplyPartState(op->state_pool,
-                                           op->eff->maskbuf,
-                                           op->eff->valbuf,
-                                           state_id);
+        return planStatePoolApplyPartState(op->state_pool, op->eff, state_id);
 
     }else{
         int size = planStatePackerBufSize(op->state_pool->packer);
@@ -270,7 +267,7 @@ plan_state_id_t planOperatorApply(const plan_operator_t *op,
             }
         }
 
-        return planStatePoolApplyPartState(op->state_pool, maskbuf, valbuf,
-                                           state_id);
+        return planStatePoolApplyPartState2(op->state_pool, maskbuf, valbuf,
+                                            state_id);
     }
 }

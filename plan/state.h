@@ -148,11 +148,19 @@ int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
                                    plan_state_id_t sid);
 
 /**
- * Applies maks and value from a partial state to the state identified by
- * its ID and saves the resulting state into state pool.
+ * Applies the partial state to the state identified by its ID and saves
+ * the resulting state into state pool.
  * The ID of the resulting state is returned.
  */
-plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
+_bor_inline plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
+                                                        const plan_part_state_t *part_state,
+                                                        plan_state_id_t sid);
+
+/**
+ * Same as planStatePoolApplyPartState() but uses "unrolled" mask and value
+ * buffers from part-state directly.
+ */
+plan_state_id_t planStatePoolApplyPartState2(plan_state_pool_t *pool,
                                             const void *maskbuf,
                                             const void *valbuf,
                                             plan_state_id_t sid);
@@ -294,6 +302,14 @@ int planPartStateIsSubset(const plan_part_state_t *part_state1,
 
 
 /**** INLINES ****/
+_bor_inline plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
+                                                        const plan_part_state_t *part_state,
+                                                        plan_state_id_t sid)
+{
+    return planStatePoolApplyPartState2(pool, part_state->maskbuf,
+                                        part_state->valbuf, sid);
+}
+
 _bor_inline int planStatePackerBufSize(const plan_state_packer_t *p)
 {
     return p->bufsize;

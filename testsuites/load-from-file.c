@@ -311,6 +311,7 @@ TEST(testLoadCondEffFromFD)
     plan_problem_t *prob;
     plan_state_t *state, *state_check;
     plan_state_id_t sid, sid_check;
+    plan_operator_t opcpy;
     int i;
 
     prob = planProblemFromFD("cond-eff.sas");
@@ -485,6 +486,79 @@ TEST(testLoadCondEffFromFD)
             assertEquals(planStateGet(state_check, i), 0);
         }
     }
+
+
+    planOperatorInit(&opcpy, prob->state_pool);
+    planOperatorCopy(&opcpy, prob->op + 590);
+
+
+    for (i = 0; i < prob->var_size; ++i){
+        planStateSet(state, i, 0);
+    }
+    planStateSet(state, 580, 1);
+    planStateSet(state, 604, 1);
+    planStateSet(state, 618, 1);
+    planStateSet(state, 590, 1);
+    planStateSet(state, 628, 1);
+
+    sid = planStatePoolInsert(prob->state_pool, state);
+    sid_check = planOperatorApply(&opcpy, sid);
+    planStatePoolGetState(prob->state_pool, sid_check, state_check);
+    for (i = 0; i < prob->var_size; ++i){
+        if (i == 580
+                || i == 604
+                || i == 618
+                || i == 590
+                || i == 628
+                || i == 533
+                || i == 107){
+            assertEquals(planStateGet(state_check, i), 1);
+        }else{
+            assertEquals(planStateGet(state_check, i), 0);
+        }
+    }
+
+    planStateSet(state, 628, 0);
+    sid = planStatePoolInsert(prob->state_pool, state);
+    sid_check = planOperatorApply(&opcpy, sid);
+    planStatePoolGetState(prob->state_pool, sid_check, state_check);
+    for (i = 0; i < prob->var_size; ++i){
+        if (i == 580
+                || i == 604
+                || i == 618
+                || i == 590
+                || i == 628
+                || i == 533
+                || i == 526
+                || i == 107){
+            assertEquals(planStateGet(state_check, i), 1);
+        }else{
+            assertEquals(planStateGet(state_check, i), 0);
+        }
+    }
+
+    planStateSet(state, 604, 0);
+    sid = planStatePoolInsert(prob->state_pool, state);
+    sid_check = planOperatorApply(&opcpy, sid);
+    planStatePoolGetState(prob->state_pool, sid_check, state_check);
+    for (i = 0; i < prob->var_size; ++i){
+        if (i == 580
+                || i == 604
+                || i == 618
+                || i == 590
+                || i == 628
+                || i == 533
+                || i == 526
+                || i == 515
+                || i == 527
+                || i == 107){
+            assertEquals(planStateGet(state_check, i), 1);
+        }else{
+            assertEquals(planStateGet(state_check, i), 0);
+        }
+    }
+
+    planOperatorFree(&opcpy);
 
     planStateDel(state_check);
     planStateDel(state);

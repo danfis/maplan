@@ -677,8 +677,10 @@ static int loadAgentFD(plan_problem_agents_t *aprob,
 
     fclose(fin);
 
-    if (aprob->agent_size == 0)
+    if (aprob->agent_size == 0){
+        planProblemFree(&aprob->prob);
         return -1;
+    }
 
     return 0;
 }

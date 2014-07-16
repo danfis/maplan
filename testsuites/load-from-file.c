@@ -305,3 +305,189 @@ TEST(testLoadAgentFromFD)
 
     planProblemAgentsDel(agents);
 }
+
+TEST(testLoadCondEffFromFD)
+{
+    plan_problem_t *prob;
+    plan_state_t *state, *state_check;
+    plan_state_id_t sid, sid_check;
+    int i;
+
+    prob = planProblemFromFD("cond-eff.sas");
+    assertNotEquals(prob, NULL);
+    if (prob == NULL)
+        return;
+
+    assertEquals(prob->op[0].cond_eff_size, 0);
+    assertEquals(prob->op[589].cond_eff_size, 5);
+    assertEquals(prob->op[589].cost, 10);
+    assertEquals(prob->op[590].cond_eff_size, 5);
+    assertEquals(prob->op[591].cond_eff_size, 5);
+
+    state = planStateNew(prob->state_pool);
+    state_check = planStateNew(prob->state_pool);
+
+    for (i = 0; i < prob->var_size; ++i){
+        planStateSet(state, i, 0);
+    }
+    planStateSet(state, 579, 1);
+    planStateSet(state, 602, 1);
+    planStateSet(state, 617, 1);
+    planStateSet(state, 589, 1);
+    planStateSet(state, 627, 1);
+
+    sid = planStatePoolInsert(prob->state_pool, state);
+    sid_check = planOperatorApply(prob->op + 589, sid);
+    planStatePoolGetState(prob->state_pool, sid_check, state_check);
+    for (i = 0; i < prob->var_size; ++i){
+        if (i == 534
+                || i == 24
+                || i == 579
+                || i == 602
+                || i == 617
+                || i == 589
+                || i == 627){
+            assertEquals(planStateGet(state_check, i), 1);
+        }else{
+            assertEquals(planStateGet(state_check, i), 0);
+        }
+    }
+
+
+    planStateSet(state, 579, 0);
+
+    sid = planStatePoolInsert(prob->state_pool, state);
+    sid_check = planOperatorApply(prob->op + 589, sid);
+    planStatePoolGetState(prob->state_pool, sid_check, state_check);
+    for (i = 0; i < prob->var_size; ++i){
+        if (i == 534
+                || i == 24
+                || i == 579
+                || i == 602
+                || i == 617
+                || i == 589
+                || i == 512
+                || i == 627){
+            assertEquals(planStateGet(state_check, i), 1);
+        }else{
+            assertEquals(planStateGet(state_check, i), 0);
+        }
+    }
+
+
+    planStateSet(state, 602, 0);
+
+    sid = planStatePoolInsert(prob->state_pool, state);
+    sid_check = planOperatorApply(prob->op + 589, sid);
+    planStatePoolGetState(prob->state_pool, sid_check, state_check);
+    for (i = 0; i < prob->var_size; ++i){
+        if (i == 534
+                || i == 24
+                || i == 579
+                || i == 602
+                || i == 617
+                || i == 589
+                || i == 512
+                || i == 515
+                || i == 627){
+            assertEquals(planStateGet(state_check, i), 1);
+        }else{
+            assertEquals(planStateGet(state_check, i), 0);
+        }
+    }
+
+
+    planStateSet(state, 617, 0);
+
+    sid = planStatePoolInsert(prob->state_pool, state);
+    sid_check = planOperatorApply(prob->op + 589, sid);
+    planStatePoolGetState(prob->state_pool, sid_check, state_check);
+    for (i = 0; i < prob->var_size; ++i){
+        if (i == 534
+                || i == 24
+                || i == 579
+                || i == 602
+                || i == 617
+                || i == 589
+                || i == 512
+                || i == 515
+                || i == 519
+                || i == 627){
+            assertEquals(planStateGet(state_check, i), 1);
+        }else{
+            assertEquals(planStateGet(state_check, i), 0);
+        }
+    }
+
+
+    for (i = 0; i < prob->var_size; ++i){
+        planStateSet(state, i, 0);
+    }
+    planStateSet(state, 580, 1);
+    planStateSet(state, 604, 1);
+    planStateSet(state, 618, 1);
+    planStateSet(state, 590, 1);
+    planStateSet(state, 628, 1);
+
+    sid = planStatePoolInsert(prob->state_pool, state);
+    sid_check = planOperatorApply(prob->op + 590, sid);
+    planStatePoolGetState(prob->state_pool, sid_check, state_check);
+    for (i = 0; i < prob->var_size; ++i){
+        if (i == 580
+                || i == 604
+                || i == 618
+                || i == 590
+                || i == 628
+                || i == 533
+                || i == 107){
+            assertEquals(planStateGet(state_check, i), 1);
+        }else{
+            assertEquals(planStateGet(state_check, i), 0);
+        }
+    }
+
+    planStateSet(state, 628, 0);
+    sid = planStatePoolInsert(prob->state_pool, state);
+    sid_check = planOperatorApply(prob->op + 590, sid);
+    planStatePoolGetState(prob->state_pool, sid_check, state_check);
+    for (i = 0; i < prob->var_size; ++i){
+        if (i == 580
+                || i == 604
+                || i == 618
+                || i == 590
+                || i == 628
+                || i == 533
+                || i == 526
+                || i == 107){
+            assertEquals(planStateGet(state_check, i), 1);
+        }else{
+            assertEquals(planStateGet(state_check, i), 0);
+        }
+    }
+
+    planStateSet(state, 604, 0);
+    sid = planStatePoolInsert(prob->state_pool, state);
+    sid_check = planOperatorApply(prob->op + 590, sid);
+    planStatePoolGetState(prob->state_pool, sid_check, state_check);
+    for (i = 0; i < prob->var_size; ++i){
+        if (i == 580
+                || i == 604
+                || i == 618
+                || i == 590
+                || i == 628
+                || i == 533
+                || i == 526
+                || i == 515
+                || i == 527
+                || i == 107){
+            assertEquals(planStateGet(state_check, i), 1);
+        }else{
+            assertEquals(planStateGet(state_check, i), 0);
+        }
+    }
+
+    planStateDel(state_check);
+    planStateDel(state);
+
+    planProblemDel(prob);
+}

@@ -289,6 +289,13 @@ int planPartStateIsSubset(const plan_part_state_t *part_state1,
                           const plan_state_pool_t *state_pool);
 
 /**
+ * Returns true if the given part-states equal.
+ */
+int planPartStateEq(const plan_part_state_t *part_state1,
+                    const plan_part_state_t *part_state2,
+                    const plan_state_pool_t *state_pool);
+
+/**
  * Macro for iterating over "unrolled" set values of partial state.
  */
 #define PLAN_PART_STATE_FOR_EACH(__part_state, __tmpi, __var, __val) \

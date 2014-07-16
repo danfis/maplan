@@ -148,13 +148,6 @@ void planOperatorCondEffSetEff(plan_operator_t *op, int cond_eff,
     planPartStateSet(op->state_pool, op->cond_eff[cond_eff].eff, var, val);
 }
 
-static int condEffSimplifyCmp(const void *a, const void *b)
-{
-    const plan_operator_cond_eff_t *e1 = a;
-    const plan_operator_cond_eff_t *e2 = b;
-    return e2->pre->vals_size - e1->pre->vals_size;
-}
-
 void planOperatorCondEffSimplify(plan_operator_t *op)
 {
     plan_operator_cond_eff_t *e1, *e2;
@@ -166,15 +159,9 @@ void planOperatorCondEffSimplify(plan_operator_t *op)
     if (op->cond_eff_size == 0)
         return;
 
-    // Sort conditional effects so the first are the effects with more
-    // preconditions (which means also more restrictive preconditions)
-    qsort(op->cond_eff, op->cond_eff_size,
-          sizeof(plan_operator_cond_eff_t),
-          condEffSimplifyCmp);
-
     cond_eff_size = op->cond_eff_size;
 
-    // Try to merge all conditional effects
+    // Try to merge conditional effects with same conditions
     for (i = 0; i < op->cond_eff_size - 1; ++i){
         e1 = op->cond_eff + i;
         if (e1->pre == NULL)
@@ -185,7 +172,7 @@ void planOperatorCondEffSimplify(plan_operator_t *op)
             if (e2->pre == NULL)
                 continue;
 
-            if (planPartStateIsSubset(e2->pre, e1->pre, op->state_pool)){
+            if (planPartStateEq(e2->pre, e1->pre, op->state_pool)){
                 // Extend effects of e1 by effects of e2
                 PLAN_PART_STATE_FOR_EACH(e2->eff, tmpi, var, val){
                     planPartStateSet(op->state_pool, e1->eff, var, val);

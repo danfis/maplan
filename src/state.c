@@ -634,6 +634,17 @@ int planPartStateIsSubset(const plan_part_state_t *ps1,
     return 1;
 }
 
+int planPartStateEq(const plan_part_state_t *ps1,
+                    const plan_part_state_t *ps2,
+                    const plan_state_pool_t *pool)
+{
+    int size = planStatePackerBufSize(pool->packer);
+
+    if (memcmp(ps1->maskbuf, ps2->maskbuf, size) == 0
+            && memcmp(ps1->valbuf, ps2->valbuf, size) == 0)
+        return 1;
+    return 0;
+}
 
 
 

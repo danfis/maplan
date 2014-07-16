@@ -111,8 +111,10 @@ static int planSearchLazyStep(void *_lazy,
     if (_planSearchCheckGoal(&lazy->search, cur_state_id))
         return PLAN_SEARCH_FOUND;
 
-    _planSearchAddLazySuccessors(&lazy->search, cur_state_id,
-                                 cur_heur, lazy->list);
+    if (cur_heur != PLAN_HEUR_DEAD_END){
+        _planSearchAddLazySuccessors(&lazy->search, cur_state_id,
+                                     cur_heur, lazy->list);
+    }
 
     return PLAN_SEARCH_CONT;
 }

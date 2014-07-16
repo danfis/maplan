@@ -676,6 +676,21 @@ static void ctxFree(plan_heur_relax_t *heur)
     planPrioQueueFree(&heur->queue);
 }
 
+_bor_inline void ctxUpdateFact(plan_heur_relax_t *heur, int fact_id,
+                               int op_id, int op_value)
+{
+    fact_t *fact = heur->fact + fact_id;
+
+    fact->value = op_value;
+    fact->reached_by_op = op_id;
+
+    // Insert only those facts that can be used later, i.e., can satisfy
+    // goal or some operators have them as preconditions.
+    // It should speed it up a little.
+    if (fact->goal || heur->precond[fact_id].size > 0)
+        planPrioQueuePush(&heur->queue, fact->value, fact_id);
+}
+
 static void ctxAddInitState(plan_heur_relax_t *heur,
                             const plan_state_t *state)
 {
@@ -685,9 +700,7 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
     len = planStateSize(state);
     for (i = 0; i < len; ++i){
         id = valToId(&heur->vid, i, planStateGet(state, i));
-        heur->fact[id].value = 0;
-        planPrioQueuePush(&heur->queue, heur->fact[id].value, id);
-        heur->fact[id].reached_by_op = -1;
+        ctxUpdateFact(heur, id, -1, 0);
     }
 }
 
@@ -705,9 +718,7 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
         fact = heur->fact + id;
 
         if (fact->value == -1 || fact->value > op_value){
-            fact->value = op_value;
-            fact->reached_by_op = op_id;
-            planPrioQueuePush(&heur->queue, fact->value, id);
+            ctxUpdateFact(heur, id, op_id, op_value);
         }
     }
 }

@@ -481,29 +481,21 @@ static void opPrecondFree(plan_heur_relax_t *heur)
 }
 
 static void effCondEffInit(plan_heur_relax_t *heur, eff_t *eff,
-                           const plan_operator_t *op,
                            const plan_operator_cond_eff_t *cond_eff)
 {
     int j;
-    plan_var_id_t var, size;
+    plan_var_id_t var;
     plan_val_t val;
-    const plan_part_state_t *op_eff, *cond_eff_eff;
+    const plan_part_state_t *cond_eff_eff;
 
-    op_eff = op->eff;
     cond_eff_eff = cond_eff->eff;
 
-    eff->size = op_eff->vals_size + cond_eff_eff->vals_size;
+    // Use only the conditioned effects because the rest of the effects are
+    // handled in the original operator (w/o conditional effects).
+    eff->size = cond_eff_eff->vals_size;
     eff->fact = BOR_ALLOC_ARR(int, eff->size);
-    size = planPartStateSize(op_eff);
-    for (j = 0, var = 0; var < size; ++var){
-        if (planPartStateIsSet(op_eff, var)){
-            val = planPartStateGet(op_eff, var);
-            eff->fact[j++] = valToId(&heur->vid, var, val);
-
-        }else if (planPartStateIsSet(cond_eff_eff, var)){
-            val = planPartStateGet(cond_eff_eff, var);
-            eff->fact[j++] = valToId(&heur->vid, var, val);
-        }
+    PLAN_PART_STATE_FOR_EACH(cond_eff_eff, j, var, val){
+        eff->fact[j++] = valToId(&heur->vid, var, val);
     }
 }
 
@@ -530,7 +522,7 @@ static void effInit(plan_heur_relax_t *heur,
 
         for (j = 0; j < ops[i].cond_eff_size; ++j){
             effCondEffInit(heur, heur->eff + cond_eff_ins,
-                           ops + i, ops[i].cond_eff + j);
+                           ops[i].cond_eff + j);
             ++cond_eff_ins;
         }
     }

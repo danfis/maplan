@@ -304,6 +304,16 @@ typedef int (*plan_search_inject_state_fn)(void *search,
                                            plan_cost_t cost,
                                            plan_cost_t heuristic);
 
+struct _plan_search_applicable_ops_t {
+    plan_operator_t **op;  /*!< Array of applicable operators. This array
+                                must be big enough to hold all operators. */
+    int op_size;           /*!< Size of .op[] */
+    int op_found;          /*!< Number of found applicable operators */
+    plan_state_id_t state; /*!< State in which these operators are
+                                applicable */
+};
+typedef struct _plan_search_applicable_ops_t plan_search_applicable_ops_t;
+
 /**
  * Common base struct for all search algorithms.
  */
@@ -319,9 +329,9 @@ struct _plan_search_t {
     plan_state_pool_t *state_pool;   /*!< State pool from params.prob */
     plan_state_space_t *state_space;
     plan_state_t *state;             /*!< Preallocated state */
-    plan_operator_t **succ_op;       /*!< Preallocated array for successor
-                                          operators. */
     plan_state_id_t goal_state;      /*!< The found state satisfying the goal */
+
+    plan_search_applicable_ops_t applicable_ops;
 };
 
 
@@ -340,6 +350,12 @@ void _planSearchInit(plan_search_t *search,
  * Frees allocated resources.
  */
 void _planSearchFree(plan_search_t *search);
+
+/**
+ * Fills .applicable_ops with applicable operators.
+ */
+void _planSearchFindApplicableOps(plan_search_t *search,
+                                  plan_state_id_t state_id);
 
 /**
  * Returns value of heuristics for the given state.

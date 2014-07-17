@@ -8,6 +8,15 @@ static void extractPath(plan_state_space_t *state_space,
                         plan_state_id_t goal_state,
                         plan_path_t *path);
 
+/** Initializes and destroys a struct for holding applicable operators */
+static void planSearchApplicableOpsInit(plan_search_applicable_ops_t *app,
+                                        int op_size);
+static void planSearchApplicableOpsFree(plan_search_applicable_ops_t *app);
+/** Fills app with operators applicable in specified state */
+_bor_inline void planSearchApplicableOpsFind(plan_search_t *search,
+                                             plan_search_applicable_ops_t *app,
+                                             plan_state_id_t state_id);
+
 void planSearchStatInit(plan_search_stat_t *stat)
 {
     stat->elapsed_time = 0.f;
@@ -82,18 +91,25 @@ void _planSearchInit(plan_search_t *search,
     search->state_pool  = params->prob->state_pool;
     search->state_space = planStateSpaceNew(search->state_pool);
     search->state       = planStateNew(search->state_pool);
-    search->succ_op     = BOR_ALLOC_ARR(plan_operator_t *, params->prob->op_size);
     search->goal_state  = PLAN_NO_STATE;
+
+    planSearchApplicableOpsInit(&search->applicable_ops,
+                                search->params.prob->op_size);
 }
 
 void _planSearchFree(plan_search_t *search)
 {
-    if (search->succ_op)
-        BOR_FREE(search->succ_op);
+    planSearchApplicableOpsFree(&search->applicable_ops);
     if (search->state)
         planStateDel(search->state);
     if (search->state_space)
         planStateSpaceDel(search->state_space);
+}
+
+void _planSearchFindApplicableOps(plan_search_t *search,
+                                  plan_state_id_t state_id)
+{
+    planSearchApplicableOpsFind(search, &search->applicable_ops, state_id);
 }
 
 plan_cost_t _planSearchHeuristic(plan_search_t *search,
@@ -105,33 +121,19 @@ plan_cost_t _planSearchHeuristic(plan_search_t *search,
     return planHeur(heur, search->state, NULL);
 }
 
-static int findApplicableOperators(plan_search_t *search,
-                                   plan_state_id_t state_id)
-{
-    // unroll the state into search->state struct
-    planStatePoolGetState(search->state_pool, state_id, search->state);
-
-    // get operators to get successors
-    return planSuccGenFind(search->params.prob->succ_gen,
-                           search->state,
-                           search->succ_op,
-                           search->params.prob->op_size);
-}
-
 void _planSearchAddLazySuccessors(plan_search_t *search,
                                   plan_state_id_t state_id,
                                   plan_cost_t cost,
                                   plan_list_lazy_t *list)
 {
-    int i, op_size;
+    int i;
     plan_operator_t *op;
 
-    // Store applicable operators in search->succ_op[]
-    op_size = findApplicableOperators(search, state_id);
+    planSearchApplicableOpsFind(search, &search->applicable_ops, state_id);
 
     // go trough all applicable operators
-    for (i = 0; i < op_size; ++i){
-        op = search->succ_op[i];
+    for (i = 0; i < search->applicable_ops.op_found; ++i){
+        op = search->applicable_ops.op[i];
         planListLazyPush(list, cost, state_id, op);
         planSearchStatIncGeneratedStates(&search->stat);
     }
@@ -301,4 +303,36 @@ static void extractPath(plan_state_space_t *state_space,
                         node->parent_state_id, node->state_id);
         node = planStateSpaceNode(state_space, node->parent_state_id);
     }
+}
+
+static void planSearchApplicableOpsInit(plan_search_applicable_ops_t *app,
+                                        int op_size)
+{
+    app->op = BOR_ALLOC_ARR(plan_operator_t *, op_size);
+    app->op_size = op_size;
+    app->op_found = 0;
+    app->state = PLAN_NO_STATE;
+}
+
+static void planSearchApplicableOpsFree(plan_search_applicable_ops_t *app)
+{
+    BOR_FREE(app->op);
+}
+
+_bor_inline void planSearchApplicableOpsFind(plan_search_t *search,
+                                             plan_search_applicable_ops_t *app,
+                                             plan_state_id_t state_id)
+{
+    if (state_id == app->state)
+        return;
+
+    // unroll the state into search->state struct
+    planStatePoolGetState(search->state_pool, state_id, search->state);
+
+    // get operators to get successors
+    app->op_found = planSuccGenFind(search->params.prob->succ_gen,
+                                    search->state, app->op, app->op_size);
+
+    // remember the corresponding state
+    app->state = state_id;
 }

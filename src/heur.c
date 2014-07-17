@@ -17,7 +17,8 @@ void planHeurDel(plan_heur_t *heur)
     heur->del_fn(heur);
 }
 
-plan_cost_t planHeur(plan_heur_t *heur, const plan_state_t *state)
+plan_cost_t planHeur(plan_heur_t *heur, const plan_state_t *state,
+                     plan_heur_preferred_ops_t *preferred_ops)
 {
     return heur->heur_fn(heur, state);
 }

@@ -102,7 +102,7 @@ plan_cost_t _planSearchHeuristic(plan_search_t *search,
 {
     planStatePoolGetState(search->state_pool, state_id, search->state);
     planSearchStatIncEvaluatedStates(&search->stat);
-    return planHeur(heur, search->state);
+    return planHeur(heur, search->state, NULL);
 }
 
 static int findApplicableOperators(plan_search_t *search,

@@ -23,35 +23,35 @@ TEST(testHeurRelaxAdd)
     state = planStateNew(p->state_pool);
     planStatePoolGetState(p->state_pool, p->initial_state, state);
 
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 10);
 
     assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
     sid = planOperatorApply(op[0], p->initial_state);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 13);
 
     assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
     sid = planOperatorApply(op[1], sid);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 7);
 
     assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
     sid = planOperatorApply(op[1], sid);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 10);
 
     assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
     sid = planOperatorApply(op[0], sid);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 8);
 
     planStateSet2(state, 9, 3, 1, 1, 1, 0, 0, 4, 3, 2);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, PLAN_HEUR_DEAD_END);
 
     planStateDel(state);
@@ -80,35 +80,35 @@ TEST(testHeurRelaxMax)
     state = planStateNew(p->state_pool);
     planStatePoolGetState(p->state_pool, p->initial_state, state);
 
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 5);
 
     assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
     sid = planOperatorApply(op[0], p->initial_state);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 5);
 
     assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
     sid = planOperatorApply(op[1], sid);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 4);
 
     assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
     sid = planOperatorApply(op[1], sid);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 4);
 
     assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
     sid = planOperatorApply(op[0], sid);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 3);
 
     planStateSet2(state, 9, 3, 1, 1, 1, 0, 0, 4, 3, 2);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, PLAN_HEUR_DEAD_END);
 
     planStateDel(state);
@@ -137,35 +137,35 @@ TEST(testHeurRelaxFF)
     state = planStateNew(p->state_pool);
     planStatePoolGetState(p->state_pool, p->initial_state, state);
 
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 6);
 
     assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
     sid = planOperatorApply(op[0], p->initial_state);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 6);
 
     assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
     sid = planOperatorApply(op[1], sid);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 5);
 
     assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
     sid = planOperatorApply(op[0], sid);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 6);
 
     assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
     sid = planOperatorApply(op[0], sid);
     planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, 6);
 
     planStateSet2(state, 9, 3, 1, 1, 1, 0, 0, 4, 3, 2);
-    h = planHeur(heur, state);
+    h = planHeur(heur, state, NULL);
     assertEquals(h, PLAN_HEUR_DEAD_END);
 
     planStateDel(state);

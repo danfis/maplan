@@ -829,22 +829,6 @@ static void markRelaxedPlan(plan_heur_relax_t *heur, int *relaxed_plan, int id)
     }
 }
 
-static int sortPreferredOpsByPtrCmp(const void *a, const void *b)
-{
-    const plan_operator_t *op1 = *(const plan_operator_t **)a;
-    const plan_operator_t *op2 = *(const plan_operator_t **)b;
-    return op1 - op2;
-}
-
-/** Sorts operators in .op[] member by the value of the pointers */
-_bor_inline void sortPreferredOpsByPtr(plan_heur_preferred_ops_t *pref_ops)
-{
-    if (pref_ops->op_size == 0)
-        return;
-
-    qsort(pref_ops->op, pref_ops->op_size, sizeof(plan_operator_t *),
-          sortPreferredOpsByPtrCmp);
-}
 
 struct _pref_ops_selector_t {
     plan_heur_preferred_ops_t *pref_ops; /*!< In/Out data structure */
@@ -863,6 +847,13 @@ typedef struct _pref_ops_selector_t pref_ops_selector_t;
 #define PREF_OPS_SELECTOR(name) \
     pref_ops_selector_t name = { NULL, NULL, NULL, NULL, NULL }
 
+static int sortPreferredOpsByPtrCmp(const void *a, const void *b)
+{
+    const plan_operator_t *op1 = *(const plan_operator_t **)a;
+    const plan_operator_t *op2 = *(const plan_operator_t **)b;
+    return op1 - op2;
+}
+
 static void prefOpsSelectorInit(pref_ops_selector_t *selector,
                                 plan_heur_preferred_ops_t *pref_ops,
                                 const plan_operator_t *base_op)
@@ -871,7 +862,10 @@ static void prefOpsSelectorInit(pref_ops_selector_t *selector,
     selector->base_op  = (plan_operator_t *)base_op;
 
     // Sort array of operators by their pointers.
-    sortPreferredOpsByPtr(pref_ops);
+    if (pref_ops->op_size > 0){
+        qsort(pref_ops->op, pref_ops->op_size, sizeof(plan_operator_t *),
+              sortPreferredOpsByPtrCmp);
+    }
 
     // Set up cursors
     selector->cur = pref_ops->op;

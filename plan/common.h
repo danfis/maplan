@@ -55,7 +55,7 @@ typedef uint32_t plan_packer_word_t;
  * Heuristic value representing dead end (state from which isn't goal
  * reachable).
  */
-#define PLAN_HEUR_DEAD_END ((plan_cost_t)-1)
+#define PLAN_HEUR_DEAD_END INT_MAX
 
 /**
  * Maximal value of cost.

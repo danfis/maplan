@@ -170,6 +170,34 @@ static plan_cost_t ctxHeur(plan_heur_relax_t *heur,
  *  to 0 if it is not. */
 static void markRelaxedPlan(plan_heur_relax_t *heur);
 
+struct _pref_ops_selector_t {
+    plan_heur_preferred_ops_t *pref_ops; /*!< In/Out data structure */
+    plan_operator_t *base_op;            /*!< Base pointer to the source
+                                              operator array. */
+    plan_operator_t **cur;               /*!< Cursor pointing to the next
+                                              operator in .pref_ops->op[] */
+    plan_operator_t **end;               /*!< Points after .pref_ops->op[] */
+    plan_operator_t **ins;               /*!< Next insert position for
+                                              preferred operator. */
+};
+typedef struct _pref_ops_selector_t pref_ops_selector_t;
+
+/** This macro is here only to shut gcc compiler which is stupidly
+ *  complaining about "may-be uninitialized" members of this struct. */
+#define PREF_OPS_SELECTOR(name) \
+    pref_ops_selector_t name = { NULL, NULL, NULL, NULL, NULL }
+
+/** Initializes preferred-operator-selector. */
+static void prefOpsSelectorInit(pref_ops_selector_t *selector,
+                                plan_heur_preferred_ops_t *pref_ops,
+                                const plan_operator_t *base_op);
+/** Finalizes selecting of preferred operators */
+static void prefOpsSelectorFinalize(pref_ops_selector_t *sel);
+/** Mark the specified operator as preferred operator. This function must
+ *  be called only with increasing values of op_id! */
+static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
+                                           int op_id);
+
 /** Main function that returns heuristic value. */
 static plan_cost_t planHeurRelax(void *heur, const plan_state_t *state,
                                  plan_heur_preferred_ops_t *preferred_ops);
@@ -816,76 +844,6 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur)
 
 
 
-struct _pref_ops_selector_t {
-    plan_heur_preferred_ops_t *pref_ops; /*!< In/Out data structure */
-    plan_operator_t *base_op;            /*!< Base pointer to the source
-                                              operator array. */
-    plan_operator_t **cur;               /*!< Cursor pointing to the next
-                                              operator in .pref_ops->op[] */
-    plan_operator_t **end;               /*!< Points after .pref_ops->op[] */
-    plan_operator_t **ins;               /*!< Next insert position for
-                                              preferred operator. */
-};
-typedef struct _pref_ops_selector_t pref_ops_selector_t;
-
-/** This macro is here only to shut gcc compiler which is stupidly
- *  complaining about "may-be uninitialized" members of this struct. */
-#define PREF_OPS_SELECTOR(name) \
-    pref_ops_selector_t name = { NULL, NULL, NULL, NULL, NULL }
-
-static int sortPreferredOpsByPtrCmp(const void *a, const void *b)
-{
-    const plan_operator_t *op1 = *(const plan_operator_t **)a;
-    const plan_operator_t *op2 = *(const plan_operator_t **)b;
-    return op1 - op2;
-}
-
-static void prefOpsSelectorInit(pref_ops_selector_t *selector,
-                                plan_heur_preferred_ops_t *pref_ops,
-                                const plan_operator_t *base_op)
-{
-    selector->pref_ops = pref_ops;
-    selector->base_op  = (plan_operator_t *)base_op;
-
-    // Sort array of operators by their pointers.
-    if (pref_ops->op_size > 0){
-        qsort(pref_ops->op, pref_ops->op_size, sizeof(plan_operator_t *),
-              sortPreferredOpsByPtrCmp);
-    }
-
-    // Set up cursors
-    selector->cur = pref_ops->op;
-    selector->end = pref_ops->op + pref_ops->op_size;
-    selector->ins = pref_ops->op;
-}
-
-static void prefOpsSelectorFinalize(pref_ops_selector_t *sel)
-{
-    // Compute number of preferred operators from .ins pointer
-    sel->pref_ops->preferred_size = sel->ins - sel->pref_ops->op;
-}
-
-static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
-                                           int op_id)
-{
-    plan_operator_t *op = sel->base_op + op_id;
-    plan_operator_t *op_swp;
-
-    // Skip operators with lower ID
-    for (; *sel->cur < op && sel->cur < sel->end; ++sel->cur);
-    if (sel->cur == sel->end)
-        return;
-
-    if (*sel->cur == op){
-        // If we found corresponding operator -- move it to the beggining
-        // of the .op[] array.
-        if (sel->ins != sel->cur){
-            BOR_SWAP(*sel->ins, *sel->cur, op_swp);
-        }
-        ++sel->ins;
-        ++sel->cur;
-    }
-}
 
 static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
                                plan_heur_preferred_ops_t *preferred_ops)
@@ -960,5 +918,60 @@ static void markRelaxedPlan(plan_heur_relax_t *heur)
     for (i = 0; i < heur->goal.size; ++i){
         id = heur->goal.fact[i];
         _markRelaxedPlan(heur, heur->relaxed_plan, id);
+    }
+}
+
+
+static int sortPreferredOpsByPtrCmp(const void *a, const void *b)
+{
+    const plan_operator_t *op1 = *(const plan_operator_t **)a;
+    const plan_operator_t *op2 = *(const plan_operator_t **)b;
+    return op1 - op2;
+}
+
+static void prefOpsSelectorInit(pref_ops_selector_t *selector,
+                                plan_heur_preferred_ops_t *pref_ops,
+                                const plan_operator_t *base_op)
+{
+    selector->pref_ops = pref_ops;
+    selector->base_op  = (plan_operator_t *)base_op;
+
+    // Sort array of operators by their pointers.
+    if (pref_ops->op_size > 0){
+        qsort(pref_ops->op, pref_ops->op_size, sizeof(plan_operator_t *),
+              sortPreferredOpsByPtrCmp);
+    }
+
+    // Set up cursors
+    selector->cur = pref_ops->op;
+    selector->end = pref_ops->op + pref_ops->op_size;
+    selector->ins = pref_ops->op;
+}
+
+static void prefOpsSelectorFinalize(pref_ops_selector_t *sel)
+{
+    // Compute number of preferred operators from .ins pointer
+    sel->pref_ops->preferred_size = sel->ins - sel->pref_ops->op;
+}
+
+static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
+                                           int op_id)
+{
+    plan_operator_t *op = sel->base_op + op_id;
+    plan_operator_t *op_swp;
+
+    // Skip operators with lower ID
+    for (; *sel->cur < op && sel->cur < sel->end; ++sel->cur);
+    if (sel->cur == sel->end)
+        return;
+
+    if (*sel->cur == op){
+        // If we found corresponding operator -- move it to the beggining
+        // of the .op[] array.
+        if (sel->ins != sel->cur){
+            BOR_SWAP(*sel->ins, *sel->cur, op_swp);
+        }
+        ++sel->ins;
+        ++sel->cur;
     }
 }

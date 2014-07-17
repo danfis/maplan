@@ -9,12 +9,11 @@ static void extractPath(plan_state_space_t *state_space,
                         plan_path_t *path);
 
 /** Initializes and destroys a struct for holding applicable operators */
-static void planSearchApplicableOpsInit(plan_search_applicable_ops_t *app,
-                                        int op_size);
-static void planSearchApplicableOpsFree(plan_search_applicable_ops_t *app);
-/** Fills app with operators applicable in specified state */
+static void planSearchApplicableOpsInit(plan_search_t *search, int op_size);
+static void planSearchApplicableOpsFree(plan_search_t *search);
+/** Fills search->applicable_ops with operators applicable in specified
+ *  state */
 _bor_inline void planSearchApplicableOpsFind(plan_search_t *search,
-                                             plan_search_applicable_ops_t *app,
                                              plan_state_id_t state_id);
 
 void planSearchStatInit(plan_search_stat_t *stat)
@@ -93,32 +92,37 @@ void _planSearchInit(plan_search_t *search,
     search->state       = planStateNew(search->state_pool);
     search->goal_state  = PLAN_NO_STATE;
 
-    planSearchApplicableOpsInit(&search->applicable_ops,
-                                search->params.prob->op_size);
+    planSearchApplicableOpsInit(search, search->params.prob->op_size);
 }
 
 void _planSearchFree(plan_search_t *search)
 {
-    planSearchApplicableOpsFree(&search->applicable_ops);
+    planSearchApplicableOpsFree(search);
     if (search->state)
         planStateDel(search->state);
     if (search->state_space)
         planStateSpaceDel(search->state_space);
 }
 
-void _planSearchFindApplicableOps(plan_search_t *search,
-                                  plan_state_id_t state_id)
-{
-    planSearchApplicableOpsFind(search, &search->applicable_ops, state_id);
-}
-
 plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_state_id_t state_id,
-                                 plan_heur_t *heur)
+                                 plan_heur_t *heur,
+                                 int preferred_ops)
 {
+    plan_heur_preferred_ops_t pref_ops;
+
     planStatePoolGetState(search->state_pool, state_id, search->state);
     planSearchStatIncEvaluatedStates(&search->stat);
-    return planHeur(heur, search->state, NULL);
+
+    if (preferred_ops){
+        planSearchApplicableOpsFind(search, state_id);
+        pref_ops.op = search->applicable_ops.op;
+        pref_ops.op_size = search->applicable_ops.op_found;
+        return planHeur(heur, search->state, &pref_ops);
+
+    }else{
+        return planHeur(heur, search->state, NULL);
+    }
 }
 
 void _planSearchAddLazySuccessors(plan_search_t *search,
@@ -129,7 +133,7 @@ void _planSearchAddLazySuccessors(plan_search_t *search,
     int i;
     plan_operator_t *op;
 
-    planSearchApplicableOpsFind(search, &search->applicable_ops, state_id);
+    planSearchApplicableOpsFind(search, state_id);
 
     // go trough all applicable operators
     for (i = 0; i < search->applicable_ops.op_found; ++i){
@@ -154,7 +158,7 @@ int _planSearchLazyInjectState(plan_search_t *search,
     if (planStateSpaceNodeIsNew(node)){
         // Compute heuristic value
         if (heur){
-            heur_val = _planSearchHeuristic(search, state_id, heur);
+            heur_val = _planSearchHeuristic(search, state_id, heur, 0);
         }
 
         // Set node to closed state with appropriate cost and heuristic
@@ -305,24 +309,24 @@ static void extractPath(plan_state_space_t *state_space,
     }
 }
 
-static void planSearchApplicableOpsInit(plan_search_applicable_ops_t *app,
-                                        int op_size)
+static void planSearchApplicableOpsInit(plan_search_t *search, int op_size)
 {
-    app->op = BOR_ALLOC_ARR(plan_operator_t *, op_size);
-    app->op_size = op_size;
-    app->op_found = 0;
-    app->state = PLAN_NO_STATE;
+    search->applicable_ops.op = BOR_ALLOC_ARR(plan_operator_t *, op_size);
+    search->applicable_ops.op_size = op_size;
+    search->applicable_ops.op_found = 0;
+    search->applicable_ops.state = PLAN_NO_STATE;
 }
 
-static void planSearchApplicableOpsFree(plan_search_applicable_ops_t *app)
+static void planSearchApplicableOpsFree(plan_search_t *search)
 {
-    BOR_FREE(app->op);
+    BOR_FREE(search->applicable_ops.op);
 }
 
 _bor_inline void planSearchApplicableOpsFind(plan_search_t *search,
-                                             plan_search_applicable_ops_t *app,
                                              plan_state_id_t state_id)
 {
+    plan_search_applicable_ops_t *app = &search->applicable_ops;
+
     if (state_id == app->state)
         return;
 

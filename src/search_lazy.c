@@ -9,6 +9,8 @@ struct _plan_search_lazy_t {
     int list_del;           /*!< True if .list should be deleted */
     plan_heur_t *heur;      /*!< Heuristic function */
     int heur_del;           /*!< True if .heur should be deleted */
+    int use_preferred_ops;  /*!< True if preferred operators from heuristic
+                                 should be used. */
 };
 typedef struct _plan_search_lazy_t plan_search_lazy_t;
 
@@ -36,10 +38,11 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
                     planSearchLazyStep,
                     planSearchLazyInjectState);
 
-    lazy->heur     = params->heur;
-    lazy->heur_del = params->heur_del;
-    lazy->list     = params->list;
-    lazy->list_del = params->list_del;
+    lazy->heur              = params->heur;
+    lazy->heur_del          = params->heur_del;
+    lazy->use_preferred_ops = params->use_preferred_ops;
+    lazy->list              = params->list;
+    lazy->list_del          = params->list_del;
 
     return &lazy->search;
 }
@@ -97,7 +100,8 @@ static int planSearchLazyStep(void *_lazy,
         return PLAN_SEARCH_CONT;
 
     // compute heuristic value for the current node
-    cur_heur = _planSearchHeuristic(&lazy->search, cur_state_id, lazy->heur);
+    cur_heur = _planSearchHeuristic(&lazy->search, cur_state_id,
+                                    lazy->heur, lazy->use_preferred_ops);
 
     // open and close the node so we can trace the path from goal to the
     // initial state

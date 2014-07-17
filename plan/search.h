@@ -134,6 +134,8 @@ struct _plan_search_ehc_params_t {
     plan_heur_t *heur; /*!< Heuristic function that ought to be used */
     int heur_del;      /*!< True if .heur should be deleted in
                             planSearchDel() */
+    int use_preferred_ops; /*!< True if preferred operators from heuristic
+                                should be used. */
 };
 typedef struct _plan_search_ehc_params_t plan_search_ehc_params_t;
 
@@ -159,6 +161,8 @@ struct _plan_search_lazy_params_t {
     plan_heur_t *heur;      /*!< Heuristic function that ought to be used */
     int heur_del;           /*!< True if .heur should be deleted in
                                  planSearchDel() */
+    int use_preferred_ops; /*!< True if preferred operators from heuristic
+                                should be used. */
     plan_list_lazy_t *list; /*!< Lazy list that will be used. */
     int list_del;           /*!< True if .list should be deleted in
                                  planSearchDel() */
@@ -352,17 +356,14 @@ void _planSearchInit(plan_search_t *search,
 void _planSearchFree(plan_search_t *search);
 
 /**
- * Fills .applicable_ops with applicable operators.
- */
-void _planSearchFindApplicableOps(plan_search_t *search,
-                                  plan_state_id_t state_id);
-
-/**
  * Returns value of heuristics for the given state.
+ * If preferred_ops is set to true, applicable operators are found sorted
+ * so that the first are the preferred ones.
  */
 plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_state_id_t state_id,
-                                 plan_heur_t *heur);
+                                 plan_heur_t *heur,
+                                 int preferred_ops);
 
 /**
  * Adds state's successors to the lazy list with the specified cost.

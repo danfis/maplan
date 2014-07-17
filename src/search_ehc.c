@@ -8,6 +8,7 @@ struct _plan_search_ehc_t {
     plan_list_lazy_t *list; /*!< List to keep track of the states */
     plan_heur_t *heur;      /*!< Heuristic function */
     int heur_del;           /*!< True if .heur should be deleted */
+    int use_preferred_ops;  /*!< True if preffered operators should be used */
     plan_cost_t best_heur;  /*!< Value of the best heuristic value found so far */
 };
 typedef struct _plan_search_ehc_t plan_search_ehc_t;
@@ -41,10 +42,11 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
                     planSearchEHCStep,
                     planSearchEHCInjectState);
 
-    ehc->list        = planListLazyFifoNew();
-    ehc->heur        = params->heur;
-    ehc->heur_del    = params->heur_del;
-    ehc->best_heur   = PLAN_COST_MAX;
+    ehc->list              = planListLazyFifoNew();
+    ehc->heur              = params->heur;
+    ehc->heur_del          = params->heur_del;
+    ehc->use_preferred_ops = params->use_preferred_ops;
+    ehc->best_heur         = PLAN_COST_MAX;
 
     return &ehc->search;
 }
@@ -69,7 +71,7 @@ static int planSearchEHCInit(void *_ehc)
     // compute heuristic for the initial state
     heur = _planSearchHeuristic(&ehc->search,
                                 ehc->search.params.prob->initial_state,
-                                ehc->heur);
+                                ehc->heur, ehc->use_preferred_ops);
     ehc->best_heur = heur;
 
     // create a first node from the initial state
@@ -116,7 +118,8 @@ static int planSearchEHCStep(void *_ehc, plan_search_step_change_t *change)
         return PLAN_SEARCH_CONT;
 
     // compute heuristic value for the current node
-    cur_heur = _planSearchHeuristic(&ehc->search, cur_state_id, ehc->heur);
+    cur_heur = _planSearchHeuristic(&ehc->search, cur_state_id, ehc->heur,
+                                    ehc->use_preferred_ops);
 
     // open and close the node so we can trace the path from goal to the
     // initial state

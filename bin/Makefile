@@ -12,6 +12,10 @@ LDFLAGS += $(PROTOBUF_LDFLAGS)
 LDFLAGS += -pthread -lrt -lm
 LDFLAGS += -lstdc++
 
+ifeq '$(BIN_STATIC)' 'yes'
+  LDFLAGS += -static
+endif
+
 TARGETS = search
 
 all: $(TARGETS)

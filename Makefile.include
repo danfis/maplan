@@ -31,6 +31,9 @@ NOPEDANTIC ?= no
 DEBUG ?= no
 PROFIL ?= no
 
+# Set to 'yes' if bin/ targets should be build as static binaries
+BIN_STATIC ?= no
+
 ifeq '$(CC_NOT_GCC)' 'yes'
   NOPEDANTIC := yes
 endif

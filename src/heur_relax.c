@@ -828,7 +828,8 @@ _bor_inline plan_cost_t relaxHeurValue(int type,
     return BOR_MAX(value1, value2);
 }
 
-static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur)
+static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur,
+                                   plan_heur_preferred_ops_t *pref_ops)
 {
     int i, id;
     plan_cost_t h;
@@ -837,6 +838,17 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur)
     for (i = 0; i < heur->goal.size; ++i){
         id = heur->goal.fact[i];
         h = relaxHeurValue(heur->type, h, heur->fact[id].value);
+    }
+
+    if (pref_ops){
+        pref_ops_selector_t pref_ops_selector;
+        markRelaxedPlan(heur);
+        prefOpsSelectorInit(&pref_ops_selector, pref_ops, heur->base_op);
+        for (i = 0; i < heur->actual_op_size; ++i){
+            if (heur->relaxed_plan[i])
+                prefOpsSelectorMarkPreferredOp(&pref_ops_selector, i);
+        }
+        prefOpsSelectorFinalize(&pref_ops_selector);
     }
 
     return h;
@@ -879,7 +891,7 @@ static plan_cost_t ctxHeur(plan_heur_relax_t *heur,
                            plan_heur_preferred_ops_t *preferred_ops)
 {
     if (heur->type == TYPE_ADD || heur->type == TYPE_MAX){
-        return relaxHeurAddMax(heur);
+        return relaxHeurAddMax(heur, preferred_ops);
     }else{ // heur->type == TYPE_FF
         return relaxHeurFF(heur, preferred_ops);
     }
@@ -961,7 +973,7 @@ static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
     plan_operator_t *op_swp;
 
     // Skip operators with lower ID
-    for (; *sel->cur < op && sel->cur < sel->end; ++sel->cur);
+    for (; sel->cur < sel->end && *sel->cur < op; ++sel->cur);
     if (sel->cur == sel->end)
         return;
 

@@ -15,6 +15,7 @@ static char *plan_output_fn = NULL;
 static int max_time = 60 * 30; // 30 minutes
 static int max_mem = 1024 * 1024; // 1GB
 static int progress_freq = 10000;
+static int use_preferred_ops = 0;
 
 
 static int readOpts(int argc, char *argv[])
@@ -33,6 +34,8 @@ static int readOpts(int argc, char *argv[])
                 "Define list type [heap|bucket|rbtree|splaytree] (default: splaytree)");
     optsAddDesc("heur", 'H', OPTS_STR, &def_heur, NULL,
                 "Define heuristic [goalcount|add|max|ff] (default: goalcount)");
+    optsAddDesc("use-preferred-ops", 'p', OPTS_NONE, &use_preferred_ops, NULL,
+                "Enable use of preferred operators. (default: disabled)");
     optsAddDesc("ma-heur-op", 0x0, OPTS_STR, &def_ma_heur_op, NULL,
                 "Which type of operators are used for heuristic"
                 " [global,projected,local] (default: projected)");
@@ -157,12 +160,14 @@ static plan_search_t *searchCreate(const char *search_name,
         planSearchEHCParamsInit(&ehc_params);
         ehc_params.heur = heurCreate(heur_name, prob, op, op_size, succ_gen);
         ehc_params.heur_del = 1;
+        ehc_params.use_preferred_ops = use_preferred_ops;
         params = &ehc_params.search;
 
     }else if (strcmp(search_name, "lazy") == 0){
         planSearchLazyParamsInit(&lazy_params);
         lazy_params.heur = heurCreate(heur_name, prob, op, op_size, succ_gen);
         lazy_params.heur_del = 1;
+        lazy_params.use_preferred_ops = use_preferred_ops;
         lazy_params.list = listLazyCreate(list_name);
         lazy_params.list_del = 1;
         params = &lazy_params.search;
@@ -375,6 +380,7 @@ int main(int argc, char *argv[])
     printf("Search: %s\n", def_search);
     printf("List: %s\n", def_list);
     printf("Heur: %s\n", def_heur);
+    printf("Use preferred operators: %d\n", use_preferred_ops);
     printf("Max Time: %d s\n", max_time);
     printf("Max Mem: %d kb\n", max_mem);
     printf("MA heuristic operators: %s\n", def_ma_heur_op);

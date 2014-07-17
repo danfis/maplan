@@ -124,6 +124,8 @@ check:
 	$(MAKE) -C testsuites check
 check-valgrind:
 	$(MAKE) -C testsuites check-valgrind
+check-segfault:
+	$(MAKE) -C testsuites check-segfault
 
 doc:
 	$(MAKE) -C doc

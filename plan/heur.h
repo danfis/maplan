@@ -9,8 +9,29 @@
  * =======================
  */
 
+/**
+ * Structure used for obtaining preferred operators.
+ * See planHeur() doc for explanation how to use it.
+ */
+struct _plan_heur_preferred_ops_t {
+    plan_operator_t **op; /*!< Input/Output list of operators. */
+    int op_size;          /*!< Number of operators in .op[] */
+    int preferred_size;   /*!< Number of preferred operators, i.e., after
+                               call of planHeur() first .preferred_size
+                               operators in .op[] are the preferred one. */
+};
+typedef struct _plan_heur_preferred_ops_t plan_heur_preferred_ops_t;
+
+/**
+ * Destructor of the heuristic object.
+ */
 typedef void (*plan_heur_del_fn)(void *heur);
-typedef plan_cost_t (*plan_heur_fn)(void *heur, const plan_state_t *state);
+
+/**
+ * Function that returns heuristic value (see planHeur() function below).
+ */
+typedef plan_cost_t (*plan_heur_fn)(void *heur, const plan_state_t *state,
+                                    plan_heur_preferred_ops_t *preferred_ops);
 
 struct _plan_heur_t {
     plan_heur_del_fn del_fn;
@@ -62,8 +83,20 @@ void planHeurDel(plan_heur_t *heur);
 
 /**
  * Returns a heuristic value.
+ * If the {preferred_ops} argument is non-NULL the function will also
+ * determine preferred operators (if it can).
+ * The parameter {preferred_ops} is used as input/output parameter the
+ * following way. The caller should set up .op and .op_size members of the
+ * struct (for example using data returned from planSuccGenFind()). The
+ * function then reorders operators in .op[] array and set .preferred_size
+ * member in a way that the first .preffered_size operators are the
+ * preferred operators.
+ * Note 1: .op[] should already contain applicable * operators.
+ * Note 2: The pointers in .op[] should be from the same array of operators
+ * as were used in building heuristic object.
  */
-plan_cost_t planHeur(plan_heur_t *heur, const plan_state_t *state);
+plan_cost_t planHeur(plan_heur_t *heur, const plan_state_t *state,
+                     plan_heur_preferred_ops_t *preferred_ops);
 
 
 

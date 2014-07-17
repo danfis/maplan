@@ -8,7 +8,8 @@ struct _plan_heur_goalcount_t {
 };
 typedef struct _plan_heur_goalcount_t plan_heur_goalcount_t;
 
-static plan_cost_t planHeurGoalCount(void *h, const plan_state_t *state);
+static plan_cost_t planHeurGoalCount(void *h, const plan_state_t *state,
+                                     plan_heur_preferred_ops_t *preferred_ops);
 static void planHeurGoalCountDel(void *h);
 
 plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal)
@@ -30,7 +31,8 @@ static void planHeurGoalCountDel(void *_h)
 }
 
 static plan_cost_t planHeurGoalCount(void *_h,
-                                     const plan_state_t *state)
+                                     const plan_state_t *state,
+                                     plan_heur_preferred_ops_t *preferred_ops)
 {
     plan_heur_goalcount_t *h = _h;
     int i;

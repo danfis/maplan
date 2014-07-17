@@ -56,6 +56,11 @@ check-valgrind: all
              --error-limit=no --suppressions=valgrind-suppress.supp \
              ./test $(CHECK_TS)
 
+check-segfault: all
+	valgrind -q --trace-children=yes \
+             --error-limit=no --suppressions=valgrind-suppress.supp \
+             ./test $(CHECK_TS)
+
 check-valgrind-gen-suppressions: all
 	valgrind -q --leak-check=full --show-reachable=yes --trace-children=yes \
              --gen-suppressions=all --log-file=out --error-limit=no \

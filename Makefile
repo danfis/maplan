@@ -21,10 +21,10 @@ DEBUG = yes
 SO_VERSION = 0
 
 CFLAGS += -I. -I../boruvka/
-CFLAGS += $(JANSSON_CFLAGS)
 CXXFLAGS += -I. -I../boruvka/
+CXXFLAGS += $(PROTOBUF_CFLAGS)
 LDFLAGS += -L. -lplan -L../boruvka -lboruvka -lm -lrt
-LDFLAGS += $(JANSSON_LDFLAGS)
+LDFLAGS += $(PROTOBUF_LDFLAGS)
 
 TARGETS  = libplan.a
 

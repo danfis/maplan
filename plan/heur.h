@@ -91,6 +91,9 @@ void planHeurDel(plan_heur_t *heur);
  * function then reorders operators in .op[] array and set .preferred_size
  * member in a way that the first .preffered_size operators are the
  * preferred operators.
+ * Note 1: .op[] should already contain applicable * operators.
+ * Note 2: The pointers in .op[] should be from the same array of operators
+ * as were used in building heuristic object.
  */
 plan_cost_t planHeur(plan_heur_t *heur, const plan_state_t *state,
                      plan_heur_preferred_ops_t *preferred_ops);

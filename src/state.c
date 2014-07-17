@@ -448,6 +448,7 @@ static int packerBitsNeeded(plan_val_t range)
 
 static int sortCmpVar(const void *a, const void *b)
 {
+    // TODO: get rid of if statements
     const plan_state_packer_var_t *va = *(const plan_state_packer_var_t **)a;
     const plan_state_packer_var_t *vb = *(const plan_state_packer_var_t **)b;
     if (va->bitlen == vb->bitlen){

@@ -448,16 +448,9 @@ static int packerBitsNeeded(plan_val_t range)
 
 static int sortCmpVar(const void *a, const void *b)
 {
-    // TODO: get rid of if statements
     const plan_state_packer_var_t *va = *(const plan_state_packer_var_t **)a;
     const plan_state_packer_var_t *vb = *(const plan_state_packer_var_t **)b;
-    if (va->bitlen == vb->bitlen){
-        return 0;
-    }else if (va->bitlen < vb->bitlen){
-        return 1;
-    }else{
-        return -1;
-    }
+    return va->bitlen - vb->bitlen;
 }
 
 static plan_packer_word_t packerVarMask(int bitlen, int shift)
@@ -582,12 +575,7 @@ static int valsCmp(const void *_a, const void *_b)
 {
     const plan_part_state_pair_t *a = _a;
     const plan_part_state_pair_t *b = _b;
-
-    if (a->var == b->var)
-        return 0;
-    if (a->var < b->var)
-        return -1;
-    return 1;
+    return a->var - b->var;
 }
 
 void planPartStateSet(plan_state_pool_t *pool,

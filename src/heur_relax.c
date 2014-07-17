@@ -160,7 +160,8 @@ static int ctxMainLoop(plan_heur_relax_t *heur);
 static plan_cost_t ctxHeur(plan_heur_relax_t *heur);
 
 /** Main function that returns heuristic value. */
-static plan_cost_t planHeurRelax(void *heur, const plan_state_t *state);
+static plan_cost_t planHeurRelax(void *heur, const plan_state_t *state,
+                                 plan_heur_preferred_ops_t *preferred_ops);
 /** Delete method */
 static void planHeurRelaxDel(void *_heur);
 
@@ -244,7 +245,8 @@ static void planHeurRelaxDel(void *_heur)
     BOR_FREE(heur);
 }
 
-static plan_cost_t planHeurRelax(void *_heur, const plan_state_t *state)
+static plan_cost_t planHeurRelax(void *_heur, const plan_state_t *state,
+                                 plan_heur_preferred_ops_t *preferred_ops)
 {
     plan_heur_relax_t *heur = _heur;
     plan_cost_t h = PLAN_HEUR_DEAD_END;

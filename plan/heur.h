@@ -9,8 +9,29 @@
  * =======================
  */
 
+/**
+ * Structure used for obtaining preferred operators.
+ * See planHeur() doc for explanation how to use it.
+ */
+struct _plan_heur_preferred_ops_t {
+    plan_operator_t **op; /*!< Input/Output list of operators. */
+    int op_size;          /*!< Number of operators in .op[] */
+    int preferred_size;   /*!< Number of preferred operators, i.e., after
+                               call of planHeur() first .preferred_size
+                               operators in .op[] are the preferred one. */
+};
+typedef struct _plan_heur_preferred_ops_t plan_heur_preferred_ops_t;
+
+/**
+ * Destructor of the heuristic object.
+ */
 typedef void (*plan_heur_del_fn)(void *heur);
-typedef plan_cost_t (*plan_heur_fn)(void *heur, const plan_state_t *state);
+
+/**
+ * Function that returns heuristic value (see planHeur() function below).
+ */
+typedef plan_cost_t (*plan_heur_fn)(void *heur, const plan_state_t *state,
+                                    plan_heur_preferred_ops_t *preferred_ops);
 
 struct _plan_heur_t {
     plan_heur_del_fn del_fn;
@@ -59,20 +80,6 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
  * Deletes heuristics object.
  */
 void planHeurDel(plan_heur_t *heur);
-
-
-/**
- * Structure used for obtaining preferred operators.
- * See planHeur() doc for explanation how to use it.
- */
-struct _plan_heur_preferred_ops_t {
-    plan_operator_t **op; /*!< Input/Output list of operators. */
-    int op_size;          /*!< Number of operators in .op[] */
-    int preferred_size;   /*!< Number of preferred operators, i.e., after
-                               call of planHeur() first .preferred_size
-                               operators in .op[] are the preferred one. */
-};
-typedef struct _plan_heur_preferred_ops_t plan_heur_preferred_ops_t;
 
 /**
  * Returns a heuristic value.

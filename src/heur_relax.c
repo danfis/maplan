@@ -166,6 +166,10 @@ static int ctxMainLoop(plan_heur_relax_t *heur);
 static plan_cost_t ctxHeur(plan_heur_relax_t *heur,
                            plan_heur_preferred_ops_t *preferred_ops);
 
+/** Sets heur->relaxed_plan[i] to 1 if i'th operator is in relaxed plan and
+ *  to 0 if it is not. */
+static void markRelaxedPlan(plan_heur_relax_t *heur);
+
 /** Main function that returns heuristic value. */
 static plan_cost_t planHeurRelax(void *heur, const plan_state_t *state,
                                  plan_heur_preferred_ops_t *preferred_ops);
@@ -810,28 +814,6 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur)
     return h;
 }
 
-static void markRelaxedPlan(plan_heur_relax_t *heur, int *relaxed_plan, int id)
-{
-    fact_t *fact = heur->fact + id;
-    int i, *op_precond, op_precond_size, id2;
-
-    if (!fact->relaxed_plan_visited && fact->reached_by_op != -1){
-        fact->relaxed_plan_visited = 1;
-
-        op_precond      = heur->op_precond[fact->reached_by_op].fact;
-        op_precond_size = heur->op_precond[fact->reached_by_op].size;
-        for (i = 0; i < op_precond_size; ++i){
-            id2 = op_precond[i];
-
-            if (!heur->fact[id2].relaxed_plan_visited
-                    && heur->fact[id2].reached_by_op != -1){
-                markRelaxedPlan(heur, relaxed_plan, id2);
-            }
-        }
-
-        relaxed_plan[heur->op_id[fact->reached_by_op]] = 1;
-    }
-}
 
 
 struct _pref_ops_selector_t {
@@ -908,22 +890,16 @@ static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
 static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
                                plan_heur_preferred_ops_t *preferred_ops)
 {
-    int i, id;
+    int i;
     plan_cost_t h = PLAN_COST_ZERO;
     PREF_OPS_SELECTOR(pref_ops_selector);
-
-    bzero(heur->relaxed_plan, sizeof(int) * heur->actual_op_size);
-
-    for (i = 0; i < heur->goal.size; ++i){
-        id = heur->goal.fact[i];
-        markRelaxedPlan(heur, heur->relaxed_plan, id);
-    }
 
     if (preferred_ops){
         prefOpsSelectorInit(&pref_ops_selector, preferred_ops,
                             heur->base_op);
     }
 
+    markRelaxedPlan(heur);
     for (i = 0; i < heur->actual_op_size; ++i){
         if (heur->relaxed_plan[i]){
             if (preferred_ops){
@@ -948,5 +924,41 @@ static plan_cost_t ctxHeur(plan_heur_relax_t *heur,
         return relaxHeurAddMax(heur);
     }else{ // heur->type == TYPE_FF
         return relaxHeurFF(heur, preferred_ops);
+    }
+}
+
+
+static void _markRelaxedPlan(plan_heur_relax_t *heur,
+                             int *relaxed_plan, int id)
+{
+    fact_t *fact = heur->fact + id;
+    int i, *op_precond, op_precond_size, id2;
+
+    if (!fact->relaxed_plan_visited && fact->reached_by_op != -1){
+        fact->relaxed_plan_visited = 1;
+
+        op_precond      = heur->op_precond[fact->reached_by_op].fact;
+        op_precond_size = heur->op_precond[fact->reached_by_op].size;
+        for (i = 0; i < op_precond_size; ++i){
+            id2 = op_precond[i];
+
+            if (!heur->fact[id2].relaxed_plan_visited
+                    && heur->fact[id2].reached_by_op != -1){
+                _markRelaxedPlan(heur, relaxed_plan, id2);
+            }
+        }
+
+        relaxed_plan[heur->op_id[fact->reached_by_op]] = 1;
+    }
+}
+
+static void markRelaxedPlan(plan_heur_relax_t *heur)
+{
+    int i, id;
+
+    bzero(heur->relaxed_plan, sizeof(int) * heur->actual_op_size);
+    for (i = 0; i < heur->goal.size; ++i){
+        id = heur->goal.fact[i];
+        _markRelaxedPlan(heur, heur->relaxed_plan, id);
     }
 }

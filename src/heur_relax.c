@@ -97,6 +97,8 @@ struct _plan_heur_relax_t {
     int goal_unsat;      /*!< Counter of unsatisfied goals */
     eff_t goal;          /*!< Copied goal in terms of fact ID */
 
+    int *relaxed_plan;   /*!< Prepared array for relaxed plan */
+
     plan_prio_queue_t queue;
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
@@ -201,6 +203,7 @@ static plan_heur_t *planHeurRelaxNew(int type,
     effInit(heur, op, op_size);
     opSimplify(heur, op, succ_gen);
     precondInit(heur);
+    heur->relaxed_plan = BOR_ALLOC_ARR(int, op_size);
 
     if (!_succ_gen)
         planSuccGenDel(succ_gen);
@@ -248,6 +251,7 @@ static void planHeurRelaxDel(void *_heur)
     valToIdFree(&heur->vid);
 
     planHeurFree(&heur->heur);
+    BOR_FREE(heur->relaxed_plan);
     BOR_FREE(heur);
 }
 
@@ -904,16 +908,15 @@ static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
 static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
                                plan_heur_preferred_ops_t *preferred_ops)
 {
-    int *relaxed_plan;
     int i, id;
     plan_cost_t h = PLAN_COST_ZERO;
     PREF_OPS_SELECTOR(pref_ops_selector);
 
-    relaxed_plan = BOR_CALLOC_ARR(int, heur->actual_op_size);
+    bzero(heur->relaxed_plan, sizeof(int) * heur->actual_op_size);
 
     for (i = 0; i < heur->goal.size; ++i){
         id = heur->goal.fact[i];
-        markRelaxedPlan(heur, relaxed_plan, id);
+        markRelaxedPlan(heur, heur->relaxed_plan, id);
     }
 
     if (preferred_ops){
@@ -922,7 +925,7 @@ static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
     }
 
     for (i = 0; i < heur->actual_op_size; ++i){
-        if (relaxed_plan[i]){
+        if (heur->relaxed_plan[i]){
             if (preferred_ops){
                 prefOpsSelectorMarkPreferredOp(&pref_ops_selector, i);
             }
@@ -930,8 +933,6 @@ static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
             h += heur->op[i].cost;
         }
     }
-
-    BOR_FREE(relaxed_plan);
 
     if (preferred_ops){
         prefOpsSelectorFinalize(&pref_ops_selector);

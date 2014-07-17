@@ -1,7 +1,6 @@
 #ifndef __PLAN_SUCCGEN_H__
 #define __PLAN_SUCCGEN_H__
 
-#include <jansson.h>
 #include <plan/operator.h>
 
 struct _plan_succ_gen_tree_t;

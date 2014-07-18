@@ -18,6 +18,21 @@ static int progress_freq = 10000;
 static int use_preferred_ops = 0;
 
 
+static void optUsePreferredOps(const char *l, char s, const char *val)
+{
+    if (strcmp(val, "off") == 0){
+        use_preferred_ops = PLAN_SEARCH_PREFERRED_NONE;
+    }else if (strcmp(val, "pref") == 0){
+        use_preferred_ops = PLAN_SEARCH_PREFERRED_PREF;
+    }else if (strcmp(val, "only") == 0){
+        use_preferred_ops = PLAN_SEARCH_PREFERRED_ONLY;
+    }else{
+        fprintf(stderr, "Error: Invalid value of `--use-preferred-ops'"
+                        "option. Setting to `off'.\n");
+        use_preferred_ops = PLAN_SEARCH_PREFERRED_NONE;
+    }
+}
+
 static int readOpts(int argc, char *argv[])
 {
     int help;
@@ -34,8 +49,10 @@ static int readOpts(int argc, char *argv[])
                 "Define list type [heap|bucket|rbtree|splaytree] (default: splaytree)");
     optsAddDesc("heur", 'H', OPTS_STR, &def_heur, NULL,
                 "Define heuristic [goalcount|add|max|ff] (default: goalcount)");
-    optsAddDesc("use-preferred-ops", 'p', OPTS_NONE, &use_preferred_ops, NULL,
-                "Enable use of preferred operators. (default: disabled)");
+    optsAddDesc("use-preferred-ops", 'p', OPTS_STR, NULL,
+                OPTS_CB(optUsePreferredOps),
+                "Enable/disable use of preferred operators: off|pref|only."
+                " (default: off)");
     optsAddDesc("ma-heur-op", 0x0, OPTS_STR, &def_ma_heur_op, NULL,
                 "Which type of operators are used for heuristic"
                 " [global,projected,local] (default: projected)");
@@ -380,7 +397,14 @@ int main(int argc, char *argv[])
     printf("Search: %s\n", def_search);
     printf("List: %s\n", def_list);
     printf("Heur: %s\n", def_heur);
-    printf("Use preferred operators: %d\n", use_preferred_ops);
+    printf("Use preferred operators: ");
+    if (use_preferred_ops == PLAN_SEARCH_PREFERRED_NONE){
+        printf("Off\n");
+    }else if (use_preferred_ops == PLAN_SEARCH_PREFERRED_PREF){
+        printf("Pref\n");
+    }else if (use_preferred_ops == PLAN_SEARCH_PREFERRED_ONLY){
+        printf("Only\n");
+    }
     printf("Max Time: %d s\n", max_time);
     printf("Max Mem: %d kb\n", max_mem);
     printf("MA heuristic operators: %s\n", def_ma_heur_op);

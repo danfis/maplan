@@ -9,6 +9,9 @@
  * =======================
  */
 
+/** Forward declaration */
+typedef struct _plan_heur_t plan_heur_t;
+
 /**
  * Structure used for obtaining preferred operators.
  * See planHeur() doc for explanation how to use it.
@@ -25,19 +28,18 @@ typedef struct _plan_heur_preferred_ops_t plan_heur_preferred_ops_t;
 /**
  * Destructor of the heuristic object.
  */
-typedef void (*plan_heur_del_fn)(void *heur);
+typedef void (*plan_heur_del_fn)(plan_heur_t *heur);
 
 /**
  * Function that returns heuristic value (see planHeur() function below).
  */
-typedef plan_cost_t (*plan_heur_fn)(void *heur, const plan_state_t *state,
+typedef plan_cost_t (*plan_heur_fn)(plan_heur_t *heur, const plan_state_t *state,
                                     plan_heur_preferred_ops_t *preferred_ops);
 
 struct _plan_heur_t {
     plan_heur_del_fn del_fn;
     plan_heur_fn heur_fn;
 };
-typedef struct _plan_heur_t plan_heur_t;
 
 /**
  * Creates a Goal Count Heuristic.

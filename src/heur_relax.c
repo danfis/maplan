@@ -103,6 +103,8 @@ struct _plan_heur_relax_t {
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
+#define HEUR_FROM_PARENT(parent) \
+    bor_container_of((parent), plan_heur_relax_t, heur)
 
 /** Initializes struct for translating variable value to fact ID */
 static void valToIdInit(val_to_id_t *vid,
@@ -199,10 +201,10 @@ static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
                                            int op_id);
 
 /** Main function that returns heuristic value. */
-static plan_cost_t planHeurRelax(void *heur, const plan_state_t *state,
+static plan_cost_t planHeurRelax(plan_heur_t *heur, const plan_state_t *state,
                                  plan_heur_preferred_ops_t *preferred_ops);
 /** Delete method */
-static void planHeurRelaxDel(void *_heur);
+static void planHeurRelaxDel(plan_heur_t *_heur);
 
 
 static plan_heur_t *planHeurRelaxNew(int type,
@@ -271,9 +273,9 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
 }
 
 
-static void planHeurRelaxDel(void *_heur)
+static void planHeurRelaxDel(plan_heur_t *_heur)
 {
-    plan_heur_relax_t *heur = _heur;
+    plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     precondFree(heur);
     effFree(heur);
     opPrecondFree(heur);
@@ -287,10 +289,10 @@ static void planHeurRelaxDel(void *_heur)
     BOR_FREE(heur);
 }
 
-static plan_cost_t planHeurRelax(void *_heur, const plan_state_t *state,
+static plan_cost_t planHeurRelax(plan_heur_t *_heur, const plan_state_t *state,
                                  plan_heur_preferred_ops_t *preferred_ops)
 {
-    plan_heur_relax_t *heur = _heur;
+    plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     plan_cost_t h = PLAN_HEUR_DEAD_END;
 
     if (preferred_ops)

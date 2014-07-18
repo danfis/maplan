@@ -8,9 +8,12 @@ struct _plan_heur_goalcount_t {
 };
 typedef struct _plan_heur_goalcount_t plan_heur_goalcount_t;
 
-static plan_cost_t planHeurGoalCount(void *h, const plan_state_t *state,
+#define HEUR_FROM_PARENT(parent) \
+    bor_container_of((parent), plan_heur_goalcount_t, heur)
+
+static plan_cost_t planHeurGoalCount(plan_heur_t *h, const plan_state_t *state,
                                      plan_heur_preferred_ops_t *preferred_ops);
-static void planHeurGoalCountDel(void *h);
+static void planHeurGoalCountDel(plan_heur_t *h);
 
 plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal)
 {
@@ -23,18 +26,18 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal)
     return &h->heur;
 }
 
-static void planHeurGoalCountDel(void *_h)
+static void planHeurGoalCountDel(plan_heur_t *_h)
 {
-    plan_heur_goalcount_t *h = _h;
+    plan_heur_goalcount_t *h = HEUR_FROM_PARENT(_h);
     planHeurFree(&h->heur);
     BOR_FREE(h);
 }
 
-static plan_cost_t planHeurGoalCount(void *_h,
+static plan_cost_t planHeurGoalCount(plan_heur_t *_h,
                                      const plan_state_t *state,
                                      plan_heur_preferred_ops_t *preferred_ops)
 {
-    plan_heur_goalcount_t *h = _h;
+    plan_heur_goalcount_t *h = HEUR_FROM_PARENT(_h);
     int i;
     plan_var_id_t var;
     plan_val_t val;

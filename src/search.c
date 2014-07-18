@@ -158,7 +158,8 @@ int _planSearchLazyInjectState(plan_search_t *search,
     if (planStateSpaceNodeIsNew(node)){
         // Compute heuristic value
         if (heur){
-            heur_val = _planSearchHeuristic(search, state_id, heur, 0);
+            heur_val = _planSearchHeuristic(search, state_id, heur,
+                                            PLAN_SEARCH_PREFERRED_NONE);
         }
 
         // Set node to closed state with appropriate cost and heuristic
@@ -167,7 +168,7 @@ int _planSearchLazyInjectState(plan_search_t *search,
                                  PLAN_NO_STATE, NULL, cost, heur_val);
 
         // Add node's successor to the open-list
-        _planSearchAddLazySuccessors(search, state_id, cost, list);
+        _planSearchAddLazySuccessors(search, state_id, heur_val, list);
     }
 
     return 0;

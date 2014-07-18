@@ -38,6 +38,24 @@ typedef struct _plan_search_t plan_search_t;
  */
 #define PLAN_SEARCH_ABORT     -2
 
+
+/**
+ * Preferred operators are not used.
+ */
+#define PLAN_SEARCH_PREFERRED_NONE 0
+
+/**
+ * Preferred operators are preferenced over the other ones. This depends on
+ * a particular search algorithm.
+ */
+#define PLAN_SEARCH_PREFERRED_PREF 1
+
+/**
+ * Only the preferred operators are used.
+ */
+#define PLAN_SEARCH_PREFERRED_ONLY 2
+
+
 /**
  * Struct for statistics from search.
  */
@@ -134,8 +152,7 @@ struct _plan_search_ehc_params_t {
     plan_heur_t *heur; /*!< Heuristic function that ought to be used */
     int heur_del;      /*!< True if .heur should be deleted in
                             planSearchDel() */
-    int use_preferred_ops; /*!< True if preferred operators from heuristic
-                                should be used. */
+    int use_preferred_ops; /*!< One of PLAN_SEARCH_PREFERRED_* constants */
 };
 typedef struct _plan_search_ehc_params_t plan_search_ehc_params_t;
 
@@ -161,8 +178,7 @@ struct _plan_search_lazy_params_t {
     plan_heur_t *heur;      /*!< Heuristic function that ought to be used */
     int heur_del;           /*!< True if .heur should be deleted in
                                  planSearchDel() */
-    int use_preferred_ops; /*!< True if preferred operators from heuristic
-                                should be used. */
+    int use_preferred_ops;  /*!< One of PLAN_SEARCH_PREFERRED_* constants */
     plan_list_lazy_t *list; /*!< Lazy list that will be used. */
     int list_del;           /*!< True if .list should be deleted in
                                  planSearchDel() */

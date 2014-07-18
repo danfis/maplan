@@ -104,41 +104,46 @@ void _planSearchFree(plan_search_t *search)
         planStateSpaceDel(search->state_space);
 }
 
+void _planSearchFindApplicableOps(plan_search_t *search,
+                                  plan_state_id_t state_id)
+{
+    planSearchApplicableOpsFind(search, state_id);
+}
+
 plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_state_id_t state_id,
                                  plan_heur_t *heur,
-                                 int preferred_ops)
+                                 plan_search_applicable_ops_t *preferred_ops)
 {
     plan_heur_preferred_ops_t pref_ops;
+    plan_cost_t hval;
 
     planStatePoolGetState(search->state_pool, state_id, search->state);
     planSearchStatIncEvaluatedStates(&search->stat);
 
     if (preferred_ops){
-        planSearchApplicableOpsFind(search, state_id);
-        pref_ops.op = search->applicable_ops.op;
-        pref_ops.op_size = search->applicable_ops.op_found;
-        return planHeur(heur, search->state, &pref_ops);
+        pref_ops.op = preferred_ops->op;
+        pref_ops.op_size = preferred_ops->op_found;
+        hval = planHeur(heur, search->state, &pref_ops);
+        preferred_ops->op_preferred = pref_ops.preferred_size;
 
     }else{
-        return planHeur(heur, search->state, NULL);
+        hval = planHeur(heur, search->state, NULL);
     }
+
+    return hval;
 }
 
 void _planSearchAddLazySuccessors(plan_search_t *search,
                                   plan_state_id_t state_id,
+                                  plan_operator_t **op, int op_size,
                                   plan_cost_t cost,
                                   plan_list_lazy_t *list)
 {
     int i;
-    plan_operator_t *op;
 
-    planSearchApplicableOpsFind(search, state_id);
-
-    // go trough all applicable operators
-    for (i = 0; i < search->applicable_ops.op_found; ++i){
-        op = search->applicable_ops.op[i];
-        planListLazyPush(list, cost, state_id, op);
+    for (i = 0; i < op_size; ++i){
+        planListLazyPush(list, cost, state_id, op[i]);
         planSearchStatIncGeneratedStates(&search->stat);
     }
 }
@@ -158,8 +163,7 @@ int _planSearchLazyInjectState(plan_search_t *search,
     if (planStateSpaceNodeIsNew(node)){
         // Compute heuristic value
         if (heur){
-            heur_val = _planSearchHeuristic(search, state_id, heur,
-                                            PLAN_SEARCH_PREFERRED_NONE);
+            heur_val = _planSearchHeuristic(search, state_id, heur, NULL);
         }
 
         // Set node to closed state with appropriate cost and heuristic
@@ -168,7 +172,11 @@ int _planSearchLazyInjectState(plan_search_t *search,
                                  PLAN_NO_STATE, NULL, cost, heur_val);
 
         // Add node's successor to the open-list
-        _planSearchAddLazySuccessors(search, state_id, heur_val, list);
+        _planSearchFindApplicableOps(search, state_id);
+        _planSearchAddLazySuccessors(search, state_id,
+                                     search->applicable_ops.op,
+                                     search->applicable_ops.op_found,
+                                     heur_val, list);
     }
 
     return 0;

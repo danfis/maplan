@@ -330,6 +330,8 @@ struct _plan_search_applicable_ops_t {
                                 must be big enough to hold all operators. */
     int op_size;           /*!< Size of .op[] */
     int op_found;          /*!< Number of found applicable operators */
+    int op_preferred;      /*!< Number of preferred operators (that are
+                                stored at the beggining of .op[] array */
     plan_state_id_t state; /*!< State in which these operators are
                                 applicable */
 };
@@ -373,20 +375,28 @@ void _planSearchInit(plan_search_t *search,
 void _planSearchFree(plan_search_t *search);
 
 /**
+ * Finds applicable operators in the specified state and store the results
+ * in searchc->applicable_ops.
+ */
+void _planSearchFindApplicableOps(plan_search_t *search,
+                                  plan_state_id_t state_id);
+
+/**
  * Returns value of heuristics for the given state.
- * If preferred_ops is set to true, applicable operators are found sorted
- * so that the first are the preferred ones.
+ * If preferred_ops is non-NULL, the function will find preferred
+ * operators and set up the given struct accordingly.
  */
 plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_state_id_t state_id,
                                  plan_heur_t *heur,
-                                 int preferred_ops);
+                                 plan_search_applicable_ops_t *preferred_ops);
 
 /**
  * Adds state's successors to the lazy list with the specified cost.
  */
 void _planSearchAddLazySuccessors(plan_search_t *search,
                                   plan_state_id_t state_id,
+                                  plan_operator_t **op, int op_size,
                                   plan_cost_t cost,
                                   plan_list_lazy_t *list);
 

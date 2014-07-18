@@ -10,11 +10,19 @@ struct _plan_search_ehc_t {
     int heur_del;           /*!< True if .heur should be deleted */
     int use_preferred_ops;  /*!< True if preffered operators should be used */
     plan_cost_t best_heur;  /*!< Value of the best heuristic value found so far */
+    plan_search_applicable_ops_t *pref_ops; /*!< This pointer is set to
+                                                 &search->applicable_ops in
+                                                 case preferred operators
+                                                 are enabled. */
 };
 typedef struct _plan_search_ehc_t plan_search_ehc_t;
 
 #define SEARCH_FROM_PARENT(parent) \
     bor_container_of((parent), plan_search_ehc_t, search)
+
+/** Adds successors to the open list, the operators should already be
+ *  filled in ehc->search.applicable_ops */
+static void addSuccessors(plan_search_ehc_t *ehc, plan_state_id_t state_id);
 
 /** Frees allocated resorces */
 static void planSearchEHCDel(plan_search_t *_ehc);
@@ -52,6 +60,12 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
     ehc->use_preferred_ops = params->use_preferred_ops;
     ehc->best_heur         = PLAN_COST_MAX;
 
+    // Set up pointer to applicable operators for later
+    ehc->pref_ops = NULL;
+    if (ehc->use_preferred_ops){
+        ehc->pref_ops = &ehc->search.applicable_ops;
+    }
+
     return &ehc->search;
 }
 
@@ -71,27 +85,28 @@ static int planSearchEHCInit(plan_search_t *_ehc)
 {
     plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
     plan_cost_t heur;
+    plan_state_id_t init_state;
+
+    init_state = ehc->search.params.prob->initial_state;
+
+    // find applicable operators
+    _planSearchFindApplicableOps(&ehc->search, init_state);
 
     // compute heuristic for the initial state
-    heur = _planSearchHeuristic(&ehc->search,
-                                ehc->search.params.prob->initial_state,
-                                ehc->heur, ehc->use_preferred_ops);
+    heur = _planSearchHeuristic(&ehc->search, init_state,
+                                ehc->heur, ehc->pref_ops);
     ehc->best_heur = heur;
 
     // create a first node from the initial state
-    _planSearchNodeOpenClose(&ehc->search,
-                             ehc->search.params.prob->initial_state,
+    _planSearchNodeOpenClose(&ehc->search, init_state,
                              PLAN_NO_STATE, NULL, 0, heur);
 
-    if (_planSearchCheckGoal(&ehc->search,
-                             ehc->search.params.prob->initial_state)){
+    if (_planSearchCheckGoal(&ehc->search, init_state)){
         return PLAN_SEARCH_FOUND;
     }
 
     // add recepies for successor nodes into list
-    _planSearchAddLazySuccessors(&ehc->search,
-                                 ehc->search.params.prob->initial_state,
-                                 0, ehc->list);
+    addSuccessors(ehc, init_state);
 
     return PLAN_SEARCH_CONT;
 }
@@ -122,9 +137,12 @@ static int planSearchEHCStep(plan_search_t *_ehc,
                             &cur_state_id, NULL) != 0)
         return PLAN_SEARCH_CONT;
 
+    // find applicable operators in the current state
+    _planSearchFindApplicableOps(&ehc->search, cur_state_id);
+
     // compute heuristic value for the current node
     cur_heur = _planSearchHeuristic(&ehc->search, cur_state_id, ehc->heur,
-                                    ehc->use_preferred_ops);
+                                    ehc->pref_ops);
 
     // open and close the node so we can trace the path from goal to the
     // initial state
@@ -146,7 +164,7 @@ static int planSearchEHCStep(plan_search_t *_ehc,
             ehc->best_heur = cur_heur;
         }
 
-        _planSearchAddLazySuccessors(&ehc->search, cur_state_id, 0, ehc->list);
+        addSuccessors(ehc, cur_state_id);
     }
 
     return PLAN_SEARCH_CONT;
@@ -158,4 +176,21 @@ static int planSearchEHCInjectState(plan_search_t *_ehc, plan_state_id_t state_i
     plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
     return _planSearchLazyInjectState(&ehc->search, ehc->heur, ehc->list,
                                       state_id, cost, heuristic);
+}
+
+static void addSuccessors(plan_search_ehc_t *ehc, plan_state_id_t state_id)
+{
+    if (ehc->use_preferred_ops == PLAN_SEARCH_PREFERRED_ONLY){
+        // Use only preferred operators
+        _planSearchAddLazySuccessors(&ehc->search, state_id,
+                                     ehc->search.applicable_ops.op,
+                                     ehc->search.applicable_ops.op_preferred,
+                                     0, ehc->list);
+    }else{
+        // Use all operators the preferred were already sorted as first
+        _planSearchAddLazySuccessors(&ehc->search, state_id,
+                                     ehc->search.applicable_ops.op,
+                                     ehc->search.applicable_ops.op_found,
+                                     0, ehc->list);
+    }
 }

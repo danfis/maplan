@@ -13,14 +13,18 @@ struct _plan_search_ehc_t {
 };
 typedef struct _plan_search_ehc_t plan_search_ehc_t;
 
+#define SEARCH_FROM_PARENT(parent) \
+    bor_container_of((parent), plan_search_ehc_t, search)
+
 /** Frees allocated resorces */
-static void planSearchEHCDel(void *_ehc);
+static void planSearchEHCDel(plan_search_t *_ehc);
 /** Initializes search. This must be call exactly once. */
-static int planSearchEHCInit(void *);
+static int planSearchEHCInit(plan_search_t *);
 /** Performes one step in the algorithm. */
-static int planSearchEHCStep(void *, plan_search_step_change_t *change);
+static int planSearchEHCStep(plan_search_t *,
+                             plan_search_step_change_t *change);
 /** Injects a new state into open-list */
-static int planSearchEHCInjectState(void *, plan_state_id_t state_id,
+static int planSearchEHCInjectState(plan_search_t *, plan_state_id_t state_id,
                                     plan_cost_t cost, plan_cost_t heuristic);
 
 
@@ -51,9 +55,9 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
     return &ehc->search;
 }
 
-static void planSearchEHCDel(void *_ehc)
+static void planSearchEHCDel(plan_search_t *_ehc)
 {
-    plan_search_ehc_t *ehc = _ehc;
+    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
 
     _planSearchFree(&ehc->search);
     if (ehc->list)
@@ -63,9 +67,9 @@ static void planSearchEHCDel(void *_ehc)
     BOR_FREE(ehc);
 }
 
-static int planSearchEHCInit(void *_ehc)
+static int planSearchEHCInit(plan_search_t *_ehc)
 {
-    plan_search_ehc_t *ehc = _ehc;
+    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
     plan_cost_t heur;
 
     // compute heuristic for the initial state
@@ -92,9 +96,10 @@ static int planSearchEHCInit(void *_ehc)
     return PLAN_SEARCH_CONT;
 }
 
-static int planSearchEHCStep(void *_ehc, plan_search_step_change_t *change)
+static int planSearchEHCStep(plan_search_t *_ehc,
+                             plan_search_step_change_t *change)
 {
-    plan_search_ehc_t *ehc = _ehc;
+    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
     plan_cost_t cur_heur;
@@ -147,10 +152,10 @@ static int planSearchEHCStep(void *_ehc, plan_search_step_change_t *change)
     return PLAN_SEARCH_CONT;
 }
 
-static int planSearchEHCInjectState(void *_ehc, plan_state_id_t state_id,
+static int planSearchEHCInjectState(plan_search_t *_ehc, plan_state_id_t state_id,
                                     plan_cost_t cost, plan_cost_t heuristic)
 {
-    plan_search_ehc_t *ehc = _ehc;
+    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
     return _planSearchLazyInjectState(&ehc->search, ehc->heur, ehc->list,
                                       state_id, cost, heuristic);
 }

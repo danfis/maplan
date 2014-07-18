@@ -286,24 +286,25 @@ _bor_inline void planSearchStatSetNotFound(plan_search_stat_t *stat);
 /**
  * Algorithm's method that frees all resources.
  */
-typedef void (*plan_search_del_fn)(void *);
+typedef void (*plan_search_del_fn)(plan_search_t *);
 
 /**
  * Initialize algorithm -- first step of algorithm.
  */
-typedef int (*plan_search_init_fn)(void *);
+typedef int (*plan_search_init_fn)(plan_search_t *);
 
 /**
  * Perform one step of algorithm.
  */
-typedef int (*plan_search_step_fn)(void *, plan_search_step_change_t *change);
+typedef int (*plan_search_step_fn)(plan_search_t *,
+                                   plan_search_step_change_t *change);
 
 /**
  * Inject the given state into open-list and performs another needed
  * operations with the state.
  * Returns 0 on success.
  */
-typedef int (*plan_search_inject_state_fn)(void *search,
+typedef int (*plan_search_inject_state_fn)(plan_search_t *search,
                                            plan_state_id_t state_id,
                                            plan_cost_t cost,
                                            plan_cost_t heuristic);

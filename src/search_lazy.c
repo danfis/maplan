@@ -14,11 +14,14 @@ struct _plan_search_lazy_t {
 };
 typedef struct _plan_search_lazy_t plan_search_lazy_t;
 
-static void planSearchLazyDel(void *_lazy);
-static int planSearchLazyInit(void *_lazy);
-static int planSearchLazyStep(void *_lazy,
+#define SEARCH_FROM_PARENT(parent) \
+    bor_container_of((parent), plan_search_lazy_t, search)
+
+static void planSearchLazyDel(plan_search_t *_lazy);
+static int planSearchLazyInit(plan_search_t *_lazy);
+static int planSearchLazyStep(plan_search_t *_lazy,
                               plan_search_step_change_t *change);
-static int planSearchLazyInjectState(void *, plan_state_id_t state_id,
+static int planSearchLazyInjectState(plan_search_t *, plan_state_id_t state_id,
                                      plan_cost_t cost, plan_cost_t heuristic);
 
 void planSearchLazyParamsInit(plan_search_lazy_params_t *p)
@@ -47,9 +50,9 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
     return &lazy->search;
 }
 
-static void planSearchLazyDel(void *_lazy)
+static void planSearchLazyDel(plan_search_t *_lazy)
 {
-    plan_search_lazy_t *lazy = _lazy;
+    plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
     _planSearchFree(&lazy->search);
     if (lazy->heur_del)
         planHeurDel(lazy->heur);
@@ -58,18 +61,18 @@ static void planSearchLazyDel(void *_lazy)
     BOR_FREE(lazy);
 }
 
-static int planSearchLazyInit(void *_lazy)
+static int planSearchLazyInit(plan_search_t *_lazy)
 {
-    plan_search_lazy_t *lazy = _lazy;
+    plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
     planListLazyPush(lazy->list, 0,
                      lazy->search.params.prob->initial_state, NULL);
     return PLAN_SEARCH_CONT;
 }
 
-static int planSearchLazyStep(void *_lazy,
+static int planSearchLazyStep(plan_search_t *_lazy,
                               plan_search_step_change_t *change)
 {
-    plan_search_lazy_t *lazy = _lazy;
+    plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
     plan_cost_t cur_heur;
@@ -123,10 +126,10 @@ static int planSearchLazyStep(void *_lazy,
     return PLAN_SEARCH_CONT;
 }
 
-static int planSearchLazyInjectState(void *_lazy, plan_state_id_t state_id,
+static int planSearchLazyInjectState(plan_search_t *_lazy, plan_state_id_t state_id,
                                      plan_cost_t cost, plan_cost_t heuristic)
 {
-    plan_search_lazy_t *lazy = _lazy;
+    plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
     return _planSearchLazyInjectState(&lazy->search, lazy->heur, lazy->list,
                                       state_id, cost, heuristic);
 }

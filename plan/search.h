@@ -38,6 +38,24 @@ typedef struct _plan_search_t plan_search_t;
  */
 #define PLAN_SEARCH_ABORT     -2
 
+
+/**
+ * Preferred operators are not used.
+ */
+#define PLAN_SEARCH_PREFERRED_NONE 0
+
+/**
+ * Preferred operators are preferenced over the other ones. This depends on
+ * a particular search algorithm.
+ */
+#define PLAN_SEARCH_PREFERRED_PREF 1
+
+/**
+ * Only the preferred operators are used.
+ */
+#define PLAN_SEARCH_PREFERRED_ONLY 2
+
+
 /**
  * Struct for statistics from search.
  */
@@ -134,8 +152,7 @@ struct _plan_search_ehc_params_t {
     plan_heur_t *heur; /*!< Heuristic function that ought to be used */
     int heur_del;      /*!< True if .heur should be deleted in
                             planSearchDel() */
-    int use_preferred_ops; /*!< True if preferred operators from heuristic
-                                should be used. */
+    int use_preferred_ops; /*!< One of PLAN_SEARCH_PREFERRED_* constants */
 };
 typedef struct _plan_search_ehc_params_t plan_search_ehc_params_t;
 
@@ -161,8 +178,7 @@ struct _plan_search_lazy_params_t {
     plan_heur_t *heur;      /*!< Heuristic function that ought to be used */
     int heur_del;           /*!< True if .heur should be deleted in
                                  planSearchDel() */
-    int use_preferred_ops; /*!< True if preferred operators from heuristic
-                                should be used. */
+    int use_preferred_ops;  /*!< One of PLAN_SEARCH_PREFERRED_* constants */
     plan_list_lazy_t *list; /*!< Lazy list that will be used. */
     int list_del;           /*!< True if .list should be deleted in
                                  planSearchDel() */
@@ -314,6 +330,8 @@ struct _plan_search_applicable_ops_t {
                                 must be big enough to hold all operators. */
     int op_size;           /*!< Size of .op[] */
     int op_found;          /*!< Number of found applicable operators */
+    int op_preferred;      /*!< Number of preferred operators (that are
+                                stored at the beggining of .op[] array */
     plan_state_id_t state; /*!< State in which these operators are
                                 applicable */
 };
@@ -357,20 +375,28 @@ void _planSearchInit(plan_search_t *search,
 void _planSearchFree(plan_search_t *search);
 
 /**
+ * Finds applicable operators in the specified state and store the results
+ * in searchc->applicable_ops.
+ */
+void _planSearchFindApplicableOps(plan_search_t *search,
+                                  plan_state_id_t state_id);
+
+/**
  * Returns value of heuristics for the given state.
- * If preferred_ops is set to true, applicable operators are found sorted
- * so that the first are the preferred ones.
+ * If preferred_ops is non-NULL, the function will find preferred
+ * operators and set up the given struct accordingly.
  */
 plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_state_id_t state_id,
                                  plan_heur_t *heur,
-                                 int preferred_ops);
+                                 plan_search_applicable_ops_t *preferred_ops);
 
 /**
  * Adds state's successors to the lazy list with the specified cost.
  */
 void _planSearchAddLazySuccessors(plan_search_t *search,
                                   plan_state_id_t state_id,
+                                  plan_operator_t **op, int op_size,
                                   plan_cost_t cost,
                                   plan_list_lazy_t *list);
 

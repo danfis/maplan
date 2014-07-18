@@ -11,11 +11,19 @@ struct _plan_search_lazy_t {
     int heur_del;           /*!< True if .heur should be deleted */
     int use_preferred_ops;  /*!< True if preferred operators from heuristic
                                  should be used. */
+    plan_search_applicable_ops_t *pref_ops; /*!< This pointer is set to
+                                                 &search->applicable_ops in
+                                                 case preferred operators
+                                                 are enabled. */
 };
 typedef struct _plan_search_lazy_t plan_search_lazy_t;
 
 #define SEARCH_FROM_PARENT(parent) \
     bor_container_of((parent), plan_search_lazy_t, search)
+
+static void addSuccessors(plan_search_lazy_t *lazy,
+                          plan_state_id_t state_id,
+                          plan_cost_t heur_val);
 
 static void planSearchLazyDel(plan_search_t *_lazy);
 static int planSearchLazyInit(plan_search_t *_lazy);
@@ -46,6 +54,10 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
     lazy->use_preferred_ops = params->use_preferred_ops;
     lazy->list              = params->list;
     lazy->list_del          = params->list_del;
+
+    lazy->pref_ops = NULL;
+    if (lazy->use_preferred_ops)
+        lazy->pref_ops = &lazy->search.applicable_ops;
 
     return &lazy->search;
 }
@@ -102,9 +114,12 @@ static int planSearchLazyStep(plan_search_t *_lazy,
     if (!planStateSpaceNodeIsNew2(lazy->search.state_space, cur_state_id))
         return PLAN_SEARCH_CONT;
 
+    // find applicable operators
+    _planSearchFindApplicableOps(&lazy->search, cur_state_id);
+
     // compute heuristic value for the current node
     cur_heur = _planSearchHeuristic(&lazy->search, cur_state_id,
-                                    lazy->heur, lazy->use_preferred_ops);
+                                    lazy->heur, lazy->pref_ops);
 
     // open and close the node so we can trace the path from goal to the
     // initial state
@@ -119,8 +134,7 @@ static int planSearchLazyStep(plan_search_t *_lazy,
         return PLAN_SEARCH_FOUND;
 
     if (cur_heur != PLAN_HEUR_DEAD_END){
-        _planSearchAddLazySuccessors(&lazy->search, cur_state_id,
-                                     cur_heur, lazy->list);
+        addSuccessors(lazy, cur_state_id, cur_heur);
     }
 
     return PLAN_SEARCH_CONT;
@@ -133,3 +147,21 @@ static int planSearchLazyInjectState(plan_search_t *_lazy, plan_state_id_t state
     return _planSearchLazyInjectState(&lazy->search, lazy->heur, lazy->list,
                                       state_id, cost, heuristic);
 }
+
+static void addSuccessors(plan_search_lazy_t *lazy,
+                          plan_state_id_t state_id,
+                          plan_cost_t heur_val)
+{
+    if (lazy->use_preferred_ops == PLAN_SEARCH_PREFERRED_ONLY){
+        _planSearchAddLazySuccessors(&lazy->search, state_id,
+                                     lazy->search.applicable_ops.op,
+                                     lazy->search.applicable_ops.op_preferred,
+                                     heur_val, lazy->list);
+    }else{
+        _planSearchAddLazySuccessors(&lazy->search, state_id,
+                                     lazy->search.applicable_ops.op,
+                                     lazy->search.applicable_ops.op_found,
+                                     heur_val, lazy->list);
+    }
+}
+

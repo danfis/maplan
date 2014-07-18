@@ -88,7 +88,7 @@ static void planListLazyMapPush(void *_l,
         l->pre_keynode = BOR_ALLOC(keynode_t);
         borFifoInit(&l->pre_keynode->fifo, sizeof(node_t));
 
-    }else if (kn != NULL){
+    }else{
         // Key already in tree
         keynode = bor_container_of(kn, keynode_t, tree);
     }

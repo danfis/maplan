@@ -74,7 +74,7 @@ struct _plan_heur_relax_t {
     precond_t *precond; /*!< Operators for which the corresponding fact is
                              precondition -- the size of this array equals
                              to .fact_size */
-    eff_t *eff;         /*!< Unrolled effects of operators. Size of this
+    eff_t *op_eff;      /*!< Unrolled effects of operators. Size of this
                              array equals to .op_size */
     eff_t *op_precond;  /*!< Precondition facts of operators. Size of this
                              array is .op_size */
@@ -556,7 +556,7 @@ static void effInit(plan_heur_relax_t *heur,
     plan_val_t val;
     eff_t *eff;
 
-    eff = heur->eff = BOR_ALLOC_ARR(eff_t, heur->op_size);
+    eff = heur->op_eff = BOR_ALLOC_ARR(eff_t, heur->op_size);
 
     // Conditional effects are after all operators
     cond_eff_ins = ops_size;
@@ -570,7 +570,7 @@ static void effInit(plan_heur_relax_t *heur,
         }
 
         for (j = 0; j < ops[i].cond_eff_size; ++j){
-            effCondEffInit(heur, heur->eff + cond_eff_ins,
+            effCondEffInit(heur, heur->op_eff + cond_eff_ins,
                            ops[i].cond_eff + j);
             ++cond_eff_ins;
         }
@@ -582,8 +582,8 @@ static void effFree(plan_heur_relax_t *heur)
     int i;
 
     for (i = 0; i < heur->op_size; ++i)
-        BOR_FREE(heur->eff[i].fact);
-    BOR_FREE(heur->eff);
+        BOR_FREE(heur->op_eff[i].fact);
+    BOR_FREE(heur->op_eff);
 }
 
 static void effRemoveId(eff_t *eff, int pos)
@@ -642,7 +642,7 @@ static void opSimplify(plan_heur_relax_t *heur,
         ref_op = op + heur->op_id[ref_i];
 
         // skip operators with no effects
-        if (heur->eff[ref_i].size == 0)
+        if (heur->op_eff[ref_i].size == 0)
             continue;
 
         // get all applicable operators
@@ -658,7 +658,7 @@ static void opSimplify(plan_heur_relax_t *heur,
                         / sizeof(plan_operator_t);
 
             // simplify effects, if possible delete in reference operator
-            opSimplifyEffects(heur->eff + ref_i, heur->eff + op_i,
+            opSimplifyEffects(heur->op_eff + ref_i, heur->op_eff + op_i,
                               ref_op->cost, ops[i]->cost);
         }
     }
@@ -676,7 +676,7 @@ static void precondInit(plan_heur_relax_t *heur)
 
     pre_end = heur->op_precond + heur->op_size;
     for (pre = heur->op_precond, opi = 0; pre < pre_end; ++pre, ++opi){
-        if (heur->eff[opi].size == 0)
+        if (heur->op_eff[opi].size == 0)
             continue;
 
         for (i = 0; i < pre->size; ++i){
@@ -752,8 +752,8 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
     int *eff_facts, eff_facts_len;
     int op_value = heur->op[op_id].value;
 
-    eff_facts = heur->eff[op_id].fact;
-    eff_facts_len = heur->eff[op_id].size;
+    eff_facts = heur->op_eff[op_id].fact;
+    eff_facts_len = heur->op_eff[op_id].size;
     for (i = 0; i < eff_facts_len; ++i){
         id = eff_facts[i];
         fact = heur->fact + id;

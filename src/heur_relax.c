@@ -4,9 +4,10 @@
 #include "plan/heur.h"
 #include "plan/prioqueue.h"
 
-#define TYPE_ADD 0
-#define TYPE_MAX 1
-#define TYPE_FF  2
+#define TYPE_ADD    0
+#define TYPE_MAX    1
+#define TYPE_FF     2
+#define TYPE_LM_CUT 3
 
 /**
  * Structure representing a single fact.
@@ -276,6 +277,14 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
                             op, op_size, succ_gen);
 }
 
+plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
+                              const plan_part_state_t *goal,
+                              const plan_operator_t *op, int op_size,
+                              const plan_succ_gen_t *succ_gen)
+{
+    return planHeurRelaxNew(TYPE_LM_CUT, var, var_size, goal,
+                            op, op_size, succ_gen);
+}
 
 static void planHeurRelaxDel(plan_heur_t *_heur)
 {

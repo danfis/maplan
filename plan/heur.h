@@ -79,6 +79,16 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
                                 const plan_succ_gen_t *succ_gen);
 
 /**
+ * Creates an LM-Cut heuristics.
+ * If succ_gen is NULL, a new successor generator is created internally
+ * from the given operators.
+ */
+plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
+                              const plan_part_state_t *goal,
+                              const plan_operator_t *op, int op_size,
+                              const plan_succ_gen_t *succ_gen);
+
+/**
  * Deletes heuristics object.
  */
 void planHeurDel(plan_heur_t *heur);

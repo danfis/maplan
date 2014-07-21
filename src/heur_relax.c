@@ -34,21 +34,21 @@ typedef struct _op_t op_t;
 /**
  * Preconditions of a fact.
  */
-struct _precond_t {
+struct _oparr_t {
     int *op;  /*!< List of operators' IDs for which the fact is
                    precondition */
     int size; /*!< Size of op[] array */
 };
-typedef struct _precond_t precond_t;
+typedef struct _oparr_t oparr_t;
 
 /**
  * Effects of an operator.
  */
-struct _eff_t {
+struct _factarr_t {
     int *fact; /*!< List of facts that are effects of the operator */
     int size;  /*!< Size of fact[] array */
 };
-typedef struct _eff_t eff_t;
+typedef struct _factarr_t factarr_t;
 
 /**
  * Structure for translation of variable's value to fact id.
@@ -71,13 +71,13 @@ struct _plan_heur_relax_t {
                                          value of its pointer. */
     val_to_id_t vid;
 
-    precond_t *precond; /*!< Operators for which the corresponding fact is
-                             precondition -- the size of this array equals
-                             to .fact_size */
-    eff_t *op_eff;      /*!< Unrolled effects of operators. Size of this
-                             array equals to .op_size */
-    eff_t *op_precond;  /*!< Precondition facts of operators. Size of this
-                             array is .op_size */
+    oparr_t *precond;      /*!< Operators for which the corresponding fact
+                                is precondition -- the size of this array
+                                equals to .fact_size */
+    factarr_t *op_eff;     /*!< Unrolled effects of operators. Size of this
+                                array equals to .op_size */
+    factarr_t *op_precond; /*!< Precondition facts of operators. Size of
+                                this array is .op_size */
 
     fact_t *fact_init;  /*!< Initialization values for facts */
     fact_t *fact;       /*!< List of facts */
@@ -95,7 +95,7 @@ struct _plan_heur_relax_t {
 
     int goal_unsat_init; /*!< Number of unsatisfied goal variables */
     int goal_unsat;      /*!< Counter of unsatisfied goals */
-    eff_t goal;          /*!< Copied goal in terms of fact ID */
+    factarr_t goal;          /*!< Copied goal in terms of fact ID */
 
     int *relaxed_plan;   /*!< Prepared array for relaxed plan */
 
@@ -137,9 +137,9 @@ static void effInit(plan_heur_relax_t *heur,
                     const plan_operator_t *ops, int ops_size);
 static void effFree(plan_heur_relax_t *heur);
 /** Removes fact id from specified position. */
-static void effRemoveId(eff_t *eff, int pos);
+static void effRemoveId(factarr_t *eff, int pos);
 /** Remove same effects where its cost is higher */
-static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
+static void opSimplifyEffects(factarr_t *ref_eff, factarr_t *op_eff,
                               plan_cost_t ref_cost, plan_cost_t op_cost);
 /** Simplifies internal representation of operators so that there are no
  *  two operators applicable in the same time with the same effect. */
@@ -460,7 +460,7 @@ static void opFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->op_id);
 }
 
-static void opPrecondCondEffInit(plan_heur_relax_t *heur, eff_t *precond,
+static void opPrecondCondEffInit(plan_heur_relax_t *heur, factarr_t *precond,
                                  const plan_operator_t *op,
                                  const plan_operator_cond_eff_t *cond_eff)
 {
@@ -496,9 +496,9 @@ static void opPrecondInit(plan_heur_relax_t *heur,
     int i, j, id, cond_eff_ins;
     plan_var_id_t var;
     plan_val_t val;
-    eff_t *precond;
+    factarr_t *precond;
 
-    precond = heur->op_precond = BOR_ALLOC_ARR(eff_t, heur->op_size);
+    precond = heur->op_precond = BOR_ALLOC_ARR(factarr_t, heur->op_size);
 
     // The conditional effects are after "ordinary" operators
     cond_eff_ins = ops_size;
@@ -529,7 +529,7 @@ static void opPrecondFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->op_precond);
 }
 
-static void effCondEffInit(plan_heur_relax_t *heur, eff_t *eff,
+static void effCondEffInit(plan_heur_relax_t *heur, factarr_t *eff,
                            const plan_operator_cond_eff_t *cond_eff)
 {
     int j;
@@ -554,9 +554,9 @@ static void effInit(plan_heur_relax_t *heur,
     int i, j, cond_eff_ins;
     plan_var_id_t var;
     plan_val_t val;
-    eff_t *eff;
+    factarr_t *eff;
 
-    eff = heur->op_eff = BOR_ALLOC_ARR(eff_t, heur->op_size);
+    eff = heur->op_eff = BOR_ALLOC_ARR(factarr_t, heur->op_size);
 
     // Conditional effects are after all operators
     cond_eff_ins = ops_size;
@@ -586,7 +586,7 @@ static void effFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->op_eff);
 }
 
-static void effRemoveId(eff_t *eff, int pos)
+static void effRemoveId(factarr_t *eff, int pos)
 {
     int i;
     for (i = pos + 1; i < eff->size; ++i)
@@ -594,7 +594,7 @@ static void effRemoveId(eff_t *eff, int pos)
     --eff->size;
 }
 
-static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
+static void opSimplifyEffects(factarr_t *ref_eff, factarr_t *op_eff,
                               plan_cost_t ref_cost, plan_cost_t op_cost)
 {
     int ref_i, op_i;
@@ -669,10 +669,10 @@ static void opSimplify(plan_heur_relax_t *heur,
 static void precondInit(plan_heur_relax_t *heur)
 {
     int i, opi, fact_id;
-    eff_t *pre, *pre_end;
-    precond_t *precond;
+    factarr_t *pre, *pre_end;
+    oparr_t *precond;
 
-    heur->precond = BOR_CALLOC_ARR(precond_t, valToIdSize(&heur->vid));
+    heur->precond = BOR_CALLOC_ARR(oparr_t, valToIdSize(&heur->vid));
 
     pre_end = heur->op_precond + heur->op_size;
     for (pre = heur->op_precond, opi = 0; pre < pre_end; ++pre, ++opi){

@@ -74,6 +74,9 @@ struct _plan_heur_relax_t {
     oparr_t *precond;      /*!< Operators for which the corresponding fact
                                 is precondition -- the size of this array
                                 equals to .fact_size */
+    oparr_t *eff;          /*!< Operators for which the corresponding fact
+                                is effect. This array is created only in
+                                case of lm-cut heuristic. */
     factarr_t *op_eff;     /*!< Unrolled effects of operators. Size of this
                                 array equals to .op_size */
     factarr_t *op_precond; /*!< Precondition facts of operators. Size of
@@ -133,9 +136,9 @@ static void opPrecondInit(plan_heur_relax_t *heur,
                           const plan_operator_t *ops, int ops_size);
 static void opPrecondFree(plan_heur_relax_t *heur);
 /** Initializes and frees .eff* structures */
-static void effInit(plan_heur_relax_t *heur,
-                    const plan_operator_t *ops, int ops_size);
-static void effFree(plan_heur_relax_t *heur);
+static void opEffInit(plan_heur_relax_t *heur,
+                      const plan_operator_t *ops, int ops_size);
+static void opEffFree(plan_heur_relax_t *heur);
 /** Removes fact id from specified position. */
 static void effRemoveId(factarr_t *eff, int pos);
 /** Remove same effects where its cost is higher */
@@ -234,9 +237,10 @@ static plan_heur_t *planHeurRelaxNew(int type,
     factInit(heur, goal);
     opInit(heur, op, op_size);
     opPrecondInit(heur, op, op_size);
-    effInit(heur, op, op_size);
+    opEffInit(heur, op, op_size);
     opSimplify(heur, op, succ_gen);
     precondInit(heur);
+    heur->eff = NULL;
     heur->relaxed_plan = BOR_ALLOC_ARR(int, op_size);
 
     if (!_succ_gen)
@@ -277,7 +281,7 @@ static void planHeurRelaxDel(plan_heur_t *_heur)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     precondFree(heur);
-    effFree(heur);
+    opEffFree(heur);
     opPrecondFree(heur);
     opFree(heur);
     factFree(heur);
@@ -529,8 +533,8 @@ static void opPrecondFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->op_precond);
 }
 
-static void effCondEffInit(plan_heur_relax_t *heur, factarr_t *eff,
-                           const plan_operator_cond_eff_t *cond_eff)
+static void opEffCondEffInit(plan_heur_relax_t *heur, factarr_t *eff,
+                             const plan_operator_cond_eff_t *cond_eff)
 {
     int j;
     plan_var_id_t var;
@@ -548,7 +552,7 @@ static void effCondEffInit(plan_heur_relax_t *heur, factarr_t *eff,
     }
 }
 
-static void effInit(plan_heur_relax_t *heur,
+static void opEffInit(plan_heur_relax_t *heur,
                     const plan_operator_t *ops, int ops_size)
 {
     int i, j, cond_eff_ins;
@@ -570,14 +574,14 @@ static void effInit(plan_heur_relax_t *heur,
         }
 
         for (j = 0; j < ops[i].cond_eff_size; ++j){
-            effCondEffInit(heur, heur->op_eff + cond_eff_ins,
-                           ops[i].cond_eff + j);
+            opEffCondEffInit(heur, heur->op_eff + cond_eff_ins,
+                             ops[i].cond_eff + j);
             ++cond_eff_ins;
         }
     }
 }
 
-static void effFree(plan_heur_relax_t *heur)
+static void opEffFree(plan_heur_relax_t *heur)
 {
     int i;
 

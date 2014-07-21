@@ -104,6 +104,8 @@ struct _plan_heur_relax_t {
     int *relaxed_plan;   /*!< Prepared array for relaxed plan */
 
     plan_prio_queue_t queue;
+
+    int lm_cut_goal_fact; /*!< ID of the artificial goal fact */
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
@@ -156,6 +158,9 @@ static void precondFree(plan_heur_relax_t *heur);
 /** Initializes and frees .eff structures */
 static void effInit(plan_heur_relax_t *heur);
 static void effFree(plan_heur_relax_t *heur);
+static void lmCutInit(plan_heur_relax_t *heur,
+                      const plan_part_state_t *goal);
+static void lmCutFree(plan_heur_relax_t *heur);
 
 
 /** Initializes main structure for computing relaxed solution. */
@@ -245,8 +250,11 @@ static plan_heur_t *planHeurRelaxNew(int type,
     opSimplify(heur, op, succ_gen);
     precondInit(heur);
     heur->eff = NULL;
-    if (type == TYPE_LM_CUT)
+    heur->lm_cut_goal_fact = -1;
+    if (type == TYPE_LM_CUT){
         effInit(heur);
+        lmCutInit(heur, goal);
+    }
     heur->relaxed_plan = BOR_ALLOC_ARR(int, op_size);
 
     if (!_succ_gen)
@@ -294,6 +302,7 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
 static void planHeurRelaxDel(plan_heur_t *_heur)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
+    lmCutFree(heur);
     effFree(heur);
     precondFree(heur);
     opEffFree(heur);
@@ -754,6 +763,63 @@ static void effFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->eff);
 }
 
+static void lmCutInit(plan_heur_relax_t *heur,
+                      const plan_part_state_t *goal)
+{
+    int i;
+    plan_var_id_t var;
+    plan_val_t val;
+    factarr_t *fact;
+    oparr_t *op;
+
+    heur->lm_cut_goal_fact = heur->fact_size;
+
+    // Reserve space for artifical fact and artifical operator
+    ++heur->op_size;
+    ++heur->fact_size;
+
+    // Set up artificial goal fact
+    heur->lm_cut_goal_fact = heur->fact_size - 1;
+
+    // The artificial operator has precondition the goal and the effect is
+    // the artificial fact.
+    heur->op_eff     = BOR_REALLOC_ARR(heur->op_eff, factarr_t, heur->op_size);
+    heur->op_precond = BOR_REALLOC_ARR(heur->op_precond,
+                                       factarr_t, heur->op_size);
+
+    // Set artificial operator preconditions
+    fact = heur->op_precond + heur->op_size - 1;
+    fact->size = goal->vals_size;
+    fact->fact = BOR_ALLOC_ARR(int, fact->size);
+    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
+        fact->fact[i] = valToId(&heur->vid, var, val);
+    }
+
+    // Set artificial operator's effect
+    fact = heur->op_eff + heur->op_size - 1;
+    fact->size = 1;
+    fact->fact = BOR_ALLOC_ARR(int, 1);
+    fact->fact[0] = heur->lm_cut_goal_fact;
+
+    // Set artifical goal precondition and effect operators
+    heur->precond = BOR_REALLOC_ARR(heur->precond, oparr_t, heur->fact_size);
+    heur->eff = BOR_REALLOC_ARR(heur->eff, oparr_t, heur->fact_size);
+
+    // The artificial fact is not precondition of any operator.
+    op = heur->precond + heur->lm_cut_goal_fact;
+    op->size = 0;
+    op->op = NULL;
+
+    // The artificial fact is the only effect of the artificial operator
+    op = heur->eff + heur->lm_cut_goal_fact;
+    op->size = 1;
+    op->op = BOR_ALLOC_ARR(int, 1);
+    op->op[0] = heur->op_size - 1;
+}
+
+static void lmCutFree(plan_heur_relax_t *heur)
+{
+}
 
 
 

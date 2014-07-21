@@ -153,6 +153,9 @@ static void opSimplify(plan_heur_relax_t *heur,
 /** Initializes and frees .precond structures */
 static void precondInit(plan_heur_relax_t *heur);
 static void precondFree(plan_heur_relax_t *heur);
+/** Initializes and frees .eff structures */
+static void effInit(plan_heur_relax_t *heur);
+static void effFree(plan_heur_relax_t *heur);
 
 
 /** Initializes main structure for computing relaxed solution. */
@@ -242,6 +245,8 @@ static plan_heur_t *planHeurRelaxNew(int type,
     opSimplify(heur, op, succ_gen);
     precondInit(heur);
     heur->eff = NULL;
+    if (type == TYPE_LM_CUT)
+        effInit(heur);
     heur->relaxed_plan = BOR_ALLOC_ARR(int, op_size);
 
     if (!_succ_gen)
@@ -289,6 +294,7 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
 static void planHeurRelaxDel(plan_heur_t *_heur)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
+    effFree(heur);
     precondFree(heur);
     opEffFree(heur);
     opPrecondFree(heur);
@@ -710,6 +716,42 @@ static void precondFree(plan_heur_relax_t *heur)
     for (i = 0; i < heur->fact_size; ++i)
         BOR_FREE(heur->precond[i].op);
     BOR_FREE(heur->precond);
+}
+
+static void effInit(plan_heur_relax_t *heur)
+{
+    int i, opi, fact_id;
+    factarr_t *eff, *eff_end;
+    oparr_t *effect;
+
+    heur->eff = BOR_CALLOC_ARR(oparr_t, heur->fact_size);
+
+    eff_end = heur->op_eff + heur->op_size;
+    for (eff = heur->op_eff, opi = 0; eff < eff_end; ++eff, ++opi){
+        if (heur->op_eff[opi].size == 0)
+            continue;
+
+        for (i = 0; i < eff->size; ++i){
+            fact_id = eff->fact[i];
+            effect = heur->eff + fact_id;
+
+            ++effect->size;
+            effect->op = BOR_REALLOC_ARR(effect->op, int, effect->size);
+            effect->op[effect->size - 1] = opi;
+        }
+    }
+}
+
+static void effFree(plan_heur_relax_t *heur)
+{
+    int i;
+
+    if (heur->eff == NULL)
+        return;
+
+    for (i = 0; i < heur->fact_size; ++i)
+        BOR_FREE(heur->eff[i].op);
+    BOR_FREE(heur->eff);
 }
 
 

@@ -105,7 +105,10 @@ struct _plan_heur_relax_t {
 
     plan_prio_queue_t queue;
 
-    int lm_cut_goal_fact; /*!< ID of the artificial goal fact */
+    int lm_cut_goal_fact;  /*!< ID of the artificial goal fact */
+    int *lm_cut_supporter; /*!< ID of fact supporter of the corresponding
+                                operator. The length of the array is
+                                .op_size. */
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
@@ -215,6 +218,8 @@ static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
 /** Main function that returns heuristic value. */
 static plan_cost_t planHeurRelax(plan_heur_t *heur, const plan_state_t *state,
                                  plan_heur_preferred_ops_t *preferred_ops);
+static plan_cost_t planHeurLMCut(plan_heur_t *heur, const plan_state_t *state,
+                                 plan_heur_preferred_ops_t *preferred_ops);
 /** Delete method */
 static void planHeurRelaxDel(plan_heur_t *_heur);
 
@@ -227,6 +232,12 @@ static plan_heur_t *planHeurRelaxNew(int type,
 {
     plan_heur_relax_t *heur;
     plan_succ_gen_t *succ_gen;
+    plan_cost_t (*heur_fn)(plan_heur_t *, const plan_state_t *,
+                           plan_heur_preferred_ops_t *);
+
+    heur_fn = planHeurRelax;
+    if (type == TYPE_LM_CUT)
+        heur_fn = planHeurLMCut;
 
     if (_succ_gen){
         succ_gen = (plan_succ_gen_t *)_succ_gen;
@@ -235,9 +246,7 @@ static plan_heur_t *planHeurRelaxNew(int type,
     }
 
     heur = BOR_ALLOC(plan_heur_relax_t);
-    planHeurInit(&heur->heur,
-                 planHeurRelaxDel,
-                 planHeurRelax);
+    planHeurInit(&heur->heur, planHeurRelaxDel, heur_fn);
     heur->type = type;
     heur->base_op = op;
 
@@ -251,6 +260,7 @@ static plan_heur_t *planHeurRelaxNew(int type,
     precondInit(heur);
     heur->eff = NULL;
     heur->lm_cut_goal_fact = -1;
+    heur->lm_cut_supporter = NULL;
     if (type == TYPE_LM_CUT){
         effInit(heur);
         lmCutInit(heur, goal);
@@ -337,6 +347,91 @@ static plan_cost_t planHeurRelax(plan_heur_t *_heur, const plan_state_t *state,
 }
 
 
+static void lmCutCtxInit(plan_heur_relax_t *heur)
+{
+    memcpy(heur->op, heur->op_init, sizeof(op_t) * heur->op_size);
+    memcpy(heur->fact, heur->fact_init, sizeof(fact_t) * heur->fact_size);
+    heur->lm_cut_supporter[heur->op_size - 1] = -2;
+    planPrioQueueInit(&heur->queue);
+}
+
+static void lmCutCtxFree(plan_heur_relax_t *heur)
+{
+    planPrioQueueFree(&heur->queue);
+}
+
+_bor_inline void lmCutEnqueue(plan_heur_relax_t *heur, int fact_id,
+                              int op_id, int value)
+{
+    fact_t *fact = heur->fact + fact_id;
+
+    if (fact->value == -1 || fact->value > value){
+        fact->value = value;
+        planPrioQueuePush(&heur->queue, fact->value, fact_id);
+    }
+}
+
+static void lmCutInitialExploration(plan_heur_relax_t *heur,
+                                    const plan_state_t *state)
+{
+    int i, j, id, len, cost;
+    int *precond;
+    plan_cost_t value;
+    fact_t *fact;
+    op_t *op;
+
+    // Insert initial state
+    len = planStateSize(state);
+    for (i = 0; i < len; ++i){
+        id = valToId(&heur->vid, i, planStateGet(state, i));
+        lmCutEnqueue(heur, id, -1, 0);
+    }
+
+    while (!planPrioQueueEmpty(&heur->queue)){
+        id = planPrioQueuePop(&heur->queue, &value);
+        fact = heur->fact + id;
+        if (fact->value != value)
+            continue;
+
+        len = heur->precond[id].size;
+        precond = heur->precond[id].op;
+        for (i = 0; i < len; ++i){
+            op = heur->op + precond[i];
+            --op->unsat;
+            if (op->unsat <= 0){
+                op->value = fact->value;
+                heur->lm_cut_supporter[precond[i]] = id;
+                cost = fact->value + op->cost;
+                for (j = 0; j < heur->op_eff[precond[i]].size; ++j){
+                    lmCutEnqueue(heur, heur->op_eff[precond[i]].fact[j],
+                                 precond[i], cost);
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < heur->op_size; ++i){
+        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut_supporter[i],
+                heur->op[i].value);
+    }
+}
+
+static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
+                                 plan_heur_preferred_ops_t *preferred_ops)
+{
+    plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
+    plan_cost_t h = PLAN_HEUR_DEAD_END;
+
+    if (preferred_ops)
+        preferred_ops->preferred_size = 0;
+
+    lmCutCtxInit(heur);
+    lmCutInitialExploration(heur, state);
+    lmCutCtxFree(heur);
+
+    return h;
+}
+
 
 static void valToIdInit(val_to_id_t *vid,
                         const plan_var_t *var, int var_size)
@@ -410,6 +505,8 @@ static void factInit(plan_heur_relax_t *heur,
 
     // prepare fact arrays
     heur->fact_size = valToIdSize(&heur->vid);
+    if (heur->type == TYPE_LM_CUT)
+        heur->fact_size += 1;
     heur->fact_init = BOR_ALLOC_ARR(fact_t, heur->fact_size);
     heur->fact      = BOR_ALLOC_ARR(fact_t, heur->fact_size);
 
@@ -452,6 +549,8 @@ static void opInit(plan_heur_relax_t *heur,
 
     // prepare operator arrays
     heur->op_size = ops_size + cond_eff_size;
+    if (heur->type == TYPE_LM_CUT)
+        heur->op_size += 1;
     heur->actual_op_size = ops_size;
     heur->op = BOR_ALLOC_ARR(op_t, heur->op_size);
     heur->op_init = BOR_ALLOC_ARR(op_t, heur->op_size);
@@ -478,6 +577,13 @@ static void opInit(plan_heur_relax_t *heur,
             heur->op_id[cond_eff_ins] = i;
             ++cond_eff_ins;
         }
+    }
+
+    if (heur->type == TYPE_LM_CUT){
+        heur->op_init[heur->op_size - 1].unsat = heur->goal.size;
+        heur->op_init[heur->op_size - 1].value = 0;
+        heur->op_init[heur->op_size - 1].cost  = 0;
+        heur->op_id[i] = -1;
     }
 }
 
@@ -546,6 +652,13 @@ static void opPrecondInit(plan_heur_relax_t *heur,
             ++cond_eff_ins;
         }
     }
+
+    if (heur->type == TYPE_LM_CUT){
+        precond = heur->op_precond + heur->op_size - 1;
+        precond->size = heur->goal.size;
+        precond->fact = BOR_ALLOC_ARR(int, precond->size);
+        memcpy(precond->fact, heur->goal.fact, sizeof(int) * precond->size);
+    }
 }
 
 static void opPrecondFree(plan_heur_relax_t *heur)
@@ -602,6 +715,13 @@ static void opEffInit(plan_heur_relax_t *heur,
                              ops[i].cond_eff + j);
             ++cond_eff_ins;
         }
+    }
+
+    if (heur->type == TYPE_LM_CUT){
+        eff = heur->op_eff + heur->op_size - 1;
+        eff->size = 1;
+        eff->fact = BOR_ALLOC_ARR(int, 1);
+        eff->fact[0] = heur->fact_size - 1;
     }
 }
 
@@ -667,6 +787,8 @@ static void opSimplify(plan_heur_relax_t *heur,
     ops = BOR_ALLOC_ARR(plan_operator_t *, heur->op_size);
 
     for (ref_i = 0; ref_i < heur->op_size; ++ref_i){
+        if (heur->op_id[ref_i] < 0)
+            continue;
         ref_op = op + heur->op_id[ref_i];
 
         // skip operators with no effects
@@ -700,7 +822,7 @@ static void precondInit(plan_heur_relax_t *heur)
     factarr_t *pre, *pre_end;
     oparr_t *precond;
 
-    heur->precond = BOR_CALLOC_ARR(oparr_t, valToIdSize(&heur->vid));
+    heur->precond = BOR_CALLOC_ARR(oparr_t, heur->fact_size);
 
     pre_end = heur->op_precond + heur->op_size;
     for (pre = heur->op_precond, opi = 0; pre < pre_end; ++pre, ++opi){
@@ -766,59 +888,14 @@ static void effFree(plan_heur_relax_t *heur)
 static void lmCutInit(plan_heur_relax_t *heur,
                       const plan_part_state_t *goal)
 {
-    int i;
-    plan_var_id_t var;
-    plan_val_t val;
-    factarr_t *fact;
-    oparr_t *op;
-
     heur->lm_cut_goal_fact = heur->fact_size;
-
-    // Reserve space for artifical fact and artifical operator
-    ++heur->op_size;
-    ++heur->fact_size;
-
-    // Set up artificial goal fact
-    heur->lm_cut_goal_fact = heur->fact_size - 1;
-
-    // The artificial operator has precondition the goal and the effect is
-    // the artificial fact.
-    heur->op_eff     = BOR_REALLOC_ARR(heur->op_eff, factarr_t, heur->op_size);
-    heur->op_precond = BOR_REALLOC_ARR(heur->op_precond,
-                                       factarr_t, heur->op_size);
-
-    // Set artificial operator preconditions
-    fact = heur->op_precond + heur->op_size - 1;
-    fact->size = goal->vals_size;
-    fact->fact = BOR_ALLOC_ARR(int, fact->size);
-    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
-        fact->fact[i] = valToId(&heur->vid, var, val);
-    }
-
-    // Set artificial operator's effect
-    fact = heur->op_eff + heur->op_size - 1;
-    fact->size = 1;
-    fact->fact = BOR_ALLOC_ARR(int, 1);
-    fact->fact[0] = heur->lm_cut_goal_fact;
-
-    // Set artifical goal precondition and effect operators
-    heur->precond = BOR_REALLOC_ARR(heur->precond, oparr_t, heur->fact_size);
-    heur->eff = BOR_REALLOC_ARR(heur->eff, oparr_t, heur->fact_size);
-
-    // The artificial fact is not precondition of any operator.
-    op = heur->precond + heur->lm_cut_goal_fact;
-    op->size = 0;
-    op->op = NULL;
-
-    // The artificial fact is the only effect of the artificial operator
-    op = heur->eff + heur->lm_cut_goal_fact;
-    op->size = 1;
-    op->op = BOR_ALLOC_ARR(int, 1);
-    op->op[0] = heur->op_size - 1;
+    heur->lm_cut_supporter = BOR_ALLOC_ARR(int, heur->op_size);
 }
 
 static void lmCutFree(plan_heur_relax_t *heur)
 {
+    if (heur->lm_cut_supporter)
+        BOR_FREE(heur->lm_cut_supporter);
 }
 
 

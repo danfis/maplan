@@ -248,3 +248,26 @@ TEST(testHeurRelaxFF)
     planSuccGenDel(succgen);
     planProblemDel(p);
 }
+
+TEST(testHeurRelaxLMCut)
+{
+    plan_problem_t *p;
+    plan_heur_t *heur;
+    plan_state_t *state;
+    plan_cost_t h;
+
+    p = planProblemFromFD("../data/ma-benchmarks/depot/pfile5.sas");
+    heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
+                            p->op, p->op_size, p->succ_gen);
+
+    state = planStateNew(p->state_pool);
+
+    planStatePoolGetState(p->state_pool, 0, state);
+    h = planHeur(heur, state, NULL);
+    fprintf(stderr, "h: %d\n", (int)h);
+
+
+    planStateDel(state);
+    planHeurDel(heur);
+    planProblemDel(p);
+}

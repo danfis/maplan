@@ -74,7 +74,6 @@ typedef struct _lm_cut_fact_t lm_cut_fact_t;
 
 struct _lm_cut_t {
     lm_cut_fact_t *fact;      /*!< Extension of fact structures */
-    lm_cut_fact_t *fact_init;
     int *op_supporter;        /*!< ID of supporter fact corresponding to
                                    the operator */
     int *op_supporter_init;
@@ -417,8 +416,7 @@ static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
 
     while (heur->fact[heur->lm_cut.goal_id].value > 0){
         // Initialize fact additional flags
-        memcpy(heur->lm_cut.fact, heur->lm_cut.fact_init,
-               sizeof(lm_cut_fact_t) * heur->fact_size);
+        bzero(heur->lm_cut.fact, sizeof(lm_cut_fact_t) * heur->fact_size);
 
         // Mark facts that are connected with the goal via zero-cost
         // operators
@@ -903,8 +901,7 @@ static void lmCutInit(plan_heur_relax_t *heur,
     if (heur->type != TYPE_LM_CUT)
         return;
 
-    heur->lm_cut.fact      = BOR_ALLOC_ARR(lm_cut_fact_t, heur->fact_size);
-    heur->lm_cut.fact_init = BOR_CALLOC_ARR(lm_cut_fact_t, heur->fact_size);
+    heur->lm_cut.fact = BOR_ALLOC_ARR(lm_cut_fact_t, heur->fact_size);
 
     heur->lm_cut.op_supporter      = BOR_ALLOC_ARR(int, heur->op_size);
     heur->lm_cut.op_supporter_init = BOR_ALLOC_ARR(int, heur->op_size);
@@ -922,7 +919,6 @@ static void lmCutFree(plan_heur_relax_t *heur)
         return;
 
     BOR_FREE(heur->lm_cut.fact);
-    BOR_FREE(heur->lm_cut.fact_init);
     BOR_FREE(heur->lm_cut.op_supporter);
     BOR_FREE(heur->lm_cut.op_supporter_init);
     BOR_FREE(heur->lm_cut.cut.op);

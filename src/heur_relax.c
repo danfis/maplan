@@ -62,6 +62,27 @@ struct _val_to_id_t {
 typedef struct _val_to_id_t val_to_id_t;
 
 
+/**
+ * Extension of facts for lm-cut algorithm.
+ */
+struct _lm_cut_fact_t {
+    unsigned goal_zone:1; /*!< True if the fact is connected with the goal
+                               via zero-cost operators */
+    unsigned in_queue:1;  /*!< True if the fact is already in queue */
+};
+typedef struct _lm_cut_fact_t lm_cut_fact_t;
+
+struct _lm_cut_t {
+    lm_cut_fact_t *fact;      /*!< Extension of fact structures */
+    lm_cut_fact_t *fact_init;
+    int *op_supporter;        /*!< ID of supporter fact corresponding to
+                                   the operator */
+    int *op_supporter_init;
+    oparr_t cut;              /*!< Array of cut operators */
+    int goal_id;              /*!< Fact ID of the artificial goal fact */
+};
+typedef struct _lm_cut_t lm_cut_t;
+
 struct _plan_heur_relax_t {
     plan_heur_t heur;
     int type;
@@ -105,11 +126,7 @@ struct _plan_heur_relax_t {
 
     plan_prio_queue_t queue;
 
-    int lm_cut_goal_fact;  /*!< ID of the artificial goal fact */
-    int *lm_cut_supporter; /*!< ID of fact supporter of the corresponding
-                                operator. The length of the array is
-                                .op_size. */
-    oparr_t lm_cut_cut;
+    lm_cut_t lm_cut; /*!< LM-Cut specific data */
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
@@ -347,7 +364,8 @@ static void lmCutCtxInit(plan_heur_relax_t *heur)
 {
     memcpy(heur->op, heur->op_init, sizeof(op_t) * heur->op_size);
     memcpy(heur->fact, heur->fact_init, sizeof(fact_t) * heur->fact_size);
-    heur->lm_cut_supporter[heur->op_size - 1] = -2;
+    memcpy(heur->lm_cut.op_supporter, heur->lm_cut.op_supporter_init,
+           sizeof(int) * heur->op_size);
     planPrioQueueInit(&heur->queue);
 }
 
@@ -395,7 +413,7 @@ static void lmCutInitialExploration(plan_heur_relax_t *heur,
             --op->unsat;
             if (op->unsat <= 0){
                 op->value = fact->value;
-                heur->lm_cut_supporter[precond[i]] = id;
+                heur->lm_cut.op_supporter[precond[i]] = id;
                 cost = fact->value + op->cost;
                 for (j = 0; j < heur->op_eff[precond[i]].size; ++j){
                     lmCutEnqueue(heur, heur->op_eff[precond[i]].fact[j],
@@ -406,24 +424,18 @@ static void lmCutInitialExploration(plan_heur_relax_t *heur,
     }
 
     for (i = 0; i < heur->op_size; ++i){
-        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut_supporter[i],
+        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut.op_supporter[i],
                 heur->op[i].value);
     }
 }
 
-#define LM_CUT_GOAL_ZONE(fact) ((fact)->reached_by_op == 1)
-#define LM_CUT_SET_GOAL_ZONE(fact) ((fact)->reached_by_op = 1)
-#define LM_CUT_BEFORE_GOAL_ZONE(fact) ((fact)->reached_by_op == 2)
-#define LM_CUT_SET_BEFORE_GOAL_ZONE(fact) ((fact)->reached_by_op = 2)
-
 static void lmCutMarkGoalPlateau(plan_heur_relax_t *heur, int fact_id)
 {
-    fact_t *fact = heur->fact + fact_id;
     int i, len, *op_id;
     op_t *op;
 
-    if (!LM_CUT_GOAL_ZONE(fact)){
-        LM_CUT_SET_GOAL_ZONE(fact);
+    if (!heur->lm_cut.fact[fact_id].goal_zone){
+        heur->lm_cut.fact[fact_id].goal_zone = 1;
         fprintf(stderr, "Mark[%d]\n", fact_id);
 
         len   = heur->eff[fact_id].size;
@@ -433,7 +445,7 @@ static void lmCutMarkGoalPlateau(plan_heur_relax_t *heur, int fact_id)
             // TODO: test for heur->lm_cut_supporter[] value + initialize
             // lm_cut_supporter in init...
             if (op->cost == 0 && op->unsat == 0)
-                lmCutMarkGoalPlateau(heur, heur->lm_cut_supporter[op_id[i]]);
+                lmCutMarkGoalPlateau(heur, heur->lm_cut.op_supporter[op_id[i]]);
         }
     }
 }
@@ -444,14 +456,12 @@ static void lmCutFindCutAddInit(plan_heur_relax_t *heur,
     plan_var_id_t var, len;
     plan_val_t val;
     int id;
-    fact_t *fact;
 
     len = planStateSize(state);
     for (var = 0; var < len; ++var){
         val = planStateGet(state, var);
         id = valToId(&heur->vid, var, val);
-        fact = heur->fact + id;
-        LM_CUT_SET_BEFORE_GOAL_ZONE(fact);
+        heur->lm_cut.fact[id].in_queue = 1;
         borLifoPush(queue, &id);
     }
 }
@@ -460,7 +470,6 @@ static void lmCutFindCut(plan_heur_relax_t *heur, const plan_state_t *state)
 {
     int i, j, fact_id, op_id;
     int reached_goal_zone;
-    fact_t *eff;
     bor_lifo_t queue;
 
     borLifoInit(&queue, sizeof(int));
@@ -472,23 +481,21 @@ static void lmCutFindCut(plan_heur_relax_t *heur, const plan_state_t *state)
 
         for (i = 0; i < heur->precond[fact_id].size; ++i){
             op_id = heur->precond[fact_id].op[i];
-            if (heur->lm_cut_supporter[op_id] == fact_id){
+            if (heur->lm_cut.op_supporter[op_id] == fact_id){
                 reached_goal_zone = 0;
                 for (j = 0; j < heur->op_eff[op_id].size; ++j){
-                    eff = heur->fact + heur->op_eff[op_id].fact[j];
-                    if (LM_CUT_GOAL_ZONE(eff)){
+                    if (heur->lm_cut.fact[heur->op_eff[op_id].fact[j]].goal_zone){
                         reached_goal_zone = 1;
-                        heur->lm_cut_cut.op[heur->lm_cut_cut.size] = op_id;
-                        ++heur->lm_cut_cut.size;
+                        heur->lm_cut.cut.op[heur->lm_cut.cut.size] = op_id;
+                        ++heur->lm_cut.cut.size;
                         break;
                     }
                 }
 
                 if (!reached_goal_zone){
                     for (j = 0; j < heur->op_eff[op_id].size; ++j){
-                        eff = heur->fact + heur->op_eff[op_id].fact[j];
-                        if (!LM_CUT_BEFORE_GOAL_ZONE(eff)){
-                            LM_CUT_SET_BEFORE_GOAL_ZONE(eff);
+                        if (!heur->lm_cut.fact[heur->op_eff[op_id].fact[j]].in_queue){
+                            heur->lm_cut.fact[heur->op_eff[op_id].fact[j]].in_queue = 1;
                             borLifoPush(&queue, &(heur->op_eff[op_id].fact[j]));
                         }
                     }
@@ -499,9 +506,9 @@ static void lmCutFindCut(plan_heur_relax_t *heur, const plan_state_t *state)
 
     borLifoFree(&queue);
 
-    for (i = 0; i < heur->lm_cut_cut.size; ++i){
+    for (i = 0; i < heur->lm_cut.cut.size; ++i){
         fprintf(stderr, "cut[%d]: %s\n", i,
-                heur->base_op[heur->lm_cut_cut.op[i]].name);
+                heur->base_op[heur->lm_cut.cut.op[i]].name);
     }
 }
 
@@ -516,12 +523,12 @@ static void lmCutUpdateSupporter(plan_heur_relax_t *heur, int op_id)
         return;
 
     for (i = 0; i < len; ++i){
-        if (heur->fact[precond[i]].value > heur->fact[heur->lm_cut_supporter[op_id]].value){
-            heur->lm_cut_supporter[op_id] = precond[i];
+        if (heur->fact[precond[i]].value > heur->fact[heur->lm_cut.op_supporter[op_id]].value){
+            heur->lm_cut.op_supporter[op_id] = precond[i];
         }
     }
 
-    heur->op[op_id].value = heur->fact[heur->lm_cut_supporter[op_id]].value;
+    heur->op[op_id].value = heur->fact[heur->lm_cut.op_supporter[op_id]].value;
 }
 
 static void lmCutIncrementalExploration(plan_heur_relax_t *heur)
@@ -530,8 +537,8 @@ static void lmCutIncrementalExploration(plan_heur_relax_t *heur)
     fact_t *fact;
     op_t *op;
 
-    for (i = 0; i < heur->lm_cut_cut.size; ++i){
-        op_id = heur->lm_cut_cut.op[i];
+    for (i = 0; i < heur->lm_cut.cut.size; ++i){
+        op_id = heur->lm_cut.cut.op[i];
 
         cost = heur->op[op_id].value + heur->op[op_id].cost;
         for (j = 0; j < heur->op_eff[op_id].size; ++j){
@@ -549,7 +556,7 @@ static void lmCutIncrementalExploration(plan_heur_relax_t *heur)
         precond = heur->precond[id].op;
         for (i = 0; i < len; ++i){
             op = heur->op + precond[i];
-            if (heur->lm_cut_supporter[precond[i]] == id){
+            if (heur->lm_cut.op_supporter[precond[i]] == id){
                 int old_cost = op->value;
                 fprintf(stderr, "Cost: %d %d %d\n", old_cost, fact->value, id);
                 if (old_cost > fact->value){
@@ -570,7 +577,7 @@ static void lmCutIncrementalExploration(plan_heur_relax_t *heur)
 
     fprintf(stderr, "INC\n");
     for (i = 0; i < heur->op_size; ++i){
-        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut_supporter[i],
+        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut.op_supporter[i],
                 heur->op[i].value);
     }
 }
@@ -589,36 +596,35 @@ static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
     lmCutCtxInit(heur);
     lmCutInitialExploration(heur, state);
 
-    if (heur->fact[heur->lm_cut_goal_fact].value >= 0)
+    if (heur->fact[heur->lm_cut.goal_id].value >= 0)
         h = 0;
 
-    while (heur->fact[heur->lm_cut_goal_fact].value > 0){
-        lmCutMarkGoalPlateau(heur, heur->lm_cut_goal_fact);
+    while (heur->fact[heur->lm_cut.goal_id].value > 0){
+        memcpy(heur->lm_cut.fact, heur->lm_cut.fact_init,
+               sizeof(lm_cut_fact_t) * heur->fact_size);
+        lmCutMarkGoalPlateau(heur, heur->lm_cut.goal_id);
         lmCutFindCut(heur, state);
 
         cut_cost = INT_MAX;
-        for (i = 0; i < heur->lm_cut_cut.size; ++i){
+        for (i = 0; i < heur->lm_cut.cut.size; ++i){
             cut_cost = BOR_MIN(cut_cost,
-                    heur->op[heur->lm_cut_cut.op[i]].cost);
+                    heur->op[heur->lm_cut.cut.op[i]].cost);
         }
-        for (i = 0; i < heur->lm_cut_cut.size; ++i){
-            heur->op[heur->lm_cut_cut.op[i]].cost -= cut_cost;
+        for (i = 0; i < heur->lm_cut.cut.size; ++i){
+            heur->op[heur->lm_cut.cut.op[i]].cost -= cut_cost;
         }
         h += cut_cost;
 
     fprintf(stderr, "TOT\n");
     for (i = 0; i < heur->op_size; ++i){
-        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut_supporter[i],
+        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut.op_supporter[i],
                 heur->op[i].value);
     }
 
         lmCutIncrementalExploration(heur);
 
         // clear:
-        heur->lm_cut_cut.size = 0;
-        for (i = 0; i < heur->fact_size; ++i){
-            heur->fact[i].reached_by_op = -1;
-        }
+        heur->lm_cut.cut.size = 0;
     }
 
     lmCutCtxFree(heur);
@@ -1081,24 +1087,34 @@ static void effFree(plan_heur_relax_t *heur)
 static void lmCutInit(plan_heur_relax_t *heur,
                       const plan_part_state_t *goal)
 {
-    if (heur->type != TYPE_LM_CUT){
-        heur->lm_cut_goal_fact = -1;
-        heur->lm_cut_supporter = NULL;
-        return;
-    }
+    int i;
 
-    heur->lm_cut_goal_fact = heur->fact_size - 1;
-    heur->lm_cut_supporter = BOR_ALLOC_ARR(int, heur->op_size);
-    heur->lm_cut_cut.size = 0;
-    heur->lm_cut_cut.op = BOR_ALLOC_ARR(int, heur->op_size);
+    if (heur->type != TYPE_LM_CUT)
+        return;
+
+    heur->lm_cut.fact      = BOR_ALLOC_ARR(lm_cut_fact_t, heur->fact_size);
+    heur->lm_cut.fact_init = BOR_CALLOC_ARR(lm_cut_fact_t, heur->fact_size);
+
+    heur->lm_cut.op_supporter      = BOR_ALLOC_ARR(int, heur->op_size);
+    heur->lm_cut.op_supporter_init = BOR_ALLOC_ARR(int, heur->op_size);
+    for (i = 0; i < heur->op_size; ++i)
+        heur->lm_cut.op_supporter_init[i] = -1;
+
+    heur->lm_cut.cut.op = BOR_ALLOC_ARR(int, heur->op_size);
+    heur->lm_cut.cut.size = 0;
+    heur->lm_cut.goal_id = heur->fact_size - 1;
 }
 
 static void lmCutFree(plan_heur_relax_t *heur)
 {
-    if (heur->lm_cut_supporter){
-        BOR_FREE(heur->lm_cut_supporter);
-        BOR_FREE(heur->lm_cut_cut.op);
-    }
+    if (heur->type != TYPE_LM_CUT)
+        return;
+
+    BOR_FREE(heur->lm_cut.fact);
+    BOR_FREE(heur->lm_cut.fact_init);
+    BOR_FREE(heur->lm_cut.op_supporter);
+    BOR_FREE(heur->lm_cut.op_supporter_init);
+    BOR_FREE(heur->lm_cut.cut.op);
 }
 
 

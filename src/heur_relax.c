@@ -361,8 +361,7 @@ static void lmCutCtxFree(plan_heur_relax_t *heur)
     planPrioQueueFree(&heur->queue);
 }
 
-_bor_inline void lmCutEnqueue(plan_heur_relax_t *heur, int fact_id,
-                              int op_id, int value)
+_bor_inline void lmCutEnqueue(plan_heur_relax_t *heur, int fact_id, int value)
 {
     fact_t *fact = heur->fact + fact_id;
 
@@ -385,7 +384,7 @@ static void lmCutInitialExploration(plan_heur_relax_t *heur,
     len = planStateSize(state);
     for (i = 0; i < len; ++i){
         id = valToId(&heur->vid, i, planStateGet(state, i));
-        lmCutEnqueue(heur, id, -1, 0);
+        lmCutEnqueue(heur, id, 0);
     }
 
     while (!planPrioQueueEmpty(&heur->queue)){
@@ -405,7 +404,7 @@ static void lmCutInitialExploration(plan_heur_relax_t *heur,
                 cost = fact->value + op->cost;
                 for (j = 0; j < heur->op_eff[precond[i]].size; ++j){
                     lmCutEnqueue(heur, heur->op_eff[precond[i]].fact[j],
-                                 precond[i], cost);
+                                 cost);
                 }
             }
         }
@@ -511,6 +510,76 @@ static void lmCutFindCut(plan_heur_relax_t *heur, const plan_state_t *state)
     }
 }
 
+static void lmCutUpdateSupporter(plan_heur_relax_t *heur, int op_id)
+{
+    int i, len, *precond;
+
+    len     = heur->op_precond[op_id].size;
+    precond = heur->op_precond[op_id].fact;
+
+    if (len == 0)
+        return;
+
+    for (i = 0; i < len; ++i){
+        if (heur->fact[precond[i]].value > heur->fact[heur->lm_cut_supporter[op_id]].value){
+            heur->lm_cut_supporter[op_id] = precond[i];
+        }
+    }
+
+    heur->op[op_id].value = heur->fact[heur->lm_cut_supporter[op_id]].value;
+}
+
+static void lmCutIncrementalExploration(plan_heur_relax_t *heur)
+{
+    int i, j, op_id, cost, id, value, len, *precond;
+    fact_t *fact;
+    op_t *op;
+
+    for (i = 0; i < heur->lm_cut_cut.size; ++i){
+        op_id = heur->lm_cut_cut.op[i];
+
+        cost = heur->op[op_id].value + heur->op[op_id].cost;
+        for (j = 0; j < heur->op_eff[op_id].size; ++j){
+            lmCutEnqueue(heur, heur->op_eff[op_id].fact[j], cost);
+        }
+    }
+
+    while (!planPrioQueueEmpty(&heur->queue)){
+        id = planPrioQueuePop(&heur->queue, &value);
+        fact = heur->fact + id;
+        if (fact->value != value)
+            continue;
+
+        len = heur->precond[id].size;
+        precond = heur->precond[id].op;
+        for (i = 0; i < len; ++i){
+            op = heur->op + precond[i];
+            if (heur->lm_cut_supporter[precond[i]] == id){
+                int old_cost = op->value;
+                fprintf(stderr, "Cost: %d %d %d\n", old_cost, fact->value, id);
+                if (old_cost > fact->value){
+                    lmCutUpdateSupporter(heur, precond[i]);
+                    int new_cost = op->value;
+                    fprintf(stderr, "NewCost: %d\n", new_cost);
+                    if (new_cost != old_cost){
+                        cost = new_cost + op->cost;
+                        for (j = 0; j < heur->op_eff[precond[i]].size; ++j){
+                            lmCutEnqueue(heur,
+                                    heur->op_eff[precond[i]].fact[j], cost);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fprintf(stderr, "INC\n");
+    for (i = 0; i < heur->op_size; ++i){
+        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut_supporter[i],
+                heur->op[i].value);
+    }
+}
+
 static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
                                  plan_heur_preferred_ops_t *preferred_ops)
 {
@@ -542,7 +611,19 @@ static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
         }
         h += cut_cost;
 
-        break;
+    fprintf(stderr, "TOT\n");
+    for (i = 0; i < heur->op_size; ++i){
+        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut_supporter[i],
+                heur->op[i].value);
+    }
+
+        lmCutIncrementalExploration(heur);
+
+        // clear:
+        heur->lm_cut_cut.size = 0;
+        for (i = 0; i < heur->fact_size; ++i){
+            heur->fact[i].reached_by_op = -1;
+        }
     }
 
     lmCutCtxFree(heur);

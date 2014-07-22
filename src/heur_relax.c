@@ -1015,73 +1015,67 @@ static void opSimplify(plan_heur_relax_t *heur,
     BOR_FREE(ops);
 }
 
-static void precondInit(plan_heur_relax_t *heur)
+static void crossReferenceInit(oparr_t **dst, int fact_size,
+                               factarr_t *src, int op_size,
+                               factarr_t *test)
 {
     int i, opi, fact_id;
-    factarr_t *pre, *pre_end;
-    oparr_t *precond;
+    oparr_t *fact, *update;
+    factarr_t *cur, *end;
 
-    heur->precond = BOR_CALLOC_ARR(oparr_t, heur->fact_size);
+    *dst = BOR_CALLOC_ARR(oparr_t, fact_size);
+    fact = *dst;
 
-    pre_end = heur->op_precond + heur->op_size;
-    for (pre = heur->op_precond, opi = 0; pre < pre_end; ++pre, ++opi){
-        if (heur->op_eff[opi].size == 0)
+    cur = src;
+    end = src + op_size;
+    for (cur = src, opi = 0; cur < end; ++cur, ++opi){
+        if (test && test[opi].size == 0)
             continue;
 
-        for (i = 0; i < pre->size; ++i){
-            fact_id = pre->fact[i];
-            precond = heur->precond + fact_id;
+        for (i = 0; i < cur->size; ++i){
+            fact_id = cur->fact[i];
+            update  = fact + fact_id;
 
-            ++precond->size;
-            precond->op = BOR_REALLOC_ARR(precond->op, int, precond->size);
-            precond->op[precond->size - 1] = opi;
+            ++update->size;
+            update->op = BOR_REALLOC_ARR(update->op, int, update->size);
+            update->op[update->size - 1] = opi;
         }
     }
+}
+
+static void crossReferenceFree(oparr_t *arr, int size)
+{
+    int i;
+
+    if (arr == NULL)
+        return;
+
+    for (i = 0; i < size; ++i)
+        BOR_FREE(arr[i].op);
+    BOR_FREE(arr);
+}
+
+static void precondInit(plan_heur_relax_t *heur)
+{
+    crossReferenceInit(&heur->precond, heur->fact_size,
+                       heur->op_precond, heur->op_size,
+                       heur->op_eff);
 }
 
 static void precondFree(plan_heur_relax_t *heur)
 {
-    int i;
-
-    for (i = 0; i < heur->fact_size; ++i)
-        BOR_FREE(heur->precond[i].op);
-    BOR_FREE(heur->precond);
+    crossReferenceFree(heur->precond, heur->fact_size);
 }
 
 static void effInit(plan_heur_relax_t *heur)
 {
-    int i, opi, fact_id;
-    factarr_t *eff, *eff_end;
-    oparr_t *effect;
-
-    heur->eff = BOR_CALLOC_ARR(oparr_t, heur->fact_size);
-
-    eff_end = heur->op_eff + heur->op_size;
-    for (eff = heur->op_eff, opi = 0; eff < eff_end; ++eff, ++opi){
-        if (heur->op_eff[opi].size == 0)
-            continue;
-
-        for (i = 0; i < eff->size; ++i){
-            fact_id = eff->fact[i];
-            effect = heur->eff + fact_id;
-
-            ++effect->size;
-            effect->op = BOR_REALLOC_ARR(effect->op, int, effect->size);
-            effect->op[effect->size - 1] = opi;
-        }
-    }
+    crossReferenceInit(&heur->eff, heur->fact_size,
+                       heur->op_eff, heur->op_size, NULL);
 }
 
 static void effFree(plan_heur_relax_t *heur)
 {
-    int i;
-
-    if (heur->eff == NULL)
-        return;
-
-    for (i = 0; i < heur->fact_size; ++i)
-        BOR_FREE(heur->eff[i].op);
-    BOR_FREE(heur->eff);
+    crossReferenceFree(heur->eff, heur->fact_size);
 }
 
 static void lmCutInit(plan_heur_relax_t *heur,

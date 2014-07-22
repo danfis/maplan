@@ -66,9 +66,9 @@ typedef struct _val_to_id_t val_to_id_t;
  * Extension of facts for lm-cut algorithm.
  */
 struct _lm_cut_fact_t {
-    unsigned goal_zone:1; /*!< True if the fact is connected with the goal
-                               via zero-cost operators */
-    unsigned in_queue:1;  /*!< True if the fact is already in queue */
+    unsigned goal_zone; /*!< True if the fact is connected with the goal
+                             via zero-cost operators */
+    unsigned in_queue;  /*!< True if the fact is already in queue */
 };
 typedef struct _lm_cut_fact_t lm_cut_fact_t;
 

@@ -384,10 +384,20 @@ _bor_inline void lmCutEnqueue(plan_heur_relax_t *heur, int fact_id, int value)
     }
 }
 
+_bor_inline void lmCutEnqueueEffects(plan_heur_relax_t *heur, int op_id,
+                                     int value)
+{
+    int i, len, *eff;
+    len = heur->op_eff[op_id].size;
+    eff = heur->op_eff[op_id].fact;
+    for (i = 0; i < len; ++i)
+        lmCutEnqueue(heur, eff[i], value);
+}
+
 static void lmCutInitialExploration(plan_heur_relax_t *heur,
                                     const plan_state_t *state)
 {
-    int i, j, id, len, cost;
+    int i, id, len, cost;
     int *precond;
     plan_cost_t value;
     fact_t *fact;
@@ -415,10 +425,7 @@ static void lmCutInitialExploration(plan_heur_relax_t *heur,
                 op->value = fact->value;
                 heur->lm_cut.op_supporter[precond[i]] = id;
                 cost = fact->value + op->cost;
-                for (j = 0; j < heur->op_eff[precond[i]].size; ++j){
-                    lmCutEnqueue(heur, heur->op_eff[precond[i]].fact[j],
-                                 cost);
-                }
+                lmCutEnqueueEffects(heur, precond[i], cost);
             }
         }
     }

@@ -1,12 +1,13 @@
 #include <boruvka/alloc.h>
 #include <boruvka/list.h>
-#include <boruvka/bucketheap.h>
+#include <boruvka/lifo.h>
 #include "plan/heur.h"
 #include "plan/prioqueue.h"
 
-#define TYPE_ADD 0
-#define TYPE_MAX 1
-#define TYPE_FF  2
+#define TYPE_ADD    0
+#define TYPE_MAX    1
+#define TYPE_FF     2
+#define TYPE_LM_CUT 3
 
 /**
  * Structure representing a single fact.
@@ -34,21 +35,21 @@ typedef struct _op_t op_t;
 /**
  * Preconditions of a fact.
  */
-struct _precond_t {
+struct _oparr_t {
     int *op;  /*!< List of operators' IDs for which the fact is
                    precondition */
     int size; /*!< Size of op[] array */
 };
-typedef struct _precond_t precond_t;
+typedef struct _oparr_t oparr_t;
 
 /**
  * Effects of an operator.
  */
-struct _eff_t {
+struct _factarr_t {
     int *fact; /*!< List of facts that are effects of the operator */
     int size;  /*!< Size of fact[] array */
 };
-typedef struct _eff_t eff_t;
+typedef struct _factarr_t factarr_t;
 
 /**
  * Structure for translation of variable's value to fact id.
@@ -61,6 +62,26 @@ struct _val_to_id_t {
 typedef struct _val_to_id_t val_to_id_t;
 
 
+/**
+ * Extension of facts for lm-cut algorithm.
+ */
+struct _lm_cut_fact_t {
+    unsigned goal_zone; /*!< True if the fact is connected with the goal
+                             via zero-cost operators */
+    unsigned in_queue;  /*!< True if the fact is already in queue */
+};
+typedef struct _lm_cut_fact_t lm_cut_fact_t;
+
+struct _lm_cut_t {
+    lm_cut_fact_t *fact;      /*!< Extension of fact structures */
+    int *op_supporter;        /*!< ID of supporter fact corresponding to
+                                   the operator */
+    int *op_supporter_init;
+    oparr_t cut;              /*!< Array of cut operators */
+    int goal_id;              /*!< Fact ID of the artificial goal fact */
+};
+typedef struct _lm_cut_t lm_cut_t;
+
 struct _plan_heur_relax_t {
     plan_heur_t heur;
     int type;
@@ -71,13 +92,16 @@ struct _plan_heur_relax_t {
                                          value of its pointer. */
     val_to_id_t vid;
 
-    precond_t *precond; /*!< Operators for which the corresponding fact is
-                             precondition -- the size of this array equals
-                             to .fact_size */
-    eff_t *eff;         /*!< Unrolled effects of operators. Size of this
-                             array equals to .op_size */
-    eff_t *op_precond;  /*!< Precondition facts of operators. Size of this
-                             array is .op_size */
+    oparr_t *precond;      /*!< Operators for which the corresponding fact
+                                is precondition -- the size of this array
+                                equals to .fact_size */
+    oparr_t *eff;          /*!< Operators for which the corresponding fact
+                                is effect. This array is created only in
+                                case of lm-cut heuristic. */
+    factarr_t *op_eff;     /*!< Unrolled effects of operators. Size of this
+                                array equals to .op_size */
+    factarr_t *op_precond; /*!< Precondition facts of operators. Size of
+                                this array is .op_size */
 
     fact_t *fact_init;  /*!< Initialization values for facts */
     fact_t *fact;       /*!< List of facts */
@@ -95,11 +119,13 @@ struct _plan_heur_relax_t {
 
     int goal_unsat_init; /*!< Number of unsatisfied goal variables */
     int goal_unsat;      /*!< Counter of unsatisfied goals */
-    eff_t goal;          /*!< Copied goal in terms of fact ID */
+    factarr_t goal;          /*!< Copied goal in terms of fact ID */
 
     int *relaxed_plan;   /*!< Prepared array for relaxed plan */
 
     plan_prio_queue_t queue;
+
+    lm_cut_t lm_cut; /*!< LM-Cut specific data */
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
@@ -133,13 +159,13 @@ static void opPrecondInit(plan_heur_relax_t *heur,
                           const plan_operator_t *ops, int ops_size);
 static void opPrecondFree(plan_heur_relax_t *heur);
 /** Initializes and frees .eff* structures */
-static void effInit(plan_heur_relax_t *heur,
-                    const plan_operator_t *ops, int ops_size);
-static void effFree(plan_heur_relax_t *heur);
+static void opEffInit(plan_heur_relax_t *heur,
+                      const plan_operator_t *ops, int ops_size);
+static void opEffFree(plan_heur_relax_t *heur);
 /** Removes fact id from specified position. */
-static void effRemoveId(eff_t *eff, int pos);
+static void effRemoveId(factarr_t *eff, int pos);
 /** Remove same effects where its cost is higher */
-static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
+static void opSimplifyEffects(factarr_t *ref_eff, factarr_t *op_eff,
                               plan_cost_t ref_cost, plan_cost_t op_cost);
 /** Simplifies internal representation of operators so that there are no
  *  two operators applicable in the same time with the same effect. */
@@ -149,6 +175,12 @@ static void opSimplify(plan_heur_relax_t *heur,
 /** Initializes and frees .precond structures */
 static void precondInit(plan_heur_relax_t *heur);
 static void precondFree(plan_heur_relax_t *heur);
+/** Initializes and frees .eff structures */
+static void effInit(plan_heur_relax_t *heur);
+static void effFree(plan_heur_relax_t *heur);
+static void lmCutInit(plan_heur_relax_t *heur,
+                      const plan_part_state_t *goal);
+static void lmCutFree(plan_heur_relax_t *heur);
 
 
 /** Initializes main structure for computing relaxed solution. */
@@ -171,6 +203,43 @@ static plan_cost_t ctxHeur(plan_heur_relax_t *heur,
 /** Sets heur->relaxed_plan[i] to 1 if i'th operator is in relaxed plan and
  *  to 0 if it is not. */
 static void markRelaxedPlan(plan_heur_relax_t *heur);
+
+/** Initialize context for lm-cut heuristic */
+static void lmCutCtxInit(plan_heur_relax_t *heur);
+/** Free context for lm-cut heuristic */
+static void lmCutCtxFree(plan_heur_relax_t *heur);
+/** Enqueue a signle fact into priority queue */
+_bor_inline void lmCutEnqueue(plan_heur_relax_t *heur, int fact_id, int value);
+/** Enqueue all operator's effects into priority queue with the specified
+ *  value. */
+_bor_inline void lmCutEnqueueEffects(plan_heur_relax_t *heur, int op_id,
+                                     int value);
+/** First relaxed exploration from the given state to the goal */
+static void lmCutInitialExploration(plan_heur_relax_t *heur,
+                                    const plan_state_t *state);
+/** Marks goal-zone, i.e., facts that are connected with the goal with
+ *  zero-cost operators */
+static void lmCutMarkGoalZone(plan_heur_relax_t *heur, int fact_id);
+/** Adds initial state facts into queue */
+_bor_inline void lmCutFindCutAddInit(plan_heur_relax_t *heur,
+                                     const plan_state_t *state,
+                                     bor_lifo_t *queue);
+/** Determines if the specified operator has effect in goal-zone. If so,
+ *  the operator is appended to the heur->lm_cut.cut and returns true.
+ *  Otherwise false is returned. */
+_bor_inline int lmCutFindCutProcessOp(plan_heur_relax_t *heur, int op_id);
+/** Enqueues all effects of operator (if not already in queue). */
+_bor_inline void lmCutFindCutEnqueueEffects(plan_heur_relax_t *heur,
+                                            int op_id,
+                                            bor_lifo_t *queue);
+/** Finds cut operators -- fills heur->lm_cut.cut structure */
+static void lmCutFindCut(plan_heur_relax_t *heur, const plan_state_t *state);
+/** Updates operator's supporter fact */
+static void lmCutUpdateSupporter(plan_heur_relax_t *heur, int op_id);
+/** Incrementally explores relaxed plan */
+static void lmCutIncrementalExploration(plan_heur_relax_t *heur);
+_bor_inline plan_cost_t lmCutUpdateOpCost(const oparr_t *cut, op_t *op);
+
 
 struct _pref_ops_selector_t {
     plan_heur_preferred_ops_t *pref_ops; /*!< In/Out data structure */
@@ -203,6 +272,8 @@ static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
 /** Main function that returns heuristic value. */
 static plan_cost_t planHeurRelax(plan_heur_t *heur, const plan_state_t *state,
                                  plan_heur_preferred_ops_t *preferred_ops);
+static plan_cost_t planHeurLMCut(plan_heur_t *heur, const plan_state_t *state,
+                                 plan_heur_preferred_ops_t *preferred_ops);
 /** Delete method */
 static void planHeurRelaxDel(plan_heur_t *_heur);
 
@@ -215,6 +286,12 @@ static plan_heur_t *planHeurRelaxNew(int type,
 {
     plan_heur_relax_t *heur;
     plan_succ_gen_t *succ_gen;
+    plan_cost_t (*heur_fn)(plan_heur_t *, const plan_state_t *,
+                           plan_heur_preferred_ops_t *);
+
+    heur_fn = planHeurRelax;
+    if (type == TYPE_LM_CUT)
+        heur_fn = planHeurLMCut;
 
     if (_succ_gen){
         succ_gen = (plan_succ_gen_t *)_succ_gen;
@@ -223,9 +300,7 @@ static plan_heur_t *planHeurRelaxNew(int type,
     }
 
     heur = BOR_ALLOC(plan_heur_relax_t);
-    planHeurInit(&heur->heur,
-                 planHeurRelaxDel,
-                 planHeurRelax);
+    planHeurInit(&heur->heur, planHeurRelaxDel, heur_fn);
     heur->type = type;
     heur->base_op = op;
 
@@ -234,9 +309,11 @@ static plan_heur_t *planHeurRelaxNew(int type,
     factInit(heur, goal);
     opInit(heur, op, op_size);
     opPrecondInit(heur, op, op_size);
-    effInit(heur, op, op_size);
+    opEffInit(heur, op, op_size);
     opSimplify(heur, op, succ_gen);
     precondInit(heur);
+    effInit(heur);
+    lmCutInit(heur, goal);
     heur->relaxed_plan = BOR_ALLOC_ARR(int, op_size);
 
     if (!_succ_gen)
@@ -272,12 +349,22 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
                             op, op_size, succ_gen);
 }
 
+plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
+                              const plan_part_state_t *goal,
+                              const plan_operator_t *op, int op_size,
+                              const plan_succ_gen_t *succ_gen)
+{
+    return planHeurRelaxNew(TYPE_LM_CUT, var, var_size, goal,
+                            op, op_size, succ_gen);
+}
 
 static void planHeurRelaxDel(plan_heur_t *_heur)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
-    precondFree(heur);
+    lmCutFree(heur);
     effFree(heur);
+    precondFree(heur);
+    opEffFree(heur);
     opPrecondFree(heur);
     opFree(heur);
     factFree(heur);
@@ -304,6 +391,51 @@ static plan_cost_t planHeurRelax(plan_heur_t *_heur, const plan_state_t *state,
         h = ctxHeur(heur, preferred_ops);
     }
     ctxFree(heur);
+
+    return h;
+}
+
+static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
+                                 plan_heur_preferred_ops_t *preferred_ops)
+{
+    plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
+    plan_cost_t h = PLAN_HEUR_DEAD_END;
+
+    if (preferred_ops)
+        preferred_ops->preferred_size = 0;
+
+    // Initialize context for the current run
+    lmCutCtxInit(heur);
+
+    // Perform initial exploration of relaxed plan state
+    lmCutInitialExploration(heur, state);
+
+    // Check whether the goal was reached, if so prepare output variable
+    if (heur->fact[heur->lm_cut.goal_id].value >= 0)
+        h = 0;
+
+    while (heur->fact[heur->lm_cut.goal_id].value > 0){
+        // Initialize fact additional flags
+        bzero(heur->lm_cut.fact, sizeof(lm_cut_fact_t) * heur->fact_size);
+
+        // Mark facts that are connected with the goal via zero-cost
+        // operators
+        lmCutMarkGoalZone(heur, heur->lm_cut.goal_id);
+
+        // Find cut operators, i.e., operators connected with effects in
+        // goal-zone
+        lmCutFindCut(heur, state);
+
+        // Determine the minimal cost from all cut-operators. Substract
+        // this cost from their cost and add it to the final heuristic
+        // value.
+        h += lmCutUpdateOpCost(&heur->lm_cut.cut, heur->op);
+
+        // Performat incremental exploration of relaxed plan state.
+        lmCutIncrementalExploration(heur);
+    }
+
+    lmCutCtxFree(heur);
 
     return h;
 }
@@ -382,6 +514,8 @@ static void factInit(plan_heur_relax_t *heur,
 
     // prepare fact arrays
     heur->fact_size = valToIdSize(&heur->vid);
+    if (heur->type == TYPE_LM_CUT)
+        heur->fact_size += 1;
     heur->fact_init = BOR_ALLOC_ARR(fact_t, heur->fact_size);
     heur->fact      = BOR_ALLOC_ARR(fact_t, heur->fact_size);
 
@@ -424,6 +558,8 @@ static void opInit(plan_heur_relax_t *heur,
 
     // prepare operator arrays
     heur->op_size = ops_size + cond_eff_size;
+    if (heur->type == TYPE_LM_CUT)
+        heur->op_size += 1;
     heur->actual_op_size = ops_size;
     heur->op = BOR_ALLOC_ARR(op_t, heur->op_size);
     heur->op_init = BOR_ALLOC_ARR(op_t, heur->op_size);
@@ -451,6 +587,13 @@ static void opInit(plan_heur_relax_t *heur,
             ++cond_eff_ins;
         }
     }
+
+    if (heur->type == TYPE_LM_CUT){
+        heur->op_init[heur->op_size - 1].unsat = heur->goal.size;
+        heur->op_init[heur->op_size - 1].value = 0;
+        heur->op_init[heur->op_size - 1].cost  = 0;
+        heur->op_id[i] = -1;
+    }
 }
 
 static void opFree(plan_heur_relax_t *heur)
@@ -460,7 +603,7 @@ static void opFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->op_id);
 }
 
-static void opPrecondCondEffInit(plan_heur_relax_t *heur, eff_t *precond,
+static void opPrecondCondEffInit(plan_heur_relax_t *heur, factarr_t *precond,
                                  const plan_operator_t *op,
                                  const plan_operator_cond_eff_t *cond_eff)
 {
@@ -496,9 +639,9 @@ static void opPrecondInit(plan_heur_relax_t *heur,
     int i, j, id, cond_eff_ins;
     plan_var_id_t var;
     plan_val_t val;
-    eff_t *precond;
+    factarr_t *precond;
 
-    precond = heur->op_precond = BOR_ALLOC_ARR(eff_t, heur->op_size);
+    precond = heur->op_precond = BOR_ALLOC_ARR(factarr_t, heur->op_size);
 
     // The conditional effects are after "ordinary" operators
     cond_eff_ins = ops_size;
@@ -518,6 +661,13 @@ static void opPrecondInit(plan_heur_relax_t *heur,
             ++cond_eff_ins;
         }
     }
+
+    if (heur->type == TYPE_LM_CUT){
+        precond = heur->op_precond + heur->op_size - 1;
+        precond->size = heur->goal.size;
+        precond->fact = BOR_ALLOC_ARR(int, precond->size);
+        memcpy(precond->fact, heur->goal.fact, sizeof(int) * precond->size);
+    }
 }
 
 static void opPrecondFree(plan_heur_relax_t *heur)
@@ -529,8 +679,8 @@ static void opPrecondFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->op_precond);
 }
 
-static void effCondEffInit(plan_heur_relax_t *heur, eff_t *eff,
-                           const plan_operator_cond_eff_t *cond_eff)
+static void opEffCondEffInit(plan_heur_relax_t *heur, factarr_t *eff,
+                             const plan_operator_cond_eff_t *cond_eff)
 {
     int j;
     plan_var_id_t var;
@@ -548,15 +698,15 @@ static void effCondEffInit(plan_heur_relax_t *heur, eff_t *eff,
     }
 }
 
-static void effInit(plan_heur_relax_t *heur,
+static void opEffInit(plan_heur_relax_t *heur,
                     const plan_operator_t *ops, int ops_size)
 {
     int i, j, cond_eff_ins;
     plan_var_id_t var;
     plan_val_t val;
-    eff_t *eff;
+    factarr_t *eff;
 
-    eff = heur->eff = BOR_ALLOC_ARR(eff_t, heur->op_size);
+    eff = heur->op_eff = BOR_ALLOC_ARR(factarr_t, heur->op_size);
 
     // Conditional effects are after all operators
     cond_eff_ins = ops_size;
@@ -570,23 +720,30 @@ static void effInit(plan_heur_relax_t *heur,
         }
 
         for (j = 0; j < ops[i].cond_eff_size; ++j){
-            effCondEffInit(heur, heur->eff + cond_eff_ins,
-                           ops[i].cond_eff + j);
+            opEffCondEffInit(heur, heur->op_eff + cond_eff_ins,
+                             ops[i].cond_eff + j);
             ++cond_eff_ins;
         }
     }
+
+    if (heur->type == TYPE_LM_CUT){
+        eff = heur->op_eff + heur->op_size - 1;
+        eff->size = 1;
+        eff->fact = BOR_ALLOC_ARR(int, 1);
+        eff->fact[0] = heur->fact_size - 1;
+    }
 }
 
-static void effFree(plan_heur_relax_t *heur)
+static void opEffFree(plan_heur_relax_t *heur)
 {
     int i;
 
     for (i = 0; i < heur->op_size; ++i)
-        BOR_FREE(heur->eff[i].fact);
-    BOR_FREE(heur->eff);
+        BOR_FREE(heur->op_eff[i].fact);
+    BOR_FREE(heur->op_eff);
 }
 
-static void effRemoveId(eff_t *eff, int pos)
+static void effRemoveId(factarr_t *eff, int pos)
 {
     int i;
     for (i = pos + 1; i < eff->size; ++i)
@@ -594,7 +751,7 @@ static void effRemoveId(eff_t *eff, int pos)
     --eff->size;
 }
 
-static void opSimplifyEffects(eff_t *ref_eff, eff_t *op_eff,
+static void opSimplifyEffects(factarr_t *ref_eff, factarr_t *op_eff,
                               plan_cost_t ref_cost, plan_cost_t op_cost)
 {
     int ref_i, op_i;
@@ -639,10 +796,12 @@ static void opSimplify(plan_heur_relax_t *heur,
     ops = BOR_ALLOC_ARR(plan_operator_t *, heur->op_size);
 
     for (ref_i = 0; ref_i < heur->op_size; ++ref_i){
+        if (heur->op_id[ref_i] < 0)
+            continue;
         ref_op = op + heur->op_id[ref_i];
 
         // skip operators with no effects
-        if (heur->eff[ref_i].size == 0)
+        if (heur->op_eff[ref_i].size == 0)
             continue;
 
         // get all applicable operators
@@ -658,7 +817,7 @@ static void opSimplify(plan_heur_relax_t *heur,
                         / sizeof(plan_operator_t);
 
             // simplify effects, if possible delete in reference operator
-            opSimplifyEffects(heur->eff + ref_i, heur->eff + op_i,
+            opSimplifyEffects(heur->op_eff + ref_i, heur->op_eff + op_i,
                               ref_op->cost, ops[i]->cost);
         }
     }
@@ -666,39 +825,104 @@ static void opSimplify(plan_heur_relax_t *heur,
     BOR_FREE(ops);
 }
 
-static void precondInit(plan_heur_relax_t *heur)
+static void crossReferenceInit(oparr_t **dst, int fact_size,
+                               factarr_t *src, int op_size,
+                               factarr_t *test)
 {
     int i, opi, fact_id;
-    eff_t *pre, *pre_end;
-    precond_t *precond;
+    oparr_t *fact, *update;
+    factarr_t *cur, *end;
 
-    heur->precond = BOR_CALLOC_ARR(precond_t, valToIdSize(&heur->vid));
+    *dst = BOR_CALLOC_ARR(oparr_t, fact_size);
+    fact = *dst;
 
-    pre_end = heur->op_precond + heur->op_size;
-    for (pre = heur->op_precond, opi = 0; pre < pre_end; ++pre, ++opi){
-        if (heur->eff[opi].size == 0)
+    cur = src;
+    end = src + op_size;
+    for (cur = src, opi = 0; cur < end; ++cur, ++opi){
+        if (test && test[opi].size == 0)
             continue;
 
-        for (i = 0; i < pre->size; ++i){
-            fact_id = pre->fact[i];
-            precond = heur->precond + fact_id;
+        for (i = 0; i < cur->size; ++i){
+            fact_id = cur->fact[i];
+            update  = fact + fact_id;
 
-            ++precond->size;
-            precond->op = BOR_REALLOC_ARR(precond->op, int, precond->size);
-            precond->op[precond->size - 1] = opi;
+            ++update->size;
+            update->op = BOR_REALLOC_ARR(update->op, int, update->size);
+            update->op[update->size - 1] = opi;
         }
     }
 }
 
-static void precondFree(plan_heur_relax_t *heur)
+static void crossReferenceFree(oparr_t *arr, int size)
 {
     int i;
 
-    for (i = 0; i < heur->fact_size; ++i)
-        BOR_FREE(heur->precond[i].op);
-    BOR_FREE(heur->precond);
+    if (arr == NULL)
+        return;
+
+    for (i = 0; i < size; ++i)
+        BOR_FREE(arr[i].op);
+    BOR_FREE(arr);
 }
 
+static void precondInit(plan_heur_relax_t *heur)
+{
+    crossReferenceInit(&heur->precond, heur->fact_size,
+                       heur->op_precond, heur->op_size,
+                       heur->op_eff);
+}
+
+static void precondFree(plan_heur_relax_t *heur)
+{
+    crossReferenceFree(heur->precond, heur->fact_size);
+}
+
+static void effInit(plan_heur_relax_t *heur)
+{
+    if (heur->type != TYPE_LM_CUT){
+        heur->eff = NULL;
+        return;
+    }
+
+    crossReferenceInit(&heur->eff, heur->fact_size,
+                       heur->op_eff, heur->op_size, NULL);
+}
+
+static void effFree(plan_heur_relax_t *heur)
+{
+    crossReferenceFree(heur->eff, heur->fact_size);
+}
+
+static void lmCutInit(plan_heur_relax_t *heur,
+                      const plan_part_state_t *goal)
+{
+    int i;
+
+    if (heur->type != TYPE_LM_CUT)
+        return;
+
+    heur->lm_cut.fact = BOR_ALLOC_ARR(lm_cut_fact_t, heur->fact_size);
+
+    heur->lm_cut.op_supporter      = BOR_ALLOC_ARR(int, heur->op_size);
+    heur->lm_cut.op_supporter_init = BOR_ALLOC_ARR(int, heur->op_size);
+    for (i = 0; i < heur->op_size; ++i)
+        heur->lm_cut.op_supporter_init[i] = -1;
+
+    heur->lm_cut.cut.op = BOR_ALLOC_ARR(int, heur->op_size);
+    heur->lm_cut.cut.size = 0;
+    heur->lm_cut.goal_id = heur->fact_size - 1;
+}
+
+static void lmCutFree(plan_heur_relax_t *heur)
+{
+    if (heur->type != TYPE_LM_CUT)
+        return;
+
+    BOR_FREE(heur->lm_cut.fact);
+    BOR_FREE(heur->lm_cut.op_supporter);
+    BOR_FREE(heur->lm_cut.op_supporter_init);
+    BOR_FREE(heur->lm_cut.cut.op);
+}
 
 
 
@@ -752,8 +976,8 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
     int *eff_facts, eff_facts_len;
     int op_value = heur->op[op_id].value;
 
-    eff_facts = heur->eff[op_id].fact;
-    eff_facts_len = heur->eff[op_id].size;
+    eff_facts = heur->op_eff[op_id].fact;
+    eff_facts_len = heur->op_eff[op_id].size;
     for (i = 0; i < eff_facts_len; ++i){
         id = eff_facts[i];
         fact = heur->fact + id;
@@ -934,6 +1158,270 @@ static void markRelaxedPlan(plan_heur_relax_t *heur)
         _markRelaxedPlan(heur, heur->relaxed_plan, id);
     }
 }
+
+
+
+static void lmCutCtxInit(plan_heur_relax_t *heur)
+{
+    memcpy(heur->op, heur->op_init, sizeof(op_t) * heur->op_size);
+    memcpy(heur->fact, heur->fact_init, sizeof(fact_t) * heur->fact_size);
+    memcpy(heur->lm_cut.op_supporter, heur->lm_cut.op_supporter_init,
+           sizeof(int) * heur->op_size);
+    planPrioQueueInit(&heur->queue);
+}
+
+static void lmCutCtxFree(plan_heur_relax_t *heur)
+{
+    planPrioQueueFree(&heur->queue);
+}
+
+_bor_inline void lmCutEnqueue(plan_heur_relax_t *heur, int fact_id, int value)
+{
+    fact_t *fact = heur->fact + fact_id;
+
+    if (fact->value == -1 || fact->value > value){
+        fact->value = value;
+        planPrioQueuePush(&heur->queue, fact->value, fact_id);
+    }
+}
+
+_bor_inline void lmCutEnqueueEffects(plan_heur_relax_t *heur, int op_id,
+                                     int value)
+{
+    int i, len, *eff;
+    len = heur->op_eff[op_id].size;
+    eff = heur->op_eff[op_id].fact;
+    for (i = 0; i < len; ++i)
+        lmCutEnqueue(heur, eff[i], value);
+}
+
+static void lmCutInitialExploration(plan_heur_relax_t *heur,
+                                    const plan_state_t *state)
+{
+    int i, id, len, cost;
+    int *precond;
+    plan_cost_t value;
+    fact_t *fact;
+    op_t *op;
+
+    // Insert initial state
+    len = planStateSize(state);
+    for (i = 0; i < len; ++i){
+        id = valToId(&heur->vid, i, planStateGet(state, i));
+        lmCutEnqueue(heur, id, 0);
+    }
+
+    while (!planPrioQueueEmpty(&heur->queue)){
+        id = planPrioQueuePop(&heur->queue, &value);
+        fact = heur->fact + id;
+        if (fact->value != value)
+            continue;
+
+        len = heur->precond[id].size;
+        precond = heur->precond[id].op;
+        for (i = 0; i < len; ++i){
+            op = heur->op + precond[i];
+            --op->unsat;
+            if (op->unsat <= 0){
+                op->value = fact->value;
+                heur->lm_cut.op_supporter[precond[i]] = id;
+                cost = fact->value + op->cost;
+                lmCutEnqueueEffects(heur, precond[i], cost);
+            }
+        }
+    }
+}
+
+static void lmCutMarkGoalZone(plan_heur_relax_t *heur, int fact_id)
+{
+    int i, len, *op_ids, op_id;
+    op_t *op;
+
+    if (!heur->lm_cut.fact[fact_id].goal_zone){
+        heur->lm_cut.fact[fact_id].goal_zone = 1;
+
+        len    = heur->eff[fact_id].size;
+        op_ids = heur->eff[fact_id].op;
+        for (i = 0; i < len; ++i){
+            op_id = op_ids[i];
+            op = heur->op + op_id;
+            if (op->cost == 0 && heur->lm_cut.op_supporter[op_id] != -1)
+                lmCutMarkGoalZone(heur, heur->lm_cut.op_supporter[op_id]);
+        }
+    }
+}
+
+_bor_inline void lmCutFindCutAddInit(plan_heur_relax_t *heur,
+                                     const plan_state_t *state,
+                                     bor_lifo_t *queue)
+{
+    plan_var_id_t var, len;
+    plan_val_t val;
+    int id;
+
+    len = planStateSize(state);
+    for (var = 0; var < len; ++var){
+        val = planStateGet(state, var);
+        id = valToId(&heur->vid, var, val);
+        heur->lm_cut.fact[id].in_queue = 1;
+        borLifoPush(queue, &id);
+    }
+}
+
+_bor_inline int lmCutFindCutProcessOp(plan_heur_relax_t *heur, int op_id)
+{
+    int i, len, *facts, fact_id;
+
+    len   = heur->op_eff[op_id].size;
+    facts = heur->op_eff[op_id].fact;
+    for (i = 0; i < len; ++i){
+        fact_id = facts[i];
+        if (heur->lm_cut.fact[fact_id].goal_zone){
+            heur->lm_cut.cut.op[heur->lm_cut.cut.size++] = op_id;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+_bor_inline void lmCutFindCutEnqueueEffects(plan_heur_relax_t *heur,
+                                            int op_id,
+                                            bor_lifo_t *queue)
+{
+    int i, len, *facts, fact_id;
+
+    len   = heur->op_eff[op_id].size;
+    facts = heur->op_eff[op_id].fact;
+    for (i = 0; i < len; ++i){
+        fact_id = facts[i];
+        if (!heur->lm_cut.fact[fact_id].in_queue){
+            heur->lm_cut.fact[fact_id].in_queue = 1;
+            borLifoPush(queue, &fact_id);
+        }
+    }
+}
+
+static void lmCutFindCut(plan_heur_relax_t *heur, const plan_state_t *state)
+{
+    int i, fact_id, op_id;
+    bor_lifo_t queue;
+
+    // Reset output structure
+    heur->lm_cut.cut.size = 0;
+
+    // Initialize queue and adds initial state
+    borLifoInit(&queue, sizeof(int));
+    lmCutFindCutAddInit(heur, state, &queue);
+
+    while (!borLifoEmpty(&queue)){
+        // Pop next fact from queue
+        fact_id = *(int *)borLifoBack(&queue);
+        borLifoPop(&queue);
+
+        for (i = 0; i < heur->precond[fact_id].size; ++i){
+            op_id = heur->precond[fact_id].op[i];
+            if (heur->lm_cut.op_supporter[op_id] == fact_id){
+                if (!lmCutFindCutProcessOp(heur, op_id)){
+                    // Goal-zone was not reached -- add operator's effects to
+                    // the queue
+                    lmCutFindCutEnqueueEffects(heur, op_id, &queue);
+                }
+            }
+        }
+    }
+
+    borLifoFree(&queue);
+}
+
+static void lmCutUpdateSupporter(plan_heur_relax_t *heur, int op_id)
+{
+    int i, len, *precond;
+    int supp;
+
+    len = heur->op_precond[op_id].size;
+    if (len == 0)
+        return;
+    precond = heur->op_precond[op_id].fact;
+    supp = heur->lm_cut.op_supporter[op_id];
+
+    for (i = 0; i < len; ++i){
+        if (heur->fact[precond[i]].value > heur->fact[supp].value){
+            supp = precond[i];
+        }
+    }
+
+    heur->lm_cut.op_supporter[op_id] = supp;
+    heur->op[op_id].value = heur->fact[supp].value;
+}
+
+static void lmCutIncrementalExploration(plan_heur_relax_t *heur)
+{
+    int i, op_id, cost, id, value, len, *precond;
+    int old_value, new_value;
+    fact_t *fact;
+    op_t *op;
+
+    // Adds effects of cut-operators to the queue
+    for (i = 0; i < heur->lm_cut.cut.size; ++i){
+        op_id = heur->lm_cut.cut.op[i];
+        op = heur->op + op_id;
+
+        cost = op->value + op->cost;
+        lmCutEnqueueEffects(heur, op_id, cost);
+    }
+
+    while (!planPrioQueueEmpty(&heur->queue)){
+        id = planPrioQueuePop(&heur->queue, &value);
+        fact = heur->fact + id;
+        if (fact->value != value)
+            continue;
+
+        len     = heur->precond[id].size;
+        precond = heur->precond[id].op;
+        for (i = 0; i < len; ++i){
+            op = heur->op + precond[i];
+
+            // Consider only supporter facts
+            if (heur->lm_cut.op_supporter[precond[i]] == id){
+                old_value = op->value;
+                if (old_value > fact->value){
+                    lmCutUpdateSupporter(heur, precond[i]);
+                    new_value = op->value;
+                    if (new_value != old_value){
+                        cost = new_value + op->cost;
+                        lmCutEnqueueEffects(heur, precond[i], cost);
+                    }
+                }
+            }
+        }
+    }
+}
+
+_bor_inline plan_cost_t lmCutUpdateOpCost(const oparr_t *cut, op_t *op)
+{
+    int cut_cost = INT_MAX;
+    int i, len, op_id;
+    const int *ops;
+
+    len = cut->size;
+    ops = cut->op;
+
+    // Find minimal cost from the cut operators
+    for (i = 0; i < len; ++i){
+        op_id = ops[i];
+        cut_cost = BOR_MIN(cut_cost, op[op_id].cost);
+    }
+
+    // Substract the minimal cost from all cut operators
+    for (i = 0; i < len; ++i){
+        op_id = ops[i];
+        op[op_id].cost -= cut_cost;
+    }
+
+    return cut_cost;
+}
+
 
 
 static int sortPreferredOpsByPtrCmp(const void *a, const void *b)

@@ -259,13 +259,8 @@ static plan_heur_t *planHeurRelaxNew(int type,
     opEffInit(heur, op, op_size);
     opSimplify(heur, op, succ_gen);
     precondInit(heur);
-    heur->eff = NULL;
-    heur->lm_cut_goal_fact = -1;
-    heur->lm_cut_supporter = NULL;
-    if (type == TYPE_LM_CUT){
-        effInit(heur);
-        lmCutInit(heur, goal);
-    }
+    effInit(heur);
+    lmCutInit(heur, goal);
     heur->relaxed_plan = BOR_ALLOC_ARR(int, op_size);
 
     if (!_succ_gen)
@@ -1069,6 +1064,11 @@ static void precondFree(plan_heur_relax_t *heur)
 
 static void effInit(plan_heur_relax_t *heur)
 {
+    if (heur->type != TYPE_LM_CUT){
+        heur->eff = NULL;
+        return;
+    }
+
     crossReferenceInit(&heur->eff, heur->fact_size,
                        heur->op_eff, heur->op_size, NULL);
 }
@@ -1081,6 +1081,12 @@ static void effFree(plan_heur_relax_t *heur)
 static void lmCutInit(plan_heur_relax_t *heur,
                       const plan_part_state_t *goal)
 {
+    if (heur->type != TYPE_LM_CUT){
+        heur->lm_cut_goal_fact = -1;
+        heur->lm_cut_supporter = NULL;
+        return;
+    }
+
     heur->lm_cut_goal_fact = heur->fact_size - 1;
     heur->lm_cut_supporter = BOR_ALLOC_ARR(int, heur->op_size);
     heur->lm_cut_cut.size = 0;

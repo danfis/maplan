@@ -436,23 +436,22 @@ static void lmCutInitialExploration(plan_heur_relax_t *heur,
     }
 }
 
-static void lmCutMarkGoalPlateau(plan_heur_relax_t *heur, int fact_id)
+static void lmCutMarkGoalZone(plan_heur_relax_t *heur, int fact_id)
 {
-    int i, len, *op_id;
+    int i, len, *op_ids, op_id;
     op_t *op;
 
     if (!heur->lm_cut.fact[fact_id].goal_zone){
         heur->lm_cut.fact[fact_id].goal_zone = 1;
         fprintf(stderr, "Mark[%d]\n", fact_id);
 
-        len   = heur->eff[fact_id].size;
-        op_id = heur->eff[fact_id].op;
+        len    = heur->eff[fact_id].size;
+        op_ids = heur->eff[fact_id].op;
         for (i = 0; i < len; ++i){
-            op = heur->op + op_id[i];
-            // TODO: test for heur->lm_cut_supporter[] value + initialize
-            // lm_cut_supporter in init...
-            if (op->cost == 0 && op->unsat == 0)
-                lmCutMarkGoalPlateau(heur, heur->lm_cut.op_supporter[op_id[i]]);
+            op_id = op_ids[i];
+            op = heur->op + op_id;
+            if (op->cost == 0 && heur->lm_cut.op_supporter[op_id] != -1)
+                lmCutMarkGoalZone(heur, heur->lm_cut.op_supporter[op_id]);
         }
     }
 }
@@ -609,7 +608,7 @@ static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
     while (heur->fact[heur->lm_cut.goal_id].value > 0){
         memcpy(heur->lm_cut.fact, heur->lm_cut.fact_init,
                sizeof(lm_cut_fact_t) * heur->fact_size);
-        lmCutMarkGoalPlateau(heur, heur->lm_cut.goal_id);
+        lmCutMarkGoalZone(heur, heur->lm_cut.goal_id);
         lmCutFindCut(heur, state);
 
         cut_cost = INT_MAX;

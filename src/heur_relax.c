@@ -435,11 +435,6 @@ static void lmCutInitialExploration(plan_heur_relax_t *heur,
             }
         }
     }
-
-    for (i = 0; i < heur->op_size; ++i){
-        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut.op_supporter[i],
-                heur->op[i].value);
-    }
 }
 
 /** Marks goal-zone, i.e., facts that are connected with the goal with
@@ -451,7 +446,6 @@ static void lmCutMarkGoalZone(plan_heur_relax_t *heur, int fact_id)
 
     if (!heur->lm_cut.fact[fact_id].goal_zone){
         heur->lm_cut.fact[fact_id].goal_zone = 1;
-        fprintf(stderr, "Mark[%d]\n", fact_id);
 
         len    = heur->eff[fact_id].size;
         op_ids = heur->eff[fact_id].op;
@@ -542,6 +536,8 @@ static void lmCutFindCut(plan_heur_relax_t *heur, const plan_state_t *state)
             op_id = heur->precond[fact_id].op[i];
             if (heur->lm_cut.op_supporter[op_id] == fact_id){
                 if (!lmCutFindCutProcessOp(heur, op_id)){
+                    // Goal-zone was not reached -- add operator's effects to
+                    // the queue
                     lmCutFindCutEnqueueEffects(heur, op_id, &queue);
                 }
             }
@@ -549,11 +545,6 @@ static void lmCutFindCut(plan_heur_relax_t *heur, const plan_state_t *state)
     }
 
     borLifoFree(&queue);
-
-    for (i = 0; i < heur->lm_cut.cut.size; ++i){
-        fprintf(stderr, "cut[%d]: %s\n", i,
-                heur->base_op[heur->lm_cut.cut.op[i]].name);
-    }
 }
 
 /** Updates operator's supporter fact */
@@ -609,11 +600,9 @@ static void lmCutIncrementalExploration(plan_heur_relax_t *heur)
             // Consider only supporter facts
             if (heur->lm_cut.op_supporter[precond[i]] == id){
                 old_value = op->value;
-                fprintf(stderr, "Cost: %d %d %d\n", old_value, fact->value, id);
                 if (old_value > fact->value){
                     lmCutUpdateSupporter(heur, precond[i]);
                     new_value = op->value;
-                    fprintf(stderr, "NewCost: %d\n", new_value);
                     if (new_value != old_value){
                         cost = new_value + op->cost;
                         lmCutEnqueueEffects(heur, precond[i], cost);
@@ -621,12 +610,6 @@ static void lmCutIncrementalExploration(plan_heur_relax_t *heur)
                 }
             }
         }
-    }
-
-    fprintf(stderr, "INC\n");
-    for (i = 0; i < heur->op_size; ++i){
-        fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut.op_supporter[i],
-                heur->op[i].value);
     }
 }
 
@@ -659,7 +642,6 @@ static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     plan_cost_t h = PLAN_HEUR_DEAD_END;
-    int i;
 
     if (preferred_ops)
         preferred_ops->preferred_size = 0;
@@ -691,12 +673,6 @@ static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
         // this cost from their cost and add it to the final heuristic
         // value.
         h += lmCutUpdateOpCost(&heur->lm_cut.cut, heur->op);
-
-        fprintf(stderr, "TOT\n");
-        for (i = 0; i < heur->op_size; ++i){
-            fprintf(stderr, "op[%d]: %d %d\n", i, heur->lm_cut.op_supporter[i],
-                    heur->op[i].value);
-        }
 
         // Performat incremental exploration of relaxed plan state.
         lmCutIncrementalExploration(heur);

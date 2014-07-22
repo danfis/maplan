@@ -416,6 +416,31 @@ static void lmCutInitialExploration(plan_heur_relax_t *heur,
     }
 }
 
+#define LM_CUT_GOAL_ZONE(fact) ((fact)->reached_by_op == 1)
+#define LM_CUT_SET_GOAL_ZONE(fact) ((fact)->reached_by_op = 1)
+#define LM_CUT_BEFORE_GOAL_ZONE(fact) ((fact)->reached_by_op == 2)
+#define LM_CUT_SET_BEFORE_GOAL_ZONE(fact) ((fact)->reached_by_op = 2)
+
+static void lmCutMarkGoalPlateau(plan_heur_relax_t *heur, int fact_id)
+{
+    fact_t *fact = heur->fact + fact_id;
+    int i, len, *op_id;
+    op_t *op;
+
+    if (!LM_CUT_GOAL_ZONE(fact)){
+        LM_CUT_SET_GOAL_ZONE(fact);
+        fprintf(stderr, "Mark[%d]\n", fact_id);
+
+        len   = heur->eff[fact_id].size;
+        op_id = heur->eff[fact_id].op;
+        for (i = 0; i < len; ++i){
+            op = heur->op + op_id[i];
+            if (op->cost == 0 && op->unsat == 0)
+                lmCutMarkGoalPlateau(heur, heur->lm_cut_supporter[op_id[i]]);
+        }
+    }
+}
+
 static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
                                  plan_heur_preferred_ops_t *preferred_ops)
 {
@@ -427,6 +452,12 @@ static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
 
     lmCutCtxInit(heur);
     lmCutInitialExploration(heur, state);
+
+    while (heur->fact[heur->lm_cut_goal_fact].value > 0){
+        lmCutMarkGoalPlateau(heur, heur->lm_cut_goal_fact);
+        break;
+    }
+
     lmCutCtxFree(heur);
 
     return h;
@@ -888,7 +919,7 @@ static void effFree(plan_heur_relax_t *heur)
 static void lmCutInit(plan_heur_relax_t *heur,
                       const plan_part_state_t *goal)
 {
-    heur->lm_cut_goal_fact = heur->fact_size;
+    heur->lm_cut_goal_fact = heur->fact_size - 1;
     heur->lm_cut_supporter = BOR_ALLOC_ARR(int, heur->op_size);
 }
 

@@ -48,7 +48,7 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("list", 'l', OPTS_STR, &def_list, NULL,
                 "Define list type [heap|bucket|rbtree|splaytree] (default: splaytree)");
     optsAddDesc("heur", 'H', OPTS_STR, &def_heur, NULL,
-                "Define heuristic [goalcount|add|max|ff] (default: goalcount)");
+                "Define heuristic [goalcount|add|max|ff|lm-cut] (default: goalcount)");
     optsAddDesc("use-preferred-ops", 'p', OPTS_STR, NULL,
                 OPTS_CB(optUsePreferredOps),
                 "Enable/disable use of preferred operators: off|pref|only."
@@ -153,6 +153,9 @@ static plan_heur_t *heurCreate(const char *name,
     }else if (strcmp(name, "ff") == 0){
         heur = planHeurRelaxFFNew(prob->var, prob->var_size,
                                   prob->goal, op, op_size, succ_gen);
+    }else if (strcmp(name, "lm-cut") == 0){
+        heur = planHeurLMCutNew(prob->var, prob->var_size,
+                                prob->goal, op, op_size, succ_gen);
     }else{
         fprintf(stderr, "Error: Invalid heuristic type: `%s'\n", name);
     }

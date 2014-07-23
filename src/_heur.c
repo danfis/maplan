@@ -170,7 +170,7 @@ static void heurFactOpInit(heur_fact_op_t *fact_op,
                            const plan_succ_gen_t *_succ_gen,
                            unsigned flags)
 {
-    int artificial_goal;
+    int artificial_goal = 0;
     plan_succ_gen_t *succ_gen;
 
     if ((flags & HEUR_FACT_OP_ARTIFICIAL_GOAL))

@@ -74,24 +74,38 @@ static void astarInsertState(plan_search_astar_t *search,
                              plan_cost_t g_cost)
 {
     plan_cost_t cost[2];
+    plan_cost_t h;
 
-    cost[0] = cost[1] = _planSearchHeuristic(&search->search, state_id,
-                                             search->heur, NULL);
-    cost[0] += g_cost;
-
-    // Force to open the node
+    // Force to open the node and compute heuristic if necessary
     if (planStateSpaceNodeIsNew(node)){
         planStateSpaceOpen(search->search.state_space, node);
-    }else if (planStateSpaceNodeIsClosed(node)){
-        planStateSpaceReopen(search->search.state_space, node);
+        h = _planSearchHeuristic(&search->search, state_id,
+                                 search->heur, NULL);
+
+    }else{
+        if (planStateSpaceNodeIsClosed(node)){
+            planStateSpaceReopen(search->search.state_space, node);
+        }
+
+        // The node was already opened, so we have already computed
+        // heuristic
+        h = node->heuristic;
     }
+
+    // Skip dead-end states
+    if (h == PLAN_HEUR_DEAD_END)
+        return;
+
+    // Set up costs for open-list -- ties are broken by heuristic value
+    cost[0] = g_cost + h; // f-value: f() = g() + h()
+    cost[1] = h; // tie-breaking value
 
     // Set correct values
     node->state_id        = state_id;
     node->parent_state_id = parent_state_id;
     node->op              = op;
     node->cost            = g_cost;
-    node->heuristic       = cost[1];
+    node->heuristic       = h;
 
     // Insert into open-list
     planListPush(search->list, cost, state_id);
@@ -151,7 +165,7 @@ static int planSearchAStarStep(plan_search_t *_search,
         // Create a new state
         next_state = planOperatorApply(op[i], cur_state);
         // Compute its g() value
-        g_cost = cost[0] - cost[1] + op[i]->cost;
+        g_cost = cur_node->cost + op[i]->cost;
 
         // Obtain corresponding node from state space
         next_node = planStateSpaceNode(search->search.state_space,
@@ -159,10 +173,9 @@ static int planSearchAStarStep(plan_search_t *_search,
 
         // Decide whether to insert the state into open-list
         insert  = planStateSpaceNodeIsNew(next_node);
-        insert |= (planStateSpaceNodeIsOpen(next_node)
+        insert |= (!planStateSpaceNodeIsNew(next_node)
                         && next_node->cost > g_cost);
-        // TODO: Reopen nodes
-        // TODO: Step change structure
+        // TODO: plan_search_step_change_t structure
 
         if (insert){
             astarInsertState(search, next_state, next_node,

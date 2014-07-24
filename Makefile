@@ -47,6 +47,7 @@ OBJS += list_tiebreaking
 OBJS += search
 OBJS += search_ehc
 OBJS += search_lazy
+OBJS += search_astar
 OBJS += heur
 OBJS += heur_goalcount
 OBJS += heur_relax

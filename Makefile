@@ -43,6 +43,7 @@ OBJS += list_lazy_bucket
 OBJS += list_lazy_rbtree
 OBJS += list_lazy_splaytree
 OBJS += list
+OBJS += list_tiebreaking
 OBJS += search
 OBJS += search_ehc
 OBJS += search_lazy

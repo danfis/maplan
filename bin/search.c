@@ -44,7 +44,7 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("ma", 0x0, OPTS_STR, &def_ma_problem, NULL,
                 "Path to definition of multi-agent problem.");
     optsAddDesc("search", 's', OPTS_STR, &def_search, NULL,
-                "Define search algorithm [ehc|lazy] (default: ehc)");
+                "Define search algorithm [ehc|lazy|astar] (default: ehc)");
     optsAddDesc("list", 'l', OPTS_STR, &def_list, NULL,
                 "Define list type [heap|bucket|rbtree|splaytree] (default: splaytree)");
     optsAddDesc("heur", 'H', OPTS_STR, &def_heur, NULL,
@@ -175,6 +175,7 @@ static plan_search_t *searchCreate(const char *search_name,
     plan_search_params_t *params;
     plan_search_ehc_params_t ehc_params;
     plan_search_lazy_params_t lazy_params;
+    plan_search_astar_params_t astar_params;
 
     if (strcmp(search_name, "ehc") == 0){
         planSearchEHCParamsInit(&ehc_params);
@@ -192,6 +193,12 @@ static plan_search_t *searchCreate(const char *search_name,
         lazy_params.list_del = 1;
         params = &lazy_params.search;
 
+    }else if (strcmp(search_name, "astar") == 0){
+        planSearchAStarParamsInit(&astar_params);
+        astar_params.heur = heurCreate(heur_name, prob, op, op_size, succ_gen);
+        astar_params.heur_del = 1;
+        params = &astar_params.search;
+
     }else{
         fprintf(stderr, "Error: Unkown search algorithm: `%s'\n",
                 search_name);
@@ -207,6 +214,8 @@ static plan_search_t *searchCreate(const char *search_name,
         search = planSearchEHCNew(&ehc_params);
     }else if (strcmp(def_search, "lazy") == 0){
         search = planSearchLazyNew(&lazy_params);
+    }else if (strcmp(def_search, "astar") == 0){
+        search = planSearchAStarNew(&astar_params);
     }
 
     return search;

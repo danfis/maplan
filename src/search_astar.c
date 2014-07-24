@@ -66,21 +66,109 @@ static void planSearchAStarDel(plan_search_t *_search)
     BOR_FREE(search);
 }
 
+static void astarInsertState(plan_search_astar_t *search,
+                             plan_state_id_t state_id,
+                             plan_state_space_node_t *node,
+                             plan_state_id_t parent_state_id,
+                             plan_operator_t *op,
+                             plan_cost_t g_cost)
+{
+    plan_cost_t cost[2];
+
+    cost[0] = cost[1] = _planSearchHeuristic(&search->search, state_id,
+                                             search->heur, NULL);
+    cost[0] += g_cost;
+
+    // Force to open the node
+    if (planStateSpaceNodeIsNew(node)){
+        planStateSpaceOpen(search->search.state_space, node);
+    }else if (planStateSpaceNodeIsClosed(node)){
+        planStateSpaceReopen(search->search.state_space, node);
+    }
+
+    // Set correct values
+    node->state_id        = state_id;
+    node->parent_state_id = parent_state_id;
+    node->op              = op;
+    node->cost            = g_cost;
+    node->heuristic       = cost[1];
+
+    // Insert into open-list
+    planListPush(search->list, cost, state_id);
+}
+
 static int planSearchAStarInit(plan_search_t *_search)
 {
-    //plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
-    // TODO
+    plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
+    plan_state_id_t init_state;
+    plan_state_space_node_t *node;
+
+    init_state = search->search.params.prob->initial_state;
+    node = planStateSpaceNode(search->search.state_space, init_state);
+    astarInsertState(search, init_state, node, 0, NULL, 0);
     return PLAN_SEARCH_CONT;
 }
 
 static int planSearchAStarStep(plan_search_t *_search,
                              plan_search_step_change_t *change)
 {
-    //plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
+    plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
+    plan_cost_t cost[2], g_cost;
+    plan_state_id_t cur_state, next_state;
+    plan_state_space_node_t *cur_node, *next_node;
+    int i, op_size, insert;
+    plan_operator_t **op;
 
     if (change)
         planSearchStepChangeReset(change);
-    // TODO
+
+    // Get next state from open list
+    if (planListPop(search->list, &cur_state, cost) != 0)
+        return PLAN_SEARCH_NOT_FOUND;
+
+    // Get corresponding state space node
+    cur_node = planStateSpaceNode(search->search.state_space, cur_state);
+
+    // Skip already closed nodes
+    if (!planStateSpaceNodeIsOpen(cur_node))
+        return PLAN_SEARCH_CONT;
+
+    // Close the current state node
+    planStateSpaceClose(search->search.state_space, cur_node);
+
+    // Check whether it is a goal
+    if (_planSearchCheckGoal(&search->search, cur_state)){
+        return PLAN_SEARCH_FOUND;
+    }
+
+    // Find all applicable operators
+    _planSearchFindApplicableOps(&search->search, cur_state);
+
+    // Add states created by applicable operators
+    op      = search->search.applicable_ops.op;
+    op_size = search->search.applicable_ops.op_found;
+    for (i = 0; i < op_size; ++i){
+        // Create a new state
+        next_state = planOperatorApply(op[i], cur_state);
+        // Compute its g() value
+        g_cost = cost[0] - cost[1] + op[i]->cost;
+
+        // Obtain corresponding node from state space
+        next_node = planStateSpaceNode(search->search.state_space,
+                                       next_state);
+
+        // Decide whether to insert the state into open-list
+        insert  = planStateSpaceNodeIsNew(next_node);
+        insert |= (planStateSpaceNodeIsOpen(next_node)
+                        && next_node->cost > g_cost);
+        // TODO: Reopen nodes
+        // TODO: Step change structure
+
+        if (insert){
+            astarInsertState(search, next_state, next_node,
+                             cur_state, op[i], g_cost);
+        }
+    }
     return PLAN_SEARCH_CONT;
 }
 

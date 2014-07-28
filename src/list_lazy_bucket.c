@@ -25,15 +25,18 @@ struct _plan_list_lazy_bucket_t {
 };
 typedef struct _plan_list_lazy_bucket_t plan_list_lazy_bucket_t;
 
-static void planListLazyBucketDel(void *l);
-static void planListLazyBucketPush(void *l,
+#define LIST_FROM_PARENT(list) \
+    bor_container_of((list), plan_list_lazy_bucket_t, list_lazy)
+
+static void planListLazyBucketDel(plan_list_lazy_t *l);
+static void planListLazyBucketPush(plan_list_lazy_t *l,
                                    plan_cost_t cost,
                                    plan_state_id_t parent_state_id,
                                    plan_operator_t *op);
-static int planListLazyBucketPop(void *l,
+static int planListLazyBucketPop(plan_list_lazy_t *l,
                                  plan_state_id_t *parent_state_id,
                                  plan_operator_t **op);
-static void planListLazyBucketClear(void *l);
+static void planListLazyBucketClear(plan_list_lazy_t *l);
 
 
 plan_list_lazy_t *planListLazyBucketNew(void)
@@ -60,9 +63,9 @@ plan_list_lazy_t *planListLazyBucketNew(void)
     return &b->list_lazy;
 }
 
-static void planListLazyBucketDel(void *_l)
+static void planListLazyBucketDel(plan_list_lazy_t *_l)
 {
-    plan_list_lazy_bucket_t *l = _l;
+    plan_list_lazy_bucket_t *l = LIST_FROM_PARENT(_l);
     int i;
 
     planListLazyFree(&l->list_lazy);
@@ -73,12 +76,12 @@ static void planListLazyBucketDel(void *_l)
     BOR_FREE(l);
 }
 
-static void planListLazyBucketPush(void *_l,
+static void planListLazyBucketPush(plan_list_lazy_t *_l,
                                    plan_cost_t cost,
                                    plan_state_id_t parent_state_id,
                                    plan_operator_t *op)
 {
-    plan_list_lazy_bucket_t *l = _l;
+    plan_list_lazy_bucket_t *l = LIST_FROM_PARENT(_l);
     bor_fifo_t *bucket;
     node_t n;
     int i;
@@ -115,11 +118,11 @@ static void planListLazyBucketPush(void *_l,
     ++l->size;
 }
 
-static int planListLazyBucketPop(void *_l,
+static int planListLazyBucketPop(plan_list_lazy_t *_l,
                                  plan_state_id_t *parent_state_id,
                                  plan_operator_t **op)
 {
-    plan_list_lazy_bucket_t *l = _l;
+    plan_list_lazy_bucket_t *l = LIST_FROM_PARENT(_l);
     bor_fifo_t *bucket;
     node_t *node;
 
@@ -145,9 +148,9 @@ static int planListLazyBucketPop(void *_l,
     return 0;
 }
 
-static void planListLazyBucketClear(void *_l)
+static void planListLazyBucketClear(plan_list_lazy_t *_l)
 {
-    plan_list_lazy_bucket_t *l = _l;
+    plan_list_lazy_bucket_t *l = LIST_FROM_PARENT(_l);
     int i;
 
     for (i = l->lowest_key; i < l->bucket_size; ++i){

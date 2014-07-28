@@ -15,15 +15,18 @@ struct _plan_list_lazy_fifo_el_t {
 };
 typedef struct _plan_list_lazy_fifo_el_t plan_list_lazy_fifo_el_t;
 
-static void planListLazyFifoDel(void *l);
-static void planListLazyFifoPush(void *l,
+#define LIST_FROM_PARENT(_list) \
+    bor_container_of((_list), plan_list_lazy_fifo_t, list)
+
+static void planListLazyFifoDel(plan_list_lazy_t *l);
+static void planListLazyFifoPush(plan_list_lazy_t *l,
                                  plan_cost_t cost,
                                  plan_state_id_t parent_state_id,
                                  plan_operator_t *op);
-static int planListLazyFifoPop(void *l,
+static int planListLazyFifoPop(plan_list_lazy_t *l,
                                plan_state_id_t *parent_state_id,
                                plan_operator_t **op);
-static void planListLazyFifoClear(void *l);
+static void planListLazyFifoClear(plan_list_lazy_t *l);
 
 
 plan_list_lazy_t *planListLazyFifoNew(void)
@@ -46,20 +49,20 @@ plan_list_lazy_t *planListLazyFifoNew(void)
     return &l->list;
 }
 
-void planListLazyFifoDel(void *_l)
+void planListLazyFifoDel(plan_list_lazy_t *_l)
 {
-    plan_list_lazy_fifo_t *l = _l;
+    plan_list_lazy_fifo_t *l = LIST_FROM_PARENT(_l);
     planListLazyFree(&l->list);
     borFifoDel(l->fifo);
     BOR_FREE(l);
 }
 
-static void planListLazyFifoPush(void *_l,
+static void planListLazyFifoPush(plan_list_lazy_t *_l,
                                  plan_cost_t cost,
                                  plan_state_id_t parent_state_id,
                                  plan_operator_t *op)
 {
-    plan_list_lazy_fifo_t *l = _l;
+    plan_list_lazy_fifo_t *l = LIST_FROM_PARENT(_l);
     plan_list_lazy_fifo_el_t el;
 
     el.parent_state_id = parent_state_id;
@@ -68,11 +71,11 @@ static void planListLazyFifoPush(void *_l,
     borFifoPush(l->fifo, &el);
 }
 
-static int planListLazyFifoPop(void *_l,
+static int planListLazyFifoPop(plan_list_lazy_t *_l,
                                plan_state_id_t *parent_state_id,
                                plan_operator_t **op)
 {
-    plan_list_lazy_fifo_t *l = _l;
+    plan_list_lazy_fifo_t *l = LIST_FROM_PARENT(_l);
     plan_list_lazy_fifo_el_t *el;
 
     if (borFifoEmpty(l->fifo))
@@ -89,8 +92,8 @@ static int planListLazyFifoPop(void *_l,
     return 0;
 }
 
-static void planListLazyFifoClear(void *_l)
+static void planListLazyFifoClear(plan_list_lazy_t *_l)
 {
-    plan_list_lazy_fifo_t *l = _l;
+    plan_list_lazy_fifo_t *l = LIST_FROM_PARENT(_l);
     borFifoClear(l->fifo);
 }

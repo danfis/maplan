@@ -150,6 +150,8 @@ static int planSearchAStarStep(plan_search_t *_search,
 
     // Close the current state node
     planStateSpaceClose(search->search.state_space, cur_node);
+    if (change)
+        planSearchStepChangeAddClosedNode(change, cur_node);
 
     // Check whether it is a goal
     if (_planSearchCheckGoal(&search->search, cur_state))

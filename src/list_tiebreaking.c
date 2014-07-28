@@ -88,6 +88,7 @@ static void planListTieBreakingDel(plan_list_t *_list)
         keynodeDel(list->pre_keynode);
     borSplayFree(list);
     _planListFree(&list->list);
+    BOR_FREE(list);
 }
 
 static void planListTieBreakingPush(plan_list_t *_list,
@@ -147,11 +148,11 @@ static int planListTieBreakingPop(plan_list_t *_list,
 static void planListTieBreakingClear(plan_list_t *_list)
 {
     plan_list_tiebreaking_t *list = LIST_FROM_PARENT(_list);
-    keynode_t *kn, *tmp;
+    keynode_t *kn;
 
-    for (kn = borSplayMin(list);
-         kn != NULL && (tmp = borSplayNext(list, kn), 1);
-         kn = tmp){
+    while (list->root){
+        kn = list->root;
+        borSplayRemove(list, list->root);
         keynodeDel(kn);
     }
 }

@@ -109,6 +109,7 @@ static void astarInsertState(plan_search_astar_t *search,
 
     // Insert into open-list
     planListPush(search->list, cost, state_id);
+    planSearchStatIncGeneratedStates(&search->search.stat);
 }
 
 static int planSearchAStarInit(plan_search_t *_search)
@@ -151,12 +152,12 @@ static int planSearchAStarStep(plan_search_t *_search,
     planStateSpaceClose(search->search.state_space, cur_node);
 
     // Check whether it is a goal
-    if (_planSearchCheckGoal(&search->search, cur_state)){
+    if (_planSearchCheckGoal(&search->search, cur_state))
         return PLAN_SEARCH_FOUND;
-    }
 
     // Find all applicable operators
     _planSearchFindApplicableOps(&search->search, cur_state);
+    planSearchStatIncExpandedStates(&search->search.stat);
 
     // Add states created by applicable operators
     op      = search->search.applicable_ops.op;

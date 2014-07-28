@@ -138,7 +138,7 @@ static int planSearchAStarStep(plan_search_t *_search,
     plan_cost_t cost[2], g_cost;
     plan_state_id_t cur_state, next_state;
     plan_state_space_node_t *cur_node, *next_node;
-    int i, op_size, insert;
+    int i, op_size;
     plan_operator_t **op;
 
     if (change)
@@ -182,11 +182,8 @@ static int planSearchAStarStep(plan_search_t *_search,
                                        next_state);
 
         // Decide whether to insert the state into open-list
-        insert  = planStateSpaceNodeIsNew(next_node);
-        insert |= (!planStateSpaceNodeIsNew(next_node)
-                        && next_node->cost > g_cost);
-
-        if (insert){
+        if (planStateSpaceNodeIsNew(next_node)
+                || next_node->cost > g_cost){
             astarInsertState(search, next_state, next_node,
                              cur_state, op[i], g_cost, cur_node->heuristic);
         }

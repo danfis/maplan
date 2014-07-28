@@ -424,6 +424,7 @@ int main(int argc, char *argv[])
     printf("Max Time: %d s\n", max_time);
     printf("Max Mem: %d kb\n", max_mem);
     printf("MA heuristic operators: %s\n", def_ma_heur_op);
+    printf("Pathmax: %d\n", use_pathmax);
     printf("\n");
 
     if (def_fd_problem){

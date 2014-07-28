@@ -16,18 +16,21 @@ struct _heap_node_t {
 };
 typedef struct _heap_node_t heap_node_t;
 
+#define LIST_FROM_PARENT(_list) \
+    bor_container_of((_list), plan_list_lazy_heap_t, list)
+
 static int heapLessThan(const bor_pairheap_node_t *n1,
                         const bor_pairheap_node_t *n2,
                         void *data);
-static void planListLazyHeapDel(void *);
-static void planListLazyHeapPush(void *,
+static void planListLazyHeapDel(plan_list_lazy_t *);
+static void planListLazyHeapPush(plan_list_lazy_t *,
                                  plan_cost_t cost,
                                  plan_state_id_t parent_state_id,
                                  plan_operator_t *op);
-static int planListLazyHeapPop(void *,
+static int planListLazyHeapPop(plan_list_lazy_t *,
                                plan_state_id_t *parent_state_id,
                                plan_operator_t **op);
-static void planListLazyHeapClear(void *);
+static void planListLazyHeapClear(plan_list_lazy_t *);
 
 
 plan_list_lazy_t *planListLazyHeapNew(void)
@@ -45,20 +48,20 @@ plan_list_lazy_t *planListLazyHeapNew(void)
     return &l->list;
 }
 
-static void planListLazyHeapDel(void *_l)
+static void planListLazyHeapDel(plan_list_lazy_t *_l)
 {
-    plan_list_lazy_heap_t *l = _l;
-    planListLazyHeapClear(l);
+    plan_list_lazy_heap_t *l = LIST_FROM_PARENT(_l);
+    planListLazyHeapClear(_l);
     borPairHeapDel(l->heap);
     BOR_FREE(l);
 }
 
-static void planListLazyHeapPush(void *_l,
+static void planListLazyHeapPush(plan_list_lazy_t *_l,
                                  plan_cost_t cost,
                                  plan_state_id_t parent_state_id,
                                  plan_operator_t *op)
 {
-    plan_list_lazy_heap_t *l = _l;
+    plan_list_lazy_heap_t *l = LIST_FROM_PARENT(_l);
     heap_node_t *n;
 
     n = BOR_ALLOC(heap_node_t);
@@ -68,11 +71,11 @@ static void planListLazyHeapPush(void *_l,
     borPairHeapAdd(l->heap, &n->heap);
 }
 
-static int planListLazyHeapPop(void *_l,
+static int planListLazyHeapPop(plan_list_lazy_t *_l,
                                plan_state_id_t *parent_state_id,
                                plan_operator_t **op)
 {
-    plan_list_lazy_heap_t *l = _l;
+    plan_list_lazy_heap_t *l = LIST_FROM_PARENT(_l);
     bor_pairheap_node_t *heap_node;
     heap_node_t *n;
 
@@ -94,9 +97,9 @@ static void clearFn(bor_pairheap_node_t *pn, void *_)
     heap_node_t *n = bor_container_of(pn, heap_node_t, heap);
     BOR_FREE(n);
 }
-static void planListLazyHeapClear(void *_l)
+static void planListLazyHeapClear(plan_list_lazy_t *_l)
 {
-    plan_list_lazy_heap_t *l = _l;
+    plan_list_lazy_heap_t *l = LIST_FROM_PARENT(_l);
     borPairHeapClear(l->heap, clearFn, NULL);
 }
 

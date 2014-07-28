@@ -26,15 +26,18 @@ struct _plan_list_lazy_map_t {
 };
 typedef struct _plan_list_lazy_map_t plan_list_lazy_map_t;
 
-static void planListLazyMapDel(void *);
-static void planListLazyMapPush(void *,
+#define LIST_FROM_PARENT(l) \
+    bor_container_of((l), plan_list_lazy_map_t, list)
+
+static void planListLazyMapDel(plan_list_lazy_t *);
+static void planListLazyMapPush(plan_list_lazy_t *,
                                 plan_cost_t cost,
                                 plan_state_id_t parent_state_id,
                                 plan_operator_t *op);
-static int planListLazyMapPop(void *,
+static int planListLazyMapPop(plan_list_lazy_t *,
                               plan_state_id_t *parent_state_id,
                               plan_operator_t **op);
-static void planListLazyMapClear(void *);
+static void planListLazyMapClear(plan_list_lazy_t *);
 
 
 plan_list_lazy_t *NEW_FN(void)
@@ -56,10 +59,10 @@ plan_list_lazy_t *NEW_FN(void)
     return &l->list;
 }
 
-static void planListLazyMapDel(void *_l)
+static void planListLazyMapDel(plan_list_lazy_t *_l)
 {
-    plan_list_lazy_map_t *l = _l;
-    planListLazyMapClear(l);
+    plan_list_lazy_map_t *l = LIST_FROM_PARENT(_l);
+    planListLazyMapClear(_l);
     if (l->pre_keynode){
         borFifoFree(&l->pre_keynode->fifo);
         BOR_FREE(l->pre_keynode);
@@ -68,12 +71,12 @@ static void planListLazyMapDel(void *_l)
     BOR_FREE(l);
 }
 
-static void planListLazyMapPush(void *_l,
+static void planListLazyMapPush(plan_list_lazy_t *_l,
                                 plan_cost_t cost,
                                 plan_state_id_t parent_state_id,
                                 plan_operator_t *op)
 {
-    plan_list_lazy_map_t *l = _l;
+    plan_list_lazy_map_t *l = LIST_FROM_PARENT(_l);
     node_t n;
     keynode_t *keynode;
     TREE_NODE_T *kn;
@@ -99,11 +102,11 @@ static void planListLazyMapPush(void *_l,
     borFifoPush(&keynode->fifo, &n);
 }
 
-static int planListLazyMapPop(void *_l,
+static int planListLazyMapPop(plan_list_lazy_t *_l,
                               plan_state_id_t *parent_state_id,
                               plan_operator_t **op)
 {
-    plan_list_lazy_map_t *l = _l;
+    plan_list_lazy_map_t *l = LIST_FROM_PARENT(_l);
     node_t *n;
     keynode_t *keynode;
     TREE_NODE_T *kn;
@@ -133,9 +136,9 @@ static int planListLazyMapPop(void *_l,
     return 0;
 }
 
-static void planListLazyMapClear(void *_l)
+static void planListLazyMapClear(plan_list_lazy_t *_l)
 {
-    plan_list_lazy_map_t *l = _l;
+    plan_list_lazy_map_t *l = LIST_FROM_PARENT(_l);
     TREE_NODE_T *kn, *tmp;
     keynode_t *keynode;
 

@@ -4,14 +4,16 @@
 #include <plan/state.h>
 #include <plan/operator.h>
 
-typedef void (*plan_list_lazy_del_fn)(void *);
-typedef void (*plan_list_lazy_push_fn)(void *, plan_cost_t cost,
+typedef struct _plan_list_lazy_t plan_list_lazy_t;
+
+typedef void (*plan_list_lazy_del_fn)(plan_list_lazy_t *);
+typedef void (*plan_list_lazy_push_fn)(plan_list_lazy_t *, plan_cost_t cost,
                                        plan_state_id_t parent_state_id,
                                        plan_operator_t *op);
-typedef int (*plan_list_lazy_pop_fn)(void *,
+typedef int (*plan_list_lazy_pop_fn)(plan_list_lazy_t *,
                                      plan_state_id_t *parent_state_id,
                                      plan_operator_t **op);
-typedef void (*plan_list_lazy_clear_fn)(void *);
+typedef void (*plan_list_lazy_clear_fn)(plan_list_lazy_t *);
 
 struct _plan_list_lazy_t {
     plan_list_lazy_del_fn del_fn;
@@ -19,7 +21,6 @@ struct _plan_list_lazy_t {
     plan_list_lazy_pop_fn pop_fn;
     plan_list_lazy_clear_fn clear_fn;
 };
-typedef struct _plan_list_lazy_t plan_list_lazy_t;
 
 /**
  * Creates a new lazy fifo list.

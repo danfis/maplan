@@ -197,7 +197,14 @@ static int planSearchAStarStep(plan_search_t *_search,
 static int planSearchAStarInjectState(plan_search_t *_search, plan_state_id_t state_id,
                                     plan_cost_t cost, plan_cost_t heuristic)
 {
-    //plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
-    // TODO
+    plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
+    plan_state_space_node_t *node;
+
+    node = planStateSpaceNode(search->search.state_space, state_id);
+    if (planStateSpaceNodeIsNew(node) || node->cost > cost){
+        astarInsertState(search, state_id, node, 0, NULL, cost, 0);
+        return 0;
+    }
+
     return -1;
 }

@@ -167,7 +167,6 @@ void planSearchEHCParamsInit(plan_search_ehc_params_t *p);
 plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params);
 
 
-
 /**
  * Lazy Best First Search Algorithm
  * ---------------------------------
@@ -194,6 +193,31 @@ void planSearchLazyParamsInit(plan_search_lazy_params_t *p);
  * Creates a new instance of the Lazy Best First Search algorithm.
  */
 plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params);
+
+
+/**
+ * A* Search Algorithm
+ * --------------------
+ */
+struct _plan_search_astar_params_t {
+    plan_search_params_t search; /*!< Common parameters */
+
+    plan_heur_t *heur; /*!< Heuristic function that ought to be used */
+    int heur_del;      /*!< True if .heur should be deleted in
+                            planSearchDel() */
+    int pathmax;       /*!< Use pathmax correction */
+};
+typedef struct _plan_search_astar_params_t plan_search_astar_params_t;
+
+/**
+ * Initializes parameters of A* algorithm.
+ */
+void planSearchAStarParamsInit(plan_search_astar_params_t *p);
+
+/**
+ * Creates a new instance of the A* search algorithm.
+ */
+plan_search_t *planSearchAStarNew(const plan_search_astar_params_t *params);
 
 
 

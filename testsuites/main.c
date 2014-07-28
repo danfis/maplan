@@ -8,6 +8,7 @@
 #include "search_lazy.h"
 #include "heur.h"
 #include "list_lazy.h"
+#include "list.h"
 #include "t_ma_comm_queue.h"
 
 TEST_SUITES {
@@ -20,6 +21,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSSearchLazy),
     TEST_SUITE_ADD(TSHeur),
     TEST_SUITE_ADD(TSListLazy),
+    TEST_SUITE_ADD(TSList),
     TEST_SUITE_ADD(TSMACommQueue),
     TEST_SUITES_CLOSURE
 };

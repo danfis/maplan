@@ -16,6 +16,7 @@ static int max_time = 60 * 30; // 30 minutes
 static int max_mem = 1024 * 1024; // 1GB
 static int progress_freq = 10000;
 static int use_preferred_ops = 0;
+static int use_pathmax = 0;
 
 
 static void optUsePreferredOps(const char *l, char s, const char *val)
@@ -44,7 +45,7 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("ma", 0x0, OPTS_STR, &def_ma_problem, NULL,
                 "Path to definition of multi-agent problem.");
     optsAddDesc("search", 's', OPTS_STR, &def_search, NULL,
-                "Define search algorithm [ehc|lazy] (default: ehc)");
+                "Define search algorithm [ehc|lazy|astar] (default: ehc)");
     optsAddDesc("list", 'l', OPTS_STR, &def_list, NULL,
                 "Define list type [heap|bucket|rbtree|splaytree] (default: splaytree)");
     optsAddDesc("heur", 'H', OPTS_STR, &def_heur, NULL,
@@ -56,6 +57,8 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("ma-heur-op", 0x0, OPTS_STR, &def_ma_heur_op, NULL,
                 "Which type of operators are used for heuristic"
                 " [global,projected,local] (default: projected)");
+    optsAddDesc("pathmax", 0x0, OPTS_NONE, &use_pathmax, NULL,
+                "Use pathmax correction. (default: false)");
     optsAddDesc("plan-output", 'o', OPTS_STR, &plan_output_fn, NULL,
                 "Path where to write resulting plan.");
     optsAddDesc("max-time", 0x0, OPTS_INT, &max_time, NULL,
@@ -175,6 +178,7 @@ static plan_search_t *searchCreate(const char *search_name,
     plan_search_params_t *params;
     plan_search_ehc_params_t ehc_params;
     plan_search_lazy_params_t lazy_params;
+    plan_search_astar_params_t astar_params;
 
     if (strcmp(search_name, "ehc") == 0){
         planSearchEHCParamsInit(&ehc_params);
@@ -192,6 +196,13 @@ static plan_search_t *searchCreate(const char *search_name,
         lazy_params.list_del = 1;
         params = &lazy_params.search;
 
+    }else if (strcmp(search_name, "astar") == 0){
+        planSearchAStarParamsInit(&astar_params);
+        astar_params.heur = heurCreate(heur_name, prob, op, op_size, succ_gen);
+        astar_params.heur_del = 1;
+        astar_params.pathmax = use_pathmax;
+        params = &astar_params.search;
+
     }else{
         fprintf(stderr, "Error: Unkown search algorithm: `%s'\n",
                 search_name);
@@ -207,6 +218,8 @@ static plan_search_t *searchCreate(const char *search_name,
         search = planSearchEHCNew(&ehc_params);
     }else if (strcmp(def_search, "lazy") == 0){
         search = planSearchLazyNew(&lazy_params);
+    }else if (strcmp(def_search, "astar") == 0){
+        search = planSearchAStarNew(&astar_params);
     }
 
     return search;
@@ -411,6 +424,7 @@ int main(int argc, char *argv[])
     printf("Max Time: %d s\n", max_time);
     printf("Max Mem: %d kb\n", max_mem);
     printf("MA heuristic operators: %s\n", def_ma_heur_op);
+    printf("Pathmax: %d\n", use_pathmax);
     printf("\n");
 
     if (def_fd_problem){

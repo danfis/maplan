@@ -6,6 +6,7 @@
 #include "statespace.h"
 #include "search_ehc.h"
 #include "search_lazy.h"
+#include "search_astar.h"
 #include "heur.h"
 #include "list_lazy.h"
 #include "list.h"
@@ -19,6 +20,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSStateSpace),
     TEST_SUITE_ADD(TSSearchEHC),
     TEST_SUITE_ADD(TSSearchLazy),
+    TEST_SUITE_ADD(TSSearchAStar),
     TEST_SUITE_ADD(TSHeur),
     TEST_SUITE_ADD(TSListLazy),
     TEST_SUITE_ADD(TSList),

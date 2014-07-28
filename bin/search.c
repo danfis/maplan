@@ -16,6 +16,7 @@ static int max_time = 60 * 30; // 30 minutes
 static int max_mem = 1024 * 1024; // 1GB
 static int progress_freq = 10000;
 static int use_preferred_ops = 0;
+static int use_pathmax = 0;
 
 
 static void optUsePreferredOps(const char *l, char s, const char *val)
@@ -56,6 +57,8 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("ma-heur-op", 0x0, OPTS_STR, &def_ma_heur_op, NULL,
                 "Which type of operators are used for heuristic"
                 " [global,projected,local] (default: projected)");
+    optsAddDesc("pathmax", 0x0, OPTS_NONE, &use_pathmax, NULL,
+                "Use pathmax correction. (default: false)");
     optsAddDesc("plan-output", 'o', OPTS_STR, &plan_output_fn, NULL,
                 "Path where to write resulting plan.");
     optsAddDesc("max-time", 0x0, OPTS_INT, &max_time, NULL,
@@ -197,6 +200,7 @@ static plan_search_t *searchCreate(const char *search_name,
         planSearchAStarParamsInit(&astar_params);
         astar_params.heur = heurCreate(heur_name, prob, op, op_size, succ_gen);
         astar_params.heur_del = 1;
+        astar_params.pathmax = use_pathmax;
         params = &astar_params.search;
 
     }else{

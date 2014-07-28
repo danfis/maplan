@@ -9,6 +9,7 @@ struct _plan_search_astar_t {
     plan_list_t *list; /*!< Open-list */
     plan_heur_t *heur; /*!< Heuristic function */
     int heur_del;      /*!< True if .heur should be deleted */
+    int pathmax;       /*!< Use pathmax correction */
 };
 typedef struct _plan_search_astar_t plan_search_astar_t;
 
@@ -50,6 +51,7 @@ plan_search_t *planSearchAStarNew(const plan_search_astar_params_t *params)
     search->list     = planListTieBreaking(2);
     search->heur     = params->heur;
     search->heur_del = params->heur_del;
+    search->pathmax  = params->pathmax;
 
     return &search->search;
 }
@@ -71,7 +73,8 @@ static void astarInsertState(plan_search_astar_t *search,
                              plan_state_space_node_t *node,
                              plan_state_id_t parent_state_id,
                              plan_operator_t *op,
-                             plan_cost_t g_cost)
+                             plan_cost_t g_cost,
+                             plan_cost_t parent_h)
 {
     plan_cost_t cost[2];
     plan_cost_t h;
@@ -81,6 +84,10 @@ static void astarInsertState(plan_search_astar_t *search,
         planStateSpaceOpen(search->search.state_space, node);
         h = _planSearchHeuristic(&search->search, state_id,
                                  search->heur, NULL);
+
+        if (search->pathmax && op != NULL){
+            h = BOR_MAX(h, parent_h - op->cost);
+        }
 
     }else{
         if (planStateSpaceNodeIsClosed(node)){
@@ -120,7 +127,7 @@ static int planSearchAStarInit(plan_search_t *_search)
 
     init_state = search->search.params.prob->initial_state;
     node = planStateSpaceNode(search->search.state_space, init_state);
-    astarInsertState(search, init_state, node, 0, NULL, 0);
+    astarInsertState(search, init_state, node, 0, NULL, 0, 0);
     return PLAN_SEARCH_CONT;
 }
 
@@ -178,11 +185,10 @@ static int planSearchAStarStep(plan_search_t *_search,
         insert  = planStateSpaceNodeIsNew(next_node);
         insert |= (!planStateSpaceNodeIsNew(next_node)
                         && next_node->cost > g_cost);
-        // TODO: plan_search_step_change_t structure
 
         if (insert){
             astarInsertState(search, next_state, next_node,
-                             cur_state, op[i], g_cost);
+                             cur_state, op[i], g_cost, cur_node->heuristic);
         }
     }
     return PLAN_SEARCH_CONT;

@@ -205,6 +205,7 @@ struct _plan_search_astar_params_t {
     plan_heur_t *heur; /*!< Heuristic function that ought to be used */
     int heur_del;      /*!< True if .heur should be deleted in
                             planSearchDel() */
+    int pathmax;       /*!< Use pathmax correction */
 };
 typedef struct _plan_search_astar_params_t plan_search_astar_params_t;
 

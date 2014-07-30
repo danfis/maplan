@@ -38,6 +38,7 @@ public:
     vector<Prevail> prevail;    // var, val
     vector<PrePost> pre_post; // var, old-val, new-val
     int cost;
+    int id;
 public:
     Operator(istream &in, const vector<Variable *> &variables);
 
@@ -53,6 +54,8 @@ public:
     vector<Prevail> &get_prevail() {return prevail; }
     const vector<PrePost> &get_pre_post() const {return pre_post; }
     vector<PrePost> &get_pre_post() {return pre_post; }
+    void set_id(int id) { this->id = id; }
+    int get_id() const { return id; }
 
     void set_owner(int o) { owner = o; }
     int get_owner() const { return owner; }

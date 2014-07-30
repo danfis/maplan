@@ -20,6 +20,7 @@ struct _plan_operator_t {
     char *name;
     int is_private;
     int owner;
+    int global_id;
 };
 typedef struct _plan_operator_t plan_operator_t;
 
@@ -32,6 +33,8 @@ _bor_inline void planOperatorSetPrivate(plan_operator_t *op);
 _bor_inline int planOperatorIsPrivate(const plan_operator_t *op);
 _bor_inline void planOperatorSetOwner(plan_operator_t *op, int owner);
 _bor_inline int planOperatorOwner(const plan_operator_t *op);
+_bor_inline void planOperatorSetGlobalId(plan_operator_t *op, int id);
+_bor_inline int planOperatorGlobalId(const plan_operator_t *op);
 
 void planOperatorSetPrecondition(plan_operator_t *op,
                                  plan_var_id_t var,
@@ -92,6 +95,16 @@ _bor_inline void planOperatorSetOwner(plan_operator_t *op, int owner)
 _bor_inline int planOperatorOwner(const plan_operator_t *op)
 {
     return op->owner;
+}
+
+_bor_inline void planOperatorSetGlobalId(plan_operator_t *op, int id)
+{
+    op->global_id = id;
+}
+
+_bor_inline int planOperatorGlobalId(const plan_operator_t *op)
+{
+    return op->global_id;
 }
 
 #endif /* __PLAN_OPERATOR_H__ */

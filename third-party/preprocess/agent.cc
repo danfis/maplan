@@ -245,6 +245,11 @@ void agentsCreate(const std::vector<std::string> &names,
                   vector<pair<Variable *, int> > &goals,
                   std::vector<Agent> &agents)
 {
+    // set ID to operators
+    for (size_t i = 0; i < operators.size(); ++i){
+        operators[i].set_id(i);
+    }
+
     // create agents and set their names
     for (size_t i = 0; i < names.size(); ++i){
         Agent agent;
@@ -356,6 +361,7 @@ void Agent::generate_cpp_input(ofstream &outfile) const
     outfile << projected_ops.size() << endl;
     for (size_t i = 0; i < projected_ops.size(); ++i){
         projected_ops[i].generate_cpp_input(outfile);
+        outfile << projected_ops[i].get_id() << endl;
         outfile << projected_ops[i].get_owner() << endl;
     }
     outfile << "end_agent_projected_operators" << endl;

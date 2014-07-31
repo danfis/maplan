@@ -53,9 +53,18 @@ typedef void (*plan_heur_del_fn)(plan_heur_t *heur);
 typedef void (*plan_heur_fn)(plan_heur_t *heur, const plan_state_t *state,
                              plan_heur_res_t *res);
 
+/**
+ * Function that returns heuristic value (see planHeur2() function below).
+ */
+typedef void (*plan_heur2_fn)(plan_heur_t *heur,
+                              const plan_state_t *state,
+                              const plan_part_state_t *goal,
+                              plan_heur_res_t *res);
+
 struct _plan_heur_t {
     plan_heur_del_fn del_fn;
     plan_heur_fn heur_fn;
+    plan_heur2_fn heur2_fn;
 };
 
 /**
@@ -118,6 +127,14 @@ void planHeurDel(plan_heur_t *heur);
 void planHeur(plan_heur_t *heur, const plan_state_t *state,
               plan_heur_res_t *res);
 
+/**
+ * Same as planHeur() but the goal is explicitly specified.
+ */
+void planHeur2(plan_heur_t *heur,
+               const plan_state_t *state,
+               const plan_part_state_t *goal,
+               plan_heur_res_t *res);
+
 
 
 
@@ -127,7 +144,8 @@ void planHeur(plan_heur_t *heur, const plan_state_t *state,
  */
 void planHeurInit(plan_heur_t *heur,
                   plan_heur_del_fn del_fn,
-                  plan_heur_fn heur_fn);
+                  plan_heur_fn heur_fn,
+                  plan_heur2_fn heur2_fn);
 
 /**
  * Frees allocated resources.

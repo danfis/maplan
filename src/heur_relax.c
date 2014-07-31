@@ -53,7 +53,7 @@ typedef struct _plan_heur_relax_t plan_heur_relax_t;
     bor_container_of((parent), plan_heur_relax_t, heur)
 
 /** Initializes main structure for computing relaxed solution. */
-static void ctxInit(plan_heur_relax_t *heur);
+static void ctxInit(plan_heur_relax_t *heur, const plan_part_state_t *goal);
 /** Free allocated resources */
 static void ctxFree(plan_heur_relax_t *heur);
 /** Adds initial state facts to the heap. */
@@ -104,6 +104,10 @@ static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
 /** Main function that returns heuristic value. */
 static void planHeurRelax(plan_heur_t *heur, const plan_state_t *state,
                           plan_heur_res_t *res);
+static void planHeurRelax2(plan_heur_t *heur,
+                           const plan_state_t *state,
+                           const plan_part_state_t *goal,
+                           plan_heur_res_t *res);
 /** Delete method */
 static void planHeurRelaxDel(plan_heur_t *_heur);
 
@@ -119,7 +123,8 @@ static plan_heur_t *planHeurRelaxNew(int type,
     int i;
 
     heur = BOR_ALLOC(plan_heur_relax_t);
-    planHeurInit(&heur->heur, planHeurRelaxDel, planHeurRelax);
+    planHeurInit(&heur->heur, planHeurRelaxDel,
+                 planHeurRelax, planHeurRelax2);
     heur->type = type;
     heur->base_op = op;
 
@@ -182,10 +187,18 @@ static void planHeurRelaxDel(plan_heur_t *_heur)
 static void planHeurRelax(plan_heur_t *_heur, const plan_state_t *state,
                           plan_heur_res_t *res)
 {
+    planHeurRelax2(_heur, state, NULL, res);
+}
+
+static void planHeurRelax2(plan_heur_t *_heur,
+                           const plan_state_t *state,
+                           const plan_part_state_t *goal,
+                           plan_heur_res_t *res)
+{
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     plan_cost_t h = PLAN_HEUR_DEAD_END;
 
-    ctxInit(heur);
+    ctxInit(heur, goal);
     ctxAddInitState(heur, state);
     if (ctxMainLoop(heur) == 0){
         h = ctxHeur(heur, res);
@@ -196,12 +209,29 @@ static void planHeurRelax(plan_heur_t *_heur, const plan_state_t *state,
 }
 
 
-static void ctxInit(plan_heur_relax_t *heur)
+static void ctxInit(plan_heur_relax_t *heur, const plan_part_state_t *goal)
 {
     memcpy(heur->op, heur->data.op, sizeof(op_t) * heur->data.op_size);
     memcpy(heur->fact, heur->data.fact, sizeof(fact_t) * heur->data.fact_size);
     heur->goal_unsat = heur->goal_unsat_init;
     planPrioQueueInit(&heur->queue);
+
+    if (goal){
+        int i, id;
+        plan_var_id_t var;
+        plan_val_t val;
+
+        // Correctly set goal flags
+        for (i = 0; i < heur->data.fact_size; ++i)
+            heur->fact[i].goal = 0;
+        PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
+            id = valToId(&heur->data.vid, var, val);
+            heur->fact[id].goal = 1;
+        }
+
+        // Change number of unsatisfied goals
+        heur->goal_unsat = goal->vals_size;
+    }
 }
 
 static void ctxFree(plan_heur_relax_t *heur)

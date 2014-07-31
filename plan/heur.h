@@ -13,17 +13,34 @@
 typedef struct _plan_heur_t plan_heur_t;
 
 /**
- * Structure used for obtaining preferred operators.
- * See planHeur() doc for explanation how to use it.
+ * Structure for results.
  */
-struct _plan_heur_preferred_ops_t {
-    plan_operator_t **op; /*!< Input/Output list of operators. */
-    int op_size;          /*!< Number of operators in .op[] */
-    int preferred_size;   /*!< Number of preferred operators, i.e., after
-                               call of planHeur() first .preferred_size
-                               operators in .op[] are the preferred one. */
+struct _plan_heur_res_t {
+    plan_cost_t heur; /*!< Computed heuristic value */
+
+    /** Preferred operators:
+     *  If .pref_op is set to non-NULL, the preferred operators will be
+     *  also determined (if the algorithm knows how). The .pref_op is used
+     *  as input/output array of operators and the caller should set it up
+     *  together with .pref_op_size. The functin planHeur() then reorders
+     *  operators in .pref_op[] so that the first ones are the preferred
+     *  ones. The number of preferred operators is then stored in
+     *  .pref_size member, i.e., first .pref_size operators in .pref_op[]
+     *  array are the preferred opetors.
+     *  Note 1: .pref_op[] should already contain applicable operators.
+     *  Note 2: The pointers in .pref_op[] should be from the same array of
+     *          operators as were used in building the heuristic object.
+     */
+    plan_operator_t **pref_op; /*!< Input/Output list of operators */
+    int pref_op_size;          /*!< Size of .pref_op[] */
+    int pref_size;             /*!< Number of preferred operators */
 };
-typedef struct _plan_heur_preferred_ops_t plan_heur_preferred_ops_t;
+typedef struct _plan_heur_res_t plan_heur_res_t;
+
+/**
+ * Initializes plan_heur_res_t structure.
+ */
+_bor_inline void planHeurResInit(plan_heur_res_t *res);
 
 /**
  * Destructor of the heuristic object.
@@ -33,8 +50,8 @@ typedef void (*plan_heur_del_fn)(plan_heur_t *heur);
 /**
  * Function that returns heuristic value (see planHeur() function below).
  */
-typedef plan_cost_t (*plan_heur_fn)(plan_heur_t *heur, const plan_state_t *state,
-                                    plan_heur_preferred_ops_t *preferred_ops);
+typedef void (*plan_heur_fn)(plan_heur_t *heur, const plan_state_t *state,
+                             plan_heur_res_t *res);
 
 struct _plan_heur_t {
     plan_heur_del_fn del_fn;
@@ -94,21 +111,12 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
 void planHeurDel(plan_heur_t *heur);
 
 /**
- * Returns a heuristic value.
- * If the {preferred_ops} argument is non-NULL the function will also
- * determine preferred operators (if it can).
- * The parameter {preferred_ops} is used as input/output parameter the
- * following way. The caller should set up .op and .op_size members of the
- * struct (for example using data returned from planSuccGenFind()). The
- * function then reorders operators in .op[] array and set .preferred_size
- * member in a way that the first .preffered_size operators are the
- * preferred operators.
- * Note 1: .op[] should already contain applicable * operators.
- * Note 2: The pointers in .op[] should be from the same array of operators
- * as were used in building heuristic object.
+ * Compute heuristic from the specified state to the goal state.
+ * See documentation to the plan_heur_res_t how the result structure is
+ * filled.
  */
-plan_cost_t planHeur(plan_heur_t *heur, const plan_state_t *state,
-                     plan_heur_preferred_ops_t *preferred_ops);
+void planHeur(plan_heur_t *heur, const plan_state_t *state,
+              plan_heur_res_t *res);
 
 
 
@@ -126,5 +134,12 @@ void planHeurInit(plan_heur_t *heur,
  * For internal use.
  */
 void planHeurFree(plan_heur_t *heur);
+
+
+/**** INLINES: ****/
+_bor_inline void planHeurResInit(plan_heur_res_t *res)
+{
+    bzero(res, sizeof(*res));
+}
 
 #endif /* __PLAN_HEUR_H__ */

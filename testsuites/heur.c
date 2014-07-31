@@ -2,251 +2,126 @@
 #include "plan/problem.h"
 #include "plan/heur.h"
 
+#define RELAX_TEST_STATE_SIZE 9
+struct _relax_test_t {
+    plan_val_t state[RELAX_TEST_STATE_SIZE];
+    plan_cost_t heur;
+    int pref_size;
+    const char **pref_op;
+};
+typedef struct _relax_test_t relax_test_t;
 
-TEST(testHeurRelaxAdd)
+static const char *relax_op_unstack_b_c[] = { "unstack b c", NULL };
+static const char *relax_op_putdown_b[] = { "put-down b", NULL };
+static const char *relax_op_3[] = 
+    { "pick-up a", "unstack c d", "unstack d b", NULL };
+static relax_test_t relax_test_add[] = {
+    { { 2, 0, 1, 1, 1, 0, 3, 1, 4 }, 10, 1, relax_op_unstack_b_c },
+    { { 0, 1, 1, 0, 1, 1, 3, 1, 4 }, 13, 1, relax_op_putdown_b },
+    { { 4, 0, 1, 0, 1, 0, 3, 1, 4 }, 7, -1, NULL },
+    { { 4, 0, 0, 1, 1, 1, 3, 0, 4 }, 10, -1, NULL },
+    { { 4, 1, 0, 0, 1, 0, 3, 2, 4 }, 8, -1, NULL },
+    { { 3, 1, 1, 1, 0, 0, 4, 3, 2 }, PLAN_HEUR_DEAD_END, 0, NULL },
+    { { 0, 0, 0, 0, 0, 0, 4, 3, 2 }, 6, 3, relax_op_3 }
+};
+static int relax_test_add_size = sizeof(relax_test_add) / sizeof(relax_test_t);
+
+static relax_test_t relax_test_max[] = {
+    { { 2, 0, 1, 1, 1, 0, 3, 1, 4 }, 5, 1, relax_op_unstack_b_c },
+    { { 0, 1, 1, 0, 1, 1, 3, 1, 4 }, 5, 1, relax_op_putdown_b },
+    { { 4, 0, 1, 0, 1, 0, 3, 1, 4 }, 4, -1, NULL },
+    { { 4, 0, 0, 1, 1, 1, 3, 0, 4 }, 4, -1, NULL },
+    { { 4, 1, 0, 0, 1, 0, 3, 2, 4 }, 3, -1, NULL },
+    { { 3, 1, 1, 1, 0, 0, 4, 3, 2 }, PLAN_HEUR_DEAD_END, 0, NULL },
+    { { 0, 0, 0, 0, 0, 0, 4, 3, 2 }, 2, 3, relax_op_3 }
+};
+static int relax_test_max_size = sizeof(relax_test_max) / sizeof(relax_test_t);
+
+static relax_test_t relax_test_ff[] = {
+    { { 2, 0, 1, 1, 1, 0, 3, 1, 4 }, 6, 1, relax_op_unstack_b_c },
+    { { 0, 1, 1, 0, 1, 1, 3, 1, 4 }, 6, 1, relax_op_putdown_b },
+    { { 4, 0, 1, 0, 1, 0, 3, 1, 4 }, 5, -1, NULL },
+    { { 4, 0, 0, 1, 1, 1, 3, 0, 4 }, 6, -1, NULL },
+    { { 4, 1, 0, 0, 1, 0, 3, 2, 4 }, 6, -1, NULL },
+    { { 3, 1, 1, 1, 0, 0, 4, 3, 2 }, PLAN_HEUR_DEAD_END, 0, NULL },
+    { { 0, 0, 0, 0, 0, 0, 4, 3, 2 }, 6, 3, relax_op_3 }
+};
+static int relax_test_ff_size = sizeof(relax_test_ff) / sizeof(relax_test_t);
+
+
+typedef plan_heur_t *(*heur_new_fn)(const plan_var_t *var, int var_size,
+                                    const plan_part_state_t *goal,
+                                    const plan_operator_t *op, int op_size,
+                                    const plan_succ_gen_t *succ_gen);
+
+static void testRelax(const char *fn, heur_new_fn new_fn,
+                      relax_test_t *relax_test, int relax_test_size)
 {
     plan_problem_t *p;
     plan_heur_t *heur;
     plan_state_t *state;
-    plan_state_id_t sid;
-    plan_succ_gen_t *succgen;
     plan_operator_t **op;
-    plan_cost_t h;
-    plan_heur_preferred_ops_t preferred;
-    int op_size;
+    plan_heur_res_t res;
+    int op_size, i, j;
+    const char **op_name;
 
-    p = planProblemFromFD("load-from-file.in1.sas");
-    succgen = planSuccGenNew(p->op, p->op_size);
-    //planProblemDump(p, stderr);
+    p = planProblemFromFD(fn);
+    heur = new_fn(p->var, p->var_size, p->goal,
+                  p->op, p->op_size, p->succ_gen);
+    state = planStateNew(p->state_pool);
 
     op = alloca(sizeof(plan_operator_t *) * p->op_size);
+    for (i = 0; i < relax_test_size; ++i){
+        for (j = 0; j < RELAX_TEST_STATE_SIZE; ++j){
+            planStateSet(state, j, relax_test[i].state[j]);
+        }
 
-    heur = planHeurRelaxAddNew(p->var, p->var_size, p->goal,
-                               p->op, p->op_size, p->succ_gen);
+        planHeurResInit(&res);
+        if (relax_test[i].pref_size >= 0){
+            op_size = planSuccGenFind(p->succ_gen, state, op, p->op_size);
+            res.pref_op = op;
+            res.pref_op_size = op_size;
+        }
+        planHeur(heur, state, &res);
 
-    state = planStateNew(p->state_pool);
-    planStatePoolGetState(p->state_pool, p->initial_state, state);
+        assertEquals(res.heur, relax_test[i].heur);
+        if (res.heur != relax_test[i].heur){
+            fprintf(stderr, "Err: %d\n", i);
+        }
 
-    op_size = planSuccGenFind(succgen, state, op, p->op_size);
-    preferred.op = op;
-    preferred.op_size = op_size;
-    h = planHeur(heur, state, &preferred);
-    assertEquals(h, 10);
-    assertEquals(preferred.preferred_size, 1);
-    assertEquals(strcmp(preferred.op[0]->name, "unstack b c"), 0);
+        if (relax_test[i].pref_size >= 0){
+            assertEquals(res.pref_size, relax_test[i].pref_size);
 
-    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
-    sid = planOperatorApply(op[0], p->initial_state);
-    planStatePoolGetState(p->state_pool, sid, state);
-    op_size = planSuccGenFind(succgen, state, op, p->op_size);
-    preferred.op = op;
-    preferred.op_size = op_size;
-    h = planHeur(heur, state, &preferred);
-    assertEquals(h, 13);
-    assertEquals(preferred.preferred_size, 1);
-    assertEquals(strcmp(preferred.op[0]->name, "put-down b"), 0);
-
-    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
-    sid = planOperatorApply(op[1], sid);
-    planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 7);
-
-    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
-    sid = planOperatorApply(op[1], sid);
-    planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 10);
-
-    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
-    sid = planOperatorApply(op[0], sid);
-    planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 8);
-
-    planStateSet2(state, 9, 3, 1, 1, 1, 0, 0, 4, 3, 2);
-    op_size = planSuccGenFind(succgen, state, op, p->op_size);
-    preferred.op = op;
-    preferred.op_size = op_size;
-    h = planHeur(heur, state, &preferred);
-    assertEquals(h, PLAN_HEUR_DEAD_END);
-    assertEquals(preferred.preferred_size, 0);
-
-
-    planStateSet2(state, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    op_size = planSuccGenFind(succgen, state, op, p->op_size);
-    preferred.op = op;
-    preferred.op_size = op_size;
-    h = planHeur(heur, state, &preferred);
-    assertEquals(h, 6);
-    assertEquals(preferred.preferred_size, 3);
-    assertEquals(strcmp(preferred.op[0]->name, "pick-up a"), 0);
-    assertEquals(strcmp(preferred.op[1]->name, "unstack c d"), 0);
-    assertEquals(strcmp(preferred.op[2]->name, "unstack d b"), 0);
+            if (relax_test[i].pref_op != NULL){
+                op_name = relax_test[i].pref_op;
+                for (j = 0; *op_name != NULL; ++op_name, ++j){
+                    assertEquals(strcmp(res.pref_op[j]->name, *op_name), 0);
+                }
+            }
+        }
+    }
 
     planStateDel(state);
     planHeurDel(heur);
-    planSuccGenDel(succgen);
     planProblemDel(p);
+}
+
+TEST(testHeurRelaxAdd)
+{
+    testRelax("load-from-file.in1.sas", planHeurRelaxAddNew,
+              relax_test_add, relax_test_add_size);
 }
 
 TEST(testHeurRelaxMax)
 {
-    plan_problem_t *p;
-    plan_heur_t *heur;
-    plan_state_t *state;
-    plan_state_id_t sid;
-    plan_succ_gen_t *succgen;
-    plan_operator_t **op;
-    plan_cost_t h;
-    plan_heur_preferred_ops_t preferred;
-    int op_size;
-
-    p = planProblemFromFD("load-from-file.in1.sas");
-    succgen = planSuccGenNew(p->op, p->op_size);
-    //planProblemDump(p, stderr);
-
-    op = alloca(sizeof(plan_operator_t *) * p->op_size);
-
-    heur = planHeurRelaxMaxNew(p->var, p->var_size, p->goal,
-                               p->op, p->op_size, p->succ_gen);
-
-    state = planStateNew(p->state_pool);
-    planStatePoolGetState(p->state_pool, p->initial_state, state);
-
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 5);
-
-    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
-    sid = planOperatorApply(op[0], p->initial_state);
-    planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 5);
-
-    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
-    sid = planOperatorApply(op[1], sid);
-    planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 4);
-
-    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
-    sid = planOperatorApply(op[1], sid);
-    planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 4);
-
-    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
-    sid = planOperatorApply(op[0], sid);
-    planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 3);
-
-    planStateSet2(state, 9, 3, 1, 1, 1, 0, 0, 4, 3, 2);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, PLAN_HEUR_DEAD_END);
-
-    planStateSet2(state, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    op_size = planSuccGenFind(succgen, state, op, p->op_size);
-    preferred.op = op;
-    preferred.op_size = op_size;
-    h = planHeur(heur, state, &preferred);
-    assertEquals(h, 2);
-    assertEquals(preferred.preferred_size, 3);
-    assertEquals(strcmp(preferred.op[0]->name, "pick-up a"), 0);
-    assertEquals(strcmp(preferred.op[1]->name, "unstack c d"), 0);
-    assertEquals(strcmp(preferred.op[2]->name, "unstack d b"), 0);
-
-    planStateDel(state);
-    planHeurDel(heur);
-    planSuccGenDel(succgen);
-    planProblemDel(p);
+    testRelax("load-from-file.in1.sas", planHeurRelaxMaxNew,
+              relax_test_max, relax_test_max_size);
 }
 
 TEST(testHeurRelaxFF)
 {
-    plan_problem_t *p;
-    plan_heur_t *heur;
-    plan_state_t *state;
-    plan_state_id_t sid;
-    plan_succ_gen_t *succgen;
-    plan_operator_t **op;
-    plan_cost_t h;
-    plan_heur_preferred_ops_t preferred;
-    int op_size;
-
-    p = planProblemFromFD("load-from-file.in1.sas");
-    succgen = planSuccGenNew(p->op, p->op_size);
-    //planProblemDump(p, stderr);
-
-    heur = planHeurRelaxFFNew(p->var, p->var_size, p->goal,
-                              p->op, p->op_size, p->succ_gen);
-
-    op = alloca(sizeof(plan_operator_t *) * p->op_size);
-
-    state = planStateNew(p->state_pool);
-    planStatePoolGetState(p->state_pool, p->initial_state, state);
-
-    op_size = planSuccGenFind(succgen, state, op, p->op_size);
-    preferred.op = op;
-    preferred.op_size = op_size;
-    h = planHeur(heur, state, &preferred);
-    assertEquals(h, 6);
-    assertEquals(preferred.preferred_size, 1);
-    assertEquals(strcmp(preferred.op[0]->name, "unstack b c"), 0);
-
-    op_size = planSuccGenFind(succgen, state, op, p->op_size);
-    assertTrue(op_size > 0);
-    sid = planOperatorApply(op[0], p->initial_state);
-    planStatePoolGetState(p->state_pool, sid, state);
-    op_size = planSuccGenFind(succgen, state, op, p->op_size);
-    preferred.op = op;
-    preferred.op_size = op_size;
-    h = planHeur(heur, state, &preferred);
-    assertEquals(h, 6);
-    assertEquals(preferred.preferred_size, 1);
-    assertEquals(strcmp(preferred.op[0]->name, "put-down b"), 0);
-
-    assertTrue(planSuccGenFind(succgen, state, op, 2) > 0);
-    sid = planOperatorApply(op[1], sid);
-    planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 5);
-
-    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
-    sid = planOperatorApply(op[0], sid);
-    planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 6);
-
-    assertTrue(planSuccGenFind(succgen, state, op, 1) > 0);
-    sid = planOperatorApply(op[0], sid);
-    planStatePoolGetState(p->state_pool, sid, state);
-    h = planHeur(heur, state, NULL);
-    assertEquals(h, 6);
-
-    planStateSet2(state, 9, 3, 1, 1, 1, 0, 0, 4, 3, 2);
-    op_size = planSuccGenFind(succgen, state, op, p->op_size);
-    preferred.op = op;
-    preferred.op_size = op_size;
-    h = planHeur(heur, state, &preferred);
-    assertEquals(h, PLAN_HEUR_DEAD_END);
-    assertEquals(preferred.preferred_size, 0);
-
-    planStateSet2(state, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    op_size = planSuccGenFind(succgen, state, op, p->op_size);
-    preferred.op = op;
-    preferred.op_size = op_size;
-    h = planHeur(heur, state, &preferred);
-    assertEquals(h, 6);
-    assertEquals(preferred.preferred_size, 3);
-    assertEquals(strcmp(preferred.op[0]->name, "pick-up a"), 0);
-    assertEquals(strcmp(preferred.op[1]->name, "unstack c d"), 0);
-    assertEquals(strcmp(preferred.op[2]->name, "unstack d b"), 0);
-
-    planStateDel(state);
-    planHeurDel(heur);
-    planSuccGenDel(succgen);
-    planProblemDel(p);
+    testRelax("load-from-file.in1.sas", planHeurRelaxFFNew,
+              relax_test_ff, relax_test_ff_size);
 }
 
 struct _lm_cut_test_t {
@@ -464,7 +339,7 @@ TEST(testHeurRelaxLMCut)
     plan_problem_t *p;
     plan_heur_t *heur;
     plan_state_t *state;
-    plan_cost_t h;
+    plan_heur_res_t res;
     int i, var;
 
     p = planProblemFromFD("../data/ma-benchmarks/depot/pfile5.sas");
@@ -476,8 +351,9 @@ TEST(testHeurRelaxLMCut)
     for (i = 0; i < lm_cut_test_len; ++i){
         for (var = 0; var < 38; ++var)
             planStateSet(state, var, lm_cut_test[i].state[var]);
-        h = planHeur(heur, state, NULL);
-        assertEquals(h, lm_cut_test[i].heur);
+        planHeurResInit(&res);
+        planHeur(heur, state, &res);
+        assertEquals(res.heur, lm_cut_test[i].heur);
     }
 
     planStateDel(state);

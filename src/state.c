@@ -526,6 +526,16 @@ void planStateSet2(plan_state_t *state, int n, ...)
     va_end(ap);
 }
 
+void planStatePrint(const plan_state_t *state, FILE *fout)
+{
+    int i;
+
+    fprintf(fout, "State: [");
+    for (i = 0; i < state->num_vars; ++i){
+        fprintf(fout, " %d", (int)state->val[i]);
+    }
+    fprintf(fout, "]\n");
+}
 
 
 

@@ -237,6 +237,10 @@ _bor_inline int planStateSize(const plan_state_t *state);
  */
 void planStateZeroize(plan_state_t *state);
 
+/**
+ * For debug purposes.
+ */
+void planStatePrint(const plan_state_t *state, FILE *fout);
 
 
 

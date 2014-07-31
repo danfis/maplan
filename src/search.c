@@ -115,23 +115,24 @@ plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_heur_t *heur,
                                  plan_search_applicable_ops_t *preferred_ops)
 {
-    plan_heur_preferred_ops_t pref_ops;
-    plan_cost_t hval;
+    plan_heur_res_t res;
 
     planStatePoolGetState(search->state_pool, state_id, search->state);
     planSearchStatIncEvaluatedStates(&search->stat);
 
+    planHeurResInit(&res);
     if (preferred_ops){
-        pref_ops.op = preferred_ops->op;
-        pref_ops.op_size = preferred_ops->op_found;
-        hval = planHeur(heur, search->state, &pref_ops);
-        preferred_ops->op_preferred = pref_ops.preferred_size;
-
-    }else{
-        hval = planHeur(heur, search->state, NULL);
+        res.pref_op = preferred_ops->op;
+        res.pref_op_size = preferred_ops->op_found;
     }
 
-    return hval;
+    planHeur(heur, search->state, &res);
+
+    if (preferred_ops){
+        preferred_ops->op_preferred = res.pref_size;
+    }
+
+    return res.heur;
 }
 
 void _planSearchAddLazySuccessors(plan_search_t *search,

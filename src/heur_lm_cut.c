@@ -42,8 +42,8 @@ typedef struct _plan_heur_lm_cut_t plan_heur_lm_cut_t;
     bor_container_of((parent), plan_heur_lm_cut_t, heur)
 
 /** Main function that returns heuristic value. */
-static plan_cost_t planHeurLMCut(plan_heur_t *heur, const plan_state_t *state,
-                                 plan_heur_preferred_ops_t *preferred_ops);
+static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
+                          plan_heur_res_t *res);
 /** Delete method */
 static void planHeurLMCutDel(plan_heur_t *_heur);
 
@@ -119,16 +119,12 @@ static void planHeurLMCutDel(plan_heur_t *_heur)
     BOR_FREE(heur);
 }
 
-static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
-                                 plan_heur_preferred_ops_t *preferred_ops)
+static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
+                          plan_heur_res_t *res)
 {
     plan_heur_lm_cut_t *heur = HEUR_FROM_PARENT(_heur);
     plan_cost_t h = PLAN_HEUR_DEAD_END;
     int i;
-
-    // Preferred operators are not supported for now
-    if (preferred_ops)
-        preferred_ops->preferred_size = 0;
 
     // Initialize context for the current run
     lmCutCtxInit(heur);
@@ -166,8 +162,7 @@ static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
 
     lmCutCtxFree(heur);
 
-    return h;
-    return 0;
+    res->heur = h;
 }
 
 static void lmCutCtxInit(plan_heur_lm_cut_t *heur)

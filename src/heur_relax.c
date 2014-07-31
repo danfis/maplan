@@ -66,8 +66,7 @@ static void ctxProcessOp(plan_heur_relax_t *heur, int op_id, fact_t *fact);
 /** Main loop of algorithm for solving relaxed problem. */
 static int ctxMainLoop(plan_heur_relax_t *heur);
 /** Computes final heuristic from the values computed in previous steps. */
-static plan_cost_t ctxHeur(plan_heur_relax_t *heur,
-                           plan_heur_preferred_ops_t *preferred_ops);
+static plan_cost_t ctxHeur(plan_heur_relax_t *heur, plan_heur_res_t *pref);
 
 /** Sets heur->relaxed_plan[i] to 1 if i'th operator is in relaxed plan and
  *  to 0 if it is not. */
@@ -75,14 +74,14 @@ static void markRelaxedPlan(plan_heur_relax_t *heur);
 
 
 struct _pref_ops_selector_t {
-    plan_heur_preferred_ops_t *pref_ops; /*!< In/Out data structure */
-    plan_operator_t *base_op;            /*!< Base pointer to the source
-                                              operator array. */
-    plan_operator_t **cur;               /*!< Cursor pointing to the next
-                                              operator in .pref_ops->op[] */
-    plan_operator_t **end;               /*!< Points after .pref_ops->op[] */
-    plan_operator_t **ins;               /*!< Next insert position for
-                                              preferred operator. */
+    plan_heur_res_t *pref_ops; /*!< In/Out data structure */
+    plan_operator_t *base_op;  /*!< Base pointer to the source
+                                    operator array. */
+    plan_operator_t **cur;     /*!< Cursor pointing to the next
+                                    operator in .pref_ops->op[] */
+    plan_operator_t **end;     /*!< Points after .pref_ops->op[] */
+    plan_operator_t **ins;     /*!< Next insert position for
+                                    preferred operator. */
 };
 typedef struct _pref_ops_selector_t pref_ops_selector_t;
 
@@ -93,7 +92,7 @@ typedef struct _pref_ops_selector_t pref_ops_selector_t;
 
 /** Initializes preferred-operator-selector. */
 static void prefOpsSelectorInit(pref_ops_selector_t *selector,
-                                plan_heur_preferred_ops_t *pref_ops,
+                                plan_heur_res_t *pref_ops,
                                 const plan_operator_t *base_op);
 /** Finalizes selecting of preferred operators */
 static void prefOpsSelectorFinalize(pref_ops_selector_t *sel);
@@ -103,8 +102,8 @@ static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
                                            int op_id);
 
 /** Main function that returns heuristic value. */
-static plan_cost_t planHeurRelax(plan_heur_t *heur, const plan_state_t *state,
-                                 plan_heur_preferred_ops_t *preferred_ops);
+static void planHeurRelax(plan_heur_t *heur, const plan_state_t *state,
+                          plan_heur_res_t *res);
 /** Delete method */
 static void planHeurRelaxDel(plan_heur_t *_heur);
 
@@ -180,23 +179,20 @@ static void planHeurRelaxDel(plan_heur_t *_heur)
     BOR_FREE(heur);
 }
 
-static plan_cost_t planHeurRelax(plan_heur_t *_heur, const plan_state_t *state,
-                                 plan_heur_preferred_ops_t *preferred_ops)
+static void planHeurRelax(plan_heur_t *_heur, const plan_state_t *state,
+                          plan_heur_res_t *res)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     plan_cost_t h = PLAN_HEUR_DEAD_END;
 
-    if (preferred_ops)
-        preferred_ops->preferred_size = 0;
-
     ctxInit(heur);
     ctxAddInitState(heur, state);
     if (ctxMainLoop(heur) == 0){
-        h = ctxHeur(heur, preferred_ops);
+        h = ctxHeur(heur, res);
     }
     ctxFree(heur);
 
-    return h;
+    res->heur = h;
 }
 
 
@@ -327,7 +323,7 @@ _bor_inline plan_cost_t relaxHeurValue(int type,
 }
 
 static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur,
-                                   plan_heur_preferred_ops_t *pref_ops)
+                                   plan_heur_res_t *pref_ops)
 {
     int i, id;
     plan_cost_t h;
@@ -338,7 +334,7 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur,
         h = relaxHeurValue(heur->type, h, heur->fact[id].value);
     }
 
-    if (pref_ops){
+    if (pref_ops->pref_op != NULL){
         pref_ops_selector_t pref_ops_selector;
         markRelaxedPlan(heur);
         prefOpsSelectorInit(&pref_ops_selector, pref_ops, heur->base_op);
@@ -356,13 +352,13 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur,
 
 
 static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
-                               plan_heur_preferred_ops_t *preferred_ops)
+                               plan_heur_res_t *preferred_ops)
 {
     int i;
     plan_cost_t h = PLAN_COST_ZERO;
     PREF_OPS_SELECTOR(pref_ops_selector);
 
-    if (preferred_ops){
+    if (preferred_ops->pref_op != NULL){
         prefOpsSelectorInit(&pref_ops_selector, preferred_ops,
                             heur->base_op);
     }
@@ -370,7 +366,7 @@ static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
     markRelaxedPlan(heur);
     for (i = 0; i < heur->data.actual_op_size; ++i){
         if (heur->relaxed_plan[i]){
-            if (preferred_ops){
+            if (preferred_ops->pref_op != NULL){
                 prefOpsSelectorMarkPreferredOp(&pref_ops_selector, i);
             }
 
@@ -378,7 +374,7 @@ static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
         }
     }
 
-    if (preferred_ops){
+    if (preferred_ops->pref_op != NULL){
         prefOpsSelectorFinalize(&pref_ops_selector);
     }
 
@@ -386,7 +382,7 @@ static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
 }
 
 static plan_cost_t ctxHeur(plan_heur_relax_t *heur,
-                           plan_heur_preferred_ops_t *preferred_ops)
+                           plan_heur_res_t *preferred_ops)
 {
     if (heur->type == TYPE_ADD || heur->type == TYPE_MAX){
         return relaxHeurAddMax(heur, preferred_ops);
@@ -440,28 +436,28 @@ static int sortPreferredOpsByPtrCmp(const void *a, const void *b)
 }
 
 static void prefOpsSelectorInit(pref_ops_selector_t *selector,
-                                plan_heur_preferred_ops_t *pref_ops,
+                                plan_heur_res_t *pref_ops,
                                 const plan_operator_t *base_op)
 {
     selector->pref_ops = pref_ops;
     selector->base_op  = (plan_operator_t *)base_op;
 
     // Sort array of operators by their pointers.
-    if (pref_ops->op_size > 0){
-        qsort(pref_ops->op, pref_ops->op_size, sizeof(plan_operator_t *),
-              sortPreferredOpsByPtrCmp);
+    if (pref_ops->pref_op_size > 0){
+        qsort(pref_ops->pref_op, pref_ops->pref_op_size,
+              sizeof(plan_operator_t *), sortPreferredOpsByPtrCmp);
     }
 
     // Set up cursors
-    selector->cur = pref_ops->op;
-    selector->end = pref_ops->op + pref_ops->op_size;
-    selector->ins = pref_ops->op;
+    selector->cur = pref_ops->pref_op;
+    selector->end = pref_ops->pref_op + pref_ops->pref_op_size;
+    selector->ins = pref_ops->pref_op;
 }
 
 static void prefOpsSelectorFinalize(pref_ops_selector_t *sel)
 {
     // Compute number of preferred operators from .ins pointer
-    sel->pref_ops->preferred_size = sel->ins - sel->pref_ops->op;
+    sel->pref_ops->pref_size = sel->ins - sel->pref_ops->pref_op;
 }
 
 static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,

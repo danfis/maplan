@@ -17,8 +17,9 @@ void planHeurDel(plan_heur_t *heur)
     heur->del_fn(heur);
 }
 
-plan_cost_t planHeur(plan_heur_t *heur, const plan_state_t *state,
-                     plan_heur_preferred_ops_t *preferred_ops)
+void planHeur(plan_heur_t *heur, const plan_state_t *state,
+              plan_heur_res_t *res)
 {
-    return heur->heur_fn(heur, state, preferred_ops);
+    res->pref_size = 0;
+    heur->heur_fn(heur, state, res);
 }

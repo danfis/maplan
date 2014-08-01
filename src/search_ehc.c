@@ -31,6 +31,10 @@ static int planSearchEHCInit(plan_search_t *);
 /** Performes one step in the algorithm. */
 static int planSearchEHCStep(plan_search_t *,
                              plan_search_step_change_t *change);
+static int planSearchEHCMAInit(plan_search_t *, plan_ma_agent_t *agent);
+static int planSearchEHCMAStep(plan_search_t *, plan_ma_agent_t *agent);
+static int planSearchEHCMAUpdate(plan_search_t *, plan_ma_agent_t *agent,
+                                 const plan_ma_msg_t *msg);
 /** Injects a new state into open-list */
 static int planSearchEHCInjectState(plan_search_t *, plan_state_id_t state_id,
                                     plan_cost_t cost, plan_cost_t heuristic);
@@ -52,9 +56,9 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
                     planSearchEHCDel,
                     planSearchEHCInit,
                     planSearchEHCStep,
-                    NULL,
-                    NULL,
-                    NULL,
+                    planSearchEHCMAInit,
+                    planSearchEHCMAStep,
+                    planSearchEHCMAUpdate,
                     planSearchEHCInjectState);
 
     ehc->list              = planListLazyFifoNew();
@@ -170,6 +174,22 @@ static int planSearchEHCStep(plan_search_t *_ehc,
         addSuccessors(ehc, cur_state_id);
     }
 
+    return PLAN_SEARCH_CONT;
+}
+
+static int planSearchEHCMAInit(plan_search_t *search, plan_ma_agent_t *agent)
+{
+    return planSearchEHCInit(search);
+}
+
+static int planSearchEHCMAStep(plan_search_t *search, plan_ma_agent_t *agent)
+{
+    return PLAN_SEARCH_CONT;
+}
+
+static int planSearchEHCMAUpdate(plan_search_t *search, plan_ma_agent_t *agent,
+                                 const plan_ma_msg_t *msg)
+{
     return PLAN_SEARCH_CONT;
 }
 

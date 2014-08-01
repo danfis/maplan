@@ -279,7 +279,8 @@ _bor_inline int planSearchStep(plan_search_t *search,
                                plan_search_step_change_t *change);
 
 /**
- * Multi-agent variant of planSearchInitStep().
+ * Multi-agent variant of planSearchInitStep(). Also PLAN_SEARCH_MA_BLOCK
+ * can be returned.
  */
 _bor_inline int planSearchMAInitStep(plan_search_t *search,
                                      plan_ma_agent_t *agent);

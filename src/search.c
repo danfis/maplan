@@ -77,11 +77,17 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_del_fn del_fn,
                      plan_search_init_fn init_fn,
                      plan_search_step_fn step_fn,
+                     plan_search_ma_init_fn ma_init_fn,
+                     plan_search_ma_step_fn ma_step_fn,
+                     plan_search_ma_update_fn ma_update_fn,
                      plan_search_inject_state_fn inject_state_fn)
 {
     search->del_fn  = del_fn;
     search->init_fn = init_fn;
     search->step_fn = step_fn;
+    search->ma_init_fn = ma_init_fn;
+    search->ma_step_fn = ma_step_fn;
+    search->ma_update_fn = ma_update_fn;
     search->inject_state_fn = inject_state_fn;
     search->params = *params;
 

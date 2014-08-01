@@ -88,4 +88,11 @@ typedef uint32_t plan_packer_word_t;
  */
 #define PLAN_PACKER_WORD_SET_ALL_BITS ((plan_packer_word_t)-1)
 
+
+/**
+ * Forward Declarations
+ * =====================
+ */
+typedef struct _plan_ma_agent_t plan_ma_agent_t;
+
 #endif /* __PLAN_COMMON_H__ */

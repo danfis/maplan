@@ -8,6 +8,7 @@
 #include <plan/heur.h>
 #include <plan/list_lazy.h>
 #include <plan/path.h>
+#include <plan/ma_msg.h>
 
 /** Forward declaration */
 typedef struct _plan_search_t plan_search_t;
@@ -26,6 +27,12 @@ typedef struct _plan_search_t plan_search_t;
  * Status signaling that a solution was found.
  */
 #define PLAN_SEARCH_FOUND      1
+
+/**
+ * Status signaling in multi-agent mode that the caller should block until
+ * an update message isn't received.
+ */
+#define PLAN_SEARCH_MA_BLOCK   2
 
 /**
  * No solution was found.
@@ -272,6 +279,26 @@ _bor_inline int planSearchStep(plan_search_t *search,
                                plan_search_step_change_t *change);
 
 /**
+ * Multi-agent variant of planSearchInitStep().
+ */
+_bor_inline int planSearchMAInitStep(plan_search_t *search,
+                                     plan_ma_agent_t *agent);
+
+/**
+ * Multi-agent variant of planSearchStep(). Also PLAN_SEARCH_MA_BLOCK can
+ * be returned.
+ */
+_bor_inline int planSearchMAStep(plan_search_t *search,
+                                 plan_ma_agent_t *agent);
+
+/**
+ * Updates state of the search algorithm using multi-agent message.
+ */
+_bor_inline int planSearchMAUpdate(plan_search_t *search,
+                                   plan_ma_agent_t *agent,
+                                   const plan_ma_msg_t *msg);
+
+/**
  * Request for injection of the state into open-list.
  * Returns 0 if the state was injected, -1 otherwise.
  */
@@ -340,6 +367,25 @@ typedef int (*plan_search_step_fn)(plan_search_t *,
                                    plan_search_step_change_t *change);
 
 /**
+ * Multi-agent version of plan_search_init_fn.
+ */
+typedef int (*plan_search_ma_init_fn)(plan_search_t *search,
+                                      plan_ma_agent_t *agent);
+
+/**
+ * Multi-agent version of plan_search_step_fn.
+ */
+typedef int (*plan_search_ma_step_fn)(plan_search_t *search,
+                                      plan_ma_agent_t *agent);
+
+/**
+ * Update multi-agent version with a message.
+ */
+typedef int (*plan_search_ma_update_fn)(plan_search_t *search,
+                                        plan_ma_agent_t *agent,
+                                        const plan_ma_msg_t *msg);
+
+/**
  * Inject the given state into open-list and performs another needed
  * operations with the state.
  * Returns 0 on success.
@@ -368,6 +414,9 @@ struct _plan_search_t {
     plan_search_del_fn del_fn;
     plan_search_init_fn init_fn;
     plan_search_step_fn step_fn;
+    plan_search_ma_init_fn ma_init_fn;
+    plan_search_ma_step_fn ma_step_fn;
+    plan_search_ma_update_fn ma_update_fn;
     plan_search_inject_state_fn inject_state_fn;
 
     plan_search_params_t params;
@@ -391,6 +440,9 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_del_fn del_fn,
                      plan_search_init_fn init_fn,
                      plan_search_step_fn step_fn,
+                     plan_search_ma_init_fn ma_init_fn,
+                     plan_search_ma_step_fn ma_step_fn,
+                     plan_search_ma_update_fn ma_update_fn,
                      plan_search_inject_state_fn inject_state_fn);
 
 /**
@@ -484,6 +536,26 @@ _bor_inline int planSearchStep(plan_search_t *search,
 {
     return search->step_fn(search, change);
 }
+
+_bor_inline int planSearchMAInitStep(plan_search_t *search,
+                                     plan_ma_agent_t *agent)
+{
+    return search->ma_init_fn(search, agent);
+}
+
+_bor_inline int planSearchMAStep(plan_search_t *search,
+                                 plan_ma_agent_t *agent)
+{
+    return search->ma_step_fn(search, agent);
+}
+
+_bor_inline int planSearchMAUpdate(plan_search_t *search,
+                                   plan_ma_agent_t *agent,
+                                   const plan_ma_msg_t *msg)
+{
+    return search->ma_update_fn(search, agent, msg);
+}
+
 
 _bor_inline int planSearchInjectState(plan_search_t *search,
                                       plan_state_id_t state_id,

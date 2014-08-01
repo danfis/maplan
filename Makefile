@@ -58,6 +58,7 @@ OBJS += ma_agent
 OBJS += ma
 OBJS += ma_heur
 OBJS += ma_search
+OBJS += ma_search_ehc
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg

@@ -28,7 +28,6 @@ struct _plan_ma_agent_t {
     int terminated;                /*!< True if the agent was already
                                         terminated */
 };
-typedef struct _plan_ma_agent_t plan_ma_agent_t;
 
 /**
  * Creates a multi-agent node.

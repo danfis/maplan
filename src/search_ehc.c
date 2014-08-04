@@ -135,12 +135,14 @@ static int planSearchEHCMAInit(plan_search_t *search, plan_ma_agent_t *agent)
 
 static int planSearchEHCMAStep(plan_search_t *search, plan_ma_agent_t *agent)
 {
-    return PLAN_SEARCH_CONT;
+    // TODO: Send public state
+    return planSearchEHCStep(search, NULL);
 }
 
 static int planSearchEHCMAUpdate(plan_search_t *search, plan_ma_agent_t *agent,
                                  const plan_ma_msg_t *msg)
 {
+    // TODO: Inject public state
     return PLAN_SEARCH_CONT;
 }
 

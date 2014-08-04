@@ -35,6 +35,11 @@ void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
 plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 /**
+ * Returns true if the message is one of SEARCH types.
+ */
+int planMAMsgIsSearchType(const plan_ma_msg_t *msg);
+
+/**
  * Set public-state type of message.
  */
 void planMAMsgSetPublicState(plan_ma_msg_t *msg, int agent_id,

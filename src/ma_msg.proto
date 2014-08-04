@@ -30,7 +30,8 @@ message PlanMAMsg {
         TERMINATE_REQUEST = 0x101;
         TERMINATE_ACK     = 0x102;
 
-        PUBLIC_STATE      = 0x001;
+        SEARCH_PUBLIC_STATE = 0x201;
+
         TRACE_PATH        = 0x002;
     }
 

@@ -40,6 +40,16 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
     return msg;
 }
 
+int planMAMsgIsSearchType(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    unsigned type = msg->type();
+
+    if ((type & 0x200u) == 0x200u)
+        return 1;
+    return 0;
+}
+
 void planMAMsgSetPublicState(plan_ma_msg_t *_msg, int agent_id,
                              const void *state, size_t state_size,
                              int state_id,
@@ -48,7 +58,7 @@ void planMAMsgSetPublicState(plan_ma_msg_t *_msg, int agent_id,
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
     PlanMAMsgPublicState *public_state;
 
-    msg->set_type(PlanMAMsg::PUBLIC_STATE);
+    msg->set_type(PlanMAMsg::SEARCH_PUBLIC_STATE);
     public_state = msg->mutable_public_state();
     public_state->set_agent_id(agent_id);
     public_state->set_state(state, state_size);
@@ -60,7 +70,7 @@ void planMAMsgSetPublicState(plan_ma_msg_t *_msg, int agent_id,
 int planMAMsgIsPublicState(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    return msg->type() == PlanMAMsg::PUBLIC_STATE;
+    return msg->type() == PlanMAMsg::SEARCH_PUBLIC_STATE;
 }
 
 int planMAMsgPublicStateAgent(const plan_ma_msg_t *_msg)

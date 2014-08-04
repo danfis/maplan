@@ -420,20 +420,6 @@ int planSearchMARun(plan_search_t *search,
 
 
 
-void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path)
-{
-    if (search->goal_state != PLAN_NO_STATE)
-        planSearchBackTrackPathFrom(search, search->goal_state, path);
-}
-
-void planSearchBackTrackPathFrom(plan_search_t *search,
-                                 plan_state_id_t from_state,
-                                 plan_path_t *path)
-{
-    extractPath(search->state_space, from_state, path);
-}
-
-
 void _planUpdateStat(plan_search_stat_t *stat,
                      long steps, bor_timer_t *timer)
 {

@@ -262,44 +262,6 @@ int planSearchMARun(plan_search_t *search,
                     plan_path_t *path);
 
 /**
- * Extracts path from initial state to the goal state (if was found) using
- * back-tracking from the goal state.
- */
-void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path);
-
-/**
- * Simliar to planSearchBackTrackPath() but starting state for
- * back-tracking is specified.
- */
-void planSearchBackTrackPathFrom(plan_search_t *search,
-                                 plan_state_id_t from_state,
-                                 plan_path_t *path);
-
-/**
-* Performs initial step which should be insertion of the initial state.
- * Returns PLAN_SEARCH_CONT or PLAN_SEARCH_FOUND.
- */
-_bor_inline int planSearchInitStep(plan_search_t *search);
-
-/**
- * Performs one step in search.
- * Returns one of PLAN_SEARCH_{CONT,FOUND,NOT_FOUND,ABORT}.
- * If {change} is non-NULL it is filled with record of changes made during
- * that step.
- */
-_bor_inline int planSearchStep(plan_search_t *search,
-                               plan_search_step_change_t *change);
-
-/**
- * Request for injection of the state into open-list.
- * Returns 0 if the state was injected, -1 otherwise.
- */
-_bor_inline int planSearchInjectState(plan_search_t *search,
-                                      plan_state_id_t state_id,
-                                      plan_cost_t cost,
-                                      plan_cost_t heuristic);
-
-/**
  * Internals
  * ----------
  */
@@ -500,30 +462,6 @@ void _planUpdateStat(plan_search_stat_t *stat,
 int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id);
 
 /**** INLINES ****/
-_bor_inline int planSearchInitStep(plan_search_t *search)
-{
-    return search->init_fn(search);
-}
-
-_bor_inline int planSearchStep(plan_search_t *search,
-                               plan_search_step_change_t *change)
-{
-    return search->step_fn(search, change);
-}
-
-
-_bor_inline int planSearchInjectState(plan_search_t *search,
-                                      plan_state_id_t state_id,
-                                      plan_cost_t cost,
-                                      plan_cost_t heuristic)
-{
-    if (!search->inject_state_fn)
-        return -1;
-    return search->inject_state_fn(search, state_id, cost, heuristic);
-}
-
-
-
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)
 {
     ++stat->evaluated_states;

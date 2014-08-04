@@ -26,9 +26,19 @@ static void planSearchApplicableOpsFree(plan_search_t *search);
 _bor_inline void planSearchApplicableOpsFind(plan_search_t *search,
                                              plan_state_id_t state_id);
 
-/** TODO */
+/** Sends TERMINATE_ACK to the arbiter */
+static void maSendTerminateAck(plan_ma_comm_queue_t *comm);
+/** Performs terminate operation. */
+static void maTerminate(plan_search_t *search);
+/** Sends public state to peers */
 static int maSendPublicState(plan_search_t *search,
                              const plan_state_space_node_t *node);
+/** Injects public state corresponding to the message to the search
+ *  algorithm */
+static void maInjectPublicState(plan_search_t *search,
+                                const plan_ma_msg_t *msg);
+/** Process one message and returns PLAN_SEARCH_* status */
+static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg);
 
 
 void planSearchStatInit(plan_search_stat_t *stat)
@@ -312,6 +322,154 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     return res;
 }
 
+int planSearchMARun(plan_search_t *search,
+                    plan_search_ma_params_t *ma_params)
+{
+    plan_ma_msg_t *msg;
+    int res;
+    long steps = 0L;
+    bor_timer_t timer;
+
+    borTimerStart(&timer);
+
+    search->ma = 1;
+    search->ma_comm = ma_params->comm;
+    search->ma_terminated = 0;
+
+    res = search->init_fn(search);
+    while (res == PLAN_SEARCH_CONT){
+        // Process all pending messages
+        while (res == PLAN_SEARCH_CONT
+                    && (msg = planMACommQueueRecv(search->ma_comm)) != NULL){
+            res = maProcessMsg(search, msg);
+        }
+
+        // Again check the status because the message could change it
+        if (res != PLAN_SEARCH_CONT)
+            break;
+
+        // Perform one step of algorithm.
+        res = search->step_fn(search, NULL);
+        ++steps;
+
+        // call progress callback
+        if (res == PLAN_SEARCH_CONT
+                && search->params.progress_fn
+                && steps >= search->params.progress_freq){
+            _planUpdateStat(&search->stat, steps, &timer);
+            res = search->params.progress_fn(&search->stat,
+                                             search->params.progress_data);
+            steps = 0;
+        }
+
+        if (res == PLAN_SEARCH_ABORT){
+            maTerminate(search);
+            break;
+
+        }else if (res == PLAN_SEARCH_FOUND){
+            // If the solution was found, terminate agent cluster and exit.
+            // TODO
+            //if (tracePath(agent) == PLAN_SEARCH_FOUND)
+            //    agent->found = 1;
+            maTerminate(search);
+            break;
+
+        }else if (res == PLAN_SEARCH_NOT_FOUND){
+            // If this agent reached dead-end, wait either for terminate
+            // signal or for some public state it can continue from.
+            if ((msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
+                res = maProcessMsg(search, msg);
+            }
+        }
+    }
+
+    // call last progress callback
+    if (search->params.progress_fn && steps != 0L){
+        _planUpdateStat(&search->stat, steps, &timer);
+        search->params.progress_fn(&search->stat,
+                                   search->params.progress_data);
+    }
+
+    return res;
+}
+
+
+
+
+
+void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path)
+{
+    if (search->goal_state != PLAN_NO_STATE)
+        planSearchBackTrackPathFrom(search, search->goal_state, path);
+}
+
+void planSearchBackTrackPathFrom(plan_search_t *search,
+                                 plan_state_id_t from_state,
+                                 plan_path_t *path)
+{
+    extractPath(search->state_space, from_state, path);
+}
+
+
+void _planUpdateStat(plan_search_stat_t *stat,
+                     long steps, bor_timer_t *timer)
+{
+    stat->steps += steps;
+
+    borTimerStop(timer);
+    stat->elapsed_time = borTimerElapsedInSF(timer);
+
+    planSearchStatUpdatePeakMemory(stat);
+}
+
+static void extractPath(plan_state_space_t *state_space,
+                        plan_state_id_t goal_state,
+                        plan_path_t *path)
+{
+    plan_state_space_node_t *node;
+
+    planPathInit(path);
+
+    node = planStateSpaceNode(state_space, goal_state);
+    while (node && node->op){
+        planPathPrepend(path, node->op,
+                        node->parent_state_id, node->state_id);
+        node = planStateSpaceNode(state_space, node->parent_state_id);
+    }
+}
+
+static void planSearchApplicableOpsInit(plan_search_t *search, int op_size)
+{
+    search->applicable_ops.op = BOR_ALLOC_ARR(plan_operator_t *, op_size);
+    search->applicable_ops.op_size = op_size;
+    search->applicable_ops.op_found = 0;
+    search->applicable_ops.state = PLAN_NO_STATE;
+}
+
+static void planSearchApplicableOpsFree(plan_search_t *search)
+{
+    BOR_FREE(search->applicable_ops.op);
+}
+
+_bor_inline void planSearchApplicableOpsFind(plan_search_t *search,
+                                             plan_state_id_t state_id)
+{
+    plan_search_applicable_ops_t *app = &search->applicable_ops;
+
+    if (state_id == app->state)
+        return;
+
+    // unroll the state into search->state struct
+    planStatePoolGetState(search->state_pool, state_id, search->state);
+
+    // get operators to get successors
+    app->op_found = planSuccGenFind(search->params.prob->succ_gen,
+                                    search->state, app->op, app->op_size);
+
+    // remember the corresponding state
+    app->state = state_id;
+}
+
 static void maSendTerminateAck(plan_ma_comm_queue_t *comm)
 {
     plan_ma_msg_t *msg;
@@ -476,152 +634,4 @@ static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
     planMAMsgDel(msg);
 
     return res;
-}
-
-int planSearchMARun(plan_search_t *search,
-                    plan_search_ma_params_t *ma_params)
-{
-    plan_ma_msg_t *msg;
-    int res;
-    long steps = 0L;
-    bor_timer_t timer;
-
-    borTimerStart(&timer);
-
-    search->ma = 1;
-    search->ma_comm = ma_params->comm;
-    search->ma_terminated = 0;
-
-    res = search->init_fn(search);
-    while (res == PLAN_SEARCH_CONT){
-        // Process all pending messages
-        while (res == PLAN_SEARCH_CONT
-                    && (msg = planMACommQueueRecv(search->ma_comm)) != NULL){
-            res = maProcessMsg(search, msg);
-        }
-
-        // Again check the status because the message could change it
-        if (res != PLAN_SEARCH_CONT)
-            break;
-
-        // Perform one step of algorithm.
-        res = search->step_fn(search, NULL);
-        ++steps;
-
-        // call progress callback
-        if (res == PLAN_SEARCH_CONT
-                && search->params.progress_fn
-                && steps >= search->params.progress_freq){
-            _planUpdateStat(&search->stat, steps, &timer);
-            res = search->params.progress_fn(&search->stat,
-                                             search->params.progress_data);
-            steps = 0;
-        }
-
-        if (res == PLAN_SEARCH_ABORT){
-            maTerminate(search);
-            break;
-
-        }else if (res == PLAN_SEARCH_FOUND){
-            // If the solution was found, terminate agent cluster and exit.
-            // TODO
-            //if (tracePath(agent) == PLAN_SEARCH_FOUND)
-            //    agent->found = 1;
-            maTerminate(search);
-            break;
-
-        }else if (res == PLAN_SEARCH_NOT_FOUND){
-            // If this agent reached dead-end, wait either for terminate
-            // signal or for some public state it can continue from.
-            if ((msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
-                res = maProcessMsg(search, msg);
-            }
-        }
-    }
-
-    // call last progress callback
-    if (search->params.progress_fn && steps != 0L){
-        _planUpdateStat(&search->stat, steps, &timer);
-        search->params.progress_fn(&search->stat,
-                                   search->params.progress_data);
-    }
-
-    return res;
-}
-
-
-
-
-
-void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path)
-{
-    if (search->goal_state != PLAN_NO_STATE)
-        planSearchBackTrackPathFrom(search, search->goal_state, path);
-}
-
-void planSearchBackTrackPathFrom(plan_search_t *search,
-                                 plan_state_id_t from_state,
-                                 plan_path_t *path)
-{
-    extractPath(search->state_space, from_state, path);
-}
-
-
-void _planUpdateStat(plan_search_stat_t *stat,
-                     long steps, bor_timer_t *timer)
-{
-    stat->steps += steps;
-
-    borTimerStop(timer);
-    stat->elapsed_time = borTimerElapsedInSF(timer);
-
-    planSearchStatUpdatePeakMemory(stat);
-}
-
-static void extractPath(plan_state_space_t *state_space,
-                        plan_state_id_t goal_state,
-                        plan_path_t *path)
-{
-    plan_state_space_node_t *node;
-
-    planPathInit(path);
-
-    node = planStateSpaceNode(state_space, goal_state);
-    while (node && node->op){
-        planPathPrepend(path, node->op,
-                        node->parent_state_id, node->state_id);
-        node = planStateSpaceNode(state_space, node->parent_state_id);
-    }
-}
-
-static void planSearchApplicableOpsInit(plan_search_t *search, int op_size)
-{
-    search->applicable_ops.op = BOR_ALLOC_ARR(plan_operator_t *, op_size);
-    search->applicable_ops.op_size = op_size;
-    search->applicable_ops.op_found = 0;
-    search->applicable_ops.state = PLAN_NO_STATE;
-}
-
-static void planSearchApplicableOpsFree(plan_search_t *search)
-{
-    BOR_FREE(search->applicable_ops.op);
-}
-
-_bor_inline void planSearchApplicableOpsFind(plan_search_t *search,
-                                             plan_state_id_t state_id)
-{
-    plan_search_applicable_ops_t *app = &search->applicable_ops;
-
-    if (state_id == app->state)
-        return;
-
-    // unroll the state into search->state struct
-    planStatePoolGetState(search->state_pool, state_id, search->state);
-
-    // get operators to get successors
-    app->op_found = planSuccGenFind(search->params.prob->succ_gen,
-                                    search->state, app->op, app->op_size);
-
-    // remember the corresponding state
-    app->state = state_id;
 }

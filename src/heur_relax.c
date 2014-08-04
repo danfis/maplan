@@ -111,6 +111,14 @@ static void planHeurRelax2(plan_heur_t *heur,
                            plan_heur_res_t *res);
 /** Delete method */
 static void planHeurRelaxDel(plan_heur_t *_heur);
+static long planHeurRelaxMA(plan_heur_t *heur,
+                            plan_ma_comm_queue_t *comm,
+                            const plan_state_t *state,
+                            plan_heur_res_t *res);
+static int planHeurRelaxMAUpdate(plan_heur_t *heur,
+                                 plan_ma_comm_queue_t *comm,
+                                 const plan_ma_msg_t *msg,
+                                 plan_heur_res_t *res);
 
 
 static plan_heur_t *planHeurRelaxNew(int type,
@@ -126,7 +134,7 @@ static plan_heur_t *planHeurRelaxNew(int type,
     heur = BOR_ALLOC(plan_heur_relax_t);
     _planHeurInit(&heur->heur, planHeurRelaxDel,
                   planHeurRelax, planHeurRelax2,
-                  NULL, NULL);
+                  planHeurRelaxMA, planHeurRelaxMAUpdate);
     heur->type = type;
     heur->base_op = op;
 
@@ -211,6 +219,22 @@ static void planHeurRelax2(plan_heur_t *_heur,
     ctxFree(heur);
 
     res->heur = h;
+}
+
+static long planHeurRelaxMA(plan_heur_t *heur,
+                            plan_ma_comm_queue_t *comm,
+                            const plan_state_t *state,
+                            plan_heur_res_t *res)
+{
+    return 0;
+}
+
+static int planHeurRelaxMAUpdate(plan_heur_t *heur,
+                                 plan_ma_comm_queue_t *comm,
+                                 const plan_ma_msg_t *msg,
+                                 plan_heur_res_t *res)
+{
+    return 0;
 }
 
 

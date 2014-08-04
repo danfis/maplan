@@ -4,6 +4,16 @@
 
 #include "plan/search.h"
 
+/** Reference data for the received public states */
+struct _ma_pub_state_data_t {
+    int agent_id;             /*!< ID of the source agent */
+    plan_cost_t cost;         /*!< Cost of the path to this state as found
+                                   by the remote agent. */
+    plan_state_id_t state_id; /*!< ID of the state in remote agent's state
+                                   pool. This is used for back-tracking. */
+};
+typedef struct _ma_pub_state_data_t ma_pub_state_data_t;
+
 static void extractPath(plan_state_space_t *state_space,
                         plan_state_id_t goal_state,
                         plan_path_t *path);
@@ -82,6 +92,8 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_ma_update_fn ma_update_fn,
                      plan_search_inject_state_fn inject_state_fn)
 {
+    ma_pub_state_data_t msg_init;
+
     search->del_fn  = del_fn;
     search->init_fn = init_fn;
     search->step_fn = step_fn;
@@ -99,6 +111,14 @@ void _planSearchInit(plan_search_t *search,
     search->goal_state  = PLAN_NO_STATE;
 
     planSearchApplicableOpsInit(search, search->params.prob->op_size);
+
+    search->ma_comm = NULL;
+
+    msg_init.agent_id = -1;
+    msg_init.cost = PLAN_COST_MAX;
+    search->ma_pub_state_reg = planStatePoolDataReserve(search->state_pool,
+                                                        sizeof(ma_pub_state_data_t),
+                                                        NULL, &msg_init);
 }
 
 void _planSearchFree(plan_search_t *search)
@@ -283,6 +303,221 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
 
     return res;
 }
+
+static void maSendTerminateAck(plan_ma_comm_queue_t *comm)
+{
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew();
+    planMAMsgSetTerminateAck(msg);
+    planMACommQueueSendToArbiter(comm, msg);
+    planMAMsgDel(msg);
+}
+
+static void maTerminate(plan_search_t *search, plan_ma_comm_queue_t *comm)
+{
+    plan_ma_msg_t *msg;
+    int count, ack;
+
+    if (search->ma_terminated)
+        return;
+
+    if (comm->arbiter){
+        // If this is arbiter just send TERMINATE signal and wait for ACK
+        // from all peers.
+        // Because the TERMINATE_ACK is sent only as a response to TERMINATE
+        // signal and because TERMINATE signal can send only the single
+        // arbiter from exactly this place it is enough just to count
+        // number of ACKs.
+
+        msg = planMAMsgNew();
+        planMAMsgSetTerminate(msg);
+        planMACommQueueSendToAll(comm, msg);
+        planMAMsgDel(msg);
+
+        count = planMACommQueueNumPeers(comm);
+        while (count > 0
+                && (msg = planMACommQueueRecvBlock(comm)) != NULL){
+
+            if (planMAMsgIsTerminateAck(msg))
+                --count;
+            planMAMsgDel(msg);
+        }
+    }else{
+        // If this node is not arbiter send TERMINATE_REQUEST, wait for
+        // TERMINATE signal, ACK it and then termination is finished.
+
+        // 1. Send TERMINATE_REQUEST
+        msg = planMAMsgNew();
+        planMAMsgSetTerminateRequest(msg);
+        planMACommQueueSendToArbiter(comm, msg);
+        planMAMsgDel(msg);
+
+        // 2. Wait for TERMINATE
+        ack = 0;
+        while (!ack && (msg = planMACommQueueRecvBlock(comm)) != NULL){
+            if (planMAMsgIsTerminate(msg)){
+                // 3. Send TERMINATE_ACK
+                maSendTerminateAck(comm);
+                ack = 1;
+            }
+            planMAMsgDel(msg);
+        }
+    }
+
+    search->ma_terminated = 1;
+}
+
+static void maInjectPublicState(plan_search_t *search,
+                                const plan_ma_msg_t *msg)
+{
+    int cost, heuristic;
+    ma_pub_state_data_t *pub_state_data;
+    plan_state_id_t state_id;
+    const void *packed_state;
+
+    // Unroll data from the message
+    packed_state = planMAMsgPublicStateStateBuf(msg);
+    cost         = planMAMsgPublicStateCost(msg);
+    heuristic    = planMAMsgPublicStateHeur(msg);
+
+    // Insert packed state into state-pool if not already inserted
+    state_id = planStatePoolInsertPacked(search->state_pool,
+                                         packed_state);
+
+    // Get public state reference data
+    pub_state_data = planStatePoolData(search->state_pool,
+                                       search->ma_pub_state_reg,
+                                       state_id);
+
+    // This state was already inserted in past, so set the reference
+    // data only if the cost is smaller
+    // Set the reference data only if the new cost is smaller than the
+    // current one. This means that either the state is brand new or the
+    // previously inserted state had bigger cost.
+    if (pub_state_data->cost > cost){
+        pub_state_data->agent_id = planMAMsgPublicStateAgent(msg);
+        pub_state_data->cost     = cost;
+        pub_state_data->state_id = planMAMsgPublicStateStateId(msg);
+    }
+
+    // Inject state into search algorithm
+    search->inject_state_fn(search, state_id, cost, heuristic);
+}
+
+static int maProcessMsg(plan_search_t *search, plan_ma_comm_queue_t *comm,
+                        plan_ma_msg_t *msg)
+{
+    int res = PLAN_SEARCH_CONT;
+
+    if (planMAMsgIsPublicState(msg)){
+        maInjectPublicState(search, msg);
+        res = PLAN_SEARCH_CONT;
+
+    }else if (planMAMsgIsTerminateType(msg)){
+        if (comm->arbiter){
+            // The arbiter should ignore all signals except
+            // TERMINATE_REQUEST because TERMINATE is allowed to send
+            // only arbiter itself and TERMINATE_ACK should be received
+            // in terminate() method.
+            if (planMAMsgIsTerminateRequest(msg)){
+                maTerminate(search, comm);
+                res = PLAN_SEARCH_ABORT;
+            }
+
+        }else{
+            // The non-arbiter node should accept only TERMINATE
+            // signal and send ACK to him.
+            if (planMAMsgIsTerminate(msg)){
+                maSendTerminateAck(comm);
+                search->ma_terminated = 1;
+                res = PLAN_SEARCH_ABORT;
+            }
+        }
+
+    }else if (planMAMsgIsTracePath(msg)){
+        // TODO
+        //res = processTracePath(agent, msg);
+    }
+
+    planMAMsgDel(msg);
+
+    return res;
+}
+
+int planSearchMARun(plan_search_t *search,
+                    plan_search_ma_params_t *ma_params)
+{
+    plan_ma_msg_t *msg;
+    plan_ma_comm_queue_t *comm = ma_params->comm;
+    int res;
+    long steps = 0L;
+    bor_timer_t timer;
+
+    borTimerStart(&timer);
+
+    search->ma_terminated = 0;
+
+    res = search->ma_init_fn(search, comm);
+    while (res == PLAN_SEARCH_CONT){
+        // Process all pending messages
+        while (res == PLAN_SEARCH_CONT
+                    && (msg = planMACommQueueRecv(comm)) != NULL){
+            res = maProcessMsg(search, comm, msg);
+        }
+
+        // Again check the status because the message could change it
+        if (res != PLAN_SEARCH_CONT)
+            break;
+
+        // Perform one step of algorithm.
+        res = search->ma_step_fn(search, comm);
+        ++steps;
+
+        // call progress callback
+        if (res == PLAN_SEARCH_CONT
+                && search->params.progress_fn
+                && steps >= search->params.progress_freq){
+            _planUpdateStat(&search->stat, steps, &timer);
+            res = search->params.progress_fn(&search->stat,
+                                             search->params.progress_data);
+            steps = 0;
+        }
+
+        if (res == PLAN_SEARCH_ABORT){
+            maTerminate(search, comm);
+            break;
+
+        }else if (res == PLAN_SEARCH_FOUND){
+            // If the solution was found, terminate agent cluster and exit.
+            // TODO
+            //if (tracePath(agent) == PLAN_SEARCH_FOUND)
+            //    agent->found = 1;
+            maTerminate(search, comm);
+            break;
+
+        }else if (res == PLAN_SEARCH_NOT_FOUND){
+            // If this agent reached dead-end, wait either for terminate
+            // signal or for some public state it can continue from.
+            if ((msg = planMACommQueueRecvBlock(comm)) != NULL){
+                res = maProcessMsg(search, comm, msg);
+            }
+        }
+    }
+
+    // call last progress callback
+    if (search->params.progress_fn && res != PLAN_SEARCH_ABORT && steps != 0L){
+        _planUpdateStat(&search->stat, steps, &timer);
+        search->params.progress_fn(&search->stat,
+                                   search->params.progress_data);
+    }
+
+    return res;
+}
+
+
+
+
 
 void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path)
 {

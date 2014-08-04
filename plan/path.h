@@ -13,6 +13,8 @@ typedef bor_list_t plan_path_t;
  * One step in path.
  */
 struct _plan_path_op_t {
+    char *name;
+    plan_cost_t cost;
     plan_operator_t *op;
     plan_state_id_t from_state;
     plan_state_id_t to_state;
@@ -31,10 +33,17 @@ void planPathInit(plan_path_t *path);
 void planPathFree(plan_path_t *path);
 
 /**
+ * Copies path from src to dst.
+ */
+void planPathCopy(plan_path_t *dst, const plan_path_t *src);
+
+/**
  * Prepends an operator into path.
  */
 void planPathPrepend(plan_path_t *path, plan_operator_t *op,
                      plan_state_id_t from, plan_state_id_t to);
+void planPathPrepend2(plan_path_t *path, const char *op_name,
+                      plan_cost_t op_cost);
 
 /**
  * Prints path to the given file.

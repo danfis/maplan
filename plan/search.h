@@ -258,7 +258,8 @@ int planSearchRun(plan_search_t *search, plan_path_t *path);
  * Runs search in multi-agent mode.
  */
 int planSearchMARun(plan_search_t *search,
-                    plan_search_ma_params_t *ma_params);
+                    plan_search_ma_params_t *ma_params,
+                    plan_path_t *path);
 
 /**
  * Extracts path from initial state to the goal state (if was found) using
@@ -403,6 +404,7 @@ struct _plan_search_t {
     int ma_pub_state_reg;          /*!< ID of the registry that associates
                                         received public state with state-id. */
     int ma_terminated;             /*!< True if already terminated */
+    plan_path_t *ma_path;          /*!< Output path for multi-agent mode */
 };
 
 

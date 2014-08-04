@@ -339,7 +339,7 @@ static void updateTracedPath(plan_path_t *path, plan_ma_msg_t *msg)
 
     for (lst = borListPrev(path); lst != path; lst = borListPrev(lst)){
         op = BOR_LIST_ENTRY(lst, plan_path_op_t, path);
-        planMAMsgTracePathAddOperator(msg, op->op->name, op->op->cost);
+        planMAMsgTracePathAddOperator(msg, op->name, op->cost);
     }
 }
 

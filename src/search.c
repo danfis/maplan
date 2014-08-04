@@ -40,6 +40,24 @@ static void maInjectPublicState(plan_search_t *search,
 /** Process one message and returns PLAN_SEARCH_* status */
 static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg);
 
+/** Back-track path discovered on this node */
+static int maBackTrackLocalPath(plan_search_t *search,
+                                plan_state_id_t from_state,
+                                plan_path_t *path);
+/** Updates path in the given message with operators in the path */
+static void maUpdateTracedPath(plan_path_t *path, plan_ma_msg_t *msg);
+/** Updates message with the traced path and return the agent where the
+ *  message should be sent.
+ *  If the message shouldn't be sent to any agent -1 is returned in case of
+ *  error or -2 if tracing is done. */
+static int maUpdateTracePathMsg(plan_search_t *search, plan_ma_msg_t *msg);
+/** Reads path stored in the message into the output path structure */
+static void maReadMsgPath(plan_ma_msg_t *msg, plan_path_t *path);
+/** Process trace-path type message and returns PLAN_SEARCH_* status */
+static int maProcessTracePath(plan_search_t *search, plan_ma_msg_t *msg);
+/** Performs trace-path operation, it is assumed that search has
+ *  found the solution. */
+static int maTracePath(plan_search_t *search);
 
 void planSearchStatInit(plan_search_stat_t *stat)
 {
@@ -274,7 +292,8 @@ int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id)
 {
     if (planProblemCheckGoal(search->params.prob, state_id)){
         search->goal_state = state_id;
-        planSearchStatSetFoundSolution(&search->stat);
+        if (!search->ma)
+            planSearchStatSetFoundSolution(&search->stat);
         return 1;
     }
 
@@ -323,7 +342,8 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
 }
 
 int planSearchMARun(plan_search_t *search,
-                    plan_search_ma_params_t *ma_params)
+                    plan_search_ma_params_t *ma_params,
+                    plan_path_t *path)
 {
     plan_ma_msg_t *msg;
     int res;
@@ -335,6 +355,7 @@ int planSearchMARun(plan_search_t *search,
     search->ma = 1;
     search->ma_comm = ma_params->comm;
     search->ma_terminated = 0;
+    search->ma_path = path;
 
     res = search->init_fn(search);
     while (res == PLAN_SEARCH_CONT){
@@ -368,9 +389,11 @@ int planSearchMARun(plan_search_t *search,
 
         }else if (res == PLAN_SEARCH_FOUND){
             // If the solution was found, terminate agent cluster and exit.
-            // TODO
-            //if (tracePath(agent) == PLAN_SEARCH_FOUND)
-            //    agent->found = 1;
+            if (maTracePath(search) == PLAN_SEARCH_FOUND){
+                planSearchStatSetFoundSolution(&search->stat);
+            }else{
+                res = PLAN_SEARCH_NOT_FOUND;
+            }
             maTerminate(search);
             break;
 
@@ -627,11 +650,176 @@ static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
         }
 
     }else if (planMAMsgIsTracePath(msg)){
-        // TODO
-        //res = processTracePath(agent, msg);
+        res = maProcessTracePath(search, msg);
     }
 
     planMAMsgDel(msg);
+
+    return res;
+}
+
+static int maBackTrackLocalPath(plan_search_t *search,
+                                plan_state_id_t from_state,
+                                plan_path_t *path)
+{
+    extractPath(search->state_space, from_state, path);
+    if (planPathEmpty(path)){
+        fprintf(stderr, "Error: Could not trace any portion of the"
+                        " path.\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+static void maUpdateTracedPath(plan_path_t *path, plan_ma_msg_t *msg)
+{
+    plan_path_op_t *op;
+    bor_list_t *lst;
+
+    for (lst = borListPrev(path); lst != path; lst = borListPrev(lst)){
+        op = BOR_LIST_ENTRY(lst, plan_path_op_t, path);
+        planMAMsgTracePathAddOperator(msg, op->name, op->cost);
+    }
+}
+
+/** Updates message with the traced path and return the agent where the
+ *  message should be sent.
+ *  If the message shouldn't be sent to any agent -1 is returned in case of
+ *  error or -2 if tracing is done. */
+static int maUpdateTracePathMsg(plan_search_t *search, plan_ma_msg_t *msg)
+{
+    plan_path_t path;
+    plan_state_id_t from_state;
+    plan_path_op_t *first_op;
+    ma_pub_state_data_t *pub_state;
+    int target_agent_id;
+
+    // Early exit if the path was already traced
+    if (planMAMsgTracePathIsDone(msg))
+        return -2;
+
+    // Get state from which start back-tracking
+    from_state = planMAMsgTracePathStateId(msg);
+
+    // Back-track path and handle possible error
+    planPathInit(&path);
+    if (maBackTrackLocalPath(search, from_state, &path) != 0){
+        return -1;
+    }
+
+    // Update trace path message by adding all operators in reverse
+    // order
+    maUpdateTracedPath(&path, msg);
+
+    // Check if we don't have the full path already
+    first_op = planPathFirstOp(&path);
+    if (first_op->from_state == 0){
+        // If traced the path to the initial state -- set the traced
+        // path as done.
+        planMAMsgTracePathSetDone(msg);
+        target_agent_id = -2;
+
+    }else{
+        // Retrieve public-state related data for the first state in path
+        pub_state = planStatePoolData(search->state_pool,
+                                      search->ma_pub_state_reg,
+                                      first_op->from_state);
+        if (pub_state->agent_id == -1){
+            fprintf(stderr, "Error: Trace-back of the path end up in"
+                            " non-public state which also isn't the"
+                            " initial state!\n");
+            return -1;
+        }
+
+        planMAMsgTracePathSetStateId(msg, pub_state->state_id);
+        target_agent_id = pub_state->agent_id;
+    }
+
+    planPathFree(&path);
+
+    return target_agent_id;
+}
+
+static void maReadMsgPath(plan_ma_msg_t *msg, plan_path_t *path)
+{
+    int i, len, cost;
+    const char *name;
+
+    // get number of operators in path
+    len = planMAMsgTracePathNumOperators(msg);
+
+    // copy path to the path strcture
+    planPathInit(path);
+    for (i = 0; i < len; ++i){
+        name = planMAMsgTracePathOperator(msg, i, &cost);
+        planPathPrepend2(path, name, cost);
+    }
+}
+
+static int maProcessTracePath(plan_search_t *search, plan_ma_msg_t *msg)
+{
+    int res, origin_agent;
+
+    res = maUpdateTracePathMsg(search, msg);
+    if (res >= 0){
+        planMACommQueueSendToNode(search->ma_comm, res, msg);
+        return PLAN_SEARCH_CONT;
+
+    }else if (res == -1){
+        return PLAN_SEARCH_ABORT;
+
+    }else if (res == -2){
+        origin_agent = planMAMsgTracePathOriginAgent(msg);
+
+        if (origin_agent != search->ma_comm->node_id){
+            // If this is not the original agent sent the result to the
+            // original agent
+            planMACommQueueSendToNode(search->ma_comm, origin_agent, msg);
+            return PLAN_SEARCH_CONT;
+
+        }else{
+            // If we have received the full traced path which we
+            // originated, read the path to the internal structure and
+            // report found solution.
+            if (search->ma_path)
+                maReadMsgPath(msg, search->ma_path);
+            return PLAN_SEARCH_FOUND;
+        }
+    }
+
+    return PLAN_SEARCH_ABORT;
+}
+
+static int maTracePath(plan_search_t *search)
+{
+    plan_ma_msg_t *msg;
+    int res;
+
+    // Construct trace-path message and fake it as it were we received this
+    // message and we should process it
+    msg = planMAMsgNew();
+    planMAMsgSetTracePath(msg, search->ma_comm->node_id);
+    planMAMsgTracePathSetStateId(msg, search->goal_state);
+
+    // Process that message as if it were just received
+    res = maProcessTracePath(search, msg);
+    planMAMsgDel(msg);
+
+    // We have found solution, so exit early
+    if (res != PLAN_SEARCH_CONT)
+        return res;
+
+    // Wait for trace-path response or terminate signal
+    while ((msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
+        if (planMAMsgIsTracePath(msg) || planMAMsgIsTerminateType(msg)){
+            res = maProcessMsg(search, msg);
+            if (res != PLAN_SEARCH_CONT)
+                break;
+        }else{
+            planMAMsgDel(msg);
+        }
+    }
 
     return res;
 }

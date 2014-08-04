@@ -1,7 +1,6 @@
 #include <boruvka/alloc.h>
 
 #include "plan/search.h"
-#include "plan/ma_agent.h"
 
 struct _plan_search_ehc_t {
     plan_search_t search;

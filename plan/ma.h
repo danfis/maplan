@@ -1,7 +1,7 @@
 #ifndef __PLAN_MA_H__
 #define __PLAN_MA_H__
 
-#include <plan/ma_agent.h>
+#include <plan/search.h>
 
 /**
  * Runs multiagent search.

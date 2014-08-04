@@ -54,7 +54,6 @@ OBJS += heur_relax
 OBJS += heur_lm_cut
 OBJS += prioqueue
 OBJS += ma_comm_queue
-OBJS += ma_agent
 OBJS += ma
 
 CXX_OBJS  = ma_msg.pb

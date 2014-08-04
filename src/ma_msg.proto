@@ -4,7 +4,25 @@ message PlanMAMsgPublicState {
     required int32 state_id = 3;
     required int32 cost = 4;
     required int32 heuristic = 5;
-};
+}
+
+message PlanMAMsgHeurRequest {
+    // Source agent
+    required int32 agent_id = 1;
+    // Reference ID of the heuristic function
+    required int64 ref_id = 2;
+
+    required bytes state = 3;
+    required int32 op_id = 4;
+}
+
+message PlanMAMsgHeurResponse {
+    // Reference ID of the heuristic function
+    required int64 ref_id = 2;
+
+    repeated int32 op_id = 3;
+    repeated int32 op_cost = 4;
+}
 
 message PlanMAMsgPathOperator {
     // Name of the operator
@@ -33,10 +51,15 @@ message PlanMAMsg {
         SEARCH_PUBLIC_STATE = 0x201;
 
         TRACE_PATH        = 0x002;
+
+        HEUR_REQUEST  = 0x301;
+        HEUR_RESPONSE = 0x302;
     }
 
     required Type type = 1;
 
     optional PlanMAMsgPublicState public_state = 2;
     optional PlanMAMsgTracePath trace_path = 3;
+    optional PlanMAMsgHeurRequest heur_request = 4;
+    optional PlanMAMsgHeurResponse heur_response = 5;
 }

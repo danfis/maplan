@@ -124,8 +124,8 @@ static plan_heur_t *planHeurRelaxNew(int type,
     int i;
 
     heur = BOR_ALLOC(plan_heur_relax_t);
-    planHeurInit(&heur->heur, planHeurRelaxDel,
-                 planHeurRelax, planHeurRelax2);
+    _planHeurInit(&heur->heur, planHeurRelaxDel,
+                  planHeurRelax, planHeurRelax2);
     heur->type = type;
     heur->base_op = op;
 
@@ -180,7 +180,7 @@ static void planHeurRelaxDel(plan_heur_t *_heur)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
 
-    planHeurFree(&heur->heur);
+    _planHeurFree(&heur->heur);
     BOR_FREE(heur->fact);
     BOR_FREE(heur->op);
     BOR_FREE(heur->relaxed_plan);

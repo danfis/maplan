@@ -1,6 +1,7 @@
 #include <boruvka/alloc.h>
 
 #include "plan/search.h"
+#include "plan/ma_agent.h"
 
 struct _plan_search_ehc_t {
     plan_search_t search;
@@ -27,7 +28,8 @@ static void addSuccessors(plan_search_ehc_t *ehc, plan_state_id_t state_id);
 static int processState(plan_search_ehc_t *ehc,
                         plan_state_id_t cur_state_id,
                         plan_state_id_t parent_state_id,
-                        plan_operator_t *parent_op);
+                        plan_operator_t *parent_op,
+                        plan_state_space_node_t **closed_node);
 
 /** Frees allocated resorces */
 static void planSearchEHCDel(plan_search_t *_ehc);
@@ -101,13 +103,12 @@ static int planSearchEHCInit(plan_search_t *_ehc)
     init_state = ehc->search.params.prob->initial_state;
 
     ehc->best_heur = PLAN_COST_MAX;
-    return processState(ehc, init_state, 0, NULL);
+    return processState(ehc, init_state, 0, NULL, NULL);
 }
 
-static int planSearchEHCStep(plan_search_t *_ehc,
-                             plan_search_step_change_t *change)
+_bor_inline int step(plan_search_ehc_t *ehc,
+                     plan_state_space_node_t **closed_node)
 {
-    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
     plan_state_id_t parent_state_id, cur_state_id;
     plan_operator_t *parent_op;
 
@@ -125,7 +126,15 @@ static int planSearchEHCStep(plan_search_t *_ehc,
                             &cur_state_id, NULL) != 0)
         return PLAN_SEARCH_CONT;
 
-    return processState(ehc, cur_state_id, parent_state_id, parent_op);
+    return processState(ehc, cur_state_id, parent_state_id, parent_op,
+                        closed_node);
+}
+
+static int planSearchEHCStep(plan_search_t *_ehc,
+                             plan_search_step_change_t *change)
+{
+    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
+    return step(ehc, NULL);
 }
 
 static int planSearchEHCMAInit(plan_search_t *search, plan_ma_agent_t *agent)
@@ -133,10 +142,46 @@ static int planSearchEHCMAInit(plan_search_t *search, plan_ma_agent_t *agent)
     return planSearchEHCInit(search);
 }
 
-static int planSearchEHCMAStep(plan_search_t *search, plan_ma_agent_t *agent)
+_bor_inline int sendPublicState(plan_ma_agent_t *agent,
+                                const plan_state_space_node_t *node)
 {
-    // TODO: Send public state
-    return planSearchEHCStep(search, NULL);
+    plan_ma_msg_t *msg;
+    const void *statebuf;
+    int res;
+
+    statebuf = planStatePoolGetPackedState(agent->state_pool, node->state_id);
+    if (statebuf == NULL)
+        return -1;
+
+    msg = planMAMsgNew();
+    planMAMsgSetPublicState(msg, agent->comm->node_id,
+                            statebuf, agent->packed_state_size,
+                            node->state_id,
+                            node->cost, node->heuristic);
+    res = planMACommQueueSendToAll(agent->comm, msg);
+    planMAMsgDel(msg);
+
+    return res;
+}
+
+static int planSearchEHCMAStep(plan_search_t *_ehc, plan_ma_agent_t *agent)
+{
+    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
+    plan_state_space_node_t *closed_node = NULL;
+    int res;
+
+    res = step(ehc, &closed_node);
+
+    if (res == PLAN_SEARCH_CONT && closed_node != NULL){
+        // Check whether the closed node is public state and if so, send it
+        // to the peers
+        if (closed_node->op != NULL
+                && !planOperatorIsPrivate(closed_node->op)){
+            sendPublicState(agent, closed_node);
+        }
+    }
+
+    return res;
 }
 
 static int planSearchEHCMAUpdate(plan_search_t *search, plan_ma_agent_t *agent,
@@ -174,9 +219,11 @@ static void addSuccessors(plan_search_ehc_t *ehc, plan_state_id_t state_id)
 static int processState(plan_search_ehc_t *ehc,
                         plan_state_id_t cur_state_id,
                         plan_state_id_t parent_state_id,
-                        plan_operator_t *parent_op)
+                        plan_operator_t *parent_op,
+                        plan_state_space_node_t **closed_node)
 {
     plan_cost_t cur_heur;
+    plan_state_space_node_t *node;
 
     // find applicable operators in the current state
     _planSearchFindApplicableOps(&ehc->search, cur_state_id);
@@ -187,9 +234,11 @@ static int processState(plan_search_ehc_t *ehc,
 
     // open and close the node so we can trace the path from goal to the
     // initial state
-    _planSearchNodeOpenClose(&ehc->search,
-                             cur_state_id, parent_state_id,
-                             parent_op, 0, cur_heur);
+    node = _planSearchNodeOpenClose(&ehc->search,
+                                    cur_state_id, parent_state_id,
+                                    parent_op, 0, cur_heur);
+    if (closed_node)
+        *closed_node = node;
 
     // check if the current state is the goal
     if (_planSearchCheckGoal(&ehc->search, cur_state_id))

@@ -47,9 +47,6 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
                     planSearchLazyDel,
                     planSearchLazyInit,
                     planSearchLazyStep,
-                    NULL,
-                    NULL,
-                    NULL,
                     planSearchLazyInjectState);
 
     lazy->heur              = params->heur;

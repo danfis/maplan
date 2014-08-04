@@ -358,25 +358,6 @@ typedef int (*plan_search_step_fn)(plan_search_t *,
                                    plan_search_step_change_t *change);
 
 /**
- * Multi-agent version of plan_search_init_fn.
- */
-typedef int (*plan_search_ma_init_fn)(plan_search_t *search,
-                                      plan_ma_comm_queue_t *comm);
-
-/**
- * Multi-agent version of plan_search_step_fn.
- */
-typedef int (*plan_search_ma_step_fn)(plan_search_t *search,
-                                      plan_ma_comm_queue_t *comm);
-
-/**
- * Update multi-agent version with a message.
- */
-typedef int (*plan_search_ma_update_fn)(plan_search_t *search,
-                                        plan_ma_comm_queue_t *comm,
-                                        const plan_ma_msg_t *msg);
-
-/**
  * Inject the given state into open-list and performs another needed
  * operations with the state.
  * Returns 0 on success.
@@ -405,9 +386,6 @@ struct _plan_search_t {
     plan_search_del_fn del_fn;
     plan_search_init_fn init_fn;
     plan_search_step_fn step_fn;
-    plan_search_ma_init_fn ma_init_fn;
-    plan_search_ma_step_fn ma_step_fn;
-    plan_search_ma_update_fn ma_update_fn;
     plan_search_inject_state_fn inject_state_fn;
 
     plan_search_params_t params;
@@ -420,6 +398,7 @@ struct _plan_search_t {
 
     plan_search_applicable_ops_t applicable_ops;
 
+    int ma;                        /*!< True if running in multi-agent mode */
     plan_ma_comm_queue_t *ma_comm; /*!< Communication queue for MA search */
     int ma_pub_state_reg;          /*!< ID of the registry that associates
                                         received public state with state-id. */
@@ -436,9 +415,6 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_del_fn del_fn,
                      plan_search_init_fn init_fn,
                      plan_search_step_fn step_fn,
-                     plan_search_ma_init_fn ma_init_fn,
-                     plan_search_ma_step_fn ma_step_fn,
-                     plan_search_ma_update_fn ma_update_fn,
                      plan_search_inject_state_fn inject_state_fn);
 
 /**

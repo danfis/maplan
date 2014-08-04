@@ -97,7 +97,8 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
 
     heur = BOR_ALLOC(plan_heur_lm_cut_t);
     _planHeurInit(&heur->heur, planHeurLMCutDel,
-                  planHeurLMCut, planHeurLMCut2);
+                  planHeurLMCut, planHeurLMCut2,
+                  NULL, NULL);
 
     flags  = HEUR_FACT_OP_INIT_FACT_EFF;
     flags |= HEUR_FACT_OP_SIMPLIFY;

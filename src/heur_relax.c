@@ -125,7 +125,8 @@ static plan_heur_t *planHeurRelaxNew(int type,
 
     heur = BOR_ALLOC(plan_heur_relax_t);
     _planHeurInit(&heur->heur, planHeurRelaxDel,
-                  planHeurRelax, planHeurRelax2);
+                  planHeurRelax, planHeurRelax2,
+                  NULL, NULL);
     heur->type = type;
     heur->base_op = op;
 

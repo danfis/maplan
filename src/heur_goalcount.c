@@ -26,7 +26,8 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal)
     _planHeurInit(&h->heur,
                   planHeurGoalCountDel,
                   planHeurGoalCount,
-                  planHeurGoalCount2);
+                  planHeurGoalCount2,
+                  NULL, NULL);
     h->goal = goal;
     return &h->heur;
 }

@@ -3,6 +3,7 @@
 
 #include <plan/common.h>
 #include <plan/problem.h>
+#include <plan/ma_comm_queue.h>
 
 /**
  * Heuristic Function API
@@ -61,10 +62,28 @@ typedef void (*plan_heur2_fn)(plan_heur_t *heur,
                               const plan_part_state_t *goal,
                               plan_heur_res_t *res);
 
+/**
+ * Multi-agent version of plan_heur_fn
+ */
+typedef long (*plan_heur_ma_fn)(plan_heur_t *heur,
+                                plan_ma_comm_queue_t *comm,
+                                const plan_state_t *state,
+                                plan_heur_res_t *res);
+
+/**
+ * Update function for multi-agent version of heuristic
+ */
+typedef int (*plan_heur_ma_update_fn)(plan_heur_t *heur,
+                                      plan_ma_comm_queue_t *comm,
+                                      const plan_ma_msg_t *msg,
+                                      plan_heur_res_t *res);
+
 struct _plan_heur_t {
     plan_heur_del_fn del_fn;
     plan_heur_fn heur_fn;
     plan_heur2_fn heur2_fn;
+    plan_heur_ma_fn heur_ma_fn;
+    plan_heur_ma_update_fn heur_ma_update_fn;
 };
 
 /**
@@ -136,6 +155,27 @@ void planHeur2(plan_heur_t *heur,
                plan_heur_res_t *res);
 
 
+/**
+ * Multi-agent version of planHeur(), this function can send some messages
+ * to other peers. Returns 0 if heuristic value was found or its reference
+ * ID by which this heuristics is identified in receiving messages (see
+ * planHeurMAUpdate()).
+ */
+long planHeurMA(plan_heur_t *heur,
+                plan_ma_comm_queue_t *comm,
+                const plan_state_t *state,
+                plan_heur_res_t *res);
+
+/**
+ * If planHeurMA() returned non-zero value (reference ID), all receiving
+ * messages with the same ID (as the returned value) should be passed into
+ * this function until 0 is returned in which case the heuristic value was
+ * computed.
+ */
+int planHeurMAUpdate(plan_heur_t *heur,
+                     plan_ma_comm_queue_t *comm,
+                     const plan_ma_msg_t *msg,
+                     plan_heur_res_t *res);
 
 
 /**
@@ -145,7 +185,9 @@ void planHeur2(plan_heur_t *heur,
 void _planHeurInit(plan_heur_t *heur,
                    plan_heur_del_fn del_fn,
                    plan_heur_fn heur_fn,
-                   plan_heur2_fn heur2_fn);
+                   plan_heur2_fn heur2_fn,
+                   plan_heur_ma_fn heur_ma_fn,
+                   plan_heur_ma_update_fn heur_ma_update_fn);
 
 /**
  * Frees allocated resources.

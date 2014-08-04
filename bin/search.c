@@ -250,11 +250,39 @@ static void printProblem(const plan_problem_t *prob,
 }
 
 
+static void printResults(int res, plan_path_t *path)
+{
+    FILE *fout;
+
+    if (res == PLAN_SEARCH_FOUND){
+        printf("Solution found.\n");
+
+        if (plan_output_fn != NULL){
+            fout = fopen(plan_output_fn, "w");
+            if (fout != NULL){
+                planPathPrint(path, fout);
+                fclose(fout);
+                printf("Plan written to `%s'\n", plan_output_fn);
+            }else{
+                fprintf(stderr, "Error: Could not plan write to `%s'\n",
+                        plan_output_fn);
+            }
+        }
+
+        printf("Path Cost: %d\n", (int)planPathCost(path));
+
+    }else if (res == PLAN_SEARCH_NOT_FOUND){
+        printf("Solution NOT found.\n");
+
+    }else if (res == PLAN_SEARCH_ABORT){
+        printf("Search Aborted.\n");
+    }
+}
+
 static int runSingleThread(plan_problem_t *prob)
 {
     plan_search_t *search;
     plan_path_t path;
-    FILE *fout;
     int res;
 
     search = searchCreate(def_search, def_heur, def_list, prob,
@@ -264,29 +292,7 @@ static int runSingleThread(plan_problem_t *prob)
 
     planPathInit(&path);
     res = planSearchRun(search, &path);
-    if (res == PLAN_SEARCH_FOUND){
-        printf("Solution found.\n");
-
-        if (plan_output_fn != NULL){
-            fout = fopen(plan_output_fn, "w");
-            if (fout != NULL){
-                planPathPrint(&path, fout);
-                fclose(fout);
-                printf("Plan written to `%s'\n", plan_output_fn);
-            }else{
-                fprintf(stderr, "Error: Could not plan write to `%s'\n",
-                        plan_output_fn);
-            }
-        }
-
-        printf("Path Cost: %d\n", (int)planPathCost(&path));
-
-    }else if (res == PLAN_SEARCH_NOT_FOUND){
-        printf("Solution NOT found.\n");
-
-    }else if (res == PLAN_SEARCH_ABORT){
-        printf("Search Aborted.\n");
-    }
+    printResults(res, &path);
 
     printf("\n");
     printf("Search Time: %f\n", search->stat.elapsed_time);
@@ -306,15 +312,12 @@ static int runSingleThread(plan_problem_t *prob)
 static int runMA(plan_problem_agents_t *ma_prob)
 {
     plan_search_t *search[ma_prob->agent_size];
+    plan_path_t path;
     int agent_id[ma_prob->agent_size];
     plan_operator_t *heur_op;
     int heur_op_size;
     plan_succ_gen_t *heur_succ_gen;
-    plan_ma_agent_path_op_t *path = NULL;
-    int path_size = 0;
     int i, res;
-    plan_cost_t cost;
-    FILE *fout;
 
     for (i = 0; i < ma_prob->agent_size; ++i){
         agent_id[i] = i;
@@ -346,39 +349,9 @@ static int runMA(plan_problem_agents_t *ma_prob)
             return -1;
     }
 
-    res = planMARun(ma_prob->agent_size, search, &path, &path_size);
-    if (res == PLAN_SEARCH_FOUND){
-        printf("Solution found.\n");
-
-        if (plan_output_fn != NULL){
-            fout = fopen(plan_output_fn, "w");
-            if (fout != NULL){
-                for (i = 0; i < path_size; ++i){
-                    fprintf(fout, "(%s)\n", path[i].name);
-                }
-                fclose(fout);
-                printf("Plan written to `%s'\n", plan_output_fn);
-
-            }else{
-                fprintf(stderr, "Error: Could not plan write to `%s'\n",
-                        plan_output_fn);
-            }
-        }
-
-        cost = 0;
-        for (i = 0; i < path_size; ++i)
-            cost += path[i].cost;
-        printf("Path Cost: %d\n", (int)cost);
-
-        if (path)
-            planMAAgentPathFree(path, path_size);
-
-    }else if (res == PLAN_SEARCH_NOT_FOUND){
-        printf("Solution NOT found.\n");
-
-    }else if (res == PLAN_SEARCH_ABORT){
-        printf("Search Aborted.\n");
-    }
+    planPathInit(&path);
+    res = planMARun(ma_prob->agent_size, search, &path);
+    printResults(res, &path);
 
     for (i = 0; i < ma_prob->agent_size; ++i){
         printf("Agent[%d] stats:\n", i);
@@ -390,6 +363,8 @@ static int runMA(plan_problem_agents_t *ma_prob)
         printf("    Peak Memory: %ld kb\n", search[i]->stat.peak_memory);
         planSearchDel(search[i]);
     }
+
+    planPathFree(&path);
 
     return 0;
 }

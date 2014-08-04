@@ -1,16 +1,16 @@
 #include "plan/heur.h"
 
-void planHeurInit(plan_heur_t *heur,
-                  plan_heur_del_fn del_fn,
-                  plan_heur_fn heur_fn,
-                  plan_heur2_fn heur2_fn)
+void _planHeurInit(plan_heur_t *heur,
+                   plan_heur_del_fn del_fn,
+                   plan_heur_fn heur_fn,
+                   plan_heur2_fn heur2_fn)
 {
     heur->del_fn   = del_fn;
     heur->heur_fn  = heur_fn;
     heur->heur2_fn = heur2_fn;
 }
 
-void planHeurFree(plan_heur_t *heur)
+void _planHeurFree(plan_heur_t *heur)
 {
 }
 

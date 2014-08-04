@@ -8,7 +8,7 @@
 #include <plan/heur.h>
 #include <plan/list_lazy.h>
 #include <plan/path.h>
-#include <plan/ma_msg.h>
+#include <plan/ma_comm_queue.h>
 
 /** Forward declaration */
 typedef struct _plan_search_t plan_search_t;
@@ -149,6 +149,11 @@ struct _plan_search_params_t {
 typedef struct _plan_search_params_t plan_search_params_t;
 
 
+struct _plan_search_ma_params_t {
+    plan_ma_comm_queue_t *comm;
+};
+typedef struct _plan_search_ma_params_t plan_search_ma_params_t;
+
 /**
  * Enforced Hill Climbing Search Algorithm
  * ----------------------------------------
@@ -250,63 +255,11 @@ void planSearchDel(plan_search_t *search);
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
 /**
- * Extracts path from initial state to the goal state (if was found) using
- * back-tracking from the goal state.
+ * Runs search in multi-agent mode.
  */
-void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path);
-
-/**
- * Simliar to planSearchBackTrackPath() but starting state for
- * back-tracking is specified.
- */
-void planSearchBackTrackPathFrom(plan_search_t *search,
-                                 plan_state_id_t from_state,
-                                 plan_path_t *path);
-
-/**
- * Performs initial step which should be insertion of the initial state.
- * Returns PLAN_SEARCH_CONT or PLAN_SEARCH_FOUND.
- */
-_bor_inline int planSearchInitStep(plan_search_t *search);
-
-/**
- * Performs one step in search.
- * Returns one of PLAN_SEARCH_{CONT,FOUND,NOT_FOUND,ABORT}.
- * If {change} is non-NULL it is filled with record of changes made during
- * that step.
- */
-_bor_inline int planSearchStep(plan_search_t *search,
-                               plan_search_step_change_t *change);
-
-/**
- * Multi-agent variant of planSearchInitStep(). Also PLAN_SEARCH_MA_BLOCK
- * can be returned.
- */
-_bor_inline int planSearchMAInitStep(plan_search_t *search,
-                                     plan_ma_agent_t *agent);
-
-/**
- * Multi-agent variant of planSearchStep(). Also PLAN_SEARCH_MA_BLOCK can
- * be returned.
- */
-_bor_inline int planSearchMAStep(plan_search_t *search,
-                                 plan_ma_agent_t *agent);
-
-/**
- * Updates state of the search algorithm using multi-agent message.
- */
-_bor_inline int planSearchMAUpdate(plan_search_t *search,
-                                   plan_ma_agent_t *agent,
-                                   const plan_ma_msg_t *msg);
-
-/**
- * Request for injection of the state into open-list.
- * Returns 0 if the state was injected, -1 otherwise.
- */
-_bor_inline int planSearchInjectState(plan_search_t *search,
-                                      plan_state_id_t state_id,
-                                      plan_cost_t cost,
-                                      plan_cost_t heuristic);
+int planSearchMARun(plan_search_t *search,
+                    plan_search_ma_params_t *ma_params,
+                    plan_path_t *path);
 
 /**
  * Internals
@@ -368,25 +321,6 @@ typedef int (*plan_search_step_fn)(plan_search_t *,
                                    plan_search_step_change_t *change);
 
 /**
- * Multi-agent version of plan_search_init_fn.
- */
-typedef int (*plan_search_ma_init_fn)(plan_search_t *search,
-                                      plan_ma_agent_t *agent);
-
-/**
- * Multi-agent version of plan_search_step_fn.
- */
-typedef int (*plan_search_ma_step_fn)(plan_search_t *search,
-                                      plan_ma_agent_t *agent);
-
-/**
- * Update multi-agent version with a message.
- */
-typedef int (*plan_search_ma_update_fn)(plan_search_t *search,
-                                        plan_ma_agent_t *agent,
-                                        const plan_ma_msg_t *msg);
-
-/**
  * Inject the given state into open-list and performs another needed
  * operations with the state.
  * Returns 0 on success.
@@ -415,9 +349,6 @@ struct _plan_search_t {
     plan_search_del_fn del_fn;
     plan_search_init_fn init_fn;
     plan_search_step_fn step_fn;
-    plan_search_ma_init_fn ma_init_fn;
-    plan_search_ma_step_fn ma_step_fn;
-    plan_search_ma_update_fn ma_update_fn;
     plan_search_inject_state_fn inject_state_fn;
 
     plan_search_params_t params;
@@ -429,6 +360,13 @@ struct _plan_search_t {
     plan_state_id_t goal_state;      /*!< The found state satisfying the goal */
 
     plan_search_applicable_ops_t applicable_ops;
+
+    int ma;                        /*!< True if running in multi-agent mode */
+    plan_ma_comm_queue_t *ma_comm; /*!< Communication queue for MA search */
+    int ma_pub_state_reg;          /*!< ID of the registry that associates
+                                        received public state with state-id. */
+    int ma_terminated;             /*!< True if already terminated */
+    plan_path_t *ma_path;          /*!< Output path for multi-agent mode */
 };
 
 
@@ -441,9 +379,6 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_del_fn del_fn,
                      plan_search_init_fn init_fn,
                      plan_search_step_fn step_fn,
-                     plan_search_ma_init_fn ma_init_fn,
-                     plan_search_ma_step_fn ma_step_fn,
-                     plan_search_ma_update_fn ma_update_fn,
                      plan_search_inject_state_fn inject_state_fn);
 
 /**
@@ -527,49 +462,6 @@ void _planUpdateStat(plan_search_stat_t *stat,
 int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id);
 
 /**** INLINES ****/
-_bor_inline int planSearchInitStep(plan_search_t *search)
-{
-    return search->init_fn(search);
-}
-
-_bor_inline int planSearchStep(plan_search_t *search,
-                               plan_search_step_change_t *change)
-{
-    return search->step_fn(search, change);
-}
-
-_bor_inline int planSearchMAInitStep(plan_search_t *search,
-                                     plan_ma_agent_t *agent)
-{
-    return search->ma_init_fn(search, agent);
-}
-
-_bor_inline int planSearchMAStep(plan_search_t *search,
-                                 plan_ma_agent_t *agent)
-{
-    return search->ma_step_fn(search, agent);
-}
-
-_bor_inline int planSearchMAUpdate(plan_search_t *search,
-                                   plan_ma_agent_t *agent,
-                                   const plan_ma_msg_t *msg)
-{
-    return search->ma_update_fn(search, agent, msg);
-}
-
-
-_bor_inline int planSearchInjectState(plan_search_t *search,
-                                      plan_state_id_t state_id,
-                                      plan_cost_t cost,
-                                      plan_cost_t heuristic)
-{
-    if (!search->inject_state_fn)
-        return -1;
-    return search->inject_state_fn(search, state_id, cost, heuristic);
-}
-
-
-
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)
 {
     ++stat->evaluated_states;

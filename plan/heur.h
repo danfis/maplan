@@ -142,16 +142,16 @@ void planHeur2(plan_heur_t *heur,
  * Initializes heuristics.
  * For internal use.
  */
-void planHeurInit(plan_heur_t *heur,
-                  plan_heur_del_fn del_fn,
-                  plan_heur_fn heur_fn,
-                  plan_heur2_fn heur2_fn);
+void _planHeurInit(plan_heur_t *heur,
+                   plan_heur_del_fn del_fn,
+                   plan_heur_fn heur_fn,
+                   plan_heur2_fn heur2_fn);
 
 /**
  * Frees allocated resources.
  * For internal use.
  */
-void planHeurFree(plan_heur_t *heur);
+void _planHeurFree(plan_heur_t *heur);
 
 
 /**** INLINES: ****/

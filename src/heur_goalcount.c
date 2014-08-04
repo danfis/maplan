@@ -23,10 +23,10 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal)
 {
     plan_heur_goalcount_t *h;
     h = BOR_ALLOC(plan_heur_goalcount_t);
-    planHeurInit(&h->heur,
-                 planHeurGoalCountDel,
-                 planHeurGoalCount,
-                 planHeurGoalCount2);
+    _planHeurInit(&h->heur,
+                  planHeurGoalCountDel,
+                  planHeurGoalCount,
+                  planHeurGoalCount2);
     h->goal = goal;
     return &h->heur;
 }
@@ -34,7 +34,7 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal)
 static void planHeurGoalCountDel(plan_heur_t *_h)
 {
     plan_heur_goalcount_t *h = HEUR_FROM_PARENT(_h);
-    planHeurFree(&h->heur);
+    _planHeurFree(&h->heur);
     BOR_FREE(h);
 }
 

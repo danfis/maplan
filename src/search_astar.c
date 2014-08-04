@@ -46,9 +46,6 @@ plan_search_t *planSearchAStarNew(const plan_search_astar_params_t *params)
                     planSearchAStarDel,
                     planSearchAStarInit,
                     planSearchAStarStep,
-                    NULL,
-                    NULL,
-                    NULL,
                     planSearchAStarInjectState);
 
     search->list     = planListTieBreaking(2);

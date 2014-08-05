@@ -150,13 +150,9 @@ static int processState(plan_search_ehc_t *ehc,
     _planSearchFindApplicableOps(&ehc->search, cur_state_id);
 
     // compute heuristic value for the current node
-    fprintf(stderr, "heur\n");
-    fflush(stderr);
     res = _planSearchHeuristic(&ehc->search, cur_state_id, &cur_heur, ehc->pref_ops);
     if (res != PLAN_SEARCH_CONT)
         return res;
-    fprintf(stderr, "cur_heur: %d\n", (int)cur_heur);
-    fflush(stderr);
 
     // open and close the node so we can trace the path from goal to the
     // initial state

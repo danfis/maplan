@@ -164,17 +164,17 @@ static void maUpdateLocalOp(plan_heur_relax_t *heur,
                             plan_ma_comm_queue_t *comm,
                             int op_id);
 
-static int planHeurRelaxMA(plan_heur_t *heur,
-                           plan_ma_comm_queue_t *comm,
-                           const plan_state_t *state,
-                           plan_heur_res_t *res);
-static int planHeurRelaxMAUpdate(plan_heur_t *heur,
-                                 plan_ma_comm_queue_t *comm,
-                                 const plan_ma_msg_t *msg,
-                                 plan_heur_res_t *res);
-static void planHeurRelaxMARequest(plan_heur_t *heur,
+static int planHeurRelaxFFMA(plan_heur_t *heur,
+                             plan_ma_comm_queue_t *comm,
+                             const plan_state_t *state,
+                             plan_heur_res_t *res);
+static int planHeurRelaxFFMAUpdate(plan_heur_t *heur,
                                    plan_ma_comm_queue_t *comm,
-                                   const plan_ma_msg_t *msg);
+                                   const plan_ma_msg_t *msg,
+                                   plan_heur_res_t *res);
+static void planHeurRelaxFFMARequest(plan_heur_t *heur,
+                                     plan_ma_comm_queue_t *comm,
+                                     const plan_ma_msg_t *msg);
 
 
 static plan_heur_t *planHeurRelaxNew(int type,
@@ -190,8 +190,8 @@ static plan_heur_t *planHeurRelaxNew(int type,
     heur = BOR_ALLOC(plan_heur_relax_t);
     _planHeurInit(&heur->heur, planHeurRelaxDel, planHeurRelax);
     if (type == TYPE_FF){
-        _planHeurMAInit(&heur->heur, planHeurRelaxMA,
-                        planHeurRelaxMAUpdate, planHeurRelaxMARequest);
+        _planHeurMAInit(&heur->heur, planHeurRelaxFFMA,
+                        planHeurRelaxFFMAUpdate, planHeurRelaxFFMARequest);
     }
 
     heur->type = type;
@@ -783,10 +783,10 @@ static void maUpdateLocalOp(plan_heur_relax_t *heur,
     }
 }
 
-static int planHeurRelaxMA(plan_heur_t *_heur,
-                           plan_ma_comm_queue_t *comm,
-                           const plan_state_t *state,
-                           plan_heur_res_t *res)
+static int planHeurRelaxFFMA(plan_heur_t *_heur,
+                             plan_ma_comm_queue_t *comm,
+                             const plan_state_t *state,
+                             plan_heur_res_t *res)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     int i;
@@ -819,10 +819,10 @@ static int planHeurRelaxMA(plan_heur_t *_heur,
     return 0;
 }
 
-static int planHeurRelaxMAUpdate(plan_heur_t *_heur,
-                                 plan_ma_comm_queue_t *comm,
-                                 const plan_ma_msg_t *msg,
-                                 plan_heur_res_t *res)
+static int planHeurRelaxFFMAUpdate(plan_heur_t *_heur,
+                                   plan_ma_comm_queue_t *comm,
+                                   const plan_ma_msg_t *msg,
+                                   plan_heur_res_t *res)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     int i, len, op_id, cost, owner;
@@ -869,9 +869,9 @@ static void maSendEmptyResponse(plan_ma_comm_queue_t *comm,
     planMAMsgDel(resp);
 }
 
-static void planHeurRelaxMARequest(plan_heur_t *_heur,
-                                   plan_ma_comm_queue_t *comm,
-                                   const plan_ma_msg_t *msg)
+static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
+                                     plan_ma_comm_queue_t *comm,
+                                     const plan_ma_msg_t *msg)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     PLAN_STATE_STACK(state, heur->data.vid.var_size);

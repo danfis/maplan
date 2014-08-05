@@ -221,7 +221,8 @@ int _planSearchLazyInjectState(plan_search_t *search,
         // Compute heuristic value
         if (search->heur){
             // TODO
-            //heur_val = _planSearchHeuristic(search, state_id, NULL);
+            //if (!search->ma)
+            //    _planSearchHeuristic(search, state_id, &heur_val, NULL);
         }
 
         // Set node to closed state with appropriate cost and heuristic
@@ -376,8 +377,6 @@ int planSearchMARun(plan_search_t *search,
 
         // Perform one step of algorithm.
         res = search->step_fn(search);
-        fprintf(stderr, "[%d] Step\n", search->ma_comm->node_id);
-        fflush(stderr);
         ++steps;
 
         // call progress callback

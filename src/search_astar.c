@@ -62,21 +62,24 @@ static void planSearchAStarDel(plan_search_t *_search)
     BOR_FREE(search);
 }
 
-static void astarInsertState(plan_search_astar_t *search,
-                             plan_state_id_t state_id,
-                             plan_state_space_node_t *node,
-                             plan_state_id_t parent_state_id,
-                             plan_operator_t *op,
-                             plan_cost_t g_cost,
-                             plan_cost_t parent_h)
+static int astarInsertState(plan_search_astar_t *search,
+                            plan_state_id_t state_id,
+                            plan_state_space_node_t *node,
+                            plan_state_id_t parent_state_id,
+                            plan_operator_t *op,
+                            plan_cost_t g_cost,
+                            plan_cost_t parent_h)
 {
     plan_cost_t cost[2];
     plan_cost_t h;
+    int res;
 
     // Force to open the node and compute heuristic if necessary
     if (planStateSpaceNodeIsNew(node)){
         planStateSpaceOpen(search->search.state_space, node);
-        h = _planSearchHeuristic(&search->search, state_id, NULL);
+        res = _planSearchHeuristic(&search->search, state_id, &h, NULL);
+        if (res != PLAN_SEARCH_CONT)
+            return res;
 
         if (search->pathmax && op != NULL){
             h = BOR_MAX(h, parent_h - op->cost);
@@ -94,7 +97,7 @@ static void astarInsertState(plan_search_astar_t *search,
 
     // Skip dead-end states
     if (h == PLAN_HEUR_DEAD_END)
-        return;
+        return PLAN_SEARCH_CONT;
 
     // Set up costs for open-list -- ties are broken by heuristic value
     cost[0] = g_cost + h; // f-value: f() = g() + h()
@@ -110,6 +113,8 @@ static void astarInsertState(plan_search_astar_t *search,
     // Insert into open-list
     planListPush(search->list, cost, state_id);
     planSearchStatIncGeneratedStates(&search->search.stat);
+
+    return PLAN_SEARCH_CONT;
 }
 
 static int planSearchAStarInit(plan_search_t *_search)
@@ -120,8 +125,7 @@ static int planSearchAStarInit(plan_search_t *_search)
 
     init_state = search->search.params.prob->initial_state;
     node = planStateSpaceNode(search->search.state_space, init_state);
-    astarInsertState(search, init_state, node, 0, NULL, 0, 0);
-    return PLAN_SEARCH_CONT;
+    return astarInsertState(search, init_state, node, 0, NULL, 0, 0);
 }
 
 static int planSearchAStarStep(plan_search_t *_search,
@@ -131,7 +135,7 @@ static int planSearchAStarStep(plan_search_t *_search,
     plan_cost_t cost[2], g_cost;
     plan_state_id_t cur_state, next_state;
     plan_state_space_node_t *cur_node, *next_node;
-    int i, op_size;
+    int i, op_size, res;
     plan_operator_t **op;
 
     if (change)
@@ -177,8 +181,11 @@ static int planSearchAStarStep(plan_search_t *_search,
         // Decide whether to insert the state into open-list
         if (planStateSpaceNodeIsNew(next_node)
                 || next_node->cost > g_cost){
-            astarInsertState(search, next_state, next_node,
-                             cur_state, op[i], g_cost, cur_node->heuristic);
+            res = astarInsertState(search, next_state, next_node,
+                                   cur_state, op[i], g_cost,
+                                   cur_node->heuristic);
+            if (res != PLAN_SEARCH_CONT)
+                return res;
         }
     }
     return PLAN_SEARCH_CONT;

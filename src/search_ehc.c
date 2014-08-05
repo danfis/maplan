@@ -146,6 +146,7 @@ static int processState(plan_search_ehc_t *ehc,
                         plan_operator_t *parent_op)
 {
     plan_cost_t cur_heur;
+    int res;
 
     // find applicable operators in the current state
     _planSearchFindApplicableOps(&ehc->search, cur_state_id);
@@ -153,7 +154,9 @@ static int processState(plan_search_ehc_t *ehc,
     // compute heuristic value for the current node
     fprintf(stderr, "heur\n");
     fflush(stderr);
-    cur_heur = _planSearchHeuristic(&ehc->search, cur_state_id, ehc->pref_ops);
+    res = _planSearchHeuristic(&ehc->search, cur_state_id, &cur_heur, ehc->pref_ops);
+    if (res != PLAN_SEARCH_CONT)
+        return res;
     fprintf(stderr, "cur_heur: %d\n", (int)cur_heur);
     fflush(stderr);
 

@@ -29,12 +29,6 @@ typedef struct _plan_search_t plan_search_t;
 #define PLAN_SEARCH_FOUND      1
 
 /**
- * Status signaling in multi-agent mode that the caller should block until
- * an update message isn't received.
- */
-#define PLAN_SEARCH_MA_BLOCK   2
-
-/**
  * No solution was found.
  */
 #define PLAN_SEARCH_NOT_FOUND -1
@@ -391,13 +385,16 @@ void _planSearchFindApplicableOps(plan_search_t *search,
                                   plan_state_id_t state_id);
 
 /**
- * Returns value of heuristics for the given state.
+ * Returns PLAN_SEARCH_CONT if the heuristic value was computed.
+ * Any other status should lead to immediate exit from the search algorithm
+ * with the same status.
  * If preferred_ops is non-NULL, the function will find preferred
  * operators and set up the given struct accordingly.
  */
-plan_cost_t _planSearchHeuristic(plan_search_t *search,
-                                 plan_state_id_t state_id,
-                                 plan_search_applicable_ops_t *preferred_ops);
+int _planSearchHeuristic(plan_search_t *search,
+                         plan_state_id_t state_id,
+                         plan_cost_t *heur_val,
+                         plan_search_applicable_ops_t *preferred_ops);
 
 /**
  * Adds state's successors to the lazy list with the specified cost.

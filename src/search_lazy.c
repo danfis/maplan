@@ -83,6 +83,7 @@ static int planSearchLazyStep(plan_search_t *_lazy,
     plan_operator_t *parent_op;
     plan_cost_t cur_heur;
     plan_state_space_node_t *node;
+    int res;
 
     if (change)
         planSearchStepChangeReset(change);
@@ -112,8 +113,10 @@ static int planSearchLazyStep(plan_search_t *_lazy,
     _planSearchFindApplicableOps(&lazy->search, cur_state_id);
 
     // compute heuristic value for the current node
-    cur_heur = _planSearchHeuristic(&lazy->search, cur_state_id,
-                                    lazy->pref_ops);
+    res = _planSearchHeuristic(&lazy->search, cur_state_id, &cur_heur,
+                               lazy->pref_ops);
+    if (res != PLAN_SEARCH_CONT)
+        return res;
 
     // open and close the node so we can trace the path from goal to the
     // initial state

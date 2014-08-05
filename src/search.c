@@ -170,9 +170,10 @@ void _planSearchFindApplicableOps(plan_search_t *search,
     planSearchApplicableOpsFind(search, state_id);
 }
 
-plan_cost_t _planSearchHeuristic(plan_search_t *search,
-                                 plan_state_id_t state_id,
-                                 plan_search_applicable_ops_t *preferred_ops)
+int _planSearchHeuristic(plan_search_t *search,
+                         plan_state_id_t state_id,
+                         plan_cost_t *heur_val,
+                         plan_search_applicable_ops_t *preferred_ops)
 {
     plan_heur_res_t res;
 
@@ -200,11 +201,12 @@ plan_cost_t _planSearchHeuristic(plan_search_t *search,
                 if (r == 0)
                     break;
             }else{
-                if (maProcessMsg(search, msg) != PLAN_SEARCH_CONT){
+                int mres;
+                if ((mres = maProcessMsg(search, msg)) != PLAN_SEARCH_CONT){
                     fprintf(stderr, "[%d]!PLAN_SEARCH_CONT\n",
                             search->ma_comm->node_id);
                     res.heur = PLAN_HEUR_DEAD_END;
-                    break;
+                    return mres;
                 }
             }
         }
@@ -215,7 +217,8 @@ plan_cost_t _planSearchHeuristic(plan_search_t *search,
         preferred_ops->op_preferred = res.pref_size;
     }
 
-    return res.heur;
+    *heur_val = res.heur;
+    return PLAN_SEARCH_CONT;
 }
 
 void _planSearchAddLazySuccessors(plan_search_t *search,

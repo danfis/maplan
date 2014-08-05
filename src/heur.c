@@ -36,10 +36,10 @@ void planHeur(plan_heur_t *heur, const plan_state_t *state,
     heur->heur_fn(heur, state, res);
 }
 
-long planHeurMA(plan_heur_t *heur,
-                plan_ma_comm_queue_t *comm,
-                const plan_state_t *state,
-                plan_heur_res_t *res)
+int planHeurMA(plan_heur_t *heur,
+               plan_ma_comm_queue_t *comm,
+               const plan_state_t *state,
+               plan_heur_res_t *res)
 {
     if (heur->heur_ma_fn == NULL){
         fprintf(stderr, "Heur Error: planHeurMA() is not defined for"

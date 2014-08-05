@@ -133,10 +133,10 @@ static void planHeurRelax2(plan_heur_t *heur,
                            plan_heur_res_t *res);
 /** Delete method */
 static void planHeurRelaxDel(plan_heur_t *_heur);
-static long planHeurRelaxMA(plan_heur_t *heur,
-                            plan_ma_comm_queue_t *comm,
-                            const plan_state_t *state,
-                            plan_heur_res_t *res);
+static int planHeurRelaxMA(plan_heur_t *heur,
+                           plan_ma_comm_queue_t *comm,
+                           const plan_state_t *state,
+                           plan_heur_res_t *res);
 static int planHeurRelaxMAUpdate(plan_heur_t *heur,
                                  plan_ma_comm_queue_t *comm,
                                  const plan_ma_msg_t *msg,
@@ -301,7 +301,6 @@ static void maDelPeerOp(ma_t *ma, int id)
 
 static void maSendHeurRequest(plan_ma_comm_queue_t *comm,
                               int peer_id,
-                              long ref_id,
                               const factarr_t *state,
                               int op_id)
 {
@@ -313,8 +312,8 @@ static void maSendHeurRequest(plan_ma_comm_queue_t *comm,
     planMACommQueueSendToNode(comm, peer_id, msg);
     planMAMsgDel(msg);
 
-    fprintf(stderr, "SEND [%d] -> [%d]: op_id %d, ref_id %ld\n",
-                    comm->node_id, peer_id, op_id, ref_id);
+    fprintf(stderr, "SEND [%d] -> [%d]: op_id %d\n",
+                    comm->node_id, peer_id, op_id);
 }
 
 static void maHeur(plan_heur_relax_t *heur,
@@ -331,15 +330,14 @@ static void maHeur(plan_heur_relax_t *heur,
     // TODO: preferred operators
 }
 
-static long planHeurRelaxMA(plan_heur_t *_heur,
-                            plan_ma_comm_queue_t *comm,
-                            const plan_state_t *state,
-                            plan_heur_res_t *res)
+static int planHeurRelaxMA(plan_heur_t *_heur,
+                           plan_ma_comm_queue_t *comm,
+                           const plan_state_t *state,
+                           plan_heur_res_t *res)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     int i;
     const plan_operator_t *op;
-    long ref_id = (long)heur;
 
     // First run non-MA heuristic algorithm
     planHeurRelax(_heur, state, res);
@@ -369,7 +367,7 @@ static long planHeurRelaxMA(plan_heur_t *_heur,
             // other peers
             if (maAddPeerOp(&heur->ma, op->global_id) == 0){
                 // Send a request to the owner
-                maSendHeurRequest(comm, op->owner, ref_id, &heur->ma.state,
+                maSendHeurRequest(comm, op->owner, &heur->ma.state,
                                   op->global_id);
             }
 
@@ -377,7 +375,7 @@ static long planHeurRelaxMA(plan_heur_t *_heur,
     }
 
     if (heur->ma.peer_op_size > 0){
-        return ref_id;
+        return -1;
     }
 
     maHeur(heur, res);
@@ -391,7 +389,6 @@ static int planHeurRelaxMAUpdate(plan_heur_t *_heur,
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     int i, len, op_id, cost, owner;
-    long ref_id = (long)heur;
 
     maDelPeerOp(&heur->ma, planMAMsgHeurResponseOpId(msg));
 
@@ -412,7 +409,7 @@ static int planHeurRelaxMAUpdate(plan_heur_t *_heur,
             fprintf(stderr, "TODO\n");
         }else{
             if (maAddPeerOp(&heur->ma, op_id) == 0){
-                maSendHeurRequest(comm, owner, ref_id, &heur->ma.state, op_id);
+                maSendHeurRequest(comm, owner, &heur->ma.state, op_id);
             }
         }
     }

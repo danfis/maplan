@@ -57,10 +57,10 @@ typedef void (*plan_heur_fn)(plan_heur_t *heur, const plan_state_t *state,
 /**
  * Multi-agent version of plan_heur_fn
  */
-typedef long (*plan_heur_ma_fn)(plan_heur_t *heur,
-                                plan_ma_comm_queue_t *comm,
-                                const plan_state_t *state,
-                                plan_heur_res_t *res);
+typedef int (*plan_heur_ma_fn)(plan_heur_t *heur,
+                               plan_ma_comm_queue_t *comm,
+                               const plan_state_t *state,
+                               plan_heur_res_t *res);
 
 /**
  * Update function for multi-agent version of heuristic
@@ -147,14 +147,14 @@ void planHeur(plan_heur_t *heur, const plan_state_t *state,
 
 /**
  * Multi-agent version of planHeur(), this function can send some messages
- * to other peers. Returns 0 if heuristic value was found or its reference
- * ID by which this heuristics is identified in receiving messages (see
- * planHeurMAUpdate()).
+ * to other peers. Returns 0 if heuristic value was found or -1 if
+ * planHeurMAUpdate() should be consecutively called on all heur-response
+ * messages.
  */
-long planHeurMA(plan_heur_t *heur,
-                plan_ma_comm_queue_t *comm,
-                const plan_state_t *state,
-                plan_heur_res_t *res);
+int planHeurMA(plan_heur_t *heur,
+               plan_ma_comm_queue_t *comm,
+               const plan_state_t *state,
+               plan_heur_res_t *res);
 
 /**
  * If planHeurMA() returned non-zero value (reference ID), all receiving

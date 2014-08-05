@@ -17,18 +17,19 @@ message PlanMAMsgHeurRequest {
     required int32 op_id = 4;
 }
 
-message PlanMAMsgHeurResponseOpOwner {
+message PlanMAMsgHeurResponseOp {
     required int32 op_id = 1;
-    required int32 owner = 2;
+    optional int32 cost = 2;
+    optional int32 owner = 3;
 }
 
 message PlanMAMsgHeurResponse {
     // Reference ID of the heuristic function
     required int64 ref_id = 2;
     // List of operators in relaxed plan
-    repeated int32 op = 3;
+    repeated PlanMAMsgHeurResponseOp op = 3;
     // List of operators in relaxed plan that belong to other peers
-    repeated PlanMAMsgHeurResponseOpOwner peer_op = 4;
+    repeated PlanMAMsgHeurResponseOp peer_op = 4;
 }
 
 message PlanMAMsgPathOperator {

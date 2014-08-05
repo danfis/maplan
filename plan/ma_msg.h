@@ -212,7 +212,7 @@ void planMAMsgSetHeurResponse(plan_ma_msg_t *msg, long ref_id);
 /**
  * Adds operator to the response
  */
-void planMAMsgHeurResponseAddOp(plan_ma_msg_t *msg, int op_id);
+void planMAMsgHeurResponseAddOp(plan_ma_msg_t *msg, int op_id, int cost);
 
 /**
  * Adds peer operator to the response.
@@ -236,9 +236,9 @@ int planMAMsgHeurResponseRefId(const plan_ma_msg_t *msg);
 int planMAMsgHeurResponseOpSize(const plan_ma_msg_t *msg);
 
 /**
- * Returns i'th operator's ID.
+ * Returns i'th operator's ID and its cost.
  */
-int planMAMsgHeurResponseOp(const plan_ma_msg_t *msg, int i);
+int planMAMsgHeurResponseOp(const plan_ma_msg_t *msg, int i, int *cost);
 
 /**
  * Returns number of peer-operators stored in response.

@@ -327,11 +327,13 @@ void planMAMsgSetHeurResponse(plan_ma_msg_t *_msg, long ref_id)
     res->set_ref_id(ref_id);
 }
 
-void planMAMsgHeurResponseAddOp(plan_ma_msg_t *_msg, int op_id)
+void planMAMsgHeurResponseAddOp(plan_ma_msg_t *_msg, int op_id, int cost)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
     PlanMAMsgHeurResponse *res = msg->mutable_heur_response();
-    res->add_op(op_id);
+    PlanMAMsgHeurResponseOp *op = res->add_op();
+    op->set_op_id(op_id);
+    op->set_cost(cost);
 }
 
 void planMAMsgHeurResponseAddPeerOp(plan_ma_msg_t *_msg,
@@ -339,7 +341,7 @@ void planMAMsgHeurResponseAddPeerOp(plan_ma_msg_t *_msg,
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
     PlanMAMsgHeurResponse *res = msg->mutable_heur_response();
-    PlanMAMsgHeurResponseOpOwner *op = res->add_peer_op();
+    PlanMAMsgHeurResponseOp *op = res->add_peer_op();
     op->set_op_id(op_id);
     op->set_owner(owner);
 }
@@ -364,11 +366,13 @@ int planMAMsgHeurResponseOpSize(const plan_ma_msg_t *_msg)
     return res.op_size();
 }
 
-int planMAMsgHeurResponseOp(const plan_ma_msg_t *_msg, int i)
+int planMAMsgHeurResponseOp(const plan_ma_msg_t *_msg, int i, int *cost)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
     const PlanMAMsgHeurResponse &res = msg->heur_response();
-    return res.op(i);
+    const PlanMAMsgHeurResponseOp &op = res.op(i);
+    *cost = op.cost();
+    return op.op_id();
 }
 
 int planMAMsgHeurResponsePeerOpSize(const plan_ma_msg_t *_msg)
@@ -382,7 +386,7 @@ int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *_msg, int i, int *owner)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
     const PlanMAMsgHeurResponse &res = msg->heur_response();
-    const PlanMAMsgHeurResponseOpOwner &op = res.peer_op(i);
+    const PlanMAMsgHeurResponseOp &op = res.peer_op(i);
     *owner = op.owner();
     return op.op_id();
 }

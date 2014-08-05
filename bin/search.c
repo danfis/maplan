@@ -49,7 +49,7 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("list", 'l', OPTS_STR, &def_list, NULL,
                 "Define list type [heap|bucket|rbtree|splaytree] (default: splaytree)");
     optsAddDesc("heur", 'H', OPTS_STR, &def_heur, NULL,
-                "Define heuristic [goalcount|add|max|ff|lm-cut] (default: goalcount)");
+                "Define heuristic [goalcount|add|max|ff|ma-ff|lm-cut] (default: goalcount)");
     optsAddDesc("use-preferred-ops", 'p', OPTS_STR, NULL,
                 OPTS_CB(optUsePreferredOps),
                 "Enable/disable use of preferred operators: off|pref|only."
@@ -141,7 +141,8 @@ static plan_list_lazy_t *listLazyCreate(const char *name)
 static plan_heur_t *heurCreate(const char *name,
                                plan_problem_t *prob,
                                const plan_operator_t *op, int op_size,
-                               const plan_succ_gen_t *succ_gen)
+                               const plan_succ_gen_t *succ_gen,
+                               const plan_problem_agent_t *agent_prob)
 {
     plan_heur_t *heur = NULL;
 
@@ -156,6 +157,8 @@ static plan_heur_t *heurCreate(const char *name,
     }else if (strcmp(name, "ff") == 0){
         heur = planHeurRelaxFFNew(prob->var, prob->var_size,
                                   prob->goal, op, op_size, succ_gen);
+    }else if (strcmp(name, "ma-ff") == 0){
+        heur = planHeurMARelaxFFNew(agent_prob);
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
                                 prob->goal, op, op_size, succ_gen);
@@ -172,6 +175,7 @@ static plan_search_t *searchCreate(const char *search_name,
                                    plan_problem_t *prob,
                                    const plan_operator_t *op, int op_size,
                                    const plan_succ_gen_t *succ_gen,
+                                   const plan_problem_agent_t *agent_prob,
                                    void *progress_data)
 {
     plan_search_t *search = NULL;
@@ -183,7 +187,8 @@ static plan_search_t *searchCreate(const char *search_name,
     if (strcmp(search_name, "ehc") == 0){
         planSearchEHCParamsInit(&ehc_params);
         ehc_params.search.heur = heurCreate(heur_name, prob,
-                                            op, op_size, succ_gen);
+                                            op, op_size, succ_gen,
+                                            agent_prob);
         ehc_params.search.heur_del = 1;
         ehc_params.use_preferred_ops = use_preferred_ops;
         params = &ehc_params.search;
@@ -191,7 +196,8 @@ static plan_search_t *searchCreate(const char *search_name,
     }else if (strcmp(search_name, "lazy") == 0){
         planSearchLazyParamsInit(&lazy_params);
         lazy_params.search.heur = heurCreate(heur_name, prob,
-                                             op, op_size, succ_gen);
+                                             op, op_size, succ_gen,
+                                             agent_prob);
         lazy_params.search.heur_del = 1;
         lazy_params.use_preferred_ops = use_preferred_ops;
         lazy_params.list = listLazyCreate(list_name);
@@ -201,7 +207,8 @@ static plan_search_t *searchCreate(const char *search_name,
     }else if (strcmp(search_name, "astar") == 0){
         planSearchAStarParamsInit(&astar_params);
         astar_params.search.heur = heurCreate(heur_name, prob,
-                                              op, op_size, succ_gen);
+                                              op, op_size, succ_gen,
+                                              agent_prob);
         astar_params.search.heur_del = 1;
         astar_params.pathmax = use_pathmax;
         params = &astar_params.search;
@@ -289,7 +296,8 @@ static int runSingleThread(plan_problem_t *prob)
     int res;
 
     search = searchCreate(def_search, def_heur, def_list, prob,
-                          prob->op, prob->op_size, prob->succ_gen, NULL);
+                          prob->op, prob->op_size, prob->succ_gen,
+                          NULL, NULL);
     if (search == NULL)
         return -1;
 
@@ -347,6 +355,7 @@ static int runMA(plan_problem_agents_t *ma_prob)
         search[i] = searchCreate(def_search, def_heur, def_list,
                                  &ma_prob->agent[i].prob,
                                  heur_op, heur_op_size, heur_succ_gen,
+                                 &ma_prob->agent[i],
                                  &agent_id[i]);
         if (search[i] == NULL)
             return -1;

@@ -6,9 +6,10 @@
 #include "plan/heur.h"
 #include "plan/prioqueue.h"
 
-#define TYPE_ADD    0
-#define TYPE_MAX    1
-#define TYPE_FF     2
+#define TYPE_ADD   0
+#define TYPE_MAX   1
+#define TYPE_FF    2
+#define TYPE_MA_FF 3
 
 /**
  * Structure representing a single fact.
@@ -189,7 +190,7 @@ static plan_heur_t *planHeurRelaxNew(int type,
 
     heur = BOR_ALLOC(plan_heur_relax_t);
     _planHeurInit(&heur->heur, planHeurRelaxDel, planHeurRelax);
-    if (type == TYPE_FF){
+    if (type == TYPE_MA_FF){
         _planHeurMAInit(&heur->heur, planHeurRelaxFFMA,
                         planHeurRelaxFFMAUpdate, planHeurRelaxFFMARequest);
     }
@@ -245,6 +246,16 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
 {
     return planHeurRelaxNew(TYPE_FF, var, var_size, goal,
                             op, op_size, succ_gen);
+}
+
+plan_heur_t *planHeurMARelaxFFNew(const plan_problem_agent_t *prob)
+{
+    return planHeurRelaxNew(TYPE_MA_FF,
+                            prob->prob.var,
+                            prob->prob.var_size,
+                            prob->prob.goal,
+                            prob->projected_op,
+                            prob->projected_op_size, NULL);
 }
 
 static void planHeurRelaxDel(plan_heur_t *_heur)
@@ -374,7 +385,7 @@ _bor_inline plan_cost_t relaxHeurOpValue(int type,
                                          plan_cost_t op_value,
                                          plan_cost_t fact_value)
 {
-    if (type == TYPE_ADD || type == TYPE_FF)
+    if (type == TYPE_ADD || type == TYPE_FF || type == TYPE_MA_FF)
         return op_value + fact_value;
     return BOR_MAX(op_cost + fact_value, op_value);
 }
@@ -499,7 +510,7 @@ static plan_cost_t ctxHeur(plan_heur_relax_t *heur,
 {
     if (heur->type == TYPE_ADD || heur->type == TYPE_MAX){
         return relaxHeurAddMax(heur, preferred_ops);
-    }else{ // heur->type == TYPE_FF
+    }else{ // heur->type == TYPE_FF || heur->type == TYPE_MA_FF
         return relaxHeurFF(heur, preferred_ops);
     }
 }

@@ -11,17 +11,24 @@ message PlanMAMsgHeurRequest {
     required int32 agent_id = 1;
     // Reference ID of the heuristic function
     required int64 ref_id = 2;
-
-    required bytes state = 3;
+    // State from which to find heuristic value
+    repeated int32 state = 3;
+    // Global operator ID
     required int32 op_id = 4;
+}
+
+message PlanMAMsgHeurResponseOpOwner {
+    required int32 op_id = 1;
+    required int32 owner = 2;
 }
 
 message PlanMAMsgHeurResponse {
     // Reference ID of the heuristic function
     required int64 ref_id = 2;
-
-    repeated int32 op_id = 3;
-    repeated int32 op_cost = 4;
+    // List of operators in relaxed plan
+    repeated int32 op = 3;
+    // List of operators in relaxed plan that belong to other peers
+    repeated PlanMAMsgHeurResponseOpOwner peer_op = 4;
 }
 
 message PlanMAMsgPathOperator {

@@ -2,17 +2,22 @@
 
 void _planHeurInit(plan_heur_t *heur,
                    plan_heur_del_fn del_fn,
-                   plan_heur_fn heur_fn,
-                   plan_heur2_fn heur2_fn,
-                   plan_heur_ma_fn heur_ma_fn,
-                   plan_heur_ma_update_fn heur_ma_update_fn)
+                   plan_heur_fn heur_fn)
 {
-    heur->del_fn   = del_fn;
-    heur->heur_fn  = heur_fn;
-    heur->heur2_fn = heur2_fn;
+    bzero(heur, sizeof(*heur));
 
-    heur->heur_ma_fn        = heur_ma_fn;
-    heur->heur_ma_update_fn = heur_ma_update_fn;
+    heur->del_fn  = del_fn;
+    heur->heur_fn = heur_fn;
+}
+
+void _planHeurMAInit(plan_heur_t *heur,
+                     plan_heur_ma_fn heur_ma_fn,
+                     plan_heur_ma_update_fn heur_ma_update_fn,
+                     plan_heur_ma_request_fn heur_ma_request_fn)
+{
+    heur->heur_ma_fn         = heur_ma_fn;
+    heur->heur_ma_update_fn  = heur_ma_update_fn;
+    heur->heur_ma_request_fn = heur_ma_request_fn;
 }
 
 void _planHeurFree(plan_heur_t *heur)
@@ -29,15 +34,6 @@ void planHeur(plan_heur_t *heur, const plan_state_t *state,
 {
     res->pref_size = 0;
     heur->heur_fn(heur, state, res);
-}
-
-void planHeur2(plan_heur_t *heur,
-               const plan_state_t *state,
-               const plan_part_state_t *goal,
-               plan_heur_res_t *res)
-{
-    res->pref_size = 0;
-    heur->heur2_fn(heur, state, goal, res);
 }
 
 long planHeurMA(plan_heur_t *heur,
@@ -66,4 +62,17 @@ int planHeurMAUpdate(plan_heur_t *heur,
     }
 
     return heur->heur_ma_update_fn(heur, comm, msg, res);
+}
+
+void planHeurMARequest(plan_heur_t *heur,
+                       plan_ma_comm_queue_t *comm,
+                       const plan_ma_msg_t *msg)
+{
+    if (heur->heur_ma_request_fn == NULL){
+        fprintf(stderr, "Heur Error: planHeurMARequest() is not defined for"
+                        " this heuristic!\n");
+        exit(-1);
+    }
+
+    heur->heur_ma_request_fn(heur, comm, msg);
 }

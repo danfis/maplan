@@ -124,6 +124,9 @@ void _planSearchInit(plan_search_t *search,
 {
     ma_pub_state_data_t msg_init;
 
+    search->heur     = params->heur;
+    search->heur_del = params->heur_del;
+
     search->del_fn  = del_fn;
     search->init_fn = init_fn;
     search->step_fn = step_fn;
@@ -153,6 +156,8 @@ void _planSearchInit(plan_search_t *search,
 void _planSearchFree(plan_search_t *search)
 {
     planSearchApplicableOpsFree(search);
+    if (search->heur && search->heur_del)
+        planHeurDel(search->heur);
     if (search->state)
         planStateDel(search->state);
     if (search->state_space)
@@ -167,7 +172,6 @@ void _planSearchFindApplicableOps(plan_search_t *search,
 
 plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_state_id_t state_id,
-                                 plan_heur_t *heur,
                                  plan_search_applicable_ops_t *preferred_ops)
 {
     plan_heur_res_t res;
@@ -181,7 +185,31 @@ plan_cost_t _planSearchHeuristic(plan_search_t *search,
         res.pref_op_size = preferred_ops->op_found;
     }
 
-    planHeur(heur, search->state, &res);
+    // TODO: if (heur->ma_heur)... or something like that
+    //planHeur(search->heur, search->state, &res);
+    long r;
+    plan_ma_msg_t *msg;
+    r = planHeurMA(search->heur, search->ma_comm, search->state, &res);
+    fprintf(stderr, "MA Heur: res: %ld\n", r);
+    if (r != 0){
+        while ((msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
+            if (planMAMsgIsHeurResponse(msg)){
+                fprintf(stderr, "Response\n");
+                r = planHeurMAUpdate(search->heur, search->ma_comm, msg, &res);
+                planMAMsgDel(msg);
+                if (r == 0)
+                    break;
+            }else{
+                if (maProcessMsg(search, msg) != PLAN_SEARCH_CONT){
+                    fprintf(stderr, "[%d]!PLAN_SEARCH_CONT\n",
+                            search->ma_comm->node_id);
+                    res.heur = PLAN_HEUR_DEAD_END;
+                    break;
+                }
+            }
+        }
+    }
+    fprintf(stderr, "[%d] XXX\n", search->ma_comm->node_id);
 
     if (preferred_ops){
         preferred_ops->op_preferred = res.pref_size;
@@ -205,7 +233,6 @@ void _planSearchAddLazySuccessors(plan_search_t *search,
 }
 
 int _planSearchLazyInjectState(plan_search_t *search,
-                               plan_heur_t *heur,
                                plan_list_lazy_t *list,
                                plan_state_id_t state_id,
                                plan_cost_t cost, plan_cost_t heur_val)
@@ -218,8 +245,9 @@ int _planSearchLazyInjectState(plan_search_t *search,
     // If the node was not discovered yet insert it into open-list
     if (planStateSpaceNodeIsNew(node)){
         // Compute heuristic value
-        if (heur){
-            heur_val = _planSearchHeuristic(search, state_id, heur, NULL);
+        if (search->heur){
+            // TODO
+            //heur_val = _planSearchHeuristic(search, state_id, NULL);
         }
 
         // Set node to closed state with appropriate cost and heuristic
@@ -280,6 +308,9 @@ plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
     node = planStateSpaceOpen2(search->state_space, state,
                                parent_state, parent_op,
                                cost, heur);
+    if (node == NULL)
+        return node;
+
     planStateSpaceClose(search->state_space, node);
 
     if (search->ma)
@@ -371,6 +402,8 @@ int planSearchMARun(plan_search_t *search,
 
         // Perform one step of algorithm.
         res = search->step_fn(search, NULL);
+        fprintf(stderr, "[%d] Step\n", search->ma_comm->node_id);
+        fflush(stderr);
         ++steps;
 
         // call progress callback
@@ -613,6 +646,10 @@ static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
     if (planMAMsgIsPublicState(msg)){
         maInjectPublicState(search, msg);
         res = PLAN_SEARCH_CONT;
+
+    }else if (planMAMsgIsHeurRequest(msg)){
+        if (search->heur)
+            planHeurMARequest(search->heur, search->ma_comm, msg);
 
     }else if (planMAMsgIsTerminateType(msg)){
         if (search->ma_comm->arbiter){

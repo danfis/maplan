@@ -265,7 +265,6 @@ const char *planMAMsgTracePathOperator(const plan_ma_msg_t *_msg, int i,
 
 void planMAMsgSetHeurRequest(plan_ma_msg_t *_msg,
                              int agent_id,
-                             long ref_id,
                              const int *state, int state_size,
                              int op_id)
 {
@@ -275,7 +274,6 @@ void planMAMsgSetHeurRequest(plan_ma_msg_t *_msg,
     msg->set_type(PlanMAMsg::HEUR_REQUEST);
     req = msg->mutable_heur_request();
     req->set_agent_id(agent_id);
-    req->set_ref_id(ref_id);
     req->set_op_id(op_id);
 
     for (int i = 0; i < state_size; ++i)
@@ -295,13 +293,6 @@ int planMAMsgHeurRequestAgentId(const plan_ma_msg_t *_msg)
     return req.agent_id();
 }
 
-int planMAMsgHeurRequestRefId(const plan_ma_msg_t *_msg)
-{
-    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgHeurRequest &req = msg->heur_request();
-    return req.ref_id();
-}
-
 int planMAMsgHeurRequestOpId(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
@@ -317,14 +308,14 @@ int planMAMsgHeurRequestState(const plan_ma_msg_t *_msg, int var)
 }
 
 
-void planMAMsgSetHeurResponse(plan_ma_msg_t *_msg, long ref_id)
+void planMAMsgSetHeurResponse(plan_ma_msg_t *_msg, int op_id)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
     PlanMAMsgHeurResponse *res;
 
     msg->set_type(PlanMAMsg::HEUR_RESPONSE);
     res = msg->mutable_heur_response();
-    res->set_ref_id(ref_id);
+    res->set_op_id(op_id);
 }
 
 void planMAMsgHeurResponseAddOp(plan_ma_msg_t *_msg, int op_id, int cost)
@@ -352,11 +343,11 @@ int planMAMsgIsHeurResponse(const plan_ma_msg_t *_msg)
     return msg->type() == PlanMAMsg::HEUR_RESPONSE;
 }
 
-int planMAMsgHeurResponseRefId(const plan_ma_msg_t *_msg)
+int planMAMsgHeurResponseOpId(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
     const PlanMAMsgHeurResponse &res = msg->heur_response();
-    return res.ref_id();
+    return res.op_id();
 }
 
 int planMAMsgHeurResponseOpSize(const plan_ma_msg_t *_msg)

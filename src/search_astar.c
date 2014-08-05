@@ -7,8 +7,6 @@ struct _plan_search_astar_t {
     plan_search_t search;
 
     plan_list_t *list; /*!< Open-list */
-    plan_heur_t *heur; /*!< Heuristic function */
-    int heur_del;      /*!< True if .heur should be deleted */
     int pathmax;       /*!< Use pathmax correction */
 };
 typedef struct _plan_search_astar_t plan_search_astar_t;
@@ -49,8 +47,6 @@ plan_search_t *planSearchAStarNew(const plan_search_astar_params_t *params)
                     planSearchAStarInjectState);
 
     search->list     = planListTieBreaking(2);
-    search->heur     = params->heur;
-    search->heur_del = params->heur_del;
     search->pathmax  = params->pathmax;
 
     return &search->search;
@@ -63,8 +59,6 @@ static void planSearchAStarDel(plan_search_t *_search)
     _planSearchFree(&search->search);
     if (search->list)
         planListDel(search->list);
-    if (search->heur_del)
-        planHeurDel(search->heur);
     BOR_FREE(search);
 }
 
@@ -82,8 +76,7 @@ static void astarInsertState(plan_search_astar_t *search,
     // Force to open the node and compute heuristic if necessary
     if (planStateSpaceNodeIsNew(node)){
         planStateSpaceOpen(search->search.state_space, node);
-        h = _planSearchHeuristic(&search->search, state_id,
-                                 search->heur, NULL);
+        h = _planSearchHeuristic(&search->search, state_id, NULL);
 
         if (search->pathmax && op != NULL){
             h = BOR_MAX(h, parent_h - op->cost);

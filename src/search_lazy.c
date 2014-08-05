@@ -7,8 +7,6 @@ struct _plan_search_lazy_t {
 
     plan_list_lazy_t *list; /*!< List to keep track of the states */
     int list_del;           /*!< True if .list should be deleted */
-    plan_heur_t *heur;      /*!< Heuristic function */
-    int heur_del;           /*!< True if .heur should be deleted */
     int use_preferred_ops;  /*!< True if preferred operators from heuristic
                                  should be used. */
     plan_search_applicable_ops_t *pref_ops; /*!< This pointer is set to
@@ -49,8 +47,6 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
                     planSearchLazyStep,
                     planSearchLazyInjectState);
 
-    lazy->heur              = params->heur;
-    lazy->heur_del          = params->heur_del;
     lazy->use_preferred_ops = params->use_preferred_ops;
     lazy->list              = params->list;
     lazy->list_del          = params->list_del;
@@ -66,8 +62,6 @@ static void planSearchLazyDel(plan_search_t *_lazy)
 {
     plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
     _planSearchFree(&lazy->search);
-    if (lazy->heur_del)
-        planHeurDel(lazy->heur);
     if (lazy->list_del)
         planListLazyDel(lazy->list);
     BOR_FREE(lazy);
@@ -119,7 +113,7 @@ static int planSearchLazyStep(plan_search_t *_lazy,
 
     // compute heuristic value for the current node
     cur_heur = _planSearchHeuristic(&lazy->search, cur_state_id,
-                                    lazy->heur, lazy->pref_ops);
+                                    lazy->pref_ops);
 
     // open and close the node so we can trace the path from goal to the
     // initial state
@@ -144,7 +138,7 @@ static int planSearchLazyInjectState(plan_search_t *_lazy, plan_state_id_t state
                                      plan_cost_t cost, plan_cost_t heuristic)
 {
     plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
-    return _planSearchLazyInjectState(&lazy->search, lazy->heur, lazy->list,
+    return _planSearchLazyInjectState(&lazy->search, lazy->list,
                                       state_id, cost, heuristic);
 }
 

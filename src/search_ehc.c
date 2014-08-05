@@ -6,8 +6,6 @@ struct _plan_search_ehc_t {
     plan_search_t search;
 
     plan_list_lazy_t *list; /*!< List to keep track of the states */
-    plan_heur_t *heur;      /*!< Heuristic function */
-    int heur_del;           /*!< True if .heur should be deleted */
     int use_preferred_ops;  /*!< True if preffered operators should be used */
     plan_cost_t best_heur;  /*!< Value of the best heuristic value found so far */
     plan_search_applicable_ops_t *pref_ops; /*!< This pointer is set to
@@ -60,8 +58,6 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
                     planSearchEHCInjectState);
 
     ehc->list              = planListLazyFifoNew();
-    ehc->heur              = params->heur;
-    ehc->heur_del          = params->heur_del;
     ehc->use_preferred_ops = params->use_preferred_ops;
     ehc->best_heur         = PLAN_COST_MAX;
 
@@ -81,8 +77,6 @@ static void planSearchEHCDel(plan_search_t *_ehc)
     _planSearchFree(&ehc->search);
     if (ehc->list)
         planListLazyDel(ehc->list);
-    if (ehc->heur_del)
-        planHeurDel(ehc->heur);
     BOR_FREE(ehc);
 }
 
@@ -125,7 +119,7 @@ static int planSearchEHCInjectState(plan_search_t *_ehc, plan_state_id_t state_i
                                     plan_cost_t cost, plan_cost_t heuristic)
 {
     plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
-    return _planSearchLazyInjectState(&ehc->search, ehc->heur, ehc->list,
+    return _planSearchLazyInjectState(&ehc->search, ehc->list,
                                       state_id, cost, heuristic);
 }
 
@@ -157,8 +151,11 @@ static int processState(plan_search_ehc_t *ehc,
     _planSearchFindApplicableOps(&ehc->search, cur_state_id);
 
     // compute heuristic value for the current node
-    cur_heur = _planSearchHeuristic(&ehc->search, cur_state_id, ehc->heur,
-                                    ehc->pref_ops);
+    fprintf(stderr, "heur\n");
+    fflush(stderr);
+    cur_heur = _planSearchHeuristic(&ehc->search, cur_state_id, ehc->pref_ops);
+    fprintf(stderr, "cur_heur: %d\n", (int)cur_heur);
+    fflush(stderr);
 
     // open and close the node so we can trace the path from goal to the
     // initial state

@@ -55,14 +55,6 @@ typedef void (*plan_heur_fn)(plan_heur_t *heur, const plan_state_t *state,
                              plan_heur_res_t *res);
 
 /**
- * Function that returns heuristic value (see planHeur2() function below).
- */
-typedef void (*plan_heur2_fn)(plan_heur_t *heur,
-                              const plan_state_t *state,
-                              const plan_part_state_t *goal,
-                              plan_heur_res_t *res);
-
-/**
  * Multi-agent version of plan_heur_fn
  */
 typedef long (*plan_heur_ma_fn)(plan_heur_t *heur,
@@ -78,12 +70,19 @@ typedef int (*plan_heur_ma_update_fn)(plan_heur_t *heur,
                                       const plan_ma_msg_t *msg,
                                       plan_heur_res_t *res);
 
+/**
+ * Method for processing request from remote peer.
+ */
+typedef void (*plan_heur_ma_request_fn)(plan_heur_t *heur,
+                                        plan_ma_comm_queue_t *comm,
+                                        const plan_ma_msg_t *msg);
+
 struct _plan_heur_t {
     plan_heur_del_fn del_fn;
     plan_heur_fn heur_fn;
-    plan_heur2_fn heur2_fn;
     plan_heur_ma_fn heur_ma_fn;
     plan_heur_ma_update_fn heur_ma_update_fn;
+    plan_heur_ma_request_fn heur_ma_request_fn;
 };
 
 /**
@@ -147,15 +146,6 @@ void planHeur(plan_heur_t *heur, const plan_state_t *state,
               plan_heur_res_t *res);
 
 /**
- * Same as planHeur() but the goal is explicitly specified.
- */
-void planHeur2(plan_heur_t *heur,
-               const plan_state_t *state,
-               const plan_part_state_t *goal,
-               plan_heur_res_t *res);
-
-
-/**
  * Multi-agent version of planHeur(), this function can send some messages
  * to other peers. Returns 0 if heuristic value was found or its reference
  * ID by which this heuristics is identified in receiving messages (see
@@ -177,6 +167,12 @@ int planHeurMAUpdate(plan_heur_t *heur,
                      const plan_ma_msg_t *msg,
                      plan_heur_res_t *res);
 
+/**
+ * Function that process multi-agent heur-request message.
+ */
+void planHeurMARequest(plan_heur_t *heur,
+                       plan_ma_comm_queue_t *comm,
+                       const plan_ma_msg_t *msg);
 
 /**
  * Initializes heuristics.
@@ -184,10 +180,17 @@ int planHeurMAUpdate(plan_heur_t *heur,
  */
 void _planHeurInit(plan_heur_t *heur,
                    plan_heur_del_fn del_fn,
-                   plan_heur_fn heur_fn,
-                   plan_heur2_fn heur2_fn,
-                   plan_heur_ma_fn heur_ma_fn,
-                   plan_heur_ma_update_fn heur_ma_update_fn);
+                   plan_heur_fn heur_fn);
+
+/**
+ * Initializes multi-agent part of the heuristics.
+ * This function must be called _after_ _planHeurInit().
+ * For internal use.
+ */
+void _planHeurMAInit(plan_heur_t *heur,
+                     plan_heur_ma_fn heur_ma_fn,
+                     plan_heur_ma_update_fn heur_ma_update_fn,
+                     plan_heur_ma_request_fn heur_ma_request_fn);
 
 /**
  * Frees allocated resources.

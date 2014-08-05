@@ -139,6 +139,10 @@ typedef void (*plan_search_run_node_closed)(plan_state_space_node_t *node,
  * Common parameters for all search algorithms.
  */
 struct _plan_search_params_t {
+    plan_heur_t *heur; /*!< Heuristic function that ought to be used */
+    int heur_del;      /*!< True if .heur should be deleted in
+                            planSearchDel() */
+
     plan_search_progress_fn progress_fn; /*!< Callback for monitoring */
     long progress_freq;                  /*!< Frequence of calling
                                               .progress_fn as number of steps. */
@@ -160,10 +164,6 @@ typedef struct _plan_search_ma_params_t plan_search_ma_params_t;
  */
 struct _plan_search_ehc_params_t {
     plan_search_params_t search; /*!< Common parameters */
-
-    plan_heur_t *heur; /*!< Heuristic function that ought to be used */
-    int heur_del;      /*!< True if .heur should be deleted in
-                            planSearchDel() */
     int use_preferred_ops; /*!< One of PLAN_SEARCH_PREFERRED_* constants */
 };
 typedef struct _plan_search_ehc_params_t plan_search_ehc_params_t;
@@ -186,9 +186,6 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params);
 struct _plan_search_lazy_params_t {
     plan_search_params_t search; /*!< Common parameters */
 
-    plan_heur_t *heur;      /*!< Heuristic function that ought to be used */
-    int heur_del;           /*!< True if .heur should be deleted in
-                                 planSearchDel() */
     int use_preferred_ops;  /*!< One of PLAN_SEARCH_PREFERRED_* constants */
     plan_list_lazy_t *list; /*!< Lazy list that will be used. */
     int list_del;           /*!< True if .list should be deleted in
@@ -214,10 +211,7 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params);
 struct _plan_search_astar_params_t {
     plan_search_params_t search; /*!< Common parameters */
 
-    plan_heur_t *heur; /*!< Heuristic function that ought to be used */
-    int heur_del;      /*!< True if .heur should be deleted in
-                            planSearchDel() */
-    int pathmax;       /*!< Use pathmax correction */
+    int pathmax; /*!< Use pathmax correction */
 };
 typedef struct _plan_search_astar_params_t plan_search_astar_params_t;
 
@@ -346,6 +340,9 @@ typedef struct _plan_search_applicable_ops_t plan_search_applicable_ops_t;
  * Common base struct for all search algorithms.
  */
 struct _plan_search_t {
+    plan_heur_t *heur;      /*!< Heuristic function */
+    int heur_del;           /*!< True if .heur should be deleted */
+
     plan_search_del_fn del_fn;
     plan_search_init_fn init_fn;
     plan_search_step_fn step_fn;
@@ -400,7 +397,6 @@ void _planSearchFindApplicableOps(plan_search_t *search,
  */
 plan_cost_t _planSearchHeuristic(plan_search_t *search,
                                  plan_state_id_t state_id,
-                                 plan_heur_t *heur,
                                  plan_search_applicable_ops_t *preferred_ops);
 
 /**
@@ -417,7 +413,6 @@ void _planSearchAddLazySuccessors(plan_search_t *search,
  * Injects given state into open-list if the node wasn't discovered yet.
  */
 int _planSearchLazyInjectState(plan_search_t *search,
-                               plan_heur_t *heur,
                                plan_list_lazy_t *list,
                                plan_state_id_t state_id,
                                plan_cost_t cost, plan_cost_t heur_val);

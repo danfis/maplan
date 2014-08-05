@@ -44,10 +44,6 @@ typedef struct _plan_heur_lm_cut_t plan_heur_lm_cut_t;
 /** Main function that returns heuristic value. */
 static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
                           plan_heur_res_t *res);
-static void planHeurLMCut2(plan_heur_t *_heur,
-                          const plan_state_t *state,
-                          const plan_part_state_t *goal,
-                          plan_heur_res_t *res);
 /** Delete method */
 static void planHeurLMCutDel(plan_heur_t *_heur);
 
@@ -97,8 +93,7 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
 
     heur = BOR_ALLOC(plan_heur_lm_cut_t);
     _planHeurInit(&heur->heur, planHeurLMCutDel,
-                  planHeurLMCut, planHeurLMCut2,
-                  NULL, NULL);
+                  planHeurLMCut);
 
     flags  = HEUR_FACT_OP_INIT_FACT_EFF;
     flags |= HEUR_FACT_OP_SIMPLIFY;
@@ -170,17 +165,6 @@ static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
     lmCutCtxFree(heur);
 
     res->heur = h;
-}
-
-static void planHeurLMCut2(plan_heur_t *_heur,
-                          const plan_state_t *state,
-                          const plan_part_state_t *goal,
-                          plan_heur_res_t *res)
-{
-    // TODO
-    fprintf(stderr, "Heur Error: planHeur2() for LM-Cut heuristic is not"
-                    " yet implemented!\n");
-    exit(-1);
 }
 
 static void lmCutCtxInit(plan_heur_lm_cut_t *heur)

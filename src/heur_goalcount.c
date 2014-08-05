@@ -13,10 +13,6 @@ typedef struct _plan_heur_goalcount_t plan_heur_goalcount_t;
 
 static void planHeurGoalCount(plan_heur_t *heur, const plan_state_t *state,
                               plan_heur_res_t *res);
-static void planHeurGoalCount2(plan_heur_t *heur,
-                               const plan_state_t *state,
-                               const plan_part_state_t *goal,
-                               plan_heur_res_t *res);
 static void planHeurGoalCountDel(plan_heur_t *h);
 
 plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal)
@@ -25,9 +21,7 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal)
     h = BOR_ALLOC(plan_heur_goalcount_t);
     _planHeurInit(&h->heur,
                   planHeurGoalCountDel,
-                  planHeurGoalCount,
-                  planHeurGoalCount2,
-                  NULL, NULL);
+                  planHeurGoalCount);
     h->goal = goal;
     return &h->heur;
 }
@@ -43,21 +37,13 @@ static void planHeurGoalCount(plan_heur_t *_h, const plan_state_t *state,
                               plan_heur_res_t *res)
 {
     plan_heur_goalcount_t *h = HEUR_FROM_PARENT(_h);
-    planHeurGoalCount2(_h, state, h->goal, res);
-}
-
-static void planHeurGoalCount2(plan_heur_t *_h,
-                               const plan_state_t *state,
-                               const plan_part_state_t *goal,
-                               plan_heur_res_t *res)
-{
     int i;
     plan_var_id_t var;
     plan_val_t val;
     plan_cost_t heur;
 
     heur = PLAN_COST_ZERO;
-    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
+    PLAN_PART_STATE_FOR_EACH(h->goal, i, var, val){
         if (val != planStateGet(state, var))
             ++heur;
     }

@@ -173,7 +173,6 @@ const char *planMAMsgTracePathOperator(const plan_ma_msg_t *msg, int i,
  */
 void planMAMsgSetHeurRequest(plan_ma_msg_t *msg,
                              int agent_id,
-                             long ref_id,
                              const int *state, int state_size,
                              int op_id);
 
@@ -186,11 +185,6 @@ int planMAMsgIsHeurRequest(const plan_ma_msg_t *msg);
  * Returns agent_id stored in heur-request message.
  */
 int planMAMsgHeurRequestAgentId(const plan_ma_msg_t *msg);
-
-/**
- * Returns ref_id stored in heur-request message.
- */
-int planMAMsgHeurRequestRefId(const plan_ma_msg_t *msg);
 
 /**
  * Returns op_id stored in heur-request message.
@@ -207,7 +201,7 @@ int planMAMsgHeurRequestState(const plan_ma_msg_t *msg, int var);
 /**
  * Set heur-response type of message
  */
-void planMAMsgSetHeurResponse(plan_ma_msg_t *msg, long ref_id);
+void planMAMsgSetHeurResponse(plan_ma_msg_t *msg, int op_id);
 
 /**
  * Adds operator to the response
@@ -228,7 +222,7 @@ int planMAMsgIsHeurResponse(const plan_ma_msg_t *msg);
 /**
  * Returns ref_id from the message
  */
-int planMAMsgHeurResponseRefId(const plan_ma_msg_t *msg);
+int planMAMsgHeurResponseOpId(const plan_ma_msg_t *msg);
 
 /**
  * Returns number of operators stored in response.

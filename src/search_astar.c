@@ -19,8 +19,7 @@ static void planSearchAStarDel(plan_search_t *_search);
 /** Initializes search. This must be call exactly once. */
 static int planSearchAStarInit(plan_search_t *_search);
 /** Performes one step in the algorithm. */
-static int planSearchAStarStep(plan_search_t *_search,
-                               plan_search_step_change_t *change);
+static int planSearchAStarStep(plan_search_t *_search);
 /** Injects a new state into open-list */
 static int planSearchAStarInjectState(plan_search_t *_search,
                                       plan_state_id_t state_id,
@@ -128,8 +127,7 @@ static int planSearchAStarInit(plan_search_t *_search)
     return astarInsertState(search, init_state, node, 0, NULL, 0, 0);
 }
 
-static int planSearchAStarStep(plan_search_t *_search,
-                             plan_search_step_change_t *change)
+static int planSearchAStarStep(plan_search_t *_search)
 {
     plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
     plan_cost_t cost[2], g_cost;
@@ -137,9 +135,6 @@ static int planSearchAStarStep(plan_search_t *_search,
     plan_state_space_node_t *cur_node, *next_node;
     int i, op_size, res;
     plan_operator_t **op;
-
-    if (change)
-        planSearchStepChangeReset(change);
 
     // Get next state from open list
     if (planListPop(search->list, &cur_state, cost) != 0)
@@ -154,8 +149,6 @@ static int planSearchAStarStep(plan_search_t *_search,
 
     // Close the current state node
     planStateSpaceClose(search->search.state_space, cur_node);
-    if (change)
-        planSearchStepChangeAddClosedNode(change, cur_node);
 
     // Check whether it is a goal
     if (_planSearchCheckGoal(&search->search, cur_state))

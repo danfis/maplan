@@ -79,41 +79,6 @@ void planSearchStatInit(plan_search_stat_t *stat);
 
 
 /**
- * Structure with record of changes made during one step of search
- * algorithm (see planSearchStep()).
- */
-struct _plan_search_step_change_t {
-    plan_state_space_node_t **closed_node; /*!< Closed nodes */
-    int closed_node_size;                  /*!< Number of closed nodes */
-    int closed_node_alloc;                 /*!< Allocated space */
-};
-typedef struct _plan_search_step_change_t plan_search_step_change_t;
-
-/**
- * Initializes plan_search_step_change_t structure.
- */
-void planSearchStepChangeInit(plan_search_step_change_t *step_change);
-
-/**
- * Frees all resources allocated within plan_search_step_change_t
- * structure.
- */
-void planSearchStepChangeFree(plan_search_step_change_t *step_change);
-
-/**
- * Reset record of the structure.
- */
-void planSearchStepChangeReset(plan_search_step_change_t *step_change);
-
-/**
- * Add record about one closed node.
- */
-void planSearchStepChangeAddClosedNode(plan_search_step_change_t *step_change,
-                                       plan_state_space_node_t *node);
-
-
-
-/**
  * Callback for progress monitoring.
  * The function should return PLAN_SEARCH_CONT if the process should
  * continue after this callback, or PLAN_SEARCH_ABORT if the process
@@ -305,8 +270,7 @@ typedef int (*plan_search_init_fn)(plan_search_t *);
 /**
  * Perform one step of algorithm.
  */
-typedef int (*plan_search_step_fn)(plan_search_t *,
-                                   plan_search_step_change_t *change);
+typedef int (*plan_search_step_fn)(plan_search_t *);
 
 /**
  * Inject the given state into open-list and performs another needed

@@ -32,8 +32,7 @@ static void planSearchEHCDel(plan_search_t *_ehc);
 /** Initializes search. This must be call exactly once. */
 static int planSearchEHCInit(plan_search_t *);
 /** Performes one step in the algorithm. */
-static int planSearchEHCStep(plan_search_t *,
-                             plan_search_step_change_t *change);
+static int planSearchEHCStep(plan_search_t *);
 /** Injects a new state into open-list */
 static int planSearchEHCInjectState(plan_search_t *, plan_state_id_t state_id,
                                     plan_cost_t cost, plan_cost_t heuristic);
@@ -91,8 +90,7 @@ static int planSearchEHCInit(plan_search_t *_ehc)
     return processState(ehc, init_state, 0, NULL);
 }
 
-static int planSearchEHCStep(plan_search_t *_ehc,
-                             plan_search_step_change_t *change)
+static int planSearchEHCStep(plan_search_t *_ehc)
 {
     plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
     plan_state_id_t parent_state_id, cur_state_id;

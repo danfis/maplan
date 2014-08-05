@@ -71,35 +71,6 @@ void planSearchStatInit(plan_search_stat_t *stat)
     stat->not_found = 0;
 }
 
-void planSearchStepChangeInit(plan_search_step_change_t *step_change)
-{
-    bzero(step_change, sizeof(*step_change));
-}
-
-void planSearchStepChangeFree(plan_search_step_change_t *step_change)
-{
-    if (step_change->closed_node)
-        BOR_FREE(step_change->closed_node);
-    bzero(step_change, sizeof(*step_change));
-}
-
-void planSearchStepChangeReset(plan_search_step_change_t *step_change)
-{
-    step_change->closed_node_size = 0;
-}
-
-void planSearchStepChangeAddClosedNode(plan_search_step_change_t *sc,
-                                       plan_state_space_node_t *node)
-{
-    if (sc->closed_node_size + 1 > sc->closed_node_alloc){
-        sc->closed_node_alloc = sc->closed_node_size + 1;
-        sc->closed_node = BOR_REALLOC_ARR(sc->closed_node,
-                                          plan_state_space_node_t *,
-                                          sc->closed_node_alloc);
-    }
-
-    sc->closed_node[sc->closed_node_size++] = node;
-}
 
 void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat)
 {
@@ -349,7 +320,7 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
 
     res = search->init_fn(search);
     while (res == PLAN_SEARCH_CONT){
-        res = search->step_fn(search, NULL);
+        res = search->step_fn(search);
 
         ++steps;
         if (res == PLAN_SEARCH_CONT
@@ -404,7 +375,7 @@ int planSearchMARun(plan_search_t *search,
             break;
 
         // Perform one step of algorithm.
-        res = search->step_fn(search, NULL);
+        res = search->step_fn(search);
         fprintf(stderr, "[%d] Step\n", search->ma_comm->node_id);
         fflush(stderr);
         ++steps;

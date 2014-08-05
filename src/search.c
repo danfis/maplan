@@ -141,12 +141,43 @@ void _planSearchFindApplicableOps(plan_search_t *search,
     planSearchApplicableOpsFind(search, state_id);
 }
 
+static int maHeur(plan_search_t *search, plan_heur_res_t *res)
+{
+    plan_ma_msg_t *msg;
+    int ma_res, msg_res;
+
+    // First call of multi-agent heuristic
+    ma_res = planHeurMA(search->heur, search->ma_comm, search->state, res);
+    if (ma_res == 0)
+        return PLAN_SEARCH_CONT;
+
+    // Wait for update messages
+    while (ma_res != 0
+            && (msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
+
+        if (planMAMsgIsHeurResponse(msg)){
+            ma_res = planHeurMAUpdate(search->heur, search->ma_comm, msg, res);
+            planMAMsgDel(msg);
+
+        }else{
+            msg_res = maProcessMsg(search, msg);
+            if (msg_res != PLAN_SEARCH_CONT){
+                res->heur = PLAN_HEUR_DEAD_END;
+                return msg_res;
+            }
+        }
+    }
+
+    return PLAN_SEARCH_CONT;
+}
+
 int _planSearchHeuristic(plan_search_t *search,
                          plan_state_id_t state_id,
                          plan_cost_t *heur_val,
                          plan_search_applicable_ops_t *preferred_ops)
 {
     plan_heur_res_t res;
+    int fres = PLAN_SEARCH_CONT;
 
     planStatePoolGetState(search->state_pool, state_id, search->state);
     planSearchStatIncEvaluatedStates(&search->stat);
@@ -157,39 +188,18 @@ int _planSearchHeuristic(plan_search_t *search,
         res.pref_op_size = preferred_ops->op_found;
     }
 
-    // TODO: if (heur->ma_heur)... or something like that
-    //planHeur(search->heur, search->state, &res);
-    long r;
-    plan_ma_msg_t *msg;
-    r = planHeurMA(search->heur, search->ma_comm, search->state, &res);
-    fprintf(stderr, "MA Heur: res: %ld\n", r);
-    if (r != 0){
-        while ((msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
-            if (planMAMsgIsHeurResponse(msg)){
-                fprintf(stderr, "Response\n");
-                r = planHeurMAUpdate(search->heur, search->ma_comm, msg, &res);
-                planMAMsgDel(msg);
-                if (r == 0)
-                    break;
-            }else{
-                int mres;
-                if ((mres = maProcessMsg(search, msg)) != PLAN_SEARCH_CONT){
-                    fprintf(stderr, "[%d]!PLAN_SEARCH_CONT\n",
-                            search->ma_comm->node_id);
-                    res.heur = PLAN_HEUR_DEAD_END;
-                    return mres;
-                }
-            }
-        }
+    if (!search->heur->ma){
+        planHeur(search->heur, search->state, &res);
+    }else{
+        fres = maHeur(search, &res);
     }
-    fprintf(stderr, "[%d] XXX\n", search->ma_comm->node_id);
 
     if (preferred_ops){
         preferred_ops->op_preferred = res.pref_size;
     }
 
     *heur_val = res.heur;
-    return PLAN_SEARCH_CONT;
+    return fres;
 }
 
 void _planSearchAddLazySuccessors(plan_search_t *search,
@@ -219,10 +229,8 @@ int _planSearchLazyInjectState(plan_search_t *search,
     // If the node was not discovered yet insert it into open-list
     if (planStateSpaceNodeIsNew(node)){
         // Compute heuristic value
-        if (search->heur){
-            // TODO
-            //if (!search->ma)
-            //    _planSearchHeuristic(search, state_id, &heur_val, NULL);
+        if (!search->heur->ma){
+            _planSearchHeuristic(search, state_id, &heur_val, NULL);
         }
 
         // Set node to closed state with appropriate cost and heuristic

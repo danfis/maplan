@@ -83,6 +83,9 @@ struct _plan_heur_t {
     plan_heur_ma_fn heur_ma_fn;
     plan_heur_ma_update_fn heur_ma_update_fn;
     plan_heur_ma_request_fn heur_ma_request_fn;
+
+    int ma; /*!< Set to true if planHeurMA*() functions should be used
+                 instead of planHeur() */
 };
 
 /**

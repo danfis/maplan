@@ -8,6 +8,7 @@ void _planHeurInit(plan_heur_t *heur,
 
     heur->del_fn  = del_fn;
     heur->heur_fn = heur_fn;
+    heur->ma = 0;
 }
 
 void _planHeurMAInit(plan_heur_t *heur,
@@ -18,6 +19,7 @@ void _planHeurMAInit(plan_heur_t *heur,
     heur->heur_ma_fn         = heur_ma_fn;
     heur->heur_ma_update_fn  = heur_ma_update_fn;
     heur->heur_ma_request_fn = heur_ma_request_fn;
+    heur->ma = 1;
 }
 
 void _planHeurFree(plan_heur_t *heur)

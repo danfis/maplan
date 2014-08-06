@@ -98,6 +98,7 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
     flags  = HEUR_FACT_OP_INIT_FACT_EFF;
     flags |= HEUR_FACT_OP_SIMPLIFY;
     flags |= HEUR_FACT_OP_ARTIFICIAL_GOAL;
+    flags |= HEUR_FACT_OP_NO_PRE_FACT;
     heurFactOpInit(&heur->data, var, var_size, goal,
                    op, op_size, succ_gen, flags);
 
@@ -214,6 +215,7 @@ static void lmCutInitialExploration(plan_heur_lm_cut_t *heur,
         id = valToId(&heur->data.vid, i, planStateGet(state, i));
         lmCutEnqueue(heur, id, 0);
     }
+    lmCutEnqueue(heur, heur->data.no_pre_fact, 0);
 
     while (!planPrioQueueEmpty(&heur->queue)){
         id = planPrioQueuePop(&heur->queue, &value);
@@ -270,6 +272,9 @@ _bor_inline void lmCutFindCutAddInit(plan_heur_lm_cut_t *heur,
         heur->fact[id].in_queue = 1;
         borLifoPush(queue, &id);
     }
+    id = heur->data.no_pre_fact;
+    heur->fact[id].in_queue = 1;
+    borLifoPush(queue, &id);
 }
 
 _bor_inline int lmCutFindCutProcessOp(plan_heur_lm_cut_t *heur, int op_id)

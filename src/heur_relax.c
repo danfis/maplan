@@ -198,7 +198,8 @@ static plan_heur_t *planHeurRelaxNew(int type,
     heur->type = type;
     heur->base_op = op;
 
-    flags = HEUR_FACT_OP_SIMPLIFY;
+    flags  = HEUR_FACT_OP_SIMPLIFY;
+    flags |= HEUR_FACT_OP_NO_PRE_FACT;
     heurFactOpInit(&heur->data, var, var_size, goal,
                    op, op_size, succ_gen, flags);
 
@@ -352,7 +353,6 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
                             const plan_state_t *state)
 {
     int i, id, len;
-    int *ops;
 
     // insert all facts from the initial state into priority queue
     len = planStateSize(state);
@@ -360,15 +360,8 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
         id = valToId(&heur->data.vid, i, planStateGet(state, i));
         ctxUpdateFact(heur, id, -1, 0);
     }
-
-    // Insert all effects from all operators without preconditions
-    len = heur->data.op_wo_pre.size;
-    ops = heur->data.op_wo_pre.op;
-    for (i = 0; i < len; ++i){
-        id = ops[i];
-        heur->op[id].value = heur->op[id].cost;
-        ctxAddEffects(heur, id);
-    }
+    // Deal with operators w/o preconditions
+    ctxUpdateFact(heur, heur->data.no_pre_fact, -1, 0);
 }
 
 static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)

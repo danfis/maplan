@@ -69,7 +69,6 @@ struct _heur_fact_op_t {
                                 index of operator. This is here because of
                                 conditional effects. Note that
                                 .op_id[i] != i only for i >= .actual_op_size */
-    oparr_t op_wo_pre;     /*!< List of operators without preconditions */
     oparr_t *fact_pre;     /*!< Operators for which the corresponding fact
                                 is precondition -- the size of this array
                                 equals to .fact_size */
@@ -352,13 +351,6 @@ static void factFree(heur_fact_op_t *fact_op)
 }
 #endif /* HEUR_FACT_OP_FACT_T */
 
-static void addOpWithoutPre(oparr_t *op_wo_pre, int id)
-{
-    ++op_wo_pre->size;
-    op_wo_pre->op = BOR_REALLOC_ARR(op_wo_pre->op, int, op_wo_pre->size);
-    op_wo_pre->op[op_wo_pre->size - 1] = id;
-}
-
 static void opInit(heur_fact_op_t *fact_op,
                    const plan_operator_t *ops, int ops_size,
                    int artificial_goal)
@@ -380,8 +372,6 @@ static void opInit(heur_fact_op_t *fact_op,
     fact_op->actual_op_size = ops_size;
     fact_op->op = BOR_ALLOC_ARR(op_t, fact_op->op_size);
     fact_op->op_id = BOR_ALLOC_ARR(int, fact_op->op_size);
-    fact_op->op_wo_pre.op = NULL;
-    fact_op->op_wo_pre.size = 0;
 
     // Determine starting position for insertion of conditional effects.
     // The conditional effects are inserted as a (somehow virtual)
@@ -393,9 +383,6 @@ static void opInit(heur_fact_op_t *fact_op,
         fact_op->op[i].value = ops[i].cost;
         fact_op->op[i].cost  = ops[i].cost;
         fact_op->op_id[i] = i;
-
-        if (fact_op->op[i].unsat == 0)
-            addOpWithoutPre(&fact_op->op_wo_pre, i);
 
 #ifdef HEUR_FACT_OP_EXTRA_OP_INIT
         HEUR_FACT_OP_EXTRA_OP_INIT(fact_op->op + i, ops + i, 0);
@@ -409,9 +396,6 @@ static void opInit(heur_fact_op_t *fact_op,
             fact_op->op[cond_eff_ins].value = ops[i].cost;
             fact_op->op[cond_eff_ins].cost  = ops[i].cost;
             fact_op->op_id[cond_eff_ins] = i;
-
-            if (fact_op->op[cond_eff_ins].unsat == 0)
-                addOpWithoutPre(&fact_op->op_wo_pre, cond_eff_ins);
 
 #ifdef HEUR_FACT_OP_EXTRA_OP_INIT
             HEUR_FACT_OP_EXTRA_OP_INIT(fact_op->op + cond_eff_ins, ops + i, 1);

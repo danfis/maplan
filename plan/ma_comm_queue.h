@@ -84,6 +84,13 @@ plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_queue_t *comm);
 plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_queue_t *comm);
 
 /**
+ * Same as planMACommQueueRecvBlock() but unblocks after specified amount
+ * of time if no message was received (and that case returns NULL).
+ */
+plan_ma_msg_t *planMACommQueueRecvBlockTimeout(plan_ma_comm_queue_t *comm,
+                                               int timeout_in_ms);
+
+/**
  * Returns number of peers.
  */
 _bor_inline int planMACommQueueNumPeers(const plan_ma_comm_queue_t *comm)

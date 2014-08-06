@@ -11,7 +11,8 @@ struct _msg_buf_t {
 typedef struct _msg_buf_t msg_buf_t;
 
 /** Recieve message in blocking or non-blocking mode */
-static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block);
+static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block,
+                           const struct timespec *timeout);
 
 plan_ma_comm_queue_pool_t *planMACommQueuePoolNew(int num_nodes)
 {
@@ -131,16 +132,37 @@ int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
 
 plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_queue_t *comm)
 {
-    return recv(comm, 0);
+    return recv(comm, 0, NULL);
 }
 
 plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_queue_t *comm)
 {
-    return recv(comm, 1);
+    return recv(comm, 1, NULL);
 }
 
+plan_ma_msg_t *planMACommQueueRecvBlockTimeout(plan_ma_comm_queue_t *comm,
+                                               int timeout_in_ms)
+{
+    struct timespec tm;
+    int sec;
+    long nsec;
 
-static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block)
+    sec = timeout_in_ms / 1000;
+    nsec = (timeout_in_ms % 1000L) * 1000L * 1000L;
+
+    clock_gettime(CLOCK_REALTIME, &tm);
+    tm.tv_sec += sec;
+    tm.tv_nsec += nsec;
+    if (tm.tv_nsec > 1000L * 1000L * 1000L){
+        tm.tv_nsec %= 1000L * 1000L * 1000L;
+        tm.tv_sec += 1;
+    }
+    return recv(comm, 1, &tm);
+}
+
+#include <errno.h>
+static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block,
+                           const struct timespec *timeout)
 {
     plan_ma_comm_queue_node_t *node = comm->pool.node + comm->node_id;
     msg_buf_t *buf;
@@ -150,7 +172,12 @@ static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block)
 
     if (block){
         // wait for available messages
-        sem_wait(&node->full);
+        if (timeout){
+            if (sem_timedwait(&node->full, timeout) != 0)
+                return NULL;
+        }else{
+            sem_wait(&node->full);
+        }
     }else{
         // wait for available messages or exit if there is none
         if (sem_trywait(&node->full) != 0)

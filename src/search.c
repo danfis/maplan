@@ -4,6 +4,12 @@
 
 #include "plan/search.h"
 
+/** Maximal time (in ms) for which is multi-agent thread blocked when
+ *  dead-end is reached. This constant is here basicaly to prevent
+ *  dead-lock when all threads are in dead-end. So, it should be set to
+ *  fairly high number. */
+#define SEARCH_MA_MAX_BLOCK_TIME (180 * 1000)
+
 /** Reference data for the received public states */
 struct _ma_pub_state_data_t {
     int agent_id;             /*!< ID of the source agent */
@@ -414,8 +420,15 @@ int planSearchMARun(plan_search_t *search,
         }else if (res == PLAN_SEARCH_NOT_FOUND){
             // If this agent reached dead-end, wait either for terminate
             // signal or for some public state it can continue from.
-            if ((msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
+            msg = planMACommQueueRecvBlockTimeout(search->ma_comm,
+                                                  SEARCH_MA_MAX_BLOCK_TIME);
+            if (msg != NULL){
                 res = maProcessMsg(search, msg);
+            }else{
+                fprintf(stderr, "[%d] Timeout.\n",
+                        search->ma_comm->node_id);
+                maTerminate(search);
+                break;
             }
         }
     }

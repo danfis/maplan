@@ -44,10 +44,6 @@ typedef struct _plan_heur_lm_cut_t plan_heur_lm_cut_t;
 /** Main function that returns heuristic value. */
 static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
                           plan_heur_res_t *res);
-static void planHeurLMCut2(plan_heur_t *_heur,
-                          const plan_state_t *state,
-                          const plan_part_state_t *goal,
-                          plan_heur_res_t *res);
 /** Delete method */
 static void planHeurLMCutDel(plan_heur_t *_heur);
 
@@ -97,11 +93,12 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
 
     heur = BOR_ALLOC(plan_heur_lm_cut_t);
     _planHeurInit(&heur->heur, planHeurLMCutDel,
-                  planHeurLMCut, planHeurLMCut2);
+                  planHeurLMCut);
 
     flags  = HEUR_FACT_OP_INIT_FACT_EFF;
     flags |= HEUR_FACT_OP_SIMPLIFY;
     flags |= HEUR_FACT_OP_ARTIFICIAL_GOAL;
+    flags |= HEUR_FACT_OP_NO_PRE_FACT;
     heurFactOpInit(&heur->data, var, var_size, goal,
                    op, op_size, succ_gen, flags);
 
@@ -171,17 +168,6 @@ static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
     res->heur = h;
 }
 
-static void planHeurLMCut2(plan_heur_t *_heur,
-                          const plan_state_t *state,
-                          const plan_part_state_t *goal,
-                          plan_heur_res_t *res)
-{
-    // TODO
-    fprintf(stderr, "Heur Error: planHeur2() for LM-Cut heuristic is not"
-                    " yet implemented!\n");
-    exit(-1);
-}
-
 static void lmCutCtxInit(plan_heur_lm_cut_t *heur)
 {
     memcpy(heur->op, heur->data.op, sizeof(op_t) * heur->data.op_size);
@@ -229,6 +215,7 @@ static void lmCutInitialExploration(plan_heur_lm_cut_t *heur,
         id = valToId(&heur->data.vid, i, planStateGet(state, i));
         lmCutEnqueue(heur, id, 0);
     }
+    lmCutEnqueue(heur, heur->data.no_pre_fact, 0);
 
     while (!planPrioQueueEmpty(&heur->queue)){
         id = planPrioQueuePop(&heur->queue, &value);
@@ -285,6 +272,9 @@ _bor_inline void lmCutFindCutAddInit(plan_heur_lm_cut_t *heur,
         heur->fact[id].in_queue = 1;
         borLifoPush(queue, &id);
     }
+    id = heur->data.no_pre_fact;
+    heur->fact[id].in_queue = 1;
+    borLifoPush(queue, &id);
 }
 
 _bor_inline int lmCutFindCutProcessOp(plan_heur_lm_cut_t *heur, int op_id)

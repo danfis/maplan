@@ -12,9 +12,9 @@ TEST(testSearchAStar)
     planSearchAStarParamsInit(&params);
     p = planProblemFromFD("../data/ma-benchmarks/driverlog/pfile3.sas");
     params.search.prob = p;
-    params.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
-                                   p->op, p->op_size, p->succ_gen);
-    params.heur_del = 1;
+    params.search.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
+                                          p->op, p->op_size, p->succ_gen);
+    params.search.heur_del = 1;
     search = planSearchAStarNew(&params);
 
     planPathInit(&path);
@@ -30,9 +30,9 @@ TEST(testSearchAStar)
     planSearchAStarParamsInit(&params);
     p = planProblemFromFD("../data/ma-benchmarks/depot/pfile2.sas");
     params.search.prob = p;
-    params.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
-                                   p->op, p->op_size, p->succ_gen);
-    params.heur_del = 1;
+    params.search.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
+                                          p->op, p->op_size, p->succ_gen);
+    params.search.heur_del = 1;
     params.pathmax = 1;
     search = planSearchAStarNew(&params);
 

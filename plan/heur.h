@@ -3,6 +3,7 @@
 
 #include <plan/common.h>
 #include <plan/problem.h>
+#include <plan/ma_comm_queue.h>
 
 /**
  * Heuristic Function API
@@ -54,17 +55,37 @@ typedef void (*plan_heur_fn)(plan_heur_t *heur, const plan_state_t *state,
                              plan_heur_res_t *res);
 
 /**
- * Function that returns heuristic value (see planHeur2() function below).
+ * Multi-agent version of plan_heur_fn
  */
-typedef void (*plan_heur2_fn)(plan_heur_t *heur,
-                              const plan_state_t *state,
-                              const plan_part_state_t *goal,
-                              plan_heur_res_t *res);
+typedef int (*plan_heur_ma_fn)(plan_heur_t *heur,
+                               plan_ma_comm_queue_t *comm,
+                               const plan_state_t *state,
+                               plan_heur_res_t *res);
+
+/**
+ * Update function for multi-agent version of heuristic
+ */
+typedef int (*plan_heur_ma_update_fn)(plan_heur_t *heur,
+                                      plan_ma_comm_queue_t *comm,
+                                      const plan_ma_msg_t *msg,
+                                      plan_heur_res_t *res);
+
+/**
+ * Method for processing request from remote peer.
+ */
+typedef void (*plan_heur_ma_request_fn)(plan_heur_t *heur,
+                                        plan_ma_comm_queue_t *comm,
+                                        const plan_ma_msg_t *msg);
 
 struct _plan_heur_t {
     plan_heur_del_fn del_fn;
     plan_heur_fn heur_fn;
-    plan_heur2_fn heur2_fn;
+    plan_heur_ma_fn heur_ma_fn;
+    plan_heur_ma_update_fn heur_ma_update_fn;
+    plan_heur_ma_request_fn heur_ma_request_fn;
+
+    int ma; /*!< Set to true if planHeurMA*() functions should be used
+                 instead of planHeur() */
 };
 
 /**
@@ -115,6 +136,11 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
                               const plan_succ_gen_t *succ_gen);
 
 /**
+ * Creates an multi-agent version of FF heuristic.
+ */
+plan_heur_t *planHeurMARelaxFFNew(const plan_problem_agent_t *prob);
+
+/**
  * Deletes heuristics object.
  */
 void planHeurDel(plan_heur_t *heur);
@@ -128,15 +154,33 @@ void planHeur(plan_heur_t *heur, const plan_state_t *state,
               plan_heur_res_t *res);
 
 /**
- * Same as planHeur() but the goal is explicitly specified.
+ * Multi-agent version of planHeur(), this function can send some messages
+ * to other peers. Returns 0 if heuristic value was found or -1 if
+ * planHeurMAUpdate() should be consecutively called on all heur-response
+ * messages.
  */
-void planHeur2(plan_heur_t *heur,
+int planHeurMA(plan_heur_t *heur,
+               plan_ma_comm_queue_t *comm,
                const plan_state_t *state,
-               const plan_part_state_t *goal,
                plan_heur_res_t *res);
 
+/**
+ * If planHeurMA() returned non-zero value (reference ID), all receiving
+ * messages with the same ID (as the returned value) should be passed into
+ * this function until 0 is returned in which case the heuristic value was
+ * computed.
+ */
+int planHeurMAUpdate(plan_heur_t *heur,
+                     plan_ma_comm_queue_t *comm,
+                     const plan_ma_msg_t *msg,
+                     plan_heur_res_t *res);
 
-
+/**
+ * Function that process multi-agent heur-request message.
+ */
+void planHeurMARequest(plan_heur_t *heur,
+                       plan_ma_comm_queue_t *comm,
+                       const plan_ma_msg_t *msg);
 
 /**
  * Initializes heuristics.
@@ -144,8 +188,17 @@ void planHeur2(plan_heur_t *heur,
  */
 void _planHeurInit(plan_heur_t *heur,
                    plan_heur_del_fn del_fn,
-                   plan_heur_fn heur_fn,
-                   plan_heur2_fn heur2_fn);
+                   plan_heur_fn heur_fn);
+
+/**
+ * Initializes multi-agent part of the heuristics.
+ * This function must be called _after_ _planHeurInit().
+ * For internal use.
+ */
+void _planHeurMAInit(plan_heur_t *heur,
+                     plan_heur_ma_fn heur_ma_fn,
+                     plan_heur_ma_update_fn heur_ma_update_fn,
+                     plan_heur_ma_request_fn heur_ma_request_fn);
 
 /**
  * Frees allocated resources.

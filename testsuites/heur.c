@@ -108,6 +108,7 @@ static void testRelax(const char *fn, heur_new_fn new_fn,
     planProblemDel(p);
 }
 
+#if 0
 struct _heur2_test_t {
     plan_val_t state[38];
 };
@@ -298,6 +299,7 @@ static void testHeur2(heur_new_fn new_fn)
     planStateDel(state);
     planProblemDel(p);
 }
+#endif
 
 static plan_heur_t *goalCountNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
@@ -310,28 +312,28 @@ static plan_heur_t *goalCountNew(const plan_var_t *var, int var_size,
 
 TEST(testHeurGoalCount)
 {
-    testHeur2(goalCountNew);
+    //testHeur2(goalCountNew);
 }
 
 TEST(testHeurRelaxAdd)
 {
     testRelax("load-from-file.in1.sas", planHeurRelaxAddNew,
               relax_test_add, relax_test_add_size);
-    testHeur2(planHeurRelaxAddNew);
+    //testHeur2(planHeurRelaxAddNew);
 }
 
 TEST(testHeurRelaxMax)
 {
     testRelax("load-from-file.in1.sas", planHeurRelaxMaxNew,
               relax_test_max, relax_test_max_size);
-    testHeur2(planHeurRelaxMaxNew);
+    //testHeur2(planHeurRelaxMaxNew);
 }
 
 TEST(testHeurRelaxFF)
 {
     testRelax("load-from-file.in1.sas", planHeurRelaxFFNew,
               relax_test_ff, relax_test_ff_size);
-    testHeur2(planHeurRelaxFFNew);
+    //testHeur2(planHeurRelaxFFNew);
 }
 
 struct _lm_cut_test_t {

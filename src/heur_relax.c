@@ -352,12 +352,22 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
                             const plan_state_t *state)
 {
     int i, id, len;
+    int *ops;
 
     // insert all facts from the initial state into priority queue
     len = planStateSize(state);
     for (i = 0; i < len; ++i){
         id = valToId(&heur->data.vid, i, planStateGet(state, i));
         ctxUpdateFact(heur, id, -1, 0);
+    }
+
+    // Insert all effects from all operators without preconditions
+    len = heur->data.op_wo_pre.size;
+    ops = heur->data.op_wo_pre.op;
+    for (i = 0; i < len; ++i){
+        id = ops[i];
+        heur->op[id].value = heur->op[id].cost;
+        ctxAddEffects(heur, id);
     }
 }
 

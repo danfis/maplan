@@ -158,6 +158,12 @@ static plan_heur_t *heurCreate(const char *name,
         heur = planHeurRelaxFFNew(prob->var, prob->var_size,
                                   prob->goal, op, op_size, succ_gen);
     }else if (strcmp(name, "ma-ff") == 0){
+        if (agent_prob == NULL){
+            fprintf(stderr, "Error: ma-ff heuristic can be used only in"
+                            " --ma mode!\n");
+            exit(-1);
+        }
+
         heur = planHeurMARelaxFFNew(agent_prob);
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,

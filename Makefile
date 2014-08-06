@@ -23,6 +23,7 @@ SO_VERSION = 0
 CFLAGS += -I. -I../boruvka/
 CXXFLAGS += -I. -I../boruvka/
 CXXFLAGS += $(PROTOBUF_CFLAGS)
+CXXFLAGS += -Wno-long-long
 LDFLAGS += -L. -lplan -L../boruvka -lboruvka -lm -lrt
 LDFLAGS += $(PROTOBUF_LDFLAGS)
 
@@ -54,7 +55,6 @@ OBJS += heur_relax
 OBJS += heur_lm_cut
 OBJS += prioqueue
 OBJS += ma_comm_queue
-OBJS += ma_agent
 OBJS += ma
 
 CXX_OBJS  = ma_msg.pb

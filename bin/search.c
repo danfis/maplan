@@ -49,7 +49,7 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("list", 'l', OPTS_STR, &def_list, NULL,
                 "Define list type [heap|bucket|rbtree|splaytree] (default: splaytree)");
     optsAddDesc("heur", 'H', OPTS_STR, &def_heur, NULL,
-                "Define heuristic [goalcount|add|max|ff|lm-cut] (default: goalcount)");
+                "Define heuristic [goalcount|add|max|ff|ma-ff|lm-cut] (default: goalcount)");
     optsAddDesc("use-preferred-ops", 'p', OPTS_STR, NULL,
                 OPTS_CB(optUsePreferredOps),
                 "Enable/disable use of preferred operators: off|pref|only."
@@ -141,7 +141,8 @@ static plan_list_lazy_t *listLazyCreate(const char *name)
 static plan_heur_t *heurCreate(const char *name,
                                plan_problem_t *prob,
                                const plan_operator_t *op, int op_size,
-                               const plan_succ_gen_t *succ_gen)
+                               const plan_succ_gen_t *succ_gen,
+                               const plan_problem_agent_t *agent_prob)
 {
     plan_heur_t *heur = NULL;
 
@@ -156,6 +157,14 @@ static plan_heur_t *heurCreate(const char *name,
     }else if (strcmp(name, "ff") == 0){
         heur = planHeurRelaxFFNew(prob->var, prob->var_size,
                                   prob->goal, op, op_size, succ_gen);
+    }else if (strcmp(name, "ma-ff") == 0){
+        if (agent_prob == NULL){
+            fprintf(stderr, "Error: ma-ff heuristic can be used only in"
+                            " --ma mode!\n");
+            exit(-1);
+        }
+
+        heur = planHeurMARelaxFFNew(agent_prob);
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
                                 prob->goal, op, op_size, succ_gen);
@@ -172,6 +181,7 @@ static plan_search_t *searchCreate(const char *search_name,
                                    plan_problem_t *prob,
                                    const plan_operator_t *op, int op_size,
                                    const plan_succ_gen_t *succ_gen,
+                                   const plan_problem_agent_t *agent_prob,
                                    void *progress_data)
 {
     plan_search_t *search = NULL;
@@ -182,15 +192,19 @@ static plan_search_t *searchCreate(const char *search_name,
 
     if (strcmp(search_name, "ehc") == 0){
         planSearchEHCParamsInit(&ehc_params);
-        ehc_params.heur = heurCreate(heur_name, prob, op, op_size, succ_gen);
-        ehc_params.heur_del = 1;
+        ehc_params.search.heur = heurCreate(heur_name, prob,
+                                            op, op_size, succ_gen,
+                                            agent_prob);
+        ehc_params.search.heur_del = 1;
         ehc_params.use_preferred_ops = use_preferred_ops;
         params = &ehc_params.search;
 
     }else if (strcmp(search_name, "lazy") == 0){
         planSearchLazyParamsInit(&lazy_params);
-        lazy_params.heur = heurCreate(heur_name, prob, op, op_size, succ_gen);
-        lazy_params.heur_del = 1;
+        lazy_params.search.heur = heurCreate(heur_name, prob,
+                                             op, op_size, succ_gen,
+                                             agent_prob);
+        lazy_params.search.heur_del = 1;
         lazy_params.use_preferred_ops = use_preferred_ops;
         lazy_params.list = listLazyCreate(list_name);
         lazy_params.list_del = 1;
@@ -198,8 +212,10 @@ static plan_search_t *searchCreate(const char *search_name,
 
     }else if (strcmp(search_name, "astar") == 0){
         planSearchAStarParamsInit(&astar_params);
-        astar_params.heur = heurCreate(heur_name, prob, op, op_size, succ_gen);
-        astar_params.heur_del = 1;
+        astar_params.search.heur = heurCreate(heur_name, prob,
+                                              op, op_size, succ_gen,
+                                              agent_prob);
+        astar_params.search.heur_del = 1;
         astar_params.pathmax = use_pathmax;
         params = &astar_params.search;
 
@@ -250,27 +266,17 @@ static void printProblem(const plan_problem_t *prob,
 }
 
 
-static int runSingleThread(plan_problem_t *prob)
+static void printResults(int res, plan_path_t *path)
 {
-    plan_search_t *search;
-    plan_path_t path;
     FILE *fout;
-    int res;
 
-    search = searchCreate(def_search, def_heur, def_list, prob,
-                          prob->op, prob->op_size, prob->succ_gen, NULL);
-    if (search == NULL)
-        return -1;
-
-    planPathInit(&path);
-    res = planSearchRun(search, &path);
     if (res == PLAN_SEARCH_FOUND){
         printf("Solution found.\n");
 
         if (plan_output_fn != NULL){
             fout = fopen(plan_output_fn, "w");
             if (fout != NULL){
-                planPathPrint(&path, fout);
+                planPathPrint(path, fout);
                 fclose(fout);
                 printf("Plan written to `%s'\n", plan_output_fn);
             }else{
@@ -279,7 +285,7 @@ static int runSingleThread(plan_problem_t *prob)
             }
         }
 
-        printf("Path Cost: %d\n", (int)planPathCost(&path));
+        printf("Path Cost: %d\n", (int)planPathCost(path));
 
     }else if (res == PLAN_SEARCH_NOT_FOUND){
         printf("Solution NOT found.\n");
@@ -287,6 +293,23 @@ static int runSingleThread(plan_problem_t *prob)
     }else if (res == PLAN_SEARCH_ABORT){
         printf("Search Aborted.\n");
     }
+}
+
+static int runSingleThread(plan_problem_t *prob)
+{
+    plan_search_t *search;
+    plan_path_t path;
+    int res;
+
+    search = searchCreate(def_search, def_heur, def_list, prob,
+                          prob->op, prob->op_size, prob->succ_gen,
+                          NULL, NULL);
+    if (search == NULL)
+        return -1;
+
+    planPathInit(&path);
+    res = planSearchRun(search, &path);
+    printResults(res, &path);
 
     printf("\n");
     printf("Search Time: %f\n", search->stat.elapsed_time);
@@ -306,15 +329,12 @@ static int runSingleThread(plan_problem_t *prob)
 static int runMA(plan_problem_agents_t *ma_prob)
 {
     plan_search_t *search[ma_prob->agent_size];
+    plan_path_t path;
     int agent_id[ma_prob->agent_size];
     plan_operator_t *heur_op;
     int heur_op_size;
     plan_succ_gen_t *heur_succ_gen;
-    plan_ma_agent_path_op_t *path = NULL;
-    int path_size = 0;
     int i, res;
-    plan_cost_t cost;
-    FILE *fout;
 
     for (i = 0; i < ma_prob->agent_size; ++i){
         agent_id[i] = i;
@@ -341,44 +361,15 @@ static int runMA(plan_problem_agents_t *ma_prob)
         search[i] = searchCreate(def_search, def_heur, def_list,
                                  &ma_prob->agent[i].prob,
                                  heur_op, heur_op_size, heur_succ_gen,
+                                 &ma_prob->agent[i],
                                  &agent_id[i]);
         if (search[i] == NULL)
             return -1;
     }
 
-    res = planMARun(ma_prob->agent_size, search, &path, &path_size);
-    if (res == PLAN_SEARCH_FOUND){
-        printf("Solution found.\n");
-
-        if (plan_output_fn != NULL){
-            fout = fopen(plan_output_fn, "w");
-            if (fout != NULL){
-                for (i = 0; i < path_size; ++i){
-                    fprintf(fout, "(%s)\n", path[i].name);
-                }
-                fclose(fout);
-                printf("Plan written to `%s'\n", plan_output_fn);
-
-            }else{
-                fprintf(stderr, "Error: Could not plan write to `%s'\n",
-                        plan_output_fn);
-            }
-        }
-
-        cost = 0;
-        for (i = 0; i < path_size; ++i)
-            cost += path[i].cost;
-        printf("Path Cost: %d\n", (int)cost);
-
-        if (path)
-            planMAAgentPathFree(path, path_size);
-
-    }else if (res == PLAN_SEARCH_NOT_FOUND){
-        printf("Solution NOT found.\n");
-
-    }else if (res == PLAN_SEARCH_ABORT){
-        printf("Search Aborted.\n");
-    }
+    planPathInit(&path);
+    res = planMARun(ma_prob->agent_size, search, &path);
+    printResults(res, &path);
 
     for (i = 0; i < ma_prob->agent_size; ++i){
         printf("Agent[%d] stats:\n", i);
@@ -390,6 +381,8 @@ static int runMA(plan_problem_agents_t *ma_prob)
         printf("    Peak Memory: %ld kb\n", search[i]->stat.peak_memory);
         planSearchDel(search[i]);
     }
+
+    planPathFree(&path);
 
     return 0;
 }

@@ -4,7 +4,31 @@ message PlanMAMsgPublicState {
     required int32 state_id = 3;
     required int32 cost = 4;
     required int32 heuristic = 5;
-};
+}
+
+message PlanMAMsgHeurRequest {
+    // Source agent
+    required int32 agent_id = 1;
+    // State from which to find heuristic value
+    repeated int32 state = 3;
+    // Global operator ID
+    required int32 op_id = 4;
+}
+
+message PlanMAMsgHeurResponseOp {
+    required int32 op_id = 1;
+    optional int32 cost = 2;
+    optional int32 owner = 3;
+}
+
+message PlanMAMsgHeurResponse {
+    // Operator for which this is response
+    required int32 op_id = 1;
+    // List of operators in relaxed plan
+    repeated PlanMAMsgHeurResponseOp op = 2;
+    // List of operators in relaxed plan that belong to other peers
+    repeated PlanMAMsgHeurResponseOp peer_op = 3;
+}
 
 message PlanMAMsgPathOperator {
     // Name of the operator
@@ -30,12 +54,18 @@ message PlanMAMsg {
         TERMINATE_REQUEST = 0x101;
         TERMINATE_ACK     = 0x102;
 
-        PUBLIC_STATE      = 0x001;
+        SEARCH_PUBLIC_STATE = 0x201;
+
         TRACE_PATH        = 0x002;
+
+        HEUR_REQUEST  = 0x301;
+        HEUR_RESPONSE = 0x302;
     }
 
     required Type type = 1;
 
     optional PlanMAMsgPublicState public_state = 2;
     optional PlanMAMsgTracePath trace_path = 3;
+    optional PlanMAMsgHeurRequest heur_request = 4;
+    optional PlanMAMsgHeurResponse heur_response = 5;
 }

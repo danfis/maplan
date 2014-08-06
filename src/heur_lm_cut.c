@@ -42,8 +42,8 @@ typedef struct _plan_heur_lm_cut_t plan_heur_lm_cut_t;
     bor_container_of((parent), plan_heur_lm_cut_t, heur)
 
 /** Main function that returns heuristic value. */
-static plan_cost_t planHeurLMCut(plan_heur_t *heur, const plan_state_t *state,
-                                 plan_heur_preferred_ops_t *preferred_ops);
+static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
+                          plan_heur_res_t *res);
 /** Delete method */
 static void planHeurLMCutDel(plan_heur_t *_heur);
 
@@ -92,11 +92,13 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
     unsigned flags;
 
     heur = BOR_ALLOC(plan_heur_lm_cut_t);
-    planHeurInit(&heur->heur, planHeurLMCutDel, planHeurLMCut);
+    _planHeurInit(&heur->heur, planHeurLMCutDel,
+                  planHeurLMCut);
 
     flags  = HEUR_FACT_OP_INIT_FACT_EFF;
     flags |= HEUR_FACT_OP_SIMPLIFY;
     flags |= HEUR_FACT_OP_ARTIFICIAL_GOAL;
+    flags |= HEUR_FACT_OP_NO_PRE_FACT;
     heurFactOpInit(&heur->data, var, var_size, goal,
                    op, op_size, succ_gen, flags);
 
@@ -116,19 +118,16 @@ static void planHeurLMCutDel(plan_heur_t *_heur)
     BOR_FREE(heur->fact);
     BOR_FREE(heur->op);
     heurFactOpFree(&heur->data);
+    _planHeurFree(&heur->heur);
     BOR_FREE(heur);
 }
 
-static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
-                                 plan_heur_preferred_ops_t *preferred_ops)
+static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
+                          plan_heur_res_t *res)
 {
     plan_heur_lm_cut_t *heur = HEUR_FROM_PARENT(_heur);
     plan_cost_t h = PLAN_HEUR_DEAD_END;
     int i;
-
-    // Preferred operators are not supported for now
-    if (preferred_ops)
-        preferred_ops->preferred_size = 0;
 
     // Initialize context for the current run
     lmCutCtxInit(heur);
@@ -166,8 +165,7 @@ static plan_cost_t planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
 
     lmCutCtxFree(heur);
 
-    return h;
-    return 0;
+    res->heur = h;
 }
 
 static void lmCutCtxInit(plan_heur_lm_cut_t *heur)
@@ -217,6 +215,7 @@ static void lmCutInitialExploration(plan_heur_lm_cut_t *heur,
         id = valToId(&heur->data.vid, i, planStateGet(state, i));
         lmCutEnqueue(heur, id, 0);
     }
+    lmCutEnqueue(heur, heur->data.no_pre_fact, 0);
 
     while (!planPrioQueueEmpty(&heur->queue)){
         id = planPrioQueuePop(&heur->queue, &value);
@@ -273,6 +272,9 @@ _bor_inline void lmCutFindCutAddInit(plan_heur_lm_cut_t *heur,
         heur->fact[id].in_queue = 1;
         borLifoPush(queue, &id);
     }
+    id = heur->data.no_pre_fact;
+    heur->fact[id].in_queue = 1;
+    borLifoPush(queue, &id);
 }
 
 _bor_inline int lmCutFindCutProcessOp(plan_heur_lm_cut_t *heur, int op_id)

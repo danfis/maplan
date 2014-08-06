@@ -40,6 +40,16 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
     return msg;
 }
 
+int planMAMsgIsSearchType(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    unsigned type = msg->type();
+
+    if ((type & 0x200u) == 0x200u)
+        return 1;
+    return 0;
+}
+
 void planMAMsgSetPublicState(plan_ma_msg_t *_msg, int agent_id,
                              const void *state, size_t state_size,
                              int state_id,
@@ -48,7 +58,7 @@ void planMAMsgSetPublicState(plan_ma_msg_t *_msg, int agent_id,
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
     PlanMAMsgPublicState *public_state;
 
-    msg->set_type(PlanMAMsg::PUBLIC_STATE);
+    msg->set_type(PlanMAMsg::SEARCH_PUBLIC_STATE);
     public_state = msg->mutable_public_state();
     public_state->set_agent_id(agent_id);
     public_state->set_state(state, state_size);
@@ -60,7 +70,7 @@ void planMAMsgSetPublicState(plan_ma_msg_t *_msg, int agent_id,
 int planMAMsgIsPublicState(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    return msg->type() == PlanMAMsg::PUBLIC_STATE;
+    return msg->type() == PlanMAMsg::SEARCH_PUBLIC_STATE;
 }
 
 int planMAMsgPublicStateAgent(const plan_ma_msg_t *_msg)
@@ -251,4 +261,123 @@ const char *planMAMsgTracePathOperator(const plan_ma_msg_t *_msg, int i,
     if (cost)
         *cost = op.cost();
     return op.name().c_str();
+}
+
+void planMAMsgSetHeurRequest(plan_ma_msg_t *_msg,
+                             int agent_id,
+                             const int *state, int state_size,
+                             int op_id)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurRequest *req;
+
+    msg->set_type(PlanMAMsg::HEUR_REQUEST);
+    req = msg->mutable_heur_request();
+    req->set_agent_id(agent_id);
+    req->set_op_id(op_id);
+
+    for (int i = 0; i < state_size; ++i)
+        req->add_state(state[i]);
+}
+
+int planMAMsgIsHeurRequest(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type() == PlanMAMsg::HEUR_REQUEST;
+}
+
+int planMAMsgHeurRequestAgentId(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurRequest &req = msg->heur_request();
+    return req.agent_id();
+}
+
+int planMAMsgHeurRequestOpId(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurRequest &req = msg->heur_request();
+    return req.op_id();
+}
+
+int planMAMsgHeurRequestState(const plan_ma_msg_t *_msg, int var)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurRequest &req = msg->heur_request();
+    return req.state(var);
+}
+
+
+void planMAMsgSetHeurResponse(plan_ma_msg_t *_msg, int op_id)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurResponse *res;
+
+    msg->set_type(PlanMAMsg::HEUR_RESPONSE);
+    res = msg->mutable_heur_response();
+    res->set_op_id(op_id);
+}
+
+void planMAMsgHeurResponseAddOp(plan_ma_msg_t *_msg, int op_id, int cost)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurResponse *res = msg->mutable_heur_response();
+    PlanMAMsgHeurResponseOp *op = res->add_op();
+    op->set_op_id(op_id);
+    op->set_cost(cost);
+}
+
+void planMAMsgHeurResponseAddPeerOp(plan_ma_msg_t *_msg,
+                                    int op_id, int owner)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurResponse *res = msg->mutable_heur_response();
+    PlanMAMsgHeurResponseOp *op = res->add_peer_op();
+    op->set_op_id(op_id);
+    op->set_owner(owner);
+}
+
+int planMAMsgIsHeurResponse(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type() == PlanMAMsg::HEUR_RESPONSE;
+}
+
+int planMAMsgHeurResponseOpId(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurResponse &res = msg->heur_response();
+    return res.op_id();
+}
+
+int planMAMsgHeurResponseOpSize(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurResponse &res = msg->heur_response();
+    return res.op_size();
+}
+
+int planMAMsgHeurResponseOp(const plan_ma_msg_t *_msg, int i, int *cost)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurResponse &res = msg->heur_response();
+    const PlanMAMsgHeurResponseOp &op = res.op(i);
+    *cost = op.cost();
+    return op.op_id();
+}
+
+int planMAMsgHeurResponsePeerOpSize(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurResponse &res = msg->heur_response();
+    return res.peer_op_size();
+}
+
+int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *_msg, int i, int *owner)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurResponse &res = msg->heur_response();
+    const PlanMAMsgHeurResponseOp &op = res.peer_op(i);
+    *owner = op.owner();
+    return op.op_id();
 }

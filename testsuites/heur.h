@@ -1,12 +1,14 @@
 #ifndef TEST_HEUR_H
 #define TEST_HEUR_H
 
+TEST(testHeurGoalCount);
 TEST(testHeurRelaxAdd);
 TEST(testHeurRelaxMax);
 TEST(testHeurRelaxFF);
 TEST(testHeurRelaxLMCut);
 
 TEST_SUITE(TSHeur) {
+    TEST_ADD(testHeurGoalCount),
     TEST_ADD(testHeurRelaxAdd),
     TEST_ADD(testHeurRelaxMax),
     TEST_ADD(testHeurRelaxFF),

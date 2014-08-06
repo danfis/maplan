@@ -13,7 +13,7 @@ TEST(testSearchLazy)
 
     params.search.prob = planProblemFromFD(DEF_JSON);
 
-    params.heur = planHeurGoalCountNew(params.search.prob->goal);
+    params.search.heur = planHeurGoalCountNew(params.search.prob->goal);
     params.list = planListLazyHeapNew();
     lazy = planSearchLazyNew(&params);
     planPathInit(&path);
@@ -24,7 +24,7 @@ TEST(testSearchLazy)
 
     planPathFree(&path);
     planListLazyDel(params.list);
-    planHeurDel(params.heur);
+    planHeurDel(params.search.heur);
     planSearchDel(lazy);
     planProblemDel(params.search.prob);
 }

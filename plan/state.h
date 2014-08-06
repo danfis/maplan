@@ -49,6 +49,10 @@ struct _plan_state_t {
 };
 typedef struct _plan_state_t plan_state_t;
 
+#define PLAN_STATE_STACK(name, var_size) \
+    plan_val_t name ## __val__[var_size]; \
+    plan_state_t state = { name ## __val__, var_size }
+
 
 struct _plan_part_state_pair_t {
     plan_var_id_t var;
@@ -237,6 +241,10 @@ _bor_inline int planStateSize(const plan_state_t *state);
  */
 void planStateZeroize(plan_state_t *state);
 
+/**
+ * For debug purposes.
+ */
+void planStatePrint(const plan_state_t *state, FILE *fout);
 
 
 

@@ -8,6 +8,7 @@
 #include <plan/heur.h>
 #include <plan/list_lazy.h>
 #include <plan/path.h>
+#include <plan/ma_comm_queue.h>
 
 /** Forward declaration */
 typedef struct _plan_search_t plan_search_t;
@@ -78,41 +79,6 @@ void planSearchStatInit(plan_search_stat_t *stat);
 
 
 /**
- * Structure with record of changes made during one step of search
- * algorithm (see planSearchStep()).
- */
-struct _plan_search_step_change_t {
-    plan_state_space_node_t **closed_node; /*!< Closed nodes */
-    int closed_node_size;                  /*!< Number of closed nodes */
-    int closed_node_alloc;                 /*!< Allocated space */
-};
-typedef struct _plan_search_step_change_t plan_search_step_change_t;
-
-/**
- * Initializes plan_search_step_change_t structure.
- */
-void planSearchStepChangeInit(plan_search_step_change_t *step_change);
-
-/**
- * Frees all resources allocated within plan_search_step_change_t
- * structure.
- */
-void planSearchStepChangeFree(plan_search_step_change_t *step_change);
-
-/**
- * Reset record of the structure.
- */
-void planSearchStepChangeReset(plan_search_step_change_t *step_change);
-
-/**
- * Add record about one closed node.
- */
-void planSearchStepChangeAddClosedNode(plan_search_step_change_t *step_change,
-                                       plan_state_space_node_t *node);
-
-
-
-/**
  * Callback for progress monitoring.
  * The function should return PLAN_SEARCH_CONT if the process should
  * continue after this callback, or PLAN_SEARCH_ABORT if the process
@@ -132,6 +98,10 @@ typedef void (*plan_search_run_node_closed)(plan_state_space_node_t *node,
  * Common parameters for all search algorithms.
  */
 struct _plan_search_params_t {
+    plan_heur_t *heur; /*!< Heuristic function that ought to be used */
+    int heur_del;      /*!< True if .heur should be deleted in
+                            planSearchDel() */
+
     plan_search_progress_fn progress_fn; /*!< Callback for monitoring */
     long progress_freq;                  /*!< Frequence of calling
                                               .progress_fn as number of steps. */
@@ -142,16 +112,17 @@ struct _plan_search_params_t {
 typedef struct _plan_search_params_t plan_search_params_t;
 
 
+struct _plan_search_ma_params_t {
+    plan_ma_comm_queue_t *comm;
+};
+typedef struct _plan_search_ma_params_t plan_search_ma_params_t;
+
 /**
  * Enforced Hill Climbing Search Algorithm
  * ----------------------------------------
  */
 struct _plan_search_ehc_params_t {
     plan_search_params_t search; /*!< Common parameters */
-
-    plan_heur_t *heur; /*!< Heuristic function that ought to be used */
-    int heur_del;      /*!< True if .heur should be deleted in
-                            planSearchDel() */
     int use_preferred_ops; /*!< One of PLAN_SEARCH_PREFERRED_* constants */
 };
 typedef struct _plan_search_ehc_params_t plan_search_ehc_params_t;
@@ -174,9 +145,6 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params);
 struct _plan_search_lazy_params_t {
     plan_search_params_t search; /*!< Common parameters */
 
-    plan_heur_t *heur;      /*!< Heuristic function that ought to be used */
-    int heur_del;           /*!< True if .heur should be deleted in
-                                 planSearchDel() */
     int use_preferred_ops;  /*!< One of PLAN_SEARCH_PREFERRED_* constants */
     plan_list_lazy_t *list; /*!< Lazy list that will be used. */
     int list_del;           /*!< True if .list should be deleted in
@@ -202,10 +170,7 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params);
 struct _plan_search_astar_params_t {
     plan_search_params_t search; /*!< Common parameters */
 
-    plan_heur_t *heur; /*!< Heuristic function that ought to be used */
-    int heur_del;      /*!< True if .heur should be deleted in
-                            planSearchDel() */
-    int pathmax;       /*!< Use pathmax correction */
+    int pathmax; /*!< Use pathmax correction */
 };
 typedef struct _plan_search_astar_params_t plan_search_astar_params_t;
 
@@ -243,42 +208,11 @@ void planSearchDel(plan_search_t *search);
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
 /**
- * Extracts path from initial state to the goal state (if was found) using
- * back-tracking from the goal state.
+ * Runs search in multi-agent mode.
  */
-void planSearchBackTrackPath(plan_search_t *search, plan_path_t *path);
-
-/**
- * Simliar to planSearchBackTrackPath() but starting state for
- * back-tracking is specified.
- */
-void planSearchBackTrackPathFrom(plan_search_t *search,
-                                 plan_state_id_t from_state,
-                                 plan_path_t *path);
-
-/**
- * Performs initial step which should be insertion of the initial state.
- * Returns PLAN_SEARCH_CONT or PLAN_SEARCH_FOUND.
- */
-_bor_inline int planSearchInitStep(plan_search_t *search);
-
-/**
- * Performs one step in search.
- * Returns one of PLAN_SEARCH_{CONT,FOUND,NOT_FOUND,ABORT}.
- * If {change} is non-NULL it is filled with record of changes made during
- * that step.
- */
-_bor_inline int planSearchStep(plan_search_t *search,
-                               plan_search_step_change_t *change);
-
-/**
- * Request for injection of the state into open-list.
- * Returns 0 if the state was injected, -1 otherwise.
- */
-_bor_inline int planSearchInjectState(plan_search_t *search,
-                                      plan_state_id_t state_id,
-                                      plan_cost_t cost,
-                                      plan_cost_t heuristic);
+int planSearchMARun(plan_search_t *search,
+                    plan_search_ma_params_t *ma_params,
+                    plan_path_t *path);
 
 /**
  * Internals
@@ -336,8 +270,7 @@ typedef int (*plan_search_init_fn)(plan_search_t *);
 /**
  * Perform one step of algorithm.
  */
-typedef int (*plan_search_step_fn)(plan_search_t *,
-                                   plan_search_step_change_t *change);
+typedef int (*plan_search_step_fn)(plan_search_t *);
 
 /**
  * Inject the given state into open-list and performs another needed
@@ -365,6 +298,9 @@ typedef struct _plan_search_applicable_ops_t plan_search_applicable_ops_t;
  * Common base struct for all search algorithms.
  */
 struct _plan_search_t {
+    plan_heur_t *heur;      /*!< Heuristic function */
+    int heur_del;           /*!< True if .heur should be deleted */
+
     plan_search_del_fn del_fn;
     plan_search_init_fn init_fn;
     plan_search_step_fn step_fn;
@@ -379,6 +315,13 @@ struct _plan_search_t {
     plan_state_id_t goal_state;      /*!< The found state satisfying the goal */
 
     plan_search_applicable_ops_t applicable_ops;
+
+    int ma;                        /*!< True if running in multi-agent mode */
+    plan_ma_comm_queue_t *ma_comm; /*!< Communication queue for MA search */
+    int ma_pub_state_reg;          /*!< ID of the registry that associates
+                                        received public state with state-id. */
+    int ma_terminated;             /*!< True if already terminated */
+    plan_path_t *ma_path;          /*!< Output path for multi-agent mode */
 };
 
 
@@ -406,14 +349,16 @@ void _planSearchFindApplicableOps(plan_search_t *search,
                                   plan_state_id_t state_id);
 
 /**
- * Returns value of heuristics for the given state.
+ * Returns PLAN_SEARCH_CONT if the heuristic value was computed.
+ * Any other status should lead to immediate exit from the search algorithm
+ * with the same status.
  * If preferred_ops is non-NULL, the function will find preferred
  * operators and set up the given struct accordingly.
  */
-plan_cost_t _planSearchHeuristic(plan_search_t *search,
-                                 plan_state_id_t state_id,
-                                 plan_heur_t *heur,
-                                 plan_search_applicable_ops_t *preferred_ops);
+int _planSearchHeuristic(plan_search_t *search,
+                         plan_state_id_t state_id,
+                         plan_cost_t *heur_val,
+                         plan_search_applicable_ops_t *preferred_ops);
 
 /**
  * Adds state's successors to the lazy list with the specified cost.
@@ -429,7 +374,6 @@ void _planSearchAddLazySuccessors(plan_search_t *search,
  * Injects given state into open-list if the node wasn't discovered yet.
  */
 int _planSearchLazyInjectState(plan_search_t *search,
-                               plan_heur_t *heur,
                                plan_list_lazy_t *list,
                                plan_state_id_t state_id,
                                plan_cost_t cost, plan_cost_t heur_val);
@@ -474,29 +418,6 @@ void _planUpdateStat(plan_search_stat_t *stat,
 int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id);
 
 /**** INLINES ****/
-_bor_inline int planSearchInitStep(plan_search_t *search)
-{
-    return search->init_fn(search);
-}
-
-_bor_inline int planSearchStep(plan_search_t *search,
-                               plan_search_step_change_t *change)
-{
-    return search->step_fn(search, change);
-}
-
-_bor_inline int planSearchInjectState(plan_search_t *search,
-                                      plan_state_id_t state_id,
-                                      plan_cost_t cost,
-                                      plan_cost_t heuristic)
-{
-    if (!search->inject_state_fn)
-        return -1;
-    return search->inject_state_fn(search, state_id, cost, heuristic);
-}
-
-
-
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)
 {
     ++stat->evaluated_states;

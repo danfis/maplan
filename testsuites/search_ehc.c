@@ -10,7 +10,8 @@ TEST(testSearchEHC)
     planSearchEHCParamsInit(&params);
 
     params.search.prob = planProblemFromFD("load-from-file.in2.sas");
-    params.heur = planHeurGoalCountNew(params.search.prob->goal);
+    params.search.heur = planHeurGoalCountNew(params.search.prob->goal);
+    params.search.heur_del = 1;
     ehc = planSearchEHCNew(&params);
     planPathInit(&path);
 
@@ -19,7 +20,6 @@ TEST(testSearchEHC)
     assertEquals(planPathCost(&path), 38);
 
     planPathFree(&path);
-    planHeurDel(params.heur);
     planSearchDel(ehc);
     planProblemDel(params.search.prob);
 }

@@ -42,6 +42,8 @@ void planOperatorInit(plan_operator_t *op, plan_state_pool_t *state_pool)
     op->name = NULL;
     op->cost = PLAN_COST_ZERO;
     op->is_private = 0;
+    op->owner = -1;
+    op->global_id = -1;
 }
 
 void planOperatorFree(plan_operator_t *op)

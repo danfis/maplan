@@ -528,6 +528,7 @@ static int agentLoadOperators(plan_problem_t *prob,
         planOperatorCopy(prob->op + ins_from, src_op + op_id);
         if (private)
             planOperatorSetPrivate(prob->op + ins_from);
+        planOperatorSetGlobalId(prob->op + ins_from, op_id);
         ++ins_from;
     }
 
@@ -535,11 +536,12 @@ static int agentLoadOperators(plan_problem_t *prob,
 }
 
 static int fdAgents(const plan_problem_t *prob, FILE *fin,
-                    plan_problem_agent_t **agents_out, int *num_agents_out)
+                    plan_problem_agent_t **agents_out, int *num_agents_out,
+                    int use_metric)
 {
     plan_problem_agent_t *agents;
     plan_problem_agent_t *agent;
-    int i, opi, num_agents, owner;
+    int i, opi, num_agents, owner, global_id;
     char name[1024];
 
     if (fscanf(fin, "%d", &num_agents) != 1)
@@ -584,10 +586,11 @@ static int fdAgents(const plan_problem_t *prob, FILE *fin,
                                             agent->projected_op_size);
         for (opi = 0; opi < agent->projected_op_size; ++opi){
             planOperatorInit(agent->projected_op + opi, agent->prob.state_pool);
-            fdOperator(agent->projected_op + opi, fin, 1);
+            fdOperator(agent->projected_op + opi, fin, use_metric);
 
-            if (fscanf(fin, "%d", &owner) != 1)
+            if (fscanf(fin, "%d %d", &global_id, &owner) != 2)
                 return -1;
+            planOperatorSetGlobalId(agent->projected_op + opi, global_id);
             planOperatorSetOwner(agent->projected_op + opi, owner);
         }
 
@@ -603,7 +606,8 @@ static int fdAgents(const plan_problem_t *prob, FILE *fin,
     return 0;
 }
 
-static int loadFDBase(plan_problem_t *plan, FILE *fin)
+static int loadFDBase(plan_problem_t *plan, FILE *fin,
+                      int *use_metric_out)
 {
     int use_metric;
 
@@ -630,6 +634,9 @@ static int loadFDBase(plan_problem_t *plan, FILE *fin)
     if (fdAssert(fin, "end_SG") != 0)
         return -1;
 
+    if (use_metric_out)
+        *use_metric_out = use_metric;
+
     return 0;
 }
 
@@ -643,7 +650,7 @@ static int loadFD(plan_problem_t *plan, const char *filename)
         return -1;
     }
 
-    if (loadFDBase(plan, fin) != 0)
+    if (loadFDBase(plan, fin, NULL) != 0)
         return -1;
 
     fclose(fin);
@@ -655,6 +662,7 @@ static int loadAgentFD(plan_problem_agents_t *aprob,
                        const char *filename)
 {
     FILE *fin;
+    int use_metric;
 
     fin = fopen(filename, "r");
     if (fin == NULL){
@@ -664,14 +672,15 @@ static int loadAgentFD(plan_problem_agents_t *aprob,
 
     planProblemInit(&aprob->prob);
 
-    if (loadFDBase(&aprob->prob, fin) != 0)
+    if (loadFDBase(&aprob->prob, fin, &use_metric) != 0)
         return -1;
 
     if (fdDomainTransitionGraph(&aprob->prob, fin) != 0)
         return -1;
     if (fdCausalGraph(&aprob->prob, fin) != 0)
         return -1;
-    if (fdAgents(&aprob->prob, fin, &aprob->agent, &aprob->agent_size) != 0)
+    if (fdAgents(&aprob->prob, fin, &aprob->agent, &aprob->agent_size,
+                 use_metric) != 0)
         return -1;
 
     fclose(fin);

@@ -198,7 +198,7 @@ static void heurFactOpInit(heur_fact_op_t *fact_op,
     }
     if (no_pre_fact){
         fact_op->fact_size += 1;
-        fact_op->no_pre_fact = fact_op->fact_size - 2;
+        fact_op->no_pre_fact = fact_op->fact_size - 1;
     }
 #ifdef HEUR_FACT_OP_FACT_T
     factInit(fact_op, artificial_goal, no_pre_fact);

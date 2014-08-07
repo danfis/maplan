@@ -128,8 +128,7 @@ static void goalFree(heur_fact_op_t *fact_op);
 
 #ifdef HEUR_FACT_OP_FACT_T
 /** Initializes and frees .fact structures */
-static void factInit(heur_fact_op_t *fact_op, int artificial_goal,
-                     int no_pre_fact);
+static void factInit(heur_fact_op_t *fact_op);
 static void factFree(heur_fact_op_t *fact_op);
 #endif /* HEUR_FACT_OP_FACT_T */
 
@@ -201,7 +200,7 @@ static void heurFactOpInit(heur_fact_op_t *fact_op,
         fact_op->no_pre_fact = fact_op->fact_size - 1;
     }
 #ifdef HEUR_FACT_OP_FACT_T
-    factInit(fact_op, artificial_goal, no_pre_fact);
+    factInit(fact_op);
 #endif /* HEUR_FACT_OP_FACT_T */
 
     opInit(fact_op, op, op_size, artificial_goal);
@@ -331,8 +330,7 @@ static void goalFree(heur_fact_op_t *fact_op)
 }
 
 #ifdef HEUR_FACT_OP_FACT_T
-static void factInit(heur_fact_op_t *fact_op, int artificial_goal,
-                     int no_pre_fact)
+static void factInit(heur_fact_op_t *fact_op)
 {
     int i;
 
@@ -476,7 +474,7 @@ static void opPreInit(heur_fact_op_t *fact_op,
 
         if (precond->size == 0 && no_pre_fact){
             precond->size = 1;
-            precond->fact = BOR_ALLOC_ARR(int, 1);
+            precond->fact = BOR_REALLOC_ARR(precond->fact, int, 1);
             precond->fact[0] = fact_op->no_pre_fact;
         }
 
@@ -548,7 +546,7 @@ static void opEffInit(heur_fact_op_t *fact_op,
         eff = fact_op->op_eff + fact_op->op_size - 1;
         eff->size = 1;
         eff->fact = BOR_ALLOC_ARR(int, 1);
-        eff->fact[0] = fact_op->fact_size - 1;
+        eff->fact[0] = fact_op->artificial_goal;
     }
 }
 

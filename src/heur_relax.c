@@ -644,7 +644,7 @@ static int maAddOpToRelaxedPlan(ma_t *ma, int id, int cost)
 {
     int i;
 
-    if (ma->relaxed_plan.size < id){
+    if (ma->relaxed_plan.size <= id){
         i = ma->relaxed_plan.size;
         ma->relaxed_plan.size = id + 1;
         ma->relaxed_plan.op = BOR_REALLOC_ARR(ma->relaxed_plan.op, int,

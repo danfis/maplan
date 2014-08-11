@@ -63,22 +63,25 @@ static int opsSortCmp(const void *a, const void *b);
 plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize)
 {
     plan_succ_gen_t *sg;
-    plan_operator_t **sorted_ops;
+    plan_operator_t **sorted_ops = NULL;
     int i;
 
-    // prepare array for sorting operators
-    sorted_ops = BOR_ALLOC_ARR(plan_operator_t *, opsize);
-    for (i = 0; i < opsize; ++i)
-        sorted_ops[i] = (plan_operator_t *)(op + i);
+    if (opsize > 0){
+        // prepare array for sorting operators
+        sorted_ops = BOR_ALLOC_ARR(plan_operator_t *, opsize);
+        for (i = 0; i < opsize; ++i)
+            sorted_ops[i] = (plan_operator_t *)(op + i);
 
-    // Sort operators by values of preconditions.
-    qsort(sorted_ops, opsize, sizeof(plan_operator_t *), opsSortCmp);
+        // Sort operators by values of preconditions.
+        qsort(sorted_ops, opsize, sizeof(plan_operator_t *), opsSortCmp);
+    }
 
     sg = BOR_ALLOC(plan_succ_gen_t);
     sg->root = treeNew(0, sorted_ops, opsize);
     sg->num_operators = opsize;
 
-    BOR_FREE(sorted_ops);
+    if (sorted_ops)
+        BOR_FREE(sorted_ops);
     return sg;
 }
 
@@ -236,6 +239,9 @@ static plan_succ_gen_tree_t *treeNew(plan_var_id_t start_var,
     tree->val = NULL;
     tree->val_size = 0;
     tree->def = NULL;
+
+    if (len == 0)
+        return tree;
 
     // Find first variable that is set for at least one operator.
     // The operators are sorted so that it is enough to check the last

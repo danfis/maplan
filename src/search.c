@@ -575,7 +575,7 @@ static int maSendPublicState(plan_search_t *search,
 {
     plan_ma_msg_t *msg;
     const void *statebuf;
-    int res;
+    int res, i, len, *peers;
 
     if (node->op == NULL || planOperatorIsPrivate(node->op))
         return -2;
@@ -584,13 +584,21 @@ static int maSendPublicState(plan_search_t *search,
     if (statebuf == NULL)
         return -1;
 
+    peers = node->op->send_peer;
+    len   = node->op->send_peer_size;
+    if (len == 0)
+        return -1;
+
     msg = planMAMsgNew();
     planMAMsgSetPublicState(msg, search->ma_comm->node_id,
                             statebuf,
                             planStatePackerBufSize(search->state_pool->packer),
                             node->state_id,
                             node->cost, node->heuristic);
-    res = planMACommQueueSendToAll(search->ma_comm, msg);
+    for (i = 0; i < len; ++i){
+        if (peers[i] != search->ma_comm->node_id)
+            res = planMACommQueueSendToNode(search->ma_comm, peers[i], msg);
+    }
     planMAMsgDel(msg);
 
     return res;

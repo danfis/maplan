@@ -21,6 +21,9 @@ struct _plan_operator_t {
     int is_private;
     int owner;
     int global_id;
+    int *send_peer; /*!< List of IDs of remote peers that are interested in
+                         states created by this operator */
+    int send_peer_size;
 };
 typedef struct _plan_operator_t plan_operator_t;
 
@@ -35,6 +38,7 @@ _bor_inline void planOperatorSetOwner(plan_operator_t *op, int owner);
 _bor_inline int planOperatorOwner(const plan_operator_t *op);
 _bor_inline void planOperatorSetGlobalId(plan_operator_t *op, int id);
 _bor_inline int planOperatorGlobalId(const plan_operator_t *op);
+void planOperatorAddSendPeer(plan_operator_t *op, int peer);
 
 void planOperatorSetPrecondition(plan_operator_t *op,
                                  plan_var_id_t var,

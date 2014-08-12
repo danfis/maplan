@@ -47,6 +47,7 @@ void setPublicVariableValues(const std::vector<Agent> &agents,
     for (size_t i = 0; i < goals.size(); ++i){
         for (size_t ai = 0; ai < agents.size(); ++ai){
             goals[i].first->set_agent_use(goals[i].second, ai);
+            goals[i].first->set_agent_pre_use(goals[i].second, ai);
         }
     }
 
@@ -59,14 +60,41 @@ void setPublicVariableValues(const std::vector<Agent> &agents,
             const vector<Operator::Prevail> &prevail = op->get_prevail();
             for (size_t i = 0; i < prevail.size(); ++i){
                 prevail[i].var->set_agent_use(prevail[i].prev, agenti);
+                prevail[i].var->set_agent_pre_use(prevail[i].prev, agenti);
             }
 
             const vector<Operator::PrePost> &pre_post = op->get_pre_post();
             for (size_t i = 0; i < pre_post.size(); ++i){
-                if (pre_post[i].pre >= 0)
+                if (pre_post[i].pre >= 0){
                     pre_post[i].var->set_agent_use(pre_post[i].pre, agenti);
+                    pre_post[i].var->set_agent_pre_use(pre_post[i].pre, agenti);
+                }
                 if (pre_post[i].post >= 0)
                     pre_post[i].var->set_agent_use(pre_post[i].post, agenti);
+            }
+        }
+    }
+
+    // set send_agents of the operators
+    for (size_t agenti = 0; agenti < agents.size(); ++agenti){
+        const Agent &agent = agents[agenti];
+        for (size_t opi = 0; opi < agent.ops.size(); ++opi){
+            Operator *op = agent.ops[opi];
+
+            const vector<Operator::PrePost> &pre_post = op->get_pre_post();
+            for (size_t i = 0; i < pre_post.size(); ++i){
+                if (pre_post[i].post == -1)
+                    continue;
+
+                const Variable *var = pre_post[i].var;
+                int val = pre_post[i].post;
+                for (size_t peer = 0; peer < agents.size(); ++peer){
+                    if (peer == agenti)
+                        continue;
+                    if (var->is_value_used_by_agent_as_pre(val, peer)){
+                        op->send_agents.insert(peer);
+                    }
+                }
             }
         }
     }
@@ -142,15 +170,11 @@ void setPublicOps(std::vector<Agent> &agents)
         for (size_t i = 0; i < agent.ops.size(); ++i){
             if (operatorUsePublicValue(*agent.ops[i])){
                 agent.public_ops.push_back(agent.ops_ids[i]);
+                agent.public_ops_ptr.push_back(agent.ops[i]);
                 //std::cerr << "Pub Op: " << agent.ops[i]->get_name() << std::endl;
             }else{
                 agent.private_ops.push_back(agent.ops_ids[i]);
                 //std::cerr << "Pri Op: " << agent.ops[i]->get_name() << std::endl;
-            }
-
-            if (operatorChangeToPublicValue(*agent.ops[i])){
-                agent.send_public_ops.push_back(agent.ops[i]);
-                //std::cerr << "SEND" << std::endl;
             }
         }
     }
@@ -348,14 +372,22 @@ void Agent::generate_cpp_input(ofstream &outfile) const
     }
     outfile << "end_agent_private_operators" << endl;
 
+    cerr << name << endl;
     outfile << "begin_agent_public_operators" << endl;
     outfile << public_ops.size() << endl;
     for (size_t i = 0; i < public_ops.size(); ++i){
-        outfile << public_ops[i] << endl;
+        outfile << public_ops[i];
+
+        std::set<int>::const_iterator it, itend;
+        it    = public_ops_ptr[i]->send_agents.begin();
+        itend = public_ops_ptr[i]->send_agents.end();
+        outfile << " " << public_ops_ptr[i]->send_agents.size();
+        for (; it != itend; ++it){
+            outfile << " " << *it;
+        }
+        outfile << endl;
     }
     outfile << "end_agent_public_operators" << endl;
-
-    // TODO: send_public_ops.
 
     outfile << "begin_agent_projected_operators" << endl;
     outfile << projected_ops.size() << endl;

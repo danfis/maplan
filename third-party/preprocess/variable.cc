@@ -71,8 +71,10 @@ void Variable::set_num_agents(int num)
     int range = get_range();
 
     agent_use.resize(range);
+    agent_pre_use.resize(range);
     for (int i = 0; i < range; ++i){
         agent_use[i].resize(num, false);
+        agent_pre_use[i].resize(num, false);
     }
 }
 

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <set>
 using namespace std;
 
 class Variable;
@@ -40,6 +41,7 @@ public:
     int cost;
     int id;
 public:
+    std::set<int> send_agents;
     Operator(istream &in, const vector<Variable *> &variables);
 
     void strip_unimportant_effects();

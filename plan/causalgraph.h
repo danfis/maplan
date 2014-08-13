@@ -1,17 +1,16 @@
 #ifndef __PLAN_CAUSALGRAPH_H__
 #define __PLAN_CAUSALGRAPH_H__
 
+#include <boruvka/rbtree_int.h>
 #include <plan/operator.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-/** Forward declaration */
-typedef struct _plan_causal_graph_var_graph_t plan_causal_graph_var_graph_t;
-
 struct _plan_causal_graph_t {
-    plan_causal_graph_var_graph_t *weighted_graph;
+    bor_rbtree_int_t *successor_graph;
+    bor_rbtree_int_t *predecessor_graph;
 };
 typedef struct _plan_causal_graph_t plan_causal_graph_t;
 

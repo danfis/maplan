@@ -318,6 +318,13 @@ int planPartStateEq(const plan_part_state_t *part_state1,
                 (__val) = (__part_state)->vals[(__tmpi)].val, 1); \
          ++(__tmpi))
 
+#define PLAN_PART_STATE_FOR_EACH_VAR(__part_state, __tmpi, __var) \
+    if ((__part_state)->vals_size > 0) \
+    for ((__tmpi) = 0; \
+         (__tmpi) < (__part_state)->vals_size \
+            && ((__var) = (__part_state)->vals[(__tmpi)].var, 1); \
+         ++(__tmpi))
+
 
 
 /**** INLINES ****/

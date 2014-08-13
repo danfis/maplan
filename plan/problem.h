@@ -45,6 +45,11 @@ typedef struct _plan_problem_agents_t plan_problem_agents_t;
 plan_problem_t *planProblemFromFD(const char *fn);
 
 /**
+ * Loads problem definition from protbuf format.
+ */
+plan_problem_t *planProblemFromProto(const char *fn);
+
+/**
  * Free all allocated resources.
  */
 void planProblemDel(plan_problem_t *problem);

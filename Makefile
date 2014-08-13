@@ -56,6 +56,7 @@ OBJS += heur_lm_cut
 OBJS += prioqueue
 OBJS += ma_comm_queue
 OBJS += ma
+OBJS += causalgraph
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg

@@ -318,6 +318,7 @@ static int runSingleThread(plan_problem_t *prob)
     printf("Expanded States: %ld\n", search->stat.expanded_states);
     printf("Generated States: %ld\n", search->stat.generated_states);
     printf("Peak Memory: %ld kb\n", search->stat.peak_memory);
+    fflush(stdout);
 
     planPathFree(&path);
 
@@ -431,6 +432,7 @@ int main(int argc, char *argv[])
     }else if (ma_prob != NULL){
         printProblem(&ma_prob->prob, ma_prob);
     }else{
+        fprintf(stderr, "Error: Could not load problem definition.\n");
         return -1;
     }
 

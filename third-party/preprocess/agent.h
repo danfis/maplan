@@ -10,8 +10,8 @@ struct Agent {
     std::string name;
     int id;
     vector<int> public_ops;  /*!< IDs of public operators */
+    vector<Operator *> public_ops_ptr;
     vector<int> private_ops; /*!< IDs of private operators */
-    vector<Operator *> send_public_ops;
     vector<Operator> projected_ops;
     vector<Operator *> ops; /*!< Array of operators assigned to this agent */
     vector<int> ops_ids;    /*!< IDs of corresponding operators in .ops[]

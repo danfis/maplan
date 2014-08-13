@@ -507,11 +507,14 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
     dst->succ_gen = NULL;
 }
 
-static int agentLoadOperators(plan_problem_t *prob,
-                              const plan_operator_t *src_op,
-                              FILE *fin, int private)
+static int agentLoadPrivateOperators(plan_problem_t *prob,
+                                     const plan_operator_t *src_op,
+                                     FILE *fin)
 {
     int i, op_size, op_id, ins_from;
+
+    if (fdAssert(fin, "begin_agent_private_operators") != 0)
+        return -1;
 
     ins_from = prob->op_size;
 
@@ -526,11 +529,57 @@ static int agentLoadOperators(plan_problem_t *prob,
 
         planOperatorInit(prob->op + ins_from, prob->state_pool);
         planOperatorCopy(prob->op + ins_from, src_op + op_id);
-        if (private)
-            planOperatorSetPrivate(prob->op + ins_from);
+        planOperatorSetPrivate(prob->op + ins_from);
         planOperatorSetGlobalId(prob->op + ins_from, op_id);
         ++ins_from;
     }
+
+    if (fdAssert(fin, "end_agent_private_operators") != 0)
+        return -1;
+
+    return 0;
+}
+
+static int agentLoadPublicOperators(int agent_id,
+                                    plan_problem_t *prob,
+                                    const plan_operator_t *src_op,
+                                    FILE *fin)
+{
+    int i, op_size, op_id, ins_from;
+    int p, peer_size, peer;
+
+    if (fdAssert(fin, "begin_agent_public_operators") != 0)
+        return -1;
+
+    ins_from = prob->op_size;
+
+    if (fscanf(fin, "%d", &op_size) != 1)
+        return -1;
+    prob->op_size += op_size;
+    prob->op = BOR_REALLOC_ARR(prob->op, plan_operator_t, prob->op_size);
+
+    for (i = 0; i < op_size; ++i){
+        if (fscanf(fin, "%d", &op_id) != 1)
+            return -1;
+
+        planOperatorInit(prob->op + ins_from, prob->state_pool);
+        planOperatorCopy(prob->op + ins_from, src_op + op_id);
+        planOperatorSetGlobalId(prob->op + ins_from, op_id);
+
+        if (fscanf(fin, "%d", &peer_size) != 1)
+            return -1;
+        for (p = 0; p < peer_size; ++p){
+            if (fscanf(fin, "%d", &peer) != 1)
+                return -1;
+            if (peer != agent_id)
+                planOperatorAddSendPeer(prob->op + ins_from, peer);
+        }
+
+        ++ins_from;
+    }
+
+    if (fdAssert(fin, "end_agent_public_operators") != 0)
+        return -1;
 
     return 0;
 }
@@ -561,16 +610,9 @@ static int fdAgents(const plan_problem_t *prob, FILE *fin,
             return -1;
         agents[i].name = strdup(name);
 
-        if (fdAssert(fin, "begin_agent_private_operators") != 0)
+        if (agentLoadPrivateOperators(&agent->prob, prob->op, fin) != 0)
             return -1;
-        agentLoadOperators(&agent->prob, prob->op, fin, 1);
-        if (fdAssert(fin, "end_agent_private_operators") != 0)
-            return -1;
-
-        if (fdAssert(fin, "begin_agent_public_operators") != 0)
-            return -1;
-        agentLoadOperators(&agent->prob, prob->op, fin, 0);
-        if (fdAssert(fin, "end_agent_public_operators") != 0)
+        if (agentLoadPublicOperators(agent->id, &agent->prob, prob->op, fin) != 0)
             return -1;
 
         agent->prob.succ_gen = planSuccGenNew(agent->prob.op,

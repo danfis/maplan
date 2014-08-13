@@ -44,6 +44,8 @@ void planOperatorInit(plan_operator_t *op, plan_state_pool_t *state_pool)
     op->is_private = 0;
     op->owner = -1;
     op->global_id = -1;
+    op->send_peer = NULL;
+    op->send_peer_size = 0;
 }
 
 void planOperatorFree(plan_operator_t *op)
@@ -60,6 +62,8 @@ void planOperatorFree(plan_operator_t *op)
     }
     if (op->cond_eff)
         BOR_FREE(op->cond_eff);
+    if (op->send_peer)
+        BOR_FREE(op->send_peer);
 }
 
 void planOperatorCopy(plan_operator_t *dst, const plan_operator_t *src)
@@ -91,8 +95,22 @@ void planOperatorCopy(plan_operator_t *dst, const plan_operator_t *src)
     dst->cost = src->cost;
     dst->name = strdup(src->name);
     dst->is_private = src->is_private;
+
+    dst->send_peer = NULL;
+    dst->send_peer_size = src->send_peer_size;
+    if (dst->send_peer_size > 0){
+        dst->send_peer = BOR_ALLOC_ARR(int, dst->send_peer_size);
+        memcpy(dst->send_peer, src->send_peer,
+               sizeof(int) * dst->send_peer_size);
+    }
 }
 
+void planOperatorAddSendPeer(plan_operator_t *op, int peer)
+{
+    ++op->send_peer_size;
+    op->send_peer = BOR_REALLOC_ARR(op->send_peer, int, op->send_peer_size);
+    op->send_peer[op->send_peer_size - 1] = peer;
+}
 
 void planOperatorSetPrecondition(plan_operator_t *op,
                                  plan_var_id_t var,

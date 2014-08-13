@@ -14,6 +14,8 @@ class Variable {
     vector<bool> value_public;
     // true if an agent use the value as a precondition or an effect
     vector<vector<bool> > agent_use;
+    // true if an agent use the value as a precondition
+    vector<vector<bool> > agent_pre_use;
 public:
     Variable(istream &in);
     void set_level(int level);
@@ -35,8 +37,12 @@ public:
     void set_num_agents(int num);
     void set_agent_use(int value, int agent)
         { agent_use[value][agent] = true; }
+    void set_agent_pre_use(int value, int agent)
+        { agent_pre_use[value][agent] = true; }
     bool is_value_used_by_agent(int value, int agent) const
         { return agent_use[value][agent]; }
+    bool is_value_used_by_agent_as_pre(int value, int agent) const
+        { return agent_pre_use[value][agent]; }
     int get_num_agent_use(int value);
 
     void reorderValues(std::vector<int> &translate);

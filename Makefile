@@ -90,8 +90,8 @@ bin/%.o: bin/%.c bin/%.h
 examples/%: examples/%.c libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
-src/ma_msg.pb.cc: src/ma_msg.proto
-	cd src && $(PROTOC) --cpp_out=. ma_msg.proto
+src/%.pb.cc: src/%.proto
+	cd src && $(PROTOC) --cpp_out=. $(notdir $<)
 
 .objs/%.pic.o: src/%.c plan/%.h plan/config.h
 	$(CC) -fPIC $(CFLAGS) -c -o $@ $<
@@ -120,6 +120,7 @@ clean:
 	rm -f $(TARGETS)
 	rm -f $(BIN_TARGETS)
 	rm -f plan/config.h
+	rm -f src/*.pb.{cc,h}
 	if [ -d bin ]; then $(MAKE) -C bin clean; fi;
 	if [ -d testsuites ]; then $(MAKE) -C testsuites clean; fi;
 	if [ -d doc ]; then $(MAKE) -C doc clean; fi;

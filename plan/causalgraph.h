@@ -8,9 +8,17 @@
 extern "C" {
 #endif /* __cplusplus */
 
+struct _plan_causal_graph_graph_t {
+    int **end_var;  /*!< ID of variable at the end of the edge */
+    int **value;    /*!< Value of the edge */
+    int *edge_size; /*!< Number edges emanating from i'th variable */
+    int var_size;   /*!< Number of variables */
+};
+typedef struct _plan_causal_graph_graph_t plan_causal_graph_graph_t;
+
 struct _plan_causal_graph_t {
-    bor_rbtree_int_t *successor_graph;
-    bor_rbtree_int_t *predecessor_graph;
+    plan_causal_graph_graph_t successor_graph;
+    plan_causal_graph_graph_t predecessor_graph;
 };
 typedef struct _plan_causal_graph_t plan_causal_graph_t;
 

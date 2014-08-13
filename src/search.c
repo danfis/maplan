@@ -8,7 +8,7 @@
  *  dead-end is reached. This constant is here basicaly to prevent
  *  dead-lock when all threads are in dead-end. So, it should be set to
  *  fairly high number. */
-#define SEARCH_MA_MAX_BLOCK_TIME (180 * 1000)
+#define SEARCH_MA_MAX_BLOCK_TIME (600 * 1000) // 10 minutes
 
 /** Reference data for the received public states */
 struct _ma_pub_state_data_t {

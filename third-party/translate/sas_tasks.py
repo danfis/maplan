@@ -41,6 +41,21 @@ class SASTask:
             print(agent, file=stream)
         print("end_agents", file=stream)
 
+    def output_proto(self, stream):
+        import problemdef_pb2
+        prob = problemdef_pb2.PlanProblem()
+        prob.version = SAS_FILE_VERSION
+        self.variables.output_proto(prob)
+        for mutex in self.mutexes:
+            mutex.output_proto(prob)
+        self.init.output_proto(prob)
+        self.goal.output_proto(prob)
+        for op in self.operators:
+            op.output_proto(self.metric, prob)
+
+        s = prob.SerializeToString()
+        stream.write(s)
+
     def get_encoding_size(self):
         task_size = 0
         task_size += self.variables.get_encoding_size()
@@ -77,6 +92,16 @@ class SASVariables:
             for value in values:
                 print(value, file=stream)
             print("end_variable", file=stream)
+
+    def output_proto(self, prob):
+        for var, (rang, axiom_layer, values) in enumerate(zip(
+                self.ranges, self.axiom_layers, self.value_names)):
+            protovar = prob.var.add()
+            protovar.name = "var%d" % var
+            protovar.range = rang
+            for value in values:
+                protovar.fact_name.append(value)
+
     def get_encoding_size(self):
         # A variable with range k has encoding size k + 1 to also give the
         # variable itself some weight.
@@ -94,6 +119,14 @@ class SASMutexGroup:
         for var, val in self.facts:
             print(var, val, file=stream)
         print("end_mutex_group", file=stream)
+
+    def output_proto(self, prob):
+        proto = prob.mutex.add()
+        for var, val in self.facts:
+            v = proto.fact.add()
+            v.var = var
+            v.val = val
+
     def get_encoding_size(self):
         return len(self.facts)
 
@@ -110,6 +143,11 @@ class SASInit:
             print(val, file=stream)
         print("end_state", file=stream)
 
+    def output_proto(self, prob):
+        proto = prob.init_state
+        for val in self.values:
+            proto.val.append(val)
+
 class SASGoal:
     def __init__(self, pairs):
         self.pairs = sorted(pairs)
@@ -122,6 +160,14 @@ class SASGoal:
         for var, val in self.pairs:
             print(var, val, file=stream)
         print("end_goal", file=stream)
+
+    def output_proto(self, prob):
+        proto = prob.goal
+        for var, val in self.pairs:
+            v = proto.val.add()
+            v.var = var
+            v.val = val
+
     def get_encoding_size(self):
         return len(self.pairs)
 
@@ -157,6 +203,44 @@ class SASOperator:
             print(var, pre, post, file=stream)
         print(self.cost, file=stream)
         print("end_operator", file=stream)
+
+    def output_proto(self, use_metric, prob):
+        proto = prob.operator.add()
+        proto.name = self.name[1:-1]
+        if use_metric:
+            proto.cost = self.cost
+        else:
+            proto.cost = 1
+
+        ppre = proto.pre
+        peff = proto.eff
+        for var, val in self.prevail:
+            v = ppre.val.add()
+            v.var = var
+            v.val = val
+
+        for var, pre, post, cond in self.pre_post:
+            if pre >= 0:
+                v = ppre.val.add()
+                v.var = var
+                v.val = pre
+
+            if len(cond) > 0:
+                pcond = proto.cond_eff.add()
+                for cvar, cval in cond:
+                    v = pcond.pre.val.add()
+                    v.var = cvar
+                    v.val = cval
+                v = pcond.eff.val.add()
+                v.var = var
+                v.val = post
+
+            else:
+                if post >= 0:
+                    v = peff.val.add()
+                    v.var = var
+                    v.val = post
+
     def get_encoding_size(self):
         size = 1 + len(self.prevail)
         for var, pre, post, cond in self.pre_post:

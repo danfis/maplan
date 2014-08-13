@@ -5,9 +5,12 @@
 *~
 *.pb.cc
 *.pb.h
+*_pb2.py
 config.h
 fd-*
 Makefile.local
 src/ma_msg.pb.*
 __pycache__
+*.pyc
+*.pyo
 third-party/preprocess/preprocess

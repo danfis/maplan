@@ -64,6 +64,7 @@ static void loadVar(plan_problem_t *p, const PlanProblem *proto)
 
         var->name = strdup(proto_var.name().c_str());
         var->range = proto_var.range();
+        var->fact_name = NULL;
     }
 }
 

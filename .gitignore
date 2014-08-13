@@ -3,6 +3,8 @@
 *.so.*
 *.o
 *~
+*.pb.cc
+*.pb.h
 config.h
 fd-*
 Makefile.local

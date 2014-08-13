@@ -1,0 +1,100 @@
+/**
+ * Pair of variable ID and its value.
+ */
+message PlanProblemVarVal {
+    // ID of the variable
+    required int32 var = 1;
+    // Variable's value
+    required int32 val = 2;
+}
+
+/**
+ * Definition of a single state
+ */
+message PlanProblemState {
+    // Values assigned to each variable
+    repeated int32 val = 1;
+}
+
+/**
+ * Definition of a partial state
+ */
+message PlanProblemPartState {
+    // Variables with assigned values
+    repeated PlanProblemVarVal val = 1;
+}
+
+/**
+ * Definition of a variable.
+ */
+message PlanProblemVar {
+    required string name = 1;
+    required int32 range = 2;
+    repeated string fact_name = 3;
+}
+
+/**
+ * Definition of a mutex group.
+ */
+message PlanProblemMutex {
+    repeated PlanProblemVarVal fact = 1;
+}
+
+/**
+ * Definition of conditional effects.
+ */
+message PlanProblemCondEff {
+    required PlanProblemPartState pre = 1;
+    required PlanProblemPartState eff = 2;
+}
+
+/**
+ * Definition of an operator.
+ */
+message PlanProblemOperator {
+    required string name = 1;
+    required int32 cost = 2;
+    required PlanProblemPartState pre = 3;
+    required PlanProblemPartState eff = 4;
+    repeated PlanProblemCondEff cond_eff = 5;
+}
+
+/**
+ * Successor generator subtree with value precondition.
+ */
+message PlanProblemSuccGenTreePre {
+    // Value of the precondition
+    required int32 val = 1;
+    required PlanProblemSuccGenTree tree = 2;
+}
+
+/**
+ * Recursive structure of successor generator tree.
+ */
+message PlanProblemSuccGenTree {
+    // Decision variable in the current node of a tree
+    required int32 var = 1;
+    // List of immediate operator IDs
+    repeated int32 immediate_op = 2;
+    // Default subtree with operators without precondition on .var
+    optional PlanProblemSuccGenTree def = 3;
+    // Subtrees with value preconditions
+    repeated PlanProblemSuccGenTreePre pre = 4;
+}
+
+/**
+ * Definition of a successor generator.
+ */
+message PlanProblemSuccGen {
+    required PlanProblemSuccGenTree root = 1;
+}
+
+message PlanProblem {
+    required int32 version = 1;
+    repeated PlanProblemVar var = 2;
+    repeated PlanProblemMutex mutex = 3;
+    required PlanProblemState init_state = 4;
+    required PlanProblemPartState goal = 5;
+    required PlanProblemOperator operator = 6;
+    optional PlanProblemSuccGen succ_gen = 7;
+}

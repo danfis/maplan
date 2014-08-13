@@ -6,6 +6,10 @@
 #include <plan/operator.h>
 #include <plan/succgen.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 struct _plan_problem_t {
     plan_var_t *var;               /*!< Definitions of variables */
     int var_size;                  /*!< Number of variables */
@@ -67,5 +71,9 @@ _bor_inline int planProblemCheckGoal(plan_problem_t *p,
 {
     return planStatePoolPartStateIsSubset(p->state_pool, p->goal, state_id);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_PROBLEM_H__ */

@@ -5,6 +5,10 @@
 #include <plan/problem.h>
 #include <plan/ma_comm_queue.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /**
  * Heuristic Function API
  * =======================
@@ -212,5 +216,10 @@ _bor_inline void planHeurResInit(plan_heur_res_t *res)
 {
     bzero(res, sizeof(*res));
 }
+
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_HEUR_H__ */

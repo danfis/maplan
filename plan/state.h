@@ -11,6 +11,10 @@
 #include <plan/var.h>
 #include <plan/dataarr.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /** Forward declaration */
 struct _plan_state_packer_var_t;
 
@@ -365,5 +369,9 @@ _bor_inline int planPartStateIsSet(const plan_part_state_t *state,
 {
     return state->is_set[var];
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_STATE_H__ */

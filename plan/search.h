@@ -10,6 +10,10 @@
 #include <plan/path.h>
 #include <plan/ma_comm_queue.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /** Forward declaration */
 typedef struct _plan_search_t plan_search_t;
 
@@ -442,5 +446,9 @@ _bor_inline void planSearchStatSetNotFound(plan_search_stat_t *stat)
 {
     stat->not_found = 1;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_SEARCH_H__ */

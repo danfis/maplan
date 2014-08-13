@@ -7,6 +7,10 @@
 
 #include <plan/ma_msg.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /** Forward declarations */
 typedef struct _plan_ma_comm_queue_pool_t plan_ma_comm_queue_pool_t;
 typedef struct _plan_ma_comm_queue_t plan_ma_comm_queue_t;
@@ -97,4 +101,9 @@ _bor_inline int planMACommQueueNumPeers(const plan_ma_comm_queue_t *comm)
 {
     return comm->pool.node_size - 1;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
+
 #endif /* __PLAN_MA_COMM_QUEUE_H__ */

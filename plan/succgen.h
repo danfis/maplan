@@ -3,6 +3,10 @@
 
 #include <plan/operator.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 struct _plan_succ_gen_tree_t;
 
 /**
@@ -59,5 +63,9 @@ _bor_inline int planSuccGenNumOperators(const plan_succ_gen_t *sg)
 {
     return sg->num_operators;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_SUCCGEN_H__ */

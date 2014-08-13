@@ -3,6 +3,10 @@
 
 #include <boruvka/pairheap.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /**
  * Adaptive Priority Queue
  * ========================
@@ -108,5 +112,9 @@ _bor_inline int planPrioQueueEmpty(const plan_prio_queue_t *q)
         return planHeapQueueEmpty(&q->heap_queue);
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_PRIOQUEUE_H__ */

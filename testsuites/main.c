@@ -1,4 +1,5 @@
 #include <cu/cu.h>
+#include "plan/ma_msg.h"
 #include "load-from-file.h"
 #include "state.h"
 #include "dataarr.h"
@@ -12,6 +13,11 @@
 #include "list.h"
 #include "t_ma_comm_queue.h"
 #include "causalgraph.h"
+
+TEST(protobufTearDown)
+{
+    planShutdownProtobuf();
+}
 
 TEST_SUITES {
     TEST_SUITE_ADD(TSLoadFromFile),
@@ -35,5 +41,6 @@ int main(int argc, char *argv[])
     CU_SET_OUT_PREFIX("regressions/");
     CU_RUN(argc, argv);
 
+    planShutdownProtobuf();
     return 0;
 }

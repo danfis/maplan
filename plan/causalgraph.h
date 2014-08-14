@@ -23,7 +23,8 @@ struct _plan_causal_graph_t {
     plan_causal_graph_graph_t successor_graph;
     /** Graph with edges from effect vars to precondition vars */
     plan_causal_graph_graph_t predecessor_graph;
-    /** Bool flag for each variable whether it is important */
+    /** Bool flag for each variable whether it is important, i.e., if it is
+     *  connected through operators with the goal. */
     int *important_var;
     /** TODO */
     int *var_order;

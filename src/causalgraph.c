@@ -31,6 +31,11 @@ typedef struct _scc_t scc_t;
 
 static void graphInit(plan_causal_graph_graph_t *g, int var_size);
 static void graphFree(plan_causal_graph_graph_t *g);
+static void graphCopyImportant(plan_causal_graph_graph_t *dst,
+                               const plan_causal_graph_graph_t *src,
+                               const int *important_var);
+static void graphPruneBySCC(plan_causal_graph_graph_t *graph,
+                            const scc_t *scc);
 /** Adds one connection to the graph (or increases edge's value by one if
  *  the connection is already there). */
 static void graphAddConnection(bor_rbtree_int_t *graph, int from, int to);
@@ -50,6 +55,7 @@ plan_causal_graph_t *planCausalGraphNew(const plan_var_t *var, int var_size,
                                         const plan_part_state_t *goal)
 {
     plan_causal_graph_t *cg;
+    plan_causal_graph_graph_t scc_graph;
     scc_t *scc;
 
     cg = BOR_ALLOC(plan_causal_graph_t);
@@ -66,8 +72,54 @@ plan_causal_graph_t *planCausalGraphNew(const plan_var_t *var, int var_size,
     // Set up .important_var[]
     markImportantVars(cg, goal);
 
-    scc = sccNew(&cg->successor_graph, var_size);
+    // Create a copy of successor graph without unimportant variables
+    graphInit(&scc_graph, var_size);
+    graphCopyImportant(&scc_graph, &cg->successor_graph,
+                       cg->important_var);
+    {
+        int v, w;
+        for (v = 0; v < var_size; ++v){
+            fprintf(stderr, "%d:", v);
+            for (w = 0; w < cg->successor_graph.edge_size[v]; ++w){
+                fprintf(stderr, " (%d: %d)",
+                        cg->successor_graph.end_var[v][w],
+                        cg->successor_graph.value[v][w]);
+            }
+            fprintf(stderr, "\n");
+        }
+        fprintf(stderr, "---\n");
+        for (v = 0; v < var_size; ++v){
+            fprintf(stderr, "%d:", v);
+            for (w = 0; w < scc_graph.edge_size[v]; ++w){
+                fprintf(stderr, " (%d: %d)",
+                        scc_graph.end_var[v][w],
+                        scc_graph.value[v][w]);
+            }
+            fprintf(stderr, "\n");
+        }
+    }
+
+    // Compute strongly connected components
+    scc = sccNew(&scc_graph, var_size);
+
+    // Remove edges outside strongly connected components
+    graphPruneBySCC(&scc_graph, scc);
+    {
+        int v, w;
+        fprintf(stderr, "---\n");
+        for (v = 0; v < var_size; ++v){
+            fprintf(stderr, "%d:", v);
+            for (w = 0; w < scc_graph.edge_size[v]; ++w){
+                fprintf(stderr, " (%d: %d)",
+                        scc_graph.end_var[v][w],
+                        scc_graph.value[v][w]);
+            }
+            fprintf(stderr, "\n");
+        }
+    }
+
     sccDel(scc);
+    graphFree(&scc_graph);
 
     return cg;
 }
@@ -105,6 +157,89 @@ static void graphFree(plan_causal_graph_graph_t *g)
     BOR_FREE(g->edge_size);
     BOR_FREE(g->value);
     BOR_FREE(g->end_var);
+}
+
+static void graphCopyImportant(plan_causal_graph_graph_t *dst,
+                               const plan_causal_graph_graph_t *src,
+                               const int *important_var)
+{
+    int var, i, edge_size, *value, *end_var, *src_value, *src_end_var, ins, w;
+
+    for (var = 0; var < src->var_size; ++var){
+        // skip unimportant vars
+        if (!important_var[var])
+            continue;
+
+        edge_size = dst->edge_size[var] = src->edge_size[var];
+        value = dst->value[var] = BOR_ALLOC_ARR(int, edge_size);
+        end_var = dst->end_var[var] = BOR_ALLOC_ARR(int, edge_size);
+
+        src_value = src->value[var];
+        src_end_var = src->end_var[var];
+
+        for (i = 0, ins = 0; i < edge_size; ++i){
+            w = src_end_var[i];
+            if (!important_var[w])
+                continue;
+
+            end_var[ins] = w;
+            value[ins++] = src_value[i];
+        }
+        dst->edge_size[var] = ins;
+    }
+}
+
+static void graphPruneVarBySCC(plan_causal_graph_graph_t *graph, int var,
+                               const scc_comp_t *comp)
+{
+    int gi, ci, gv, cv, edge_size, *value, *end_var, ins;
+
+    if (comp->var_size == 1){
+        graph->edge_size[var] = 0;
+    }
+
+    edge_size = graph->edge_size[var];
+    value = graph->value[var];
+    end_var = graph->end_var[var];
+
+    // Both arrays in comp and in end_var are sorted
+    ins = 0;
+    for (gi = ci = 0; gi < edge_size && ci < comp->var_size;){
+        gv = end_var[gi];
+        cv = comp->var[ci];
+
+        if (gv == cv){
+            // Keep this edge
+            if (ins != gi){
+                value[ins] = value[gi];
+                end_var[ins] = end_var[gi];
+            }
+            ++ins;
+            ++gi;
+            ++ci;
+
+        }else if (gv < cv){
+            ++gi;
+        }else{ // (gv > cv)
+            ++ci;
+        }
+    }
+
+    graph->edge_size[var] = ins;
+}
+
+static void graphPruneBySCC(plan_causal_graph_graph_t *graph,
+                            const scc_t *scc)
+{
+    int ci, v;
+    const scc_comp_t *comp;
+
+    for (ci = 0; ci < scc->comp_size; ++ci){
+        comp = scc->comp + ci;
+        for (v = 0; v < comp->var_size; ++v){
+            graphPruneVarBySCC(graph, comp->var[v], comp);
+        }
+    }
 }
 
 static void rbtreeToGraph(bor_rbtree_int_t *rb,
@@ -145,6 +280,9 @@ static void graphAddConnection(bor_rbtree_int_t *graph, int from, int to)
     bor_rbtree_int_node_t *tree_node, *tree_edge;
     graph_node_t *node;
     graph_edge_t *edge;
+
+    if (from == to)
+        return;
 
     tree_node = borRBTreeIntFind(graph, from);
     if (tree_node != NULL){
@@ -346,7 +484,6 @@ static scc_t *sccNew(const plan_causal_graph_graph_t *graph, int var_size)
     // Run Tarjan's algorithm for finding strongly connected components.
     sccTarjan(scc, graph, var_size);
 
-    /* DEBUG:
     int i, j;
     for (i = 0; i < scc->comp_size; ++i){
         for (j = 0; j < scc->comp[i].var_size; ++j){
@@ -354,7 +491,6 @@ static scc_t *sccNew(const plan_causal_graph_graph_t *graph, int var_size)
         }
         fprintf(stderr, "\n");
     }
-    */
 
     return scc;
 }

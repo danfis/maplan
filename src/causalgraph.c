@@ -405,23 +405,21 @@ static void orderingUpdateSucc(bor_pairheap_t *heap,
 
 static void updateOrdering(plan_causal_graph_t *cg,
                            order_var_t *order_var,
-                           const plan_causal_graph_graph_t *graph,
-                           const scc_comp_t *comp)
+                           const plan_causal_graph_graph_t *graph)
 {
     bor_pairheap_t *heap;
     bor_pairheap_node_t *hnode;
     order_var_t *minvar;
-    int i, var;
+    int i;
 
     // Create and initialize heap
     heap = borPairHeapNew(heapLT, NULL);
-    for (i = 0; i < comp->var_size; ++i){
-        var = comp->var[i];
-        if (!cg->important_var[var])
+    for (i = 0; i < cg->var_size; ++i){
+        if (!cg->important_var[i])
             continue;
 
-        borPairHeapAdd(heap, &order_var[var].heap);
-        order_var[var].ins = 1;
+        borPairHeapAdd(heap, &order_var[i].heap);
+        order_var[i].ins = 1;
     }
 
     // Order variables as DAG
@@ -439,6 +437,17 @@ static void updateOrdering(plan_causal_graph_t *cg,
     }
 
     borPairHeapDel(heap);
+}
+
+static void reverseVarOrder(plan_var_id_t *arr, int size)
+{
+    int i, len;
+    plan_var_id_t tmp;
+
+    len = size / 2;
+    for (i = 0; i < len; ++i){
+        BOR_SWAP(arr[i], arr[size - 1 - i], tmp);
+    }
 }
 
 static void createOrdering(plan_causal_graph_t *cg)
@@ -470,12 +479,10 @@ static void createOrdering(plan_causal_graph_t *cg)
     // Compute sum of all incoming weights for all variables
     computeIncomingWeights(&scc_graph, var);
 
-    // Initialize ordering variable
-    cg->var_order_size = 0;
-
     // Create ordering from components
-    for (i = scc->comp_size - 1; i >= 0; --i)
-        updateOrdering(cg, var, &scc_graph, scc->comp + i);
+    cg->var_order_size = 0;
+    updateOrdering(cg, var, &scc_graph);
+    reverseVarOrder(cg->var_order, cg->var_order_size);
     cg->var_order[cg->var_order_size] = PLAN_VAR_ID_UNDEFINED;
 
     BOR_FREE(var);

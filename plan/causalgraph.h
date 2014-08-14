@@ -25,8 +25,9 @@ struct _plan_causal_graph_t {
     /** Bool flag for each variable whether it is important, i.e., if it is
      *  connected through operators with the goal. */
     int *important_var;
-    int *var_order; /*!< Ordered array of variable IDs */
-    int var_order_size;
+    plan_var_id_t *var_order; /*!< Ordered array of variable IDs, array
+                                   ends with PLAN_VAR_ID_UNDEFINED. */
+    int var_order_size;       /*!< Number of elements in .var_order[] */
 };
 typedef struct _plan_causal_graph_t plan_causal_graph_t;
 

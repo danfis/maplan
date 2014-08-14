@@ -52,7 +52,7 @@ plan_causal_graph_t *planCausalGraphNew(int var_size,
     graphInit(&cg->successor_graph, var_size);
     graphInit(&cg->predecessor_graph, var_size);
     cg->important_var = BOR_ALLOC_ARR(int, cg->var_size);
-    cg->var_order = BOR_ALLOC_ARR(int, cg->var_size);
+    cg->var_order = BOR_ALLOC_ARR(plan_var_id_t, cg->var_size + 1);
 
     // Fill successor and predecessor graphs by dependencies between
     // preconditions and effects of operators.
@@ -473,8 +473,10 @@ static void createOrdering(plan_causal_graph_t *cg)
     // Initialize ordering variable
     cg->var_order_size = 0;
 
+    // Create ordering from components
     for (i = scc->comp_size - 1; i >= 0; --i)
         updateOrdering(cg, var, &scc_graph, scc->comp + i);
+    cg->var_order[cg->var_order_size] = PLAN_VAR_ID_UNDEFINED;
 
     BOR_FREE(var);
     sccDel(scc);

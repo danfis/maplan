@@ -3,6 +3,11 @@
 #include "plan/ma_msg.h"
 #include "ma_msg.pb.h"
 
+void planShutdownProtobuf(void)
+{
+    google::protobuf::ShutdownProtobufLibrary();
+}
+
 plan_ma_msg_t *planMAMsgNew(void)
 {
     PlanMAMsg *msg;

@@ -10,6 +10,13 @@ extern "C" {
 typedef void plan_ma_msg_t;
 
 /**
+ * Frees global memory allocated by google protobuffers.
+ * This is just wrapper for
+ *      google::protobuf::ShutdownProtobufLibrary().
+ */
+void planShutdownProtobuf(void);
+
+/**
  * Creates a new message.
  */
 plan_ma_msg_t *planMAMsgNew(void);

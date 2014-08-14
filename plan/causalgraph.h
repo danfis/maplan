@@ -17,8 +17,16 @@ struct _plan_causal_graph_graph_t {
 typedef struct _plan_causal_graph_graph_t plan_causal_graph_graph_t;
 
 struct _plan_causal_graph_t {
+    int var_size;
+
+    /** Graph with edges from precondition vars to effect vars */
     plan_causal_graph_graph_t successor_graph;
+    /** Graph with edges from effect vars to precondition vars */
     plan_causal_graph_graph_t predecessor_graph;
+    /** Bool flag for each variable whether it is important */
+    int *important_var;
+    /** TODO */
+    int *var_order;
 };
 typedef struct _plan_causal_graph_t plan_causal_graph_t;
 

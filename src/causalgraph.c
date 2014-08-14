@@ -49,8 +49,14 @@ plan_causal_graph_t *planCausalGraphNew(const plan_var_t *var, int var_size,
     scc_t *scc;
 
     cg = BOR_ALLOC(plan_causal_graph_t);
+    cg->var_size = var_size;
     graphInit(&cg->successor_graph, var_size);
     graphInit(&cg->predecessor_graph, var_size);
+    cg->important_var = BOR_ALLOC_ARR(int, cg->var_size);
+    cg->var_order = BOR_ALLOC_ARR(int, cg->var_size);
+
+    // Fill successor and predecessor graphs by dependencies between
+    // preconditions and effects of operators.
     fillGraphs(cg, op, op_size);
 
     scc = sccNew(&cg->successor_graph, var_size);
@@ -63,6 +69,10 @@ void planCausalGraphDel(plan_causal_graph_t *cg)
 {
     graphFree(&cg->successor_graph);
     graphFree(&cg->predecessor_graph);
+    if (cg->important_var)
+        BOR_FREE(cg->important_var);
+    if (cg->var_order)
+        BOR_FREE(cg->var_order);
     BOR_FREE(cg);
 }
 
@@ -209,6 +219,11 @@ struct _scc_dfs_t {
 };
 typedef struct _scc_dfs_t scc_dfs_t;
 
+static int cmpInt(const void *a, const void *b)
+{
+    return (*(int *)a) - (*(int *)b);
+}
+
 static void sccTarjanStrongconnect(scc_t *scc, scc_dfs_t *dfs, int var)
 {
     int i, len, *end_var, w;
@@ -245,6 +260,8 @@ static void sccTarjanStrongconnect(scc_t *scc, scc_dfs_t *dfs, int var)
 
         // Copy variable IDs from stack to the component
         memcpy(comp->var, dfs->stack + i, sizeof(int) * comp->var_size);
+        if (comp->var_size > 1)
+            qsort(comp->var, comp->var_size, sizeof(int), cmpInt);
 
         // Shrink stack
         dfs->stack_size = i;
@@ -288,6 +305,16 @@ static scc_t *sccNew(const plan_causal_graph_graph_t *graph, int var_size)
 
     // Run Tarjan's algorithm for finding strongly connected components.
     sccTarjan(scc, graph, var_size);
+
+    /* DEBUG:
+    int i, j;
+    for (i = 0; i < scc->comp_size; ++i){
+        for (j = 0; j < scc->comp[i].var_size; ++j){
+            fprintf(stderr, " %d", scc->comp[i].var[j]);
+        }
+        fprintf(stderr, "\n");
+    }
+    */
 
     return scc;
 }

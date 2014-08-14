@@ -41,7 +41,7 @@ static void createOrdering(plan_causal_graph_t *cg);
 static scc_t *sccNew(const plan_causal_graph_graph_t *graph, int var_size);
 static void sccDel(scc_t *);
 
-plan_causal_graph_t *planCausalGraphNew(const plan_var_t *var, int var_size,
+plan_causal_graph_t *planCausalGraphNew(int var_size,
                                         const plan_operator_t *op, int op_size,
                                         const plan_part_state_t *goal)
 {

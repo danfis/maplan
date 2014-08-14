@@ -48,9 +48,7 @@ static void fillGraphs(plan_causal_graph_t *cg,
 static void markImportantVars(plan_causal_graph_t *cg,
                               const plan_part_state_t *goal);
 /** Creates an ordering of variables based on the given graph */
-static void createOrdering(plan_causal_graph_t *cg,
-                           const plan_causal_graph_graph_t *graph,
-                           const scc_t *scc);
+static void createOrdering(plan_causal_graph_t *cg);
 /** Determines strongly connected components */
 static scc_t *sccNew(const plan_causal_graph_graph_t *graph, int var_size);
 static void sccDel(scc_t *);
@@ -60,8 +58,6 @@ plan_causal_graph_t *planCausalGraphNew(const plan_var_t *var, int var_size,
                                         const plan_part_state_t *goal)
 {
     plan_causal_graph_t *cg;
-    plan_causal_graph_graph_t scc_graph;
-    scc_t *scc;
 
     cg = BOR_ALLOC(plan_causal_graph_t);
     cg->var_size = var_size;
@@ -77,58 +73,8 @@ plan_causal_graph_t *planCausalGraphNew(const plan_var_t *var, int var_size,
     // Set up .important_var[]
     markImportantVars(cg, goal);
 
-    // Create a copy of successor graph without unimportant variables
-    graphInit(&scc_graph, var_size);
-    graphCopyImportant(&scc_graph, &cg->successor_graph,
-                       cg->important_var);
-    {
-        int v, w;
-        for (v = 0; v < var_size; ++v){
-            fprintf(stderr, "%d:", v);
-            for (w = 0; w < cg->successor_graph.edge_size[v]; ++w){
-                fprintf(stderr, " (%d: %d)",
-                        cg->successor_graph.end_var[v][w],
-                        cg->successor_graph.value[v][w]);
-            }
-            fprintf(stderr, "\n");
-        }
-        fprintf(stderr, "---\n");
-        for (v = 0; v < var_size; ++v){
-            fprintf(stderr, "%d:", v);
-            for (w = 0; w < scc_graph.edge_size[v]; ++w){
-                fprintf(stderr, " (%d: %d)",
-                        scc_graph.end_var[v][w],
-                        scc_graph.value[v][w]);
-            }
-            fprintf(stderr, "\n");
-        }
-    }
-
-    // Compute strongly connected components
-    scc = sccNew(&scc_graph, var_size);
-
-    // Remove edges outside strongly connected components
-    graphPruneBySCC(&scc_graph, scc);
-
-    {
-        int v, w;
-        fprintf(stderr, "---\n");
-        for (v = 0; v < var_size; ++v){
-            fprintf(stderr, "%d:", v);
-            for (w = 0; w < scc_graph.edge_size[v]; ++w){
-                fprintf(stderr, " (%d: %d)",
-                        scc_graph.end_var[v][w],
-                        scc_graph.value[v][w]);
-            }
-            fprintf(stderr, "\n");
-        }
-    }
-
-    // Compute ordering of variables
-    createOrdering(cg, &scc_graph, scc);
-
-    sccDel(scc);
-    graphFree(&scc_graph);
+    // Compute ordering of variables (.var_order*)
+    createOrdering(cg);
 
     return cg;
 }
@@ -476,7 +422,6 @@ static void updateOrdering(plan_causal_graph_t *cg,
         hnode = borPairHeapExtractMin(heap);
         minvar = bor_container_of(hnode, order_var_t, heap);
         minvar->ins = 0;
-        fprintf(stderr, "H: %d %d\n", minvar->var, minvar->w);
 
         // Add variable to the ordering array
         cg->var_order[cg->var_order_size++] = minvar->var;
@@ -486,20 +431,25 @@ static void updateOrdering(plan_causal_graph_t *cg,
     }
 
     borPairHeapDel(heap);
-
-    fprintf(stderr, "Var Ordering:");
-    for (i = 0; i < cg->var_order_size; ++i){
-        fprintf(stderr, " %d", cg->var_order[i]);
-    }
-    fprintf(stderr, "\n");
 }
 
-static void createOrdering(plan_causal_graph_t *cg,
-                           const plan_causal_graph_graph_t *graph,
-                           const scc_t *scc)
+static void createOrdering(plan_causal_graph_t *cg)
 {
+    plan_causal_graph_graph_t scc_graph;
+    scc_t *scc;
     order_var_t *var;
     int i;
+
+    // Create a copy of successor graph without unimportant variables
+    graphInit(&scc_graph, cg->var_size);
+    graphCopyImportant(&scc_graph, &cg->successor_graph,
+                       cg->important_var);
+
+    // Compute strongly connected components
+    scc = sccNew(&scc_graph, cg->var_size);
+
+    // Remove edges outside strongly connected components
+    graphPruneBySCC(&scc_graph, scc);
 
     // Initialize array with variables
     var = BOR_ALLOC_ARR(order_var_t, cg->var_size);
@@ -510,22 +460,19 @@ static void createOrdering(plan_causal_graph_t *cg,
     }
 
     // Compute sum of all incoming weights for all variables
-    computeIncomingWeights(graph, var);
+    computeIncomingWeights(&scc_graph, var);
 
     // Initialize ordering variable
     cg->var_order_size = 0;
 
     for (i = scc->comp_size - 1; i >= 0; --i)
-        updateOrdering(cg, var, graph, scc->comp + i);
+        updateOrdering(cg, var, &scc_graph, scc->comp + i);
 
     BOR_FREE(var);
-
-    fprintf(stderr, "Var Ordering:");
-    for (i = 0; i < cg->var_order_size; ++i){
-        fprintf(stderr, " %d", cg->var_order[i]);
-    }
-    fprintf(stderr, "\n");
+    sccDel(scc);
+    graphFree(&scc_graph);
 }
+
 
 /** Context for DFS during computing SCC */
 struct _scc_dfs_t {
@@ -625,14 +572,6 @@ static scc_t *sccNew(const plan_causal_graph_graph_t *graph, int var_size)
 
     // Run Tarjan's algorithm for finding strongly connected components.
     sccTarjan(scc, graph, var_size);
-
-    int i, j;
-    for (i = 0; i < scc->comp_size; ++i){
-        for (j = 0; j < scc->comp[i].var_size; ++j){
-            fprintf(stderr, " %d", scc->comp[i].var[j]);
-        }
-        fprintf(stderr, "\n");
-    }
 
     return scc;
 }

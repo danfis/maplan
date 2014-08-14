@@ -156,7 +156,6 @@ static void loadProblem(plan_problem_t *p, const PlanProblem *proto)
     loadOperator(p, proto);
 
     cg = planCausalGraphNew(p->var_size, p->op, p->op_size, p->goal);
-    p->succ_gen = planSuccGenNew2(p->op, p->op_size,
-                                  cg->var_order, cg->var_order_size);
+    p->succ_gen = planSuccGenNew(p->op, p->op_size, cg->var_order);
     planCausalGraphDel(cg);
 }

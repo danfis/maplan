@@ -210,7 +210,7 @@ static void heurFactOpInit(heur_fact_op_t *fact_op,
     if (flags & HEUR_FACT_OP_SIMPLIFY){
         succ_gen = (plan_succ_gen_t *)_succ_gen;
         if (_succ_gen == NULL)
-            succ_gen = planSuccGenNew(op, op_size);
+            succ_gen = planSuccGenNew(op, op_size, NULL);
         opSimplify(fact_op, op, succ_gen);
         if (_succ_gen == NULL)
             planSuccGenDel(succ_gen);

@@ -10,6 +10,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/**
+ * If set, causal graph will be used for fine tuning problem definition.
+ */
+#define PLAN_PROBLEM_USE_CG 0x1
+
 struct _plan_problem_t {
     plan_var_t *var;               /*!< Definitions of variables */
     int var_size;                  /*!< Number of variables */
@@ -46,8 +51,9 @@ plan_problem_t *planProblemFromFD(const char *fn);
 
 /**
  * Loads problem definition from protbuf format.
+ * For flags see PLAN_PROBLEM_* macros.
  */
-plan_problem_t *planProblemFromProto(const char *fn);
+plan_problem_t *planProblemFromProto(const char *fn, int flags);
 
 /**
  * Free all allocated resources.

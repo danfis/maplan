@@ -156,6 +156,13 @@ int planOperatorAddCondEff(plan_operator_t *op)
     return op->cond_eff_size - 1;
 }
 
+void planOperatorDelLastCondEff(plan_operator_t *op)
+{
+    planOperatorCondEffFree(op->cond_eff + op->cond_eff_size - 1);
+    --op->cond_eff_size;
+}
+
+
 void planOperatorCondEffSetPre(plan_operator_t *op, int cond_eff,
                                plan_var_id_t var, plan_val_t val)
 {

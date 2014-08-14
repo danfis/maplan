@@ -3,10 +3,12 @@
 
 TEST(testCausalGraphImportantVar);
 TEST(testCausalGraphVarOrder);
+TEST(testCausalGraphPruneUnimportantVar);
 
 TEST_SUITE(TSCausalGraph){
     TEST_ADD(testCausalGraphImportantVar),
     TEST_ADD(testCausalGraphVarOrder),
+    TEST_ADD(testCausalGraphPruneUnimportantVar),
     TEST_SUITE_CLOSURE
 };
 

@@ -5,6 +5,7 @@
 #include <boruvka/alloc.h>
 
 #include "plan/problem.h"
+#include "plan/causalgraph.h"
 #include "problemdef.pb.h"
 
 static void loadProblem(plan_problem_t *p, const PlanProblem *proto);
@@ -145,11 +146,17 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto)
 
 static void loadProblem(plan_problem_t *p, const PlanProblem *proto)
 {
+    plan_causal_graph_t *cg;
+
     loadVar(p, proto);
     p->state_pool = planStatePoolNew(p->var, p->var_size);
 
     loadInitState(p, proto);
     loadGoal(p, proto);
     loadOperator(p, proto);
-    p->succ_gen = planSuccGenNew(p->op, p->op_size);
+
+    cg = planCausalGraphNew(p->var_size, p->op, p->op_size, p->goal);
+    p->succ_gen = planSuccGenNew2(p->op, p->op_size,
+                                  cg->var_order, cg->var_order_size);
+    planCausalGraphDel(cg);
 }

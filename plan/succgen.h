@@ -25,6 +25,14 @@ typedef struct _plan_succ_gen_t plan_succ_gen_t;
 plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize);
 
 /**
+ * Same as planSuccGenNew2() but different variable can be provided.
+ * Only the variables named in var_order argument will be used and in the
+ * same order as stored there.
+ */
+plan_succ_gen_t *planSuccGenNew2(const plan_operator_t *op, int opsize,
+                                 int *var_order, int var_order_size);
+
+/**
  * Loads successor generator from FD definition.
  */
 plan_succ_gen_t *planSuccGenFromFD(FILE *fin,

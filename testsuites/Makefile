@@ -31,6 +31,7 @@ OBJS += heur.o
 OBJS += list_lazy.o
 OBJS += list.o
 OBJS += t_ma_comm_queue.o
+OBJS += causalgraph.o
 
 all: $(TARGETS)
 

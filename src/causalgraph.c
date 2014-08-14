@@ -37,6 +37,10 @@ static void graphAddConnection(bor_rbtree_int_t *graph, int from, int to);
 /** Creates a weighted graph from operators */
 static void fillGraphs(plan_causal_graph_t *cg,
                        const plan_operator_t *op, int op_size);
+/** Fills .important_var array with 0/1 signaling whether there is
+ *  connection between the variable and a goal. */
+static void markImportantVars(plan_causal_graph_t *cg,
+                              const plan_part_state_t *goal);
 /** Determines strongly connected components */
 static scc_t *sccNew(const plan_causal_graph_graph_t *graph, int var_size);
 static void sccDel(scc_t *);
@@ -58,6 +62,9 @@ plan_causal_graph_t *planCausalGraphNew(const plan_var_t *var, int var_size,
     // Fill successor and predecessor graphs by dependencies between
     // preconditions and effects of operators.
     fillGraphs(cg, op, op_size);
+
+    // Set up .important_var[]
+    markImportantVars(cg, goal);
 
     scc = sccNew(&cg->successor_graph, var_size);
     sccDel(scc);
@@ -205,6 +212,39 @@ static void fillGraphs(plan_causal_graph_t *cg,
 
     borRBTreeIntDel(succ_graph);
     borRBTreeIntDel(pred_graph);
+}
+
+
+static void markImportantVarsDFS(plan_causal_graph_t *cg, int var)
+{
+    int i, len, *other_var, w;
+
+    len = cg->predecessor_graph.edge_size[var];
+    other_var = cg->predecessor_graph.end_var[var];
+    for (i = 0; i < len; ++i){
+        w = other_var[i];
+        if (!cg->important_var[w]){
+            cg->important_var[w] = 1;
+            markImportantVarsDFS(cg, w);
+        }
+    }
+}
+
+static void markImportantVars(plan_causal_graph_t *cg,
+                              const plan_part_state_t *goal)
+{
+    int i;
+    plan_var_id_t var;
+
+    // Set all variables as unimportant
+    bzero(cg->important_var, sizeof(int) * cg->var_size);
+
+    PLAN_PART_STATE_FOR_EACH_VAR(goal, i, var){
+        if (!cg->important_var[var]){
+            cg->important_var[var] = 1;
+            markImportantVarsDFS(cg, var);
+        }
+    }
 }
 
 /** Context for DFS during computing SCC */

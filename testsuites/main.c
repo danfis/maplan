@@ -11,6 +11,7 @@
 #include "list_lazy.h"
 #include "list.h"
 #include "t_ma_comm_queue.h"
+#include "causalgraph.h"
 
 TEST_SUITES {
     TEST_SUITE_ADD(TSLoadFromFile),
@@ -25,6 +26,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSListLazy),
     TEST_SUITE_ADD(TSList),
     TEST_SUITE_ADD(TSMACommQueue),
+    TEST_SUITE_ADD(TSCausalGraph),
     TEST_SUITES_CLOSURE
 };
 

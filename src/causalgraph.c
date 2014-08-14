@@ -1,4 +1,5 @@
 #include <boruvka/alloc.h>
+#include <boruvka/pairheap.h>
 
 #include "plan/causalgraph.h"
 
@@ -46,6 +47,10 @@ static void fillGraphs(plan_causal_graph_t *cg,
  *  connection between the variable and a goal. */
 static void markImportantVars(plan_causal_graph_t *cg,
                               const plan_part_state_t *goal);
+/** Creates an ordering of variables based on the given graph */
+static void createOrdering(plan_causal_graph_t *cg,
+                           const plan_causal_graph_graph_t *graph,
+                           const scc_t *scc);
 /** Determines strongly connected components */
 static scc_t *sccNew(const plan_causal_graph_graph_t *graph, int var_size);
 static void sccDel(scc_t *);
@@ -104,6 +109,7 @@ plan_causal_graph_t *planCausalGraphNew(const plan_var_t *var, int var_size,
 
     // Remove edges outside strongly connected components
     graphPruneBySCC(&scc_graph, scc);
+
     {
         int v, w;
         fprintf(stderr, "---\n");
@@ -117,6 +123,9 @@ plan_causal_graph_t *planCausalGraphNew(const plan_var_t *var, int var_size,
             fprintf(stderr, "\n");
         }
     }
+
+    // Compute ordering of variables
+    createOrdering(cg, &scc_graph, scc);
 
     sccDel(scc);
     graphFree(&scc_graph);
@@ -383,6 +392,138 @@ static void markImportantVars(plan_causal_graph_t *cg,
             markImportantVarsDFS(cg, var);
         }
     }
+}
+
+struct _order_var_t {
+    bor_pairheap_node_t heap;
+    int var; /*!< ID of the variable */
+    int w;   /*!< Incoming weight */
+    int ins; /*!< True if inserted into heap */
+};
+typedef struct _order_var_t order_var_t;
+
+static int heapLT(const bor_pairheap_node_t *a,
+                  const bor_pairheap_node_t *b, void *_)
+{
+    order_var_t *v1 = bor_container_of(a, order_var_t, heap);
+    order_var_t *v2 = bor_container_of(b, order_var_t, heap);
+    if (v1->w == v2->w)
+        return v1->var < v2->var;
+    return v1->w < v2->w;
+}
+
+/** Computes sum of incoming weights for each variable */
+static void computeIncomingWeights(const plan_causal_graph_graph_t *graph,
+                                   order_var_t *var)
+{
+    int i, j, edge_size, *value, *end_var;
+
+    for (i = 0; i < graph->var_size; ++i){
+        edge_size = graph->edge_size[i];
+        value = graph->value[i];
+        end_var = graph->end_var[i];
+        for (j = 0; j < edge_size; ++j){
+            var[end_var[j]].w += value[j];
+        }
+    }
+}
+
+/** Updates all var's successors' incoming weights and this their position
+ *  in the heap. */
+static void orderingUpdateSucc(bor_pairheap_t *heap,
+                               order_var_t *order_var,
+                               const plan_causal_graph_graph_t *graph,
+                               int var, int w)
+{
+    int i, edge_size, *end_var, v;
+
+    edge_size = graph->edge_size[var];
+    end_var   = graph->end_var[var];
+    for (i = 0; i < edge_size; ++i){
+        v = end_var[i];
+        if (order_var[v].ins){
+            order_var[v].w -= w;
+            borPairHeapDecreaseKey(heap, &order_var[v].heap);
+        }
+    }
+}
+
+static void updateOrdering(plan_causal_graph_t *cg,
+                           order_var_t *order_var,
+                           const plan_causal_graph_graph_t *graph,
+                           const scc_comp_t *comp)
+{
+    bor_pairheap_t *heap;
+    bor_pairheap_node_t *hnode;
+    order_var_t *minvar;
+    int i, var;
+
+    // Create and initialize heap
+    heap = borPairHeapNew(heapLT, NULL);
+    for (i = 0; i < comp->var_size; ++i){
+        var = comp->var[i];
+        if (!cg->important_var[var])
+            continue;
+
+        borPairHeapAdd(heap, &order_var[var].heap);
+        order_var[var].ins = 1;
+    }
+
+    // Order variables as DAG
+    while (!borPairHeapEmpty(heap)){
+        // Remove node with lowest incoming weight
+        hnode = borPairHeapExtractMin(heap);
+        minvar = bor_container_of(hnode, order_var_t, heap);
+        minvar->ins = 0;
+        fprintf(stderr, "H: %d %d\n", minvar->var, minvar->w);
+
+        // Add variable to the ordering array
+        cg->var_order[cg->var_order_size++] = minvar->var;
+
+        // Update all successor variables
+        orderingUpdateSucc(heap, order_var, graph, minvar->var, minvar->w);
+    }
+
+    borPairHeapDel(heap);
+
+    fprintf(stderr, "Var Ordering:");
+    for (i = 0; i < cg->var_order_size; ++i){
+        fprintf(stderr, " %d", cg->var_order[i]);
+    }
+    fprintf(stderr, "\n");
+}
+
+static void createOrdering(plan_causal_graph_t *cg,
+                           const plan_causal_graph_graph_t *graph,
+                           const scc_t *scc)
+{
+    order_var_t *var;
+    int i;
+
+    // Initialize array with variables
+    var = BOR_ALLOC_ARR(order_var_t, cg->var_size);
+    for (i = 0; i < cg->var_size; ++i){
+        var[i].var = i;
+        var[i].w = 0;
+        var[i].ins = 0;
+    }
+
+    // Compute sum of all incoming weights for all variables
+    computeIncomingWeights(graph, var);
+
+    // Initialize ordering variable
+    cg->var_order_size = 0;
+
+    for (i = scc->comp_size - 1; i >= 0; --i)
+        updateOrdering(cg, var, graph, scc->comp + i);
+
+    BOR_FREE(var);
+
+    fprintf(stderr, "Var Ordering:");
+    for (i = 0; i < cg->var_order_size; ++i){
+        fprintf(stderr, " %d", cg->var_order[i]);
+    }
+    fprintf(stderr, "\n");
 }
 
 /** Context for DFS during computing SCC */

@@ -7,7 +7,6 @@ TEST(testCausalGraphImportantVar)
 {
     plan_problem_t *prob;
     plan_causal_graph_t *cg;
-    int i;
 
     prob = planProblemFromProto("../data/ma-benchmarks/rovers/p03.proto");
     cg = planCausalGraphNew(prob->var, prob->var_size,
@@ -43,4 +42,29 @@ TEST(testCausalGraphImportantVar)
 
     planCausalGraphDel(cg);
     planProblemDel(prob);
+}
+
+static void varOrder(const char *fn)
+{
+    plan_problem_t *prob;
+    plan_causal_graph_t *cg;
+    int i;
+
+    prob = planProblemFromProto(fn);
+    cg = planCausalGraphNew(prob->var, prob->var_size,
+                            prob->op, prob->op_size, prob->goal);
+
+    fprintf(stdout, "VarOrder for `%s':\n", fn);
+    for (i = 0; i < cg->var_order_size; ++i){
+        fprintf(stdout, "%d - %s\n", cg->var_order[i],
+                prob->var[cg->var_order[i]].name);
+    }
+
+    planCausalGraphDel(cg);
+    planProblemDel(prob);
+}
+
+TEST(testCausalGraphVarOrder)
+{
+    varOrder("../data/ma-benchmarks/rovers/p03.proto");
 }

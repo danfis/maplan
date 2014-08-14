@@ -28,6 +28,7 @@ struct _plan_causal_graph_t {
     int *important_var;
     /** TODO */
     int *var_order;
+    int var_order_size;
 };
 typedef struct _plan_causal_graph_t plan_causal_graph_t;
 

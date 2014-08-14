@@ -280,6 +280,7 @@ static void rbtreeToGraph(bor_rbtree_int_t *rb,
             BOR_FREE(edge);
         }
 
+        borRBTreeIntDel(node->edge);
         BOR_FREE(node);
     }
 }

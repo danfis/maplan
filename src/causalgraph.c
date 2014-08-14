@@ -1,4 +1,5 @@
 #include <boruvka/alloc.h>
+#include <boruvka/rbtree_int.h>
 #include <boruvka/pairheap.h>
 
 #include "plan/causalgraph.h"

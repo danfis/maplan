@@ -1,7 +1,6 @@
 #ifndef __PLAN_CAUSALGRAPH_H__
 #define __PLAN_CAUSALGRAPH_H__
 
-#include <boruvka/rbtree_int.h>
 #include <plan/operator.h>
 
 #ifdef __cplusplus
@@ -26,8 +25,7 @@ struct _plan_causal_graph_t {
     /** Bool flag for each variable whether it is important, i.e., if it is
      *  connected through operators with the goal. */
     int *important_var;
-    /** TODO */
-    int *var_order;
+    int *var_order; /*!< Ordered array of variable IDs */
     int var_order_size;
 };
 typedef struct _plan_causal_graph_t plan_causal_graph_t;

@@ -3,19 +3,6 @@
 
 #include "plan/causalgraph.h"
 
-struct _graph_edge_t {
-    bor_rbtree_int_node_t rbtree;
-    int value;
-};
-typedef struct _graph_edge_t graph_edge_t;
-
-struct _graph_node_t {
-    bor_rbtree_int_node_t rbtree;
-    bor_rbtree_int_t *edge;
-    int edge_size;
-};
-typedef struct _graph_node_t graph_node_t;
-
 /** One strongly connected component */
 struct _scc_comp_t {
     int *var;     /*!< Variables in component */
@@ -32,14 +19,14 @@ typedef struct _scc_t scc_t;
 
 static void graphInit(plan_causal_graph_graph_t *g, int var_size);
 static void graphFree(plan_causal_graph_graph_t *g);
+/** Copies src graph into dst with unimportant variables */
 static void graphCopyImportant(plan_causal_graph_graph_t *dst,
                                const plan_causal_graph_graph_t *src,
                                const int *important_var);
+/** Removes from graph edges that are not within found strongly connected
+ *  components. */
 static void graphPruneBySCC(plan_causal_graph_graph_t *graph,
                             const scc_t *scc);
-/** Adds one connection to the graph (or increases edge's value by one if
- *  the connection is already there). */
-static void graphAddConnection(bor_rbtree_int_t *graph, int from, int to);
 /** Creates a weighted graph from operators */
 static void fillGraphs(plan_causal_graph_t *cg,
                        const plan_operator_t *op, int op_size);
@@ -197,6 +184,24 @@ static void graphPruneBySCC(plan_causal_graph_graph_t *graph,
     }
 }
 
+
+
+/** Edge from variable to variable in rbtree-based graph */
+struct _graph_edge_t {
+    bor_rbtree_int_node_t rbtree;
+    int value;
+};
+typedef struct _graph_edge_t graph_edge_t;
+
+/** Variable node in rbtree-based graph */
+struct _graph_node_t {
+    bor_rbtree_int_node_t rbtree;
+    bor_rbtree_int_t *edge;
+    int edge_size;
+};
+typedef struct _graph_node_t graph_node_t;
+
+/** Converts rbtree-based graph to array based graph */
 static void rbtreeToGraph(bor_rbtree_int_t *rb,
                           plan_causal_graph_graph_t *graph)
 {
@@ -231,6 +236,8 @@ static void rbtreeToGraph(bor_rbtree_int_t *rb,
     }
 }
 
+/** Adds one connection to the graph (or increases edge's value by one if
+ *  the connection is already there). */
 static void graphAddConnection(bor_rbtree_int_t *graph, int from, int to)
 {
     bor_rbtree_int_node_t *tree_node, *tree_edge;

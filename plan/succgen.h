@@ -21,8 +21,12 @@ typedef struct _plan_succ_gen_t plan_succ_gen_t;
 
 /**
  * Creates a new successor generator for the given operators.
+ * If optional argument var_order is specified, the given order of
+ * variables is used (and only variables stated there are used). The given
+ * array must end with PLAN_VAR_ID_UNDEFINED.
  */
-plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize);
+plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize,
+                                const plan_var_id_t *var_order);
 
 /**
  * Loads successor generator from FD definition.

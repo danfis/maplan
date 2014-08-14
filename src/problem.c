@@ -616,7 +616,7 @@ static int fdAgents(const plan_problem_t *prob, FILE *fin,
             return -1;
 
         agent->prob.succ_gen = planSuccGenNew(agent->prob.op,
-                                              agent->prob.op_size);
+                                              agent->prob.op_size, NULL);
 
 
         if (fdAssert(fin, "begin_agent_projected_operators") != 0)

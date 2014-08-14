@@ -427,7 +427,7 @@ int main(int argc, char *argv[])
     if (def_fd_problem){
         prob = planProblemFromFD(def_fd_problem);
     }else if (def_seq_problem){
-        prob = planProblemFromProto(def_seq_problem);
+        prob = planProblemFromProto(def_seq_problem, PLAN_PROBLEM_USE_CG);
     }else if (def_ma_problem){
         ma_prob = planProblemAgentsFromFD(def_ma_problem);
     }
@@ -464,6 +464,8 @@ int main(int argc, char *argv[])
     printf("Overall Time: %f s\n", borTimerElapsedInSF(&timer));
 
     optsClear();
+
+    planShutdownProtobuf();
 
     return 0;
 }

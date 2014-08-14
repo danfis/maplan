@@ -3,10 +3,12 @@
 
 TEST(testStateBasic);
 TEST(testStatePreEff);
+TEST(protobufTearDown);
 
 TEST_SUITE(TSState) {
     TEST_ADD(testStateBasic),
     TEST_ADD(testStatePreEff),
+    TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE
 };
 

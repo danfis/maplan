@@ -57,6 +57,7 @@ void planOperatorSetCost(plan_operator_t *op, plan_cost_t cost);
  * Adds a new conditional effect and returns a reference ID.
  */
 int planOperatorAddCondEff(plan_operator_t *op);
+void planOperatorDelLastCondEff(plan_operator_t *op);
 
 /**
  * Sets precondition of a conditional effect.

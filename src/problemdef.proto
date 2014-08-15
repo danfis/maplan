@@ -59,36 +59,6 @@ message PlanProblemOperator {
     repeated PlanProblemCondEff cond_eff = 5;
 }
 
-/**
- * Successor generator subtree with value precondition.
- */
-message PlanProblemSuccGenTreePre {
-    // Value of the precondition
-    required int32 val = 1;
-    required PlanProblemSuccGenTree tree = 2;
-}
-
-/**
- * Recursive structure of successor generator tree.
- */
-message PlanProblemSuccGenTree {
-    // Decision variable in the current node of a tree
-    required int32 var = 1;
-    // List of immediate operator IDs
-    repeated int32 immediate_op = 2;
-    // Default subtree with operators without precondition on .var
-    optional PlanProblemSuccGenTree def = 3;
-    // Subtrees with value preconditions
-    repeated PlanProblemSuccGenTreePre pre = 4;
-}
-
-/**
- * Definition of a successor generator.
- */
-message PlanProblemSuccGen {
-    required PlanProblemSuccGenTree root = 1;
-}
-
 message PlanProblem {
     required int32 version = 1;
     repeated PlanProblemVar var = 2;
@@ -96,5 +66,4 @@ message PlanProblem {
     required PlanProblemState init_state = 4;
     required PlanProblemPartState goal = 5;
     repeated PlanProblemOperator operator = 6;
-    optional PlanProblemSuccGen succ_gen = 7;
 }

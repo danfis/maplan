@@ -53,6 +53,9 @@ class SASTask:
         for op in self.operators:
             op.output_proto(self.metric, prob)
 
+        for agent in self.agents:
+            prob.agent_name.append(agent)
+
         s = prob.SerializeToString()
         stream.write(s)
 

@@ -6597,4 +6597,9 @@ $turn_to satellite4 star7 phenomenon8
 d22
 turn_to satellite4 star7 star6
 d"
-d
+d:
+satellite0:
+satellite1:
+satellite2:
+satellite3:
+satellite4

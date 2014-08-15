@@ -8075,4 +8075,9 @@ $turn_to satellite4 star8 phenomenon9
 q22
 turn_to satellite4 star8 star5
 q"
-q
+q:
+satellite0:
+satellite1:
+satellite2:
+satellite3:
+satellite4

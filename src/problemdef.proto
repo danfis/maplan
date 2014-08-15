@@ -66,4 +66,5 @@ message PlanProblem {
     required PlanProblemState init_state = 4;
     required PlanProblemPartState goal = 5;
     repeated PlanProblemOperator operator = 6;
+    repeated string agent_name = 7;
 }

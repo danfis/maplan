@@ -18,8 +18,9 @@ for domain_pddl in $(find -P $TOPDIR -name 'domain.pddl'); do
         fi
 
         out_proto=${pddl%%.pddl}.proto
+        addl=${pddl%%.pddl}.addl
 
-        echo "$pddl"
-        python2 $TRANSLATE "$domain_pddl" "$pddl" --output $out_proto --proto >/dev/null 2>&1
+        echo "$pddl" "$addl"
+        python2 $TRANSLATE "$domain_pddl" "$pddl" $addl --output $out_proto --proto >/dev/null 2>&1
     done
 done

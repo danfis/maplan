@@ -13,8 +13,6 @@ extern "C" {
 struct _plan_var_t {
     char *name;
     plan_val_t range;
-    char **fact_name;
-    int axiom_layer;
 };
 typedef struct _plan_var_t plan_var_t;
 

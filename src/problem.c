@@ -173,7 +173,6 @@ static int fdVar1(plan_var_t *var, FILE *fin)
     plan_val_t i;
     char sval[1024], *fact_name;
     size_t size;
-    ssize_t fact_name_len;
     int layer, range;
 
     if (fdAssert(fin, "begin_variable") != 0)
@@ -182,7 +181,6 @@ static int fdVar1(plan_var_t *var, FILE *fin)
         return -1;
 
     var->name = strdup(sval);
-    var->axiom_layer = layer;
     var->range = range;
 
     if ((int)var->range != range){
@@ -193,22 +191,10 @@ static int fdVar1(plan_var_t *var, FILE *fin)
         return -1;
     }
 
-    var->fact_name = BOR_ALLOC_ARR(char *, var->range);
-    size = 0;
-    fact_name = NULL;
     getline(&fact_name, &size, fin);
     for (i = 0; i < var->range; ++i){
-        fact_name_len = getline(&fact_name, &size, fin);
-        if (fact_name_len > 1){
-            fact_name[fact_name_len - 1] = 0x0;
-            var->fact_name[i] = strdup(fact_name);
-        }else{
-            var->fact_name[i] = strdup("");
-        }
+        getline(&fact_name, &size, fin);
     }
-
-    if (fact_name != NULL)
-        free(fact_name);
 
     if (fdAssert(fin, "end_variable") != 0)
         return -1;

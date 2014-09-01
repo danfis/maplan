@@ -192,10 +192,15 @@ static int fdVar1(plan_var_t *var, FILE *fin)
         return -1;
     }
 
+    fact_name = NULL;
+    size = 0;
     getline(&fact_name, &size, fin);
     for (i = 0; i < var->range; ++i){
         getline(&fact_name, &size, fin);
     }
+
+    if (fact_name)
+        free(fact_name);
 
     if (fdAssert(fin, "end_variable") != 0)
         return -1;

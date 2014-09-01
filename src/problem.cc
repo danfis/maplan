@@ -8,6 +8,13 @@
 #include "plan/causalgraph.h"
 #include "problemdef.pb.h"
 
+/** Parses protobuffer from the given file. Returns NULL on failure. */
+static PlanProblem *parseProto(const char *fn);
+/** Loads problem from protobuffer */
+static int loadProblem(plan_problem_t *prob,
+                       const PlanProblem *proto,
+                       int flags);
+
 static void loadProtoProblem(plan_problem_t *prob,
                              const PlanProblem *proto,
                              const plan_var_id_t *var_map,
@@ -18,9 +25,27 @@ static void pruneUnimportantVars(plan_problem_t *oldp,
                                  const int *important_var,
                                  plan_var_id_t *var_order);
 
-static PlanProblem *parseProto(const char *fn);
-static int loadProblem(plan_problem_t *prob, const PlanProblem *proto,
-                       int flags);
+plan_problem_t *planProblemFromProto(const char *fn, int flags)
+{
+    plan_problem_t *p = NULL;
+    PlanProblem *proto = NULL;
+
+    proto = parseProto(fn);
+    if (proto == NULL)
+        return NULL;
+
+    p = BOR_ALLOC(plan_problem_t);
+    loadProblem(p, proto, flags);
+
+    delete proto;
+
+    return p;
+}
+
+plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags)
+{
+    return NULL;
+}
 
 static PlanProblem *parseProto(const char *fn)
 {
@@ -50,7 +75,8 @@ static PlanProblem *parseProto(const char *fn)
     return proto;
 }
 
-static int loadProblem(plan_problem_t *p, const PlanProblem *proto,
+static int loadProblem(plan_problem_t *p,
+                       const PlanProblem *proto,
                        int flags)
 {
     plan_causal_graph_t *cg;
@@ -81,28 +107,6 @@ static int loadProblem(plan_problem_t *p, const PlanProblem *proto,
     }
 
     return 0;
-}
-
-plan_problem_t *planProblemFromProto(const char *fn, int flags)
-{
-    plan_problem_t *p = NULL;
-    PlanProblem *proto = NULL;
-
-    proto = parseProto(fn);
-    if (proto == NULL)
-        return NULL;
-
-    p = BOR_ALLOC(plan_problem_t);
-    loadProblem(p, proto, flags);
-
-    delete proto;
-
-    return p;
-}
-
-plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags)
-{
-    return NULL;
 }
 
 static void loadVar(plan_problem_t *p, const PlanProblem *proto,

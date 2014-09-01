@@ -14,6 +14,10 @@ static PlanProblem *parseProto(const char *fn);
 static int loadProblem(plan_problem_t *prob,
                        const PlanProblem *proto,
                        int flags);
+/** Load agents part from the protobuffer */
+static void loadAgents(plan_problem_agents_t *p,
+                       const PlanProblem *proto,
+                       int flags);
 
 static void loadProtoProblem(plan_problem_t *prob,
                              const PlanProblem *proto,
@@ -44,7 +48,20 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags)
 
 plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags)
 {
-    return NULL;
+    plan_problem_agents_t *p = NULL;
+    PlanProblem *proto = NULL;
+
+    proto = parseProto(fn);
+    if (proto == NULL)
+        return NULL;
+
+    p = BOR_ALLOC(plan_problem_agents_t);
+    loadProblem(&p->prob, proto, flags);
+    loadAgents(p, proto, flags);
+
+    delete proto;
+
+    return p;
 }
 
 static PlanProblem *parseProto(const char *fn)
@@ -107,6 +124,102 @@ static int loadProblem(plan_problem_t *p,
     }
 
     return 0;
+}
+
+
+static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
+{
+    int i;
+    plan_state_t *state;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    bzero(dst, sizeof(*dst));
+
+    dst->var_size = src->var_size;
+    dst->var = BOR_ALLOC_ARR(plan_var_t, src->var_size);
+    for (i = 0; i < src->var_size; ++i){
+        planVarCopy(dst->var + i, src->var + i);
+    }
+
+    if (!src->state_pool)
+        return;
+
+    dst->state_pool = planStatePoolNew(dst->var, dst->var_size);
+
+    state = planStateNew(src->state_pool);
+    planStatePoolGetState(src->state_pool, src->initial_state, state);
+    dst->initial_state = planStatePoolInsert(dst->state_pool, state);
+    planStateDel(state);
+
+    dst->goal = planPartStateNew(dst->state_pool);
+    PLAN_PART_STATE_FOR_EACH(src->goal, i, var, val){
+        planPartStateSet(dst->state_pool, dst->goal, var, val);
+    }
+
+    dst->op_size = 0;
+    dst->op = NULL;
+    dst->succ_gen = NULL;
+}
+
+static void agentCreatePublicPrivateOperators(plan_problem_agent_t *agent,
+                                              const plan_problem_t *prob)
+{
+    int i;
+    char *name_token = new char[strlen(agent->name) + 2];
+    plan_problem_t *agent_prob = &agent->prob;
+    plan_operator_t *op;
+
+    strcpy(name_token + 1, agent->name);
+    name_token[0] = ' ';
+
+    // Allocate maximum memory that would be needed
+    agent_prob->op = BOR_ALLOC_ARR(plan_operator_t, prob->op_size);
+
+    // Initialize number of operators in the array
+    agent_prob->op_size = 0;
+
+    for (i = 0; i < prob->op_size; ++i){
+        if (strstr(prob->op[i].name, name_token) != NULL){
+            op = agent_prob->op + agent_prob->op_size;
+            planOperatorCopy(op, prob->op + i);
+            planOperatorSetGlobalId(op, i);
+
+            ++agent_prob->op_size;
+        }
+    }
+
+    // Give back unneeded memory
+    agent_prob->op = BOR_REALLOC_ARR(agent_prob->op, plan_operator_t,
+                                     agent_prob->op_size);
+
+    delete [] name_token;
+}
+
+static void loadAgents(plan_problem_agents_t *p,
+                       const PlanProblem *proto,
+                       int flags)
+{
+    int i;
+    plan_problem_agent_t *agent;
+
+    p->agent_size = proto->agent_name_size();
+    if (p->agent_size == 0){
+        p->agent = NULL;
+        return;
+    }
+
+    p->agent = BOR_ALLOC_ARR(plan_problem_agent_t, p->agent_size);
+    for (i = 0; i < p->agent_size; ++i){
+        agent = p->agent + i;
+        agent->id = i;
+        agent->name = strdup(proto->agent_name(i).c_str());
+        agent->projected_op = NULL;
+        agent->projected_op_size = 0;
+
+        agentInitProblem(&agent->prob, &p->prob);
+        agentCreatePublicPrivateOperators(agent, &p->prob);
+    }
 }
 
 static void loadVar(plan_problem_t *p, const PlanProblem *proto,

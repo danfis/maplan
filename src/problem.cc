@@ -176,14 +176,13 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
     plan_problem_agent_t *ap = agents->agent;
     int i, j, inserted;
     const plan_operator_t *glob_op;
-    char **name_token;
+    std::vector<std::string> name_token;
 
     // Create name token for each agent
-    name_token = new char *[agent_size];
+    name_token.resize(agents->agent_size);
     for (i = 0; i < agent_size; ++i){
-        name_token[i] = new char[strlen(ap[i].name) + 2];
-        strcpy(name_token[i] + 1, ap[i].name);
-        name_token[i][0] = ' ';
+        name_token[i] = " ";
+        name_token[i] += ap[i].name;
     }
 
     // Prepare agents' structures
@@ -197,7 +196,7 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
 
         inserted = 0;
         for (j = 0; j < agents->agent_size; ++j){
-            if (strstr(glob_op->name, name_token[j]) != NULL){
+            if (strstr(glob_op->name, name_token[j].c_str()) != NULL){
                 agentAddOperator(&ap[j].prob, i, glob_op);
                 inserted = 1;
             }
@@ -217,10 +216,121 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
         ap[i].prob.op = BOR_REALLOC_ARR(ap[i].prob.op, plan_operator_t,
                                         ap[i].prob.op_size);
     }
+}
 
-    for (i = 0; i < agent_size; ++i)
-        delete [] name_token[i];
-    delete [] name_token;
+struct AgentVarVal {
+    std::vector<bool> use; /*!< true for each agent if the value is used
+                               in precondition or effect of its operator */
+    std::vector<bool> pre; /*!< true for each agent if the value is used in
+                                precondition of its operator */
+    bool pub;  /*!< True if the value is public (used by more than one
+                    agent) */
+
+    AgentVarVal() : pub(false) {}
+
+    void resize(int size)
+    {
+        use.resize(size, false);
+        pre.resize(size, false);
+    }
+};
+
+class AgentVarVals {
+    std::vector<std::vector<AgentVarVal> > val;
+
+  public:
+    AgentVarVals(const plan_problem_t *prob, int agent_size)
+    {
+        val.resize(prob->var_size);
+        for (int i = 0; i < prob->var_size; ++i){
+            val[i].resize(prob->var[i].range);
+            for (int j = 0; j < (int)prob->var[i].range; ++j){
+                val[i][j].resize(agent_size);
+            }
+        }
+    }
+
+    /**
+     * Set variable's value as used by the agent in precondition.
+     */
+    void setPreUse(int var, int value, int agent_id)
+    {
+        val[var][value].pre[agent_id] = true;
+        val[var][value].use[agent_id] = true;
+    }
+
+    /**
+     * Set variable's value as used by the agent in an effect.
+     */
+    void setEffUse(int var, int value, int agent_id)
+    {
+        val[var][value].use[agent_id] = true;
+    }
+
+    /**
+     * Sets variables' values as public if they are used by more than one
+     * agent.
+     */
+    void determinePublicVals()
+    {
+        for (size_t i = 0; i < val.size(); ++i){
+            int sum = 0;
+            for (size_t j = 0; j < val[i].size(); ++j){
+                for (size_t k = 0; k < val[i][j].use.size(); ++k)
+                    sum += val[i][j].use[k];
+                if (sum > 1)
+                    val[i][j].pub = true;
+            }
+        }
+    }
+};
+
+static void agentSetVarValUsePrePartState(AgentVarVals &vals,
+                                          const plan_part_state_t *ps,
+                                          int agent_id)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+
+    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+        vals.setPreUse(var, val, agent_id);
+    }
+}
+
+static void agentSetVarValUseEffPartState(AgentVarVals &vals,
+                                          const plan_part_state_t *ps,
+                                          int agent_id)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+
+    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+        vals.setEffUse(var, val, agent_id);
+    }
+}
+
+static void agentSetVarValUse(AgentVarVals &vals,
+                              const plan_problem_agents_t *agents)
+{
+    int i, opi;
+    const plan_problem_t *ap;
+
+    // Set goals as public for all agents
+    for (i = 0; i < agents->agent_size; ++i)
+        agentSetVarValUsePrePartState(vals, agents->prob.goal, i);
+
+    // Process operators from all agents and all its operators
+    for (i = 0; i < agents->agent_size; ++i){
+        ap = &agents->agent[i].prob;
+        for (opi = 0; opi < ap->op_size; ++opi){
+            agentSetVarValUsePrePartState(vals, ap->op[opi].pre, i);
+            agentSetVarValUseEffPartState(vals, ap->op[opi].eff, i);
+        }
+    }
+
+    vals.determinePublicVals();
 }
 
 static void loadAgents(plan_problem_agents_t *p,
@@ -229,6 +339,7 @@ static void loadAgents(plan_problem_agents_t *p,
 {
     int i;
     plan_problem_agent_t *agent;
+    AgentVarVals var_vals(&p->prob, p->agent_size);
 
     p->agent_size = proto->agent_name_size();
     if (p->agent_size == 0){
@@ -247,7 +358,17 @@ static void loadAgents(plan_problem_agents_t *p,
         agentInitProblem(&agent->prob, &p->prob);
     }
 
+    // Split operators between agents
     agentSplitOperators(p);
+
+    // Determine which variable values are used by which agents' operators
+    agentSetVarValUse(var_vals, p);
+
+    // TODO: Set op.send_peer
+    // TODO: Create successor-generator
+    // TODO: pruneUnimportantVars() for each agent?
+    // TODO: Set private ops.
+    // TODO: Projected operators
 }
 
 static void loadVar(plan_problem_t *p, const PlanProblem *proto,

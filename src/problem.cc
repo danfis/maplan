@@ -8,22 +8,24 @@
 #include "plan/causalgraph.h"
 #include "problemdef.pb.h"
 
-static plan_problem_t *loadProtoProblem(const PlanProblem *proto,
-                                        const plan_var_id_t *var_map,
-                                        int var_size);
+static void loadProtoProblem(plan_problem_t *prob,
+                             const PlanProblem *proto,
+                             const plan_var_id_t *var_map,
+                             int var_size);
 static int hasUnimportantVars(const plan_causal_graph_t *cg);
-static plan_problem_t *pruneUnimportantVars(plan_problem_t *oldp,
-                                            const PlanProblem *proto,
-                                            const int *important_var,
-                                            plan_var_id_t *var_order);
+static void pruneUnimportantVars(plan_problem_t *oldp,
+                                 const PlanProblem *proto,
+                                 const int *important_var,
+                                 plan_var_id_t *var_order);
 
-plan_problem_t *planProblemFromProto(const char *fn, int flags)
+static PlanProblem *parseProto(const char *fn);
+static int loadProblem(plan_problem_t *prob, const PlanProblem *proto,
+                       int flags);
+
+static PlanProblem *parseProto(const char *fn)
 {
-    plan_problem_t *p = NULL;
     PlanProblem *proto = NULL;
-    plan_causal_graph_t *cg;
-    plan_var_id_t *var_order;
-    int size, fd;
+    int fd;
 
     // Open file with problem definition
     fd = open(fn, O_RDONLY);
@@ -45,8 +47,19 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags)
         return NULL;
     }
 
+    return proto;
+}
+
+static int loadProblem(plan_problem_t *p, const PlanProblem *proto,
+                       int flags)
+{
+    plan_causal_graph_t *cg;
+    plan_var_id_t *var_order;
+    int size;
+
+
     // Load problem from the protobuffer
-    p = loadProtoProblem(proto, NULL, -1);
+    loadProtoProblem(p, proto, NULL, -1);
 
     // Fix problem with causal graph
     if (flags & PLAN_PROBLEM_USE_CG){
@@ -56,7 +69,7 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags)
             size = sizeof(plan_var_id_t) * (cg->var_order_size + 1);
             var_order = (plan_var_id_t *)alloca(size);
             memcpy(var_order, cg->var_order, size);
-            p = pruneUnimportantVars(p, proto, cg->important_var, var_order);
+            pruneUnimportantVars(p, proto, cg->important_var, var_order);
         }else{
             var_order = cg->var_order;
         }
@@ -67,9 +80,29 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags)
         p->succ_gen = planSuccGenNew(p->op, p->op_size, NULL);
     }
 
+    return 0;
+}
+
+plan_problem_t *planProblemFromProto(const char *fn, int flags)
+{
+    plan_problem_t *p = NULL;
+    PlanProblem *proto = NULL;
+
+    proto = parseProto(fn);
+    if (proto == NULL)
+        return NULL;
+
+    p = BOR_ALLOC(plan_problem_t);
+    loadProblem(p, proto, flags);
+
     delete proto;
 
     return p;
+}
+
+plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags)
+{
+    return NULL;
 }
 
 static void loadVar(plan_problem_t *p, const PlanProblem *proto,
@@ -220,13 +253,11 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
     }
 }
 
-static plan_problem_t *loadProtoProblem(const PlanProblem *proto,
-                                        const plan_var_id_t *var_map,
-                                        int var_size)
+static void loadProtoProblem(plan_problem_t *p,
+                             const PlanProblem *proto,
+                             const plan_var_id_t *var_map,
+                             int var_size)
 {
-    plan_problem_t *p;
-
-    p = BOR_ALLOC(plan_problem_t);
     bzero(p, sizeof(*p));
 
     loadVar(p, proto, var_map, var_size);
@@ -243,8 +274,6 @@ static plan_problem_t *loadProtoProblem(const PlanProblem *proto,
     loadInitState(p, proto, var_map);
     loadGoal(p, proto, var_map);
     loadOperator(p, proto, var_map);
-
-    return p;
 }
 
 static int hasUnimportantVars(const plan_causal_graph_t *cg)
@@ -254,19 +283,18 @@ static int hasUnimportantVars(const plan_causal_graph_t *cg)
     return i != cg->var_size;
 }
 
-static plan_problem_t *pruneUnimportantVars(plan_problem_t *oldp,
-                                            const PlanProblem *proto,
-                                            const int *important_var,
-                                            plan_var_id_t *var_order)
+static void pruneUnimportantVars(plan_problem_t *p,
+                                 const PlanProblem *proto,
+                                 const int *important_var,
+                                 plan_var_id_t *var_order)
 {
     int i, id, var_size;
     plan_var_id_t *var_map;
-    plan_problem_t *p;
 
     // Create mapping from old var ID to the new ID
-    var_map = (plan_var_id_t *)alloca(sizeof(plan_var_id_t) * oldp->var_size);
+    var_map = (plan_var_id_t *)alloca(sizeof(plan_var_id_t) * p->var_size);
     var_size = 0;
-    for (i = 0, id = 0; i < oldp->var_size; ++i){
+    for (i = 0, id = 0; i < p->var_size; ++i){
         if (important_var[i]){
             var_map[i] = id++;
             ++var_size;
@@ -280,7 +308,6 @@ static plan_problem_t *pruneUnimportantVars(plan_problem_t *oldp,
         *var_order = var_map[*var_order];
     }
 
-    p = loadProtoProblem(proto, var_map, var_size);
-    planProblemDel(oldp);
-    return p;
+    planProblemFree(p);
+    loadProtoProblem(p, proto, var_map, var_size);
 }

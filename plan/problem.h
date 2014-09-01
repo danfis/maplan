@@ -61,9 +61,20 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags);
 void planProblemDel(plan_problem_t *problem);
 
 /**
+ * Free allocated resources "in place"
+ */
+void planProblemFree(plan_problem_t *prob);
+
+/**
  * Load agent problem definitions from the specified file.
  */
 plan_problem_agents_t *planProblemAgentsFromFD(const char *fn);
+
+/**
+ * Loads agent problem definition from protbuf format.
+ * For flags see PLAN_PROBLEM_* macros.
+ */
+plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags);
 
 /**
  * Deletes agent defitions.

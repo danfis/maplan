@@ -7,40 +7,6 @@
 #define READ_BUFSIZE 1024
 
 
-static void planProblemFree(plan_problem_t *plan)
-{
-    int i;
-
-    if (plan->succ_gen)
-        planSuccGenDel(plan->succ_gen);
-
-    if (plan->goal){
-        planPartStateDel(plan->goal);
-        plan->goal = NULL;
-    }
-
-    if (plan->var != NULL){
-        for (i = 0; i < plan->var_size; ++i){
-            planVarFree(plan->var + i);
-        }
-        BOR_FREE(plan->var);
-    }
-    plan->var = NULL;
-
-    if (plan->state_pool)
-        planStatePoolDel(plan->state_pool);
-    plan->state_pool = NULL;
-
-    if (plan->op){
-        for (i = 0; i < plan->op_size; ++i){
-            planOperatorFree(plan->op + i);
-        }
-        BOR_FREE(plan->op);
-    }
-    plan->op = NULL;
-    plan->op_size = 0;
-}
-
 static void planProblemInit(plan_problem_t *p)
 {
     p->var = NULL;
@@ -76,6 +42,41 @@ void planProblemDel(plan_problem_t *plan)
     planProblemFree(plan);
     BOR_FREE(plan);
 }
+
+void planProblemFree(plan_problem_t *plan)
+{
+    int i;
+
+    if (plan->succ_gen)
+        planSuccGenDel(plan->succ_gen);
+
+    if (plan->goal){
+        planPartStateDel(plan->goal);
+        plan->goal = NULL;
+    }
+
+    if (plan->var != NULL){
+        for (i = 0; i < plan->var_size; ++i){
+            planVarFree(plan->var + i);
+        }
+        BOR_FREE(plan->var);
+    }
+    plan->var = NULL;
+
+    if (plan->state_pool)
+        planStatePoolDel(plan->state_pool);
+    plan->state_pool = NULL;
+
+    if (plan->op){
+        for (i = 0; i < plan->op_size; ++i){
+            planOperatorFree(plan->op + i);
+        }
+        BOR_FREE(plan->op);
+    }
+    plan->op = NULL;
+    plan->op_size = 0;
+}
+
 
 plan_problem_agents_t *planProblemAgentsFromFD(const char *fn)
 {

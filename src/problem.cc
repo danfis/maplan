@@ -162,37 +162,64 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
     dst->succ_gen = NULL;
 }
 
-static void agentCreatePublicPrivateOperators(plan_problem_agent_t *agent,
-                                              const plan_problem_t *prob)
+static void agentSplitOperators(plan_problem_agents_t *agents)
 {
-    int i;
-    char *name_token = new char[strlen(agent->name) + 2];
-    plan_problem_t *agent_prob = &agent->prob;
+    const plan_problem_t *prob = &agents->prob;
+    int agent_size = agents->agent_size;
+    plan_problem_agent_t *ap = agents->agent;
+    int i, j, inserted;
+    const plan_operator_t *glob_op;
+    char **name_token;
     plan_operator_t *op;
 
-    strcpy(name_token + 1, agent->name);
-    name_token[0] = ' ';
+    // Create name token for each agent
+    name_token = new char *[agent_size];
+    for (i = 0; i < agent_size; ++i){
+        name_token[i] = new char[strlen(ap[i].name) + 2];
+        strcpy(name_token[i] + 1, ap[i].name);
+        name_token[i][0] = ' ';
+    }
 
-    // Allocate maximum memory that would be needed
-    agent_prob->op = BOR_ALLOC_ARR(plan_operator_t, prob->op_size);
-
-    // Initialize number of operators in the array
-    agent_prob->op_size = 0;
+    // Prepare agents' structures
+    for (i = 0; i < agents->agent_size; ++i){
+        ap[i].prob.op = BOR_ALLOC_ARR(plan_operator_t, prob->op_size);
+        ap[i].prob.op_size = 0;
+    }
 
     for (i = 0; i < prob->op_size; ++i){
-        if (strstr(prob->op[i].name, name_token) != NULL){
-            op = agent_prob->op + agent_prob->op_size;
-            planOperatorCopy(op, prob->op + i);
-            planOperatorSetGlobalId(op, i);
+        glob_op = prob->op + i;
 
-            ++agent_prob->op_size;
+        inserted = 0;
+        for (j = 0; j < agents->agent_size; ++j){
+            if (strstr(glob_op->name, name_token[j]) != NULL){
+                op = ap[j].prob.op + ap[j].prob.op_size;
+                planOperatorCopy(op, glob_op);
+                planOperatorSetGlobalId(op, i);
+                ++ap[j].prob.op_size;
+                inserted = 1;
+            }
+        }
+
+        if (!inserted){
+            // if the operator wasn't inserted anywhere, insert it to all
+            // agents
+            for (j = 0; j < agents->agent_size; ++j){
+                op = ap[j].prob.op + ap[j].prob.op_size;
+                planOperatorCopy(op, glob_op);
+                planOperatorSetGlobalId(op, i);
+                ++ap[j].prob.op_size;
+            }
         }
     }
 
-    // Give back unneeded memory
-    agent_prob->op = BOR_REALLOC_ARR(agent_prob->op, plan_operator_t,
-                                     agent_prob->op_size);
+    // Given back unneeded memory
+    for (i = 0; i < agents->agent_size; ++i){
+        ap[i].prob.op = BOR_REALLOC_ARR(ap[i].prob.op, plan_operator_t,
+                                        ap[i].prob.op_size);
+    }
 
+    for (i = 0; i < agent_size; ++i)
+        delete [] name_token[i];
     delete [] name_token;
 }
 
@@ -218,8 +245,9 @@ static void loadAgents(plan_problem_agents_t *p,
         agent->projected_op_size = 0;
 
         agentInitProblem(&agent->prob, &p->prob);
-        agentCreatePublicPrivateOperators(agent, &p->prob);
     }
+
+    agentSplitOperators(p);
 }
 
 static void loadVar(plan_problem_t *p, const PlanProblem *proto,

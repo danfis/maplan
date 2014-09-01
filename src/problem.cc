@@ -162,6 +162,13 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
     dst->succ_gen = NULL;
 }
 
+static void agentAddOperator(plan_problem_t *dst, int id, const plan_operator_t *op)
+{
+    planOperatorCopy(dst->op + dst->op_size, op);
+    planOperatorSetGlobalId(dst->op + dst->op_size, id);
+    ++dst->op_size;
+}
+
 static void agentSplitOperators(plan_problem_agents_t *agents)
 {
     const plan_problem_t *prob = &agents->prob;
@@ -170,7 +177,6 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
     int i, j, inserted;
     const plan_operator_t *glob_op;
     char **name_token;
-    plan_operator_t *op;
 
     // Create name token for each agent
     name_token = new char *[agent_size];
@@ -192,10 +198,7 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
         inserted = 0;
         for (j = 0; j < agents->agent_size; ++j){
             if (strstr(glob_op->name, name_token[j]) != NULL){
-                op = ap[j].prob.op + ap[j].prob.op_size;
-                planOperatorCopy(op, glob_op);
-                planOperatorSetGlobalId(op, i);
-                ++ap[j].prob.op_size;
+                agentAddOperator(&ap[j].prob, i, glob_op);
                 inserted = 1;
             }
         }
@@ -204,10 +207,7 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
             // if the operator wasn't inserted anywhere, insert it to all
             // agents
             for (j = 0; j < agents->agent_size; ++j){
-                op = ap[j].prob.op + ap[j].prob.op_size;
-                planOperatorCopy(op, glob_op);
-                planOperatorSetGlobalId(op, i);
-                ++ap[j].prob.op_size;
+                agentAddOperator(&ap[j].prob, i, glob_op);
             }
         }
     }

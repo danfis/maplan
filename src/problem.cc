@@ -386,35 +386,32 @@ static void agentSetSendPeers(plan_problem_t *prob,
     }
 }
 
-static void agentSetPrivateOps(plan_operator_t *ops, int op_size,
-                               const AgentVarVals &vals)
+static bool agentIsPartStatePublic(const plan_part_state_t *ps,
+                                   const AgentVarVals &vals)
 {
     plan_var_id_t var;
     plan_val_t val;
     int i;
+
+    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+        if (vals.isPublic(var, val))
+            return true;
+    }
+
+    return false;
+}
+
+static void agentSetPrivateOps(plan_operator_t *ops, int op_size,
+                               const AgentVarVals &vals)
+{
     plan_operator_t *op;
 
     for (int opi = 0; opi < op_size; ++opi){
         op = ops + opi;
-
-        bool pub = false;
-        PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
-            if (vals.isPublic(var, val)){
-                pub = true;
-                break;
-            }
-        }
-        if (!pub){
-            PLAN_PART_STATE_FOR_EACH(op->pre, i, var, val){
-                if (vals.isPublic(var, val)){
-                    pub = true;
-                    break;
-                }
-            }
-        }
-
-        if (!pub)
+        if (!agentIsPartStatePublic(op->eff, vals)
+                && !agentIsPartStatePublic(op->pre, vals)){
             planOperatorSetPrivate(op);
+        }
     }
 }
 

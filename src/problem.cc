@@ -283,6 +283,13 @@ class AgentVarVals {
             }
         }
     }
+    /**
+     * Returns true if the value is used by the specified agent.
+     */
+    bool used(int var, int value, int agent_id) const
+    {
+        return val[var][value].use[agent_id];
+    }
 
     /**
      * Returns true if the value is used as precondition by the specified
@@ -400,6 +407,66 @@ static void agentSetPrivateOps(plan_operator_t *ops, int op_size,
     }
 }
 
+static void agentProjectPartState(plan_part_state_t *ps,
+                                  plan_state_pool_t *state_pool,
+                                  int agent_id,
+                                  const AgentVarVals &vals)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+
+    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+        if (!vals.used(var, val, agent_id)){
+            planPartStateUnset(state_pool, ps, var);
+        }
+    }
+}
+
+static bool agentProjectOp(plan_operator_t *op, int agent_id,
+                           const AgentVarVals &vals)
+{
+    agentProjectPartState(op->pre, op->state_pool, agent_id, vals);
+    agentProjectPartState(op->eff, op->state_pool, agent_id, vals);
+
+    if (op->eff->vals_size > 0)
+        return true;
+    return false;
+}
+
+static void agentCreateProjectedOps(plan_problem_agent_t *agent,
+                                    int agent_id,
+                                    const plan_operator_t *ops,
+                                    int ops_size,
+                                    const AgentVarVals &vals)
+{
+    plan_operator_t *proj_op;
+
+    // Allocate enough memory
+    agent->projected_op = BOR_ALLOC_ARR(plan_operator_t, ops_size);
+    agent->projected_op_size = 0;
+
+    for (int opi = 0; opi < ops_size; ++opi){
+        proj_op = agent->projected_op + agent->projected_op_size;
+
+        planOperatorInit(proj_op, agent->prob.state_pool);
+        planOperatorCopy(proj_op, ops + opi);
+
+        if (agentProjectOp(proj_op, agent_id, vals)){
+            planOperatorSetOwner(proj_op, agent_id);
+            planOperatorSetGlobalId(proj_op, opi);
+            ++agent->projected_op_size;
+        }else{
+            planOperatorFree(proj_op);
+        }
+    }
+
+    // Given back unused memory
+    agent->projected_op = BOR_REALLOC_ARR(agent->projected_op,
+                                          plan_operator_t,
+                                          agent->projected_op_size);
+}
+
 static void loadAgents(plan_problem_agents_t *p,
                        const PlanProblem *proto,
                        int flags)
@@ -437,11 +504,13 @@ static void loadAgents(plan_problem_agents_t *p,
         // Distinct private and public operators
         agentSetPrivateOps(p->agent[i].prob.op, p->agent[i].prob.op_size,
                            var_vals);
+
+        agentCreateProjectedOps(p->agent + i, i,
+                                p->prob.op, p->prob.op_size, var_vals);
     }
 
     // TODO: Create successor-generator
     // TODO: pruneUnimportantVars() for each agent?
-    // TODO: Projected operators
 }
 
 static void loadVar(plan_problem_t *p, const PlanProblem *proto,

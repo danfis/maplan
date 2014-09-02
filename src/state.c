@@ -627,7 +627,7 @@ void planPartStateUnset(plan_state_pool_t *pool, plan_part_state_t *state,
     state->is_set[var] = 0;
 
     planStatePackerSet(pool->packer, var, 0, state->valbuf);
-    planStatePackerSetMask(pool->packer, var, state->maskbuf);
+    planStatePackerClearMask(pool->packer, var, state->maskbuf);
 
     for (i = 0; i < state->vals_size; ++i){
         if (state->vals[i].var == var){

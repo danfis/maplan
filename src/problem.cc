@@ -507,10 +507,11 @@ static void loadAgents(plan_problem_agents_t *p,
 
         agentCreateProjectedOps(p->agent + i, i,
                                 p->prob.op, p->prob.op_size, var_vals);
-    }
 
-    // TODO: Create successor-generator
-    // TODO: pruneUnimportantVars() for each agent?
+        p->agent[i].prob.succ_gen = planSuccGenNew(p->agent[i].prob.op,
+                                                   p->agent[i].prob.op_size,
+                                                   NULL);
+    }
 }
 
 static void loadVar(plan_problem_t *p, const PlanProblem *proto,

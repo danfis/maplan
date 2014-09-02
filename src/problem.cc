@@ -423,12 +423,15 @@ static void agentProjectPartState(plan_part_state_t *ps,
     plan_var_id_t var;
     plan_val_t val;
     int i;
+    std::vector<int> unset;
 
     PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
-        if (!vals.used(var, val, agent_id)){
-            planPartStateUnset(state_pool, ps, var);
-        }
+        if (!vals.isPublic(var, val) && !vals.used(var, val, agent_id))
+            unset.push_back(var);
     }
+
+    for (size_t i = 0; i < unset.size(); ++i)
+        planPartStateUnset(state_pool, ps, unset[i]);
 }
 
 static bool agentProjectOp(plan_operator_t *op, int agent_id,

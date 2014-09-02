@@ -303,6 +303,14 @@ TEST(testLoadAgentFromFD)
         assertFalse(planOperatorIsPrivate(agent->prob.op + i));
     }
 
+    for (i = 0; i < 13; ++i)
+        assertEquals(agent->projected_op[i].global_id, i);
+    assertEquals(agent->projected_op[13].global_id, 14);
+    for (i = 14; i < 20; ++i)
+        assertEquals(agent->projected_op[i].global_id, i + 5);
+    for (i = 20; i < 36; ++i)
+        assertEquals(agent->projected_op[i].global_id, i + 7);
+
     planProblemAgentsDel(agents);
 }
 
@@ -417,6 +425,14 @@ TEST(testLoadAgentFromProto)
     assertTrue(!planOperatorIsPrivate(agent->prob.op + 19));
     for (i = 20; i <= 33; ++i)
         assertTrue(planOperatorIsPrivate(agent->prob.op + i));
+
+    for (i = 0; i < 13; ++i)
+        assertEquals(agent->projected_op[i].global_id, i);
+    assertEquals(agent->projected_op[13].global_id, 14);
+    for (i = 14; i < 20; ++i)
+        assertEquals(agent->projected_op[i].global_id, i + 5);
+    for (i = 20; i < 36; ++i)
+        assertEquals(agent->projected_op[i].global_id, i + 7);
 
     planProblemAgentsDel(agents);
 }

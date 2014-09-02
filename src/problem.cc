@@ -283,6 +283,15 @@ class AgentVarVals {
             }
         }
     }
+
+    /**
+     * Returns true if the value is used as precondition by the specified
+     * agent.
+     */
+    bool usedAsPre(int var, int value, int agent_id) const
+    {
+        return val[var][value].pre[agent_id];
+    }
 };
 
 static void agentSetVarValUsePrePartState(AgentVarVals &vals,
@@ -333,6 +342,32 @@ static void agentSetVarValUse(AgentVarVals &vals,
     vals.determinePublicVals();
 }
 
+static void agentSetSendPeers(plan_problem_t *prob,
+                              int agent_id,
+                              int agent_size,
+                              const AgentVarVals &vals)
+{
+    plan_operator_t *op;
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+
+    for (int opi = 0; opi < prob->op_size; ++opi){
+        op = prob->op + opi;
+        for (int peer = 0; peer < agent_size; ++peer){
+            if (peer == agent_id)
+                continue;
+
+            PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
+                if (vals.usedAsPre(var, val, peer)){
+                    planOperatorAddSendPeer(op, peer);
+                    break;
+                }
+            }
+        }
+    }
+}
+
 static void loadAgents(plan_problem_agents_t *p,
                        const PlanProblem *proto,
                        int flags)
@@ -363,6 +398,11 @@ static void loadAgents(plan_problem_agents_t *p,
 
     // Determine which variable values are used by which agents' operators
     agentSetVarValUse(var_vals, p);
+
+    // Set up receiving peers of the operators
+    for (i = 0; i < p->agent_size; ++i){
+        agentSetSendPeers(&p->agent[i].prob, i, p->agent_size, var_vals);
+    }
 
     // TODO: Set op.send_peer
     // TODO: Create successor-generator

@@ -306,6 +306,121 @@ TEST(testLoadAgentFromFD)
     planProblemAgentsDel(agents);
 }
 
+TEST(testLoadAgentFromProto)
+{
+    plan_problem_agents_t *agents;
+    plan_problem_agent_t *agent;
+    plan_problem_t *p;
+    plan_state_t *initial_state;
+    int i, api;
+
+    agents = planProblemAgentsFromProto("../data/ma-benchmarks/rovers/p03.proto",
+                                        PLAN_PROBLEM_USE_CG);
+    assertNotEquals(agents, NULL);
+    if (agents == NULL)
+        return;
+
+    for (api = 0; api < agents->agent_size; ++api){
+        p = &agents->agent[api].prob;
+
+        assertEquals(p->var_size, 13);
+        assertEquals(p->var[0].range, 3);
+        assertEquals(p->var[1].range, 4);
+        assertEquals(p->var[2].range, 3);
+        assertEquals(p->var[3].range, 3);
+        assertEquals(p->var[4].range, 2);
+        assertEquals(p->var[5].range, 2);
+        assertEquals(p->var[6].range, 2);
+        assertEquals(p->var[7].range, 2);
+        assertEquals(p->var[8].range, 2);
+        assertEquals(p->var[9].range, 2);
+        assertEquals(p->var[10].range, 2);
+        assertEquals(p->var[11].range, 2);
+        assertEquals(p->var[12].range, 2);
+
+        initial_state = planStateNew(p->state_pool);
+        planStatePoolGetState(p->state_pool, 0, initial_state);
+
+        assertEquals(planStateGet(initial_state, 0), 1);
+        assertEquals(planStateGet(initial_state, 1), 3);
+        assertEquals(planStateGet(initial_state, 2), 0);
+        assertEquals(planStateGet(initial_state, 3), 0);
+        assertEquals(planStateGet(initial_state, 4), 0);
+        assertEquals(planStateGet(initial_state, 5), 0);
+        assertEquals(planStateGet(initial_state, 6), 1);
+        assertEquals(planStateGet(initial_state, 7), 1);
+        assertEquals(planStateGet(initial_state, 8), 1);
+        assertEquals(planStateGet(initial_state, 9), 1);
+        assertEquals(planStateGet(initial_state, 10), 0);
+        assertEquals(planStateGet(initial_state, 11), 0);
+        assertEquals(planStateGet(initial_state, 12), 1);
+
+        planStateDel(initial_state);
+
+        assertEquals(planPartStateGet(p->goal, 0), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 1), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 2), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 3), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 4), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 5), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 6), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 7), 0);
+        assertEquals(planPartStateGet(p->goal, 8), 0);
+        assertEquals(planPartStateGet(p->goal, 9), 0);
+        assertEquals(planPartStateGet(p->goal, 10), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 11), PLAN_VAL_UNDEFINED);
+        assertEquals(planPartStateGet(p->goal, 12), PLAN_VAL_UNDEFINED);
+
+        assertFalse(planPartStateIsSet(p->goal, 0));
+        assertFalse(planPartStateIsSet(p->goal, 1));
+        assertFalse(planPartStateIsSet(p->goal, 2));
+        assertFalse(planPartStateIsSet(p->goal, 3));
+        assertFalse(planPartStateIsSet(p->goal, 4));
+        assertFalse(planPartStateIsSet(p->goal, 5));
+        assertFalse(planPartStateIsSet(p->goal, 6));
+        assertTrue(planPartStateIsSet(p->goal, 7));
+        assertTrue(planPartStateIsSet(p->goal, 8));
+        assertTrue(planPartStateIsSet(p->goal, 9));
+        assertFalse(planPartStateIsSet(p->goal, 10));
+        assertFalse(planPartStateIsSet(p->goal, 11));
+        assertFalse(planPartStateIsSet(p->goal, 12));
+    }
+
+    assertEquals(agents->agent_size, 2);
+
+    agent = agents->agent + 0;
+    assertEquals(strcmp(agent->name, "rover0"), 0);
+    assertEquals(agent->id, 0);
+
+    assertTrue(!planOperatorIsPrivate(agent->prob.op + 0));
+    assertTrue(!planOperatorIsPrivate(agent->prob.op + 1));
+    assertTrue(planOperatorIsPrivate(agent->prob.op + 2));
+    assertTrue(planOperatorIsPrivate(agent->prob.op + 3));
+    assertTrue(planOperatorIsPrivate(agent->prob.op + 4));
+    assertTrue(planOperatorIsPrivate(agent->prob.op + 5));
+    assertTrue(planOperatorIsPrivate(agent->prob.op + 6));
+    assertTrue(!planOperatorIsPrivate(agent->prob.op + 7));
+    assertTrue(!planOperatorIsPrivate(agent->prob.op + 8));
+
+    agent = agents->agent + 1;
+    assertEquals(strcmp(agent->name, "rover1"), 0);
+    assertEquals(agent->id, 1);
+    assertTrue(planOperatorIsPrivate(agent->prob.op + 0));
+
+    assertTrue(planOperatorIsPrivate(agent->prob.op + 0));
+    assertTrue(planOperatorIsPrivate(agent->prob.op + 1));
+    for (i = 2; i <= 10; ++i)
+        assertTrue(!planOperatorIsPrivate(agent->prob.op + i));
+    for (i = 11; i <= 17; ++i)
+        assertTrue(planOperatorIsPrivate(agent->prob.op + i));
+    assertTrue(!planOperatorIsPrivate(agent->prob.op + 18));
+    assertTrue(!planOperatorIsPrivate(agent->prob.op + 19));
+    for (i = 20; i <= 33; ++i)
+        assertTrue(planOperatorIsPrivate(agent->prob.op + i));
+
+    planProblemAgentsDel(agents);
+}
+
 TEST(testLoadCondEffFromFD)
 {
     plan_problem_t *prob;

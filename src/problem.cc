@@ -162,8 +162,11 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
     dst->succ_gen = NULL;
 }
 
-static void agentAddOperator(plan_problem_t *dst, int id, const plan_operator_t *op)
+static void agentAddOperator(plan_problem_t *dst,
+                             plan_state_pool_t *state_pool,
+                             int id, const plan_operator_t *op)
 {
+    planOperatorInit(dst->op + dst->op_size, state_pool);
     planOperatorCopy(dst->op + dst->op_size, op);
     planOperatorSetGlobalId(dst->op + dst->op_size, id);
     ++dst->op_size;
@@ -197,7 +200,7 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
         inserted = 0;
         for (j = 0; j < agents->agent_size; ++j){
             if (strstr(glob_op->name, name_token[j].c_str()) != NULL){
-                agentAddOperator(&ap[j].prob, i, glob_op);
+                agentAddOperator(&ap[j].prob, ap[j].prob.state_pool, i, glob_op);
                 inserted = 1;
             }
         }
@@ -206,7 +209,7 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
             // if the operator wasn't inserted anywhere, insert it to all
             // agents
             for (j = 0; j < agents->agent_size; ++j){
-                agentAddOperator(&ap[j].prob, i, glob_op);
+                agentAddOperator(&ap[j].prob, ap[j].prob.state_pool, i, glob_op);
             }
         }
     }
@@ -274,9 +277,9 @@ class AgentVarVals {
     void determinePublicVals()
     {
         for (size_t i = 0; i < val.size(); ++i){
-            int sum = 0;
             for (size_t j = 0; j < val[i].size(); ++j){
-                for (size_t k = 0; k < val[i][j].use.size(); ++k)
+                int sum = 0;
+                for (size_t k = 0; k < val[i][j].use.size() && sum < 2; ++k)
                     sum += val[i][j].use[k];
                 if (sum > 1)
                     val[i][j].pub = true;
@@ -401,6 +404,14 @@ static void agentSetPrivateOps(plan_operator_t *ops, int op_size,
                 break;
             }
         }
+        if (!pub){
+            PLAN_PART_STATE_FOR_EACH(op->pre, i, var, val){
+                if (vals.isPublic(var, val)){
+                    pub = true;
+                    break;
+                }
+            }
+        }
 
         if (!pub)
             planOperatorSetPrivate(op);
@@ -473,13 +484,14 @@ static void loadAgents(plan_problem_agents_t *p,
 {
     int i;
     plan_problem_agent_t *agent;
-    AgentVarVals var_vals(&p->prob, p->agent_size);
 
     p->agent_size = proto->agent_name_size();
     if (p->agent_size == 0){
         p->agent = NULL;
         return;
     }
+
+    AgentVarVals var_vals(&p->prob, p->agent_size);
 
     p->agent = BOR_ALLOC_ARR(plan_problem_agent_t, p->agent_size);
     for (i = 0; i < p->agent_size; ++i){

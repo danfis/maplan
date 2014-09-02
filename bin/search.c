@@ -7,6 +7,7 @@
 
 static char *def_fd_problem = NULL;
 static char *def_ma_problem = NULL;
+static char *def_mafd_problem = NULL;
 static char *def_seq_problem = NULL;
 static char *def_search = "ehc";
 static char *def_list = "splaytree";
@@ -44,7 +45,9 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("fd", 0x0, OPTS_STR, &def_fd_problem, NULL,
                 "Path to the FD's .sas problem definition.");
     optsAddDesc("ma", 0x0, OPTS_STR, &def_ma_problem, NULL,
-                "Path to definition of multi-agent problem.");
+                "Path to .proto definition of multi-agent problem.");
+    optsAddDesc("mafd", 0x0, OPTS_STR, &def_mafd_problem, NULL,
+                "Path to FD definition of multi-agent problem.");
     optsAddDesc("seq", 0x0, OPTS_STR, &def_seq_problem, NULL,
                 "Path to .proto definition of sequential problem.");
     optsAddDesc("search", 's', OPTS_STR, &def_search, NULL,
@@ -77,8 +80,9 @@ static int readOpts(int argc, char *argv[])
     if (help)
         return -1;
 
-    if (def_fd_problem == NULL && def_seq_problem == NULL && def_ma_problem == NULL){
-        fprintf(stderr, "Error: Problem must be defined (--fd or --seq or --ma).\n");
+    if (def_fd_problem == NULL && def_seq_problem == NULL
+            && def_ma_problem == NULL && def_mafd_problem == NULL){
+        fprintf(stderr, "Error: Problem must be defined (--fd or --seq or --ma or --mafd).\n");
         return -1;
     }
 
@@ -429,7 +433,10 @@ int main(int argc, char *argv[])
     }else if (def_seq_problem){
         prob = planProblemFromProto(def_seq_problem, PLAN_PROBLEM_USE_CG);
     }else if (def_ma_problem){
-        ma_prob = planProblemAgentsFromFD(def_ma_problem);
+        ma_prob = planProblemAgentsFromProto(def_ma_problem,
+                                             PLAN_PROBLEM_USE_CG);
+    }else if (def_mafd_problem){
+        ma_prob = planProblemAgentsFromFD(def_mafd_problem);
     }
 
     if (prob != NULL){

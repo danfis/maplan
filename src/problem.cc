@@ -292,6 +292,14 @@ class AgentVarVals {
     {
         return val[var][value].pre[agent_id];
     }
+
+    /**
+     * Returns true if the value is public.
+     */
+    bool isPublic(int var, int value) const
+    {
+        return val[var][value].pub;
+    }
 };
 
 static void agentSetVarValUsePrePartState(AgentVarVals &vals,
@@ -368,6 +376,30 @@ static void agentSetSendPeers(plan_problem_t *prob,
     }
 }
 
+static void agentSetPrivateOps(plan_operator_t *ops, int op_size,
+                               const AgentVarVals &vals)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+    plan_operator_t *op;
+
+    for (int opi = 0; opi < op_size; ++opi){
+        op = ops + opi;
+
+        bool pub = false;
+        PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
+            if (vals.isPublic(var, val)){
+                pub = true;
+                break;
+            }
+        }
+
+        if (!pub)
+            planOperatorSetPrivate(op);
+    }
+}
+
 static void loadAgents(plan_problem_agents_t *p,
                        const PlanProblem *proto,
                        int flags)
@@ -399,15 +431,16 @@ static void loadAgents(plan_problem_agents_t *p,
     // Determine which variable values are used by which agents' operators
     agentSetVarValUse(var_vals, p);
 
-    // Set up receiving peers of the operators
     for (i = 0; i < p->agent_size; ++i){
+        // Set up receiving peers of the operators
         agentSetSendPeers(&p->agent[i].prob, i, p->agent_size, var_vals);
+        // Distinct private and public operators
+        agentSetPrivateOps(p->agent[i].prob.op, p->agent[i].prob.op_size,
+                           var_vals);
     }
 
-    // TODO: Set op.send_peer
     // TODO: Create successor-generator
     // TODO: pruneUnimportantVars() for each agent?
-    // TODO: Set private ops.
     // TODO: Projected operators
 }
 

@@ -52,10 +52,10 @@ struct _plan_heur_relax_t {
 
     heur_fact_op_t data;
 
-    const plan_operator_t *base_op; /*!< Pointer to the input operators.
-                                         This value is used for computing
-                                         ID of the operator based on the
-                                         value of its pointer. */
+    const plan_op_t *base_op; /*!< Pointer to the input operators.
+                                   This value is used for computing
+                                   ID of the operator based on the
+                                   value of its pointer. */
     op_t *op;
     fact_t *fact;
     int *relaxed_plan;   /*!< Prepared array for relaxed plan */
@@ -95,12 +95,12 @@ static void markRelaxedPlan(plan_heur_relax_t *heur);
 
 struct _pref_ops_selector_t {
     plan_heur_res_t *pref_ops; /*!< In/Out data structure */
-    plan_operator_t *base_op;  /*!< Base pointer to the source
+    plan_op_t *base_op;  /*!< Base pointer to the source
                                     operator array. */
-    plan_operator_t **cur;     /*!< Cursor pointing to the next
+    plan_op_t **cur;     /*!< Cursor pointing to the next
                                     operator in .pref_ops->op[] */
-    plan_operator_t **end;     /*!< Points after .pref_ops->op[] */
-    plan_operator_t **ins;     /*!< Next insert position for
+    plan_op_t **end;     /*!< Points after .pref_ops->op[] */
+    plan_op_t **ins;     /*!< Next insert position for
                                     preferred operator. */
 };
 typedef struct _pref_ops_selector_t pref_ops_selector_t;
@@ -113,7 +113,7 @@ typedef struct _pref_ops_selector_t pref_ops_selector_t;
 /** Initializes preferred-operator-selector. */
 static void prefOpsSelectorInit(pref_ops_selector_t *selector,
                                 plan_heur_res_t *pref_ops,
-                                const plan_operator_t *base_op);
+                                const plan_op_t *base_op);
 /** Finalizes selecting of preferred operators */
 static void prefOpsSelectorFinalize(pref_ops_selector_t *sel);
 /** Mark the specified operator as preferred operator. This function must
@@ -153,7 +153,7 @@ static void maHeur(plan_heur_relax_t *heur,
                    plan_heur_res_t *res);
 /** Returns operator corresponding to its global ID or NULL if this node
  *  does not know this operator */
-static const plan_operator_t *maOpFromId(plan_heur_relax_t *heur, int op_id);
+static const plan_op_t *maOpFromId(plan_heur_relax_t *heur, int op_id);
 /** Performs local exploration from the initial state stored in .ma.state
  *  to the specified goal. */
 static void maExploreLocal(plan_heur_relax_t *heur,
@@ -181,7 +181,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *heur,
 static plan_heur_t *planHeurRelaxNew(int type,
                                      const plan_var_t *var, int var_size,
                                      const plan_part_state_t *goal,
-                                     const plan_operator_t *op, int op_size,
+                                     const plan_op_t *op, int op_size,
                                      const plan_succ_gen_t *succ_gen)
 {
     plan_heur_relax_t *heur;
@@ -224,7 +224,7 @@ static plan_heur_t *planHeurRelaxNew(int type,
 
 plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_operator_t *op, int op_size,
+                                 const plan_op_t *op, int op_size,
                                  const plan_succ_gen_t *succ_gen)
 {
     return planHeurRelaxNew(TYPE_ADD, var, var_size, goal,
@@ -233,7 +233,7 @@ plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
 
 plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_operator_t *op, int op_size,
+                                 const plan_op_t *op, int op_size,
                                  const plan_succ_gen_t *succ_gen)
 {
     return planHeurRelaxNew(TYPE_MAX, var, var_size, goal,
@@ -242,7 +242,7 @@ plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
 
 plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
                                 const plan_part_state_t *goal,
-                                const plan_operator_t *op, int op_size,
+                                const plan_op_t *op, int op_size,
                                 const plan_succ_gen_t *succ_gen)
 {
     return planHeurRelaxNew(TYPE_FF, var, var_size, goal,
@@ -559,22 +559,22 @@ static void markRelaxedPlan(plan_heur_relax_t *heur)
 
 static int sortPreferredOpsByPtrCmp(const void *a, const void *b)
 {
-    const plan_operator_t *op1 = *(const plan_operator_t **)a;
-    const plan_operator_t *op2 = *(const plan_operator_t **)b;
+    const plan_op_t *op1 = *(const plan_op_t **)a;
+    const plan_op_t *op2 = *(const plan_op_t **)b;
     return op1 - op2;
 }
 
 static void prefOpsSelectorInit(pref_ops_selector_t *selector,
                                 plan_heur_res_t *pref_ops,
-                                const plan_operator_t *base_op)
+                                const plan_op_t *base_op)
 {
     selector->pref_ops = pref_ops;
-    selector->base_op  = (plan_operator_t *)base_op;
+    selector->base_op  = (plan_op_t *)base_op;
 
     // Sort array of operators by their pointers.
     if (pref_ops->pref_op_size > 0){
         qsort(pref_ops->pref_op, pref_ops->pref_op_size,
-              sizeof(plan_operator_t *), sortPreferredOpsByPtrCmp);
+              sizeof(plan_op_t *), sortPreferredOpsByPtrCmp);
     }
 
     // Set up cursors
@@ -592,8 +592,8 @@ static void prefOpsSelectorFinalize(pref_ops_selector_t *sel)
 static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
                                            int op_id)
 {
-    plan_operator_t *op = sel->base_op + op_id;
-    plan_operator_t *op_swp;
+    plan_op_t *op = sel->base_op + op_id;
+    plan_op_t *op_swp;
 
     // Skip operators with lower ID
     for (; sel->cur < sel->end && *sel->cur < op; ++sel->cur);
@@ -724,10 +724,13 @@ static void maHeur(plan_heur_relax_t *heur,
     // TODO: preferred operators
 }
 
-static const plan_operator_t *maOpFromId(plan_heur_relax_t *heur, int op_id)
+static const plan_op_t *maOpFromId(plan_heur_relax_t *heur, int op_id)
 {
+    return NULL;
+    // TODO
+    /*
     int i;
-    const plan_operator_t *op = NULL;
+    const plan_op_t *op = NULL;
 
     for (i = 0; i < heur->data.actual_op_size; ++i){
         op = heur->base_op + i;
@@ -736,6 +739,7 @@ static const plan_operator_t *maOpFromId(plan_heur_relax_t *heur, int op_id)
     }
 
     return NULL;
+    */
 }
 
 static void maExploreLocal(plan_heur_relax_t *heur,
@@ -744,7 +748,7 @@ static void maExploreLocal(plan_heur_relax_t *heur,
                            plan_heur_res_t *res)
 {
     PLAN_STATE_STACK(state, heur->data.vid.var_size);
-    const plan_operator_t *op;
+    //const plan_op_t *op;
     int i;
 
     // Initialize initial state
@@ -763,11 +767,15 @@ static void maExploreLocal(plan_heur_relax_t *heur,
             continue;
 
         // Get the corresponding operator
-        op = heur->base_op + i;
+        // TODO
+        //op = heur->base_op + i;
 
         // Add the operator to the relaxed plan
-        maAddOpToRelaxedPlan(&heur->ma, op->global_id, op->cost);
+        // TODO
+        //maAddOpToRelaxedPlan(&heur->ma, op->global_id, op->cost);
 
+        // TODO
+        /*
         if (op->owner != comm->node_id){
             // The operator is owned by remote peer.
             // Add it to the set of operators we are waiting for from
@@ -779,6 +787,7 @@ static void maExploreLocal(plan_heur_relax_t *heur,
             }
 
         }
+        */
     }
 }
 
@@ -786,7 +795,7 @@ static void maUpdateLocalOp(plan_heur_relax_t *heur,
                             plan_ma_comm_queue_t *comm,
                             int op_id)
 {
-    const plan_operator_t *op;
+    const plan_op_t *op;
     plan_heur_res_t res;
 
     op = maOpFromId(heur, op_id);
@@ -893,7 +902,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
     PLAN_STATE_STACK(state, heur->data.vid.var_size);
     plan_heur_res_t res;
     plan_ma_msg_t *response;
-    const plan_operator_t *op;
+    const plan_op_t *op;
     int i, op_id, agent_id;
 
     op_id = planMAMsgHeurRequestOpId(msg);
@@ -928,6 +937,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
         if (!heur->relaxed_plan[i])
             continue;
 
+        /* TODO
         op = heur->base_op + i;
         if (op->owner == comm->node_id){
             // Operator belongs to this agent
@@ -938,6 +948,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
             planMAMsgHeurResponseAddPeerOp(response, op->global_id,
                                            op->owner);
         }
+        */
     }
     planMACommQueueSendToNode(comm, agent_id, response);
 

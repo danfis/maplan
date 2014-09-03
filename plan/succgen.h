@@ -1,7 +1,7 @@
 #ifndef __PLAN_SUCCGEN_H__
 #define __PLAN_SUCCGEN_H__
 
-#include <plan/operator.h>
+#include <plan/op.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,7 +25,7 @@ typedef struct _plan_succ_gen_t plan_succ_gen_t;
  * variables is used (and only variables stated there are used). The given
  * array must end with PLAN_VAR_ID_UNDEFINED.
  */
-plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize,
+plan_succ_gen_t *planSuccGenNew(const plan_op_t *op, int opsize,
                                 const plan_var_id_t *var_order);
 
 /**
@@ -33,7 +33,7 @@ plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize,
  */
 plan_succ_gen_t *planSuccGenFromFD(FILE *fin,
                                    const plan_var_t *vars,
-                                   plan_operator_t *op);
+                                   plan_op_t *op);
 
 /**
  * Deletes successor generator.
@@ -52,14 +52,14 @@ _bor_inline int planSuccGenNumOperators(const plan_succ_gen_t *sg);
  */
 int planSuccGenFind(const plan_succ_gen_t *sg,
                     const plan_state_t *state,
-                    plan_operator_t **op, int op_size);
+                    plan_op_t **op, int op_size);
 
 /**
  * Same as planSuccGenFind() but uses partial state instead of full state.
  */
 int planSuccGenFindPart(const plan_succ_gen_t *sg,
                         const plan_part_state_t *part_state,
-                        plan_operator_t **op, int op_size);
+                        plan_op_t **op, int op_size);
 
 
 /**** INLINES ****/

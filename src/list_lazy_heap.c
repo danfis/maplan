@@ -11,7 +11,7 @@ typedef struct _plan_list_lazy_heap_t plan_list_lazy_heap_t;
 struct _heap_node_t {
     plan_cost_t cost;
     plan_state_id_t parent_state_id;
-    plan_operator_t *op;
+    plan_op_t *op;
     bor_pairheap_node_t heap; /*!< Connector to an open list */
 };
 typedef struct _heap_node_t heap_node_t;
@@ -26,10 +26,10 @@ static void planListLazyHeapDel(plan_list_lazy_t *);
 static void planListLazyHeapPush(plan_list_lazy_t *,
                                  plan_cost_t cost,
                                  plan_state_id_t parent_state_id,
-                                 plan_operator_t *op);
+                                 plan_op_t *op);
 static int planListLazyHeapPop(plan_list_lazy_t *,
                                plan_state_id_t *parent_state_id,
-                               plan_operator_t **op);
+                               plan_op_t **op);
 static void planListLazyHeapClear(plan_list_lazy_t *);
 
 
@@ -59,7 +59,7 @@ static void planListLazyHeapDel(plan_list_lazy_t *_l)
 static void planListLazyHeapPush(plan_list_lazy_t *_l,
                                  plan_cost_t cost,
                                  plan_state_id_t parent_state_id,
-                                 plan_operator_t *op)
+                                 plan_op_t *op)
 {
     plan_list_lazy_heap_t *l = LIST_FROM_PARENT(_l);
     heap_node_t *n;
@@ -73,7 +73,7 @@ static void planListLazyHeapPush(plan_list_lazy_t *_l,
 
 static int planListLazyHeapPop(plan_list_lazy_t *_l,
                                plan_state_id_t *parent_state_id,
-                               plan_operator_t **op)
+                               plan_op_t **op)
 {
     plan_list_lazy_heap_t *l = LIST_FROM_PARENT(_l);
     bor_pairheap_node_t *heap_node;

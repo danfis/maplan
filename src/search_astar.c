@@ -65,7 +65,7 @@ static int astarInsertState(plan_search_astar_t *search,
                             plan_state_id_t state_id,
                             plan_state_space_node_t *node,
                             plan_state_id_t parent_state_id,
-                            plan_operator_t *op,
+                            plan_op_t *op,
                             plan_cost_t g_cost,
                             plan_cost_t parent_h)
 {
@@ -134,7 +134,7 @@ static int planSearchAStarStep(plan_search_t *_search)
     plan_state_id_t cur_state, next_state;
     plan_state_space_node_t *cur_node, *next_node;
     int i, op_size, res;
-    plan_operator_t **op;
+    plan_op_t **op;
 
     // Get next state from open list
     if (planListPop(search->list, &cur_state, cost) != 0)
@@ -163,7 +163,7 @@ static int planSearchAStarStep(plan_search_t *_search)
     op_size = search->search.applicable_ops.op_found;
     for (i = 0; i < op_size; ++i){
         // Create a new state
-        next_state = planOperatorApply(op[i], cur_state);
+        next_state = planOpApply(op[i], cur_state);
         // Compute its g() value
         g_cost = cur_node->cost + op[i]->cost;
 

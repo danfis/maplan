@@ -216,7 +216,7 @@ static int fdGoal(plan_problem_t *plan, FILE *fin)
     return 0;
 }
 
-static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
+static int fdOperator(plan_op_t *op, FILE *fin, int use_metric)
 {
     char *name;
     size_t name_size;
@@ -244,7 +244,7 @@ static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
     for (i = 0; i < len; ++i){
         if (fscanf(fin, "%d %d", &var, &pre) != 2)
             return -1;
-        planOperatorSetPrecondition(op, var, pre);
+        planOpSetPre(op, var, pre);
     }
 
     // pre-post
@@ -254,11 +254,11 @@ static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
         if (fscanf(fin, "%d", &cond) != 1)
             return -1;
         if (cond > 0){
-            cond_eff_id = planOperatorAddCondEff(op);
+            cond_eff_id = planOpAddCondEff(op);
             for (ci = 0; ci < cond; ++ci){
                 if (fscanf(fin, "%d %d", &var, &pre) != 2)
                     return -1;
-                planOperatorCondEffSetPre(op, cond_eff_id, var, pre);
+                planOpCondEffSetPre(op, cond_eff_id, var, pre);
             }
         }
 
@@ -266,16 +266,16 @@ static int fdOperator(plan_operator_t *op, FILE *fin, int use_metric)
             return -1;
 
         if (pre != -1)
-            planOperatorSetPrecondition(op, var, pre);
+            planOpSetPre(op, var, pre);
 
         if (cond == 0){
-            planOperatorSetEffect(op, var, post);
+            planOpSetEff(op, var, post);
         }else{
-            planOperatorCondEffSetEff(op, cond_eff_id, var, post);
+            planOpCondEffSetEff(op, cond_eff_id, var, post);
         }
     }
 
-    planOperatorCondEffSimplify(op);
+    planOpCondEffSimplify(op);
 
     if (fscanf(fin, "%d", &cost) != 1)
         return -1;
@@ -295,9 +295,9 @@ static int fdOperators(plan_problem_t *plan, FILE *fin, int use_metric)
         return -1;
 
     plan->op_size = num_ops;
-    plan->op = BOR_ALLOC_ARR(plan_operator_t, plan->op_size);
+    plan->op = BOR_ALLOC_ARR(plan_op_t, plan->op_size);
     for (i = 0; i < plan->op_size; ++i){
-        planOperatorInit(plan->op + i, plan->state_pool);
+        planOpInit(plan->op + i, plan->state_pool);
     }
 
     for (i = 0; i < num_ops; ++i){
@@ -412,7 +412,7 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
 }
 
 static int agentLoadPrivateOperators(plan_problem_t *prob,
-                                     const plan_operator_t *src_op,
+                                     const plan_op_t *src_op,
                                      FILE *fin)
 {
     int i, op_size, op_id, ins_from;
@@ -425,16 +425,17 @@ static int agentLoadPrivateOperators(plan_problem_t *prob,
     if (fscanf(fin, "%d", &op_size) != 1)
         return -1;
     prob->op_size += op_size;
-    prob->op = BOR_REALLOC_ARR(prob->op, plan_operator_t, prob->op_size);
+    prob->op = BOR_REALLOC_ARR(prob->op, plan_op_t, prob->op_size);
 
     for (i = 0; i < op_size; ++i){
         if (fscanf(fin, "%d", &op_id) != 1)
             return -1;
 
-        planOperatorInit(prob->op + ins_from, prob->state_pool);
-        planOperatorCopy(prob->op + ins_from, src_op + op_id);
-        planOperatorSetPrivate(prob->op + ins_from);
-        planOperatorSetGlobalId(prob->op + ins_from, op_id);
+        planOpInit(prob->op + ins_from, prob->state_pool);
+        planOpCopy(prob->op + ins_from, src_op + op_id);
+        // TODO
+        //planOpSetPrivate(prob->op + ins_from);
+        //planOpSetGlobalId(prob->op + ins_from, op_id);
         ++ins_from;
     }
 
@@ -446,7 +447,7 @@ static int agentLoadPrivateOperators(plan_problem_t *prob,
 
 static int agentLoadPublicOperators(int agent_id,
                                     plan_problem_t *prob,
-                                    const plan_operator_t *src_op,
+                                    const plan_op_t *src_op,
                                     FILE *fin)
 {
     int i, op_size, op_id, ins_from;
@@ -460,23 +461,25 @@ static int agentLoadPublicOperators(int agent_id,
     if (fscanf(fin, "%d", &op_size) != 1)
         return -1;
     prob->op_size += op_size;
-    prob->op = BOR_REALLOC_ARR(prob->op, plan_operator_t, prob->op_size);
+    prob->op = BOR_REALLOC_ARR(prob->op, plan_op_t, prob->op_size);
 
     for (i = 0; i < op_size; ++i){
         if (fscanf(fin, "%d", &op_id) != 1)
             return -1;
 
-        planOperatorInit(prob->op + ins_from, prob->state_pool);
-        planOperatorCopy(prob->op + ins_from, src_op + op_id);
-        planOperatorSetGlobalId(prob->op + ins_from, op_id);
+        planOpInit(prob->op + ins_from, prob->state_pool);
+        planOpCopy(prob->op + ins_from, src_op + op_id);
+        // TODO
+        //planOpSetGlobalId(prob->op + ins_from, op_id);
 
         if (fscanf(fin, "%d", &peer_size) != 1)
             return -1;
         for (p = 0; p < peer_size; ++p){
             if (fscanf(fin, "%d", &peer) != 1)
                 return -1;
-            if (peer != agent_id)
-                planOperatorAddSendPeer(prob->op + ins_from, peer);
+            // TODO
+            //if (peer != agent_id)
+            //    planOpAddSendPeer(prob->op + ins_from, peer);
         }
 
         ++ins_from;
@@ -527,16 +530,17 @@ static int fdAgents(const plan_problem_t *prob, FILE *fin,
 
         if (fscanf(fin, "%d", &agent->proj_op_size) != 1)
             return -1;
-        agent->proj_op = BOR_ALLOC_ARR(plan_operator_t, agent->proj_op_size);
+        agent->proj_op = BOR_ALLOC_ARR(plan_op_t, agent->proj_op_size);
 
         for (opi = 0; opi < agent->proj_op_size; ++opi){
-            planOperatorInit(agent->proj_op + opi, agent->state_pool);
+            planOpInit(agent->proj_op + opi, agent->state_pool);
             fdOperator(agent->proj_op + opi, fin, use_metric);
 
             if (fscanf(fin, "%d %d", &global_id, &owner) != 2)
                 return -1;
-            planOperatorSetGlobalId(agent->proj_op + opi, global_id);
-            planOperatorSetOwner(agent->proj_op + opi, owner);
+            // TODO
+            //planOpSetGlobalId(agent->proj_op + opi, global_id);
+            //planOpSetOwner(agent->proj_op + opi, owner);
         }
 
         if (fdAssert(fin, "end_agent_projected_operators") != 0)

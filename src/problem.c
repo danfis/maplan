@@ -16,12 +16,12 @@ void planProblemDel(plan_problem_t *plan)
     BOR_FREE(plan);
 }
 
-static void freeOps(plan_operator_t *ops, int ops_size)
+static void freeOps(plan_op_t *ops, int ops_size)
 {
     int i;
 
     for (i = 0; i < ops_size; ++i){
-        planOperatorFree(ops + i);
+        planOpFree(ops + i);
     }
     BOR_FREE(ops);
 }

@@ -20,7 +20,7 @@ DEBUG = yes
 
 SO_VERSION = 0
 
-CFLAGS += -I. -I../boruvka/
+CFLAGS += -I. -I../boruvka/ -Werror
 CXXFLAGS += -I. -I../boruvka/
 CXXFLAGS += $(PROTOBUF_CFLAGS)
 CXXFLAGS += -Wno-long-long
@@ -33,7 +33,6 @@ OBJS  = problem
 OBJS += problem-fd
 OBJS += var
 OBJS += state
-OBJS += operator
 OBJS += op
 OBJS += dataarr
 OBJS += succgen

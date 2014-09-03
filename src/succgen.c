@@ -13,7 +13,7 @@ void qsort_r(void *base, size_t nmemb, size_t size,
  */
 struct _plan_succ_gen_tree_t {
     plan_var_id_t var;                  /*!< Decision variable */
-    plan_operator_t **ops;              /*!< List of immediate operators
+    plan_op_t **ops;                    /*!< List of immediate operators
                                              that are returned once this
                                              node is reached */
     int ops_size;
@@ -33,13 +33,13 @@ struct _var_order_t {
 typedef struct _var_order_t var_order_t;
 
 /** Creates a new tree node (and recursively all subtrees) */
-static plan_succ_gen_tree_t *treeNew(plan_operator_t **ops, int len,
+static plan_succ_gen_tree_t *treeNew(plan_op_t **ops, int len,
                                      const plan_var_id_t *var);
 
 /** Creates a new tree from the FD definition */
 static plan_succ_gen_tree_t *treeFromFD(FILE *fin,
                                         const plan_var_t *vars,
-                                        plan_operator_t *ops,
+                                        plan_op_t *ops,
                                         int *num_ops);
 
 /** Recursively deletes a tree */
@@ -48,21 +48,21 @@ static void treeDel(plan_succ_gen_tree_t *tree);
 /** Finds applicable operators to the given state */
 static int treeFind(const plan_succ_gen_tree_t *tree,
                     plan_val_t *vals,
-                    plan_operator_t **op, int op_size);
+                    plan_op_t **op, int op_size);
 
 /** Set immediate operators to tree node */
 static void treeBuildSetOps(plan_succ_gen_tree_t *tree,
-                            plan_operator_t **ops, int len);
+                            plan_op_t **ops, int len);
 /** Build default subtree */
 static int treeBuildDef(plan_succ_gen_tree_t *tree,
-                        plan_operator_t **ops, int len,
+                        plan_op_t **ops, int len,
                         const plan_var_id_t *var);
 /** Prepare array of .val[] subtrees */
 static void treeBuildPrepareVal(plan_succ_gen_tree_t *tree,
                                 plan_val_t val);
 /** Build val subtree */
 static int treeBuildVal(plan_succ_gen_tree_t *tree,
-                        plan_operator_t **ops, int len,
+                        plan_op_t **ops, int len,
                         const plan_var_id_t *var);
 
 /** Comparator for qsort which sorts operators by its variables and its
@@ -72,11 +72,11 @@ static int opsSortCmp(const void *a, const void *b, void *data);
 
 
 
-plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize,
+plan_succ_gen_t *planSuccGenNew(const plan_op_t *op, int opsize,
                                 const plan_var_id_t *var_order)
 {
     plan_succ_gen_t *sg;
-    plan_operator_t **sorted_ops = NULL;
+    plan_op_t **sorted_ops = NULL;
     plan_var_id_t *_var_order;
     int i;
 
@@ -91,12 +91,12 @@ plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize,
         }
 
         // prepare array for sorting operators
-        sorted_ops = BOR_ALLOC_ARR(plan_operator_t *, opsize);
+        sorted_ops = BOR_ALLOC_ARR(plan_op_t *, opsize);
         for (i = 0; i < opsize; ++i)
-            sorted_ops[i] = (plan_operator_t *)(op + i);
+            sorted_ops[i] = (plan_op_t *)(op + i);
 
         // Sort operators by values of preconditions.
-        qsort_r(sorted_ops, opsize, sizeof(plan_operator_t *),
+        qsort_r(sorted_ops, opsize, sizeof(plan_op_t *),
                 opsSortCmp, (void *)var_order);
     }
 
@@ -111,7 +111,7 @@ plan_succ_gen_t *planSuccGenNew(const plan_operator_t *op, int opsize,
 
 plan_succ_gen_t *planSuccGenFromFD(FILE *fin,
                                    const plan_var_t *vars,
-                                   plan_operator_t *op)
+                                   plan_op_t *op)
 {
     plan_succ_gen_t *sg;
     sg = BOR_ALLOC(plan_succ_gen_t);
@@ -130,7 +130,7 @@ void planSuccGenDel(plan_succ_gen_t *sg)
 
 int planSuccGenFind(const plan_succ_gen_t *sg,
                     const plan_state_t *state,
-                    plan_operator_t **op, int op_size)
+                    plan_op_t **op, int op_size)
 {
     // Use variable-length array to speed it up.
     plan_val_t vals[state->num_vars];
@@ -140,7 +140,7 @@ int planSuccGenFind(const plan_succ_gen_t *sg,
 
 int planSuccGenFindPart(const plan_succ_gen_t *sg,
                         const plan_part_state_t *part_state,
-                        plan_operator_t **op, int op_size)
+                        plan_op_t **op, int op_size)
 {
     plan_val_t vals[part_state->num_vars];
     memcpy(vals, part_state->val, sizeof(plan_val_t) * part_state->num_vars);
@@ -154,8 +154,8 @@ int planSuccGenFindPart(const plan_succ_gen_t *sg,
 
 static int opsSortCmp(const void *a, const void *b, void *_var_order)
 {
-    const plan_operator_t *opa = *(const plan_operator_t **)a;
-    const plan_operator_t *opb = *(const plan_operator_t **)b;
+    const plan_op_t *opa = *(const plan_op_t **)a;
+    const plan_op_t *opb = *(const plan_op_t **)b;
     const plan_var_id_t *var = _var_order;
     int aset, bset;
     plan_val_t aval, bval;
@@ -187,7 +187,7 @@ static int opsSortCmp(const void *a, const void *b, void *_var_order)
 }
 
 static void treeBuildSetOps(plan_succ_gen_tree_t *tree,
-                            plan_operator_t **ops, int len)
+                            plan_op_t **ops, int len)
 {
     int i;
 
@@ -195,14 +195,14 @@ static void treeBuildSetOps(plan_succ_gen_tree_t *tree,
         BOR_FREE(tree->ops);
 
     tree->ops_size = len;
-    tree->ops = BOR_ALLOC_ARR(plan_operator_t *, tree->ops_size);
+    tree->ops = BOR_ALLOC_ARR(plan_op_t *, tree->ops_size);
 
     for (i = 0; i < len; ++i)
         tree->ops[i] = ops[i];
 }
 
 static int treeBuildDef(plan_succ_gen_tree_t *tree,
-                        plan_operator_t **ops, int len,
+                        plan_op_t **ops, int len,
                         const plan_var_id_t *var)
 {
     int size;
@@ -230,7 +230,7 @@ static void treeBuildPrepareVal(plan_succ_gen_tree_t *tree,
 }
 
 static int treeBuildVal(plan_succ_gen_tree_t *tree,
-                        plan_operator_t **ops, int len,
+                        plan_op_t **ops, int len,
                         const plan_var_id_t *var)
 {
     int size;
@@ -248,7 +248,7 @@ static int treeBuildVal(plan_succ_gen_tree_t *tree,
     return size;
 }
 
-static plan_succ_gen_tree_t *treeNew(plan_operator_t **ops, int len,
+static plan_succ_gen_tree_t *treeNew(plan_op_t **ops, int len,
                                      const plan_var_id_t *var)
 {
     plan_succ_gen_tree_t *tree;
@@ -304,7 +304,7 @@ static plan_succ_gen_tree_t *treeNew(plan_operator_t **ops, int len,
 }
 
 static void treeFromFDOps(plan_succ_gen_tree_t *tree, FILE *fin,
-                          plan_operator_t *ops, int *num_ops_out)
+                          plan_op_t *ops, int *num_ops_out)
 {
     int i, num_ops, op_idx;
 
@@ -318,7 +318,7 @@ static void treeFromFDOps(plan_succ_gen_tree_t *tree, FILE *fin,
 
     *num_ops_out += num_ops;
     tree->ops_size = num_ops;
-    tree->ops = BOR_ALLOC_ARR(plan_operator_t *, tree->ops_size);
+    tree->ops = BOR_ALLOC_ARR(plan_op_t *, tree->ops_size);
     for (i = 0; i < num_ops; ++i){
         if (fscanf(fin, "%d", &op_idx) != 1){
             fprintf(stderr, "Error: Invalid successor generator definition.\n");
@@ -330,7 +330,7 @@ static void treeFromFDOps(plan_succ_gen_tree_t *tree, FILE *fin,
 
 static plan_succ_gen_tree_t *treeFromFD(FILE *fin,
                                         const plan_var_t *vars,
-                                        plan_operator_t *ops,
+                                        plan_op_t *ops,
                                         int *num_ops_out)
 {
     plan_succ_gen_tree_t *tree;
@@ -413,7 +413,7 @@ static void treeDel(plan_succ_gen_tree_t *tree)
 
 static int treeFind(const plan_succ_gen_tree_t *tree,
                     plan_val_t *vals,
-                    plan_operator_t **op, int op_size)
+                    plan_op_t **op, int op_size)
 {
     int i, found = 0, size;
     plan_val_t val;

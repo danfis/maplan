@@ -2,7 +2,7 @@
 #define __PLAN_LIST_H__
 
 #include <plan/state.h>
-#include <plan/operator.h>
+#include <plan/op.h>
 
 #ifdef __cplusplus
 extern "C" {

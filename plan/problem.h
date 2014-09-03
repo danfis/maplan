@@ -32,20 +32,10 @@ struct _plan_problem_t {
 };
 typedef struct _plan_problem_t plan_problem_t;
 
-struct _plan_problem_agent_t {
-    int id;                        /*!< ID of the agent */
-    char *name;                    /*!< Name of the agent */
-    plan_operator_t *projected_op; /*!< Array of projected operators */
-    int projected_op_size;         /*!< Number of projected operators */
-
-    plan_problem_t prob;           /*!< The rest of the problem definition */
-};
-typedef struct _plan_problem_agent_t plan_problem_agent_t;
-
 struct _plan_problem_agents_t {
-    plan_problem_t prob;
-    plan_problem_agent_t *agent;
-    int agent_size;
+    plan_problem_t glob;   /*!< Global definition w/o agents */
+    plan_problem_t *agent; /*!< Definition for each agent */
+    int agent_size;        /*!< Number of agents */
 };
 typedef struct _plan_problem_agents_t plan_problem_agents_t;
 

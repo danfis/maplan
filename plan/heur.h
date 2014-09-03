@@ -142,7 +142,7 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
 /**
  * Creates an multi-agent version of FF heuristic.
  */
-plan_heur_t *planHeurMARelaxFFNew(const plan_problem_agent_t *prob);
+plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *agent_def);
 
 /**
  * Deletes heuristics object.

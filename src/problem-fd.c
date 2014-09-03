@@ -489,55 +489,54 @@ static int agentLoadPublicOperators(int agent_id,
 }
 
 static int fdAgents(const plan_problem_t *prob, FILE *fin,
-                    plan_problem_agent_t **agents_out, int *num_agents_out,
+                    plan_problem_t **agents_out, int *num_agents_out,
                     int use_metric)
 {
-    plan_problem_agent_t *agents;
-    plan_problem_agent_t *agent;
-    int i, opi, num_agents, owner, global_id;
+    plan_problem_t *agents;
+    plan_problem_t *agent;
+    int i, opi, num_agents, owner, global_id, agent_id;
     char name[1024];
 
     if (fscanf(fin, "%d", &num_agents) != 1)
         return 0;
 
-    agents = BOR_ALLOC_ARR(plan_problem_agent_t, num_agents);
+    agents = BOR_ALLOC_ARR(plan_problem_t, num_agents);
 
-    for (i = 0; i < num_agents; ++i){
+    for (agent_id = 0; agent_id < num_agents; ++agent_id){
         if (fdAssert(fin, "begin_agent") != 0)
             return -1;
 
 
-        agent = agents + i;
-        agentInitProblem(&agent->prob, prob);
+        agent = agents + agent_id;
+        agentInitProblem(agent, prob);
 
-        if (fscanf(fin, "%s %d", name, &agents[i].id) != 2)
+        if (fscanf(fin, "%s %d", name, &i) != 2 || i != agent_id)
             return -1;
-        agents[i].name = strdup(name);
+        agent->agent_name = strdup(name);
 
-        if (agentLoadPrivateOperators(&agent->prob, prob->op, fin) != 0)
+        if (agentLoadPrivateOperators(agent, prob->op, fin) != 0)
             return -1;
-        if (agentLoadPublicOperators(agent->id, &agent->prob, prob->op, fin) != 0)
+        if (agentLoadPublicOperators(agent_id, agent, prob->op, fin) != 0)
             return -1;
 
-        agent->prob.succ_gen = planSuccGenNew(agent->prob.op,
-                                              agent->prob.op_size, NULL);
+        agent->succ_gen = planSuccGenNew(agent->op, agent->op_size, NULL);
 
 
         if (fdAssert(fin, "begin_agent_projected_operators") != 0)
             return -1;
 
-        if (fscanf(fin, "%d", &agent->projected_op_size) != 1)
+        if (fscanf(fin, "%d", &agent->proj_op_size) != 1)
             return -1;
-        agent->projected_op = BOR_ALLOC_ARR(plan_operator_t,
-                                            agent->projected_op_size);
-        for (opi = 0; opi < agent->projected_op_size; ++opi){
-            planOperatorInit(agent->projected_op + opi, agent->prob.state_pool);
-            fdOperator(agent->projected_op + opi, fin, use_metric);
+        agent->proj_op = BOR_ALLOC_ARR(plan_operator_t, agent->proj_op_size);
+
+        for (opi = 0; opi < agent->proj_op_size; ++opi){
+            planOperatorInit(agent->proj_op + opi, agent->state_pool);
+            fdOperator(agent->proj_op + opi, fin, use_metric);
 
             if (fscanf(fin, "%d %d", &global_id, &owner) != 2)
                 return -1;
-            planOperatorSetGlobalId(agent->projected_op + opi, global_id);
-            planOperatorSetOwner(agent->projected_op + opi, owner);
+            planOperatorSetGlobalId(agent->proj_op + opi, global_id);
+            planOperatorSetOwner(agent->proj_op + opi, owner);
         }
 
         if (fdAssert(fin, "end_agent_projected_operators") != 0)
@@ -616,23 +615,23 @@ static int loadAgentFD(plan_problem_agents_t *aprob,
         return -1;
     }
 
-    planProblemInit(&aprob->prob);
+    planProblemInit(&aprob->glob);
 
-    if (loadFDBase(&aprob->prob, fin, &use_metric) != 0)
+    if (loadFDBase(&aprob->glob, fin, &use_metric) != 0)
         return -1;
 
-    if (fdDomainTransitionGraph(&aprob->prob, fin) != 0)
+    if (fdDomainTransitionGraph(&aprob->glob, fin) != 0)
         return -1;
-    if (fdCausalGraph(&aprob->prob, fin) != 0)
+    if (fdCausalGraph(&aprob->glob, fin) != 0)
         return -1;
-    if (fdAgents(&aprob->prob, fin, &aprob->agent, &aprob->agent_size,
+    if (fdAgents(&aprob->glob, fin, &aprob->agent, &aprob->agent_size,
                  use_metric) != 0)
         return -1;
 
     fclose(fin);
 
     if (aprob->agent_size == 0){
-        planProblemFree(&aprob->prob);
+        planProblemFree(&aprob->glob);
         return -1;
     }
 

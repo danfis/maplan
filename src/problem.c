@@ -60,31 +60,15 @@ void planProblemFree(plan_problem_t *plan)
 }
 
 
-static void agentFree(plan_problem_agent_t *ag)
-{
-    int i;
-
-    planProblemFree(&ag->prob);
-    if (ag->name)
-        BOR_FREE(ag->name);
-
-    if (ag->projected_op){
-        for (i = 0; i < ag->projected_op_size; ++i){
-            planOperatorFree(ag->projected_op + i);
-        }
-        BOR_FREE(ag->projected_op);
-    }
-}
-
 void planProblemAgentsDel(plan_problem_agents_t *agents)
 {
     int i;
 
-    planProblemFree(&agents->prob);
+    planProblemFree(&agents->glob);
 
-    for (i = 0; i < agents->agent_size; ++i){
-        agentFree(agents->agent + i);
-    }
+    for (i = 0; i < agents->agent_size; ++i)
+        planProblemFree(agents->agent + i);
+
     if (agents->agent)
         BOR_FREE(agents->agent);
     BOR_FREE(agents);

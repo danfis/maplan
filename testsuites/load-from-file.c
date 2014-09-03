@@ -200,7 +200,7 @@ TEST(testLoadFromFD2)
 TEST(testLoadAgentFromFD)
 {
     plan_problem_agents_t *agents;
-    plan_problem_agent_t *agent;
+    plan_problem_t *agent;
     plan_problem_t *p;
     plan_state_t *initial_state;
     int i, api;
@@ -213,7 +213,7 @@ TEST(testLoadAgentFromFD)
         return;
 
     for (api = 0; api < agents->agent_size; ++api){
-        p = &agents->agent[api].prob;
+        p = agents->agent + api;
 
         assertEquals(p->var_size, 13);
         assertEquals(p->var[0].range, 4);
@@ -281,35 +281,33 @@ TEST(testLoadAgentFromFD)
     assertEquals(agents->agent_size, 2);
 
     agent = agents->agent + 0;
-    assertEquals(strcmp(agent->name, "rover0"), 0);
-    assertEquals(agent->id, 0);
+    assertEquals(strcmp(agent->agent_name, "rover0"), 0);
 
     for (i = 0; i < 5; ++i){
-        assertTrue(planOperatorIsPrivate(agent->prob.op + i));
+        assertTrue(planOperatorIsPrivate(agent->op + i));
     }
-    for (i = 5; i < agent->prob.op_size; ++i){
-        assertFalse(planOperatorIsPrivate(agent->prob.op + i));
+    for (i = 5; i < agent->op_size; ++i){
+        assertFalse(planOperatorIsPrivate(agent->op + i));
     }
 
     agent = agents->agent + 1;
-    assertEquals(strcmp(agent->name, "rover1"), 0);
-    assertEquals(agent->id, 1);
-    assertTrue(planOperatorIsPrivate(agent->prob.op + 0));
+    assertEquals(strcmp(agent->agent_name, "rover1"), 0);
+    assertTrue(planOperatorIsPrivate(agent->op + 0));
 
     for (i = 0; i < 23; ++i){
-        assertTrue(planOperatorIsPrivate(agent->prob.op + i));
+        assertTrue(planOperatorIsPrivate(agent->op + i));
     }
-    for (i = 23; i < agent->prob.op_size; ++i){
-        assertFalse(planOperatorIsPrivate(agent->prob.op + i));
+    for (i = 23; i < agent->op_size; ++i){
+        assertFalse(planOperatorIsPrivate(agent->op + i));
     }
 
     for (i = 0; i < 13; ++i)
-        assertEquals(agent->projected_op[i].global_id, i);
-    assertEquals(agent->projected_op[13].global_id, 14);
+        assertEquals(agent->proj_op[i].global_id, i);
+    assertEquals(agent->proj_op[13].global_id, 14);
     for (i = 14; i < 20; ++i)
-        assertEquals(agent->projected_op[i].global_id, i + 5);
+        assertEquals(agent->proj_op[i].global_id, i + 5);
     for (i = 20; i < 36; ++i)
-        assertEquals(agent->projected_op[i].global_id, i + 7);
+        assertEquals(agent->proj_op[i].global_id, i + 7);
 
     planProblemAgentsDel(agents);
 }
@@ -317,7 +315,7 @@ TEST(testLoadAgentFromFD)
 TEST(testLoadAgentFromProto)
 {
     plan_problem_agents_t *agents;
-    plan_problem_agent_t *agent;
+    plan_problem_t *agent;
     plan_problem_t *p;
     plan_state_t *initial_state;
     int i, api;
@@ -329,7 +327,7 @@ TEST(testLoadAgentFromProto)
         return;
 
     for (api = 0; api < agents->agent_size; ++api){
-        p = &agents->agent[api].prob;
+        p = agents->agent + api;
 
         assertEquals(p->var_size, 13);
         assertEquals(p->var[0].range, 3);
@@ -397,42 +395,40 @@ TEST(testLoadAgentFromProto)
     assertEquals(agents->agent_size, 2);
 
     agent = agents->agent + 0;
-    assertEquals(strcmp(agent->name, "rover0"), 0);
-    assertEquals(agent->id, 0);
+    assertEquals(strcmp(agent->agent_name, "rover0"), 0);
 
-    assertTrue(!planOperatorIsPrivate(agent->prob.op + 0));
-    assertTrue(!planOperatorIsPrivate(agent->prob.op + 1));
-    assertTrue(planOperatorIsPrivate(agent->prob.op + 2));
-    assertTrue(planOperatorIsPrivate(agent->prob.op + 3));
-    assertTrue(planOperatorIsPrivate(agent->prob.op + 4));
-    assertTrue(planOperatorIsPrivate(agent->prob.op + 5));
-    assertTrue(planOperatorIsPrivate(agent->prob.op + 6));
-    assertTrue(!planOperatorIsPrivate(agent->prob.op + 7));
-    assertTrue(!planOperatorIsPrivate(agent->prob.op + 8));
+    assertTrue(!planOperatorIsPrivate(agent->op + 0));
+    assertTrue(!planOperatorIsPrivate(agent->op + 1));
+    assertTrue(planOperatorIsPrivate(agent->op + 2));
+    assertTrue(planOperatorIsPrivate(agent->op + 3));
+    assertTrue(planOperatorIsPrivate(agent->op + 4));
+    assertTrue(planOperatorIsPrivate(agent->op + 5));
+    assertTrue(planOperatorIsPrivate(agent->op + 6));
+    assertTrue(!planOperatorIsPrivate(agent->op + 7));
+    assertTrue(!planOperatorIsPrivate(agent->op + 8));
 
     agent = agents->agent + 1;
-    assertEquals(strcmp(agent->name, "rover1"), 0);
-    assertEquals(agent->id, 1);
-    assertTrue(planOperatorIsPrivate(agent->prob.op + 0));
+    assertEquals(strcmp(agent->agent_name, "rover1"), 0);
 
-    assertTrue(planOperatorIsPrivate(agent->prob.op + 0));
-    assertTrue(planOperatorIsPrivate(agent->prob.op + 1));
+    assertTrue(planOperatorIsPrivate(agent->op + 0));
+    assertTrue(planOperatorIsPrivate(agent->op + 0));
+    assertTrue(planOperatorIsPrivate(agent->op + 1));
     for (i = 2; i <= 10; ++i)
-        assertTrue(!planOperatorIsPrivate(agent->prob.op + i));
+        assertTrue(!planOperatorIsPrivate(agent->op + i));
     for (i = 11; i <= 17; ++i)
-        assertTrue(planOperatorIsPrivate(agent->prob.op + i));
-    assertTrue(!planOperatorIsPrivate(agent->prob.op + 18));
-    assertTrue(!planOperatorIsPrivate(agent->prob.op + 19));
+        assertTrue(planOperatorIsPrivate(agent->op + i));
+    assertTrue(!planOperatorIsPrivate(agent->op + 18));
+    assertTrue(!planOperatorIsPrivate(agent->op + 19));
     for (i = 20; i <= 33; ++i)
-        assertTrue(planOperatorIsPrivate(agent->prob.op + i));
+        assertTrue(planOperatorIsPrivate(agent->op + i));
 
     for (i = 0; i < 13; ++i)
-        assertEquals(agent->projected_op[i].global_id, i);
-    assertEquals(agent->projected_op[13].global_id, 14);
+        assertEquals(agent->proj_op[i].global_id, i);
+    assertEquals(agent->proj_op[13].global_id, 14);
     for (i = 14; i < 20; ++i)
-        assertEquals(agent->projected_op[i].global_id, i + 5);
+        assertEquals(agent->proj_op[i].global_id, i + 5);
     for (i = 20; i < 36; ++i)
-        assertEquals(agent->projected_op[i].global_id, i + 7);
+        assertEquals(agent->proj_op[i].global_id, i + 7);
 
     planProblemAgentsDel(agents);
 }

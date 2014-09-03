@@ -433,9 +433,7 @@ static int agentLoadPrivateOperators(plan_problem_t *prob,
 
         planOpInit(prob->op + ins_from, prob->state_pool);
         planOpCopy(prob->op + ins_from, src_op + op_id);
-        // TODO
-        //planOpSetPrivate(prob->op + ins_from);
-        //planOpSetGlobalId(prob->op + ins_from, op_id);
+        planOpExtraMAOpSetPrivate(prob->op + ins_from);
         ++ins_from;
     }
 
@@ -469,17 +467,14 @@ static int agentLoadPublicOperators(int agent_id,
 
         planOpInit(prob->op + ins_from, prob->state_pool);
         planOpCopy(prob->op + ins_from, src_op + op_id);
-        // TODO
-        //planOpSetGlobalId(prob->op + ins_from, op_id);
 
         if (fscanf(fin, "%d", &peer_size) != 1)
             return -1;
         for (p = 0; p < peer_size; ++p){
             if (fscanf(fin, "%d", &peer) != 1)
                 return -1;
-            // TODO
-            //if (peer != agent_id)
-            //    planOpAddSendPeer(prob->op + ins_from, peer);
+            if (peer != agent_id)
+                planOpExtraMAOpAddRecvAgent(prob->op + ins_from, peer);
         }
 
         ++ins_from;
@@ -538,9 +533,8 @@ static int fdAgents(const plan_problem_t *prob, FILE *fin,
 
             if (fscanf(fin, "%d %d", &global_id, &owner) != 2)
                 return -1;
-            // TODO
-            //planOpSetGlobalId(agent->proj_op + opi, global_id);
-            //planOpSetOwner(agent->proj_op + opi, owner);
+            planOpExtraMAProjOpSetGlobalId(agent->proj_op + opi, global_id);
+            planOpExtraMAProjOpSetOwner(agent->proj_op + opi, owner);
         }
 
         if (fdAssert(fin, "end_agent_projected_operators") != 0)

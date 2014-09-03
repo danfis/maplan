@@ -168,8 +168,6 @@ static void agentAddOperator(plan_problem_t *dst,
 {
     planOpInit(dst->op + dst->op_size, state_pool);
     planOpCopy(dst->op + dst->op_size, op);
-    // TODO
-    //planOpSetGlobalId(dst->op + dst->op_size, id);
     ++dst->op_size;
 }
 
@@ -378,8 +376,7 @@ static void agentSetSendPeers(plan_problem_t *prob,
 
             PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
                 if (vals.usedAsPre(var, val, peer)){
-                    // TODO
-                    //planOpAddSendPeer(op, peer);
+                    planOpExtraMAOpAddRecvAgent(op, peer);
                     break;
                 }
             }
@@ -411,8 +408,7 @@ static void agentSetPrivateOps(plan_op_t *ops, int op_size,
         op = ops + opi;
         if (!agentIsPartStatePublic(op->eff, vals)
                 && !agentIsPartStatePublic(op->pre, vals)){
-            // TODO
-            //planOpSetPrivate(op);
+            planOpExtraMAOpSetPrivate(op);
         }
     }
 }
@@ -466,9 +462,8 @@ static void agentCreateProjectedOps(plan_problem_t *agent,
         planOpCopy(proj_op, ops + opi);
 
         if (agentProjectOp(proj_op, agent_id, vals)){
-            // TODO
-            //planOpSetOwner(proj_op, agent_id);
-            //planOpSetGlobalId(proj_op, opi);
+            planOpExtraMAProjOpSetOwner(proj_op, agent_id);
+            planOpExtraMAProjOpSetGlobalId(proj_op, opi);
             ++agent->proj_op_size;
         }else{
             planOpFree(proj_op);

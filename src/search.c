@@ -573,21 +573,19 @@ static void maTerminate(plan_search_t *search)
 static int maSendPublicState(plan_search_t *search,
                              const plan_state_space_node_t *node)
 {
-    // TODO
-    /*
     plan_ma_msg_t *msg;
     const void *statebuf;
-    int res, i, len, *peers;
+    int res, i, len;
+    const int *peers;
 
-    if (node->op == NULL || planOperatorIsPrivate(node->op))
+    if (node->op == NULL || planOpExtraMAOpIsPrivate(node->op))
         return -2;
 
     statebuf = planStatePoolGetPackedState(search->state_pool, node->state_id);
     if (statebuf == NULL)
         return -1;
 
-    peers = node->op->send_peer;
-    len   = node->op->send_peer_size;
+    peers = planOpExtraMAOpRecvAgents(node->op, &len);
     if (len == 0)
         return -1;
 
@@ -604,8 +602,6 @@ static int maSendPublicState(plan_search_t *search,
     planMAMsgDel(msg);
 
     return res;
-    */
-    return -1;
 }
 
 static void maInjectPublicState(plan_search_t *search,

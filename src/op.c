@@ -195,6 +195,13 @@ plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id)
     }
 }
 
+void planOpExtraMAOpAddRecvAgent(plan_op_t *op, int agent_id)
+{
+    ++op->extra.ma_op.recv_agent_size;
+    op->extra.ma_op.recv_agent = BOR_REALLOC_ARR(op->extra.ma_op.recv_agent, int,
+                                                 op->extra.ma_op.recv_agent_size);
+    op->extra.ma_op.recv_agent[op->extra.ma_op.recv_agent_size - 1] = agent_id;
+}
 
 
 static void planOpCondEffFree(plan_op_cond_eff_t *ceff)

@@ -17,14 +17,26 @@ struct _plan_op_cond_eff_t {
 };
 typedef struct _plan_op_cond_eff_t plan_op_cond_eff_t;
 
-struct _plan_op_data_t {
-    int is_private;
-    int owner;
-    int global_id;
-    int *send_peer; /*!< List of IDs of remote peers that are interested in
-                         states created by this operator */
-    int send_peer_size;
+/**
+ * Extra data needed for multi-agent public/private operators.
+ */
+struct _plan_op_ma_op_t {
+    unsigned is_private:1;       /*!< True if the operator is private */
+    unsigned recv_agent_size:31; /*!< Length of .recv_agent */
+    int *recv_agent;             /*!< List of IDs of agents that should
+                                      receive results of this operator. */
 };
+typedef struct _plan_op_ma_op_t plan_op_ma_op_t;
+
+/**
+ * Extra data needed for multi-agent projected operators
+ */
+struct _plan_op_ma_proj_op_t {
+    int owner;     /*!< ID of the agent that owns this operator */
+    int global_id; /*!< ID of the original operator the projection was made
+                        from */
+};
+typedef struct _plan_op_ma_proj_op_t plan_op_ma_proj_op_t;
 
 /**
  * Struct represention one operator.
@@ -38,6 +50,11 @@ struct _plan_op_t {
     plan_cost_t cost;              /*!< Cost of the operator */
     plan_state_pool_t *state_pool; /*!< Reference to the state-pool this
                                         operator is made from */
+
+    union {
+        plan_op_ma_op_t ma_op;
+        plan_op_ma_proj_op_t ma_proj_op;
+    } extra;
 };
 typedef struct _plan_op_t plan_op_t;
 
@@ -55,6 +72,7 @@ void planOpFree(plan_op_t *op);
 /**
  * Copies operator src to the dst. The operator dst must be already
  * initialized with state-pool object.
+ * The .extra data are not copied at all!
  */
 void planOpCopy(plan_op_t *dst, const plan_op_t *src);
 
@@ -114,6 +132,47 @@ void planOpCondEffSimplify(plan_op_t *op);
 plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id);
 
 
+/**
+ * Returns true if the operator is marked as private.
+ */
+_bor_inline int planOpExtraMAOpIsPrivate(const plan_op_t *op);
+
+/**
+ * Sets operator as private in its extra data.
+ */
+_bor_inline void planOpExtraMAOpSetPrivate(plan_op_t *op);
+
+/**
+ * Returns array of agent IDs that should receive results of this operator.
+ */
+_bor_inline const int *planOpExtraMAOpRecvAgents(const plan_op_t *op, int *size);
+
+/**
+ * Record agent ID as receiving agent of the operator in extra data.
+ */
+void planOpExtraMAOpAddRecvAgent(plan_op_t *op, int agent_id);
+
+/**
+ * Returns owner of the projected operator.
+ */
+_bor_inline int planOpExtraMAProjOpOwner(const plan_op_t *op);
+
+/**
+ * Sets owner ID in ma-proj-op extra data.
+ */
+_bor_inline void planOpExtraMAProjOpSetOwner(plan_op_t *op, int owner);
+
+/**
+ * Returns global ID associated with the operator.
+ */
+_bor_inline int planOpExtraMAProjOpGlobalId(const plan_op_t *op);
+
+/**
+ * Sets operator's global ID in ma-proj-op extra data.
+ */
+_bor_inline void planOpExtraMAProjOpSetGlobalId(plan_op_t *op, int id);
+
+
 /**** INLINES ****/
 _bor_inline void planOpSetPre(plan_op_t *op, plan_var_id_t var, plan_val_t val)
 {
@@ -130,48 +189,41 @@ _bor_inline void planOpSetCost(plan_op_t *op, plan_cost_t cost)
     op->cost = cost;
 }
 
-
-
-#if 0
-_bor_inline void planOpSetPrivate(plan_op_t *op);
-_bor_inline int planOpIsPrivate(const plan_op_t *op);
-_bor_inline void planOpSetOwner(plan_op_t *op, int owner);
-_bor_inline int planOpOwner(const plan_op_t *op);
-_bor_inline void planOpSetGlobalId(plan_op_t *op, int id);
-_bor_inline int planOpGlobalId(const plan_op_t *op);
-void planOpAddSendPeer(plan_op_t *op, int peer);
-
-/**** INLINES: ****/
-_bor_inline void planOpSetPrivate(plan_op_t *op)
+_bor_inline int planOpExtraMAOpIsPrivate(const plan_op_t *op)
 {
-    op->is_private = 1;
+    return op->extra.ma_op.is_private;
 }
 
-_bor_inline int planOpIsPrivate(const plan_op_t *op)
+_bor_inline void planOpExtraMAOpSetPrivate(plan_op_t *op)
 {
-    return op->is_private;
+    op->extra.ma_op.is_private = 1;
 }
 
-_bor_inline void planOpSetOwner(plan_op_t *op, int owner)
+_bor_inline const int *planOpExtraMAOpRecvAgents(const plan_op_t *op, int *size)
 {
-    op->owner = owner;
+    *size = op->extra.ma_op.recv_agent_size;
+    return op->extra.ma_op.recv_agent;
 }
 
-_bor_inline int planOpOwner(const plan_op_t *op)
+_bor_inline int planOpExtraMAProjOpOwner(const plan_op_t *op)
 {
-    return op->owner;
+    return op->extra.ma_proj_op.owner;
 }
 
-_bor_inline void planOpSetGlobalId(plan_op_t *op, int id)
+_bor_inline void planOpExtraMAProjOpSetOwner(plan_op_t *op, int owner)
 {
-    op->global_id = id;
+    op->extra.ma_proj_op.owner = owner;
 }
 
-_bor_inline int planOpGlobalId(const plan_op_t *op)
+_bor_inline int planOpExtraMAProjOpGlobalId(const plan_op_t *op)
 {
-    return op->global_id;
+    return op->extra.ma_proj_op.global_id;
 }
-#endif
+
+_bor_inline void planOpExtraMAProjOpSetGlobalId(plan_op_t *op, int id)
+{
+    op->extra.ma_proj_op.global_id = id;
+}
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -726,20 +726,16 @@ static void maHeur(plan_heur_relax_t *heur,
 
 static const plan_op_t *maOpFromId(plan_heur_relax_t *heur, int op_id)
 {
-    return NULL;
-    // TODO
-    /*
     int i;
     const plan_op_t *op = NULL;
 
     for (i = 0; i < heur->data.actual_op_size; ++i){
         op = heur->base_op + i;
-        if (op->global_id == op_id)
+        if (planOpExtraMAProjOpGlobalId(op) == op_id)
             return op;
     }
 
     return NULL;
-    */
 }
 
 static void maExploreLocal(plan_heur_relax_t *heur,
@@ -748,8 +744,8 @@ static void maExploreLocal(plan_heur_relax_t *heur,
                            plan_heur_res_t *res)
 {
     PLAN_STATE_STACK(state, heur->data.vid.var_size);
-    //const plan_op_t *op;
-    int i;
+    const plan_op_t *op;
+    int i, global_id, owner;
 
     // Initialize initial state
     for (i = 0; i < heur->data.vid.var_size; ++i){
@@ -767,27 +763,22 @@ static void maExploreLocal(plan_heur_relax_t *heur,
             continue;
 
         // Get the corresponding operator
-        // TODO
-        //op = heur->base_op + i;
+        op = heur->base_op + i;
+        global_id = planOpExtraMAProjOpGlobalId(op);
+        owner = planOpExtraMAProjOpOwner(op);
 
         // Add the operator to the relaxed plan
-        // TODO
-        //maAddOpToRelaxedPlan(&heur->ma, op->global_id, op->cost);
+        maAddOpToRelaxedPlan(&heur->ma, global_id, op->cost);
 
-        // TODO
-        /*
-        if (op->owner != comm->node_id){
+        if (owner != comm->node_id){
             // The operator is owned by remote peer.
             // Add it to the set of operators we are waiting for from
             // other peers
-            if (maAddPeerOp(&heur->ma, op->global_id) == 0){
+            if (maAddPeerOp(&heur->ma, global_id) == 0){
                 // Send a request to the owner
-                maSendHeurRequest(comm, op->owner, &heur->ma.state,
-                                  op->global_id);
+                maSendHeurRequest(comm, owner, &heur->ma.state, global_id);
             }
-
         }
-        */
     }
 }
 
@@ -904,6 +895,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
     plan_ma_msg_t *response;
     const plan_op_t *op;
     int i, op_id, agent_id;
+    int global_id, owner;
 
     op_id = planMAMsgHeurRequestOpId(msg);
     agent_id = planMAMsgHeurRequestAgentId(msg);
@@ -937,18 +929,18 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
         if (!heur->relaxed_plan[i])
             continue;
 
-        /* TODO
         op = heur->base_op + i;
-        if (op->owner == comm->node_id){
+        global_id = planOpExtraMAProjOpGlobalId(op);
+        owner = planOpExtraMAProjOpOwner(op);
+
+        if (owner == comm->node_id){
             // Operator belongs to this agent
-            planMAMsgHeurResponseAddOp(response, op->global_id,
+            planMAMsgHeurResponseAddOp(response, global_id,
                                        heur->data.op[i].cost);
         }else{
             // Operator belongs to other agent
-            planMAMsgHeurResponseAddPeerOp(response, op->global_id,
-                                           op->owner);
+            planMAMsgHeurResponseAddPeerOp(response, global_id, owner);
         }
-        */
     }
     planMACommQueueSendToNode(comm, agent_id, response);
 

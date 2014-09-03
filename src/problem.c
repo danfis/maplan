@@ -9,13 +9,7 @@
 
 static void planProblemInit(plan_problem_t *p)
 {
-    p->var = NULL;
-    p->var_size = 0;
-    p->state_pool = NULL;
-    p->op = NULL;
-    p->op_size = 0;
-    p->goal = NULL;
-    p->succ_gen = NULL;
+    bzero(p, sizeof(*p));
 }
 
 static int loadFD(plan_problem_t *plan, const char *filename);
@@ -43,6 +37,16 @@ void planProblemDel(plan_problem_t *plan)
     BOR_FREE(plan);
 }
 
+static void freeOps(plan_operator_t *ops, int ops_size)
+{
+    int i;
+
+    for (i = 0; i < ops_size; ++i){
+        planOperatorFree(ops + i);
+    }
+    BOR_FREE(ops);
+}
+
 void planProblemFree(plan_problem_t *plan)
 {
     int i;
@@ -52,7 +56,6 @@ void planProblemFree(plan_problem_t *plan)
 
     if (plan->goal){
         planPartStateDel(plan->goal);
-        plan->goal = NULL;
     }
 
     if (plan->var != NULL){
@@ -61,20 +64,20 @@ void planProblemFree(plan_problem_t *plan)
         }
         BOR_FREE(plan->var);
     }
-    plan->var = NULL;
 
     if (plan->state_pool)
         planStatePoolDel(plan->state_pool);
-    plan->state_pool = NULL;
 
-    if (plan->op){
-        for (i = 0; i < plan->op_size; ++i){
-            planOperatorFree(plan->op + i);
-        }
-        BOR_FREE(plan->op);
-    }
-    plan->op = NULL;
-    plan->op_size = 0;
+    if (plan->op)
+        freeOps(plan->op, plan->op_size);
+
+    if (plan->agent_name)
+        BOR_FREE(plan->agent_name);
+
+    if (plan->proj_op)
+        freeOps(plan->proj_op, plan->proj_op_size);
+
+    bzero(plan, sizeof(*plan));
 }
 
 

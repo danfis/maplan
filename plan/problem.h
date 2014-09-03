@@ -24,6 +24,11 @@ struct _plan_problem_t {
     plan_operator_t *op;           /*!< Array of operators */
     int op_size;                   /*!< Number of operators */
     plan_succ_gen_t *succ_gen;     /*!< Successor generator */
+
+    /** Fllowing data are available only in case of agent problem defintion: */
+    char *agent_name;         /*!< Name of the corresponding agent */
+    plan_operator_t *proj_op; /*!< Projected operators */
+    int proj_op_size;         /*!< Number of projected operators */
 };
 typedef struct _plan_problem_t plan_problem_t;
 

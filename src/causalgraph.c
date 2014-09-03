@@ -209,7 +209,7 @@ static void rbtreeToGraph(bor_rbtree_int_t *rb,
     bor_rbtree_int_node_t *tree_node, *tree_edge;
     graph_node_t *node;
     graph_edge_t *edge;
-    int var, i, edge_size, *value, *end_var;
+    int var, i, edge_size, *value = NULL, *end_var = NULL;
 
     while (!borRBTreeIntEmpty(rb)){
         tree_node = borRBTreeIntExtractMin(rb);

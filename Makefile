@@ -20,7 +20,7 @@ DEBUG = yes
 
 SO_VERSION = 0
 
-CFLAGS += -I. -I../boruvka/ -Werror
+CFLAGS += -I. -I../boruvka/
 CXXFLAGS += -I. -I../boruvka/
 CXXFLAGS += $(PROTOBUF_CFLAGS)
 CXXFLAGS += -Wno-long-long

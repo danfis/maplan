@@ -29,8 +29,8 @@ static unsigned states[NUM_STATES][9] = {
 
 static int sortOpsCmp(const void *a, const void *b)
 {
-    plan_operator_t *opa = *(plan_operator_t **)a;
-    plan_operator_t *opb = *(plan_operator_t **)b;
+    plan_op_t *opa = *(plan_op_t **)a;
+    plan_op_t *opb = *(plan_op_t **)b;
     if (opa == opb)
         return 0;
     if (opa < opb)
@@ -39,9 +39,9 @@ static int sortOpsCmp(const void *a, const void *b)
 }
 
 static int findOpsLinear(const plan_state_pool_t *pool,
-                         plan_operator_t *op, int op_size,
+                         plan_op_t *op, int op_size,
                          plan_state_id_t sid,
-                         plan_operator_t **op_out)
+                         plan_op_t **op_out)
 {
     int i, found;
 
@@ -52,19 +52,19 @@ static int findOpsLinear(const plan_state_pool_t *pool,
         }
     }
 
-    qsort(op_out, found, sizeof(plan_operator_t *), sortOpsCmp);
+    qsort(op_out, found, sizeof(plan_op_t *), sortOpsCmp);
     return found;
 }
 
 static int findOpsSG(const plan_succ_gen_t *sg,
                      const plan_state_t *state,
-                     plan_operator_t **ops,
+                     plan_op_t **ops,
                      int ops_size)
 {
     int found;
 
     found = planSuccGenFind(sg, state, ops, ops_size);
-    qsort(ops, BOR_MIN(found, ops_size), sizeof(plan_operator_t *), sortOpsCmp);
+    qsort(ops, BOR_MIN(found, ops_size), sizeof(plan_op_t *), sortOpsCmp);
     return found;
 }
 
@@ -73,7 +73,7 @@ TEST(testSuccGen)
 {
     plan_problem_t *prob;
     plan_succ_gen_t *sg;
-    plan_operator_t **ops1, **ops2;
+    plan_op_t **ops1, **ops2;
     plan_state_id_t sid;
     int ops_size, found1, found2, i, j;
     plan_state_t *state;
@@ -83,8 +83,8 @@ TEST(testSuccGen)
     sg = planSuccGenNew(prob->op, prob->op_size, NULL);
 
     ops_size = prob->op_size;
-    ops1 = BOR_ALLOC_ARR(plan_operator_t *, ops_size);
-    ops2 = BOR_ALLOC_ARR(plan_operator_t *, ops_size);
+    ops1 = BOR_ALLOC_ARR(plan_op_t *, ops_size);
+    ops2 = BOR_ALLOC_ARR(plan_op_t *, ops_size);
     state = planStateNew(prob->state_pool);
 
     for (i = 0; i < NUM_STATES; ++i){

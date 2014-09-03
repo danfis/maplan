@@ -153,6 +153,11 @@ _bor_inline const int *planOpExtraMAOpRecvAgents(const plan_op_t *op, int *size)
 void planOpExtraMAOpAddRecvAgent(plan_op_t *op, int agent_id);
 
 /**
+ * Free resources allocated within ma-op extra data.
+ */
+void planOpExtraMAOpFree(plan_op_t *op);
+
+/**
  * Returns owner of the projected operator.
  */
 _bor_inline int planOpExtraMAProjOpOwner(const plan_op_t *op);

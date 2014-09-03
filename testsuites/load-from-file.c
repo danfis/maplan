@@ -284,30 +284,30 @@ TEST(testLoadAgentFromFD)
     assertEquals(strcmp(agent->agent_name, "rover0"), 0);
 
     for (i = 0; i < 5; ++i){
-        assertTrue(planOperatorIsPrivate(agent->op + i));
+        assertTrue(planOpExtraMAOpIsPrivate(agent->op + i));
     }
     for (i = 5; i < agent->op_size; ++i){
-        assertFalse(planOperatorIsPrivate(agent->op + i));
+        assertFalse(planOpExtraMAOpIsPrivate(agent->op + i));
     }
 
     agent = agents->agent + 1;
     assertEquals(strcmp(agent->agent_name, "rover1"), 0);
-    assertTrue(planOperatorIsPrivate(agent->op + 0));
+    assertTrue(planOpExtraMAOpIsPrivate(agent->op + 0));
 
     for (i = 0; i < 23; ++i){
-        assertTrue(planOperatorIsPrivate(agent->op + i));
+        assertTrue(planOpExtraMAOpIsPrivate(agent->op + i));
     }
     for (i = 23; i < agent->op_size; ++i){
-        assertFalse(planOperatorIsPrivate(agent->op + i));
+        assertFalse(planOpExtraMAOpIsPrivate(agent->op + i));
     }
 
     for (i = 0; i < 13; ++i)
-        assertEquals(agent->proj_op[i].global_id, i);
-    assertEquals(agent->proj_op[13].global_id, 14);
+        assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + i), i);
+    assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + 13), 14);
     for (i = 14; i < 20; ++i)
-        assertEquals(agent->proj_op[i].global_id, i + 5);
+        assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + i), i + 5);
     for (i = 20; i < 36; ++i)
-        assertEquals(agent->proj_op[i].global_id, i + 7);
+        assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + i), i + 7);
 
     planProblemAgentsDel(agents);
 }
@@ -397,38 +397,38 @@ TEST(testLoadAgentFromProto)
     agent = agents->agent + 0;
     assertEquals(strcmp(agent->agent_name, "rover0"), 0);
 
-    assertTrue(!planOperatorIsPrivate(agent->op + 0));
-    assertTrue(!planOperatorIsPrivate(agent->op + 1));
-    assertTrue(planOperatorIsPrivate(agent->op + 2));
-    assertTrue(planOperatorIsPrivate(agent->op + 3));
-    assertTrue(planOperatorIsPrivate(agent->op + 4));
-    assertTrue(planOperatorIsPrivate(agent->op + 5));
-    assertTrue(planOperatorIsPrivate(agent->op + 6));
-    assertTrue(!planOperatorIsPrivate(agent->op + 7));
-    assertTrue(!planOperatorIsPrivate(agent->op + 8));
+    assertTrue(!planOpExtraMAOpIsPrivate(agent->op + 0));
+    assertTrue(!planOpExtraMAOpIsPrivate(agent->op + 1));
+    assertTrue(planOpExtraMAOpIsPrivate(agent->op + 2));
+    assertTrue(planOpExtraMAOpIsPrivate(agent->op + 3));
+    assertTrue(planOpExtraMAOpIsPrivate(agent->op + 4));
+    assertTrue(planOpExtraMAOpIsPrivate(agent->op + 5));
+    assertTrue(planOpExtraMAOpIsPrivate(agent->op + 6));
+    assertTrue(!planOpExtraMAOpIsPrivate(agent->op + 7));
+    assertTrue(!planOpExtraMAOpIsPrivate(agent->op + 8));
 
     agent = agents->agent + 1;
     assertEquals(strcmp(agent->agent_name, "rover1"), 0);
 
-    assertTrue(planOperatorIsPrivate(agent->op + 0));
-    assertTrue(planOperatorIsPrivate(agent->op + 0));
-    assertTrue(planOperatorIsPrivate(agent->op + 1));
+    assertTrue(planOpExtraMAOpIsPrivate(agent->op + 0));
+    assertTrue(planOpExtraMAOpIsPrivate(agent->op + 0));
+    assertTrue(planOpExtraMAOpIsPrivate(agent->op + 1));
     for (i = 2; i <= 10; ++i)
-        assertTrue(!planOperatorIsPrivate(agent->op + i));
+        assertTrue(!planOpExtraMAOpIsPrivate(agent->op + i));
     for (i = 11; i <= 17; ++i)
-        assertTrue(planOperatorIsPrivate(agent->op + i));
-    assertTrue(!planOperatorIsPrivate(agent->op + 18));
-    assertTrue(!planOperatorIsPrivate(agent->op + 19));
+        assertTrue(planOpExtraMAOpIsPrivate(agent->op + i));
+    assertTrue(!planOpExtraMAOpIsPrivate(agent->op + 18));
+    assertTrue(!planOpExtraMAOpIsPrivate(agent->op + 19));
     for (i = 20; i <= 33; ++i)
-        assertTrue(planOperatorIsPrivate(agent->op + i));
+        assertTrue(planOpExtraMAOpIsPrivate(agent->op + i));
 
     for (i = 0; i < 13; ++i)
-        assertEquals(agent->proj_op[i].global_id, i);
-    assertEquals(agent->proj_op[13].global_id, 14);
+        assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + i), i);
+    assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + 13), 14);
     for (i = 14; i < 20; ++i)
-        assertEquals(agent->proj_op[i].global_id, i + 5);
+        assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + i), i + 5);
     for (i = 20; i < 36; ++i)
-        assertEquals(agent->proj_op[i].global_id, i + 7);
+        assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + i), i + 7);
 
     planProblemAgentsDel(agents);
 }
@@ -438,7 +438,7 @@ TEST(testLoadCondEffFromFD)
     plan_problem_t *prob;
     plan_state_t *state, *state_check;
     plan_state_id_t sid, sid_check;
-    plan_operator_t opcpy;
+    plan_op_t opcpy;
     int i;
 
     prob = planProblemFromFD("cond-eff.sas");
@@ -465,7 +465,7 @@ TEST(testLoadCondEffFromFD)
     planStateSet(state, 627, 1);
 
     sid = planStatePoolInsert(prob->state_pool, state);
-    sid_check = planOperatorApply(prob->op + 589, sid);
+    sid_check = planOpApply(prob->op + 589, sid);
     planStatePoolGetState(prob->state_pool, sid_check, state_check);
     for (i = 0; i < prob->var_size; ++i){
         if (i == 534
@@ -485,7 +485,7 @@ TEST(testLoadCondEffFromFD)
     planStateSet(state, 579, 0);
 
     sid = planStatePoolInsert(prob->state_pool, state);
-    sid_check = planOperatorApply(prob->op + 589, sid);
+    sid_check = planOpApply(prob->op + 589, sid);
     planStatePoolGetState(prob->state_pool, sid_check, state_check);
     for (i = 0; i < prob->var_size; ++i){
         if (i == 534
@@ -506,7 +506,7 @@ TEST(testLoadCondEffFromFD)
     planStateSet(state, 602, 0);
 
     sid = planStatePoolInsert(prob->state_pool, state);
-    sid_check = planOperatorApply(prob->op + 589, sid);
+    sid_check = planOpApply(prob->op + 589, sid);
     planStatePoolGetState(prob->state_pool, sid_check, state_check);
     for (i = 0; i < prob->var_size; ++i){
         if (i == 534
@@ -528,7 +528,7 @@ TEST(testLoadCondEffFromFD)
     planStateSet(state, 617, 0);
 
     sid = planStatePoolInsert(prob->state_pool, state);
-    sid_check = planOperatorApply(prob->op + 589, sid);
+    sid_check = planOpApply(prob->op + 589, sid);
     planStatePoolGetState(prob->state_pool, sid_check, state_check);
     for (i = 0; i < prob->var_size; ++i){
         if (i == 534
@@ -558,7 +558,7 @@ TEST(testLoadCondEffFromFD)
     planStateSet(state, 628, 1);
 
     sid = planStatePoolInsert(prob->state_pool, state);
-    sid_check = planOperatorApply(prob->op + 590, sid);
+    sid_check = planOpApply(prob->op + 590, sid);
     planStatePoolGetState(prob->state_pool, sid_check, state_check);
     for (i = 0; i < prob->var_size; ++i){
         if (i == 580
@@ -576,7 +576,7 @@ TEST(testLoadCondEffFromFD)
 
     planStateSet(state, 628, 0);
     sid = planStatePoolInsert(prob->state_pool, state);
-    sid_check = planOperatorApply(prob->op + 590, sid);
+    sid_check = planOpApply(prob->op + 590, sid);
     planStatePoolGetState(prob->state_pool, sid_check, state_check);
     for (i = 0; i < prob->var_size; ++i){
         if (i == 580
@@ -595,7 +595,7 @@ TEST(testLoadCondEffFromFD)
 
     planStateSet(state, 604, 0);
     sid = planStatePoolInsert(prob->state_pool, state);
-    sid_check = planOperatorApply(prob->op + 590, sid);
+    sid_check = planOpApply(prob->op + 590, sid);
     planStatePoolGetState(prob->state_pool, sid_check, state_check);
     for (i = 0; i < prob->var_size; ++i){
         if (i == 580
@@ -615,8 +615,8 @@ TEST(testLoadCondEffFromFD)
     }
 
 
-    planOperatorInit(&opcpy, prob->state_pool);
-    planOperatorCopy(&opcpy, prob->op + 590);
+    planOpInit(&opcpy, prob->state_pool);
+    planOpCopy(&opcpy, prob->op + 590);
 
 
     for (i = 0; i < prob->var_size; ++i){
@@ -629,7 +629,7 @@ TEST(testLoadCondEffFromFD)
     planStateSet(state, 628, 1);
 
     sid = planStatePoolInsert(prob->state_pool, state);
-    sid_check = planOperatorApply(&opcpy, sid);
+    sid_check = planOpApply(&opcpy, sid);
     planStatePoolGetState(prob->state_pool, sid_check, state_check);
     for (i = 0; i < prob->var_size; ++i){
         if (i == 580
@@ -647,7 +647,7 @@ TEST(testLoadCondEffFromFD)
 
     planStateSet(state, 628, 0);
     sid = planStatePoolInsert(prob->state_pool, state);
-    sid_check = planOperatorApply(&opcpy, sid);
+    sid_check = planOpApply(&opcpy, sid);
     planStatePoolGetState(prob->state_pool, sid_check, state_check);
     for (i = 0; i < prob->var_size; ++i){
         if (i == 580
@@ -666,7 +666,7 @@ TEST(testLoadCondEffFromFD)
 
     planStateSet(state, 604, 0);
     sid = planStatePoolInsert(prob->state_pool, state);
-    sid_check = planOperatorApply(&opcpy, sid);
+    sid_check = planOpApply(&opcpy, sid);
     planStatePoolGetState(prob->state_pool, sid_check, state_check);
     for (i = 0; i < prob->var_size; ++i){
         if (i == 580
@@ -685,7 +685,7 @@ TEST(testLoadCondEffFromFD)
         }
     }
 
-    planOperatorFree(&opcpy);
+    planOpFree(&opcpy);
 
     planStateDel(state_check);
     planStateDel(state);

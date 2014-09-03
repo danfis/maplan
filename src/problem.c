@@ -62,9 +62,17 @@ void planProblemFree(plan_problem_t *plan)
 
 void planProblemAgentsDel(plan_problem_agents_t *agents)
 {
-    int i;
+    int i, opid;
+    plan_problem_t *agent;
 
     planProblemFree(&agents->glob);
+
+    for (i = 0; i < agents->agent_size; ++i){
+        agent = agents->agent + i;
+
+        for (opid = 0; opid < agent->op_size; ++opid)
+            planOpExtraMAOpFree(agent->op + opid);
+    }
 
     for (i = 0; i < agents->agent_size; ++i)
         planProblemFree(agents->agent + i);

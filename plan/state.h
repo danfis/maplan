@@ -68,6 +68,7 @@ typedef struct _plan_part_state_pair_t plan_part_state_pair_t;
  * Struct representing partial state.
  */
 struct _plan_part_state_t {
+    const plan_state_packer_t *packer;
     plan_val_t *val; /*!< Array of unpacked values */
     int *is_set;     /*!< Array of bool flags stating whether the
                           corresponding value is set */
@@ -263,6 +264,11 @@ plan_part_state_t *planPartStateNew(const plan_state_pool_t *pool);
 void planPartStateDel(plan_part_state_t *part_state);
 
 /**
+ * Copies partial state from src to dst.
+ */
+void planPartStateCopy(plan_part_state_t *dst, const plan_part_state_t *src);
+
+/**
  * Returns number of variable the state consists of.
  */
 _bor_inline int planPartStateSize(const plan_part_state_t *state);
@@ -276,14 +282,13 @@ _bor_inline plan_val_t planPartStateGet(const plan_part_state_t *state,
 /**
  * Sets a value of a specified variable.
  */
-void planPartStateSet(plan_state_pool_t *pool, plan_part_state_t *state,
+void planPartStateSet(plan_part_state_t *state,
                       plan_var_id_t var, plan_val_t val);
 
 /**
  * Unset the value of the specified variable.
  */
-void planPartStateUnset(plan_state_pool_t *pool, plan_part_state_t *state,
-                        plan_var_id_t var);
+void planPartStateUnset(plan_part_state_t *state, plan_var_id_t var);
 
 /**
  * Returns true if var's variable is set.
@@ -303,15 +308,13 @@ void planPartStateToState(const plan_part_state_t *part_state,
  * Returns true if part_state1 is subset of part_state2.
  */
 int planPartStateIsSubset(const plan_part_state_t *part_state1,
-                          const plan_part_state_t *part_state2,
-                          const plan_state_pool_t *state_pool);
+                          const plan_part_state_t *part_state2);
 
 /**
  * Returns true if the given part-states equal.
  */
 int planPartStateEq(const plan_part_state_t *part_state1,
-                    const plan_part_state_t *part_state2,
-                    const plan_state_pool_t *state_pool);
+                    const plan_part_state_t *part_state2);
 
 /**
  * Macro for iterating over "unrolled" set values of partial state.

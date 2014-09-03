@@ -161,20 +161,20 @@ TEST(testStatePreEff)
 
 
     parts[0] = planPartStateNew(pool);
-    planPartStateSet(pool, parts[0], 0, 1);
-    planPartStateSet(pool, parts[0], 2, 1);
+    planPartStateSet(parts[0], 0, 1);
+    planPartStateSet(parts[0], 2, 1);
 
     parts[1] = planPartStateNew(pool);
-    planPartStateSet(pool, parts[1], 2, 1);
-    planPartStateSet(pool, parts[1], 3, 3);
+    planPartStateSet(parts[1], 2, 1);
+    planPartStateSet(parts[1], 3, 3);
 
     parts[2] = planPartStateNew(pool);
-    planPartStateSet(pool, parts[2], 0, 2);
-    planPartStateSet(pool, parts[2], 2, 0);
-    planPartStateSet(pool, parts[2], 3, 1);
+    planPartStateSet(parts[2], 0, 2);
+    planPartStateSet(parts[2], 2, 0);
+    planPartStateSet(parts[2], 3, 1);
 
     parts[3] = planPartStateNew(pool);
-    planPartStateSet(pool, parts[3], 3, 3);
+    planPartStateSet(parts[3], 3, 3);
 
 
     assertTrue(planStatePoolPartStateIsSubset(pool, parts[0], ids[0]));
@@ -345,9 +345,9 @@ TEST(testPartStateUnset)
     pool = planStatePoolNew(vars, 4);
     ps = planPartStateNew(pool);
 
-    planPartStateSet(pool, ps, 1, 1);
-    planPartStateSet(pool, ps, 2, 0);
-    planPartStateSet(pool, ps, 3, 3);
+    planPartStateSet(ps, 1, 1);
+    planPartStateSet(ps, 2, 0);
+    planPartStateSet(ps, 3, 3);
 
     assertFalse(planPartStateIsSet(ps, 0));
     assertTrue(planPartStateIsSet(ps, 1));
@@ -382,7 +382,7 @@ TEST(testPartStateUnset)
     assertFalse(planStatePoolPartStateIsSubset(pool, ps, 2));
 
 
-    planPartStateUnset(pool, ps, 3);
+    planPartStateUnset(ps, 3);
     assertFalse(planPartStateIsSet(ps, 0));
     assertTrue(planPartStateIsSet(ps, 1));
     assertTrue(planPartStateIsSet(ps, 2));
@@ -402,7 +402,7 @@ TEST(testPartStateUnset)
     assertTrue(planStatePoolPartStateIsSubset(pool, ps, 2));
 
 
-    planPartStateUnset(pool, ps, 2);
+    planPartStateUnset(ps, 2);
     assertFalse(planPartStateIsSet(ps, 0));
     assertTrue(planPartStateIsSet(ps, 1));
     assertFalse(planPartStateIsSet(ps, 2));

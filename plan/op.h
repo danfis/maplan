@@ -181,12 +181,12 @@ _bor_inline void planOpExtraMAProjOpSetGlobalId(plan_op_t *op, int id);
 /**** INLINES ****/
 _bor_inline void planOpSetPre(plan_op_t *op, plan_var_id_t var, plan_val_t val)
 {
-    planPartStateSet(op->state_pool, op->pre, var, val);
+    planPartStateSet(op->pre, var, val);
 }
 
 _bor_inline void planOpSetEff(plan_op_t *op, plan_var_id_t var, plan_val_t val)
 {
-    planPartStateSet(op->state_pool, op->eff, var, val);
+    planPartStateSet(op->eff, var, val);
 }
 
 _bor_inline void planOpSetCost(plan_op_t *op, plan_cost_t cost)

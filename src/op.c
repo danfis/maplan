@@ -41,16 +41,9 @@ void planOpFree(plan_op_t *op)
 void planOpCopy(plan_op_t *dst, const plan_op_t *src)
 {
     int i;
-    plan_var_id_t var;
-    plan_val_t val;
 
-    PLAN_PART_STATE_FOR_EACH(src->pre, i, var, val){
-        planPartStateSet(dst->state_pool, dst->pre, var, val);
-    }
-
-    PLAN_PART_STATE_FOR_EACH(src->eff, i, var, val){
-        planPartStateSet(dst->state_pool, dst->eff, var, val);
-    }
+    planPartStateCopy(dst->pre, src->pre);
+    planPartStateCopy(dst->eff, src->eff);
 
     if (src->cond_eff_size > 0){
         dst->cond_eff_size = src->cond_eff_size;
@@ -94,13 +87,13 @@ int planOpAddCondEff(plan_op_t *op)
 void planOpCondEffSetPre(plan_op_t *op, int cond_eff,
                          plan_var_id_t var, plan_val_t val)
 {
-    planPartStateSet(op->state_pool, op->cond_eff[cond_eff].pre, var, val);
+    planPartStateSet(op->cond_eff[cond_eff].pre, var, val);
 }
 
 void planOpCondEffSetEff(plan_op_t *op, int cond_eff,
                          plan_var_id_t var, plan_val_t val)
 {
-    planPartStateSet(op->state_pool, op->cond_eff[cond_eff].eff, var, val);
+    planPartStateSet(op->cond_eff[cond_eff].eff, var, val);
 }
 
 void planOpDelLastCondEff(plan_op_t *op)
@@ -133,10 +126,10 @@ void planOpCondEffSimplify(plan_op_t *op)
             if (e2->pre == NULL)
                 continue;
 
-            if (planPartStateEq(e2->pre, e1->pre, op->state_pool)){
+            if (planPartStateEq(e2->pre, e1->pre)){
                 // Extend effects of e1 by effects of e2
                 PLAN_PART_STATE_FOR_EACH(e2->eff, tmpi, var, val){
-                    planPartStateSet(op->state_pool, e1->eff, var, val);
+                    planPartStateSet(e1->eff, var, val);
                 }
 
                 // and destroy e2
@@ -219,17 +212,8 @@ static void planOpCondEffCopy(plan_state_pool_t *state_pool,
                               plan_op_cond_eff_t *dst,
                               const plan_op_cond_eff_t *src)
 {
-    int i;
-    plan_var_id_t var;
-    plan_val_t val;
-
-    PLAN_PART_STATE_FOR_EACH(src->pre, i, var, val){
-        planPartStateSet(state_pool, dst->pre, var, val);
-    }
-
-    PLAN_PART_STATE_FOR_EACH(src->eff, i, var, val){
-        planPartStateSet(state_pool, dst->eff, var, val);
-    }
+    planPartStateCopy(dst->pre, src->pre);
+    planPartStateCopy(dst->eff, src->eff);
 }
 
 _bor_inline void bitOr(void *a, const void *b, int size)
@@ -254,53 +238,3 @@ _bor_inline void bitOr(void *a, const void *b, int size)
         *a8 |= *b8;
     }
 }
-
-#if 0
-void planOpAddSendPeer(plan_op_t *op, int peer)
-{
-    ++op->send_peer_size;
-    op->send_peer = BOR_REALLOC_ARR(op->send_peer, int, op->send_peer_size);
-    op->send_peer[op->send_peer_size - 1] = peer;
-}
-
-void planOpSetPrecondition(plan_op_t *op,
-                                 plan_var_id_t var,
-                                 plan_val_t val)
-{
-    planPartStateSet(op->state_pool, op->pre, var, val);
-}
-
-void planOpSetEffect(plan_op_t *op,
-                           plan_var_id_t var,
-                           plan_val_t val)
-{
-    planPartStateSet(op->state_pool, op->eff, var, val);
-}
-
-void planOpSetName(plan_op_t *op, const char *name)
-{
-    const char *c;
-    int i;
-
-    if (op->name)
-        BOR_FREE(op->name);
-
-    op->name = BOR_ALLOC_ARR(char, strlen(name) + 1);
-    for (i = 0, c = name; c && *c; ++c, ++i){
-        op->name[i] = *c;
-    }
-    op->name[i] = 0;
-}
-
-void planOpSetCost(plan_op_t *op, plan_cost_t cost)
-{
-    op->cost = cost;
-}
-
-
-
-
-
-
-#endif
-

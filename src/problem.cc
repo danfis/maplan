@@ -131,8 +131,6 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
 {
     int i;
     plan_state_t *state;
-    plan_var_id_t var;
-    plan_val_t val;
 
     planProblemInit(dst);
 
@@ -153,9 +151,7 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
     planStateDel(state);
 
     dst->goal = planPartStateNew(dst->state_pool);
-    PLAN_PART_STATE_FOR_EACH(src->goal, i, var, val){
-        planPartStateSet(dst->state_pool, dst->goal, var, val);
-    }
+    planPartStateCopy(dst->goal, src->goal);
 
     dst->op_size = 0;
     dst->op = NULL;
@@ -414,7 +410,6 @@ static void agentSetPrivateOps(plan_op_t *ops, int op_size,
 }
 
 static void agentProjectPartState(plan_part_state_t *ps,
-                                  plan_state_pool_t *state_pool,
                                   int agent_id,
                                   const AgentVarVals &vals)
 {
@@ -429,14 +424,14 @@ static void agentProjectPartState(plan_part_state_t *ps,
     }
 
     for (size_t i = 0; i < unset.size(); ++i)
-        planPartStateUnset(state_pool, ps, unset[i]);
+        planPartStateUnset(ps, unset[i]);
 }
 
 static bool agentProjectOp(plan_op_t *op, int agent_id,
                            const AgentVarVals &vals)
 {
-    agentProjectPartState(op->pre, op->state_pool, agent_id, vals);
-    agentProjectPartState(op->eff, op->state_pool, agent_id, vals);
+    agentProjectPartState(op->pre, agent_id, vals);
+    agentProjectPartState(op->eff, agent_id, vals);
 
     if (op->eff->vals_size > 0)
         return true;
@@ -578,7 +573,7 @@ static void loadGoal(plan_problem_t *p, const PlanProblem *proto,
         if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
             continue;
 
-        planPartStateSet(p->state_pool, p->goal, var_map[v.var()], v.val());
+        planPartStateSet(p->goal, var_map[v.var()], v.val());
     }
 }
 

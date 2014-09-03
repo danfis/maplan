@@ -29,15 +29,15 @@ struct _plan_state_packer_var_t {
 typedef struct _plan_state_packer_var_t plan_state_packer_var_t;
 
 /** Sets variable to value in packed state buffer */
-static void planStatePackerSet(plan_state_packer_t *packer,
+static void planStatePackerSet(const plan_state_packer_t *packer,
                                plan_var_id_t var,
                                plan_val_t val,
                                void *buf);
 /** Sets mask (~0) corresponding to the variable in packed state buffer */
-static void planStatePackerSetMask(plan_state_packer_t *packer,
+static void planStatePackerSetMask(const plan_state_packer_t *packer,
                                    plan_var_id_t var, void *buf);
 /** Opposite of planStatePackerSetMask() */
-static void planStatePackerClearMask(plan_state_packer_t *packer,
+static void planStatePackerClearMask(const plan_state_packer_t *packer,
                                      plan_var_id_t var, void *buf);
 /** Returns number of bits needed for storing all values in interval
  * [0,range). */
@@ -425,7 +425,7 @@ void planStatePackerUnpack(const plan_state_packer_t *p,
     }
 }
 
-static void planStatePackerSet(plan_state_packer_t *packer,
+static void planStatePackerSet(const plan_state_packer_t *packer,
                                plan_var_id_t var,
                                plan_val_t val,
                                void *buf)
@@ -433,14 +433,14 @@ static void planStatePackerSet(plan_state_packer_t *packer,
     packerSetVar(packer->vars + var, val, buf);
 }
 
-static void planStatePackerSetMask(plan_state_packer_t *packer,
+static void planStatePackerSetMask(const plan_state_packer_t *packer,
                                    plan_var_id_t var, void *_buf)
 {
     plan_packer_word_t *buf = (plan_packer_word_t *)_buf;
     buf[packer->vars[var].pos] |= packer->vars[var].mask;
 }
 
-static void planStatePackerClearMask(plan_state_packer_t *packer,
+static void planStatePackerClearMask(const plan_state_packer_t *packer,
                                      plan_var_id_t var, void *_buf)
 {
     plan_packer_word_t *buf = (plan_packer_word_t *)_buf;
@@ -558,6 +558,7 @@ plan_part_state_t *planPartStateNew(const plan_state_pool_t *pool)
     int i, size;
 
     ps = BOR_ALLOC(plan_part_state_t);
+    ps->packer = pool->packer;
     ps->num_vars = pool->num_vars;
     ps->val    = BOR_ALLOC_ARR(plan_val_t, pool->num_vars);
     ps->is_set = BOR_ALLOC_ARR(int, pool->num_vars);
@@ -591,6 +592,17 @@ void planPartStateDel(plan_part_state_t *part_state)
     BOR_FREE(part_state);
 }
 
+void planPartStateCopy(plan_part_state_t *dst, const plan_part_state_t *src)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+
+    PLAN_PART_STATE_FOR_EACH(src, i, var, val){
+        planPartStateSet(dst, var, val);
+    }
+}
+
 static int valsCmp(const void *_a, const void *_b)
 {
     const plan_part_state_pair_t *a = _a;
@@ -598,16 +610,15 @@ static int valsCmp(const void *_a, const void *_b)
     return a->var - b->var;
 }
 
-void planPartStateSet(plan_state_pool_t *pool,
-                      plan_part_state_t *state,
+void planPartStateSet(plan_part_state_t *state,
                       plan_var_id_t var,
                       plan_val_t val)
 {
     state->val[var] = val;
     state->is_set[var] = 1;
 
-    planStatePackerSet(pool->packer, var, val, state->valbuf);
-    planStatePackerSetMask(pool->packer, var, state->maskbuf);
+    planStatePackerSet(state->packer, var, val, state->valbuf);
+    planStatePackerSetMask(state->packer, var, state->maskbuf);
 
     ++state->vals_size;
     state->vals = BOR_REALLOC_ARR(state->vals,
@@ -618,16 +629,15 @@ void planPartStateSet(plan_state_pool_t *pool,
     qsort(state->vals, state->vals_size, sizeof(plan_part_state_pair_t), valsCmp);
 }
 
-void planPartStateUnset(plan_state_pool_t *pool, plan_part_state_t *state,
-                        plan_var_id_t var)
+void planPartStateUnset(plan_part_state_t *state, plan_var_id_t var)
 {
     int i;
 
     state->val[var] = PLAN_VAL_UNDEFINED;
     state->is_set[var] = 0;
 
-    planStatePackerSet(pool->packer, var, 0, state->valbuf);
-    planStatePackerClearMask(pool->packer, var, state->maskbuf);
+    planStatePackerSet(state->packer, var, 0, state->valbuf);
+    planStatePackerClearMask(state->packer, var, state->maskbuf);
 
     for (i = 0; i < state->vals_size; ++i){
         if (state->vals[i].var == var){
@@ -657,10 +667,9 @@ void planPartStateToState(const plan_part_state_t *part_state,
 }
 
 int planPartStateIsSubset(const plan_part_state_t *ps1,
-                          const plan_part_state_t *ps2,
-                          const plan_state_pool_t *pool)
+                          const plan_part_state_t *ps2)
 {
-    int size = planStatePackerBufSize(pool->packer);
+    int size = planStatePackerBufSize(ps1->packer);
     char buf[size];
 
     bitAnd(ps1->maskbuf, ps2->maskbuf, size, buf);
@@ -675,10 +684,9 @@ int planPartStateIsSubset(const plan_part_state_t *ps1,
 }
 
 int planPartStateEq(const plan_part_state_t *ps1,
-                    const plan_part_state_t *ps2,
-                    const plan_state_pool_t *pool)
+                    const plan_part_state_t *ps2)
 {
-    int size = planStatePackerBufSize(pool->packer);
+    int size = planStatePackerBufSize(ps1->packer);
 
     if (memcmp(ps1->maskbuf, ps2->maskbuf, size) == 0
             && memcmp(ps1->valbuf, ps2->valbuf, size) == 0)

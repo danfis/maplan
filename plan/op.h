@@ -58,33 +58,48 @@ void planOpFree(plan_op_t *op);
  */
 void planOpCopy(plan_op_t *dst, const plan_op_t *src);
 
-#if 0
-void planOpSetPrecondition(plan_op_t *op,
-                                 plan_var_id_t var,
-                                 plan_val_t val);
-void planOpSetEffect(plan_op_t *op,
-                           plan_var_id_t var,
-                           plan_val_t val);
+/**
+ * Sets operator's name.
+ */
 void planOpSetName(plan_op_t *op, const char *name);
-void planOpSetCost(plan_op_t *op, plan_cost_t cost);
 
 /**
- * Adds a new conditional effect and returns a reference ID.
+ * Sets operator's cost.
+ */
+_bor_inline void planOpSetCost(plan_op_t *op, plan_cost_t cost);
+
+/**
+ * Sets one precondition variable.
+ */
+_bor_inline void planOpSetPre(plan_op_t *op, plan_var_id_t var, plan_val_t val);
+
+/**
+ * Sets one effect variable.
+ */
+_bor_inline void planOpSetEff(plan_op_t *op, plan_var_id_t var, plan_val_t val);
+
+/**
+ * Adds a new conditional effect and returns its reference ID.
  */
 int planOpAddCondEff(plan_op_t *op);
-void planOpDelLastCondEff(plan_op_t *op);
 
 /**
- * Sets precondition of a conditional effect.
+ * Sets a precondition of a conditional effect identified by its ID as
+ * returned by planOpAddCondEff().
  */
 void planOpCondEffSetPre(plan_op_t *op, int cond_eff,
-                               plan_var_id_t var, plan_val_t val);
+                         plan_var_id_t var, plan_val_t val);
 
 /**
- * Sets effect of a conditional effect.
+ * Same as planOpCondEffSetPre() but set effect instead of precondition.
  */
 void planOpCondEffSetEff(plan_op_t *op, int cond_eff,
-                               plan_var_id_t var, plan_val_t val);
+                         plan_var_id_t var, plan_val_t val);
+
+/**
+ * Deletes last added conditional effect.
+ */
+void planOpDelLastCondEff(plan_op_t *op);
 
 /**
  * Simplify conditional effects.
@@ -96,11 +111,28 @@ void planOpCondEffSimplify(plan_op_t *op);
  * into state pool it has reference to. The ID of the resulting state is
  * returned.
  */
-plan_state_id_t planOpApply(const plan_op_t *op,
-                                  plan_state_id_t state_id);
+plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id);
+
+
+/**** INLINES ****/
+_bor_inline void planOpSetPre(plan_op_t *op, plan_var_id_t var, plan_val_t val)
+{
+    planPartStateSet(op->state_pool, op->pre, var, val);
+}
+
+_bor_inline void planOpSetEff(plan_op_t *op, plan_var_id_t var, plan_val_t val)
+{
+    planPartStateSet(op->state_pool, op->eff, var, val);
+}
+
+_bor_inline void planOpSetCost(plan_op_t *op, plan_cost_t cost)
+{
+    op->cost = cost;
+}
 
 
 
+#if 0
 _bor_inline void planOpSetPrivate(plan_op_t *op);
 _bor_inline int planOpIsPrivate(const plan_op_t *op);
 _bor_inline void planOpSetOwner(plan_op_t *op, int owner);

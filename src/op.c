@@ -10,7 +10,8 @@ static void planOpCondEffFree(plan_op_cond_eff_t *ceff);
 static void planOpCondEffCopy(plan_state_pool_t *state_pool,
                               plan_op_cond_eff_t *dst,
                               const plan_op_cond_eff_t *src);
-
+/** Bit operator: a = a | b */
+_bor_inline void bitOr(void *a, const void *b, int size);
 
 void planOpInit(plan_op_t *op, plan_state_pool_t *state_pool)
 {
@@ -73,69 +74,11 @@ static void planOpCondEffInit(plan_op_cond_eff_t *ceff,
     ceff->eff = planPartStateNew(state_pool);
 }
 
-static void planOpCondEffFree(plan_op_cond_eff_t *ceff)
-{
-    planPartStateDel(ceff->pre);
-    planPartStateDel(ceff->eff);
-}
-
-static void planOpCondEffCopy(plan_state_pool_t *state_pool,
-                              plan_op_cond_eff_t *dst,
-                              const plan_op_cond_eff_t *src)
-{
-    int i;
-    plan_var_id_t var;
-    plan_val_t val;
-
-    PLAN_PART_STATE_FOR_EACH(src->pre, i, var, val){
-        planPartStateSet(state_pool, dst->pre, var, val);
-    }
-
-    PLAN_PART_STATE_FOR_EACH(src->eff, i, var, val){
-        planPartStateSet(state_pool, dst->eff, var, val);
-    }
-}
-
-#if 0
-void planOpAddSendPeer(plan_op_t *op, int peer)
-{
-    ++op->send_peer_size;
-    op->send_peer = BOR_REALLOC_ARR(op->send_peer, int, op->send_peer_size);
-    op->send_peer[op->send_peer_size - 1] = peer;
-}
-
-void planOpSetPrecondition(plan_op_t *op,
-                                 plan_var_id_t var,
-                                 plan_val_t val)
-{
-    planPartStateSet(op->state_pool, op->pre, var, val);
-}
-
-void planOpSetEffect(plan_op_t *op,
-                           plan_var_id_t var,
-                           plan_val_t val)
-{
-    planPartStateSet(op->state_pool, op->eff, var, val);
-}
-
 void planOpSetName(plan_op_t *op, const char *name)
 {
-    const char *c;
-    int i;
-
     if (op->name)
         BOR_FREE(op->name);
-
-    op->name = BOR_ALLOC_ARR(char, strlen(name) + 1);
-    for (i = 0, c = name; c && *c; ++c, ++i){
-        op->name[i] = *c;
-    }
-    op->name[i] = 0;
-}
-
-void planOpSetCost(plan_op_t *op, plan_cost_t cost)
-{
-    op->cost = cost;
+    op->name = strdup(name);
 }
 
 int planOpAddCondEff(plan_op_t *op)
@@ -148,23 +91,22 @@ int planOpAddCondEff(plan_op_t *op)
     return op->cond_eff_size - 1;
 }
 
-void planOpDelLastCondEff(plan_op_t *op)
-{
-    planOpCondEffFree(op->cond_eff + op->cond_eff_size - 1);
-    --op->cond_eff_size;
-}
-
-
 void planOpCondEffSetPre(plan_op_t *op, int cond_eff,
-                               plan_var_id_t var, plan_val_t val)
+                         plan_var_id_t var, plan_val_t val)
 {
     planPartStateSet(op->state_pool, op->cond_eff[cond_eff].pre, var, val);
 }
 
 void planOpCondEffSetEff(plan_op_t *op, int cond_eff,
-                               plan_var_id_t var, plan_val_t val)
+                         plan_var_id_t var, plan_val_t val)
 {
     planPartStateSet(op->state_pool, op->cond_eff[cond_eff].eff, var, val);
+}
+
+void planOpDelLastCondEff(plan_op_t *op)
+{
+    planOpCondEffFree(op->cond_eff + op->cond_eff_size - 1);
+    --op->cond_eff_size;
 }
 
 void planOpCondEffSimplify(plan_op_t *op)
@@ -220,32 +162,7 @@ void planOpCondEffSimplify(plan_op_t *op)
     }
 }
 
-/** Bit operator: a = a | b */
-_bor_inline void bitOr(void *a, const void *b, int size)
-{
-    uint32_t *a32;
-    const uint32_t *b32;
-    uint8_t *a8;
-    const uint8_t *b8;
-    int size32, size8;
-
-    size32 = size / 4;
-    a32 = a;
-    b32 = b;
-    for (; size32 != 0; --size32, ++a32, ++b32){
-        *a32 |= *b32;
-    }
-
-    size8 = size % 4;
-    a8 = (uint8_t *)a32;
-    b8 = (uint8_t *)b32;
-    for (; size8 != 0; --size8, ++a8, ++b8){
-        *a8 |= *b8;
-    }
-}
-
-plan_state_id_t planOpApply(const plan_op_t *op,
-                                  plan_state_id_t state_id)
+plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id)
 {
     if (op->cond_eff_size == 0){
         // Use faster branch for non-conditional effects
@@ -277,5 +194,101 @@ plan_state_id_t planOpApply(const plan_op_t *op,
                                             state_id);
     }
 }
+
+
+
+static void planOpCondEffFree(plan_op_cond_eff_t *ceff)
+{
+    planPartStateDel(ceff->pre);
+    planPartStateDel(ceff->eff);
+}
+
+static void planOpCondEffCopy(plan_state_pool_t *state_pool,
+                              plan_op_cond_eff_t *dst,
+                              const plan_op_cond_eff_t *src)
+{
+    int i;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    PLAN_PART_STATE_FOR_EACH(src->pre, i, var, val){
+        planPartStateSet(state_pool, dst->pre, var, val);
+    }
+
+    PLAN_PART_STATE_FOR_EACH(src->eff, i, var, val){
+        planPartStateSet(state_pool, dst->eff, var, val);
+    }
+}
+
+_bor_inline void bitOr(void *a, const void *b, int size)
+{
+    uint32_t *a32;
+    const uint32_t *b32;
+    uint8_t *a8;
+    const uint8_t *b8;
+    int size32, size8;
+
+    size32 = size / 4;
+    a32 = a;
+    b32 = b;
+    for (; size32 != 0; --size32, ++a32, ++b32){
+        *a32 |= *b32;
+    }
+
+    size8 = size % 4;
+    a8 = (uint8_t *)a32;
+    b8 = (uint8_t *)b32;
+    for (; size8 != 0; --size8, ++a8, ++b8){
+        *a8 |= *b8;
+    }
+}
+
+#if 0
+void planOpAddSendPeer(plan_op_t *op, int peer)
+{
+    ++op->send_peer_size;
+    op->send_peer = BOR_REALLOC_ARR(op->send_peer, int, op->send_peer_size);
+    op->send_peer[op->send_peer_size - 1] = peer;
+}
+
+void planOpSetPrecondition(plan_op_t *op,
+                                 plan_var_id_t var,
+                                 plan_val_t val)
+{
+    planPartStateSet(op->state_pool, op->pre, var, val);
+}
+
+void planOpSetEffect(plan_op_t *op,
+                           plan_var_id_t var,
+                           plan_val_t val)
+{
+    planPartStateSet(op->state_pool, op->eff, var, val);
+}
+
+void planOpSetName(plan_op_t *op, const char *name)
+{
+    const char *c;
+    int i;
+
+    if (op->name)
+        BOR_FREE(op->name);
+
+    op->name = BOR_ALLOC_ARR(char, strlen(name) + 1);
+    for (i = 0, c = name; c && *c; ++c, ++i){
+        op->name[i] = *c;
+    }
+    op->name[i] = 0;
+}
+
+void planOpSetCost(plan_op_t *op, plan_cost_t cost)
+{
+    op->cost = cost;
+}
+
+
+
+
+
+
 #endif
 

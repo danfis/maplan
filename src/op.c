@@ -170,8 +170,8 @@ plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id)
 
     }else{
         int size = planStatePackerBufSize(op->state_pool->packer);
-        char *maskbuf[size];
-        char *valbuf[size];
+        char maskbuf[size];
+        char valbuf[size];
         int i;
 
         // Initialize mask and value by non-conditional effects.

@@ -207,7 +207,7 @@ static int fdGoal(plan_problem_t *plan, FILE *fin)
     for (i = 0; i < len; ++i){
         if (fscanf(fin, "%d %d", &var, &val) != 2)
             return -1;
-        planPartStateSet(plan->state_pool, plan->goal, var, val);
+        planPartStateSet(plan->goal, var, val);
     }
 
     if (fdAssert(fin, "end_goal") != 0)
@@ -403,7 +403,7 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
 
     dst->goal = planPartStateNew(dst->state_pool);
     PLAN_PART_STATE_FOR_EACH(src->goal, i, var, val){
-        planPartStateSet(dst->state_pool, dst->goal, var, val);
+        planPartStateSet(dst->goal, var, val);
     }
 
     dst->op_size = 0;

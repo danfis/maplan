@@ -45,11 +45,11 @@ void planOpCopy(plan_op_t *dst, const plan_op_t *src)
     plan_val_t val;
 
     PLAN_PART_STATE_FOR_EACH(src->pre, i, var, val){
-        planPartStateSet(dst->state_pool, dst->pre, var, val);
+        planPartStateSet(dst->pre, var, val);
     }
 
     PLAN_PART_STATE_FOR_EACH(src->eff, i, var, val){
-        planPartStateSet(dst->state_pool, dst->eff, var, val);
+        planPartStateSet(dst->eff, var, val);
     }
 
     if (src->cond_eff_size > 0){
@@ -94,13 +94,13 @@ int planOpAddCondEff(plan_op_t *op)
 void planOpCondEffSetPre(plan_op_t *op, int cond_eff,
                          plan_var_id_t var, plan_val_t val)
 {
-    planPartStateSet(op->state_pool, op->cond_eff[cond_eff].pre, var, val);
+    planPartStateSet(op->cond_eff[cond_eff].pre, var, val);
 }
 
 void planOpCondEffSetEff(plan_op_t *op, int cond_eff,
                          plan_var_id_t var, plan_val_t val)
 {
-    planPartStateSet(op->state_pool, op->cond_eff[cond_eff].eff, var, val);
+    planPartStateSet(op->cond_eff[cond_eff].eff, var, val);
 }
 
 void planOpDelLastCondEff(plan_op_t *op)
@@ -133,10 +133,10 @@ void planOpCondEffSimplify(plan_op_t *op)
             if (e2->pre == NULL)
                 continue;
 
-            if (planPartStateEq(e2->pre, e1->pre, op->state_pool)){
+            if (planPartStateEq(e2->pre, e1->pre)){
                 // Extend effects of e1 by effects of e2
                 PLAN_PART_STATE_FOR_EACH(e2->eff, tmpi, var, val){
-                    planPartStateSet(op->state_pool, e1->eff, var, val);
+                    planPartStateSet(e1->eff, var, val);
                 }
 
                 // and destroy e2
@@ -224,11 +224,11 @@ static void planOpCondEffCopy(plan_state_pool_t *state_pool,
     plan_val_t val;
 
     PLAN_PART_STATE_FOR_EACH(src->pre, i, var, val){
-        planPartStateSet(state_pool, dst->pre, var, val);
+        planPartStateSet(dst->pre, var, val);
     }
 
     PLAN_PART_STATE_FOR_EACH(src->eff, i, var, val){
-        planPartStateSet(state_pool, dst->eff, var, val);
+        planPartStateSet(dst->eff, var, val);
     }
 }
 

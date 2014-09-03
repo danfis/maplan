@@ -66,6 +66,11 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags);
 void planProblemDel(plan_problem_t *problem);
 
 /**
+ * Initializes empty problem definition.
+ */
+void planProblemInit(plan_problem_t *prob);
+
+/**
  * Free allocated resources "in place"
  */
 void planProblemFree(plan_problem_t *prob);

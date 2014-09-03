@@ -147,7 +147,7 @@ static plan_list_lazy_t *listLazyCreate(const char *name)
 
 static plan_heur_t *heurCreate(const char *name,
                                const plan_problem_t *prob,
-                               const plan_operator_t *op, int op_size,
+                               const plan_op_t *op, int op_size,
                                const plan_succ_gen_t *succ_gen)
 {
     plan_heur_t *heur = NULL;
@@ -179,7 +179,7 @@ static plan_search_t *searchCreate(const char *search_name,
                                    const char *heur_name,
                                    const char *list_name,
                                    plan_problem_t *prob,
-                                   const plan_operator_t *op, int op_size,
+                                   const plan_op_t *op, int op_size,
                                    const plan_succ_gen_t *succ_gen,
                                    void *progress_data)
 {
@@ -328,7 +328,7 @@ static int runMA(plan_problem_agents_t *ma_prob)
     plan_search_t *search[ma_prob->agent_size];
     plan_path_t path;
     int agent_id[ma_prob->agent_size];
-    plan_operator_t *heur_op;
+    plan_op_t *heur_op;
     int heur_op_size;
     plan_succ_gen_t *heur_succ_gen;
     int i, res;

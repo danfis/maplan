@@ -34,6 +34,7 @@ OBJS += problem-fd
 OBJS += var
 OBJS += state
 OBJS += operator
+OBJS += op
 OBJS += dataarr
 OBJS += succgen
 OBJS += path

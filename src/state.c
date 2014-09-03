@@ -36,6 +36,9 @@ static void planStatePackerSet(plan_state_packer_t *packer,
 /** Sets mask (~0) corresponding to the variable in packed state buffer */
 static void planStatePackerSetMask(plan_state_packer_t *packer,
                                    plan_var_id_t var, void *buf);
+/** Opposite of planStatePackerSetMask() */
+static void planStatePackerClearMask(plan_state_packer_t *packer,
+                                     plan_var_id_t var, void *buf);
 /** Returns number of bits needed for storing all values in interval
  * [0,range). */
 static int packerBitsNeeded(plan_val_t range);
@@ -437,6 +440,13 @@ static void planStatePackerSetMask(plan_state_packer_t *packer,
     buf[packer->vars[var].pos] |= packer->vars[var].mask;
 }
 
+static void planStatePackerClearMask(plan_state_packer_t *packer,
+                                     plan_var_id_t var, void *_buf)
+{
+    plan_packer_word_t *buf = (plan_packer_word_t *)_buf;
+    buf[packer->vars[var].pos] &= ~packer->vars[var].mask;
+}
+
 static int packerBitsNeeded(plan_val_t range)
 {
     plan_packer_word_t max_val = range - 1;
@@ -606,6 +616,37 @@ void planPartStateSet(plan_state_pool_t *pool,
     state->vals[state->vals_size - 1].var = var;
     state->vals[state->vals_size - 1].val = val;
     qsort(state->vals, state->vals_size, sizeof(plan_part_state_pair_t), valsCmp);
+}
+
+void planPartStateUnset(plan_state_pool_t *pool, plan_part_state_t *state,
+                        plan_var_id_t var)
+{
+    int i;
+
+    state->val[var] = PLAN_VAL_UNDEFINED;
+    state->is_set[var] = 0;
+
+    planStatePackerSet(pool->packer, var, 0, state->valbuf);
+    planStatePackerClearMask(pool->packer, var, state->maskbuf);
+
+    for (i = 0; i < state->vals_size; ++i){
+        if (state->vals[i].var == var){
+            state->vals[i] = state->vals[state->vals_size - 1];
+            --state->vals_size;
+            break;
+        }
+    }
+
+    if (state->vals_size == 0 && state->vals){
+        BOR_FREE(state->vals);
+        state->vals = NULL;
+    }else if (state->vals){
+        state->vals = BOR_REALLOC_ARR(state->vals,
+                                      plan_part_state_pair_t,
+                                      state->vals_size);
+        qsort(state->vals, state->vals_size,
+              sizeof(plan_part_state_pair_t), valsCmp);
+    }
 }
 
 void planPartStateToState(const plan_part_state_t *part_state,

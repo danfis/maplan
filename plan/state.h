@@ -280,6 +280,12 @@ void planPartStateSet(plan_state_pool_t *pool, plan_part_state_t *state,
                       plan_var_id_t var, plan_val_t val);
 
 /**
+ * Unset the value of the specified variable.
+ */
+void planPartStateUnset(plan_state_pool_t *pool, plan_part_state_t *state,
+                        plan_var_id_t var);
+
+/**
  * Returns true if var's variable is set.
  */
 _bor_inline int planPartStateIsSet(const plan_part_state_t *state,

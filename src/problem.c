@@ -16,12 +16,12 @@ void planProblemDel(plan_problem_t *plan)
     BOR_FREE(plan);
 }
 
-static void freeOps(plan_operator_t *ops, int ops_size)
+static void freeOps(plan_op_t *ops, int ops_size)
 {
     int i;
 
     for (i = 0; i < ops_size; ++i){
-        planOperatorFree(ops + i);
+        planOpFree(ops + i);
     }
     BOR_FREE(ops);
 }
@@ -62,9 +62,17 @@ void planProblemFree(plan_problem_t *plan)
 
 void planProblemAgentsDel(plan_problem_agents_t *agents)
 {
-    int i;
+    int i, opid;
+    plan_problem_t *agent;
 
     planProblemFree(&agents->glob);
+
+    for (i = 0; i < agents->agent_size; ++i){
+        agent = agents->agent + i;
+
+        for (opid = 0; opid < agent->op_size; ++opid)
+            planOpExtraMAOpFree(agent->op + opid);
+    }
 
     for (i = 0; i < agents->agent_size; ++i)
         planProblemFree(agents->agent + i);

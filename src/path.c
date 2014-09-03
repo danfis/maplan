@@ -35,7 +35,7 @@ void planPathCopy(plan_path_t *dst, const plan_path_t *src)
     }
 }
 
-void planPathPrepend(plan_path_t *path, plan_operator_t *op,
+void planPathPrepend(plan_path_t *path, plan_op_t *op,
                      plan_state_id_t from, plan_state_id_t to)
 {
     plan_path_op_t *path_op;

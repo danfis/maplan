@@ -3,7 +3,7 @@
 
 #include <plan/var.h>
 #include <plan/state.h>
-#include <plan/operator.h>
+#include <plan/op.h>
 #include <plan/succgen.h>
 
 #ifdef __cplusplus
@@ -21,14 +21,14 @@ struct _plan_problem_t {
     plan_state_pool_t *state_pool; /*!< Instance of state pool/registry */
     plan_state_id_t initial_state; /*!< State ID of the initial state */
     plan_part_state_t *goal;       /*!< Partial state representing goal */
-    plan_operator_t *op;           /*!< Array of operators */
+    plan_op_t *op;                 /*!< Array of operators */
     int op_size;                   /*!< Number of operators */
     plan_succ_gen_t *succ_gen;     /*!< Successor generator */
 
     /** Fllowing data are available only in case of agent problem defintion: */
-    char *agent_name;         /*!< Name of the corresponding agent */
-    plan_operator_t *proj_op; /*!< Projected operators */
-    int proj_op_size;         /*!< Number of projected operators */
+    char *agent_name;   /*!< Name of the corresponding agent */
+    plan_op_t *proj_op; /*!< Projected operators */
+    int proj_op_size;   /*!< Number of projected operators */
 };
 typedef struct _plan_problem_t plan_problem_t;
 

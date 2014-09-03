@@ -61,7 +61,7 @@ int planStateSpaceOpen(plan_state_space_t *ss,
 plan_state_space_node_t *planStateSpaceOpen2(plan_state_space_t *ss,
                                              plan_state_id_t state_id,
                                              plan_state_id_t parent_state_id,
-                                             plan_operator_t *op,
+                                             plan_op_t *op,
                                              plan_cost_t cost,
                                              plan_cost_t heuristic)
 {
@@ -95,7 +95,7 @@ int planStateSpaceReopen(plan_state_space_t *ss,
 plan_state_space_node_t *planStateSpaceReopen2(plan_state_space_t *ss,
                                                plan_state_id_t state_id,
                                                plan_state_id_t parent_state_id,
-                                               plan_operator_t *op,
+                                               plan_op_t *op,
                                                plan_cost_t cost,
                                                plan_cost_t heuristic)
 {

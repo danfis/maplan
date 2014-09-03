@@ -287,7 +287,7 @@ typedef int (*plan_search_inject_state_fn)(plan_search_t *search,
                                            plan_cost_t heuristic);
 
 struct _plan_search_applicable_ops_t {
-    plan_operator_t **op;  /*!< Array of applicable operators. This array
+    plan_op_t **op;        /*!< Array of applicable operators. This array
                                 must be big enough to hold all operators. */
     int op_size;           /*!< Size of .op[] */
     int op_found;          /*!< Number of found applicable operators */
@@ -369,7 +369,7 @@ int _planSearchHeuristic(plan_search_t *search,
  */
 void _planSearchAddLazySuccessors(plan_search_t *search,
                                   plan_state_id_t state_id,
-                                  plan_operator_t **op, int op_size,
+                                  plan_op_t **op, int op_size,
                                   plan_cost_t cost,
                                   plan_list_lazy_t *list);
 
@@ -393,7 +393,7 @@ void _planSearchReachedDeadEnd(plan_search_t *search);
  * The resulting state and node is returned via output arguments.\
  */
 int _planSearchNewState(plan_search_t *search,
-                        plan_operator_t *operator,
+                        plan_op_t *operator,
                         plan_state_id_t parent_state,
                         plan_state_id_t *new_state_id,
                         plan_state_space_node_t **new_node);
@@ -404,7 +404,7 @@ int _planSearchNewState(plan_search_t *search,
 plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
                                                   plan_state_id_t state,
                                                   plan_state_id_t parent_state,
-                                                  plan_operator_t *parent_op,
+                                                  plan_op_t *parent_op,
                                                   plan_cost_t cost,
                                                   plan_cost_t heur);
 

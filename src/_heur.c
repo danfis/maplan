@@ -96,7 +96,7 @@ typedef struct _heur_fact_op_t heur_fact_op_t;
 static void heurFactOpInit(heur_fact_op_t *fact_op,
                            const plan_var_t *var, int var_size,
                            const plan_part_state_t *goal,
-                           const plan_operator_t *op, int op_size,
+                           const plan_op_t *op, int op_size,
                            const plan_succ_gen_t *_succ_gen,
                            unsigned flags);
 
@@ -134,17 +134,17 @@ static void factFree(heur_fact_op_t *fact_op);
 
 /** Initializes and frees .op* srtuctures */
 static void opInit(heur_fact_op_t *fact_op,
-                   const plan_operator_t *ops, int ops_size,
+                   const plan_op_t *ops, int ops_size,
                    int artificial_goal);
 static void opFree(heur_fact_op_t *fact_op);
 /** Initializes and frees .precond structures. */
 static void opPreInit(heur_fact_op_t *fact_op,
-                      const plan_operator_t *ops, int ops_size,
+                      const plan_op_t *ops, int ops_size,
                       int artificial_goal,
                       int no_pre_fact);
 /** Initializes and frees .eff* structures */
 static void opEffInit(heur_fact_op_t *fact_op,
-                      const plan_operator_t *ops, int ops_size,
+                      const plan_op_t *ops, int ops_size,
                       int artificial_goal);
 /** Initializes .fact_pre structures */
 static void factPreInit(heur_fact_op_t *fact_op);
@@ -156,7 +156,7 @@ static void opSimplifyEffects(factarr_t *ref_eff, factarr_t *op_eff,
 /** Simplifies internal representation of operators so that there are no
  *  two operators applicable in the same time with the same effect. */
 static void opSimplify(heur_fact_op_t *fact_op,
-                       const plan_operator_t *op,
+                       const plan_op_t *op,
                        const plan_succ_gen_t *succ_gen);
 
 /** Set to flags if you want .fact_eff initialized */
@@ -172,7 +172,7 @@ static void opSimplify(heur_fact_op_t *fact_op,
 static void heurFactOpInit(heur_fact_op_t *fact_op,
                            const plan_var_t *var, int var_size,
                            const plan_part_state_t *goal,
-                           const plan_operator_t *op, int op_size,
+                           const plan_op_t *op, int op_size,
                            const plan_succ_gen_t *_succ_gen,
                            unsigned flags)
 {
@@ -350,12 +350,12 @@ static void factFree(heur_fact_op_t *fact_op)
 #endif /* HEUR_FACT_OP_FACT_T */
 
 static void opInit(heur_fact_op_t *fact_op,
-                   const plan_operator_t *ops, int ops_size,
+                   const plan_op_t *ops, int ops_size,
                    int artificial_goal)
 {
     int i, j, cond_eff_size;
     int cond_eff_ins;
-    plan_operator_cond_eff_t *cond_eff;
+    plan_op_cond_eff_t *cond_eff;
 
     // determine number of conditional effects in operators
     cond_eff_size = 0;
@@ -419,8 +419,8 @@ static void opFree(heur_fact_op_t *fact_op)
 
 static void opPrecondCondEffInit(factarr_t *precond,
                                  const val_to_id_t *vid,
-                                 const plan_operator_t *op,
-                                 const plan_operator_cond_eff_t *cond_eff)
+                                 const plan_op_t *op,
+                                 const plan_op_cond_eff_t *cond_eff)
 {
     int i, size, id;
     plan_var_id_t var;
@@ -449,7 +449,7 @@ static void opPrecondCondEffInit(factarr_t *precond,
 }
 
 static void opPreInit(heur_fact_op_t *fact_op,
-                      const plan_operator_t *ops, int ops_size,
+                      const plan_op_t *ops, int ops_size,
                       int artificial_goal,
                       int no_pre_fact)
 {
@@ -495,7 +495,7 @@ static void opPreInit(heur_fact_op_t *fact_op,
 }
 
 static void opEffCondEffInit(heur_fact_op_t *fact_op, factarr_t *eff,
-                             const plan_operator_cond_eff_t *cond_eff)
+                             const plan_op_cond_eff_t *cond_eff)
 {
     int j;
     plan_var_id_t var;
@@ -514,7 +514,7 @@ static void opEffCondEffInit(heur_fact_op_t *fact_op, factarr_t *eff,
 }
 
 static void opEffInit(heur_fact_op_t *fact_op,
-                      const plan_operator_t *ops, int ops_size,
+                      const plan_op_t *ops, int ops_size,
                       int artificial_goal)
 {
     int i, j, cond_eff_ins;
@@ -632,16 +632,16 @@ static void opSimplifyEffects(factarr_t *ref_eff, factarr_t *op_eff,
 }
 
 static void opSimplify(heur_fact_op_t *fact_op,
-                       const plan_operator_t *op,
+                       const plan_op_t *op,
                        const plan_succ_gen_t *succ_gen)
 {
     int i, ref_i, op_i;
-    const plan_operator_t *ref_op; // reference operator
-    plan_operator_t **ops;   // list of operators applicable in ref_op->pre
+    const plan_op_t *ref_op; // reference operator
+    plan_op_t **ops;         // list of operators applicable in ref_op->pre
     int ops_size;            // number of applicable operators
 
     // Allocate array for applicable operators
-    ops = BOR_ALLOC_ARR(plan_operator_t *, fact_op->op_size);
+    ops = BOR_ALLOC_ARR(plan_op_t *, fact_op->op_size);
 
     for (ref_i = 0; ref_i < fact_op->op_size; ++ref_i){
         if (fact_op->op_id[ref_i] < 0)
@@ -663,7 +663,7 @@ static void opSimplify(heur_fact_op_t *fact_op,
 
             // compute id of the operator
             op_i = ((unsigned long)ops[i] - (unsigned long)op)
-                        / sizeof(plan_operator_t);
+                        / sizeof(plan_op_t);
 
             // simplify effects, if possible delete in reference operator
             opSimplifyEffects(fact_op->op_eff + ref_i, fact_op->op_eff + op_i,

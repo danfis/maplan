@@ -7,7 +7,7 @@
 /** A structure containing a stored value */
 struct _node_t {
     plan_state_id_t parent_state_id;
-    plan_operator_t *op;
+    plan_op_t *op;
 };
 typedef struct _node_t node_t;
 
@@ -33,10 +33,10 @@ static void planListLazyMapDel(plan_list_lazy_t *);
 static void planListLazyMapPush(plan_list_lazy_t *,
                                 plan_cost_t cost,
                                 plan_state_id_t parent_state_id,
-                                plan_operator_t *op);
+                                plan_op_t *op);
 static int planListLazyMapPop(plan_list_lazy_t *,
                               plan_state_id_t *parent_state_id,
-                              plan_operator_t **op);
+                              plan_op_t **op);
 static void planListLazyMapClear(plan_list_lazy_t *);
 
 
@@ -74,7 +74,7 @@ static void planListLazyMapDel(plan_list_lazy_t *_l)
 static void planListLazyMapPush(plan_list_lazy_t *_l,
                                 plan_cost_t cost,
                                 plan_state_id_t parent_state_id,
-                                plan_operator_t *op)
+                                plan_op_t *op)
 {
     plan_list_lazy_map_t *l = LIST_FROM_PARENT(_l);
     node_t n;
@@ -104,7 +104,7 @@ static void planListLazyMapPush(plan_list_lazy_t *_l,
 
 static int planListLazyMapPop(plan_list_lazy_t *_l,
                               plan_state_id_t *parent_state_id,
-                              plan_operator_t **op)
+                              plan_op_t **op)
 {
     plan_list_lazy_map_t *l = LIST_FROM_PARENT(_l);
     node_t *n;

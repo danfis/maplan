@@ -51,7 +51,7 @@ static int relax_test_ff_size = sizeof(relax_test_ff) / sizeof(relax_test_t);
 
 typedef plan_heur_t *(*heur_new_fn)(const plan_var_t *var, int var_size,
                                     const plan_part_state_t *goal,
-                                    const plan_operator_t *op, int op_size,
+                                    const plan_op_t *op, int op_size,
                                     const plan_succ_gen_t *succ_gen);
 
 static void testRelax(const char *fn, heur_new_fn new_fn,
@@ -60,7 +60,7 @@ static void testRelax(const char *fn, heur_new_fn new_fn,
     plan_problem_t *p;
     plan_heur_t *heur;
     plan_state_t *state;
-    plan_operator_t **op;
+    plan_op_t **op;
     plan_heur_res_t res;
     int op_size, i, j;
     const char **op_name;
@@ -70,7 +70,7 @@ static void testRelax(const char *fn, heur_new_fn new_fn,
                   p->op, p->op_size, p->succ_gen);
     state = planStateNew(p->state_pool);
 
-    op = alloca(sizeof(plan_operator_t *) * p->op_size);
+    op = alloca(sizeof(plan_op_t *) * p->op_size);
     for (i = 0; i < relax_test_size; ++i){
         for (j = 0; j < RELAX_TEST_STATE_SIZE; ++j){
             planStateSet(state, j, relax_test[i].state[j]);
@@ -303,7 +303,7 @@ static void testHeur2(heur_new_fn new_fn)
 
 static plan_heur_t *goalCountNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_operator_t *op, int op_size,
+                                 const plan_op_t *op, int op_size,
                                  const plan_succ_gen_t *succ_gen)
 {
     return planHeurGoalCountNew(goal);

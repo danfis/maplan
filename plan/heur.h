@@ -36,9 +36,9 @@ struct _plan_heur_res_t {
      *  Note 2: The pointers in .pref_op[] should be from the same array of
      *          operators as were used in building the heuristic object.
      */
-    plan_operator_t **pref_op; /*!< Input/Output list of operators */
-    int pref_op_size;          /*!< Size of .pref_op[] */
-    int pref_size;             /*!< Number of preferred operators */
+    plan_op_t **pref_op; /*!< Input/Output list of operators */
+    int pref_op_size;    /*!< Size of .pref_op[] */
+    int pref_size;       /*!< Number of preferred operators */
 };
 typedef struct _plan_heur_res_t plan_heur_res_t;
 
@@ -106,7 +106,7 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal);
  */
 plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_operator_t *op, int op_size,
+                                 const plan_op_t *op, int op_size,
                                  const plan_succ_gen_t *succ_gen);
 
 /**
@@ -116,7 +116,7 @@ plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
  */
 plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_operator_t *op, int op_size,
+                                 const plan_op_t *op, int op_size,
                                  const plan_succ_gen_t *succ_gen);
 
 /**
@@ -126,7 +126,7 @@ plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
  */
 plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
                                 const plan_part_state_t *goal,
-                                const plan_operator_t *op, int op_size,
+                                const plan_op_t *op, int op_size,
                                 const plan_succ_gen_t *succ_gen);
 
 /**
@@ -136,7 +136,7 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
  */
 plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
                               const plan_part_state_t *goal,
-                              const plan_operator_t *op, int op_size,
+                              const plan_op_t *op, int op_size,
                               const plan_succ_gen_t *succ_gen);
 
 /**

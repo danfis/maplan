@@ -85,7 +85,7 @@ _bor_inline plan_cost_t lmCutUpdateOpCost(const oparr_t *cut, op_t *op);
 
 plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
                               const plan_part_state_t *goal,
-                              const plan_operator_t *op, int op_size,
+                              const plan_op_t *op, int op_size,
                               const plan_succ_gen_t *succ_gen)
 {
     plan_heur_lm_cut_t *heur;

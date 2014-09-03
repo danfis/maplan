@@ -30,7 +30,7 @@ static void graphPruneBySCC(plan_causal_graph_graph_t *graph,
                             const scc_t *scc);
 /** Creates a weighted graph from operators */
 static void fillGraphs(plan_causal_graph_t *cg,
-                       const plan_operator_t *op, int op_size);
+                       const plan_op_t *op, int op_size);
 /** Fills .important_var array with 0/1 signaling whether there is
  *  connection between the variable and a goal. */
 static void markImportantVars(plan_causal_graph_t *cg,
@@ -42,7 +42,7 @@ static scc_t *sccNew(const plan_causal_graph_graph_t *graph, int var_size);
 static void sccDel(scc_t *);
 
 plan_causal_graph_t *planCausalGraphNew(int var_size,
-                                        const plan_operator_t *op, int op_size,
+                                        const plan_op_t *op, int op_size,
                                         const plan_part_state_t *goal)
 {
     plan_causal_graph_t *cg;
@@ -272,9 +272,9 @@ static void graphAddConnection(bor_rbtree_int_t *graph, int from, int to)
 }
 
 static void fillGraphs(plan_causal_graph_t *cg,
-                       const plan_operator_t *op, int op_size)
+                       const plan_op_t *op, int op_size)
 {
-    plan_operator_cond_eff_t *cond_eff;
+    plan_op_cond_eff_t *cond_eff;
     int i, j, prei, effi;
     plan_var_id_t pre_var, eff_var;
     bor_rbtree_int_t *succ_graph, *pred_graph;

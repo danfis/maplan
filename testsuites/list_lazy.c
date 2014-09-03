@@ -5,7 +5,7 @@ TEST(testListLazyHeap)
 {
     plan_list_lazy_t *l;
     plan_state_id_t sid;
-    plan_operator_t *op;
+    plan_op_t *op;
 
     l = planListLazyHeapNew();
     planListLazyPush(l, 1, 1, NULL);
@@ -35,11 +35,11 @@ TEST(testListLazyHeap)
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);
     assertEquals(sid, 2);
-    assertEquals(op, (plan_operator_t *)0x1);
+    assertEquals(op, (plan_op_t *)0x1);
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);
     assertEquals(sid, 4);
-    assertEquals(op, (plan_operator_t *)0x2);
+    assertEquals(op, (plan_op_t *)0x2);
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);
     assertEquals(sid, 5);
@@ -53,7 +53,7 @@ TEST(testListLazyHeap)
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);
     assertEquals(sid, 3);
-    assertEquals(op, (plan_operator_t *)0x3);
+    assertEquals(op, (plan_op_t *)0x3);
 
     assertEquals(planListLazyPop(l, &sid, &op), -1);
     assertEquals(planListLazyPop(l, &sid, &op), -1);
@@ -65,7 +65,7 @@ TEST(testListLazyBucket)
 {
     plan_list_lazy_t *l;
     plan_state_id_t sid;
-    plan_operator_t *op;
+    plan_op_t *op;
 
     l = planListLazyBucketNew();
     planListLazyPush(l, 1, 1, NULL);
@@ -95,11 +95,11 @@ TEST(testListLazyBucket)
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);
     assertEquals(sid, 2);
-    assertEquals(op, (plan_operator_t *)0x1);
+    assertEquals(op, (plan_op_t *)0x1);
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);
     assertEquals(sid, 4);
-    assertEquals(op, (plan_operator_t *)0x2);
+    assertEquals(op, (plan_op_t *)0x2);
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);
     assertEquals(sid, 5);
@@ -111,7 +111,7 @@ TEST(testListLazyBucket)
 
     assertEquals(planListLazyPop(l, &sid, &op), 0);
     assertEquals(sid, 3);
-    assertEquals(op, (plan_operator_t *)0x3);
+    assertEquals(op, (plan_op_t *)0x3);
 
     assertEquals(planListLazyPop(l, &sid, &op), -1);
     assertEquals(planListLazyPop(l, &sid, &op), -1);

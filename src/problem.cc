@@ -164,11 +164,10 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
 
 static void agentAddOperator(plan_problem_t *dst,
                              plan_state_pool_t *state_pool,
-                             int id, const plan_operator_t *op)
+                             int id, const plan_op_t *op)
 {
-    planOperatorInit(dst->op + dst->op_size, state_pool);
-    planOperatorCopy(dst->op + dst->op_size, op);
-    planOperatorSetGlobalId(dst->op + dst->op_size, id);
+    planOpInit(dst->op + dst->op_size, state_pool);
+    planOpCopy(dst->op + dst->op_size, op);
     ++dst->op_size;
 }
 
@@ -178,7 +177,7 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
     int agent_size = agents->agent_size;
     plan_problem_t *ap = agents->agent;
     int i, j, inserted;
-    const plan_operator_t *glob_op;
+    const plan_op_t *glob_op;
     std::vector<std::string> name_token;
 
     // Create name token for each agent
@@ -190,7 +189,7 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
 
     // Prepare agents' structures
     for (i = 0; i < agents->agent_size; ++i){
-        ap[i].op = BOR_ALLOC_ARR(plan_operator_t, prob->op_size);
+        ap[i].op = BOR_ALLOC_ARR(plan_op_t, prob->op_size);
         ap[i].op_size = 0;
     }
 
@@ -216,13 +215,13 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
 
     // Given back unneeded memory
     for (i = 0; i < agents->agent_size; ++i){
-        ap[i].op = BOR_REALLOC_ARR(ap[i].op, plan_operator_t, ap[i].op_size);
+        ap[i].op = BOR_REALLOC_ARR(ap[i].op, plan_op_t, ap[i].op_size);
     }
 }
 
 struct AgentVarVal {
     std::vector<bool> use; /*!< true for each agent if the value is used
-                               in precondition or effect of its operator */
+                                in precondition or effect of its operator */
     std::vector<bool> pre; /*!< true for each agent if the value is used in
                                 precondition of its operator */
     bool pub;  /*!< True if the value is public (used by more than one
@@ -364,7 +363,7 @@ static void agentSetSendPeers(plan_problem_t *prob,
                               int agent_size,
                               const AgentVarVals &vals)
 {
-    plan_operator_t *op;
+    plan_op_t *op;
     plan_var_id_t var;
     plan_val_t val;
     int i;
@@ -377,7 +376,7 @@ static void agentSetSendPeers(plan_problem_t *prob,
 
             PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
                 if (vals.usedAsPre(var, val, peer)){
-                    planOperatorAddSendPeer(op, peer);
+                    planOpExtraMAOpAddRecvAgent(op, peer);
                     break;
                 }
             }
@@ -400,16 +399,16 @@ static bool agentIsPartStatePublic(const plan_part_state_t *ps,
     return false;
 }
 
-static void agentSetPrivateOps(plan_operator_t *ops, int op_size,
+static void agentSetPrivateOps(plan_op_t *ops, int op_size,
                                const AgentVarVals &vals)
 {
-    plan_operator_t *op;
+    plan_op_t *op;
 
     for (int opi = 0; opi < op_size; ++opi){
         op = ops + opi;
         if (!agentIsPartStatePublic(op->eff, vals)
                 && !agentIsPartStatePublic(op->pre, vals)){
-            planOperatorSetPrivate(op);
+            planOpExtraMAOpSetPrivate(op);
         }
     }
 }
@@ -433,7 +432,7 @@ static void agentProjectPartState(plan_part_state_t *ps,
         planPartStateUnset(state_pool, ps, unset[i]);
 }
 
-static bool agentProjectOp(plan_operator_t *op, int agent_id,
+static bool agentProjectOp(plan_op_t *op, int agent_id,
                            const AgentVarVals &vals)
 {
     agentProjectPartState(op->pre, op->state_pool, agent_id, vals);
@@ -446,34 +445,34 @@ static bool agentProjectOp(plan_operator_t *op, int agent_id,
 
 static void agentCreateProjectedOps(plan_problem_t *agent,
                                     int agent_id,
-                                    const plan_operator_t *ops,
+                                    const plan_op_t *ops,
                                     int ops_size,
                                     const AgentVarVals &vals)
 {
-    plan_operator_t *proj_op;
+    plan_op_t *proj_op;
 
     // Allocate enough memory
-    agent->proj_op = BOR_ALLOC_ARR(plan_operator_t, ops_size);
+    agent->proj_op = BOR_ALLOC_ARR(plan_op_t, ops_size);
     agent->proj_op_size = 0;
 
     for (int opi = 0; opi < ops_size; ++opi){
         proj_op = agent->proj_op + agent->proj_op_size;
 
-        planOperatorInit(proj_op, agent->state_pool);
-        planOperatorCopy(proj_op, ops + opi);
+        planOpInit(proj_op, agent->state_pool);
+        planOpCopy(proj_op, ops + opi);
 
         if (agentProjectOp(proj_op, agent_id, vals)){
-            planOperatorSetOwner(proj_op, agent_id);
-            planOperatorSetGlobalId(proj_op, opi);
+            planOpExtraMAProjOpSetOwner(proj_op, agent_id);
+            planOpExtraMAProjOpSetGlobalId(proj_op, opi);
             ++agent->proj_op_size;
         }else{
-            planOperatorFree(proj_op);
+            planOpFree(proj_op);
         }
     }
 
     // Given back unused memory
     agent->proj_op = BOR_REALLOC_ARR(agent->proj_op,
-                                     plan_operator_t,
+                                     plan_op_t,
                                      agent->proj_op_size);
 }
 
@@ -592,14 +591,14 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
 
     // Allocate array for operators
     p->op_size = len;
-    p->op = BOR_ALLOC_ARR(plan_operator_t, p->op_size);
+    p->op = BOR_ALLOC_ARR(plan_op_t, p->op_size);
 
     for (i = 0, ins = 0; i < len; ++i){
         int num_effects = 0;
         const PlanProblemOperator &proto_op = proto->operator_(i);
-        plan_operator_t *op = p->op + ins;
+        plan_op_t *op = p->op + ins;
 
-        planOperatorInit(op, p->state_pool);
+        planOpInit(op, p->state_pool);
         op->name = strdup(proto_op.name().c_str());
         op->cost = proto_op.cost();
 
@@ -609,7 +608,7 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
             if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
                 continue;
 
-            planOperatorSetPrecondition(op, var_map[v.var()], v.val());
+            planOpSetPre(op, var_map[v.var()], v.val());
         }
 
         const PlanProblemPartState &proto_eff = proto_op.eff();
@@ -618,14 +617,14 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
             if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
                 continue;
 
-            planOperatorSetEffect(op, var_map[v.var()], v.val());
+            planOpSetEff(op, var_map[v.var()], v.val());
             ++num_effects;
         }
 
         for (int j = 0; j < proto_op.cond_eff_size(); ++j){
             int num_cond_eff = 0;
             const PlanProblemCondEff &proto_cond_eff = proto_op.cond_eff(j);
-            int cond_eff_id = planOperatorAddCondEff(op);
+            int cond_eff_id = planOpAddCondEff(op);
 
             const PlanProblemPartState &proto_pre = proto_cond_eff.pre();
             for (int k = 0; k < proto_pre.val_size(); ++k){
@@ -633,7 +632,7 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
                 if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
                     continue;
 
-                planOperatorCondEffSetPre(op, cond_eff_id, var_map[v.var()], v.val());
+                planOpCondEffSetPre(op, cond_eff_id, var_map[v.var()], v.val());
             }
 
             const PlanProblemPartState &proto_eff = proto_cond_eff.eff();
@@ -642,21 +641,21 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
                 if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
                     continue;
 
-                planOperatorCondEffSetEff(op, cond_eff_id, var_map[v.var()], v.val());
+                planOpCondEffSetEff(op, cond_eff_id, var_map[v.var()], v.val());
                 ++num_effects;
                 ++num_cond_eff;
             }
 
             if (num_cond_eff == 0){
-                planOperatorDelLastCondEff(op);
+                planOpDelLastCondEff(op);
             }
         }
 
         if (num_effects > 0){
-            planOperatorCondEffSimplify(op);
+            planOpCondEffSimplify(op);
             ++ins;
         }else{
-            planOperatorFree(op);
+            planOpFree(op);
         }
     }
 
@@ -664,7 +663,7 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
         // Reset number of operators
         p->op_size = ins;
         // and give back some memory
-        p->op = BOR_REALLOC_ARR(p->op, plan_operator_t, p->op_size);
+        p->op = BOR_REALLOC_ARR(p->op, plan_op_t, p->op_size);
     }
 }
 

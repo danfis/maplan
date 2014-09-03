@@ -11,7 +11,7 @@
 
 struct _node_t {
     plan_state_id_t parent_state_id;
-    plan_operator_t *op;
+    plan_op_t *op;
 };
 typedef struct _node_t node_t;
 
@@ -32,10 +32,10 @@ static void planListLazyBucketDel(plan_list_lazy_t *l);
 static void planListLazyBucketPush(plan_list_lazy_t *l,
                                    plan_cost_t cost,
                                    plan_state_id_t parent_state_id,
-                                   plan_operator_t *op);
+                                   plan_op_t *op);
 static int planListLazyBucketPop(plan_list_lazy_t *l,
                                  plan_state_id_t *parent_state_id,
-                                 plan_operator_t **op);
+                                 plan_op_t **op);
 static void planListLazyBucketClear(plan_list_lazy_t *l);
 
 
@@ -79,7 +79,7 @@ static void planListLazyBucketDel(plan_list_lazy_t *_l)
 static void planListLazyBucketPush(plan_list_lazy_t *_l,
                                    plan_cost_t cost,
                                    plan_state_id_t parent_state_id,
-                                   plan_operator_t *op)
+                                   plan_op_t *op)
 {
     plan_list_lazy_bucket_t *l = LIST_FROM_PARENT(_l);
     bor_fifo_t *bucket;
@@ -120,7 +120,7 @@ static void planListLazyBucketPush(plan_list_lazy_t *_l,
 
 static int planListLazyBucketPop(plan_list_lazy_t *_l,
                                  plan_state_id_t *parent_state_id,
-                                 plan_operator_t **op)
+                                 plan_op_t **op)
 {
     plan_list_lazy_bucket_t *l = LIST_FROM_PARENT(_l);
     bor_fifo_t *bucket;

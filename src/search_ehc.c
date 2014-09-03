@@ -25,7 +25,7 @@ static void addSuccessors(plan_search_ehc_t *ehc, plan_state_id_t state_id);
 static int processState(plan_search_ehc_t *ehc,
                         plan_state_id_t cur_state_id,
                         plan_state_id_t parent_state_id,
-                        plan_operator_t *parent_op);
+                        plan_op_t *parent_op);
 
 /** Frees allocated resorces */
 static void planSearchEHCDel(plan_search_t *_ehc);
@@ -94,7 +94,7 @@ static int planSearchEHCStep(plan_search_t *_ehc)
 {
     plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
     plan_state_id_t parent_state_id, cur_state_id;
-    plan_operator_t *parent_op;
+    plan_op_t *parent_op;
 
     // get the next node in list
     if (planListLazyPop(ehc->list, &parent_state_id, &parent_op) != 0){
@@ -141,7 +141,7 @@ static void addSuccessors(plan_search_ehc_t *ehc, plan_state_id_t state_id)
 static int processState(plan_search_ehc_t *ehc,
                         plan_state_id_t cur_state_id,
                         plan_state_id_t parent_state_id,
-                        plan_operator_t *parent_op)
+                        plan_op_t *parent_op)
 {
     plan_cost_t cur_heur;
     int res;

@@ -2,7 +2,7 @@
 #define __PLAN_LIST_LAZY_H__
 
 #include <plan/state.h>
-#include <plan/operator.h>
+#include <plan/op.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,10 +13,10 @@ typedef struct _plan_list_lazy_t plan_list_lazy_t;
 typedef void (*plan_list_lazy_del_fn)(plan_list_lazy_t *);
 typedef void (*plan_list_lazy_push_fn)(plan_list_lazy_t *, plan_cost_t cost,
                                        plan_state_id_t parent_state_id,
-                                       plan_operator_t *op);
+                                       plan_op_t *op);
 typedef int (*plan_list_lazy_pop_fn)(plan_list_lazy_t *,
                                      plan_state_id_t *parent_state_id,
-                                     plan_operator_t **op);
+                                     plan_op_t **op);
 typedef void (*plan_list_lazy_clear_fn)(plan_list_lazy_t *);
 
 struct _plan_list_lazy_t {
@@ -63,7 +63,7 @@ _bor_inline void planListLazyDel(plan_list_lazy_t *l);
 _bor_inline void planListLazyPush(plan_list_lazy_t *l,
                                   plan_cost_t cost,
                                   plan_state_id_t parent_state_id,
-                                  plan_operator_t *op);
+                                  plan_op_t *op);
 
 /**
  * Pops the next element from the list that has the lowest cost.
@@ -71,7 +71,7 @@ _bor_inline void planListLazyPush(plan_list_lazy_t *l,
  */
 _bor_inline int planListLazyPop(plan_list_lazy_t *l,
                                 plan_state_id_t *parent_state_id,
-                                plan_operator_t **op);
+                                plan_op_t **op);
 
 /**
  * Empties the list.
@@ -87,14 +87,14 @@ _bor_inline void planListLazyDel(plan_list_lazy_t *l)
 _bor_inline void planListLazyPush(plan_list_lazy_t *l,
                                   plan_cost_t cost,
                                   plan_state_id_t parent_state_id,
-                                  plan_operator_t *op)
+                                  plan_op_t *op)
 {
     l->push_fn(l, cost, parent_state_id, op);
 }
 
 _bor_inline int planListLazyPop(plan_list_lazy_t *l,
                                 plan_state_id_t *parent_state_id,
-                                plan_operator_t **op)
+                                plan_op_t **op)
 {
     return l->pop_fn(l, parent_state_id, op);
 }

@@ -78,7 +78,7 @@ static int planSearchLazyStep(plan_search_t *_lazy)
 {
     plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
     plan_state_id_t parent_state_id, cur_state_id;
-    plan_operator_t *parent_op;
+    plan_op_t *parent_op;
     plan_cost_t cur_heur;
     int res;
 
@@ -96,7 +96,7 @@ static int planSearchLazyStep(plan_search_t *_lazy)
         parent_state_id = PLAN_NO_STATE;
     }else{
         // create a new state
-        cur_state_id = planOperatorApply(parent_op, parent_state_id);
+        cur_state_id = planOpApply(parent_op, parent_state_id);
     }
 
     // check whether the state was already visited

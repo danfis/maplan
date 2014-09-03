@@ -210,7 +210,7 @@ int _planSearchHeuristic(plan_search_t *search,
 
 void _planSearchAddLazySuccessors(plan_search_t *search,
                                   plan_state_id_t state_id,
-                                  plan_operator_t **op, int op_size,
+                                  plan_op_t **op, int op_size,
                                   plan_cost_t cost,
                                   plan_list_lazy_t *list)
 {
@@ -264,7 +264,7 @@ void _planSearchReachedDeadEnd(plan_search_t *search)
 }
 
 int _planSearchNewState(plan_search_t *search,
-                        plan_operator_t *operator,
+                        plan_op_t *operator,
                         plan_state_id_t parent_state,
                         plan_state_id_t *new_state_id,
                         plan_state_space_node_t **new_node)
@@ -272,7 +272,7 @@ int _planSearchNewState(plan_search_t *search,
     plan_state_id_t state_id;
     plan_state_space_node_t *node;
 
-    state_id = planOperatorApply(operator, parent_state);
+    state_id = planOpApply(operator, parent_state);
     node     = planStateSpaceNode(search->state_space, state_id);
 
     if (new_state_id)
@@ -288,7 +288,7 @@ int _planSearchNewState(plan_search_t *search,
 plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
                                                   plan_state_id_t state,
                                                   plan_state_id_t parent_state,
-                                                  plan_operator_t *parent_op,
+                                                  plan_op_t *parent_op,
                                                   plan_cost_t cost,
                                                   plan_cost_t heur)
 {
@@ -476,7 +476,7 @@ static void extractPath(plan_state_space_t *state_space,
 
 static void planSearchApplicableOpsInit(plan_search_t *search, int op_size)
 {
-    search->applicable_ops.op = BOR_ALLOC_ARR(plan_operator_t *, op_size);
+    search->applicable_ops.op = BOR_ALLOC_ARR(plan_op_t *, op_size);
     search->applicable_ops.op_size = op_size;
     search->applicable_ops.op_found = 0;
     search->applicable_ops.state = PLAN_NO_STATE;
@@ -575,17 +575,17 @@ static int maSendPublicState(plan_search_t *search,
 {
     plan_ma_msg_t *msg;
     const void *statebuf;
-    int res, i, len, *peers;
+    int res, i, len;
+    const int *peers;
 
-    if (node->op == NULL || planOperatorIsPrivate(node->op))
+    if (node->op == NULL || planOpExtraMAOpIsPrivate(node->op))
         return -2;
 
     statebuf = planStatePoolGetPackedState(search->state_pool, node->state_id);
     if (statebuf == NULL)
         return -1;
 
-    peers = node->op->send_peer;
-    len   = node->op->send_peer_size;
+    peers = planOpExtraMAOpRecvAgents(node->op, &len);
     if (len == 0)
         return -1;
 

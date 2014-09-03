@@ -4,7 +4,7 @@
 #include <boruvka/pairheap.h>
 
 #include <plan/state.h>
-#include <plan/operator.h>
+#include <plan/op.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,7 +17,7 @@ extern "C" {
 struct _plan_state_space_node_t {
     plan_state_id_t state_id;        /*!< ID of the corresponding state */
     plan_state_id_t parent_state_id; /*!< ID of the parent state */
-    plan_operator_t *op;             /*!< Creating operator */
+    plan_op_t *op;                   /*!< Creating operator */
     plan_cost_t cost;                /*!< Cost of the path from the initial
                                           state to this state. */
     plan_cost_t heuristic;           /*!< Value of the heuristic */
@@ -68,7 +68,7 @@ int planStateSpaceOpen(plan_state_space_t *ss,
 plan_state_space_node_t *planStateSpaceOpen2(plan_state_space_t *ss,
                                              plan_state_id_t state_id,
                                              plan_state_id_t parent_state_id,
-                                             plan_operator_t *op,
+                                             plan_op_t *op,
                                              plan_cost_t cost,
                                              plan_cost_t heuristic);
 
@@ -87,7 +87,7 @@ int planStateSpaceReopen(plan_state_space_t *ss,
 plan_state_space_node_t *planStateSpaceReopen2(plan_state_space_t *ss,
                                                plan_state_id_t state_id,
                                                plan_state_id_t parent_state_id,
-                                               plan_operator_t *op,
+                                               plan_op_t *op,
                                                plan_cost_t cost,
                                                plan_cost_t heuristic);
 

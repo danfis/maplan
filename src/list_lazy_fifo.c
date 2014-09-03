@@ -11,7 +11,7 @@ typedef struct _plan_list_lazy_fifo_t plan_list_lazy_fifo_t;
 
 struct _plan_list_lazy_fifo_el_t {
     plan_state_id_t parent_state_id;
-    plan_operator_t *op;
+    plan_op_t *op;
 };
 typedef struct _plan_list_lazy_fifo_el_t plan_list_lazy_fifo_el_t;
 
@@ -22,10 +22,10 @@ static void planListLazyFifoDel(plan_list_lazy_t *l);
 static void planListLazyFifoPush(plan_list_lazy_t *l,
                                  plan_cost_t cost,
                                  plan_state_id_t parent_state_id,
-                                 plan_operator_t *op);
+                                 plan_op_t *op);
 static int planListLazyFifoPop(plan_list_lazy_t *l,
                                plan_state_id_t *parent_state_id,
-                               plan_operator_t **op);
+                               plan_op_t **op);
 static void planListLazyFifoClear(plan_list_lazy_t *l);
 
 
@@ -60,7 +60,7 @@ void planListLazyFifoDel(plan_list_lazy_t *_l)
 static void planListLazyFifoPush(plan_list_lazy_t *_l,
                                  plan_cost_t cost,
                                  plan_state_id_t parent_state_id,
-                                 plan_operator_t *op)
+                                 plan_op_t *op)
 {
     plan_list_lazy_fifo_t *l = LIST_FROM_PARENT(_l);
     plan_list_lazy_fifo_el_t el;
@@ -73,7 +73,7 @@ static void planListLazyFifoPush(plan_list_lazy_t *_l,
 
 static int planListLazyFifoPop(plan_list_lazy_t *_l,
                                plan_state_id_t *parent_state_id,
-                               plan_operator_t **op)
+                               plan_op_t **op)
 {
     plan_list_lazy_fifo_t *l = LIST_FROM_PARENT(_l);
     plan_list_lazy_fifo_el_t *el;

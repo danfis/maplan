@@ -324,3 +324,106 @@ TEST(testStatePreEff)
     planPartStateDel(parts[3]);
     planStatePoolDel(pool);
 }
+
+TEST(testPartStateUnset)
+{
+    plan_var_t vars[4];
+    plan_state_pool_t *pool;
+    plan_part_state_t *ps;
+    plan_state_t *state;
+
+    planVarInit(vars + 0);
+    planVarInit(vars + 1);
+    planVarInit(vars + 2);
+    planVarInit(vars + 3);
+
+    vars[0].range = 3;
+    vars[1].range = 2;
+    vars[2].range = 2;
+    vars[3].range = 4;
+
+    pool = planStatePoolNew(vars, 4);
+    ps = planPartStateNew(pool);
+
+    planPartStateSet(pool, ps, 1, 1);
+    planPartStateSet(pool, ps, 2, 0);
+    planPartStateSet(pool, ps, 3, 3);
+
+    assertFalse(planPartStateIsSet(ps, 0));
+    assertTrue(planPartStateIsSet(ps, 1));
+    assertTrue(planPartStateIsSet(ps, 2));
+    assertTrue(planPartStateIsSet(ps, 3));
+    assertEquals(planPartStateGet(ps, 0), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(ps, 1), 1);
+    assertEquals(planPartStateGet(ps, 2), 0);
+    assertEquals(planPartStateGet(ps, 3), 3);
+
+    state = planStateNew(pool);
+    planStateSet(state, 0, 1);
+    planStateSet(state, 1, 1);
+    planStateSet(state, 2, 0);
+    planStateSet(state, 3, 3);
+    planStatePoolInsert(pool, state); // ID = 0
+
+    planStateSet(state, 0, 1);
+    planStateSet(state, 1, 1);
+    planStateSet(state, 2, 1);
+    planStateSet(state, 3, 1);
+    planStatePoolInsert(pool, state); // ID = 1
+
+    planStateSet(state, 0, 1);
+    planStateSet(state, 1, 1);
+    planStateSet(state, 2, 0);
+    planStateSet(state, 3, 2);
+    planStatePoolInsert(pool, state); // ID = 2
+
+    assertTrue(planStatePoolPartStateIsSubset(pool, ps, 0));
+    assertFalse(planStatePoolPartStateIsSubset(pool, ps, 1));
+    assertFalse(planStatePoolPartStateIsSubset(pool, ps, 2));
+
+
+    planPartStateUnset(pool, ps, 3);
+    assertFalse(planPartStateIsSet(ps, 0));
+    assertTrue(planPartStateIsSet(ps, 1));
+    assertTrue(planPartStateIsSet(ps, 2));
+    assertFalse(planPartStateIsSet(ps, 3));
+    assertEquals(planPartStateGet(ps, 0), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(ps, 1), 1);
+    assertEquals(planPartStateGet(ps, 2), 0);
+    assertEquals(planPartStateGet(ps, 3), PLAN_VAL_UNDEFINED);
+    assertEquals(ps->vals_size, 2);
+    assertEquals(ps->vals[0].var, 1);
+    assertEquals(ps->vals[0].val, 1);
+    assertEquals(ps->vals[1].var, 2);
+    assertEquals(ps->vals[1].val, 0);
+
+    assertTrue(planStatePoolPartStateIsSubset(pool, ps, 0));
+    assertFalse(planStatePoolPartStateIsSubset(pool, ps, 1));
+    assertTrue(planStatePoolPartStateIsSubset(pool, ps, 2));
+
+
+    planPartStateUnset(pool, ps, 2);
+    assertFalse(planPartStateIsSet(ps, 0));
+    assertTrue(planPartStateIsSet(ps, 1));
+    assertFalse(planPartStateIsSet(ps, 2));
+    assertFalse(planPartStateIsSet(ps, 3));
+    assertEquals(planPartStateGet(ps, 0), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(ps, 1), 1);
+    assertEquals(planPartStateGet(ps, 2), PLAN_VAL_UNDEFINED);
+    assertEquals(planPartStateGet(ps, 3), PLAN_VAL_UNDEFINED);
+    assertEquals(ps->vals_size, 1);
+    assertEquals(ps->vals[0].var, 1);
+    assertEquals(ps->vals[0].val, 1);
+
+    assertTrue(planStatePoolPartStateIsSubset(pool, ps, 0));
+    assertTrue(planStatePoolPartStateIsSubset(pool, ps, 1));
+    assertTrue(planStatePoolPartStateIsSubset(pool, ps, 2));
+
+    planStateDel(state);
+    planPartStateDel(ps);
+    planStatePoolDel(pool);
+    planVarFree(vars + 0);
+    planVarFree(vars + 1);
+    planVarFree(vars + 2);
+    planVarFree(vars + 3);
+}

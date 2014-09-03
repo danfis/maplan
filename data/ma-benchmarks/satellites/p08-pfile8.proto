@@ -1,0 +1,4531 @@
+K
+var0Atom calibrated(instrument0)#NegatedAtom calibrated(instrument0)K
+var1Atom calibrated(instrument1)#NegatedAtom calibrated(instrument1)K
+var2Atom calibrated(instrument2)#NegatedAtom calibrated(instrument2)K
+var3Atom calibrated(instrument3)#NegatedAtom calibrated(instrument3)K
+var4Atom calibrated(instrument4)#NegatedAtom calibrated(instrument4)K
+var5Atom calibrated(instrument5)#NegatedAtom calibrated(instrument5)K
+var6Atom calibrated(instrument6)#NegatedAtom calibrated(instrument6)K
+var7Atom calibrated(instrument7)#NegatedAtom calibrated(instrument7)K
+var8Atom calibrated(instrument8)#NegatedAtom calibrated(instrument8)K
+var9Atom calibrated(instrument9)#NegatedAtom calibrated(instrument9)b
+var10'Atom have_image(groundstation1, image0).NegatedAtom have_image(groundstation1, image0)p
+var11.Atom have_image(groundstation1, spectrograph3)5NegatedAtom have_image(groundstation1, spectrograph3)n
+var12-Atom have_image(groundstation1, thermograph1)4NegatedAtom have_image(groundstation1, thermograph1)n
+var13-Atom have_image(groundstation1, thermograph2)4NegatedAtom have_image(groundstation1, thermograph2)^
+var14%Atom have_image(phenomenon12, image0),NegatedAtom have_image(phenomenon12, image0)l
+var15,Atom have_image(phenomenon12, spectrograph3)3NegatedAtom have_image(phenomenon12, spectrograph3)j
+var16+Atom have_image(phenomenon12, thermograph1)2NegatedAtom have_image(phenomenon12, thermograph1)j
+var17+Atom have_image(phenomenon12, thermograph2)2NegatedAtom have_image(phenomenon12, thermograph2)^
+var18%Atom have_image(phenomenon13, image0),NegatedAtom have_image(phenomenon13, image0)l
+var19,Atom have_image(phenomenon13, spectrograph3)3NegatedAtom have_image(phenomenon13, spectrograph3)j
+var20+Atom have_image(phenomenon13, thermograph1)2NegatedAtom have_image(phenomenon13, thermograph1)j
+var21+Atom have_image(phenomenon13, thermograph2)2NegatedAtom have_image(phenomenon13, thermograph2)^
+var22%Atom have_image(phenomenon14, image0),NegatedAtom have_image(phenomenon14, image0)l
+var23,Atom have_image(phenomenon14, spectrograph3)3NegatedAtom have_image(phenomenon14, spectrograph3)j
+var24+Atom have_image(phenomenon14, thermograph1)2NegatedAtom have_image(phenomenon14, thermograph1)j
+var25+Atom have_image(phenomenon14, thermograph2)2NegatedAtom have_image(phenomenon14, thermograph2)\
+var26$Atom have_image(phenomenon5, image0)+NegatedAtom have_image(phenomenon5, image0)j
+var27+Atom have_image(phenomenon5, spectrograph3)2NegatedAtom have_image(phenomenon5, spectrograph3)h
+var28*Atom have_image(phenomenon5, thermograph1)1NegatedAtom have_image(phenomenon5, thermograph1)h
+var29*Atom have_image(phenomenon5, thermograph2)1NegatedAtom have_image(phenomenon5, thermograph2)\
+var30$Atom have_image(phenomenon8, image0)+NegatedAtom have_image(phenomenon8, image0)j
+var31+Atom have_image(phenomenon8, spectrograph3)2NegatedAtom have_image(phenomenon8, spectrograph3)h
+var32*Atom have_image(phenomenon8, thermograph1)1NegatedAtom have_image(phenomenon8, thermograph1)h
+var33*Atom have_image(phenomenon8, thermograph2)1NegatedAtom have_image(phenomenon8, thermograph2)\
+var34$Atom have_image(phenomenon9, image0)+NegatedAtom have_image(phenomenon9, image0)j
+var35+Atom have_image(phenomenon9, spectrograph3)2NegatedAtom have_image(phenomenon9, spectrograph3)h
+var36*Atom have_image(phenomenon9, thermograph1)1NegatedAtom have_image(phenomenon9, thermograph1)h
+var37*Atom have_image(phenomenon9, thermograph2)1NegatedAtom have_image(phenomenon9, thermograph2)V
+var38!Atom have_image(planet11, image0)(NegatedAtom have_image(planet11, image0)d
+var39(Atom have_image(planet11, spectrograph3)/NegatedAtom have_image(planet11, spectrograph3)b
+var40'Atom have_image(planet11, thermograph1).NegatedAtom have_image(planet11, thermograph1)b
+var41'Atom have_image(planet11, thermograph2).NegatedAtom have_image(planet11, thermograph2)P
+var42Atom have_image(star0, image0)%NegatedAtom have_image(star0, image0)^
+var43%Atom have_image(star0, spectrograph3),NegatedAtom have_image(star0, spectrograph3)\
+var44$Atom have_image(star0, thermograph1)+NegatedAtom have_image(star0, thermograph1)\
+var45$Atom have_image(star0, thermograph2)+NegatedAtom have_image(star0, thermograph2)R
+var46Atom have_image(star10, image0)&NegatedAtom have_image(star10, image0)`
+var47&Atom have_image(star10, spectrograph3)-NegatedAtom have_image(star10, spectrograph3)^
+var48%Atom have_image(star10, thermograph1),NegatedAtom have_image(star10, thermograph1)^
+var49%Atom have_image(star10, thermograph2),NegatedAtom have_image(star10, thermograph2)P
+var50Atom have_image(star2, image0)%NegatedAtom have_image(star2, image0)^
+var51%Atom have_image(star2, spectrograph3),NegatedAtom have_image(star2, spectrograph3)\
+var52$Atom have_image(star2, thermograph1)+NegatedAtom have_image(star2, thermograph1)\
+var53$Atom have_image(star2, thermograph2)+NegatedAtom have_image(star2, thermograph2)P
+var54Atom have_image(star3, image0)%NegatedAtom have_image(star3, image0)^
+var55%Atom have_image(star3, spectrograph3),NegatedAtom have_image(star3, spectrograph3)\
+var56$Atom have_image(star3, thermograph1)+NegatedAtom have_image(star3, thermograph1)\
+var57$Atom have_image(star3, thermograph2)+NegatedAtom have_image(star3, thermograph2)P
+var58Atom have_image(star4, image0)%NegatedAtom have_image(star4, image0)^
+var59%Atom have_image(star4, spectrograph3),NegatedAtom have_image(star4, spectrograph3)\
+var60$Atom have_image(star4, thermograph1)+NegatedAtom have_image(star4, thermograph1)\
+var61$Atom have_image(star4, thermograph2)+NegatedAtom have_image(star4, thermograph2)P
+var62Atom have_image(star6, image0)%NegatedAtom have_image(star6, image0)^
+var63%Atom have_image(star6, spectrograph3),NegatedAtom have_image(star6, spectrograph3)\
+var64$Atom have_image(star6, thermograph1)+NegatedAtom have_image(star6, thermograph1)\
+var65$Atom have_image(star6, thermograph2)+NegatedAtom have_image(star6, thermograph2)P
+var66Atom have_image(star7, image0)%NegatedAtom have_image(star7, image0)^
+var67%Atom have_image(star7, spectrograph3),NegatedAtom have_image(star7, spectrograph3)\
+var68$Atom have_image(star7, thermograph1)+NegatedAtom have_image(star7, thermograph1)\
+var69$Atom have_image(star7, thermograph2)+NegatedAtom have_image(star7, thermograph2)»
+var70)Atom pointing(satellite0, groundstation1)'Atom pointing(satellite0, phenomenon12)'Atom pointing(satellite0, phenomenon13)'Atom pointing(satellite0, phenomenon14)&Atom pointing(satellite0, phenomenon5)&Atom pointing(satellite0, phenomenon8)&Atom pointing(satellite0, phenomenon9)#Atom pointing(satellite0, planet11) Atom pointing(satellite0, star0)!Atom pointing(satellite0, star10) Atom pointing(satellite0, star2) Atom pointing(satellite0, star3) Atom pointing(satellite0, star4) Atom pointing(satellite0, star6) Atom pointing(satellite0, star7)»
+var71)Atom pointing(satellite1, groundstation1)'Atom pointing(satellite1, phenomenon12)'Atom pointing(satellite1, phenomenon13)'Atom pointing(satellite1, phenomenon14)&Atom pointing(satellite1, phenomenon5)&Atom pointing(satellite1, phenomenon8)&Atom pointing(satellite1, phenomenon9)#Atom pointing(satellite1, planet11) Atom pointing(satellite1, star0)!Atom pointing(satellite1, star10) Atom pointing(satellite1, star2) Atom pointing(satellite1, star3) Atom pointing(satellite1, star4) Atom pointing(satellite1, star6) Atom pointing(satellite1, star7)»
+var72)Atom pointing(satellite2, groundstation1)'Atom pointing(satellite2, phenomenon12)'Atom pointing(satellite2, phenomenon13)'Atom pointing(satellite2, phenomenon14)&Atom pointing(satellite2, phenomenon5)&Atom pointing(satellite2, phenomenon8)&Atom pointing(satellite2, phenomenon9)#Atom pointing(satellite2, planet11) Atom pointing(satellite2, star0)!Atom pointing(satellite2, star10) Atom pointing(satellite2, star2) Atom pointing(satellite2, star3) Atom pointing(satellite2, star4) Atom pointing(satellite2, star6) Atom pointing(satellite2, star7)»
+var73)Atom pointing(satellite3, groundstation1)'Atom pointing(satellite3, phenomenon12)'Atom pointing(satellite3, phenomenon13)'Atom pointing(satellite3, phenomenon14)&Atom pointing(satellite3, phenomenon5)&Atom pointing(satellite3, phenomenon8)&Atom pointing(satellite3, phenomenon9)#Atom pointing(satellite3, planet11) Atom pointing(satellite3, star0)!Atom pointing(satellite3, star10) Atom pointing(satellite3, star2) Atom pointing(satellite3, star3) Atom pointing(satellite3, star4) Atom pointing(satellite3, star6) Atom pointing(satellite3, star7)L
+var74Atom power_avail(satellite0)#NegatedAtom power_avail(satellite0)L
+var75Atom power_avail(satellite1)#NegatedAtom power_avail(satellite1)L
+var76Atom power_avail(satellite2)#NegatedAtom power_avail(satellite2)L
+var77Atom power_avail(satellite3)#NegatedAtom power_avail(satellite3)H
+var78Atom power_on(instrument0)!NegatedAtom power_on(instrument0)H
+var79Atom power_on(instrument1)!NegatedAtom power_on(instrument1)H
+var80Atom power_on(instrument2)!NegatedAtom power_on(instrument2)H
+var81Atom power_on(instrument3)!NegatedAtom power_on(instrument3)H
+var82Atom power_on(instrument4)!NegatedAtom power_on(instrument4)H
+var83Atom power_on(instrument5)!NegatedAtom power_on(instrument5)H
+var84Atom power_on(instrument6)!NegatedAtom power_on(instrument6)H
+var85Atom power_on(instrument7)!NegatedAtom power_on(instrument7)H
+var86Atom power_on(instrument8)!NegatedAtom power_on(instrument8)H
+var87Atom power_on(instrument9)!NegatedAtom power_on(instrument9)Z
+F 
+F
+F
+F
+F
+F
+F
+F
+F
+F	
+F
+
+F
+F
+F
+FZ
+G 
+G
+G
+G
+G
+G
+G
+G
+G
+G	
+G
+
+G
+G
+G
+GZ
+H 
+H
+H
+H
+H
+H
+H
+H
+H
+H	
+H
+
+H
+H
+H
+HZ
+I 
+I
+I
+I
+I
+I
+I
+I
+I
+I	
+I
+
+I
+I
+I
+I"°    *<
+ 
+ 
+ 
+ 
+ 
+" 
+) 
+/ 
+@ 
+C 2@
+&calibrate satellite0 instrument0 star3
+F
+N "
+  2@
+&calibrate satellite0 instrument1 star2
+F
+
+O "
+ 2@
+&calibrate satellite0 instrument2 star4
+F
+P "
+ 2I
+/calibrate satellite1 instrument3 groundstation1
+G 
+Q "
+ 2@
+&calibrate satellite1 instrument4 star4
+G
+R "
+ 2@
+&calibrate satellite1 instrument5 star0
+G
+S "
+ 2@
+&calibrate satellite2 instrument6 star3
+H
+T "
+ 2@
+&calibrate satellite2 instrument7 star0
+H
+U "
+ 2@
+&calibrate satellite3 instrument8 star3
+I
+V "
+ 2@
+&calibrate satellite3 instrument9 star4
+I
+W "
+	 2;
+!switch_off instrument0 satellite0
+N "
+J 
+N2;
+!switch_off instrument1 satellite0
+O "
+J 
+O2;
+!switch_off instrument2 satellite0
+P "
+J 
+P2;
+!switch_off instrument3 satellite1
+Q "
+K 
+Q2;
+!switch_off instrument4 satellite1
+R "
+K 
+R2;
+!switch_off instrument5 satellite1
+S "
+K 
+S2;
+!switch_off instrument6 satellite2
+T "
+L 
+T2;
+!switch_off instrument7 satellite2
+U "
+L 
+U2;
+!switch_off instrument8 satellite3
+V "
+M 
+V2;
+!switch_off instrument9 satellite3
+W "
+M 
+W2@
+ switch_on instrument0 satellite0
+J "
+ 
+J
+N 2@
+ switch_on instrument1 satellite0
+J "
+
+J
+O 2@
+ switch_on instrument2 satellite0
+J "
+
+J
+P 2@
+ switch_on instrument3 satellite1
+K "
+
+K
+Q 2@
+ switch_on instrument4 satellite1
+K "
+
+K
+R 2@
+ switch_on instrument5 satellite1
+K "
+
+K
+S 2@
+ switch_on instrument6 satellite2
+L "
+
+L
+T 2@
+ switch_on instrument7 satellite2
+L "
+
+L
+U 2@
+ switch_on instrument8 satellite3
+M "
+
+M
+V 2@
+ switch_on instrument9 satellite3
+M "
+	
+M
+W 2W
+7take_image satellite0 groundstation1 instrument0 image0
+  
+F 
+N "
+
+ 2]
+=take_image satellite0 groundstation1 instrument0 thermograph1
+  
+F 
+N "
+ 2^
+>take_image satellite0 groundstation1 instrument1 spectrograph3
+ 
+F 
+O "
+ 2]
+=take_image satellite0 groundstation1 instrument1 thermograph1
+ 
+F 
+O "
+ 2]
+=take_image satellite0 groundstation1 instrument1 thermograph2
+ 
+F 
+O "
+ 2^
+>take_image satellite0 groundstation1 instrument2 spectrograph3
+ 
+F 
+P "
+ 2U
+5take_image satellite0 phenomenon12 instrument0 image0
+  
+F
+N "
+ 2[
+;take_image satellite0 phenomenon12 instrument0 thermograph1
+  
+F
+N "
+ 2\
+<take_image satellite0 phenomenon12 instrument1 spectrograph3
+ 
+F
+O "
+ 2[
+;take_image satellite0 phenomenon12 instrument1 thermograph1
+ 
+F
+O "
+ 2[
+;take_image satellite0 phenomenon12 instrument1 thermograph2
+ 
+F
+O "
+ 2\
+<take_image satellite0 phenomenon12 instrument2 spectrograph3
+ 
+F
+P "
+ 2U
+5take_image satellite0 phenomenon13 instrument0 image0
+  
+F
+N "
+ 2[
+;take_image satellite0 phenomenon13 instrument0 thermograph1
+  
+F
+N "
+ 2\
+<take_image satellite0 phenomenon13 instrument1 spectrograph3
+ 
+F
+O "
+ 2[
+;take_image satellite0 phenomenon13 instrument1 thermograph1
+ 
+F
+O "
+ 2[
+;take_image satellite0 phenomenon13 instrument1 thermograph2
+ 
+F
+O "
+ 2\
+<take_image satellite0 phenomenon13 instrument2 spectrograph3
+ 
+F
+P "
+ 2U
+5take_image satellite0 phenomenon14 instrument0 image0
+  
+F
+N "
+ 2[
+;take_image satellite0 phenomenon14 instrument0 thermograph1
+  
+F
+N "
+ 2\
+<take_image satellite0 phenomenon14 instrument1 spectrograph3
+ 
+F
+O "
+ 2[
+;take_image satellite0 phenomenon14 instrument1 thermograph1
+ 
+F
+O "
+ 2[
+;take_image satellite0 phenomenon14 instrument1 thermograph2
+ 
+F
+O "
+ 2\
+<take_image satellite0 phenomenon14 instrument2 spectrograph3
+ 
+F
+P "
+ 2T
+4take_image satellite0 phenomenon5 instrument0 image0
+  
+F
+N "
+ 2Z
+:take_image satellite0 phenomenon5 instrument0 thermograph1
+  
+F
+N "
+ 2[
+;take_image satellite0 phenomenon5 instrument1 spectrograph3
+ 
+F
+O "
+ 2Z
+:take_image satellite0 phenomenon5 instrument1 thermograph1
+ 
+F
+O "
+ 2Z
+:take_image satellite0 phenomenon5 instrument1 thermograph2
+ 
+F
+O "
+ 2[
+;take_image satellite0 phenomenon5 instrument2 spectrograph3
+ 
+F
+P "
+ 2T
+4take_image satellite0 phenomenon8 instrument0 image0
+  
+F
+N "
+ 2Z
+:take_image satellite0 phenomenon8 instrument0 thermograph1
+  
+F
+N "
+  2[
+;take_image satellite0 phenomenon8 instrument1 spectrograph3
+ 
+F
+O "
+ 2Z
+:take_image satellite0 phenomenon8 instrument1 thermograph1
+ 
+F
+O "
+  2Z
+:take_image satellite0 phenomenon8 instrument1 thermograph2
+ 
+F
+O "
+! 2[
+;take_image satellite0 phenomenon8 instrument2 spectrograph3
+ 
+F
+P "
+ 2T
+4take_image satellite0 phenomenon9 instrument0 image0
+  
+F
+N "
+" 2Z
+:take_image satellite0 phenomenon9 instrument0 thermograph1
+  
+F
+N "
+$ 2[
+;take_image satellite0 phenomenon9 instrument1 spectrograph3
+ 
+F
+O "
+# 2Z
+:take_image satellite0 phenomenon9 instrument1 thermograph1
+ 
+F
+O "
+$ 2Z
+:take_image satellite0 phenomenon9 instrument1 thermograph2
+ 
+F
+O "
+% 2[
+;take_image satellite0 phenomenon9 instrument2 spectrograph3
+ 
+F
+P "
+# 2Q
+1take_image satellite0 planet11 instrument0 image0
+  
+F
+N "
+& 2W
+7take_image satellite0 planet11 instrument0 thermograph1
+  
+F
+N "
+( 2X
+8take_image satellite0 planet11 instrument1 spectrograph3
+ 
+F
+O "
+' 2W
+7take_image satellite0 planet11 instrument1 thermograph1
+ 
+F
+O "
+( 2W
+7take_image satellite0 planet11 instrument1 thermograph2
+ 
+F
+O "
+) 2X
+8take_image satellite0 planet11 instrument2 spectrograph3
+ 
+F
+P "
+' 2N
+.take_image satellite0 star0 instrument0 image0
+  
+F
+N "
+* 2T
+4take_image satellite0 star0 instrument0 thermograph1
+  
+F
+N "
+, 2U
+5take_image satellite0 star0 instrument1 spectrograph3
+ 
+F
+O "
++ 2T
+4take_image satellite0 star0 instrument1 thermograph1
+ 
+F
+O "
+, 2T
+4take_image satellite0 star0 instrument1 thermograph2
+ 
+F
+O "
+- 2U
+5take_image satellite0 star0 instrument2 spectrograph3
+ 
+F
+P "
++ 2O
+/take_image satellite0 star10 instrument0 image0
+  
+F	
+N "
+. 2U
+5take_image satellite0 star10 instrument0 thermograph1
+  
+F	
+N "
+0 2V
+6take_image satellite0 star10 instrument1 spectrograph3
+ 
+F	
+O "
+/ 2U
+5take_image satellite0 star10 instrument1 thermograph1
+ 
+F	
+O "
+0 2U
+5take_image satellite0 star10 instrument1 thermograph2
+ 
+F	
+O "
+1 2V
+6take_image satellite0 star10 instrument2 spectrograph3
+ 
+F	
+P "
+/ 2N
+.take_image satellite0 star2 instrument0 image0
+  
+F
+
+N "
+2 2T
+4take_image satellite0 star2 instrument0 thermograph1
+  
+F
+
+N "
+4 2U
+5take_image satellite0 star2 instrument1 spectrograph3
+ 
+F
+
+O "
+3 2T
+4take_image satellite0 star2 instrument1 thermograph1
+ 
+F
+
+O "
+4 2T
+4take_image satellite0 star2 instrument1 thermograph2
+ 
+F
+
+O "
+5 2U
+5take_image satellite0 star2 instrument2 spectrograph3
+ 
+F
+
+P "
+3 2N
+.take_image satellite0 star3 instrument0 image0
+  
+F
+N "
+6 2T
+4take_image satellite0 star3 instrument0 thermograph1
+  
+F
+N "
+8 2U
+5take_image satellite0 star3 instrument1 spectrograph3
+ 
+F
+O "
+7 2T
+4take_image satellite0 star3 instrument1 thermograph1
+ 
+F
+O "
+8 2T
+4take_image satellite0 star3 instrument1 thermograph2
+ 
+F
+O "
+9 2U
+5take_image satellite0 star3 instrument2 spectrograph3
+ 
+F
+P "
+7 2N
+.take_image satellite0 star4 instrument0 image0
+  
+F
+N "
+: 2T
+4take_image satellite0 star4 instrument0 thermograph1
+  
+F
+N "
+< 2U
+5take_image satellite0 star4 instrument1 spectrograph3
+ 
+F
+O "
+; 2T
+4take_image satellite0 star4 instrument1 thermograph1
+ 
+F
+O "
+< 2T
+4take_image satellite0 star4 instrument1 thermograph2
+ 
+F
+O "
+= 2U
+5take_image satellite0 star4 instrument2 spectrograph3
+ 
+F
+P "
+; 2N
+.take_image satellite0 star6 instrument0 image0
+  
+F
+N "
+> 2T
+4take_image satellite0 star6 instrument0 thermograph1
+  
+F
+N "
+@ 2U
+5take_image satellite0 star6 instrument1 spectrograph3
+ 
+F
+O "
+? 2T
+4take_image satellite0 star6 instrument1 thermograph1
+ 
+F
+O "
+@ 2T
+4take_image satellite0 star6 instrument1 thermograph2
+ 
+F
+O "
+A 2U
+5take_image satellite0 star6 instrument2 spectrograph3
+ 
+F
+P "
+? 2N
+.take_image satellite0 star7 instrument0 image0
+  
+F
+N "
+B 2T
+4take_image satellite0 star7 instrument0 thermograph1
+  
+F
+N "
+D 2U
+5take_image satellite0 star7 instrument1 spectrograph3
+ 
+F
+O "
+C 2T
+4take_image satellite0 star7 instrument1 thermograph1
+ 
+F
+O "
+D 2T
+4take_image satellite0 star7 instrument1 thermograph2
+ 
+F
+O "
+E 2U
+5take_image satellite0 star7 instrument2 spectrograph3
+ 
+F
+P "
+C 2W
+7take_image satellite1 groundstation1 instrument3 image0
+ 
+G 
+Q "
+
+ 2]
+=take_image satellite1 groundstation1 instrument3 thermograph2
+ 
+G 
+Q "
+ 2]
+=take_image satellite1 groundstation1 instrument4 thermograph1
+ 
+G 
+R "
+ 2^
+>take_image satellite1 groundstation1 instrument5 spectrograph3
+ 
+G 
+S "
+ 2]
+=take_image satellite1 groundstation1 instrument5 thermograph1
+ 
+G 
+S "
+ 2]
+=take_image satellite1 groundstation1 instrument5 thermograph2
+ 
+G 
+S "
+ 2U
+5take_image satellite1 phenomenon12 instrument3 image0
+ 
+G
+Q "
+ 2[
+;take_image satellite1 phenomenon12 instrument3 thermograph2
+ 
+G
+Q "
+ 2[
+;take_image satellite1 phenomenon12 instrument4 thermograph1
+ 
+G
+R "
+ 2\
+<take_image satellite1 phenomenon12 instrument5 spectrograph3
+ 
+G
+S "
+ 2[
+;take_image satellite1 phenomenon12 instrument5 thermograph1
+ 
+G
+S "
+ 2[
+;take_image satellite1 phenomenon12 instrument5 thermograph2
+ 
+G
+S "
+ 2U
+5take_image satellite1 phenomenon13 instrument3 image0
+ 
+G
+Q "
+ 2[
+;take_image satellite1 phenomenon13 instrument3 thermograph2
+ 
+G
+Q "
+ 2[
+;take_image satellite1 phenomenon13 instrument4 thermograph1
+ 
+G
+R "
+ 2\
+<take_image satellite1 phenomenon13 instrument5 spectrograph3
+ 
+G
+S "
+ 2[
+;take_image satellite1 phenomenon13 instrument5 thermograph1
+ 
+G
+S "
+ 2[
+;take_image satellite1 phenomenon13 instrument5 thermograph2
+ 
+G
+S "
+ 2U
+5take_image satellite1 phenomenon14 instrument3 image0
+ 
+G
+Q "
+ 2[
+;take_image satellite1 phenomenon14 instrument3 thermograph2
+ 
+G
+Q "
+ 2[
+;take_image satellite1 phenomenon14 instrument4 thermograph1
+ 
+G
+R "
+ 2\
+<take_image satellite1 phenomenon14 instrument5 spectrograph3
+ 
+G
+S "
+ 2[
+;take_image satellite1 phenomenon14 instrument5 thermograph1
+ 
+G
+S "
+ 2[
+;take_image satellite1 phenomenon14 instrument5 thermograph2
+ 
+G
+S "
+ 2T
+4take_image satellite1 phenomenon5 instrument3 image0
+ 
+G
+Q "
+ 2Z
+:take_image satellite1 phenomenon5 instrument3 thermograph2
+ 
+G
+Q "
+ 2Z
+:take_image satellite1 phenomenon5 instrument4 thermograph1
+ 
+G
+R "
+ 2[
+;take_image satellite1 phenomenon5 instrument5 spectrograph3
+ 
+G
+S "
+ 2Z
+:take_image satellite1 phenomenon5 instrument5 thermograph1
+ 
+G
+S "
+ 2Z
+:take_image satellite1 phenomenon5 instrument5 thermograph2
+ 
+G
+S "
+ 2T
+4take_image satellite1 phenomenon8 instrument3 image0
+ 
+G
+Q "
+ 2Z
+:take_image satellite1 phenomenon8 instrument3 thermograph2
+ 
+G
+Q "
+! 2Z
+:take_image satellite1 phenomenon8 instrument4 thermograph1
+ 
+G
+R "
+  2[
+;take_image satellite1 phenomenon8 instrument5 spectrograph3
+ 
+G
+S "
+ 2Z
+:take_image satellite1 phenomenon8 instrument5 thermograph1
+ 
+G
+S "
+  2Z
+:take_image satellite1 phenomenon8 instrument5 thermograph2
+ 
+G
+S "
+! 2T
+4take_image satellite1 phenomenon9 instrument3 image0
+ 
+G
+Q "
+" 2Z
+:take_image satellite1 phenomenon9 instrument3 thermograph2
+ 
+G
+Q "
+% 2Z
+:take_image satellite1 phenomenon9 instrument4 thermograph1
+ 
+G
+R "
+$ 2[
+;take_image satellite1 phenomenon9 instrument5 spectrograph3
+ 
+G
+S "
+# 2Z
+:take_image satellite1 phenomenon9 instrument5 thermograph1
+ 
+G
+S "
+$ 2Z
+:take_image satellite1 phenomenon9 instrument5 thermograph2
+ 
+G
+S "
+% 2Q
+1take_image satellite1 planet11 instrument3 image0
+ 
+G
+Q "
+& 2W
+7take_image satellite1 planet11 instrument3 thermograph2
+ 
+G
+Q "
+) 2W
+7take_image satellite1 planet11 instrument4 thermograph1
+ 
+G
+R "
+( 2X
+8take_image satellite1 planet11 instrument5 spectrograph3
+ 
+G
+S "
+' 2W
+7take_image satellite1 planet11 instrument5 thermograph1
+ 
+G
+S "
+( 2W
+7take_image satellite1 planet11 instrument5 thermograph2
+ 
+G
+S "
+) 2N
+.take_image satellite1 star0 instrument3 image0
+ 
+G
+Q "
+* 2T
+4take_image satellite1 star0 instrument3 thermograph2
+ 
+G
+Q "
+- 2T
+4take_image satellite1 star0 instrument4 thermograph1
+ 
+G
+R "
+, 2U
+5take_image satellite1 star0 instrument5 spectrograph3
+ 
+G
+S "
++ 2T
+4take_image satellite1 star0 instrument5 thermograph1
+ 
+G
+S "
+, 2T
+4take_image satellite1 star0 instrument5 thermograph2
+ 
+G
+S "
+- 2O
+/take_image satellite1 star10 instrument3 image0
+ 
+G	
+Q "
+. 2U
+5take_image satellite1 star10 instrument3 thermograph2
+ 
+G	
+Q "
+1 2U
+5take_image satellite1 star10 instrument4 thermograph1
+ 
+G	
+R "
+0 2V
+6take_image satellite1 star10 instrument5 spectrograph3
+ 
+G	
+S "
+/ 2U
+5take_image satellite1 star10 instrument5 thermograph1
+ 
+G	
+S "
+0 2U
+5take_image satellite1 star10 instrument5 thermograph2
+ 
+G	
+S "
+1 2N
+.take_image satellite1 star2 instrument3 image0
+ 
+G
+
+Q "
+2 2T
+4take_image satellite1 star2 instrument3 thermograph2
+ 
+G
+
+Q "
+5 2T
+4take_image satellite1 star2 instrument4 thermograph1
+ 
+G
+
+R "
+4 2U
+5take_image satellite1 star2 instrument5 spectrograph3
+ 
+G
+
+S "
+3 2T
+4take_image satellite1 star2 instrument5 thermograph1
+ 
+G
+
+S "
+4 2T
+4take_image satellite1 star2 instrument5 thermograph2
+ 
+G
+
+S "
+5 2N
+.take_image satellite1 star3 instrument3 image0
+ 
+G
+Q "
+6 2T
+4take_image satellite1 star3 instrument3 thermograph2
+ 
+G
+Q "
+9 2T
+4take_image satellite1 star3 instrument4 thermograph1
+ 
+G
+R "
+8 2U
+5take_image satellite1 star3 instrument5 spectrograph3
+ 
+G
+S "
+7 2T
+4take_image satellite1 star3 instrument5 thermograph1
+ 
+G
+S "
+8 2T
+4take_image satellite1 star3 instrument5 thermograph2
+ 
+G
+S "
+9 2N
+.take_image satellite1 star4 instrument3 image0
+ 
+G
+Q "
+: 2T
+4take_image satellite1 star4 instrument3 thermograph2
+ 
+G
+Q "
+= 2T
+4take_image satellite1 star4 instrument4 thermograph1
+ 
+G
+R "
+< 2U
+5take_image satellite1 star4 instrument5 spectrograph3
+ 
+G
+S "
+; 2T
+4take_image satellite1 star4 instrument5 thermograph1
+ 
+G
+S "
+< 2T
+4take_image satellite1 star4 instrument5 thermograph2
+ 
+G
+S "
+= 2N
+.take_image satellite1 star6 instrument3 image0
+ 
+G
+Q "
+> 2T
+4take_image satellite1 star6 instrument3 thermograph2
+ 
+G
+Q "
+A 2T
+4take_image satellite1 star6 instrument4 thermograph1
+ 
+G
+R "
+@ 2U
+5take_image satellite1 star6 instrument5 spectrograph3
+ 
+G
+S "
+? 2T
+4take_image satellite1 star6 instrument5 thermograph1
+ 
+G
+S "
+@ 2T
+4take_image satellite1 star6 instrument5 thermograph2
+ 
+G
+S "
+A 2N
+.take_image satellite1 star7 instrument3 image0
+ 
+G
+Q "
+B 2T
+4take_image satellite1 star7 instrument3 thermograph2
+ 
+G
+Q "
+E 2T
+4take_image satellite1 star7 instrument4 thermograph1
+ 
+G
+R "
+D 2U
+5take_image satellite1 star7 instrument5 spectrograph3
+ 
+G
+S "
+C 2T
+4take_image satellite1 star7 instrument5 thermograph1
+ 
+G
+S "
+D 2T
+4take_image satellite1 star7 instrument5 thermograph2
+ 
+G
+S "
+E 2]
+=take_image satellite2 groundstation1 instrument6 thermograph1
+ 
+H 
+T "
+ 2]
+=take_image satellite2 groundstation1 instrument6 thermograph2
+ 
+H 
+T "
+ 2W
+7take_image satellite2 groundstation1 instrument7 image0
+ 
+H 
+U "
+
+ 2]
+=take_image satellite2 groundstation1 instrument7 thermograph1
+ 
+H 
+U "
+ 2]
+=take_image satellite2 groundstation1 instrument7 thermograph2
+ 
+H 
+U "
+ 2[
+;take_image satellite2 phenomenon12 instrument6 thermograph1
+ 
+H
+T "
+ 2[
+;take_image satellite2 phenomenon12 instrument6 thermograph2
+ 
+H
+T "
+ 2U
+5take_image satellite2 phenomenon12 instrument7 image0
+ 
+H
+U "
+ 2[
+;take_image satellite2 phenomenon12 instrument7 thermograph1
+ 
+H
+U "
+ 2[
+;take_image satellite2 phenomenon12 instrument7 thermograph2
+ 
+H
+U "
+ 2[
+;take_image satellite2 phenomenon13 instrument6 thermograph1
+ 
+H
+T "
+ 2[
+;take_image satellite2 phenomenon13 instrument6 thermograph2
+ 
+H
+T "
+ 2U
+5take_image satellite2 phenomenon13 instrument7 image0
+ 
+H
+U "
+ 2[
+;take_image satellite2 phenomenon13 instrument7 thermograph1
+ 
+H
+U "
+ 2[
+;take_image satellite2 phenomenon13 instrument7 thermograph2
+ 
+H
+U "
+ 2[
+;take_image satellite2 phenomenon14 instrument6 thermograph1
+ 
+H
+T "
+ 2[
+;take_image satellite2 phenomenon14 instrument6 thermograph2
+ 
+H
+T "
+ 2U
+5take_image satellite2 phenomenon14 instrument7 image0
+ 
+H
+U "
+ 2[
+;take_image satellite2 phenomenon14 instrument7 thermograph1
+ 
+H
+U "
+ 2[
+;take_image satellite2 phenomenon14 instrument7 thermograph2
+ 
+H
+U "
+ 2Z
+:take_image satellite2 phenomenon5 instrument6 thermograph1
+ 
+H
+T "
+ 2Z
+:take_image satellite2 phenomenon5 instrument6 thermograph2
+ 
+H
+T "
+ 2T
+4take_image satellite2 phenomenon5 instrument7 image0
+ 
+H
+U "
+ 2Z
+:take_image satellite2 phenomenon5 instrument7 thermograph1
+ 
+H
+U "
+ 2Z
+:take_image satellite2 phenomenon5 instrument7 thermograph2
+ 
+H
+U "
+ 2Z
+:take_image satellite2 phenomenon8 instrument6 thermograph1
+ 
+H
+T "
+  2Z
+:take_image satellite2 phenomenon8 instrument6 thermograph2
+ 
+H
+T "
+! 2T
+4take_image satellite2 phenomenon8 instrument7 image0
+ 
+H
+U "
+ 2Z
+:take_image satellite2 phenomenon8 instrument7 thermograph1
+ 
+H
+U "
+  2Z
+:take_image satellite2 phenomenon8 instrument7 thermograph2
+ 
+H
+U "
+! 2Z
+:take_image satellite2 phenomenon9 instrument6 thermograph1
+ 
+H
+T "
+$ 2Z
+:take_image satellite2 phenomenon9 instrument6 thermograph2
+ 
+H
+T "
+% 2T
+4take_image satellite2 phenomenon9 instrument7 image0
+ 
+H
+U "
+" 2Z
+:take_image satellite2 phenomenon9 instrument7 thermograph1
+ 
+H
+U "
+$ 2Z
+:take_image satellite2 phenomenon9 instrument7 thermograph2
+ 
+H
+U "
+% 2W
+7take_image satellite2 planet11 instrument6 thermograph1
+ 
+H
+T "
+( 2W
+7take_image satellite2 planet11 instrument6 thermograph2
+ 
+H
+T "
+) 2Q
+1take_image satellite2 planet11 instrument7 image0
+ 
+H
+U "
+& 2W
+7take_image satellite2 planet11 instrument7 thermograph1
+ 
+H
+U "
+( 2W
+7take_image satellite2 planet11 instrument7 thermograph2
+ 
+H
+U "
+) 2T
+4take_image satellite2 star0 instrument6 thermograph1
+ 
+H
+T "
+, 2T
+4take_image satellite2 star0 instrument6 thermograph2
+ 
+H
+T "
+- 2N
+.take_image satellite2 star0 instrument7 image0
+ 
+H
+U "
+* 2T
+4take_image satellite2 star0 instrument7 thermograph1
+ 
+H
+U "
+, 2T
+4take_image satellite2 star0 instrument7 thermograph2
+ 
+H
+U "
+- 2U
+5take_image satellite2 star10 instrument6 thermograph1
+ 
+H	
+T "
+0 2U
+5take_image satellite2 star10 instrument6 thermograph2
+ 
+H	
+T "
+1 2O
+/take_image satellite2 star10 instrument7 image0
+ 
+H	
+U "
+. 2U
+5take_image satellite2 star10 instrument7 thermograph1
+ 
+H	
+U "
+0 2U
+5take_image satellite2 star10 instrument7 thermograph2
+ 
+H	
+U "
+1 2T
+4take_image satellite2 star2 instrument6 thermograph1
+ 
+H
+
+T "
+4 2T
+4take_image satellite2 star2 instrument6 thermograph2
+ 
+H
+
+T "
+5 2N
+.take_image satellite2 star2 instrument7 image0
+ 
+H
+
+U "
+2 2T
+4take_image satellite2 star2 instrument7 thermograph1
+ 
+H
+
+U "
+4 2T
+4take_image satellite2 star2 instrument7 thermograph2
+ 
+H
+
+U "
+5 2T
+4take_image satellite2 star3 instrument6 thermograph1
+ 
+H
+T "
+8 2T
+4take_image satellite2 star3 instrument6 thermograph2
+ 
+H
+T "
+9 2N
+.take_image satellite2 star3 instrument7 image0
+ 
+H
+U "
+6 2T
+4take_image satellite2 star3 instrument7 thermograph1
+ 
+H
+U "
+8 2T
+4take_image satellite2 star3 instrument7 thermograph2
+ 
+H
+U "
+9 2T
+4take_image satellite2 star4 instrument6 thermograph1
+ 
+H
+T "
+< 2T
+4take_image satellite2 star4 instrument6 thermograph2
+ 
+H
+T "
+= 2N
+.take_image satellite2 star4 instrument7 image0
+ 
+H
+U "
+: 2T
+4take_image satellite2 star4 instrument7 thermograph1
+ 
+H
+U "
+< 2T
+4take_image satellite2 star4 instrument7 thermograph2
+ 
+H
+U "
+= 2T
+4take_image satellite2 star6 instrument6 thermograph1
+ 
+H
+T "
+@ 2T
+4take_image satellite2 star6 instrument6 thermograph2
+ 
+H
+T "
+A 2N
+.take_image satellite2 star6 instrument7 image0
+ 
+H
+U "
+> 2T
+4take_image satellite2 star6 instrument7 thermograph1
+ 
+H
+U "
+@ 2T
+4take_image satellite2 star6 instrument7 thermograph2
+ 
+H
+U "
+A 2T
+4take_image satellite2 star7 instrument6 thermograph1
+ 
+H
+T "
+D 2T
+4take_image satellite2 star7 instrument6 thermograph2
+ 
+H
+T "
+E 2N
+.take_image satellite2 star7 instrument7 image0
+ 
+H
+U "
+B 2T
+4take_image satellite2 star7 instrument7 thermograph1
+ 
+H
+U "
+D 2T
+4take_image satellite2 star7 instrument7 thermograph2
+ 
+H
+U "
+E 2W
+7take_image satellite3 groundstation1 instrument8 image0
+ 
+I 
+V "
+
+ 2W
+7take_image satellite3 groundstation1 instrument9 image0
+	 
+I 
+W "
+
+ 2^
+>take_image satellite3 groundstation1 instrument9 spectrograph3
+	 
+I 
+W "
+ 2]
+=take_image satellite3 groundstation1 instrument9 thermograph1
+	 
+I 
+W "
+ 2U
+5take_image satellite3 phenomenon12 instrument8 image0
+ 
+I
+V "
+ 2U
+5take_image satellite3 phenomenon12 instrument9 image0
+	 
+I
+W "
+ 2\
+<take_image satellite3 phenomenon12 instrument9 spectrograph3
+	 
+I
+W "
+ 2[
+;take_image satellite3 phenomenon12 instrument9 thermograph1
+	 
+I
+W "
+ 2U
+5take_image satellite3 phenomenon13 instrument8 image0
+ 
+I
+V "
+ 2U
+5take_image satellite3 phenomenon13 instrument9 image0
+	 
+I
+W "
+ 2\
+<take_image satellite3 phenomenon13 instrument9 spectrograph3
+	 
+I
+W "
+ 2[
+;take_image satellite3 phenomenon13 instrument9 thermograph1
+	 
+I
+W "
+ 2U
+5take_image satellite3 phenomenon14 instrument8 image0
+ 
+I
+V "
+ 2U
+5take_image satellite3 phenomenon14 instrument9 image0
+	 
+I
+W "
+ 2\
+<take_image satellite3 phenomenon14 instrument9 spectrograph3
+	 
+I
+W "
+ 2[
+;take_image satellite3 phenomenon14 instrument9 thermograph1
+	 
+I
+W "
+ 2T
+4take_image satellite3 phenomenon5 instrument8 image0
+ 
+I
+V "
+ 2T
+4take_image satellite3 phenomenon5 instrument9 image0
+	 
+I
+W "
+ 2[
+;take_image satellite3 phenomenon5 instrument9 spectrograph3
+	 
+I
+W "
+ 2Z
+:take_image satellite3 phenomenon5 instrument9 thermograph1
+	 
+I
+W "
+ 2T
+4take_image satellite3 phenomenon8 instrument8 image0
+ 
+I
+V "
+ 2T
+4take_image satellite3 phenomenon8 instrument9 image0
+	 
+I
+W "
+ 2[
+;take_image satellite3 phenomenon8 instrument9 spectrograph3
+	 
+I
+W "
+ 2Z
+:take_image satellite3 phenomenon8 instrument9 thermograph1
+	 
+I
+W "
+  2T
+4take_image satellite3 phenomenon9 instrument8 image0
+ 
+I
+V "
+" 2T
+4take_image satellite3 phenomenon9 instrument9 image0
+	 
+I
+W "
+" 2[
+;take_image satellite3 phenomenon9 instrument9 spectrograph3
+	 
+I
+W "
+# 2Z
+:take_image satellite3 phenomenon9 instrument9 thermograph1
+	 
+I
+W "
+$ 2Q
+1take_image satellite3 planet11 instrument8 image0
+ 
+I
+V "
+& 2Q
+1take_image satellite3 planet11 instrument9 image0
+	 
+I
+W "
+& 2X
+8take_image satellite3 planet11 instrument9 spectrograph3
+	 
+I
+W "
+' 2W
+7take_image satellite3 planet11 instrument9 thermograph1
+	 
+I
+W "
+( 2N
+.take_image satellite3 star0 instrument8 image0
+ 
+I
+V "
+* 2N
+.take_image satellite3 star0 instrument9 image0
+	 
+I
+W "
+* 2U
+5take_image satellite3 star0 instrument9 spectrograph3
+	 
+I
+W "
++ 2T
+4take_image satellite3 star0 instrument9 thermograph1
+	 
+I
+W "
+, 2O
+/take_image satellite3 star10 instrument8 image0
+ 
+I	
+V "
+. 2O
+/take_image satellite3 star10 instrument9 image0
+	 
+I	
+W "
+. 2V
+6take_image satellite3 star10 instrument9 spectrograph3
+	 
+I	
+W "
+/ 2U
+5take_image satellite3 star10 instrument9 thermograph1
+	 
+I	
+W "
+0 2N
+.take_image satellite3 star2 instrument8 image0
+ 
+I
+
+V "
+2 2N
+.take_image satellite3 star2 instrument9 image0
+	 
+I
+
+W "
+2 2U
+5take_image satellite3 star2 instrument9 spectrograph3
+	 
+I
+
+W "
+3 2T
+4take_image satellite3 star2 instrument9 thermograph1
+	 
+I
+
+W "
+4 2N
+.take_image satellite3 star3 instrument8 image0
+ 
+I
+V "
+6 2N
+.take_image satellite3 star3 instrument9 image0
+	 
+I
+W "
+6 2U
+5take_image satellite3 star3 instrument9 spectrograph3
+	 
+I
+W "
+7 2T
+4take_image satellite3 star3 instrument9 thermograph1
+	 
+I
+W "
+8 2N
+.take_image satellite3 star4 instrument8 image0
+ 
+I
+V "
+: 2N
+.take_image satellite3 star4 instrument9 image0
+	 
+I
+W "
+: 2U
+5take_image satellite3 star4 instrument9 spectrograph3
+	 
+I
+W "
+; 2T
+4take_image satellite3 star4 instrument9 thermograph1
+	 
+I
+W "
+< 2N
+.take_image satellite3 star6 instrument8 image0
+ 
+I
+V "
+> 2N
+.take_image satellite3 star6 instrument9 image0
+	 
+I
+W "
+> 2U
+5take_image satellite3 star6 instrument9 spectrograph3
+	 
+I
+W "
+? 2T
+4take_image satellite3 star6 instrument9 thermograph1
+	 
+I
+W "
+@ 2N
+.take_image satellite3 star7 instrument8 image0
+ 
+I
+V "
+B 2N
+.take_image satellite3 star7 instrument9 image0
+	 
+I
+W "
+B 2U
+5take_image satellite3 star7 instrument9 spectrograph3
+	 
+I
+W "
+C 2T
+4take_image satellite3 star7 instrument9 thermograph1
+	 
+I
+W "
+D 2B
+.turn_to satellite0 groundstation1 phenomenon12
+F"
+F 2B
+.turn_to satellite0 groundstation1 phenomenon13
+F"
+F 2B
+.turn_to satellite0 groundstation1 phenomenon14
+F"
+F 2A
+-turn_to satellite0 groundstation1 phenomenon5
+F"
+F 2A
+-turn_to satellite0 groundstation1 phenomenon8
+F"
+F 2A
+-turn_to satellite0 groundstation1 phenomenon9
+F"
+F 2>
+*turn_to satellite0 groundstation1 planet11
+F"
+F 2;
+'turn_to satellite0 groundstation1 star0
+F"
+F 2<
+(turn_to satellite0 groundstation1 star10
+F	"
+F 2;
+'turn_to satellite0 groundstation1 star2
+F
+"
+F 2;
+'turn_to satellite0 groundstation1 star3
+F"
+F 2;
+'turn_to satellite0 groundstation1 star4
+F"
+F 2;
+'turn_to satellite0 groundstation1 star6
+F"
+F 2;
+'turn_to satellite0 groundstation1 star7
+F"
+F 2B
+.turn_to satellite0 phenomenon12 groundstation1
+F "
+F2@
+,turn_to satellite0 phenomenon12 phenomenon13
+F"
+F2@
+,turn_to satellite0 phenomenon12 phenomenon14
+F"
+F2?
++turn_to satellite0 phenomenon12 phenomenon5
+F"
+F2?
++turn_to satellite0 phenomenon12 phenomenon8
+F"
+F2?
++turn_to satellite0 phenomenon12 phenomenon9
+F"
+F2<
+(turn_to satellite0 phenomenon12 planet11
+F"
+F29
+%turn_to satellite0 phenomenon12 star0
+F"
+F2:
+&turn_to satellite0 phenomenon12 star10
+F	"
+F29
+%turn_to satellite0 phenomenon12 star2
+F
+"
+F29
+%turn_to satellite0 phenomenon12 star3
+F"
+F29
+%turn_to satellite0 phenomenon12 star4
+F"
+F29
+%turn_to satellite0 phenomenon12 star6
+F"
+F29
+%turn_to satellite0 phenomenon12 star7
+F"
+F2B
+.turn_to satellite0 phenomenon13 groundstation1
+F "
+F2@
+,turn_to satellite0 phenomenon13 phenomenon12
+F"
+F2@
+,turn_to satellite0 phenomenon13 phenomenon14
+F"
+F2?
++turn_to satellite0 phenomenon13 phenomenon5
+F"
+F2?
++turn_to satellite0 phenomenon13 phenomenon8
+F"
+F2?
++turn_to satellite0 phenomenon13 phenomenon9
+F"
+F2<
+(turn_to satellite0 phenomenon13 planet11
+F"
+F29
+%turn_to satellite0 phenomenon13 star0
+F"
+F2:
+&turn_to satellite0 phenomenon13 star10
+F	"
+F29
+%turn_to satellite0 phenomenon13 star2
+F
+"
+F29
+%turn_to satellite0 phenomenon13 star3
+F"
+F29
+%turn_to satellite0 phenomenon13 star4
+F"
+F29
+%turn_to satellite0 phenomenon13 star6
+F"
+F29
+%turn_to satellite0 phenomenon13 star7
+F"
+F2B
+.turn_to satellite0 phenomenon14 groundstation1
+F "
+F2@
+,turn_to satellite0 phenomenon14 phenomenon12
+F"
+F2@
+,turn_to satellite0 phenomenon14 phenomenon13
+F"
+F2?
++turn_to satellite0 phenomenon14 phenomenon5
+F"
+F2?
++turn_to satellite0 phenomenon14 phenomenon8
+F"
+F2?
++turn_to satellite0 phenomenon14 phenomenon9
+F"
+F2<
+(turn_to satellite0 phenomenon14 planet11
+F"
+F29
+%turn_to satellite0 phenomenon14 star0
+F"
+F2:
+&turn_to satellite0 phenomenon14 star10
+F	"
+F29
+%turn_to satellite0 phenomenon14 star2
+F
+"
+F29
+%turn_to satellite0 phenomenon14 star3
+F"
+F29
+%turn_to satellite0 phenomenon14 star4
+F"
+F29
+%turn_to satellite0 phenomenon14 star6
+F"
+F29
+%turn_to satellite0 phenomenon14 star7
+F"
+F2A
+-turn_to satellite0 phenomenon5 groundstation1
+F "
+F2?
++turn_to satellite0 phenomenon5 phenomenon12
+F"
+F2?
++turn_to satellite0 phenomenon5 phenomenon13
+F"
+F2?
++turn_to satellite0 phenomenon5 phenomenon14
+F"
+F2>
+*turn_to satellite0 phenomenon5 phenomenon8
+F"
+F2>
+*turn_to satellite0 phenomenon5 phenomenon9
+F"
+F2;
+'turn_to satellite0 phenomenon5 planet11
+F"
+F28
+$turn_to satellite0 phenomenon5 star0
+F"
+F29
+%turn_to satellite0 phenomenon5 star10
+F	"
+F28
+$turn_to satellite0 phenomenon5 star2
+F
+"
+F28
+$turn_to satellite0 phenomenon5 star3
+F"
+F28
+$turn_to satellite0 phenomenon5 star4
+F"
+F28
+$turn_to satellite0 phenomenon5 star6
+F"
+F28
+$turn_to satellite0 phenomenon5 star7
+F"
+F2A
+-turn_to satellite0 phenomenon8 groundstation1
+F "
+F2?
++turn_to satellite0 phenomenon8 phenomenon12
+F"
+F2?
++turn_to satellite0 phenomenon8 phenomenon13
+F"
+F2?
++turn_to satellite0 phenomenon8 phenomenon14
+F"
+F2>
+*turn_to satellite0 phenomenon8 phenomenon5
+F"
+F2>
+*turn_to satellite0 phenomenon8 phenomenon9
+F"
+F2;
+'turn_to satellite0 phenomenon8 planet11
+F"
+F28
+$turn_to satellite0 phenomenon8 star0
+F"
+F29
+%turn_to satellite0 phenomenon8 star10
+F	"
+F28
+$turn_to satellite0 phenomenon8 star2
+F
+"
+F28
+$turn_to satellite0 phenomenon8 star3
+F"
+F28
+$turn_to satellite0 phenomenon8 star4
+F"
+F28
+$turn_to satellite0 phenomenon8 star6
+F"
+F28
+$turn_to satellite0 phenomenon8 star7
+F"
+F2A
+-turn_to satellite0 phenomenon9 groundstation1
+F "
+F2?
++turn_to satellite0 phenomenon9 phenomenon12
+F"
+F2?
++turn_to satellite0 phenomenon9 phenomenon13
+F"
+F2?
++turn_to satellite0 phenomenon9 phenomenon14
+F"
+F2>
+*turn_to satellite0 phenomenon9 phenomenon5
+F"
+F2>
+*turn_to satellite0 phenomenon9 phenomenon8
+F"
+F2;
+'turn_to satellite0 phenomenon9 planet11
+F"
+F28
+$turn_to satellite0 phenomenon9 star0
+F"
+F29
+%turn_to satellite0 phenomenon9 star10
+F	"
+F28
+$turn_to satellite0 phenomenon9 star2
+F
+"
+F28
+$turn_to satellite0 phenomenon9 star3
+F"
+F28
+$turn_to satellite0 phenomenon9 star4
+F"
+F28
+$turn_to satellite0 phenomenon9 star6
+F"
+F28
+$turn_to satellite0 phenomenon9 star7
+F"
+F2>
+*turn_to satellite0 planet11 groundstation1
+F "
+F2<
+(turn_to satellite0 planet11 phenomenon12
+F"
+F2<
+(turn_to satellite0 planet11 phenomenon13
+F"
+F2<
+(turn_to satellite0 planet11 phenomenon14
+F"
+F2;
+'turn_to satellite0 planet11 phenomenon5
+F"
+F2;
+'turn_to satellite0 planet11 phenomenon8
+F"
+F2;
+'turn_to satellite0 planet11 phenomenon9
+F"
+F25
+!turn_to satellite0 planet11 star0
+F"
+F26
+"turn_to satellite0 planet11 star10
+F	"
+F25
+!turn_to satellite0 planet11 star2
+F
+"
+F25
+!turn_to satellite0 planet11 star3
+F"
+F25
+!turn_to satellite0 planet11 star4
+F"
+F25
+!turn_to satellite0 planet11 star6
+F"
+F25
+!turn_to satellite0 planet11 star7
+F"
+F2;
+'turn_to satellite0 star0 groundstation1
+F "
+F29
+%turn_to satellite0 star0 phenomenon12
+F"
+F29
+%turn_to satellite0 star0 phenomenon13
+F"
+F29
+%turn_to satellite0 star0 phenomenon14
+F"
+F28
+$turn_to satellite0 star0 phenomenon5
+F"
+F28
+$turn_to satellite0 star0 phenomenon8
+F"
+F28
+$turn_to satellite0 star0 phenomenon9
+F"
+F25
+!turn_to satellite0 star0 planet11
+F"
+F23
+turn_to satellite0 star0 star10
+F	"
+F22
+turn_to satellite0 star0 star2
+F
+"
+F22
+turn_to satellite0 star0 star3
+F"
+F22
+turn_to satellite0 star0 star4
+F"
+F22
+turn_to satellite0 star0 star6
+F"
+F22
+turn_to satellite0 star0 star7
+F"
+F2<
+(turn_to satellite0 star10 groundstation1
+F "
+F	2:
+&turn_to satellite0 star10 phenomenon12
+F"
+F	2:
+&turn_to satellite0 star10 phenomenon13
+F"
+F	2:
+&turn_to satellite0 star10 phenomenon14
+F"
+F	29
+%turn_to satellite0 star10 phenomenon5
+F"
+F	29
+%turn_to satellite0 star10 phenomenon8
+F"
+F	29
+%turn_to satellite0 star10 phenomenon9
+F"
+F	26
+"turn_to satellite0 star10 planet11
+F"
+F	23
+turn_to satellite0 star10 star0
+F"
+F	23
+turn_to satellite0 star10 star2
+F
+"
+F	23
+turn_to satellite0 star10 star3
+F"
+F	23
+turn_to satellite0 star10 star4
+F"
+F	23
+turn_to satellite0 star10 star6
+F"
+F	23
+turn_to satellite0 star10 star7
+F"
+F	2;
+'turn_to satellite0 star2 groundstation1
+F "
+F
+29
+%turn_to satellite0 star2 phenomenon12
+F"
+F
+29
+%turn_to satellite0 star2 phenomenon13
+F"
+F
+29
+%turn_to satellite0 star2 phenomenon14
+F"
+F
+28
+$turn_to satellite0 star2 phenomenon5
+F"
+F
+28
+$turn_to satellite0 star2 phenomenon8
+F"
+F
+28
+$turn_to satellite0 star2 phenomenon9
+F"
+F
+25
+!turn_to satellite0 star2 planet11
+F"
+F
+22
+turn_to satellite0 star2 star0
+F"
+F
+23
+turn_to satellite0 star2 star10
+F	"
+F
+22
+turn_to satellite0 star2 star3
+F"
+F
+22
+turn_to satellite0 star2 star4
+F"
+F
+22
+turn_to satellite0 star2 star6
+F"
+F
+22
+turn_to satellite0 star2 star7
+F"
+F
+2;
+'turn_to satellite0 star3 groundstation1
+F "
+F29
+%turn_to satellite0 star3 phenomenon12
+F"
+F29
+%turn_to satellite0 star3 phenomenon13
+F"
+F29
+%turn_to satellite0 star3 phenomenon14
+F"
+F28
+$turn_to satellite0 star3 phenomenon5
+F"
+F28
+$turn_to satellite0 star3 phenomenon8
+F"
+F28
+$turn_to satellite0 star3 phenomenon9
+F"
+F25
+!turn_to satellite0 star3 planet11
+F"
+F22
+turn_to satellite0 star3 star0
+F"
+F23
+turn_to satellite0 star3 star10
+F	"
+F22
+turn_to satellite0 star3 star2
+F
+"
+F22
+turn_to satellite0 star3 star4
+F"
+F22
+turn_to satellite0 star3 star6
+F"
+F22
+turn_to satellite0 star3 star7
+F"
+F2;
+'turn_to satellite0 star4 groundstation1
+F "
+F29
+%turn_to satellite0 star4 phenomenon12
+F"
+F29
+%turn_to satellite0 star4 phenomenon13
+F"
+F29
+%turn_to satellite0 star4 phenomenon14
+F"
+F28
+$turn_to satellite0 star4 phenomenon5
+F"
+F28
+$turn_to satellite0 star4 phenomenon8
+F"
+F28
+$turn_to satellite0 star4 phenomenon9
+F"
+F25
+!turn_to satellite0 star4 planet11
+F"
+F22
+turn_to satellite0 star4 star0
+F"
+F23
+turn_to satellite0 star4 star10
+F	"
+F22
+turn_to satellite0 star4 star2
+F
+"
+F22
+turn_to satellite0 star4 star3
+F"
+F22
+turn_to satellite0 star4 star6
+F"
+F22
+turn_to satellite0 star4 star7
+F"
+F2;
+'turn_to satellite0 star6 groundstation1
+F "
+F29
+%turn_to satellite0 star6 phenomenon12
+F"
+F29
+%turn_to satellite0 star6 phenomenon13
+F"
+F29
+%turn_to satellite0 star6 phenomenon14
+F"
+F28
+$turn_to satellite0 star6 phenomenon5
+F"
+F28
+$turn_to satellite0 star6 phenomenon8
+F"
+F28
+$turn_to satellite0 star6 phenomenon9
+F"
+F25
+!turn_to satellite0 star6 planet11
+F"
+F22
+turn_to satellite0 star6 star0
+F"
+F23
+turn_to satellite0 star6 star10
+F	"
+F22
+turn_to satellite0 star6 star2
+F
+"
+F22
+turn_to satellite0 star6 star3
+F"
+F22
+turn_to satellite0 star6 star4
+F"
+F22
+turn_to satellite0 star6 star7
+F"
+F2;
+'turn_to satellite0 star7 groundstation1
+F "
+F29
+%turn_to satellite0 star7 phenomenon12
+F"
+F29
+%turn_to satellite0 star7 phenomenon13
+F"
+F29
+%turn_to satellite0 star7 phenomenon14
+F"
+F28
+$turn_to satellite0 star7 phenomenon5
+F"
+F28
+$turn_to satellite0 star7 phenomenon8
+F"
+F28
+$turn_to satellite0 star7 phenomenon9
+F"
+F25
+!turn_to satellite0 star7 planet11
+F"
+F22
+turn_to satellite0 star7 star0
+F"
+F23
+turn_to satellite0 star7 star10
+F	"
+F22
+turn_to satellite0 star7 star2
+F
+"
+F22
+turn_to satellite0 star7 star3
+F"
+F22
+turn_to satellite0 star7 star4
+F"
+F22
+turn_to satellite0 star7 star6
+F"
+F2B
+.turn_to satellite1 groundstation1 phenomenon12
+G"
+G 2B
+.turn_to satellite1 groundstation1 phenomenon13
+G"
+G 2B
+.turn_to satellite1 groundstation1 phenomenon14
+G"
+G 2A
+-turn_to satellite1 groundstation1 phenomenon5
+G"
+G 2A
+-turn_to satellite1 groundstation1 phenomenon8
+G"
+G 2A
+-turn_to satellite1 groundstation1 phenomenon9
+G"
+G 2>
+*turn_to satellite1 groundstation1 planet11
+G"
+G 2;
+'turn_to satellite1 groundstation1 star0
+G"
+G 2<
+(turn_to satellite1 groundstation1 star10
+G	"
+G 2;
+'turn_to satellite1 groundstation1 star2
+G
+"
+G 2;
+'turn_to satellite1 groundstation1 star3
+G"
+G 2;
+'turn_to satellite1 groundstation1 star4
+G"
+G 2;
+'turn_to satellite1 groundstation1 star6
+G"
+G 2;
+'turn_to satellite1 groundstation1 star7
+G"
+G 2B
+.turn_to satellite1 phenomenon12 groundstation1
+G "
+G2@
+,turn_to satellite1 phenomenon12 phenomenon13
+G"
+G2@
+,turn_to satellite1 phenomenon12 phenomenon14
+G"
+G2?
++turn_to satellite1 phenomenon12 phenomenon5
+G"
+G2?
++turn_to satellite1 phenomenon12 phenomenon8
+G"
+G2?
++turn_to satellite1 phenomenon12 phenomenon9
+G"
+G2<
+(turn_to satellite1 phenomenon12 planet11
+G"
+G29
+%turn_to satellite1 phenomenon12 star0
+G"
+G2:
+&turn_to satellite1 phenomenon12 star10
+G	"
+G29
+%turn_to satellite1 phenomenon12 star2
+G
+"
+G29
+%turn_to satellite1 phenomenon12 star3
+G"
+G29
+%turn_to satellite1 phenomenon12 star4
+G"
+G29
+%turn_to satellite1 phenomenon12 star6
+G"
+G29
+%turn_to satellite1 phenomenon12 star7
+G"
+G2B
+.turn_to satellite1 phenomenon13 groundstation1
+G "
+G2@
+,turn_to satellite1 phenomenon13 phenomenon12
+G"
+G2@
+,turn_to satellite1 phenomenon13 phenomenon14
+G"
+G2?
++turn_to satellite1 phenomenon13 phenomenon5
+G"
+G2?
++turn_to satellite1 phenomenon13 phenomenon8
+G"
+G2?
++turn_to satellite1 phenomenon13 phenomenon9
+G"
+G2<
+(turn_to satellite1 phenomenon13 planet11
+G"
+G29
+%turn_to satellite1 phenomenon13 star0
+G"
+G2:
+&turn_to satellite1 phenomenon13 star10
+G	"
+G29
+%turn_to satellite1 phenomenon13 star2
+G
+"
+G29
+%turn_to satellite1 phenomenon13 star3
+G"
+G29
+%turn_to satellite1 phenomenon13 star4
+G"
+G29
+%turn_to satellite1 phenomenon13 star6
+G"
+G29
+%turn_to satellite1 phenomenon13 star7
+G"
+G2B
+.turn_to satellite1 phenomenon14 groundstation1
+G "
+G2@
+,turn_to satellite1 phenomenon14 phenomenon12
+G"
+G2@
+,turn_to satellite1 phenomenon14 phenomenon13
+G"
+G2?
++turn_to satellite1 phenomenon14 phenomenon5
+G"
+G2?
++turn_to satellite1 phenomenon14 phenomenon8
+G"
+G2?
++turn_to satellite1 phenomenon14 phenomenon9
+G"
+G2<
+(turn_to satellite1 phenomenon14 planet11
+G"
+G29
+%turn_to satellite1 phenomenon14 star0
+G"
+G2:
+&turn_to satellite1 phenomenon14 star10
+G	"
+G29
+%turn_to satellite1 phenomenon14 star2
+G
+"
+G29
+%turn_to satellite1 phenomenon14 star3
+G"
+G29
+%turn_to satellite1 phenomenon14 star4
+G"
+G29
+%turn_to satellite1 phenomenon14 star6
+G"
+G29
+%turn_to satellite1 phenomenon14 star7
+G"
+G2A
+-turn_to satellite1 phenomenon5 groundstation1
+G "
+G2?
++turn_to satellite1 phenomenon5 phenomenon12
+G"
+G2?
++turn_to satellite1 phenomenon5 phenomenon13
+G"
+G2?
++turn_to satellite1 phenomenon5 phenomenon14
+G"
+G2>
+*turn_to satellite1 phenomenon5 phenomenon8
+G"
+G2>
+*turn_to satellite1 phenomenon5 phenomenon9
+G"
+G2;
+'turn_to satellite1 phenomenon5 planet11
+G"
+G28
+$turn_to satellite1 phenomenon5 star0
+G"
+G29
+%turn_to satellite1 phenomenon5 star10
+G	"
+G28
+$turn_to satellite1 phenomenon5 star2
+G
+"
+G28
+$turn_to satellite1 phenomenon5 star3
+G"
+G28
+$turn_to satellite1 phenomenon5 star4
+G"
+G28
+$turn_to satellite1 phenomenon5 star6
+G"
+G28
+$turn_to satellite1 phenomenon5 star7
+G"
+G2A
+-turn_to satellite1 phenomenon8 groundstation1
+G "
+G2?
++turn_to satellite1 phenomenon8 phenomenon12
+G"
+G2?
++turn_to satellite1 phenomenon8 phenomenon13
+G"
+G2?
++turn_to satellite1 phenomenon8 phenomenon14
+G"
+G2>
+*turn_to satellite1 phenomenon8 phenomenon5
+G"
+G2>
+*turn_to satellite1 phenomenon8 phenomenon9
+G"
+G2;
+'turn_to satellite1 phenomenon8 planet11
+G"
+G28
+$turn_to satellite1 phenomenon8 star0
+G"
+G29
+%turn_to satellite1 phenomenon8 star10
+G	"
+G28
+$turn_to satellite1 phenomenon8 star2
+G
+"
+G28
+$turn_to satellite1 phenomenon8 star3
+G"
+G28
+$turn_to satellite1 phenomenon8 star4
+G"
+G28
+$turn_to satellite1 phenomenon8 star6
+G"
+G28
+$turn_to satellite1 phenomenon8 star7
+G"
+G2A
+-turn_to satellite1 phenomenon9 groundstation1
+G "
+G2?
++turn_to satellite1 phenomenon9 phenomenon12
+G"
+G2?
++turn_to satellite1 phenomenon9 phenomenon13
+G"
+G2?
++turn_to satellite1 phenomenon9 phenomenon14
+G"
+G2>
+*turn_to satellite1 phenomenon9 phenomenon5
+G"
+G2>
+*turn_to satellite1 phenomenon9 phenomenon8
+G"
+G2;
+'turn_to satellite1 phenomenon9 planet11
+G"
+G28
+$turn_to satellite1 phenomenon9 star0
+G"
+G29
+%turn_to satellite1 phenomenon9 star10
+G	"
+G28
+$turn_to satellite1 phenomenon9 star2
+G
+"
+G28
+$turn_to satellite1 phenomenon9 star3
+G"
+G28
+$turn_to satellite1 phenomenon9 star4
+G"
+G28
+$turn_to satellite1 phenomenon9 star6
+G"
+G28
+$turn_to satellite1 phenomenon9 star7
+G"
+G2>
+*turn_to satellite1 planet11 groundstation1
+G "
+G2<
+(turn_to satellite1 planet11 phenomenon12
+G"
+G2<
+(turn_to satellite1 planet11 phenomenon13
+G"
+G2<
+(turn_to satellite1 planet11 phenomenon14
+G"
+G2;
+'turn_to satellite1 planet11 phenomenon5
+G"
+G2;
+'turn_to satellite1 planet11 phenomenon8
+G"
+G2;
+'turn_to satellite1 planet11 phenomenon9
+G"
+G25
+!turn_to satellite1 planet11 star0
+G"
+G26
+"turn_to satellite1 planet11 star10
+G	"
+G25
+!turn_to satellite1 planet11 star2
+G
+"
+G25
+!turn_to satellite1 planet11 star3
+G"
+G25
+!turn_to satellite1 planet11 star4
+G"
+G25
+!turn_to satellite1 planet11 star6
+G"
+G25
+!turn_to satellite1 planet11 star7
+G"
+G2;
+'turn_to satellite1 star0 groundstation1
+G "
+G29
+%turn_to satellite1 star0 phenomenon12
+G"
+G29
+%turn_to satellite1 star0 phenomenon13
+G"
+G29
+%turn_to satellite1 star0 phenomenon14
+G"
+G28
+$turn_to satellite1 star0 phenomenon5
+G"
+G28
+$turn_to satellite1 star0 phenomenon8
+G"
+G28
+$turn_to satellite1 star0 phenomenon9
+G"
+G25
+!turn_to satellite1 star0 planet11
+G"
+G23
+turn_to satellite1 star0 star10
+G	"
+G22
+turn_to satellite1 star0 star2
+G
+"
+G22
+turn_to satellite1 star0 star3
+G"
+G22
+turn_to satellite1 star0 star4
+G"
+G22
+turn_to satellite1 star0 star6
+G"
+G22
+turn_to satellite1 star0 star7
+G"
+G2<
+(turn_to satellite1 star10 groundstation1
+G "
+G	2:
+&turn_to satellite1 star10 phenomenon12
+G"
+G	2:
+&turn_to satellite1 star10 phenomenon13
+G"
+G	2:
+&turn_to satellite1 star10 phenomenon14
+G"
+G	29
+%turn_to satellite1 star10 phenomenon5
+G"
+G	29
+%turn_to satellite1 star10 phenomenon8
+G"
+G	29
+%turn_to satellite1 star10 phenomenon9
+G"
+G	26
+"turn_to satellite1 star10 planet11
+G"
+G	23
+turn_to satellite1 star10 star0
+G"
+G	23
+turn_to satellite1 star10 star2
+G
+"
+G	23
+turn_to satellite1 star10 star3
+G"
+G	23
+turn_to satellite1 star10 star4
+G"
+G	23
+turn_to satellite1 star10 star6
+G"
+G	23
+turn_to satellite1 star10 star7
+G"
+G	2;
+'turn_to satellite1 star2 groundstation1
+G "
+G
+29
+%turn_to satellite1 star2 phenomenon12
+G"
+G
+29
+%turn_to satellite1 star2 phenomenon13
+G"
+G
+29
+%turn_to satellite1 star2 phenomenon14
+G"
+G
+28
+$turn_to satellite1 star2 phenomenon5
+G"
+G
+28
+$turn_to satellite1 star2 phenomenon8
+G"
+G
+28
+$turn_to satellite1 star2 phenomenon9
+G"
+G
+25
+!turn_to satellite1 star2 planet11
+G"
+G
+22
+turn_to satellite1 star2 star0
+G"
+G
+23
+turn_to satellite1 star2 star10
+G	"
+G
+22
+turn_to satellite1 star2 star3
+G"
+G
+22
+turn_to satellite1 star2 star4
+G"
+G
+22
+turn_to satellite1 star2 star6
+G"
+G
+22
+turn_to satellite1 star2 star7
+G"
+G
+2;
+'turn_to satellite1 star3 groundstation1
+G "
+G29
+%turn_to satellite1 star3 phenomenon12
+G"
+G29
+%turn_to satellite1 star3 phenomenon13
+G"
+G29
+%turn_to satellite1 star3 phenomenon14
+G"
+G28
+$turn_to satellite1 star3 phenomenon5
+G"
+G28
+$turn_to satellite1 star3 phenomenon8
+G"
+G28
+$turn_to satellite1 star3 phenomenon9
+G"
+G25
+!turn_to satellite1 star3 planet11
+G"
+G22
+turn_to satellite1 star3 star0
+G"
+G23
+turn_to satellite1 star3 star10
+G	"
+G22
+turn_to satellite1 star3 star2
+G
+"
+G22
+turn_to satellite1 star3 star4
+G"
+G22
+turn_to satellite1 star3 star6
+G"
+G22
+turn_to satellite1 star3 star7
+G"
+G2;
+'turn_to satellite1 star4 groundstation1
+G "
+G29
+%turn_to satellite1 star4 phenomenon12
+G"
+G29
+%turn_to satellite1 star4 phenomenon13
+G"
+G29
+%turn_to satellite1 star4 phenomenon14
+G"
+G28
+$turn_to satellite1 star4 phenomenon5
+G"
+G28
+$turn_to satellite1 star4 phenomenon8
+G"
+G28
+$turn_to satellite1 star4 phenomenon9
+G"
+G25
+!turn_to satellite1 star4 planet11
+G"
+G22
+turn_to satellite1 star4 star0
+G"
+G23
+turn_to satellite1 star4 star10
+G	"
+G22
+turn_to satellite1 star4 star2
+G
+"
+G22
+turn_to satellite1 star4 star3
+G"
+G22
+turn_to satellite1 star4 star6
+G"
+G22
+turn_to satellite1 star4 star7
+G"
+G2;
+'turn_to satellite1 star6 groundstation1
+G "
+G29
+%turn_to satellite1 star6 phenomenon12
+G"
+G29
+%turn_to satellite1 star6 phenomenon13
+G"
+G29
+%turn_to satellite1 star6 phenomenon14
+G"
+G28
+$turn_to satellite1 star6 phenomenon5
+G"
+G28
+$turn_to satellite1 star6 phenomenon8
+G"
+G28
+$turn_to satellite1 star6 phenomenon9
+G"
+G25
+!turn_to satellite1 star6 planet11
+G"
+G22
+turn_to satellite1 star6 star0
+G"
+G23
+turn_to satellite1 star6 star10
+G	"
+G22
+turn_to satellite1 star6 star2
+G
+"
+G22
+turn_to satellite1 star6 star3
+G"
+G22
+turn_to satellite1 star6 star4
+G"
+G22
+turn_to satellite1 star6 star7
+G"
+G2;
+'turn_to satellite1 star7 groundstation1
+G "
+G29
+%turn_to satellite1 star7 phenomenon12
+G"
+G29
+%turn_to satellite1 star7 phenomenon13
+G"
+G29
+%turn_to satellite1 star7 phenomenon14
+G"
+G28
+$turn_to satellite1 star7 phenomenon5
+G"
+G28
+$turn_to satellite1 star7 phenomenon8
+G"
+G28
+$turn_to satellite1 star7 phenomenon9
+G"
+G25
+!turn_to satellite1 star7 planet11
+G"
+G22
+turn_to satellite1 star7 star0
+G"
+G23
+turn_to satellite1 star7 star10
+G	"
+G22
+turn_to satellite1 star7 star2
+G
+"
+G22
+turn_to satellite1 star7 star3
+G"
+G22
+turn_to satellite1 star7 star4
+G"
+G22
+turn_to satellite1 star7 star6
+G"
+G2B
+.turn_to satellite2 groundstation1 phenomenon12
+H"
+H 2B
+.turn_to satellite2 groundstation1 phenomenon13
+H"
+H 2B
+.turn_to satellite2 groundstation1 phenomenon14
+H"
+H 2A
+-turn_to satellite2 groundstation1 phenomenon5
+H"
+H 2A
+-turn_to satellite2 groundstation1 phenomenon8
+H"
+H 2A
+-turn_to satellite2 groundstation1 phenomenon9
+H"
+H 2>
+*turn_to satellite2 groundstation1 planet11
+H"
+H 2;
+'turn_to satellite2 groundstation1 star0
+H"
+H 2<
+(turn_to satellite2 groundstation1 star10
+H	"
+H 2;
+'turn_to satellite2 groundstation1 star2
+H
+"
+H 2;
+'turn_to satellite2 groundstation1 star3
+H"
+H 2;
+'turn_to satellite2 groundstation1 star4
+H"
+H 2;
+'turn_to satellite2 groundstation1 star6
+H"
+H 2;
+'turn_to satellite2 groundstation1 star7
+H"
+H 2B
+.turn_to satellite2 phenomenon12 groundstation1
+H "
+H2@
+,turn_to satellite2 phenomenon12 phenomenon13
+H"
+H2@
+,turn_to satellite2 phenomenon12 phenomenon14
+H"
+H2?
++turn_to satellite2 phenomenon12 phenomenon5
+H"
+H2?
++turn_to satellite2 phenomenon12 phenomenon8
+H"
+H2?
++turn_to satellite2 phenomenon12 phenomenon9
+H"
+H2<
+(turn_to satellite2 phenomenon12 planet11
+H"
+H29
+%turn_to satellite2 phenomenon12 star0
+H"
+H2:
+&turn_to satellite2 phenomenon12 star10
+H	"
+H29
+%turn_to satellite2 phenomenon12 star2
+H
+"
+H29
+%turn_to satellite2 phenomenon12 star3
+H"
+H29
+%turn_to satellite2 phenomenon12 star4
+H"
+H29
+%turn_to satellite2 phenomenon12 star6
+H"
+H29
+%turn_to satellite2 phenomenon12 star7
+H"
+H2B
+.turn_to satellite2 phenomenon13 groundstation1
+H "
+H2@
+,turn_to satellite2 phenomenon13 phenomenon12
+H"
+H2@
+,turn_to satellite2 phenomenon13 phenomenon14
+H"
+H2?
++turn_to satellite2 phenomenon13 phenomenon5
+H"
+H2?
++turn_to satellite2 phenomenon13 phenomenon8
+H"
+H2?
++turn_to satellite2 phenomenon13 phenomenon9
+H"
+H2<
+(turn_to satellite2 phenomenon13 planet11
+H"
+H29
+%turn_to satellite2 phenomenon13 star0
+H"
+H2:
+&turn_to satellite2 phenomenon13 star10
+H	"
+H29
+%turn_to satellite2 phenomenon13 star2
+H
+"
+H29
+%turn_to satellite2 phenomenon13 star3
+H"
+H29
+%turn_to satellite2 phenomenon13 star4
+H"
+H29
+%turn_to satellite2 phenomenon13 star6
+H"
+H29
+%turn_to satellite2 phenomenon13 star7
+H"
+H2B
+.turn_to satellite2 phenomenon14 groundstation1
+H "
+H2@
+,turn_to satellite2 phenomenon14 phenomenon12
+H"
+H2@
+,turn_to satellite2 phenomenon14 phenomenon13
+H"
+H2?
++turn_to satellite2 phenomenon14 phenomenon5
+H"
+H2?
++turn_to satellite2 phenomenon14 phenomenon8
+H"
+H2?
++turn_to satellite2 phenomenon14 phenomenon9
+H"
+H2<
+(turn_to satellite2 phenomenon14 planet11
+H"
+H29
+%turn_to satellite2 phenomenon14 star0
+H"
+H2:
+&turn_to satellite2 phenomenon14 star10
+H	"
+H29
+%turn_to satellite2 phenomenon14 star2
+H
+"
+H29
+%turn_to satellite2 phenomenon14 star3
+H"
+H29
+%turn_to satellite2 phenomenon14 star4
+H"
+H29
+%turn_to satellite2 phenomenon14 star6
+H"
+H29
+%turn_to satellite2 phenomenon14 star7
+H"
+H2A
+-turn_to satellite2 phenomenon5 groundstation1
+H "
+H2?
++turn_to satellite2 phenomenon5 phenomenon12
+H"
+H2?
++turn_to satellite2 phenomenon5 phenomenon13
+H"
+H2?
++turn_to satellite2 phenomenon5 phenomenon14
+H"
+H2>
+*turn_to satellite2 phenomenon5 phenomenon8
+H"
+H2>
+*turn_to satellite2 phenomenon5 phenomenon9
+H"
+H2;
+'turn_to satellite2 phenomenon5 planet11
+H"
+H28
+$turn_to satellite2 phenomenon5 star0
+H"
+H29
+%turn_to satellite2 phenomenon5 star10
+H	"
+H28
+$turn_to satellite2 phenomenon5 star2
+H
+"
+H28
+$turn_to satellite2 phenomenon5 star3
+H"
+H28
+$turn_to satellite2 phenomenon5 star4
+H"
+H28
+$turn_to satellite2 phenomenon5 star6
+H"
+H28
+$turn_to satellite2 phenomenon5 star7
+H"
+H2A
+-turn_to satellite2 phenomenon8 groundstation1
+H "
+H2?
++turn_to satellite2 phenomenon8 phenomenon12
+H"
+H2?
++turn_to satellite2 phenomenon8 phenomenon13
+H"
+H2?
++turn_to satellite2 phenomenon8 phenomenon14
+H"
+H2>
+*turn_to satellite2 phenomenon8 phenomenon5
+H"
+H2>
+*turn_to satellite2 phenomenon8 phenomenon9
+H"
+H2;
+'turn_to satellite2 phenomenon8 planet11
+H"
+H28
+$turn_to satellite2 phenomenon8 star0
+H"
+H29
+%turn_to satellite2 phenomenon8 star10
+H	"
+H28
+$turn_to satellite2 phenomenon8 star2
+H
+"
+H28
+$turn_to satellite2 phenomenon8 star3
+H"
+H28
+$turn_to satellite2 phenomenon8 star4
+H"
+H28
+$turn_to satellite2 phenomenon8 star6
+H"
+H28
+$turn_to satellite2 phenomenon8 star7
+H"
+H2A
+-turn_to satellite2 phenomenon9 groundstation1
+H "
+H2?
++turn_to satellite2 phenomenon9 phenomenon12
+H"
+H2?
++turn_to satellite2 phenomenon9 phenomenon13
+H"
+H2?
++turn_to satellite2 phenomenon9 phenomenon14
+H"
+H2>
+*turn_to satellite2 phenomenon9 phenomenon5
+H"
+H2>
+*turn_to satellite2 phenomenon9 phenomenon8
+H"
+H2;
+'turn_to satellite2 phenomenon9 planet11
+H"
+H28
+$turn_to satellite2 phenomenon9 star0
+H"
+H29
+%turn_to satellite2 phenomenon9 star10
+H	"
+H28
+$turn_to satellite2 phenomenon9 star2
+H
+"
+H28
+$turn_to satellite2 phenomenon9 star3
+H"
+H28
+$turn_to satellite2 phenomenon9 star4
+H"
+H28
+$turn_to satellite2 phenomenon9 star6
+H"
+H28
+$turn_to satellite2 phenomenon9 star7
+H"
+H2>
+*turn_to satellite2 planet11 groundstation1
+H "
+H2<
+(turn_to satellite2 planet11 phenomenon12
+H"
+H2<
+(turn_to satellite2 planet11 phenomenon13
+H"
+H2<
+(turn_to satellite2 planet11 phenomenon14
+H"
+H2;
+'turn_to satellite2 planet11 phenomenon5
+H"
+H2;
+'turn_to satellite2 planet11 phenomenon8
+H"
+H2;
+'turn_to satellite2 planet11 phenomenon9
+H"
+H25
+!turn_to satellite2 planet11 star0
+H"
+H26
+"turn_to satellite2 planet11 star10
+H	"
+H25
+!turn_to satellite2 planet11 star2
+H
+"
+H25
+!turn_to satellite2 planet11 star3
+H"
+H25
+!turn_to satellite2 planet11 star4
+H"
+H25
+!turn_to satellite2 planet11 star6
+H"
+H25
+!turn_to satellite2 planet11 star7
+H"
+H2;
+'turn_to satellite2 star0 groundstation1
+H "
+H29
+%turn_to satellite2 star0 phenomenon12
+H"
+H29
+%turn_to satellite2 star0 phenomenon13
+H"
+H29
+%turn_to satellite2 star0 phenomenon14
+H"
+H28
+$turn_to satellite2 star0 phenomenon5
+H"
+H28
+$turn_to satellite2 star0 phenomenon8
+H"
+H28
+$turn_to satellite2 star0 phenomenon9
+H"
+H25
+!turn_to satellite2 star0 planet11
+H"
+H23
+turn_to satellite2 star0 star10
+H	"
+H22
+turn_to satellite2 star0 star2
+H
+"
+H22
+turn_to satellite2 star0 star3
+H"
+H22
+turn_to satellite2 star0 star4
+H"
+H22
+turn_to satellite2 star0 star6
+H"
+H22
+turn_to satellite2 star0 star7
+H"
+H2<
+(turn_to satellite2 star10 groundstation1
+H "
+H	2:
+&turn_to satellite2 star10 phenomenon12
+H"
+H	2:
+&turn_to satellite2 star10 phenomenon13
+H"
+H	2:
+&turn_to satellite2 star10 phenomenon14
+H"
+H	29
+%turn_to satellite2 star10 phenomenon5
+H"
+H	29
+%turn_to satellite2 star10 phenomenon8
+H"
+H	29
+%turn_to satellite2 star10 phenomenon9
+H"
+H	26
+"turn_to satellite2 star10 planet11
+H"
+H	23
+turn_to satellite2 star10 star0
+H"
+H	23
+turn_to satellite2 star10 star2
+H
+"
+H	23
+turn_to satellite2 star10 star3
+H"
+H	23
+turn_to satellite2 star10 star4
+H"
+H	23
+turn_to satellite2 star10 star6
+H"
+H	23
+turn_to satellite2 star10 star7
+H"
+H	2;
+'turn_to satellite2 star2 groundstation1
+H "
+H
+29
+%turn_to satellite2 star2 phenomenon12
+H"
+H
+29
+%turn_to satellite2 star2 phenomenon13
+H"
+H
+29
+%turn_to satellite2 star2 phenomenon14
+H"
+H
+28
+$turn_to satellite2 star2 phenomenon5
+H"
+H
+28
+$turn_to satellite2 star2 phenomenon8
+H"
+H
+28
+$turn_to satellite2 star2 phenomenon9
+H"
+H
+25
+!turn_to satellite2 star2 planet11
+H"
+H
+22
+turn_to satellite2 star2 star0
+H"
+H
+23
+turn_to satellite2 star2 star10
+H	"
+H
+22
+turn_to satellite2 star2 star3
+H"
+H
+22
+turn_to satellite2 star2 star4
+H"
+H
+22
+turn_to satellite2 star2 star6
+H"
+H
+22
+turn_to satellite2 star2 star7
+H"
+H
+2;
+'turn_to satellite2 star3 groundstation1
+H "
+H29
+%turn_to satellite2 star3 phenomenon12
+H"
+H29
+%turn_to satellite2 star3 phenomenon13
+H"
+H29
+%turn_to satellite2 star3 phenomenon14
+H"
+H28
+$turn_to satellite2 star3 phenomenon5
+H"
+H28
+$turn_to satellite2 star3 phenomenon8
+H"
+H28
+$turn_to satellite2 star3 phenomenon9
+H"
+H25
+!turn_to satellite2 star3 planet11
+H"
+H22
+turn_to satellite2 star3 star0
+H"
+H23
+turn_to satellite2 star3 star10
+H	"
+H22
+turn_to satellite2 star3 star2
+H
+"
+H22
+turn_to satellite2 star3 star4
+H"
+H22
+turn_to satellite2 star3 star6
+H"
+H22
+turn_to satellite2 star3 star7
+H"
+H2;
+'turn_to satellite2 star4 groundstation1
+H "
+H29
+%turn_to satellite2 star4 phenomenon12
+H"
+H29
+%turn_to satellite2 star4 phenomenon13
+H"
+H29
+%turn_to satellite2 star4 phenomenon14
+H"
+H28
+$turn_to satellite2 star4 phenomenon5
+H"
+H28
+$turn_to satellite2 star4 phenomenon8
+H"
+H28
+$turn_to satellite2 star4 phenomenon9
+H"
+H25
+!turn_to satellite2 star4 planet11
+H"
+H22
+turn_to satellite2 star4 star0
+H"
+H23
+turn_to satellite2 star4 star10
+H	"
+H22
+turn_to satellite2 star4 star2
+H
+"
+H22
+turn_to satellite2 star4 star3
+H"
+H22
+turn_to satellite2 star4 star6
+H"
+H22
+turn_to satellite2 star4 star7
+H"
+H2;
+'turn_to satellite2 star6 groundstation1
+H "
+H29
+%turn_to satellite2 star6 phenomenon12
+H"
+H29
+%turn_to satellite2 star6 phenomenon13
+H"
+H29
+%turn_to satellite2 star6 phenomenon14
+H"
+H28
+$turn_to satellite2 star6 phenomenon5
+H"
+H28
+$turn_to satellite2 star6 phenomenon8
+H"
+H28
+$turn_to satellite2 star6 phenomenon9
+H"
+H25
+!turn_to satellite2 star6 planet11
+H"
+H22
+turn_to satellite2 star6 star0
+H"
+H23
+turn_to satellite2 star6 star10
+H	"
+H22
+turn_to satellite2 star6 star2
+H
+"
+H22
+turn_to satellite2 star6 star3
+H"
+H22
+turn_to satellite2 star6 star4
+H"
+H22
+turn_to satellite2 star6 star7
+H"
+H2;
+'turn_to satellite2 star7 groundstation1
+H "
+H29
+%turn_to satellite2 star7 phenomenon12
+H"
+H29
+%turn_to satellite2 star7 phenomenon13
+H"
+H29
+%turn_to satellite2 star7 phenomenon14
+H"
+H28
+$turn_to satellite2 star7 phenomenon5
+H"
+H28
+$turn_to satellite2 star7 phenomenon8
+H"
+H28
+$turn_to satellite2 star7 phenomenon9
+H"
+H25
+!turn_to satellite2 star7 planet11
+H"
+H22
+turn_to satellite2 star7 star0
+H"
+H23
+turn_to satellite2 star7 star10
+H	"
+H22
+turn_to satellite2 star7 star2
+H
+"
+H22
+turn_to satellite2 star7 star3
+H"
+H22
+turn_to satellite2 star7 star4
+H"
+H22
+turn_to satellite2 star7 star6
+H"
+H2B
+.turn_to satellite3 groundstation1 phenomenon12
+I"
+I 2B
+.turn_to satellite3 groundstation1 phenomenon13
+I"
+I 2B
+.turn_to satellite3 groundstation1 phenomenon14
+I"
+I 2A
+-turn_to satellite3 groundstation1 phenomenon5
+I"
+I 2A
+-turn_to satellite3 groundstation1 phenomenon8
+I"
+I 2A
+-turn_to satellite3 groundstation1 phenomenon9
+I"
+I 2>
+*turn_to satellite3 groundstation1 planet11
+I"
+I 2;
+'turn_to satellite3 groundstation1 star0
+I"
+I 2<
+(turn_to satellite3 groundstation1 star10
+I	"
+I 2;
+'turn_to satellite3 groundstation1 star2
+I
+"
+I 2;
+'turn_to satellite3 groundstation1 star3
+I"
+I 2;
+'turn_to satellite3 groundstation1 star4
+I"
+I 2;
+'turn_to satellite3 groundstation1 star6
+I"
+I 2;
+'turn_to satellite3 groundstation1 star7
+I"
+I 2B
+.turn_to satellite3 phenomenon12 groundstation1
+I "
+I2@
+,turn_to satellite3 phenomenon12 phenomenon13
+I"
+I2@
+,turn_to satellite3 phenomenon12 phenomenon14
+I"
+I2?
++turn_to satellite3 phenomenon12 phenomenon5
+I"
+I2?
++turn_to satellite3 phenomenon12 phenomenon8
+I"
+I2?
++turn_to satellite3 phenomenon12 phenomenon9
+I"
+I2<
+(turn_to satellite3 phenomenon12 planet11
+I"
+I29
+%turn_to satellite3 phenomenon12 star0
+I"
+I2:
+&turn_to satellite3 phenomenon12 star10
+I	"
+I29
+%turn_to satellite3 phenomenon12 star2
+I
+"
+I29
+%turn_to satellite3 phenomenon12 star3
+I"
+I29
+%turn_to satellite3 phenomenon12 star4
+I"
+I29
+%turn_to satellite3 phenomenon12 star6
+I"
+I29
+%turn_to satellite3 phenomenon12 star7
+I"
+I2B
+.turn_to satellite3 phenomenon13 groundstation1
+I "
+I2@
+,turn_to satellite3 phenomenon13 phenomenon12
+I"
+I2@
+,turn_to satellite3 phenomenon13 phenomenon14
+I"
+I2?
++turn_to satellite3 phenomenon13 phenomenon5
+I"
+I2?
++turn_to satellite3 phenomenon13 phenomenon8
+I"
+I2?
++turn_to satellite3 phenomenon13 phenomenon9
+I"
+I2<
+(turn_to satellite3 phenomenon13 planet11
+I"
+I29
+%turn_to satellite3 phenomenon13 star0
+I"
+I2:
+&turn_to satellite3 phenomenon13 star10
+I	"
+I29
+%turn_to satellite3 phenomenon13 star2
+I
+"
+I29
+%turn_to satellite3 phenomenon13 star3
+I"
+I29
+%turn_to satellite3 phenomenon13 star4
+I"
+I29
+%turn_to satellite3 phenomenon13 star6
+I"
+I29
+%turn_to satellite3 phenomenon13 star7
+I"
+I2B
+.turn_to satellite3 phenomenon14 groundstation1
+I "
+I2@
+,turn_to satellite3 phenomenon14 phenomenon12
+I"
+I2@
+,turn_to satellite3 phenomenon14 phenomenon13
+I"
+I2?
++turn_to satellite3 phenomenon14 phenomenon5
+I"
+I2?
++turn_to satellite3 phenomenon14 phenomenon8
+I"
+I2?
++turn_to satellite3 phenomenon14 phenomenon9
+I"
+I2<
+(turn_to satellite3 phenomenon14 planet11
+I"
+I29
+%turn_to satellite3 phenomenon14 star0
+I"
+I2:
+&turn_to satellite3 phenomenon14 star10
+I	"
+I29
+%turn_to satellite3 phenomenon14 star2
+I
+"
+I29
+%turn_to satellite3 phenomenon14 star3
+I"
+I29
+%turn_to satellite3 phenomenon14 star4
+I"
+I29
+%turn_to satellite3 phenomenon14 star6
+I"
+I29
+%turn_to satellite3 phenomenon14 star7
+I"
+I2A
+-turn_to satellite3 phenomenon5 groundstation1
+I "
+I2?
++turn_to satellite3 phenomenon5 phenomenon12
+I"
+I2?
++turn_to satellite3 phenomenon5 phenomenon13
+I"
+I2?
++turn_to satellite3 phenomenon5 phenomenon14
+I"
+I2>
+*turn_to satellite3 phenomenon5 phenomenon8
+I"
+I2>
+*turn_to satellite3 phenomenon5 phenomenon9
+I"
+I2;
+'turn_to satellite3 phenomenon5 planet11
+I"
+I28
+$turn_to satellite3 phenomenon5 star0
+I"
+I29
+%turn_to satellite3 phenomenon5 star10
+I	"
+I28
+$turn_to satellite3 phenomenon5 star2
+I
+"
+I28
+$turn_to satellite3 phenomenon5 star3
+I"
+I28
+$turn_to satellite3 phenomenon5 star4
+I"
+I28
+$turn_to satellite3 phenomenon5 star6
+I"
+I28
+$turn_to satellite3 phenomenon5 star7
+I"
+I2A
+-turn_to satellite3 phenomenon8 groundstation1
+I "
+I2?
++turn_to satellite3 phenomenon8 phenomenon12
+I"
+I2?
++turn_to satellite3 phenomenon8 phenomenon13
+I"
+I2?
++turn_to satellite3 phenomenon8 phenomenon14
+I"
+I2>
+*turn_to satellite3 phenomenon8 phenomenon5
+I"
+I2>
+*turn_to satellite3 phenomenon8 phenomenon9
+I"
+I2;
+'turn_to satellite3 phenomenon8 planet11
+I"
+I28
+$turn_to satellite3 phenomenon8 star0
+I"
+I29
+%turn_to satellite3 phenomenon8 star10
+I	"
+I28
+$turn_to satellite3 phenomenon8 star2
+I
+"
+I28
+$turn_to satellite3 phenomenon8 star3
+I"
+I28
+$turn_to satellite3 phenomenon8 star4
+I"
+I28
+$turn_to satellite3 phenomenon8 star6
+I"
+I28
+$turn_to satellite3 phenomenon8 star7
+I"
+I2A
+-turn_to satellite3 phenomenon9 groundstation1
+I "
+I2?
++turn_to satellite3 phenomenon9 phenomenon12
+I"
+I2?
++turn_to satellite3 phenomenon9 phenomenon13
+I"
+I2?
++turn_to satellite3 phenomenon9 phenomenon14
+I"
+I2>
+*turn_to satellite3 phenomenon9 phenomenon5
+I"
+I2>
+*turn_to satellite3 phenomenon9 phenomenon8
+I"
+I2;
+'turn_to satellite3 phenomenon9 planet11
+I"
+I28
+$turn_to satellite3 phenomenon9 star0
+I"
+I29
+%turn_to satellite3 phenomenon9 star10
+I	"
+I28
+$turn_to satellite3 phenomenon9 star2
+I
+"
+I28
+$turn_to satellite3 phenomenon9 star3
+I"
+I28
+$turn_to satellite3 phenomenon9 star4
+I"
+I28
+$turn_to satellite3 phenomenon9 star6
+I"
+I28
+$turn_to satellite3 phenomenon9 star7
+I"
+I2>
+*turn_to satellite3 planet11 groundstation1
+I "
+I2<
+(turn_to satellite3 planet11 phenomenon12
+I"
+I2<
+(turn_to satellite3 planet11 phenomenon13
+I"
+I2<
+(turn_to satellite3 planet11 phenomenon14
+I"
+I2;
+'turn_to satellite3 planet11 phenomenon5
+I"
+I2;
+'turn_to satellite3 planet11 phenomenon8
+I"
+I2;
+'turn_to satellite3 planet11 phenomenon9
+I"
+I25
+!turn_to satellite3 planet11 star0
+I"
+I26
+"turn_to satellite3 planet11 star10
+I	"
+I25
+!turn_to satellite3 planet11 star2
+I
+"
+I25
+!turn_to satellite3 planet11 star3
+I"
+I25
+!turn_to satellite3 planet11 star4
+I"
+I25
+!turn_to satellite3 planet11 star6
+I"
+I25
+!turn_to satellite3 planet11 star7
+I"
+I2;
+'turn_to satellite3 star0 groundstation1
+I "
+I29
+%turn_to satellite3 star0 phenomenon12
+I"
+I29
+%turn_to satellite3 star0 phenomenon13
+I"
+I29
+%turn_to satellite3 star0 phenomenon14
+I"
+I28
+$turn_to satellite3 star0 phenomenon5
+I"
+I28
+$turn_to satellite3 star0 phenomenon8
+I"
+I28
+$turn_to satellite3 star0 phenomenon9
+I"
+I25
+!turn_to satellite3 star0 planet11
+I"
+I23
+turn_to satellite3 star0 star10
+I	"
+I22
+turn_to satellite3 star0 star2
+I
+"
+I22
+turn_to satellite3 star0 star3
+I"
+I22
+turn_to satellite3 star0 star4
+I"
+I22
+turn_to satellite3 star0 star6
+I"
+I22
+turn_to satellite3 star0 star7
+I"
+I2<
+(turn_to satellite3 star10 groundstation1
+I "
+I	2:
+&turn_to satellite3 star10 phenomenon12
+I"
+I	2:
+&turn_to satellite3 star10 phenomenon13
+I"
+I	2:
+&turn_to satellite3 star10 phenomenon14
+I"
+I	29
+%turn_to satellite3 star10 phenomenon5
+I"
+I	29
+%turn_to satellite3 star10 phenomenon8
+I"
+I	29
+%turn_to satellite3 star10 phenomenon9
+I"
+I	26
+"turn_to satellite3 star10 planet11
+I"
+I	23
+turn_to satellite3 star10 star0
+I"
+I	23
+turn_to satellite3 star10 star2
+I
+"
+I	23
+turn_to satellite3 star10 star3
+I"
+I	23
+turn_to satellite3 star10 star4
+I"
+I	23
+turn_to satellite3 star10 star6
+I"
+I	23
+turn_to satellite3 star10 star7
+I"
+I	2;
+'turn_to satellite3 star2 groundstation1
+I "
+I
+29
+%turn_to satellite3 star2 phenomenon12
+I"
+I
+29
+%turn_to satellite3 star2 phenomenon13
+I"
+I
+29
+%turn_to satellite3 star2 phenomenon14
+I"
+I
+28
+$turn_to satellite3 star2 phenomenon5
+I"
+I
+28
+$turn_to satellite3 star2 phenomenon8
+I"
+I
+28
+$turn_to satellite3 star2 phenomenon9
+I"
+I
+25
+!turn_to satellite3 star2 planet11
+I"
+I
+22
+turn_to satellite3 star2 star0
+I"
+I
+23
+turn_to satellite3 star2 star10
+I	"
+I
+22
+turn_to satellite3 star2 star3
+I"
+I
+22
+turn_to satellite3 star2 star4
+I"
+I
+22
+turn_to satellite3 star2 star6
+I"
+I
+22
+turn_to satellite3 star2 star7
+I"
+I
+2;
+'turn_to satellite3 star3 groundstation1
+I "
+I29
+%turn_to satellite3 star3 phenomenon12
+I"
+I29
+%turn_to satellite3 star3 phenomenon13
+I"
+I29
+%turn_to satellite3 star3 phenomenon14
+I"
+I28
+$turn_to satellite3 star3 phenomenon5
+I"
+I28
+$turn_to satellite3 star3 phenomenon8
+I"
+I28
+$turn_to satellite3 star3 phenomenon9
+I"
+I25
+!turn_to satellite3 star3 planet11
+I"
+I22
+turn_to satellite3 star3 star0
+I"
+I23
+turn_to satellite3 star3 star10
+I	"
+I22
+turn_to satellite3 star3 star2
+I
+"
+I22
+turn_to satellite3 star3 star4
+I"
+I22
+turn_to satellite3 star3 star6
+I"
+I22
+turn_to satellite3 star3 star7
+I"
+I2;
+'turn_to satellite3 star4 groundstation1
+I "
+I29
+%turn_to satellite3 star4 phenomenon12
+I"
+I29
+%turn_to satellite3 star4 phenomenon13
+I"
+I29
+%turn_to satellite3 star4 phenomenon14
+I"
+I28
+$turn_to satellite3 star4 phenomenon5
+I"
+I28
+$turn_to satellite3 star4 phenomenon8
+I"
+I28
+$turn_to satellite3 star4 phenomenon9
+I"
+I25
+!turn_to satellite3 star4 planet11
+I"
+I22
+turn_to satellite3 star4 star0
+I"
+I23
+turn_to satellite3 star4 star10
+I	"
+I22
+turn_to satellite3 star4 star2
+I
+"
+I22
+turn_to satellite3 star4 star3
+I"
+I22
+turn_to satellite3 star4 star6
+I"
+I22
+turn_to satellite3 star4 star7
+I"
+I2;
+'turn_to satellite3 star6 groundstation1
+I "
+I29
+%turn_to satellite3 star6 phenomenon12
+I"
+I29
+%turn_to satellite3 star6 phenomenon13
+I"
+I29
+%turn_to satellite3 star6 phenomenon14
+I"
+I28
+$turn_to satellite3 star6 phenomenon5
+I"
+I28
+$turn_to satellite3 star6 phenomenon8
+I"
+I28
+$turn_to satellite3 star6 phenomenon9
+I"
+I25
+!turn_to satellite3 star6 planet11
+I"
+I22
+turn_to satellite3 star6 star0
+I"
+I23
+turn_to satellite3 star6 star10
+I	"
+I22
+turn_to satellite3 star6 star2
+I
+"
+I22
+turn_to satellite3 star6 star3
+I"
+I22
+turn_to satellite3 star6 star4
+I"
+I22
+turn_to satellite3 star6 star7
+I"
+I2;
+'turn_to satellite3 star7 groundstation1
+I "
+I29
+%turn_to satellite3 star7 phenomenon12
+I"
+I29
+%turn_to satellite3 star7 phenomenon13
+I"
+I29
+%turn_to satellite3 star7 phenomenon14
+I"
+I28
+$turn_to satellite3 star7 phenomenon5
+I"
+I28
+$turn_to satellite3 star7 phenomenon8
+I"
+I28
+$turn_to satellite3 star7 phenomenon9
+I"
+I25
+!turn_to satellite3 star7 planet11
+I"
+I22
+turn_to satellite3 star7 star0
+I"
+I23
+turn_to satellite3 star7 star10
+I	"
+I22
+turn_to satellite3 star7 star2
+I
+"
+I22
+turn_to satellite3 star7 star3
+I"
+I22
+turn_to satellite3 star7 star4
+I"
+I22
+turn_to satellite3 star7 star6
+I"
+I:
+satellite0:
+satellite1:
+satellite2:
+satellite3

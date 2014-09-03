@@ -80,7 +80,7 @@ TEST(testSuccGen)
 
     prob = planProblemFromFD("load-from-file.in1.sas");
 
-    sg = planSuccGenNew(prob->op, prob->op_size);
+    sg = planSuccGenNew(prob->op, prob->op_size, NULL);
 
     ops_size = prob->op_size;
     ops1 = BOR_ALLOC_ARR(plan_operator_t *, ops_size);

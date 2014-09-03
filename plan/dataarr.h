@@ -3,6 +3,10 @@
 
 #include <boruvka/segmarr.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef void (*plan_data_arr_el_init_fn)(void *el, const void *userdata);
 
 struct _plan_data_arr_t {
@@ -36,5 +40,9 @@ _bor_inline void *planDataArrGet(plan_data_arr_t *arr, size_t i)
 
     return borSegmArrGet(arr->arr, i);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_DATAARR_H__ */

@@ -4,6 +4,10 @@
 #include <plan/common.h>
 #include <plan/state.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 struct _plan_operator_cond_eff_t {
     plan_part_state_t *pre;
     plan_part_state_t *eff;
@@ -53,6 +57,7 @@ void planOperatorSetCost(plan_operator_t *op, plan_cost_t cost);
  * Adds a new conditional effect and returns a reference ID.
  */
 int planOperatorAddCondEff(plan_operator_t *op);
+void planOperatorDelLastCondEff(plan_operator_t *op);
 
 /**
  * Sets precondition of a conditional effect.
@@ -110,5 +115,9 @@ _bor_inline int planOperatorGlobalId(const plan_operator_t *op)
 {
     return op->global_id;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_OPERATOR_H__ */

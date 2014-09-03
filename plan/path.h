@@ -4,6 +4,10 @@
 #include <boruvka/list.h>
 #include <plan/operator.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /**
  * Structure holding the path from an initial state to a goal.
  */
@@ -76,4 +80,9 @@ _bor_inline plan_path_op_t *planPathFirstOp(plan_path_t *path)
 {
     return BOR_LIST_ENTRY(borListNext(path), plan_path_op_t, path);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
+
 #endif /* __PLAN_PATH_H__ */

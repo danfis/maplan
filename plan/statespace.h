@@ -6,6 +6,10 @@
 #include <plan/state.h>
 #include <plan/operator.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #define PLAN_STATE_SPACE_NODE_NEW    0
 #define PLAN_STATE_SPACE_NODE_OPEN   1
 #define PLAN_STATE_SPACE_NODE_CLOSED 2
@@ -180,5 +184,9 @@ _bor_inline int planStateSpaceNodeIsClosed2(plan_state_space_t *ss,
     n = planStateSpaceNode(ss, state_id);
     return planStateSpaceNodeIsClosed(n);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_STATESPACE_H__ */

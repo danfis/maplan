@@ -56,9 +56,12 @@ OBJS += heur_lm_cut
 OBJS += prioqueue
 OBJS += ma_comm_queue
 OBJS += ma
+OBJS += causalgraph
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg
+CXX_OBJS += problem
+CXX_OBJS += problemdef.pb
 
 BIN_TARGETS =
 
@@ -90,7 +93,7 @@ bin/%.o: bin/%.c bin/%.h
 examples/%: examples/%.c libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
-src/%.pb.cc: src/%.proto
+src/%.pb.h src/%.pb.cc: src/%.proto
 	cd src && $(PROTOC) --cpp_out=. $(notdir $<)
 
 .objs/%.pic.o: src/%.c plan/%.h plan/config.h
@@ -103,6 +106,10 @@ src/%.pb.cc: src/%.proto
 .objs/%.o: src/%.c plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+.objs/ma_msg.cxx.o: src/ma_msg.cc plan/ma_msg.h src/ma_msg.pb.h plan/config.h
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+.objs/problem.cxx.o: src/problem.cc plan/problem.h src/problemdef.pb.h plan/config.h
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 .objs/%.cxx.o: src/%.cc plan/%.h plan/config.h
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 .objs/%.cxx.o: src/%.cc plan/config.h

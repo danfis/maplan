@@ -6,6 +6,15 @@
 #include <plan/operator.h>
 #include <plan/succgen.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/**
+ * If set, causal graph will be used for fine tuning problem definition.
+ */
+#define PLAN_PROBLEM_USE_CG 0x1
+
 struct _plan_problem_t {
     plan_var_t *var;               /*!< Definitions of variables */
     int var_size;                  /*!< Number of variables */
@@ -41,14 +50,31 @@ typedef struct _plan_problem_agents_t plan_problem_agents_t;
 plan_problem_t *planProblemFromFD(const char *fn);
 
 /**
+ * Loads problem definition from protbuf format.
+ * For flags see PLAN_PROBLEM_* macros.
+ */
+plan_problem_t *planProblemFromProto(const char *fn, int flags);
+
+/**
  * Free all allocated resources.
  */
 void planProblemDel(plan_problem_t *problem);
 
 /**
+ * Free allocated resources "in place"
+ */
+void planProblemFree(plan_problem_t *prob);
+
+/**
  * Load agent problem definitions from the specified file.
  */
 plan_problem_agents_t *planProblemAgentsFromFD(const char *fn);
+
+/**
+ * Loads agent problem definition from protbuf format.
+ * For flags see PLAN_PROBLEM_* macros.
+ */
+plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags);
 
 /**
  * Deletes agent defitions.
@@ -67,5 +93,9 @@ _bor_inline int planProblemCheckGoal(plan_problem_t *p,
 {
     return planStatePoolPartStateIsSubset(p->state_pool, p->goal, state_id);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_PROBLEM_H__ */

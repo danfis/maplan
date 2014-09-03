@@ -4,6 +4,10 @@
 #include <limits.h>
 #include <boruvka/core.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /**
  * Basic Types
  * ============
@@ -87,5 +91,9 @@ typedef uint32_t plan_packer_word_t;
  * Word with all bits set (i.e., 0xffff...)
  */
 #define PLAN_PACKER_WORD_SET_ALL_BITS ((plan_packer_word_t)-1)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_COMMON_H__ */

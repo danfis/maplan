@@ -648,6 +648,8 @@ def parse_args():
         help="output relaxed task (no delete effects)")
     argparser.add_argument("--output", "-o", dest="output_file",
                            default="output.sas", nargs="?")
+    argparser.add_argument("--proto", "-p", dest="use_proto",
+                           action="store_true")
     return argparser.parse_args()
 
 
@@ -671,13 +673,18 @@ def main():
                     del action.effects[index]
 
     output_file = args.output_file
+    use_proto = args.use_proto
+    print('Use Proto:', use_proto)
 
     sas_task = pddl_to_sas(task)
     dump_statistics(sas_task)
 
     with timers.timing("Writing output"):
         with open(output_file, "w") as output_file:
-            sas_task.output(output_file)
+            if use_proto:
+                sas_task.output_proto(output_file)
+            else:
+                sas_task.output(output_file)
     print("Done! %s" % timer)
 
 

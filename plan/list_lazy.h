@@ -4,6 +4,10 @@
 #include <plan/state.h>
 #include <plan/operator.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct _plan_list_lazy_t plan_list_lazy_t;
 
 typedef void (*plan_list_lazy_del_fn)(plan_list_lazy_t *);
@@ -114,5 +118,9 @@ void planListLazyInit(plan_list_lazy_t *l,
  * Frees resources.
  */
 void planListLazyFree(plan_list_lazy_t *l);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_LIST_LAZY_H__ */

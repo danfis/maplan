@@ -4,6 +4,10 @@
 #include <plan/state.h>
 #include <plan/operator.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /***
  * Open Lists That Can Hold Only A State ID
  * =========================================
@@ -113,5 +117,9 @@ void _planListInit(plan_list_t *l,
  * Frees resources of parent object.
  */
 void _planListFree(plan_list_t *l);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_LIST_H__ */

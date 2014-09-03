@@ -7,40 +7,6 @@
 #define READ_BUFSIZE 1024
 
 
-static void planProblemFree(plan_problem_t *plan)
-{
-    int i;
-
-    if (plan->succ_gen)
-        planSuccGenDel(plan->succ_gen);
-
-    if (plan->goal){
-        planPartStateDel(plan->goal);
-        plan->goal = NULL;
-    }
-
-    if (plan->var != NULL){
-        for (i = 0; i < plan->var_size; ++i){
-            planVarFree(plan->var + i);
-        }
-        BOR_FREE(plan->var);
-    }
-    plan->var = NULL;
-
-    if (plan->state_pool)
-        planStatePoolDel(plan->state_pool);
-    plan->state_pool = NULL;
-
-    if (plan->op){
-        for (i = 0; i < plan->op_size; ++i){
-            planOperatorFree(plan->op + i);
-        }
-        BOR_FREE(plan->op);
-    }
-    plan->op = NULL;
-    plan->op_size = 0;
-}
-
 static void planProblemInit(plan_problem_t *p)
 {
     p->var = NULL;
@@ -76,6 +42,41 @@ void planProblemDel(plan_problem_t *plan)
     planProblemFree(plan);
     BOR_FREE(plan);
 }
+
+void planProblemFree(plan_problem_t *plan)
+{
+    int i;
+
+    if (plan->succ_gen)
+        planSuccGenDel(plan->succ_gen);
+
+    if (plan->goal){
+        planPartStateDel(plan->goal);
+        plan->goal = NULL;
+    }
+
+    if (plan->var != NULL){
+        for (i = 0; i < plan->var_size; ++i){
+            planVarFree(plan->var + i);
+        }
+        BOR_FREE(plan->var);
+    }
+    plan->var = NULL;
+
+    if (plan->state_pool)
+        planStatePoolDel(plan->state_pool);
+    plan->state_pool = NULL;
+
+    if (plan->op){
+        for (i = 0; i < plan->op_size; ++i){
+            planOperatorFree(plan->op + i);
+        }
+        BOR_FREE(plan->op);
+    }
+    plan->op = NULL;
+    plan->op_size = 0;
+}
+
 
 plan_problem_agents_t *planProblemAgentsFromFD(const char *fn)
 {
@@ -173,7 +174,6 @@ static int fdVar1(plan_var_t *var, FILE *fin)
     plan_val_t i;
     char sval[1024], *fact_name;
     size_t size;
-    ssize_t fact_name_len;
     int layer, range;
 
     if (fdAssert(fin, "begin_variable") != 0)
@@ -182,7 +182,6 @@ static int fdVar1(plan_var_t *var, FILE *fin)
         return -1;
 
     var->name = strdup(sval);
-    var->axiom_layer = layer;
     var->range = range;
 
     if ((int)var->range != range){
@@ -193,21 +192,14 @@ static int fdVar1(plan_var_t *var, FILE *fin)
         return -1;
     }
 
-    var->fact_name = BOR_ALLOC_ARR(char *, var->range);
-    size = 0;
     fact_name = NULL;
+    size = 0;
     getline(&fact_name, &size, fin);
     for (i = 0; i < var->range; ++i){
-        fact_name_len = getline(&fact_name, &size, fin);
-        if (fact_name_len > 1){
-            fact_name[fact_name_len - 1] = 0x0;
-            var->fact_name[i] = strdup(fact_name);
-        }else{
-            var->fact_name[i] = strdup("");
-        }
+        getline(&fact_name, &size, fin);
     }
 
-    if (fact_name != NULL)
+    if (fact_name)
         free(fact_name);
 
     if (fdAssert(fin, "end_variable") != 0)
@@ -616,7 +608,7 @@ static int fdAgents(const plan_problem_t *prob, FILE *fin,
             return -1;
 
         agent->prob.succ_gen = planSuccGenNew(agent->prob.op,
-                                              agent->prob.op_size);
+                                              agent->prob.op_size, NULL);
 
 
         if (fdAssert(fin, "begin_agent_projected_operators") != 0)

@@ -269,6 +269,8 @@ static void planHeurRelaxDel(plan_heur_t *_heur)
     BOR_FREE(heur->op);
     BOR_FREE(heur->relaxed_plan);
     heurFactOpFree(&heur->data);
+    if (heur->goal.fact)
+        BOR_FREE(heur->goal.fact);
     BOR_FREE(heur);
 }
 

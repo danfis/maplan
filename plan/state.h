@@ -11,6 +11,10 @@
 #include <plan/var.h>
 #include <plan/dataarr.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /** Forward declaration */
 struct _plan_state_packer_var_t;
 
@@ -276,6 +280,12 @@ void planPartStateSet(plan_state_pool_t *pool, plan_part_state_t *state,
                       plan_var_id_t var, plan_val_t val);
 
 /**
+ * Unset the value of the specified variable.
+ */
+void planPartStateUnset(plan_state_pool_t *pool, plan_part_state_t *state,
+                        plan_var_id_t var);
+
+/**
  * Returns true if var's variable is set.
  */
 _bor_inline int planPartStateIsSet(const plan_part_state_t *state,
@@ -312,6 +322,13 @@ int planPartStateEq(const plan_part_state_t *part_state1,
          (__tmpi) < (__part_state)->vals_size \
             && ((__var) = (__part_state)->vals[(__tmpi)].var, \
                 (__val) = (__part_state)->vals[(__tmpi)].val, 1); \
+         ++(__tmpi))
+
+#define PLAN_PART_STATE_FOR_EACH_VAR(__part_state, __tmpi, __var) \
+    if ((__part_state)->vals_size > 0) \
+    for ((__tmpi) = 0; \
+         (__tmpi) < (__part_state)->vals_size \
+            && ((__var) = (__part_state)->vals[(__tmpi)].var, 1); \
          ++(__tmpi))
 
 
@@ -365,5 +382,9 @@ _bor_inline int planPartStateIsSet(const plan_part_state_t *state,
 {
     return state->is_set[var];
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* __PLAN_STATE_H__ */

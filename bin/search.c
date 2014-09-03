@@ -146,10 +146,9 @@ static plan_list_lazy_t *listLazyCreate(const char *name)
 }
 
 static plan_heur_t *heurCreate(const char *name,
-                               plan_problem_t *prob,
+                               const plan_problem_t *prob,
                                const plan_operator_t *op, int op_size,
-                               const plan_succ_gen_t *succ_gen,
-                               const plan_problem_agent_t *agent_prob)
+                               const plan_succ_gen_t *succ_gen)
 {
     plan_heur_t *heur = NULL;
 
@@ -165,13 +164,7 @@ static plan_heur_t *heurCreate(const char *name,
         heur = planHeurRelaxFFNew(prob->var, prob->var_size,
                                   prob->goal, op, op_size, succ_gen);
     }else if (strcmp(name, "ma-ff") == 0){
-        if (agent_prob == NULL){
-            fprintf(stderr, "Error: ma-ff heuristic can be used only in"
-                            " --ma mode!\n");
-            exit(-1);
-        }
-
-        heur = planHeurMARelaxFFNew(agent_prob);
+        heur = planHeurMARelaxFFNew(prob);
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
                                 prob->goal, op, op_size, succ_gen);
@@ -188,7 +181,6 @@ static plan_search_t *searchCreate(const char *search_name,
                                    plan_problem_t *prob,
                                    const plan_operator_t *op, int op_size,
                                    const plan_succ_gen_t *succ_gen,
-                                   const plan_problem_agent_t *agent_prob,
                                    void *progress_data)
 {
     plan_search_t *search = NULL;
@@ -200,8 +192,7 @@ static plan_search_t *searchCreate(const char *search_name,
     if (strcmp(search_name, "ehc") == 0){
         planSearchEHCParamsInit(&ehc_params);
         ehc_params.search.heur = heurCreate(heur_name, prob,
-                                            op, op_size, succ_gen,
-                                            agent_prob);
+                                            op, op_size, succ_gen);
         ehc_params.search.heur_del = 1;
         ehc_params.use_preferred_ops = use_preferred_ops;
         params = &ehc_params.search;
@@ -209,8 +200,7 @@ static plan_search_t *searchCreate(const char *search_name,
     }else if (strcmp(search_name, "lazy") == 0){
         planSearchLazyParamsInit(&lazy_params);
         lazy_params.search.heur = heurCreate(heur_name, prob,
-                                             op, op_size, succ_gen,
-                                             agent_prob);
+                                             op, op_size, succ_gen);
         lazy_params.search.heur_del = 1;
         lazy_params.use_preferred_ops = use_preferred_ops;
         lazy_params.list = listLazyCreate(list_name);
@@ -220,8 +210,7 @@ static plan_search_t *searchCreate(const char *search_name,
     }else if (strcmp(search_name, "astar") == 0){
         planSearchAStarParamsInit(&astar_params);
         astar_params.search.heur = heurCreate(heur_name, prob,
-                                              op, op_size, succ_gen,
-                                              agent_prob);
+                                              op, op_size, succ_gen);
         astar_params.search.heur_del = 1;
         astar_params.pathmax = use_pathmax;
         params = &astar_params.search;
@@ -262,11 +251,11 @@ static void printProblem(const plan_problem_t *prob,
         printf("Num agents: %d\n", ma_prob->agent_size);
         for (i = 0; i < ma_prob->agent_size; ++i){
             printf("Agent[%d]\n", i);
-            printf("    name: %s\n", ma_prob->agent[i].name);
+            printf("    name: %s\n", ma_prob->agent[i].agent_name);
             printf("    num operators: %d\n",
-                    ma_prob->agent[i].prob.op_size);
+                    ma_prob->agent[i].op_size);
             printf("    projected operators: %d\n",
-                    ma_prob->agent[i].projected_op_size);
+                    ma_prob->agent[i].proj_op_size);
         }
     }
     printf("\n");
@@ -310,7 +299,7 @@ static int runSingleThread(plan_problem_t *prob)
 
     search = searchCreate(def_search, def_heur, def_list, prob,
                           prob->op, prob->op_size, prob->succ_gen,
-                          NULL, NULL);
+                          NULL);
     if (search == NULL)
         return -1;
 
@@ -348,28 +337,27 @@ static int runMA(plan_problem_agents_t *ma_prob)
         agent_id[i] = i;
 
         if (strcmp(def_ma_heur_op, "global") == 0){
-            heur_op       = ma_prob->prob.op;
-            heur_op_size  = ma_prob->prob.op_size;
-            heur_succ_gen = ma_prob->prob.succ_gen;
+            heur_op       = ma_prob->glob.op;
+            heur_op_size  = ma_prob->glob.op_size;
+            heur_succ_gen = ma_prob->glob.succ_gen;
 
         }else if (strcmp(def_ma_heur_op, "projected") == 0){
-            heur_op       = ma_prob->agent[i].projected_op;
-            heur_op_size  = ma_prob->agent[i].projected_op_size;
+            heur_op       = ma_prob->agent[i].proj_op;
+            heur_op_size  = ma_prob->agent[i].proj_op_size;
             heur_succ_gen = NULL;
 
         }else if (strcmp(def_ma_heur_op, "local") == 0){
-            heur_op       = ma_prob->agent[i].prob.op;
-            heur_op_size  = ma_prob->agent[i].prob.op_size;
-            heur_succ_gen = ma_prob->agent[i].prob.succ_gen;
+            heur_op       = ma_prob->agent[i].op;
+            heur_op_size  = ma_prob->agent[i].op_size;
+            heur_succ_gen = ma_prob->agent[i].succ_gen;
 
         }else{
             return -1;
         }
 
         search[i] = searchCreate(def_search, def_heur, def_list,
-                                 &ma_prob->agent[i].prob,
+                                 ma_prob->agent + i,
                                  heur_op, heur_op_size, heur_succ_gen,
-                                 &ma_prob->agent[i],
                                  &agent_id[i]);
         if (search[i] == NULL)
             return -1;
@@ -442,7 +430,7 @@ int main(int argc, char *argv[])
     if (prob != NULL){
         printProblem(prob, NULL);
     }else if (ma_prob != NULL){
-        printProblem(&ma_prob->prob, ma_prob);
+        printProblem(&ma_prob->glob, ma_prob);
     }else{
         fprintf(stderr, "Error: Could not load problem definition.\n");
         return -1;

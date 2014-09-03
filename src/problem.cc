@@ -56,7 +56,7 @@ plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags)
         return NULL;
 
     p = BOR_ALLOC(plan_problem_agents_t);
-    loadProblem(&p->prob, proto, flags);
+    loadProblem(&p->glob, proto, flags);
     loadAgents(p, proto, flags);
 
     delete proto;
@@ -134,7 +134,7 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
     plan_var_id_t var;
     plan_val_t val;
 
-    bzero(dst, sizeof(*dst));
+    planProblemInit(dst);
 
     dst->var_size = src->var_size;
     dst->var = BOR_ALLOC_ARR(plan_var_t, src->var_size);
@@ -174,9 +174,9 @@ static void agentAddOperator(plan_problem_t *dst,
 
 static void agentSplitOperators(plan_problem_agents_t *agents)
 {
-    const plan_problem_t *prob = &agents->prob;
+    const plan_problem_t *prob = &agents->glob;
     int agent_size = agents->agent_size;
-    plan_problem_agent_t *ap = agents->agent;
+    plan_problem_t *ap = agents->agent;
     int i, j, inserted;
     const plan_operator_t *glob_op;
     std::vector<std::string> name_token;
@@ -185,13 +185,13 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
     name_token.resize(agents->agent_size);
     for (i = 0; i < agent_size; ++i){
         name_token[i] = " ";
-        name_token[i] += ap[i].name;
+        name_token[i] += ap[i].agent_name;
     }
 
     // Prepare agents' structures
     for (i = 0; i < agents->agent_size; ++i){
-        ap[i].prob.op = BOR_ALLOC_ARR(plan_operator_t, prob->op_size);
-        ap[i].prob.op_size = 0;
+        ap[i].op = BOR_ALLOC_ARR(plan_operator_t, prob->op_size);
+        ap[i].op_size = 0;
     }
 
     for (i = 0; i < prob->op_size; ++i){
@@ -200,7 +200,7 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
         inserted = 0;
         for (j = 0; j < agents->agent_size; ++j){
             if (strstr(glob_op->name, name_token[j].c_str()) != NULL){
-                agentAddOperator(&ap[j].prob, ap[j].prob.state_pool, i, glob_op);
+                agentAddOperator(ap + j, ap[j].state_pool, i, glob_op);
                 inserted = 1;
             }
         }
@@ -209,15 +209,14 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
             // if the operator wasn't inserted anywhere, insert it to all
             // agents
             for (j = 0; j < agents->agent_size; ++j){
-                agentAddOperator(&ap[j].prob, ap[j].prob.state_pool, i, glob_op);
+                agentAddOperator(ap + j, ap[j].state_pool, i, glob_op);
             }
         }
     }
 
     // Given back unneeded memory
     for (i = 0; i < agents->agent_size; ++i){
-        ap[i].prob.op = BOR_REALLOC_ARR(ap[i].prob.op, plan_operator_t,
-                                        ap[i].prob.op_size);
+        ap[i].op = BOR_REALLOC_ARR(ap[i].op, plan_operator_t, ap[i].op_size);
     }
 }
 
@@ -346,11 +345,11 @@ static void agentSetVarValUse(AgentVarVals &vals,
 
     // Set goals as public for all agents
     for (i = 0; i < agents->agent_size; ++i)
-        agentSetVarValUsePrePartState(vals, agents->prob.goal, i);
+        agentSetVarValUsePrePartState(vals, agents->glob.goal, i);
 
     // Process operators from all agents and all its operators
     for (i = 0; i < agents->agent_size; ++i){
-        ap = &agents->agent[i].prob;
+        ap = agents->agent + i;
         for (opi = 0; opi < ap->op_size; ++opi){
             agentSetVarValUsePrePartState(vals, ap->op[opi].pre, i);
             agentSetVarValUseEffPartState(vals, ap->op[opi].eff, i);
@@ -445,7 +444,7 @@ static bool agentProjectOp(plan_operator_t *op, int agent_id,
     return false;
 }
 
-static void agentCreateProjectedOps(plan_problem_agent_t *agent,
+static void agentCreateProjectedOps(plan_problem_t *agent,
                                     int agent_id,
                                     const plan_operator_t *ops,
                                     int ops_size,
@@ -454,28 +453,28 @@ static void agentCreateProjectedOps(plan_problem_agent_t *agent,
     plan_operator_t *proj_op;
 
     // Allocate enough memory
-    agent->projected_op = BOR_ALLOC_ARR(plan_operator_t, ops_size);
-    agent->projected_op_size = 0;
+    agent->proj_op = BOR_ALLOC_ARR(plan_operator_t, ops_size);
+    agent->proj_op_size = 0;
 
     for (int opi = 0; opi < ops_size; ++opi){
-        proj_op = agent->projected_op + agent->projected_op_size;
+        proj_op = agent->proj_op + agent->proj_op_size;
 
-        planOperatorInit(proj_op, agent->prob.state_pool);
+        planOperatorInit(proj_op, agent->state_pool);
         planOperatorCopy(proj_op, ops + opi);
 
         if (agentProjectOp(proj_op, agent_id, vals)){
             planOperatorSetOwner(proj_op, agent_id);
             planOperatorSetGlobalId(proj_op, opi);
-            ++agent->projected_op_size;
+            ++agent->proj_op_size;
         }else{
             planOperatorFree(proj_op);
         }
     }
 
     // Given back unused memory
-    agent->projected_op = BOR_REALLOC_ARR(agent->projected_op,
-                                          plan_operator_t,
-                                          agent->projected_op_size);
+    agent->proj_op = BOR_REALLOC_ARR(agent->proj_op,
+                                     plan_operator_t,
+                                     agent->proj_op_size);
 }
 
 static void loadAgents(plan_problem_agents_t *p,
@@ -483,7 +482,7 @@ static void loadAgents(plan_problem_agents_t *p,
                        int flags)
 {
     int i;
-    plan_problem_agent_t *agent;
+    plan_problem_t *agent;
 
     p->agent_size = proto->agent_name_size();
     if (p->agent_size == 0){
@@ -491,17 +490,13 @@ static void loadAgents(plan_problem_agents_t *p,
         return;
     }
 
-    AgentVarVals var_vals(&p->prob, p->agent_size);
+    AgentVarVals var_vals(&p->glob, p->agent_size);
 
-    p->agent = BOR_ALLOC_ARR(plan_problem_agent_t, p->agent_size);
+    p->agent = BOR_ALLOC_ARR(plan_problem_t, p->agent_size);
     for (i = 0; i < p->agent_size; ++i){
         agent = p->agent + i;
-        agent->id = i;
-        agent->name = strdup(proto->agent_name(i).c_str());
-        agent->projected_op = NULL;
-        agent->projected_op_size = 0;
-
-        agentInitProblem(&agent->prob, &p->prob);
+        agentInitProblem(agent, &p->glob);
+        agent->agent_name = strdup(proto->agent_name(i).c_str());
     }
 
     // Split operators between agents
@@ -512,17 +507,16 @@ static void loadAgents(plan_problem_agents_t *p,
 
     for (i = 0; i < p->agent_size; ++i){
         // Set up receiving peers of the operators
-        agentSetSendPeers(&p->agent[i].prob, i, p->agent_size, var_vals);
+        agentSetSendPeers(p->agent + i, i, p->agent_size, var_vals);
         // Distinct private and public operators
-        agentSetPrivateOps(p->agent[i].prob.op, p->agent[i].prob.op_size,
+        agentSetPrivateOps(p->agent[i].op, p->agent[i].op_size,
                            var_vals);
 
         agentCreateProjectedOps(p->agent + i, i,
-                                p->prob.op, p->prob.op_size, var_vals);
+                                p->glob.op, p->glob.op_size, var_vals);
 
-        p->agent[i].prob.succ_gen = planSuccGenNew(p->agent[i].prob.op,
-                                                   p->agent[i].prob.op_size,
-                                                   NULL);
+        p->agent[i].succ_gen = planSuccGenNew(p->agent[i].op,
+                                              p->agent[i].op_size, NULL);
     }
 }
 

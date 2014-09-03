@@ -249,14 +249,14 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
                             op, op_size, succ_gen);
 }
 
-plan_heur_t *planHeurMARelaxFFNew(const plan_problem_agent_t *prob)
+plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
 {
     return planHeurRelaxNew(TYPE_MA_FF,
-                            prob->prob.var,
-                            prob->prob.var_size,
-                            prob->prob.goal,
-                            prob->projected_op,
-                            prob->projected_op_size, NULL);
+                            prob->var,
+                            prob->var_size,
+                            prob->goal,
+                            prob->proj_op,
+                            prob->proj_op_size, NULL);
 }
 
 static void planHeurRelaxDel(plan_heur_t *_heur)

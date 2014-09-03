@@ -592,6 +592,17 @@ void planPartStateDel(plan_part_state_t *part_state)
     BOR_FREE(part_state);
 }
 
+void planPartStateCopy(plan_part_state_t *dst, const plan_part_state_t *src)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+
+    PLAN_PART_STATE_FOR_EACH(src, i, var, val){
+        planPartStateSet(dst, var, val);
+    }
+}
+
 static int valsCmp(const void *_a, const void *_b)
 {
     const plan_part_state_pair_t *a = _a;

@@ -264,6 +264,11 @@ plan_part_state_t *planPartStateNew(const plan_state_pool_t *pool);
 void planPartStateDel(plan_part_state_t *part_state);
 
 /**
+ * Copies partial state from src to dst.
+ */
+void planPartStateCopy(plan_part_state_t *dst, const plan_part_state_t *src);
+
+/**
  * Returns number of variable the state consists of.
  */
 _bor_inline int planPartStateSize(const plan_part_state_t *state);

@@ -131,8 +131,6 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
 {
     int i;
     plan_state_t *state;
-    plan_var_id_t var;
-    plan_val_t val;
 
     planProblemInit(dst);
 
@@ -153,9 +151,7 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
     planStateDel(state);
 
     dst->goal = planPartStateNew(dst->state_pool);
-    PLAN_PART_STATE_FOR_EACH(src->goal, i, var, val){
-        planPartStateSet(dst->goal, var, val);
-    }
+    planPartStateCopy(dst->goal, src->goal);
 
     dst->op_size = 0;
     dst->op = NULL;

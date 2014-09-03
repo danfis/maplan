@@ -41,16 +41,9 @@ void planOpFree(plan_op_t *op)
 void planOpCopy(plan_op_t *dst, const plan_op_t *src)
 {
     int i;
-    plan_var_id_t var;
-    plan_val_t val;
 
-    PLAN_PART_STATE_FOR_EACH(src->pre, i, var, val){
-        planPartStateSet(dst->pre, var, val);
-    }
-
-    PLAN_PART_STATE_FOR_EACH(src->eff, i, var, val){
-        planPartStateSet(dst->eff, var, val);
-    }
+    planPartStateCopy(dst->pre, src->pre);
+    planPartStateCopy(dst->eff, src->eff);
 
     if (src->cond_eff_size > 0){
         dst->cond_eff_size = src->cond_eff_size;
@@ -219,17 +212,8 @@ static void planOpCondEffCopy(plan_state_pool_t *state_pool,
                               plan_op_cond_eff_t *dst,
                               const plan_op_cond_eff_t *src)
 {
-    int i;
-    plan_var_id_t var;
-    plan_val_t val;
-
-    PLAN_PART_STATE_FOR_EACH(src->pre, i, var, val){
-        planPartStateSet(dst->pre, var, val);
-    }
-
-    PLAN_PART_STATE_FOR_EACH(src->eff, i, var, val){
-        planPartStateSet(dst->eff, var, val);
-    }
+    planPartStateCopy(dst->pre, src->pre);
+    planPartStateCopy(dst->eff, src->eff);
 }
 
 _bor_inline void bitOr(void *a, const void *b, int size)

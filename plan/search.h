@@ -112,6 +112,8 @@ struct _plan_search_params_t {
     void *progress_data;
 
     plan_problem_t *prob; /*!< Problem definition */
+    int ma_ack_solution; /*!< Set to true if you want ack'ed solutions in
+                              multi-agent mode. */
 };
 typedef struct _plan_search_params_t plan_search_params_t;
 
@@ -407,6 +409,12 @@ plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
                                                   plan_op_t *parent_op,
                                                   plan_cost_t cost,
                                                   plan_cost_t heur);
+
+/**
+ * Checks whether the node is public and if so, sends it to other agents.
+ */
+void _planSearchMASendState(plan_search_t *search,
+                            plan_state_space_node_t *node);
 
 /**
  * Updates part of statistics.

@@ -143,6 +143,7 @@ static int processState(plan_search_ehc_t *ehc,
                         plan_state_id_t parent_state_id,
                         plan_op_t *parent_op)
 {
+    plan_state_space_node_t *cur_node;
     plan_cost_t cur_heur;
     int res;
 
@@ -156,13 +157,16 @@ static int processState(plan_search_ehc_t *ehc,
 
     // open and close the node so we can trace the path from goal to the
     // initial state
-    _planSearchNodeOpenClose(&ehc->search,
-                             cur_state_id, parent_state_id,
-                             parent_op, 0, cur_heur);
+    cur_node = _planSearchNodeOpenClose(&ehc->search,
+                                        cur_state_id, parent_state_id,
+                                        parent_op, 0, cur_heur);
 
     // check if the current state is the goal
     if (_planSearchCheckGoal(&ehc->search, cur_state_id))
         return PLAN_SEARCH_FOUND;
+
+    // Useful only in MA node
+    _planSearchMASendState(&ehc->search, cur_node);
 
     if (cur_heur != PLAN_HEUR_DEAD_END){
         // If the heuristic for the current state is the best so far, restart

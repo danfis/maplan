@@ -80,6 +80,7 @@ static int planSearchLazyStep(plan_search_t *_lazy)
     plan_state_id_t parent_state_id, cur_state_id;
     plan_op_t *parent_op;
     plan_cost_t cur_heur;
+    plan_state_space_node_t *cur_node;
     int res;
 
     // get next node from the list
@@ -114,13 +115,16 @@ static int planSearchLazyStep(plan_search_t *_lazy)
 
     // open and close the node so we can trace the path from goal to the
     // initial state
-    _planSearchNodeOpenClose(&lazy->search, cur_state_id,
-                             parent_state_id, parent_op,
-                             0, cur_heur);
+    cur_node = _planSearchNodeOpenClose(&lazy->search, cur_state_id,
+                                        parent_state_id, parent_op,
+                                        0, cur_heur);
 
     // check if the current state is the goal
     if (_planSearchCheckGoal(&lazy->search, cur_state_id))
         return PLAN_SEARCH_FOUND;
+
+    // Useful only in MA node
+    _planSearchMASendState(&lazy->search, cur_node);
 
     if (cur_heur != PLAN_HEUR_DEAD_END){
         addSuccessors(lazy, cur_state_id, cur_heur);

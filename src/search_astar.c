@@ -158,6 +158,9 @@ static int planSearchAStarStep(plan_search_t *_search)
     _planSearchFindApplicableOps(&search->search, cur_state);
     planSearchStatIncExpandedStates(&search->search.stat);
 
+    // Useful only in MA node
+    _planSearchMASendState(&search->search, cur_node);
+
     // Add states created by applicable operators
     op      = search->search.applicable_ops.op;
     op_size = search->search.applicable_ops.op_found;
@@ -191,7 +194,9 @@ static int planSearchAStarInjectState(plan_search_t *_search, plan_state_id_t st
     plan_state_space_node_t *node;
 
     node = planStateSpaceNode(search->search.state_space, state_id);
-    if (planStateSpaceNodeIsNew(node) || node->cost > cost){
+    if (planStateSpaceNodeIsNew(node)
+            || node->cost > cost
+            || node->heuristic < heuristic){
         astarInsertState(search, state_id, node, 0, NULL, cost, 0);
         return 0;
     }

@@ -301,11 +301,14 @@ plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
         return node;
 
     planStateSpaceClose(search->state_space, node);
+    return node;
+}
 
+void _planSearchMASendState(plan_search_t *search,
+                            plan_state_space_node_t *node)
+{
     if (search->ma)
         maSendPublicState(search, node);
-
-    return node;
 }
 
 int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id)
@@ -689,8 +692,8 @@ static int maBackTrackLocalPath(plan_search_t *search,
 {
     extractPath(search->state_space, from_state, path);
     if (planPathEmpty(path)){
-        fprintf(stderr, "Error: Could not trace any portion of the"
-                        " path.\n");
+        fprintf(stderr, "Error[%d]: Could not trace any portion of the"
+                        " path.\n", search->ma_comm->node_id);
         return -1;
     }
 

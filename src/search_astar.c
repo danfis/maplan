@@ -8,6 +8,7 @@ struct _plan_search_astar_t {
 
     plan_list_t *list; /*!< Open-list */
     int pathmax;       /*!< Use pathmax correction */
+    plan_cost_t best_solution_cost;
 };
 typedef struct _plan_search_astar_t plan_search_astar_t;
 
@@ -47,6 +48,7 @@ plan_search_t *planSearchAStarNew(const plan_search_astar_params_t *params)
 
     search->list     = planListTieBreaking(2);
     search->pathmax  = params->pathmax;
+    search->best_solution_cost = PLAN_COST_MAX;
 
     return &search->search;
 }
@@ -151,8 +153,10 @@ static int planSearchAStarStep(plan_search_t *_search)
     planStateSpaceClose(search->search.state_space, cur_node);
 
     // Check whether it is a goal
-    if (_planSearchCheckGoal(&search->search, cur_node))
+    if (_planSearchCheckGoal(&search->search, cur_node)){
+        search->best_solution_cost = cur_node->cost;
         return PLAN_SEARCH_FOUND;
+    }
 
     // Find all applicable operators
     _planSearchFindApplicableOps(&search->search, cur_state);
@@ -192,6 +196,11 @@ static int planSearchAStarInjectState(plan_search_t *_search, plan_state_id_t st
 {
     plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
     plan_state_space_node_t *node;
+
+    // Skip nodes that have higher cost that the best solution so far
+    // because these nodes cannot generate better solutions
+    if (cost >= search->best_solution_cost)
+        return -1;
 
     node = planStateSpaceNode(search->search.state_space, state_id);
     if (planStateSpaceNodeIsNew(node)

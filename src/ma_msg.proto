@@ -48,6 +48,22 @@ message PlanMAMsgTracePath {
     required bool done = 4;
 }
 
+message PlanMAMsgSolutionFound {
+    // The agent that found the solution
+    required int32 agent_id = 1;
+    // Agent's identification of the solution
+    required int32 solution_id = 2;
+    // Cost of the solution
+    required int32 cost = 3;
+}
+
+message PlanMAMsgSolutionAck {
+    // ID of the agent that sent this message
+    required int32 agent_id = 1;
+    // ID of the acked solution
+    required int32 solution_id = 2;
+}
+
 message PlanMAMsg {
     enum Type {
         TERMINATE         = 0x100;
@@ -60,6 +76,9 @@ message PlanMAMsg {
 
         HEUR_REQUEST  = 0x301;
         HEUR_RESPONSE = 0x302;
+
+        SOLUTION_FOUND = 0x401;
+        SOLUTION_ACK = 0x402;
     }
 
     required Type type = 1;
@@ -68,4 +87,6 @@ message PlanMAMsg {
     optional PlanMAMsgTracePath trace_path = 3;
     optional PlanMAMsgHeurRequest heur_request = 4;
     optional PlanMAMsgHeurResponse heur_response = 5;
+    optional PlanMAMsgSolutionFound solution_found = 6;
+    optional PlanMAMsgSolutionAck solution_ack = 7;
 }

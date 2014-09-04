@@ -78,6 +78,16 @@ int planMAMsgIsPublicState(const plan_ma_msg_t *_msg)
     return msg->type() == PlanMAMsg::SEARCH_PUBLIC_STATE;
 }
 
+void planMAMsgPublicStateSetToken(plan_ma_msg_t *_msg,
+                                  int agent_id, int token)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgPublicState *public_state = msg->mutable_public_state();
+    while ((int)public_state->token_size() < agent_id - 1)
+        public_state->add_token(false);
+    public_state->add_token(token % 2);
+}
+
 int planMAMsgPublicStateAgent(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
@@ -111,6 +121,15 @@ int planMAMsgPublicStateHeur(const plan_ma_msg_t *_msg)
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
     const PlanMAMsgPublicState &public_state = msg->public_state();
     return public_state.heuristic();
+}
+
+int planMAMsgPublicStateToken(const plan_ma_msg_t *_msg, int agent_id)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgPublicState &public_state = msg->public_state();
+    if (public_state.token_size() <= agent_id)
+        return 0;
+    return public_state.token(agent_id);
 }
 
 void planMAMsgGetPublicState(const plan_ma_msg_t *_msg, int *agent_id,
@@ -387,58 +406,19 @@ int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *_msg, int i, int *owner)
     return op.op_id();
 }
 
-void planMAMsgSetSolutionFound(plan_ma_msg_t *_msg, int agent_id,
-                               int solution_id, int cost)
-{
-    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
-    msg->set_type(PlanMAMsg::SOLUTION_FOUND);
-    PlanMAMsgSolutionFound *sol = msg->mutable_solution_found();
-    sol->set_agent_id(agent_id);
-    sol->set_solution_id(solution_id);
-    sol->set_cost(cost);
-}
-
-int planMAMsgSolutionFoundAgentId(const plan_ma_msg_t *_msg)
-{
-    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgSolutionFound &res = msg->solution_found();
-    return res.agent_id();
-}
-
-int planMAMsgSolutionFoundSolutionId(const plan_ma_msg_t *_msg)
-{
-    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgSolutionFound &res = msg->solution_found();
-    return res.solution_id();
-}
-
-int planMAMsgSolutionFoundCost(const plan_ma_msg_t *_msg)
-{
-    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgSolutionFound &res = msg->solution_found();
-    return res.cost();
-}
 
 
-void planMAMsgSetSolutionAck(plan_ma_msg_t *_msg, int agent_id, int solution_id)
+void planMAMsgSetSolutionAck(plan_ma_msg_t *_msg, int state_id)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
     msg->set_type(PlanMAMsg::SOLUTION_ACK);
     PlanMAMsgSolutionAck *sol = msg->mutable_solution_ack();
-    sol->set_agent_id(agent_id);
-    sol->set_solution_id(solution_id);
+    sol->set_state_id(state_id);
 }
 
-int planMAMsgSolutionAckAgentId(const plan_ma_msg_t *_msg)
+int planMAMsgSolutionAckStateId(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
     const PlanMAMsgSolutionAck &res = msg->solution_ack();
-    return res.agent_id();
-}
-
-int planMAMsgSolutionAckSolutionId(const plan_ma_msg_t *_msg)
-{
-    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgSolutionAck &res = msg->solution_ack();
-    return res.solution_id();
+    return res.state_id();
 }

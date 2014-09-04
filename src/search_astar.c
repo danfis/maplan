@@ -195,8 +195,8 @@ static int planSearchAStarInjectState(plan_search_t *_search, plan_state_id_t st
 
     node = planStateSpaceNode(search->search.state_space, state_id);
     if (planStateSpaceNodeIsNew(node)
-            || node->cost > cost
-            || node->heuristic < heuristic){
+            || node->cost > cost){
+            //TODO: || (planStateSpaceIsOpen(node) && node->heuristic < heuristic)){
         astarInsertState(search, state_id, node, 0, NULL, cost, 0);
         return 0;
     }

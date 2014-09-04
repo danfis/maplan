@@ -251,6 +251,45 @@ int planMAMsgHeurResponsePeerOpSize(const plan_ma_msg_t *msg);
  */
 int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *msg, int i, int *owner);
 
+
+
+/**
+ * Sets message as SOLUTION_FOUND.
+ */
+void planMAMsgSetSolutionFound(plan_ma_msg_t *msg, int agent_id,
+                               int solution_id, int cost);
+
+/**
+ * Returns .agent_id part of the message
+ */
+int planMAMsgSolutionFoundAgentId(const plan_ma_msg_t *msg);
+
+/**
+ * Returns .solution_id part of the message
+ */
+int planMAMsgSolutionFoundSolutionId(const plan_ma_msg_t *msg);
+
+/**
+ * Returns .cost part of the message.
+ */
+int planMAMsgSolutionFoundCost(const plan_ma_msg_t *msg);
+
+
+/**
+ * Creates SOLUTION_ACK message.
+ */
+void planMAMsgSetSolutionAck(plan_ma_msg_t *msg, int agent_id, int solution_id);
+
+/**
+ * Returns agent ID from the message.
+ */
+int planMAMsgSolutionAckAgentId(const plan_ma_msg_t *msg);
+
+/**
+ * Returns solution ID from the message.
+ */
+int planMAMsgSolutionAckSolutionId(const plan_ma_msg_t *msg);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

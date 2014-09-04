@@ -386,3 +386,59 @@ int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *_msg, int i, int *owner)
     *owner = op.owner();
     return op.op_id();
 }
+
+void planMAMsgSetSolutionFound(plan_ma_msg_t *_msg, int agent_id,
+                               int solution_id, int cost)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    msg->set_type(PlanMAMsg::SOLUTION_FOUND);
+    PlanMAMsgSolutionFound *sol = msg->mutable_solution_found();
+    sol->set_agent_id(agent_id);
+    sol->set_solution_id(solution_id);
+    sol->set_cost(cost);
+}
+
+int planMAMsgSolutionFoundAgentId(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgSolutionFound &res = msg->solution_found();
+    return res.agent_id();
+}
+
+int planMAMsgSolutionFoundSolutionId(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgSolutionFound &res = msg->solution_found();
+    return res.solution_id();
+}
+
+int planMAMsgSolutionFoundCost(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgSolutionFound &res = msg->solution_found();
+    return res.cost();
+}
+
+
+void planMAMsgSetSolutionAck(plan_ma_msg_t *_msg, int agent_id, int solution_id)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    msg->set_type(PlanMAMsg::SOLUTION_ACK);
+    PlanMAMsgSolutionAck *sol = msg->mutable_solution_ack();
+    sol->set_agent_id(agent_id);
+    sol->set_solution_id(solution_id);
+}
+
+int planMAMsgSolutionAckAgentId(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgSolutionAck &res = msg->solution_ack();
+    return res.agent_id();
+}
+
+int planMAMsgSolutionAckSolutionId(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgSolutionAck &res = msg->solution_ack();
+    return res.solution_id();
+}

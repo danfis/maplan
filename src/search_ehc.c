@@ -162,7 +162,7 @@ static int processState(plan_search_ehc_t *ehc,
                                         parent_op, 0, cur_heur);
 
     // check if the current state is the goal
-    if (_planSearchCheckGoal(&ehc->search, cur_state_id))
+    if (_planSearchCheckGoal(&ehc->search, cur_node))
         return PLAN_SEARCH_FOUND;
 
     // Useful only in MA node

@@ -427,7 +427,7 @@ void _planUpdateStat(plan_search_stat_t *stat,
  * Also the goal state is recorded in stats and the goal state is
  * remembered.
  */
-int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id);
+int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node);
 
 /**** INLINES ****/
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)

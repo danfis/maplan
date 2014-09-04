@@ -311,10 +311,10 @@ void _planSearchMASendState(plan_search_t *search,
         maSendPublicState(search, node);
 }
 
-int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id)
+int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node)
 {
-    if (planProblemCheckGoal(search->params.prob, state_id)){
-        search->goal_state = state_id;
+    if (planProblemCheckGoal(search->params.prob, node->state_id)){
+        search->goal_state = node->state_id;
         if (!search->ma)
             planSearchStatSetFoundSolution(&search->stat);
         return 1;

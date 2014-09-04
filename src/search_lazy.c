@@ -120,7 +120,7 @@ static int planSearchLazyStep(plan_search_t *_lazy)
                                         0, cur_heur);
 
     // check if the current state is the goal
-    if (_planSearchCheckGoal(&lazy->search, cur_state_id))
+    if (_planSearchCheckGoal(&lazy->search, cur_node))
         return PLAN_SEARCH_FOUND;
 
     // Useful only in MA node

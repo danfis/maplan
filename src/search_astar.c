@@ -151,7 +151,7 @@ static int planSearchAStarStep(plan_search_t *_search)
     planStateSpaceClose(search->search.state_space, cur_node);
 
     // Check whether it is a goal
-    if (_planSearchCheckGoal(&search->search, cur_state))
+    if (_planSearchCheckGoal(&search->search, cur_node))
         return PLAN_SEARCH_FOUND;
 
     // Find all applicable operators

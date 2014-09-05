@@ -152,6 +152,10 @@ static int planSearchAStarStep(plan_search_t *_search)
     // Close the current state node
     planStateSpaceClose(search->search.state_space, cur_node);
 
+    // Skip nodes that cannot improve solution
+    if (cur_node->cost >= search->best_solution_cost)
+        return PLAN_SEARCH_CONT;
+
     // Check whether it is a goal
     if (_planSearchCheckGoal(&search->search, cur_node)){
         search->best_solution_cost = cur_node->cost;

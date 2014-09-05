@@ -44,7 +44,8 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
                     planSearchLazyDel,
                     planSearchLazyInit,
                     planSearchLazyStep,
-                    planSearchLazyInjectState);
+                    planSearchLazyInjectState,
+                    NULL);
 
     lazy->use_preferred_ops = params->use_preferred_ops;
     lazy->list              = params->list;

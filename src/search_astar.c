@@ -26,6 +26,8 @@ static int planSearchAStarInjectState(plan_search_t *_search,
                                       plan_state_id_t state_id,
                                       plan_cost_t cost,
                                       plan_cost_t heuristic);
+/** Returns lowest cost in open-list */
+static plan_cost_t planSearchAStarLowestCost(plan_search_t *search);
 
 
 void planSearchAStarParamsInit(plan_search_astar_params_t *p)
@@ -44,7 +46,8 @@ plan_search_t *planSearchAStarNew(const plan_search_astar_params_t *params)
                     planSearchAStarDel,
                     planSearchAStarInit,
                     planSearchAStarStep,
-                    planSearchAStarInjectState);
+                    planSearchAStarInjectState,
+                    planSearchAStarLowestCost);
 
     search->list     = planListTieBreaking(2);
     search->pathmax  = params->pathmax;
@@ -215,4 +218,15 @@ static int planSearchAStarInjectState(plan_search_t *_search, plan_state_id_t st
     }
 
     return -1;
+}
+
+static plan_cost_t planSearchAStarLowestCost(plan_search_t *_search)
+{
+    plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
+    plan_state_id_t state_id;
+    plan_cost_t cost[2];
+
+    if (planListTop(search->list, &state_id, cost) != 0)
+        return PLAN_COST_MAX;
+    return cost[0];
 }

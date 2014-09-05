@@ -288,6 +288,12 @@ typedef int (*plan_search_inject_state_fn)(plan_search_t *search,
                                            plan_cost_t cost,
                                            plan_cost_t heuristic);
 
+/**
+ * Returns the lowest cost which is currently available among all open
+ * nodes.
+ */
+typedef plan_cost_t (*plan_search_lowest_cost_fn)(plan_search_t *search);
+
 struct _plan_search_applicable_ops_t {
     plan_op_t **op;        /*!< Array of applicable operators. This array
                                 must be big enough to hold all operators. */
@@ -311,6 +317,7 @@ struct _plan_search_t {
     plan_search_init_fn init_fn;
     plan_search_step_fn step_fn;
     plan_search_inject_state_fn inject_state_fn;
+    plan_search_lowest_cost_fn lowest_cost_fn;
 
     plan_search_params_t params;
     plan_search_stat_t stat;
@@ -340,7 +347,8 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_del_fn del_fn,
                      plan_search_init_fn init_fn,
                      plan_search_step_fn step_fn,
-                     plan_search_inject_state_fn inject_state_fn);
+                     plan_search_inject_state_fn inject_state_fn,
+                     plan_search_lowest_cost_fn lowest_cost_fn);
 
 /**
  * Frees allocated resources.

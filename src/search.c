@@ -97,7 +97,8 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_del_fn del_fn,
                      plan_search_init_fn init_fn,
                      plan_search_step_fn step_fn,
-                     plan_search_inject_state_fn inject_state_fn)
+                     plan_search_inject_state_fn inject_state_fn,
+                     plan_search_lowest_cost_fn lowest_cost_fn)
 {
     ma_pub_state_data_t msg_init;
 
@@ -108,6 +109,7 @@ void _planSearchInit(plan_search_t *search,
     search->init_fn = init_fn;
     search->step_fn = step_fn;
     search->inject_state_fn = inject_state_fn;
+    search->lowest_cost_fn = lowest_cost_fn;
     search->params = *params;
 
     planSearchStatInit(&search->stat);

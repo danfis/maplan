@@ -54,7 +54,8 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
                     planSearchEHCDel,
                     planSearchEHCInit,
                     planSearchEHCStep,
-                    planSearchEHCInjectState);
+                    planSearchEHCInjectState,
+                    NULL);
 
     ehc->list              = planListLazyFifoNew();
     ehc->use_preferred_ops = params->use_preferred_ops;

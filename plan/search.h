@@ -335,6 +335,7 @@ struct _plan_search_t {
                                         received public state with state-id. */
     int ma_terminated;             /*!< True if already terminated */
     plan_path_t *ma_path;          /*!< Output path for multi-agent mode */
+    int ma_ack_solution;           /*!< True if solution should be ack'ed */
 };
 
 

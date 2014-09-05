@@ -130,6 +130,7 @@ void _planSearchInit(plan_search_t *search,
                                                         sizeof(ma_pub_state_data_t),
                                                         NULL, &msg_init);
     search->ma_terminated = 0;
+    search->ma_ack_solution = params->ma_ack_solution;
 }
 
 void _planSearchFree(plan_search_t *search)

@@ -60,12 +60,6 @@ void planMAMsgSetPublicState(plan_ma_msg_t *msg, int agent_id,
 int planMAMsgIsPublicState(const plan_ma_msg_t *msg);
 
 /**
- * Sets agent's token
- */
-void planMAMsgPublicStateSetToken(plan_ma_msg_t *msg,
-                                  int agent_id, int token);
-
-/**
  * Returns agent_id of the source agent.
  */
 int planMAMsgPublicStateAgent(const plan_ma_msg_t *msg);
@@ -90,11 +84,6 @@ int planMAMsgPublicStateCost(const plan_ma_msg_t *msg);
  * Returns heuristic value computed by the remote agent.
  */
 int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg);
-
-/**
- * Returns token corresponding to the agent.
- */
-int planMAMsgPublicStateToken(const plan_ma_msg_t *msg, int agent_id);
 
 /**
  * Sets message as type TERMINATE
@@ -265,9 +254,38 @@ int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *msg, int i, int *owner);
 
 
 /**
+ * Creates SOLUTION message.
+ */
+void planMAMsgSetSolution(plan_ma_msg_t *msg, int agent_id,
+                          const void *state, size_t state_size,
+                          int state_id,
+                          int cost, int heuristic,
+                          int token);
+
+/**
+ * Returns true if the message is of type SOLUTION.
+ */
+int planMAMsgIsSolution(const plan_ma_msg_t *msg);
+
+/**
+ * Returns public-state part of the message.
+ */
+const plan_ma_msg_t *planMAMsgSolutionPublicState(const plan_ma_msg_t *msg);
+
+/**
+ * Returns token associated with the solution.
+ */
+int planMAMsgSolutionToken(const plan_ma_msg_t *msg);
+
+/**
  * Creates SOLUTION_ACK message.
  */
 void planMAMsgSetSolutionAck(plan_ma_msg_t *msg, int state_id);
+
+/**
+ * Returns true if the message is of type SOLUTION_ACK;
+ */
+int planMAMsgIsSolutionAck(const plan_ma_msg_t *msg);
 
 /**
  * Returns ID of the solution state.

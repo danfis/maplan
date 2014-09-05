@@ -4,8 +4,6 @@ message PlanMAMsgPublicState {
     required int32 state_id = 3;
     required int32 cost = 4;
     required int32 heuristic = 5;
-    // Token for each agent indexed by its ID
-    repeated bool token = 6;
 }
 
 message PlanMAMsgHeurRequest {
@@ -50,6 +48,13 @@ message PlanMAMsgTracePath {
     required bool done = 4;
 }
 
+message PlanMAMsgSolution {
+    // Public state the is a solution
+    required PlanMAMsgPublicState state = 1;
+    // Unique token associated with the solution
+    required int32 token = 2;
+}
+
 message PlanMAMsgSolutionAck {
     // ID of the acked solution state
     required int32 state_id = 1;
@@ -68,7 +73,8 @@ message PlanMAMsg {
         HEUR_REQUEST  = 0x301;
         HEUR_RESPONSE = 0x302;
 
-        SOLUTION_ACK = 0x401;
+        SOLUTION     = 0x401;
+        SOLUTION_ACK = 0x402;
     }
 
     required Type type = 1;
@@ -77,5 +83,6 @@ message PlanMAMsg {
     optional PlanMAMsgTracePath trace_path = 3;
     optional PlanMAMsgHeurRequest heur_request = 4;
     optional PlanMAMsgHeurResponse heur_response = 5;
+    optional PlanMAMsgSolution solution = 6;
     optional PlanMAMsgSolutionAck solution_ack = 7;
 }

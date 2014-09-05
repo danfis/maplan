@@ -268,14 +268,15 @@ void planMAMsgSetSolution(plan_ma_msg_t *msg, int agent_id,
 int planMAMsgIsSolution(const plan_ma_msg_t *msg);
 
 /**
- * Returns public-state part of the message.
+ * Returns public-state message created from the solution message.
  */
-const plan_ma_msg_t *planMAMsgSolutionPublicState(const plan_ma_msg_t *msg);
+plan_ma_msg_t *planMAMsgSolutionPublicState(const plan_ma_msg_t *msg);
 
 /**
  * Returns token associated with the solution.
  */
 int planMAMsgSolutionToken(const plan_ma_msg_t *msg);
+
 
 /**
  * Creates SOLUTION_ACK message.
@@ -291,6 +292,22 @@ int planMAMsgIsSolutionAck(const plan_ma_msg_t *msg);
  * Returns ID of the solution state.
  */
 int planMAMsgSolutionAckStateId(const plan_ma_msg_t *msg);
+
+
+/**
+ * Creates SOLUTION_MARK message.
+ */
+void planMAMsgSetSolutionMark(plan_ma_msg_t *msg, int token);
+
+/**
+ * Returns true if the message is of type SOLUTION_MARK.
+ */
+int planMAMsgIsSolutionMark(const plan_ma_msg_t *msg);
+
+/**
+ * Returns token of stop-mark message.
+ */
+int planMAMsgSolutionMarkToken(const plan_ma_msg_t *msg);
 
 #ifdef __cplusplus
 } /* extern "C" */

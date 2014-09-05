@@ -56,8 +56,12 @@ message PlanMAMsgSolution {
 }
 
 message PlanMAMsgSolutionAck {
-    // ID of the acked solution state
-    required int32 state_id = 1;
+    required bool ack = 1;
+    required int32 token = 2;
+}
+
+message PlanMAMsgSolutionMark {
+    required int32 token = 1;
 }
 
 message PlanMAMsg {
@@ -73,8 +77,9 @@ message PlanMAMsg {
         HEUR_REQUEST  = 0x301;
         HEUR_RESPONSE = 0x302;
 
-        SOLUTION     = 0x401;
-        SOLUTION_ACK = 0x402;
+        SOLUTION      = 0x401;
+        SOLUTION_ACK  = 0x402;
+        SOLUTION_MARK = 0x403;
     }
 
     required Type type = 1;
@@ -85,4 +90,5 @@ message PlanMAMsg {
     optional PlanMAMsgHeurResponse heur_response = 5;
     optional PlanMAMsgSolution solution = 6;
     optional PlanMAMsgSolutionAck solution_ack = 7;
+    optional PlanMAMsgSolutionMark solution_mark = 8;
 }

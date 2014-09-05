@@ -36,6 +36,15 @@ typedef int (*plan_list_pop_fn)(plan_list_t *list,
                                 plan_cost_t *cost);
 
 /**
+ * Peeks at the top of the list and returns an element with the lowest
+ * cost.
+ * Returns 0 on success, -1 if the list is empty.
+ */
+typedef int (*plan_list_top_fn)(plan_list_t *list,
+                                plan_state_id_t *state_id,
+                                plan_cost_t *cost);
+
+/**
  * Removes all elements from the list.
  */
 typedef void (*plan_list_clear_fn)(plan_list_t *list);
@@ -44,6 +53,7 @@ struct _plan_list_t {
     plan_list_del_fn del_fn;
     plan_list_push_fn push_fn;
     plan_list_pop_fn pop_fn;
+    plan_list_top_fn top_fn;
     plan_list_clear_fn clear_fn;
 };
 
@@ -74,6 +84,14 @@ _bor_inline int planListPop(plan_list_t *list,
                             plan_cost_t *cost);
 
 /**
+ * Peeks at the top of the list.
+ * Returns 0 on success, -1 if the heap is empty.
+ */
+_bor_inline int planListTop(plan_list_t *list,
+                            plan_state_id_t *state_id,
+                            plan_cost_t *cost);
+
+/**
  * Empties the list.
  */
 _bor_inline void planListClear(plan_list_t *list);
@@ -98,6 +116,13 @@ _bor_inline int planListPop(plan_list_t *list,
     return list->pop_fn(list, state_id, cost);
 }
 
+_bor_inline int planListTop(plan_list_t *list,
+                            plan_state_id_t *state_id,
+                            plan_cost_t *cost)
+{
+    return list->top_fn(list, state_id, cost);
+}
+
 _bor_inline void planListClear(plan_list_t *l)
 {
     l->clear_fn(l);
@@ -111,6 +136,7 @@ void _planListInit(plan_list_t *l,
                    plan_list_del_fn del_fn,
                    plan_list_push_fn push_fn,
                    plan_list_pop_fn pop_fn,
+                   plan_list_top_fn top_fn,
                    plan_list_clear_fn clear_fn);
 
 /**

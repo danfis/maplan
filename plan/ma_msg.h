@@ -277,11 +277,17 @@ plan_ma_msg_t *planMAMsgSolutionPublicState(const plan_ma_msg_t *msg);
  */
 int planMAMsgSolutionToken(const plan_ma_msg_t *msg);
 
+/**
+ * Returns cost of the solution.
+ */
+int planMAMsgSolutionCost(const plan_ma_msg_t *msg);
+
 
 /**
  * Creates SOLUTION_ACK message.
  */
-void planMAMsgSetSolutionAck(plan_ma_msg_t *msg, int state_id);
+void planMAMsgSetSolutionAck(plan_ma_msg_t *msg, int agent_id,
+                             int ack, int token);
 
 /**
  * Returns true if the message is of type SOLUTION_ACK;
@@ -289,20 +295,35 @@ void planMAMsgSetSolutionAck(plan_ma_msg_t *msg, int state_id);
 int planMAMsgIsSolutionAck(const plan_ma_msg_t *msg);
 
 /**
+ * Returns ID of the source agent.
+ */
+int planMAMsgSolutionAckAgent(const plan_ma_msg_t *msg);
+
+/**
+ * Returns true if ACK or false if NACK.
+ */
+int planMAMsgSolutionAck(const plan_ma_msg_t *msg);
+
+/**
  * Returns ID of the solution state.
  */
-int planMAMsgSolutionAckStateId(const plan_ma_msg_t *msg);
+int planMAMsgSolutionAckToken(const plan_ma_msg_t *msg);
 
 
 /**
  * Creates SOLUTION_MARK message.
  */
-void planMAMsgSetSolutionMark(plan_ma_msg_t *msg, int token);
+void planMAMsgSetSolutionMark(plan_ma_msg_t *msg, int agent_id, int token);
 
 /**
  * Returns true if the message is of type SOLUTION_MARK.
  */
 int planMAMsgIsSolutionMark(const plan_ma_msg_t *msg);
+
+/**
+ * Returns ID of the source agent.
+ */
+int planMAMsgSolutionMarkAgent(const plan_ma_msg_t *msg);
 
 /**
  * Returns token of stop-mark message.

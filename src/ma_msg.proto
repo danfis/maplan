@@ -56,12 +56,14 @@ message PlanMAMsgSolution {
 }
 
 message PlanMAMsgSolutionAck {
-    required bool ack = 1;
-    required int32 token = 2;
+    required int32 agent_id = 1;
+    required bool ack = 2;
+    required int32 token = 3;
 }
 
 message PlanMAMsgSolutionMark {
-    required int32 token = 1;
+    required int32 agent_id = 1;
+    required int32 token = 2;
 }
 
 message PlanMAMsg {

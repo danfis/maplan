@@ -436,12 +436,21 @@ int planMAMsgSolutionToken(const plan_ma_msg_t *_msg)
     return sol.token();
 }
 
+int planMAMsgSolutionCost(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgSolution &sol = msg->solution();
+    return sol.state().cost();
+}
 
-void planMAMsgSetSolutionAck(plan_ma_msg_t *_msg, int ack, int token)
+
+void planMAMsgSetSolutionAck(plan_ma_msg_t *_msg, int agent_id,
+                             int ack, int token)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
     msg->set_type(PlanMAMsg::SOLUTION_ACK);
     PlanMAMsgSolutionAck *sol = msg->mutable_solution_ack();
+    sol->set_agent_id(agent_id);
     sol->set_ack(ack);
     sol->set_token(token);
 }
@@ -459,6 +468,13 @@ int planMAMsgSolutionAck(const plan_ma_msg_t *_msg)
     return res.ack();
 }
 
+int planMAMsgSolutionAckAgent(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgSolutionAck &res = msg->solution_ack();
+    return res.agent_id();
+}
+
 int planMAMsgSolutionAckToken(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
@@ -468,11 +484,12 @@ int planMAMsgSolutionAckToken(const plan_ma_msg_t *_msg)
 
 
 
-void planMAMsgSetSolutionMark(plan_ma_msg_t *_msg, int token)
+void planMAMsgSetSolutionMark(plan_ma_msg_t *_msg, int agent_id, int token)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
     msg->set_type(PlanMAMsg::SOLUTION_MARK);
     PlanMAMsgSolutionMark *sol = msg->mutable_solution_mark();
+    sol->set_agent_id(agent_id);
     sol->set_token(token);
 }
 
@@ -480,6 +497,13 @@ int planMAMsgIsSolutionMark(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
     return msg->type() == PlanMAMsg::SOLUTION_MARK;
+}
+
+int planMAMsgSolutionMarkAgent(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgSolutionMark &res = msg->solution_mark();
+    return res.agent_id();
 }
 
 int planMAMsgSolutionMarkToken(const plan_ma_msg_t *_msg)

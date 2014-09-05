@@ -306,6 +306,36 @@ struct _plan_search_applicable_ops_t {
 };
 typedef struct _plan_search_applicable_ops_t plan_search_applicable_ops_t;
 
+struct _plan_search_ma_solution_verify_t {
+    bor_fifo_t waitlist; /*!< Solution messages waiting for verification */
+    int in_progress;     /*!< True if we are in the middle of erification
+                              of a solution */
+    plan_cost_t cost;    /*!< Cost of the solution */
+    int state_id;        /*!< State ID of the currently verified solution */
+    int token;           /*!< Token associated with the solution */
+    int *mark;           /*!< Array of bool flags signaling the from the
+                              SOLUTION_MARK message was received from the
+                              corresponding agent. */
+    int mark_size;
+    int mark_remaining;  /*!< Number of peers for which SOLUTION_MARK was
+                              not received yet */
+    int ack_remaining;   /*!< Number of acks remaining */
+
+    int invalid;         /*!< True if the verification failed */
+    int reinsert;        /*!< True if the solution should be re-inserted */
+};
+typedef struct _plan_search_ma_solution_verify_t
+    plan_search_ma_solution_verify_t;
+
+struct _plan_search_ma_solution_ack_t {
+    plan_ma_msg_t *solution_msg;
+    plan_cost_t cost_lower_bound;
+    int token;
+    int *mark;
+    int mark_remaining;
+};
+typedef struct _plan_search_ma_solution_ack_t plan_search_ma_solution_ack_t;
+
 /**
  * Common base struct for all search algorithms.
  */
@@ -336,6 +366,12 @@ struct _plan_search_t {
     int ma_terminated;             /*!< True if already terminated */
     plan_path_t *ma_path;          /*!< Output path for multi-agent mode */
     int ma_ack_solution;           /*!< True if solution should be ack'ed */
+
+    /** Struct for verification of solutions */
+    plan_search_ma_solution_verify_t ma_solution_verify;
+    /** Solutions waiting for ACK */
+    plan_search_ma_solution_ack_t *ma_solution_ack;
+    int ma_solution_ack_size;
 };
 
 

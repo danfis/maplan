@@ -65,6 +65,26 @@ static int maProcessTracePath(plan_search_t *search, plan_ma_msg_t *msg);
  *  found the solution. */
 static int maTracePath(plan_search_t *search);
 
+/** Initialize and free resources in verification structure. */
+static void maSolutionVerifyInit(plan_search_t *search,
+                                 plan_search_ma_solution_verify_t *v);
+static void maSolutionVerifyInit2(plan_search_t *search);
+static void maSolutionVerifyFree(plan_search_ma_solution_verify_t *v);
+/** Starts verification of the specified states as a global solution */
+static void maSolutionStartVerify(plan_search_t *search, plan_state_id_t sol_id);
+/** Start verifying next solution if queued */
+static void maSolutionVerifyNext(plan_search_t *search);
+/** Checks whether the public state somehow does not break verification
+ *  process */
+static void maSolutionVerifyCheckPublicState(plan_search_t *search,
+                                             const plan_ma_msg_t *msg);
+/** Process ACK message during verification of the solution */
+static int maSolutionVerifyAck(plan_search_t *search, const plan_ma_msg_t *msg);
+/** Process MARK message during verification of the solution */
+static int maSolutionVerifyMark(plan_search_t *search, const plan_ma_msg_t *msg);
+/** Evaluate verification of solution */
+static int maSolutionVerifyEval(plan_search_t *search);
+
 void planSearchStatInit(plan_search_stat_t *stat)
 {
     stat->elapsed_time = 0.f;
@@ -130,7 +150,12 @@ void _planSearchInit(plan_search_t *search,
                                                         sizeof(ma_pub_state_data_t),
                                                         NULL, &msg_init);
     search->ma_terminated = 0;
+
     search->ma_ack_solution = params->ma_ack_solution;
+    if (search->ma_ack_solution)
+        maSolutionVerifyInit(search, &search->ma_solution_verify);
+    search->ma_solution_ack = NULL;
+    search->ma_solution_ack_size = 0;
 }
 
 void _planSearchFree(plan_search_t *search)
@@ -142,6 +167,8 @@ void _planSearchFree(plan_search_t *search)
         planStateDel(search->state);
     if (search->state_space)
         planStateSpaceDel(search->state_space);
+    if (search->ma_ack_solution)
+        maSolutionVerifyFree(&search->ma_solution_verify);
 }
 
 void _planSearchFindApplicableOps(plan_search_t *search,
@@ -383,12 +410,28 @@ int planSearchMARun(plan_search_t *search,
     search->ma_terminated = 0;
     search->ma_path = path;
 
+    if (search->ma_ack_solution)
+        maSolutionVerifyInit2(search);
+
     res = search->init_fn(search);
     while (res == PLAN_SEARCH_CONT){
+        // Start verifying next solution if queued
+        if (search->ma_ack_solution)
+            maSolutionVerifyNext(search);
+
         // Process all pending messages
         while (res == PLAN_SEARCH_CONT
                     && (msg = planMACommQueueRecv(search->ma_comm)) != NULL){
             res = maProcessMsg(search, msg);
+        }
+
+
+        // Process finalized verification of the solution
+        if (res != PLAN_SEARCH_CONT
+                && search->ma_ack_solution
+                && search->ma_solution_verify.in_progress){
+            res = maSolutionVerifyEval(search);
+            continue;
         }
 
         // Again check the status because the message could change it
@@ -414,14 +457,22 @@ int planSearchMARun(plan_search_t *search,
             break;
 
         }else if (res == PLAN_SEARCH_FOUND){
-            // If the solution was found, terminate agent cluster and exit.
-            if (maTracePath(search) == PLAN_SEARCH_FOUND){
-                planSearchStatSetFoundSolution(&search->stat);
+            fprintf(stderr, "SOL FOUND\n");
+            fflush(stderr);
+            if (search->ma_ack_solution){
+                maSolutionStartVerify(search, search->goal_state);
+                res = PLAN_SEARCH_CONT;
+
             }else{
-                res = PLAN_SEARCH_NOT_FOUND;
+                // If the solution was found, terminate agent cluster and exit.
+                if (maTracePath(search) == PLAN_SEARCH_FOUND){
+                    planSearchStatSetFoundSolution(&search->stat);
+                }else{
+                    res = PLAN_SEARCH_NOT_FOUND;
+                }
+                maTerminate(search);
+                break;
             }
-            maTerminate(search);
-            break;
 
         }else if (res == PLAN_SEARCH_NOT_FOUND){
             // If this agent reached dead-end, wait either for terminate
@@ -617,6 +668,7 @@ static void maInjectPublicState(plan_search_t *search,
     ma_pub_state_data_t *pub_state_data;
     plan_state_id_t state_id;
     const void *packed_state;
+    int res;
 
     // Unroll data from the message
     packed_state = planMAMsgPublicStateStateBuf(msg);
@@ -644,7 +696,16 @@ static void maInjectPublicState(plan_search_t *search,
     }
 
     // Inject state into search algorithm
-    search->inject_state_fn(search, state_id, cost, heuristic);
+    res = search->inject_state_fn(search, state_id, cost, heuristic);
+
+    if (search->ma_ack_solution){
+        if (search->ma_solution_verify.in_progress && res == 0){
+            // If a new state was injected and we are in the middle of the
+            // solution verification, check whether this state does not
+            // somehow break verification process.
+            maSolutionVerifyCheckPublicState(search, msg);
+        }
+    }
 }
 
 static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
@@ -682,6 +743,19 @@ static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
 
     }else if (planMAMsgIsTracePath(msg)){
         res = maProcessTracePath(search, msg);
+
+    }else if (planMAMsgIsSolutionAck(msg)){
+        if (search->ma_ack_solution && search->ma_solution_verify.in_progress)
+            res = maSolutionVerifyAck(search, msg);
+
+    }else if (planMAMsgIsSolutionMark(msg)){
+        res = PLAN_SEARCH_CONT;
+
+        if (search->ma_ack_solution){
+            if (search->ma_solution_verify.in_progress){
+                res = maSolutionVerifyMark(search, msg);
+            }
+        }
     }
 
     planMAMsgDel(msg);
@@ -851,6 +925,188 @@ static int maTracePath(plan_search_t *search)
             planMAMsgDel(msg);
         }
     }
+
+    return res;
+}
+
+
+static void maSolutionVerifyInit(plan_search_t *search,
+                                 plan_search_ma_solution_verify_t *v)
+{
+    borFifoInit(&v->waitlist, sizeof(plan_ma_msg_t *));
+    v->mark_size = 0;
+    v->mark = NULL;
+}
+
+static void maSolutionVerifyInit2(plan_search_t *search)
+{
+    plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
+
+    ver->mark_size = search->ma_comm->pool.node_size;
+    ver->mark = BOR_REALLOC_ARR(ver->mark, int, ver->mark_size);
+    ver->in_progress = 0;
+}
+
+static void maSolutionVerifyFree(plan_search_ma_solution_verify_t *v)
+{
+    plan_ma_msg_t *msg;
+
+    while (!borFifoEmpty(&v->waitlist)){
+        msg = borFifoFront(&v->waitlist);
+        borFifoPop(&v->waitlist);
+        planMAMsgDel(msg);
+    }
+
+    if (v->mark)
+        BOR_FREE(v->mark);
+}
+
+static void maSolutionStartVerify(plan_search_t *search, plan_state_id_t sol_id)
+{
+    plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
+    plan_state_space_node_t *node;
+    plan_ma_msg_t *msg;
+    const void *statebuf;
+
+    node = planStateSpaceNode(search->state_space, sol_id);
+    statebuf = planStatePoolGetPackedState(search->state_pool, node->state_id);
+    if (statebuf == NULL){
+        fprintf(stderr, "Error[%d]: Solution cannot be verified because"
+                        " state is not created.\n",
+                        search->ma_comm->node_id);
+        return;
+    }
+
+    // Construct SOLUTION message and use search->ma_comm->node_id as token
+    // because one agent can verify only one solution at a time.
+    msg = planMAMsgNew();
+    planMAMsgSetSolution(msg, search->ma_comm->node_id,
+                         statebuf,
+                         planStatePackerBufSize(search->state_pool->packer),
+                         node->state_id,
+                         node->cost, node->heuristic,
+                         search->ma_comm->node_id);
+
+    // Insert solution message to the wait-list
+    borFifoPush(&ver->waitlist, &msg);
+}
+
+static void maSolutionVerifyNext(plan_search_t *search)
+{
+    plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
+    plan_ma_msg_t *msg;
+
+    if (ver->in_progress || borFifoEmpty(&ver->waitlist))
+        return;
+
+    // Pick up next solution from the queue, delete it after it was
+    // verified!
+    msg = *((plan_ma_msg_t **)borFifoFront(&ver->waitlist));
+
+    // Send the solution message to peers
+    planMACommQueueSendToAll(search->ma_comm, msg);
+
+    // Set in_progress flag and remember the important parts of the
+    // solution
+    ver->in_progress = 1;
+    ver->cost = planMAMsgSolutionCost(msg);
+    ver->token = planMAMsgSolutionToken(msg);
+    bzero(ver->mark, sizeof(int) * ver->mark_size);
+    ver->mark_remaining = ver->mark_size - 1; // -1 for this agent
+    ver->ack_remaining = ver->mark_remaining;
+    ver->invalid = 0;
+    ver->reinsert = 0;
+}
+
+static void maSolutionVerifyCheckPublicState(plan_search_t *search,
+                                             const plan_ma_msg_t *msg)
+{
+    plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
+    int agent_id;
+    plan_cost_t cost, heur;
+
+    // If have already received SOLUTION_MARK from the agent we can ignore
+    // this public state whatever is there stored
+    agent_id = planMAMsgPublicStateAgent(msg);
+    if (ver->mark[agent_id])
+        return;
+
+    // Check if the state has lower cost than the solution, if so invalide
+    // verification and mark the solution to be re-inserted into open-list
+    cost = planMAMsgPublicStateCost(msg);
+    heur = planMAMsgPublicStateHeur(msg);
+    if (ver->cost > cost + heur){
+        ver->invalid = 1;
+        ver->reinsert = 1;
+    }
+}
+
+static int maSolutionVerifyAck(plan_search_t *search, const plan_ma_msg_t *msg)
+{
+    plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
+
+    --ver->ack_remaining;
+    if (!planMAMsgSolutionAck(msg))
+        ver->invalid = 0;
+
+    if (ver->ack_remaining == 0 && ver->mark_remaining == 0)
+        return PLAN_SEARCH_FOUND;
+    return PLAN_SEARCH_CONT;
+}
+
+static int maSolutionVerifyMark(plan_search_t *search, const plan_ma_msg_t *msg)
+{
+    plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
+    int agent_id, token;
+
+    // Check if it is correct token
+    token = planMAMsgSolutionMarkToken(msg);
+    if (ver->token != token)
+        return PLAN_SEARCH_CONT;
+
+    agent_id = planMAMsgSolutionMarkAgent(msg);
+    if (ver->mark[agent_id] == 0){
+        ver->mark[agent_id] = 1;
+        --ver->mark_remaining;
+    }
+
+    if (ver->ack_remaining == 0 && ver->mark_remaining == 0)
+        return PLAN_SEARCH_FOUND;
+    return PLAN_SEARCH_CONT;
+}
+
+static int maSolutionVerifyEval(plan_search_t *search)
+{
+    plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
+    int res;
+
+    if (!ver->invalid){
+        // The solution was verified!
+        if (maTracePath(search) == PLAN_SEARCH_FOUND){
+            planSearchStatSetFoundSolution(&search->stat);
+            res = PLAN_SEARCH_FOUND;
+        }else{
+            res = PLAN_SEARCH_NOT_FOUND;
+        }
+        maTerminate(search);
+
+    }else if (ver->reinsert){
+        // The solution failed in this very agent, reinsert the state and
+        // continue
+        // TODO: Reinsert state
+        fprintf(stderr, "Reinsert!!\n");
+        res = PLAN_SEARCH_CONT;
+
+    }else{
+        // The solution failed elsewhere, ignore this and continue like
+        // nothing happend
+        res = PLAN_SEARCH_CONT;
+    }
+
+    // Pop the current solution
+    borFifoPop(&ver->waitlist);
+    // Reset in-progress flag
+    ver->in_progress = 0;
 
     return res;
 }

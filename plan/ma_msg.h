@@ -282,6 +282,16 @@ int planMAMsgSolutionToken(const plan_ma_msg_t *msg);
  */
 int planMAMsgSolutionCost(const plan_ma_msg_t *msg);
 
+/**
+ * Returns source agent of the message.
+ */
+int planMAMsgSolutionAgent(const plan_ma_msg_t *msg);
+
+/**
+ * Returns state-id of the solution.
+ */
+int planMAMsgSolutionStateId(const plan_ma_msg_t *msg);
+
 
 /**
  * Creates SOLUTION_ACK message.

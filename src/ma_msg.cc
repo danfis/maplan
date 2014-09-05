@@ -443,6 +443,20 @@ int planMAMsgSolutionCost(const plan_ma_msg_t *_msg)
     return sol.state().cost();
 }
 
+int planMAMsgSolutionAgent(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgSolution &sol = msg->solution();
+    return sol.state().agent_id();
+}
+
+int planMAMsgSolutionStateId(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgSolution &sol = msg->solution();
+    return sol.state().state_id();
+}
+
 
 void planMAMsgSetSolutionAck(plan_ma_msg_t *_msg, int agent_id,
                              int ack, int token)

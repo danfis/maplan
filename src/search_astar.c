@@ -156,8 +156,8 @@ static int planSearchAStarStep(plan_search_t *_search)
     planStateSpaceClose(search->search.state_space, cur_node);
 
     // Skip nodes that cannot improve solution
-    if (cur_node->cost >= search->best_solution_cost)
-        return PLAN_SEARCH_CONT;
+    //if (cur_node->cost >= search->best_solution_cost)
+    //    return PLAN_SEARCH_CONT;
 
     // Check whether it is a goal
     if (_planSearchCheckGoal(&search->search, cur_node)){
@@ -206,8 +206,8 @@ static int planSearchAStarInjectState(plan_search_t *_search, plan_state_id_t st
 
     // Skip nodes that have higher cost that the best solution so far
     // because these nodes cannot generate better solutions
-    if (cost >= search->best_solution_cost)
-        return -1;
+    //if (cost >= search->best_solution_cost)
+    //    return -1;
 
     node = planStateSpaceNode(search->search.state_space, state_id);
     if (planStateSpaceNodeIsNew(node)

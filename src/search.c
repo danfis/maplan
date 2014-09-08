@@ -82,7 +82,9 @@ static void maSolutionVerifyCheckPublicState(plan_search_t *search,
 /** Process ACK message during verification of the solution */
 static int maSolutionVerifyAck(plan_search_t *search, const plan_ma_msg_t *msg);
 /** Process MARK message during verification of the solution */
-static int maSolutionVerifyMark(plan_search_t *search, const plan_ma_msg_t *msg);
+static int maSolutionVerifyMark(plan_search_t *search,
+                                const plan_ma_msg_t *msg,
+                                int *used);
 /** Evaluate verification of solution */
 static int maSolutionVerifyEval(plan_search_t *search);
 /** Send SOLUTION_MARK message to all peers */
@@ -809,14 +811,10 @@ static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
 
         if (search->ma_ack_solution){
             if (search->ma_solution_verify.in_progress){
-                res = maSolutionVerifyMark(search, msg);
-                if (res == 0){
-                    res = PLAN_SEARCH_CONT;
-                }else if (res == 1){
-                    res = PLAN_SEARCH_FOUND;
-                }else{ // res == -1
+                int used;
+                res = maSolutionVerifyMark(search, msg, &used);
+                if (!used)
                     maSolutionAckUpdate(search, msg);
-                }
             }else{
                 maSolutionAckUpdate(search, msg);
             }
@@ -1140,11 +1138,14 @@ static int maSolutionVerifyAck(plan_search_t *search, const plan_ma_msg_t *msg)
     return PLAN_SEARCH_CONT;
 }
 
-static int maSolutionVerifyMark(plan_search_t *search, const plan_ma_msg_t *msg)
+static int maSolutionVerifyMark(plan_search_t *search,
+                                const plan_ma_msg_t *msg,
+                                int *used)
 {
     plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
     int agent_id, token;
 
+    *used = 0;
     fprintf(stderr, "[%d] SolutionVerifyMark, agent_id: %d\n",
             search->ma_comm->node_id, planMAMsgSolutionMarkAgent(msg));
     // Check if it is correct token
@@ -1152,8 +1153,9 @@ static int maSolutionVerifyMark(plan_search_t *search, const plan_ma_msg_t *msg)
     if (ver->token != token){
         fprintf(stderr, "[%d] SolutionVerifyMark -1\n",
                 search->ma_comm->node_id);
-        return -1;
+        return PLAN_SEARCH_CONT;
     }
+    *used = 1;
 
     agent_id = planMAMsgSolutionMarkAgent(msg);
     if (ver->mark[agent_id] == 0){
@@ -1165,8 +1167,8 @@ static int maSolutionVerifyMark(plan_search_t *search, const plan_ma_msg_t *msg)
             search->ma_comm->node_id, ver->ack_remaining,
             ver->mark_remaining);
     if (ver->ack_remaining == 0 && ver->mark_remaining == 0)
-        return 1;
-    return 0;
+        return PLAN_SEARCH_FOUND;
+    return PLAN_SEARCH_CONT;
 }
 
 static int maSolutionVerifyEval(plan_search_t *search)

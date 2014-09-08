@@ -155,10 +155,6 @@ static int planSearchAStarStep(plan_search_t *_search)
     // Close the current state node
     planStateSpaceClose(search->search.state_space, cur_node);
 
-    // Skip nodes that cannot improve solution
-    //if (cur_node->cost >= search->best_solution_cost)
-    //    return PLAN_SEARCH_CONT;
-
     // Check whether it is a goal
     if (_planSearchCheckGoal(&search->search, cur_node)){
         search->best_solution_cost = cur_node->cost;
@@ -204,17 +200,20 @@ static int planSearchAStarInjectState(plan_search_t *_search, plan_state_id_t st
     plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
     plan_state_space_node_t *node;
 
-    // Skip nodes that have higher cost that the best solution so far
-    // because these nodes cannot generate better solutions
-    //if (cost >= search->best_solution_cost)
-    //    return -1;
-
     node = planStateSpaceNode(search->search.state_space, state_id);
     if (planStateSpaceNodeIsNew(node)
             || node->cost > cost
             || heuristic == 0){
             //TODO: || (planStateSpaceIsOpen(node) && node->heuristic < heuristic)){
-        astarInsertState(search, state_id, node, 0, NULL, cost, 0);
+
+        heuristic = BOR_MAX(heuristic, node->heuristic);
+        if (node->cost == -1 || node->cost > cost){
+            astarInsertState(search, state_id, node, 0, NULL, cost, heuristic);
+        }else{
+            astarInsertState(search, state_id, node, node->parent_state_id,
+                             node->op, node->cost, node->heuristic);
+        }
+
         return 0;
     }
 

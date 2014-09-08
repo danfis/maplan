@@ -356,6 +356,7 @@ struct _plan_search_t {
     plan_state_space_t *state_space;
     plan_state_t *state;             /*!< Preallocated state */
     plan_state_id_t goal_state;      /*!< The found state satisfying the goal */
+    plan_cost_t best_goal_cost;
 
     plan_search_applicable_ops_t applicable_ops;
 

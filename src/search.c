@@ -44,6 +44,8 @@ static int maSendPublicState(plan_search_t *search,
  *  algorithm */
 static int maInjectPublicState(plan_search_t *search,
                                const plan_ma_msg_t *msg);
+/** Reinject state that was already created in past */
+static int maReinjectState(plan_search_t *search, plan_state_id_t state_id);
 /** Process one message and returns PLAN_SEARCH_* status */
 static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg);
 
@@ -91,12 +93,12 @@ static int maSolutionVerifyEval(plan_search_t *search);
 static void maSolutionAckSendMark(plan_search_t *search,
                                   plan_search_ma_solution_ack_t *sol_ack);
 /** Updates state of the solution waiting for ACK */
-static void maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg);
+static int maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg);
 /** Deletes i'th solution-ack structure */
 static void maSolutionAckDel(plan_search_t *search, int i);
 /** Send response to the originator of the SOLUTION message. */
-static void maSolutionAckSendResponse(plan_search_t *search,
-                                      const plan_search_ma_solution_ack_t *sol_ack);
+static int maSolutionAckSendResponse(plan_search_t *search,
+                                     const plan_search_ma_solution_ack_t *sol_ack);
 /** Check public state when have pending some remote solutions */
 static void maSolutionAckCheckPublicState(plan_search_t *search,
                                           const plan_ma_msg_t *msg);
@@ -720,9 +722,22 @@ static int maInjectPublicState(plan_search_t *search,
     return res;
 }
 
+static int maReinjectState(plan_search_t *search, plan_state_id_t state_id)
+{
+    plan_state_space_node_t *node;
+
+    node = planStateSpaceNode(search->state_space, state_id);
+    if (node == NULL)
+        return -1;
+
+    return search->inject_state_fn(search, state_id, node->cost,
+                                   node->heuristic);
+}
+
 static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
 {
     int res = PLAN_SEARCH_CONT;
+    int used;
 
     if (planMAMsgIsPublicState(msg)){
         res = maInjectPublicState(search, msg);
@@ -770,9 +785,9 @@ static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
     }else if (planMAMsgIsSolution(msg)){
         fprintf(stderr, "[%d]: SOLUTION %d\n", search->ma_comm->node_id,
                 planMAMsgSolutionToken(msg));
-        if (search->ma_ack_solution)
-            maSolutionAckUpdate(search, msg);
         res = PLAN_SEARCH_CONT;
+        if (search->ma_ack_solution)
+            res = maSolutionAckUpdate(search, msg);
 
     }else if (planMAMsgIsSolutionAck(msg)){
         fprintf(stderr, "[%d]: SOLUTION_ACK\n", search->ma_comm->node_id);
@@ -788,12 +803,11 @@ static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
 
         if (search->ma_ack_solution){
             if (search->ma_solution_verify.in_progress){
-                int used;
                 res = maSolutionVerifyMark(search, msg, &used);
                 if (!used)
-                    maSolutionAckUpdate(search, msg);
+                    res = maSolutionAckUpdate(search, msg);
             }else{
-                maSolutionAckUpdate(search, msg);
+                res = maSolutionAckUpdate(search, msg);
             }
         }
     }
@@ -1169,10 +1183,17 @@ static int maSolutionVerifyEval(plan_search_t *search)
     }else if (ver->reinsert){
         // The solution failed in this very agent, reinsert the state and
         // continue
-        // TODO: Reinsert state
-        fprintf(stderr, "Reinsert!!\n");
-        fflush(stderr);
         res = PLAN_SEARCH_CONT;
+        if (maReinjectState(search, ver->state_id) != 0){
+            fprintf(stderr, "Error[%d]: Could not reinsert nack'ed solution"
+                            " to the open-list. This could\n"
+                            "cause dead-lock during verification of the"
+                            " solution! Thus the whole agent\n"
+                            "cluster will be shut down right now.\n",
+                            search->ma_comm->node_id);
+            maTerminate(search);
+            return PLAN_SEARCH_ABORT;
+        }
 
     }else{
         // The solution failed elsewhere, ignore this and continue like
@@ -1203,11 +1224,11 @@ static void maSolutionAckSendMark(plan_search_t *search,
             search->ma_comm->node_id, sol_ack->token);
 }
 
-static void maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg)
+static int maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg)
 {
     plan_search_ma_solution_ack_t *sol_ack;
     plan_ma_msg_t *solution_msg;
-    int i, agent_id, token;
+    int i, agent_id, token, res = PLAN_SEARCH_CONT;
 
     if (planMAMsgIsSolution(msg)){
         agent_id = planMAMsgSolutionAgent(msg);
@@ -1238,11 +1259,12 @@ static void maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg)
 
             if (sol_ack->mark_remaining == 0){
                 // The lower bound was already completely computed
-                maSolutionAckSendResponse(search, sol_ack);
+                if (maSolutionAckSendResponse(search, sol_ack) != 0)
+                    res = PLAN_SEARCH_ABORT;
                 maSolutionAckDel(search, i);
             }
 
-            return;
+            return res;
         }
     }
 
@@ -1262,6 +1284,8 @@ static void maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg)
     fprintf(stderr, "[%d] AckUpdate Created: %d\n",
             search->ma_comm->node_id, sol_ack->mark_remaining);
     maSolutionAckSendMark(search, sol_ack);
+
+    return res;
 }
 
 static void maSolutionAckDel(plan_search_t *search, int i)
@@ -1287,8 +1311,8 @@ static void maSolutionAckDel(plan_search_t *search, int i)
                                               search->ma_solution_ack_size);
 }
 
-static void maSolutionAckSendResponse(plan_search_t *search,
-                                      const plan_search_ma_solution_ack_t *sol_ack)
+static int maSolutionAckSendResponse(plan_search_t *search,
+                                     const plan_search_ma_solution_ack_t *sol_ack)
 {
     plan_ma_msg_t *msg;
     int ack, agent;
@@ -1302,18 +1326,29 @@ static void maSolutionAckSendResponse(plan_search_t *search,
         ack = 0;
     }
 
-    fprintf(stderr, "[%d] SolutionAckSendResponse, token: %d, cost: %d, ack: %d\n",
-            search->ma_comm->node_id, sol_ack->token, cost, ack);
     msg = planMAMsgNew();
     planMAMsgSetSolutionAck(msg, search->ma_comm->node_id, ack, sol_ack->token);
     planMACommQueueSendToNode(search->ma_comm, agent, msg);
     planMAMsgDel(msg);
 
     if (ack == 0){
-        fprintf(stderr, "[%d] NACK\n", search->ma_comm->node_id);
-        // TODO: Insert sol_ack->solution_msg!
-        maInjectPublicState(search, sol_ack->solution_msg);
+        // Because this agent cannot ACK this solution, the solution is
+        // inserted here and verified later when it pops from the
+        // open-list, or a better solution is found and thus that solution
+        // is verified.
+        if (maInjectPublicState(search, sol_ack->solution_msg) != 0){
+            fprintf(stderr, "Error[%d]: Could not insert nack'ed solution"
+                            " to the open-list. This could\n"
+                            "cause dead-lock during verification of the"
+                            " solution! Thus the whole agent\n"
+                            "cluster will be shut down right now.\n",
+                            search->ma_comm->node_id);
+            maTerminate(search);
+            return -1;
+        }
     }
+
+    return 0;
 }
 
 static void maSolutionAckCheckPublicState(plan_search_t *search,

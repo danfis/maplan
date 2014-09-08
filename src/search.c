@@ -185,9 +185,12 @@ void _planSearchFree(plan_search_t *search)
         planStateDel(search->state);
     if (search->state_space)
         planStateSpaceDel(search->state_space);
-    if (search->ma_ack_solution)
+    if (search->ma_ack_solution){
         maSolutionVerifyFree(&search->ma_solution_verify);
-    // TODO: search->ma_solution_ack
+        while (search->ma_solution_ack_size > 0){
+            maSolutionAckDel(search, search->ma_solution_ack_size - 1);
+        }
+    }
 }
 
 void _planSearchFindApplicableOps(plan_search_t *search,
@@ -363,9 +366,6 @@ void _planSearchMASendState(plan_search_t *search,
 int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node)
 {
     if (planProblemCheckGoal(search->params.prob, node->state_id)){
-        fprintf(stderr, "[%d] GOAL %d\n",
-                search->ma_comm->node_id,
-                node->state_id);
         search->goal_state = node->state_id;
         if (!search->ma)
             planSearchStatSetFoundSolution(&search->stat);
@@ -470,8 +470,6 @@ int planSearchMARun(plan_search_t *search,
             break;
 
         }else if (res == PLAN_SEARCH_FOUND){
-            fprintf(stderr, "SOL FOUND\n");
-            fflush(stderr);
             if (search->ma_ack_solution){
                 maSolutionVerifyStart(search, search->goal_state);
                 res = PLAN_SEARCH_CONT;
@@ -496,8 +494,6 @@ int planSearchMARun(plan_search_t *search,
                 res = maProcessMsg(search, msg);
 
             }else{
-                fprintf(stderr, "[%d] Timeout.\n",
-                        search->ma_comm->node_id);
                 maTerminate(search);
                 break;
             }
@@ -602,7 +598,6 @@ static void maTerminate(plan_search_t *search)
     if (search->ma_terminated)
         return;
 
-    fprintf(stderr, "[%d] TERMINATE\n", search->ma_comm->node_id);
     if (search->ma_comm->arbiter){
         // If this is arbiter just send TERMINATE signal and wait for ACK
         // from all peers.
@@ -783,24 +778,14 @@ static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
         res = maProcessTracePath(search, msg);
 
     }else if (planMAMsgIsSolution(msg)){
-        fprintf(stderr, "[%d]: SOLUTION %d\n", search->ma_comm->node_id,
-                planMAMsgSolutionToken(msg));
-        res = PLAN_SEARCH_CONT;
         if (search->ma_ack_solution)
             res = maSolutionAckUpdate(search, msg);
 
     }else if (planMAMsgIsSolutionAck(msg)){
-        fprintf(stderr, "[%d]: SOLUTION_ACK\n", search->ma_comm->node_id);
         if (search->ma_ack_solution && search->ma_solution_verify.in_progress)
             res = maSolutionVerifyAck(search, msg);
 
     }else if (planMAMsgIsSolutionMark(msg)){
-        fprintf(stderr, "[%d]: SOLUTION_MARK %d %d\n",
-                search->ma_comm->node_id,
-                planMAMsgSolutionMarkAgent(msg),
-                planMAMsgSolutionMarkToken(msg));
-        res = PLAN_SEARCH_CONT;
-
         if (search->ma_ack_solution){
             if (search->ma_solution_verify.in_progress){
                 res = maSolutionVerifyMark(search, msg, &used);
@@ -883,9 +868,12 @@ static int maUpdateTracePathMsg(plan_search_t *search, plan_ma_msg_t *msg)
                                       search->ma_pub_state_reg,
                                       from_state);
         if (pub_state->agent_id == -1){
-            fprintf(stderr, "Error: Trace-back of the path end up in"
+            fprintf(stderr, "%d %d\n", pub_state->agent_id,
+                    pub_state->cost);
+            fprintf(stderr, "Error[%d]: Trace-back of the path end up in"
                             " non-public state which also isn't the"
-                            " initial state!\n");
+                            " initial state!\n",
+                            search->ma_comm->node_id);
             return -1;
         }
 
@@ -953,9 +941,6 @@ static int maTracePath(plan_search_t *search, plan_state_id_t goal_state)
     plan_ma_msg_t *msg;
     int res;
 
-    fprintf(stderr, "[%d] TRACE PATH\n",
-            search->ma_comm->node_id);
-    fflush(stderr);
     // Construct trace-path message and fake it as it were we received this
     // message and we should process it
     msg = planMAMsgNew();
@@ -966,9 +951,6 @@ static int maTracePath(plan_search_t *search, plan_state_id_t goal_state)
     res = maProcessTracePath(search, msg);
     planMAMsgDel(msg);
 
-    fprintf(stderr, "[%d] TRACE PATH X1\n",
-            search->ma_comm->node_id);
-    fflush(stderr);
     // We have found solution, so exit early
     if (res != PLAN_SEARCH_CONT)
         return res;
@@ -1026,9 +1008,6 @@ static void maSolutionVerifyStart(plan_search_t *search, plan_state_id_t sol_id)
     plan_ma_msg_t *msg;
     const void *statebuf;
 
-    fprintf(stderr, "[%d] SolutionStartVerify %d\n",
-            search->ma_comm->node_id, sol_id);
-
     node = planStateSpaceNode(search->state_space, sol_id);
     statebuf = planStatePoolGetPackedState(search->state_pool, node->state_id);
     if (statebuf == NULL){
@@ -1060,9 +1039,6 @@ static void maSolutionVerifyNext(plan_search_t *search)
     if (ver->in_progress || borFifoEmpty(&ver->waitlist))
         return;
 
-    fprintf(stderr, "[%d] SolutionVerifyNext %d\n",
-            search->ma_comm->node_id, ver->in_progress);
-
     // Pick up next solution from the queue, delete it after it was
     // verified!
     msg = *((plan_ma_msg_t **)borFifoFront(&ver->waitlist));
@@ -1093,8 +1069,6 @@ static void maSolutionVerifyCheckPublicState(plan_search_t *search,
     // If have already received SOLUTION_MARK from the agent we can ignore
     // this public state whatever is there stored
     agent_id = planMAMsgPublicStateAgent(msg);
-    fprintf(stderr, "[%d] SolutionVerifyCheckPublicState, agent_id: %d, mark: %d\n",
-            search->ma_comm->node_id, agent_id, ver->mark[agent_id]);
     if (ver->mark[agent_id])
         return;
 
@@ -1103,8 +1077,6 @@ static void maSolutionVerifyCheckPublicState(plan_search_t *search,
     cost = planMAMsgPublicStateCost(msg);
     heur = planMAMsgPublicStateHeur(msg);
     if (ver->cost > cost + heur){
-        fprintf(stderr, "[%d] SolutionVerifyCheckPublicState invalid, reinster\n",
-                        search->ma_comm->node_id);
         ver->invalid = 1;
         ver->reinsert = 1;
     }
@@ -1114,18 +1086,12 @@ static int maSolutionVerifyAck(plan_search_t *search, const plan_ma_msg_t *msg)
 {
     plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
 
-    fprintf(stderr, "[%d] SolutionVerifyAck, agent_id: %d, ack_remain: %d, mark_remain: %d\n",
-            search->ma_comm->node_id, planMAMsgSolutionAckAgent(msg),
-            ver->ack_remaining, ver->mark_remaining);
     --ver->ack_remaining;
     if (!planMAMsgSolutionAck(msg))
         ver->invalid = 1;
 
-    if (ver->ack_remaining == 0 && ver->mark_remaining == 0){
-        fprintf(stderr, "[%d] SolutionVerifyAck FOUND\n",
-                search->ma_comm->node_id);
+    if (ver->ack_remaining == 0 && ver->mark_remaining == 0)
         return maSolutionVerifyEval(search);
-    }
     return PLAN_SEARCH_CONT;
 }
 
@@ -1136,16 +1102,11 @@ static int maSolutionVerifyMark(plan_search_t *search,
     plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
     int agent_id, token;
 
-    *used = 0;
-    fprintf(stderr, "[%d] SolutionVerifyMark, agent_id: %d\n",
-            search->ma_comm->node_id, planMAMsgSolutionMarkAgent(msg));
     // Check if it is correct token
+    *used = 0;
     token = planMAMsgSolutionMarkToken(msg);
-    if (ver->token != token){
-        fprintf(stderr, "[%d] SolutionVerifyMark -1\n",
-                search->ma_comm->node_id);
+    if (ver->token != token)
         return PLAN_SEARCH_CONT;
-    }
     *used = 1;
 
     agent_id = planMAMsgSolutionMarkAgent(msg);
@@ -1154,9 +1115,6 @@ static int maSolutionVerifyMark(plan_search_t *search,
         --ver->mark_remaining;
     }
 
-    fprintf(stderr, "[%d] SolutionVerifyMark ack_remain: %d, mark_remain: %d\n",
-            search->ma_comm->node_id, ver->ack_remaining,
-            ver->mark_remaining);
     if (ver->ack_remaining == 0 && ver->mark_remaining == 0)
         return maSolutionVerifyEval(search);
     return PLAN_SEARCH_CONT;
@@ -1167,8 +1125,6 @@ static int maSolutionVerifyEval(plan_search_t *search)
     plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
     int res;
 
-    fprintf(stderr, "[%d] SolutionVerifyEval, invalid: %d\n",
-            search->ma_comm->node_id, ver->invalid);
     if (!ver->invalid){
         // The solution was verified!
         if (maTracePath(search, ver->state_id) == PLAN_SEARCH_FOUND){
@@ -1177,13 +1133,13 @@ static int maSolutionVerifyEval(plan_search_t *search)
         }else{
             res = PLAN_SEARCH_NOT_FOUND;
         }
-        fprintf(stderr, "[%d] VERIFY\n", search->ma_comm->node_id);
         maTerminate(search);
 
     }else if (ver->reinsert){
         // The solution failed in this very agent, reinsert the state and
         // continue
         res = PLAN_SEARCH_CONT;
+        fprintf(stderr, "[%d] reinject\n", search->ma_comm->node_id);
         if (maReinjectState(search, ver->state_id) != 0){
             fprintf(stderr, "Error[%d]: Could not reinsert nack'ed solution"
                             " to the open-list. This could\n"
@@ -1192,7 +1148,7 @@ static int maSolutionVerifyEval(plan_search_t *search)
                             "cluster will be shut down right now.\n",
                             search->ma_comm->node_id);
             maTerminate(search);
-            return PLAN_SEARCH_ABORT;
+            res = PLAN_SEARCH_ABORT;
         }
 
     }else{
@@ -1219,9 +1175,6 @@ static void maSolutionAckSendMark(plan_search_t *search,
     planMAMsgSetSolutionMark(msg_out, search->ma_comm->node_id, sol_ack->token);
     planMACommQueueSendToAll(search->ma_comm, msg_out);
     planMAMsgDel(msg_out);
-
-    fprintf(stderr, "[%d] SolutionAckSendMark, token: %d\n",
-            search->ma_comm->node_id, sol_ack->token);
 }
 
 static int maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg)
@@ -1234,15 +1187,11 @@ static int maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg)
         agent_id = planMAMsgSolutionAgent(msg);
         token = planMAMsgSolutionToken(msg);
         solution_msg = planMAMsgSolutionPublicState(msg);
-        fprintf(stderr, "[%d] AckUpdate SOL agent_id: %d, token: %d\n",
-                search->ma_comm->node_id, agent_id, token);
 
     }else{ // msg is SOLUTION_MARK
         agent_id = planMAMsgSolutionMarkAgent(msg);
         token = planMAMsgSolutionMarkToken(msg);
         solution_msg = NULL;
-        fprintf(stderr, "[%d] AckUpdate MARK agent_id: %d, token: %d\n",
-                search->ma_comm->node_id, agent_id, token);
     }
 
     for (i = 0; i < search->ma_solution_ack_size; ++i){
@@ -1254,8 +1203,6 @@ static int maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg)
 
             sol_ack->mark[agent_id] = 1;
             --sol_ack->mark_remaining;
-            fprintf(stderr, "[%d] AckUpdate Found sol-ack: %d\n",
-                    search->ma_comm->node_id, sol_ack->mark_remaining);
 
             if (sol_ack->mark_remaining == 0){
                 // The lower bound was already completely computed
@@ -1281,8 +1228,6 @@ static int maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg)
     sol_ack->mark_remaining = search->ma_comm->pool.node_size - 1;
     sol_ack->mark[agent_id] = 1;
     --sol_ack->mark_remaining;
-    fprintf(stderr, "[%d] AckUpdate Created: %d\n",
-            search->ma_comm->node_id, sol_ack->mark_remaining);
     maSolutionAckSendMark(search, sol_ack);
 
     return res;
@@ -1293,8 +1238,6 @@ static void maSolutionAckDel(plan_search_t *search, int i)
     plan_search_ma_solution_ack_t *sol_ack;
     int ins;
 
-    fprintf(stderr, "[%d] SolutionAckDel, %d\n",
-            search->ma_comm->node_id, i);
     sol_ack = search->ma_solution_ack + i;
     if (sol_ack->solution_msg)
         planMAMsgDel(sol_ack->solution_msg);
@@ -1361,16 +1304,11 @@ static void maSolutionAckCheckPublicState(plan_search_t *search,
     if (search->ma_solution_ack_size == 0)
         return;
 
-    fprintf(stderr, "[%d] SolutionCheckPublicState, from: %d\n",
-            search->ma_comm->node_id, planMAMsgPublicStateAgent(msg));
-
     agent_id = planMAMsgPublicStateAgent(msg);
     cost     = planMAMsgPublicStateCost(msg) + planMAMsgPublicStateHeur(msg);
     for (i = 0; i < search->ma_solution_ack_size; ++i){
         sol_ack = search->ma_solution_ack + i;
         if (!sol_ack->mark[agent_id]){
-            fprintf(stderr, "[%d] SolutionCheckPublicState, update_token: %d\n",
-                    search->ma_comm->node_id, sol_ack->token);
             sol_ack->cost_lower_bound = BOR_MIN(sol_ack->cost_lower_bound, cost);
         }
     }

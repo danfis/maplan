@@ -72,7 +72,7 @@ static void maSolutionVerifyInit(plan_search_t *search,
 static void maSolutionVerifyInit2(plan_search_t *search);
 static void maSolutionVerifyFree(plan_search_ma_solution_verify_t *v);
 /** Starts verification of the specified states as a global solution */
-static void maSolutionStartVerify(plan_search_t *search, plan_state_id_t sol_id);
+static void maSolutionVerifyStart(plan_search_t *search, plan_state_id_t sol_id);
 /** Start verifying next solution if queued */
 static void maSolutionVerifyNext(plan_search_t *search);
 /** Checks whether the public state somehow does not break verification
@@ -444,20 +444,6 @@ int planSearchMARun(plan_search_t *search,
                     && (msg = planMACommQueueRecv(search->ma_comm)) != NULL){
             res = maProcessMsg(search, msg);
         }
-        fprintf(stderr, "[%d] res: %d\n",
-            search->ma_comm->node_id, res);
-        fflush(stderr);
-
-
-        // Process finalized verification of the solution
-        if (res != PLAN_SEARCH_CONT
-                && res != PLAN_SEARCH_ABORT
-                && search->ma_ack_solution
-                && search->ma_solution_verify.in_progress){
-            res = maSolutionVerifyEval(search);
-            fflush(stderr);
-            continue;
-        }
 
         // Again check the status because the message could change it
         if (res != PLAN_SEARCH_CONT)
@@ -485,7 +471,7 @@ int planSearchMARun(plan_search_t *search,
             fprintf(stderr, "SOL FOUND\n");
             fflush(stderr);
             if (search->ma_ack_solution){
-                maSolutionStartVerify(search, search->goal_state);
+                maSolutionVerifyStart(search, search->goal_state);
                 res = PLAN_SEARCH_CONT;
 
             }else{
@@ -506,15 +492,6 @@ int planSearchMARun(plan_search_t *search,
                                                   SEARCH_MA_MAX_BLOCK_TIME);
             if (msg != NULL){
                 res = maProcessMsg(search, msg);
-
-        if (res != PLAN_SEARCH_CONT
-                && res != PLAN_SEARCH_ABORT
-                && search->ma_ack_solution
-                && search->ma_solution_verify.in_progress){
-            res = maSolutionVerifyEval(search);
-            fflush(stderr);
-            continue;
-        }
 
             }else{
                 fprintf(stderr, "[%d] Timeout.\n",
@@ -1028,7 +1005,7 @@ static void maSolutionVerifyFree(plan_search_ma_solution_verify_t *v)
         BOR_FREE(v->mark);
 }
 
-static void maSolutionStartVerify(plan_search_t *search, plan_state_id_t sol_id)
+static void maSolutionVerifyStart(plan_search_t *search, plan_state_id_t sol_id)
 {
     plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
     plan_state_space_node_t *node;
@@ -1133,7 +1110,7 @@ static int maSolutionVerifyAck(plan_search_t *search, const plan_ma_msg_t *msg)
     if (ver->ack_remaining == 0 && ver->mark_remaining == 0){
         fprintf(stderr, "[%d] SolutionVerifyAck FOUND\n",
                 search->ma_comm->node_id);
-        return PLAN_SEARCH_FOUND;
+        return maSolutionVerifyEval(search);
     }
     return PLAN_SEARCH_CONT;
 }
@@ -1167,7 +1144,7 @@ static int maSolutionVerifyMark(plan_search_t *search,
             search->ma_comm->node_id, ver->ack_remaining,
             ver->mark_remaining);
     if (ver->ack_remaining == 0 && ver->mark_remaining == 0)
-        return PLAN_SEARCH_FOUND;
+        return maSolutionVerifyEval(search);
     return PLAN_SEARCH_CONT;
 }
 

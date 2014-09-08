@@ -64,7 +64,7 @@ static void maReadMsgPath(plan_ma_msg_t *msg, plan_path_t *path);
 static int maProcessTracePath(plan_search_t *search, plan_ma_msg_t *msg);
 /** Performs trace-path operation, it is assumed that search has
  *  found the solution. */
-static int maTracePath(plan_search_t *search);
+static int maTracePath(plan_search_t *search, plan_state_id_t goal_state);
 
 /** Initialize and free resources in verification structure. */
 static void maSolutionVerifyInit(plan_search_t *search,
@@ -476,7 +476,7 @@ int planSearchMARun(plan_search_t *search,
 
             }else{
                 // If the solution was found, terminate agent cluster and exit.
-                if (maTracePath(search) == PLAN_SEARCH_FOUND){
+                if (maTracePath(search, search->goal_state) == PLAN_SEARCH_FOUND){
                     planSearchStatSetFoundSolution(&search->stat);
                 }else{
                     res = PLAN_SEARCH_NOT_FOUND;
@@ -934,7 +934,7 @@ static int maProcessTracePath(plan_search_t *search, plan_ma_msg_t *msg)
     return PLAN_SEARCH_ABORT;
 }
 
-static int maTracePath(plan_search_t *search)
+static int maTracePath(plan_search_t *search, plan_state_id_t goal_state)
 {
     plan_ma_msg_t *msg;
     int res;
@@ -946,7 +946,7 @@ static int maTracePath(plan_search_t *search)
     // message and we should process it
     msg = planMAMsgNew();
     planMAMsgSetTracePath(msg, search->ma_comm->node_id);
-    planMAMsgTracePathSetStateId(msg, search->goal_state);
+    planMAMsgTracePathSetStateId(msg, goal_state);
 
     // Process that message as if it were just received
     res = maProcessTracePath(search, msg);
@@ -1156,9 +1156,8 @@ static int maSolutionVerifyEval(plan_search_t *search)
     fprintf(stderr, "[%d] SolutionVerifyEval, invalid: %d\n",
             search->ma_comm->node_id, ver->invalid);
     if (!ver->invalid){
-        search->goal_state = ver->state_id;
         // The solution was verified!
-        if (maTracePath(search) == PLAN_SEARCH_FOUND){
+        if (maTracePath(search, ver->state_id) == PLAN_SEARCH_FOUND){
             planSearchStatSetFoundSolution(&search->stat);
             res = PLAN_SEARCH_FOUND;
         }else{

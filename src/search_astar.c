@@ -204,7 +204,6 @@ static int planSearchAStarInjectState(plan_search_t *_search, plan_state_id_t st
     if (planStateSpaceNodeIsNew(node)
             || node->cost > cost
             || heuristic == 0){
-            //TODO: || (planStateSpaceIsOpen(node) && node->heuristic < heuristic)){
 
         heuristic = BOR_MAX(heuristic, node->heuristic);
         if (node->cost == -1 || node->cost > cost){

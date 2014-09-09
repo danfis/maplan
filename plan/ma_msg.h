@@ -86,6 +86,11 @@ int planMAMsgPublicStateCost(const plan_ma_msg_t *msg);
 int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg);
 
 /**
+ * Returns true if the message is any of TERMINATE* types.
+ */
+int planMAMsgIsTerminateType(const plan_ma_msg_t *msg);
+
+/**
  * Sets message as type TERMINATE
  */
 void planMAMsgSetTerminate(plan_ma_msg_t *msg);
@@ -108,7 +113,7 @@ int planMAMsgIsTerminateRequest(const plan_ma_msg_t *msg);
 /**
  * Returns agent ID from the TERMINATE_REQUEST message.
  */
-int planMAMsgSetTerminateRequestAgent(const plan_ma_msg_t *msg);
+int planMAMsgTerminateRequestAgent(const plan_ma_msg_t *msg);
 
 /**
  * Initializes message as TRACE_PATH

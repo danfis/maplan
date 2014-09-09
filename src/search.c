@@ -33,10 +33,11 @@ static void planSearchApplicableOpsFree(plan_search_t *search);
 _bor_inline void planSearchApplicableOpsFind(plan_search_t *search,
                                              plan_state_id_t state_id);
 
-/** Sends TERMINATE_ACK to the arbiter */
-static void maSendTerminateAck(plan_ma_comm_queue_t *comm);
 /** Performs terminate operation. */
 static void maTerminate(plan_search_t *search);
+/** Wait for the TERMINATE* signals and ignore any other messages.
+ *  This function blocks until this agent isn't terminated. */
+static void maTerminateWait(plan_search_t *search);
 /** Sends public state to peers */
 static int maSendPublicState(plan_search_t *search,
                              const plan_state_space_node_t *node);
@@ -499,6 +500,7 @@ int planSearchMARun(plan_search_t *search,
                 res = maProcessMsg(search, msg);
 
             }else{
+                // TODO: print why are we terminating
                 maTerminate(search);
                 break;
             }
@@ -585,65 +587,60 @@ _bor_inline void planSearchApplicableOpsFind(plan_search_t *search,
     app->state = state_id;
 }
 
-static void maSendTerminateAck(plan_ma_comm_queue_t *comm)
-{
-    plan_ma_msg_t *msg;
-
-    msg = planMAMsgNew();
-    planMAMsgSetTerminateAck(msg);
-    planMACommQueueSendToArbiter(comm, msg);
-    planMAMsgDel(msg);
-}
-
 static void maTerminate(plan_search_t *search)
 {
     plan_ma_msg_t *msg;
-    int count, ack;
 
     if (search->ma_terminated)
         return;
 
-    if (search->ma_comm->arbiter){
-        // If this is arbiter just send TERMINATE signal and wait for ACK
-        // from all peers.
-        // Because the TERMINATE_ACK is sent only as a response to TERMINATE
-        // signal and because TERMINATE signal can send only the single
-        // arbiter from exactly this place it is enough just to count
-        // number of ACKs.
+    // First send termination request in ring of agents and wait until it
+    // comes back (or until TERMINATION signal is received).
+    msg = planMAMsgNew();
+    planMAMsgSetTerminateRequest(msg, search->ma_comm->node_id);
+    planMACommQueueSendInRing(search->ma_comm, msg);
+    planMAMsgDel(msg);
 
-        msg = planMAMsgNew();
-        planMAMsgSetTerminate(msg);
-        planMACommQueueSendToAll(search->ma_comm, msg);
-        planMAMsgDel(msg);
+    maTerminateWait(search);
+}
 
-        count = planMACommQueueNumPeers(search->ma_comm);
-        while (count > 0
-                && (msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
+static void maTerminateWait(plan_search_t *search)
+{
+    plan_ma_msg_t *msg;
+    int agent_id;
 
-            if (planMAMsgIsTerminateAck(msg))
-                --count;
+    while ((msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
+        if (planMAMsgIsTerminate(msg)){
+            // When TERMINATE signal is received, just terminate
             planMAMsgDel(msg);
-        }
-    }else{
-        // If this node is not arbiter send TERMINATE_REQUEST, wait for
-        // TERMINATE signal, ACK it and then termination is finished.
+            break;
 
-        // 1. Send TERMINATE_REQUEST
-        msg = planMAMsgNew();
-        planMAMsgSetTerminateRequest(msg);
-        planMACommQueueSendToArbiter(search->ma_comm, msg);
-        planMAMsgDel(msg);
+        }else if (planMAMsgIsTerminateRequest(msg)){
+            // If the TERMINATE_REQUEST is received it can be either the
+            // original TERMINATE_REQUEST from this agent or it can be
+            // request from some other agent that want to terminate in the
+            // same time.
+            agent_id = planMAMsgTerminateRequestAgent(msg);
+            if (agent_id == search->ma_comm->node_id){
+                // If our terminate-request circled in the whole ring and
+                // came back, we can safely send TERMINATE signal to all
+                // other agents and terminate.
+                planMAMsgDel(msg);
+                msg = planMAMsgNew();
+                planMAMsgSetTerminate(msg);
+                planMACommQueueSendToAll(search->ma_comm, msg);
+                planMAMsgDel(msg);
+                break;
 
-        // 2. Wait for TERMINATE
-        ack = 0;
-        while (!ack && (msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
-            if (planMAMsgIsTerminate(msg)){
-                // 3. Send TERMINATE_ACK
-                maSendTerminateAck(search->ma_comm);
-                ack = 1;
+            }else{
+                // The request is from some other agent, just is send it to
+                // the next agent in ring
+                planMACommQueueSendInRing(search->ma_comm, msg);
             }
-            planMAMsgDel(msg);
         }
+        // All other messages are ignored!
+
+        planMAMsgDel(msg);
     }
 
     search->ma_terminated = 1;
@@ -762,26 +759,17 @@ static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
         if (search->heur)
             planHeurMARequest(search->heur, search->ma_comm, msg);
 
-    }else if (planMAMsgIsTerminateType(msg)){
-        if (search->ma_comm->arbiter){
-            // The arbiter should ignore all signals except
-            // TERMINATE_REQUEST because TERMINATE is allowed to send
-            // only arbiter itself and TERMINATE_ACK should be received
-            // in terminate() method.
-            if (planMAMsgIsTerminateRequest(msg)){
-                maTerminate(search);
-                res = PLAN_SEARCH_ABORT;
-            }
+    }else if (planMAMsgIsTerminate(msg)){
+        // Abort on any terminate signal
+        res = PLAN_SEARCH_ABORT;
 
-        }else{
-            // The non-arbiter node should accept only TERMINATE
-            // signal and send ACK to him.
-            if (planMAMsgIsTerminate(msg)){
-                maSendTerminateAck(search->ma_comm);
-                search->ma_terminated = 1;
-                res = PLAN_SEARCH_ABORT;
-            }
-        }
+    }else if (planMAMsgIsTerminateRequest(msg)){
+        // If we have received terminate-request it means some agent want
+        // to terminate. So send the request to the next agent in ring and
+        // wait for TERMINATE signal.
+        planMACommQueueSendInRing(search->ma_comm, msg);
+        maTerminateWait(search);
+        res = PLAN_SEARCH_ABORT;
 
     }else if (planMAMsgIsTracePath(msg)){
         res = maProcessTracePath(search, msg);

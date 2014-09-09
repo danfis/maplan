@@ -66,13 +66,16 @@ message PlanMAMsgSolutionMark {
     required int32 token = 2;
 }
 
+message PlanMAMsgTerminateRequest {
+    required int32 agent_id = 1;
+}
+
 message PlanMAMsg {
     enum Type {
         TRACE_PATH = 0x002;
 
         TERMINATE         = 0x100;
         TERMINATE_REQUEST = 0x101;
-        TERMINATE_ACK     = 0x102;
 
         SEARCH_PUBLIC_STATE = 0x201;
 
@@ -93,4 +96,5 @@ message PlanMAMsg {
     optional PlanMAMsgSolution solution = 6;
     optional PlanMAMsgSolutionAck solution_ack = 7;
     optional PlanMAMsgSolutionMark solution_mark = 8;
+    optional PlanMAMsgTerminateRequest terminate_request = 9;
 }

@@ -32,7 +32,6 @@ struct _plan_ma_comm_queue_pool_t {
 struct _plan_ma_comm_queue_t {
     plan_ma_comm_queue_pool_t pool; /*!< Corresponding pool */
     int node_id;                    /*!< ID of the current node */
-    int arbiter;                    /*!< True if this node is arbiter */
 };
 
 
@@ -61,18 +60,18 @@ int planMACommQueueSendToAll(plan_ma_comm_queue_t *comm,
                              const plan_ma_msg_t *msg);
 
 /**
- * Sends the message to an arbiter.
- * Returns 0 on success.
- */
-int planMACommQueueSendToArbiter(plan_ma_comm_queue_t *comm,
-                                 const plan_ma_msg_t *msg);
-
-/**
  * Sends the message to the specified node.
  * Returns 0 on success.
  */
 int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
                               int node_id,
+                              const plan_ma_msg_t *msg);
+
+/**
+ * Sends the message to the next node in ring.
+ * Returns 0 on success.
+ */
+int planMACommQueueSendInRing(plan_ma_comm_queue_t *comm,
                               const plan_ma_msg_t *msg);
 
 /**

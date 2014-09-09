@@ -153,10 +153,12 @@ int planMAMsgIsTerminate(const plan_ma_msg_t *_msg)
     return msg->type() == PlanMAMsg::TERMINATE;
 }
 
-void planMAMsgSetTerminateRequest(plan_ma_msg_t *_msg)
+void planMAMsgSetTerminateRequest(plan_ma_msg_t *_msg, int agent_id)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgTerminateRequest *req = msg->mutable_terminate_request();
     msg->set_type(PlanMAMsg::TERMINATE_REQUEST);
+    req->set_agent_id(agent_id);
 }
 
 int planMAMsgIsTerminateRequest(const plan_ma_msg_t *_msg)
@@ -165,26 +167,10 @@ int planMAMsgIsTerminateRequest(const plan_ma_msg_t *_msg)
     return msg->type() == PlanMAMsg::TERMINATE_REQUEST;
 }
 
-void planMAMsgSetTerminateAck(plan_ma_msg_t *_msg)
-{
-    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
-    msg->set_type(PlanMAMsg::TERMINATE_ACK);
-}
-
-int planMAMsgIsTerminateAck(const plan_ma_msg_t *_msg)
+int planMAMsgSetTerminateRequestAgent(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    return msg->type() == PlanMAMsg::TERMINATE_ACK;
-}
-
-int planMAMsgIsTerminateType(const plan_ma_msg_t *_msg)
-{
-    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    unsigned type = msg->type();
-
-    if ((type & 0x100u) == 0x100u)
-        return 1;
-    return 0;
+    return msg->terminate_request().agent_id();
 }
 
 void planMAMsgSetTracePath(plan_ma_msg_t *_msg, int origin_agent_id)

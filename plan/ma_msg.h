@@ -98,7 +98,7 @@ int planMAMsgIsTerminate(const plan_ma_msg_t *msg);
 /**
  * Sets message as TERMINATE_REQUEST
  */
-void planMAMsgSetTerminateRequest(plan_ma_msg_t *msg);
+void planMAMsgSetTerminateRequest(plan_ma_msg_t *msg, int agent_id);
 
 /**
  * Returns if the message is of type TERMINATE_REQUEST
@@ -106,19 +106,9 @@ void planMAMsgSetTerminateRequest(plan_ma_msg_t *msg);
 int planMAMsgIsTerminateRequest(const plan_ma_msg_t *msg);
 
 /**
- * Sets message as TERMINATE_ACK
+ * Returns agent ID from the TERMINATE_REQUEST message.
  */
-void planMAMsgSetTerminateAck(plan_ma_msg_t *msg);
-
-/**
- * Returns if the message is of type TERMINATE_ACK
- */
-int planMAMsgIsTerminateAck(const plan_ma_msg_t *msg);
-
-/**
- * Returns true if the message one of TERMINATE_* type.
- */
-int planMAMsgIsTerminateType(const plan_ma_msg_t *msg);
+int planMAMsgSetTerminateRequestAgent(const plan_ma_msg_t *msg);
 
 /**
  * Initializes message as TRACE_PATH

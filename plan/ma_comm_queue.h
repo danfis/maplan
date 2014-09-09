@@ -76,6 +76,13 @@ int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
                               const plan_ma_msg_t *msg);
 
 /**
+ * Sends the message to the next node in ring.
+ * Returns 0 on success.
+ */
+int planMACommQueueSendInRing(plan_ma_comm_queue_t *comm,
+                              const plan_ma_msg_t *msg);
+
+/**
  * Receives a next message in non-blocking mode.
  * It is caller's responsibility to destroy the returned message.
  */

@@ -138,6 +138,14 @@ int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
     return 0;
 }
 
+int planMACommQueueSendInRing(plan_ma_comm_queue_t *comm,
+                              const plan_ma_msg_t *msg)
+{
+    int next_node_id;
+    next_node_id = (comm->node_id + 1) % comm->pool.node_size;
+    return planMACommQueueSendToNode(comm, next_node_id, msg);
+}
+
 plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_queue_t *comm)
 {
     return recv(comm, 0, NULL);

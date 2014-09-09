@@ -1408,16 +1408,21 @@ static int maSolutionAckSendResponse(plan_search_t *search,
     planMAMsgDel(msg);
 
     if (ack == 0){
-        // Because this agent cannot ACK this solution, the solution is
-        // inserted here and verified later when it pops from the
-        // open-list, or a better solution is found and thus that solution
-        // is verified.
         fprintf(stderr, "[%d] INJECT PUBLIC STATE %d, %d, cost: %d\n",
                 search->ma_comm->node_id,
                 planMAMsgPublicStateStateId(sol_ack->solution_msg),
                 planMAMsgPublicStateAgent(sol_ack->solution_msg),
                 planMAMsgPublicStateCost(sol_ack->solution_msg));
 
+        // Check whether we should even bother with this solution, if we
+        // have already seen better solution just ignore this solution.
+        if (cost > search->best_goal_cost)
+            return 0;
+
+        // Because this agent cannot ACK this solution, the solution is
+        // inserted here and verified later when it pops from the
+        // open-list, or a better solution is found and thus that solution
+        // is verified.
         if (maInjectPublicState(search, sol_ack->solution_msg) != 0){
             fprintf(stderr, "Error[%d]: Could not insert nack'ed solution"
                             " to the open-list. This could\n"

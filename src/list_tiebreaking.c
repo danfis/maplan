@@ -42,6 +42,9 @@ static void planListTieBreakingPush(plan_list_t *list,
 static int planListTieBreakingPop(plan_list_t *list,
                                   plan_state_id_t *state_id,
                                   plan_cost_t *cost);
+static int planListTieBreakingTop(plan_list_t *list,
+                                  plan_state_id_t *state_id,
+                                  plan_cost_t *cost);
 static void planListTieBreakingClear(plan_list_t *list);
 
 
@@ -70,6 +73,7 @@ plan_list_t *planListTieBreaking(int num_costs)
                   planListTieBreakingDel,
                   planListTieBreakingPush,
                   planListTieBreakingPop,
+                  planListTieBreakingTop,
                   planListTieBreakingClear);
     list->size = num_costs;
     list->pre_keynode = keynodeNew(list->size);
@@ -142,6 +146,27 @@ static int planListTieBreakingPop(plan_list_t *_list,
         keynodeDel(kn);
     }
 
+    return 0;
+}
+
+static int planListTieBreakingTop(plan_list_t *_list,
+                                  plan_state_id_t *state_id,
+                                  plan_cost_t *cost)
+{
+    plan_list_tiebreaking_t *list = LIST_FROM_PARENT(_list);
+    keynode_t *kn;
+    node_t *n;
+
+    if (list->root == NULL)
+        return -1;
+
+    // Find out minimal node
+    kn = borSplayMin(list);
+
+    // Get the next node from the key-node.
+    n = borFifoFront(&kn->fifo);
+    *state_id = n->state_id;
+    memcpy(cost, KEYNODE_COST(kn), sizeof(plan_cost_t) * list->size);
     return 0;
 }
 

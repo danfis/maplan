@@ -48,18 +48,40 @@ message PlanMAMsgTracePath {
     required bool done = 4;
 }
 
+message PlanMAMsgSolution {
+    // Public state the is a solution
+    required PlanMAMsgPublicState state = 1;
+    // Unique token associated with the solution
+    required int32 token = 2;
+}
+
+message PlanMAMsgSolutionAck {
+    required int32 agent_id = 1;
+    required bool ack = 2;
+    required int32 token = 3;
+}
+
+message PlanMAMsgSolutionMark {
+    required int32 agent_id = 1;
+    required int32 token = 2;
+}
+
 message PlanMAMsg {
     enum Type {
+        TRACE_PATH = 0x002;
+
         TERMINATE         = 0x100;
         TERMINATE_REQUEST = 0x101;
         TERMINATE_ACK     = 0x102;
 
         SEARCH_PUBLIC_STATE = 0x201;
 
-        TRACE_PATH        = 0x002;
-
         HEUR_REQUEST  = 0x301;
         HEUR_RESPONSE = 0x302;
+
+        SOLUTION      = 0x401;
+        SOLUTION_ACK  = 0x402;
+        SOLUTION_MARK = 0x403;
     }
 
     required Type type = 1;
@@ -68,4 +90,7 @@ message PlanMAMsg {
     optional PlanMAMsgTracePath trace_path = 3;
     optional PlanMAMsgHeurRequest heur_request = 4;
     optional PlanMAMsgHeurResponse heur_response = 5;
+    optional PlanMAMsgSolution solution = 6;
+    optional PlanMAMsgSolutionAck solution_ack = 7;
+    optional PlanMAMsgSolutionMark solution_mark = 8;
 }

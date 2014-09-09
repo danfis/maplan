@@ -112,6 +112,8 @@ struct _plan_search_params_t {
     void *progress_data;
 
     plan_problem_t *prob; /*!< Problem definition */
+    int ma_ack_solution; /*!< Set to true if you want ack'ed solutions in
+                              multi-agent mode. */
 };
 typedef struct _plan_search_params_t plan_search_params_t;
 
@@ -286,6 +288,12 @@ typedef int (*plan_search_inject_state_fn)(plan_search_t *search,
                                            plan_cost_t cost,
                                            plan_cost_t heuristic);
 
+/**
+ * Returns the lowest cost which is currently available among all open
+ * nodes.
+ */
+typedef plan_cost_t (*plan_search_lowest_cost_fn)(plan_search_t *search);
+
 struct _plan_search_applicable_ops_t {
     plan_op_t **op;        /*!< Array of applicable operators. This array
                                 must be big enough to hold all operators. */
@@ -298,6 +306,36 @@ struct _plan_search_applicable_ops_t {
 };
 typedef struct _plan_search_applicable_ops_t plan_search_applicable_ops_t;
 
+struct _plan_search_ma_solution_verify_t {
+    bor_fifo_t waitlist; /*!< Solution messages waiting for verification */
+    int in_progress;     /*!< True if we are in the middle of erification
+                              of a solution */
+    plan_cost_t cost;    /*!< Cost of the solution */
+    int state_id;        /*!< State ID of the currently verified solution */
+    int token;           /*!< Token associated with the solution */
+    int *mark;           /*!< Array of bool flags signaling the from the
+                              SOLUTION_MARK message was received from the
+                              corresponding agent. */
+    int mark_size;
+    int mark_remaining;  /*!< Number of peers for which SOLUTION_MARK was
+                              not received yet */
+    int ack_remaining;   /*!< Number of acks remaining */
+
+    int invalid;         /*!< True if the verification failed */
+    int reinsert;        /*!< True if the solution should be re-inserted */
+};
+typedef struct _plan_search_ma_solution_verify_t
+    plan_search_ma_solution_verify_t;
+
+struct _plan_search_ma_solution_ack_t {
+    plan_ma_msg_t *solution_msg;
+    plan_cost_t cost_lower_bound;
+    int token;
+    int *mark;
+    int mark_remaining;
+};
+typedef struct _plan_search_ma_solution_ack_t plan_search_ma_solution_ack_t;
+
 /**
  * Common base struct for all search algorithms.
  */
@@ -309,6 +347,7 @@ struct _plan_search_t {
     plan_search_init_fn init_fn;
     plan_search_step_fn step_fn;
     plan_search_inject_state_fn inject_state_fn;
+    plan_search_lowest_cost_fn lowest_cost_fn;
 
     plan_search_params_t params;
     plan_search_stat_t stat;
@@ -317,6 +356,7 @@ struct _plan_search_t {
     plan_state_space_t *state_space;
     plan_state_t *state;             /*!< Preallocated state */
     plan_state_id_t goal_state;      /*!< The found state satisfying the goal */
+    plan_cost_t best_goal_cost;
 
     plan_search_applicable_ops_t applicable_ops;
 
@@ -326,6 +366,13 @@ struct _plan_search_t {
                                         received public state with state-id. */
     int ma_terminated;             /*!< True if already terminated */
     plan_path_t *ma_path;          /*!< Output path for multi-agent mode */
+    int ma_ack_solution;           /*!< True if solution should be ack'ed */
+
+    /** Struct for verification of solutions */
+    plan_search_ma_solution_verify_t ma_solution_verify;
+    /** Solutions waiting for ACK */
+    plan_search_ma_solution_ack_t *ma_solution_ack;
+    int ma_solution_ack_size;
 };
 
 
@@ -338,7 +385,8 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_del_fn del_fn,
                      plan_search_init_fn init_fn,
                      plan_search_step_fn step_fn,
-                     plan_search_inject_state_fn inject_state_fn);
+                     plan_search_inject_state_fn inject_state_fn,
+                     plan_search_lowest_cost_fn lowest_cost_fn);
 
 /**
  * Frees allocated resources.
@@ -409,6 +457,12 @@ plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
                                                   plan_cost_t heur);
 
 /**
+ * Checks whether the node is public and if so, sends it to other agents.
+ */
+void _planSearchMASendState(plan_search_t *search,
+                            plan_state_space_node_t *node);
+
+/**
  * Updates part of statistics.
  */
 void _planUpdateStat(plan_search_stat_t *stat,
@@ -419,7 +473,7 @@ void _planUpdateStat(plan_search_stat_t *stat,
  * Also the goal state is recorded in stats and the goal state is
  * remembered.
  */
-int _planSearchCheckGoal(plan_search_t *search, plan_state_id_t state_id);
+int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node);
 
 /**** INLINES ****/
 _bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)

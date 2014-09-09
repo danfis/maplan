@@ -8,6 +8,7 @@ struct _plan_search_astar_t {
 
     plan_list_t *list; /*!< Open-list */
     int pathmax;       /*!< Use pathmax correction */
+    plan_cost_t best_solution_cost;
 };
 typedef struct _plan_search_astar_t plan_search_astar_t;
 
@@ -25,6 +26,8 @@ static int planSearchAStarInjectState(plan_search_t *_search,
                                       plan_state_id_t state_id,
                                       plan_cost_t cost,
                                       plan_cost_t heuristic);
+/** Returns lowest cost in open-list */
+static plan_cost_t planSearchAStarLowestCost(plan_search_t *search);
 
 
 void planSearchAStarParamsInit(plan_search_astar_params_t *p)
@@ -43,10 +46,12 @@ plan_search_t *planSearchAStarNew(const plan_search_astar_params_t *params)
                     planSearchAStarDel,
                     planSearchAStarInit,
                     planSearchAStarStep,
-                    planSearchAStarInjectState);
+                    planSearchAStarInjectState,
+                    planSearchAStarLowestCost);
 
     search->list     = planListTieBreaking(2);
     search->pathmax  = params->pathmax;
+    search->best_solution_cost = PLAN_COST_MAX;
 
     return &search->search;
 }
@@ -151,12 +156,17 @@ static int planSearchAStarStep(plan_search_t *_search)
     planStateSpaceClose(search->search.state_space, cur_node);
 
     // Check whether it is a goal
-    if (_planSearchCheckGoal(&search->search, cur_state))
+    if (_planSearchCheckGoal(&search->search, cur_node)){
+        search->best_solution_cost = cur_node->cost;
         return PLAN_SEARCH_FOUND;
+    }
 
     // Find all applicable operators
     _planSearchFindApplicableOps(&search->search, cur_state);
     planSearchStatIncExpandedStates(&search->search.stat);
+
+    // Useful only in MA node
+    _planSearchMASendState(&search->search, cur_node);
 
     // Add states created by applicable operators
     op      = search->search.applicable_ops.op;
@@ -191,10 +201,31 @@ static int planSearchAStarInjectState(plan_search_t *_search, plan_state_id_t st
     plan_state_space_node_t *node;
 
     node = planStateSpaceNode(search->search.state_space, state_id);
-    if (planStateSpaceNodeIsNew(node) || node->cost > cost){
-        astarInsertState(search, state_id, node, 0, NULL, cost, 0);
+    if (planStateSpaceNodeIsNew(node)
+            || node->cost > cost
+            || heuristic == 0){
+
+        heuristic = BOR_MAX(heuristic, node->heuristic);
+        if (node->cost == -1 || node->cost > cost){
+            astarInsertState(search, state_id, node, 0, NULL, cost, heuristic);
+        }else{
+            astarInsertState(search, state_id, node, node->parent_state_id,
+                             node->op, node->cost, node->heuristic);
+        }
+
         return 0;
     }
 
     return -1;
+}
+
+static plan_cost_t planSearchAStarLowestCost(plan_search_t *_search)
+{
+    plan_search_astar_t *search = SEARCH_FROM_PARENT(_search);
+    plan_state_id_t state_id;
+    plan_cost_t cost[2];
+
+    if (planListTop(search->list, &state_id, cost) != 0)
+        return PLAN_COST_MAX;
+    return cost[0];
 }

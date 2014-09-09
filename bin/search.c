@@ -212,6 +212,8 @@ static plan_search_t *searchCreate(const char *search_name,
         astar_params.search.heur = heurCreate(heur_name, prob,
                                               op, op_size, succ_gen);
         astar_params.search.heur_del = 1;
+        // TODO: Make this an option:
+        astar_params.search.ma_ack_solution = 1;
         astar_params.pathmax = use_pathmax;
         params = &astar_params.search;
 

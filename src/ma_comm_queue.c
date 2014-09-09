@@ -57,13 +57,21 @@ plan_ma_comm_queue_pool_t *planMACommQueuePoolNew(int num_nodes)
 
 void planMACommQueuePoolDel(plan_ma_comm_queue_pool_t *pool)
 {
+    msg_buf_t *buf;
+    plan_ma_comm_queue_node_t *node;
     int i;
 
     for (i = 0; i < pool->node_size; ++i){
-        borFifoFree(&pool->node[i].fifo);
-        pthread_mutex_destroy(&pool->node[i].lock);
-        sem_destroy(&pool->node[i].full);
-        sem_destroy(&pool->node[i].empty);
+        node = pool->node + i;
+
+        while (!borFifoEmpty(&node->fifo)){
+            buf = borFifoFront(&node->fifo);
+            BOR_FREE(buf->buf);
+            borFifoPop(&node->fifo);
+        }
+        pthread_mutex_destroy(&node->lock);
+        sem_destroy(&node->full);
+        sem_destroy(&node->empty);
     }
 
     BOR_FREE(pool->node);

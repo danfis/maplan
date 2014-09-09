@@ -48,9 +48,7 @@ plan_ma_comm_queue_pool_t *planMACommQueuePoolNew(int num_nodes)
     for (i = 0; i < pool->node_size; ++i){
         pool->queue[i].pool    = *pool;
         pool->queue[i].node_id = i;
-        pool->queue[i].arbiter = 0;
     }
-    pool->queue[0].arbiter = 1;
 
     return pool;
 }
@@ -99,15 +97,6 @@ int planMACommQueueSendToAll(plan_ma_comm_queue_t *comm,
     }
 
     return 0;
-}
-
-int planMACommQueueSendToArbiter(plan_ma_comm_queue_t *comm,
-                                 const plan_ma_msg_t *msg)
-{
-    if (comm->node_id == 0)
-        return -1;
-
-    return planMACommQueueSendToNode(comm, 0, msg);
 }
 
 int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,

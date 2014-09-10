@@ -561,7 +561,6 @@ static void crossReferenceInit(oparr_t **dst, int fact_size,
     *dst = BOR_CALLOC_ARR(oparr_t, fact_size);
     fact = *dst;
 
-    cur = src;
     end = src + op_size;
     for (cur = src, opi = 0; cur < end; ++cur, ++opi){
         if (test && test[opi].size == 0)

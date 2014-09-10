@@ -21,11 +21,13 @@ DEBUG = yes
 SO_VERSION = 0
 
 CFLAGS += -I. -I../boruvka/
+CFLAGS += $(ZMQ_CFLAGS)
 CXXFLAGS += -I. -I../boruvka/
 CXXFLAGS += $(PROTOBUF_CFLAGS)
 CXXFLAGS += -Wno-long-long
 LDFLAGS += -L. -lplan -L../boruvka -lboruvka -lm -lrt
 LDFLAGS += $(PROTOBUF_LDFLAGS)
+LDFLAGS += $(ZMQ_LDFLAGS)
 
 TARGETS  = libplan.a
 
@@ -57,7 +59,9 @@ OBJS += heur_lm_cut
 OBJS += prioqueue
 OBJS += ma_comm
 OBJS += ma_comm_queue
-OBJS += ma_comm_net
+ifeq '$(USE_ZMQ)' 'yes'
+  OBJS += ma_comm_net
+endif
 OBJS += ma
 OBJS += causalgraph
 
@@ -179,7 +183,7 @@ help:
 	@echo "    NOWALL     'yes'/'no' - Turns off -Wall gcc option     (=$(NOWALL))"
 	@echo "    NOPEDANTIC 'yes'/'no' - Turns off -pedantic gcc option (=$(NOPEDANTIC))"
 	@echo ""
-	@echo "    USE_MEMCHECK 'yes'/'no'  - Use memory checking during allocation (=$(USE_MEMCHECK))"
+	@echo "    USE_ZMQ  'yes'/'no'  - Use libzmq library (=$(USE_ZMQ))"
 	@echo ""
 	@echo "    PREFIX     - Prefix where library will be installed                             (=$(PREFIX))"
 	@echo "    INCLUDEDIR - Directory where header files will be installed (PREFIX/INCLUDEDIR) (=$(INCLUDEDIR))"
@@ -195,6 +199,8 @@ help:
 	@echo "    CONFIG_FLAGS      = $(CONFIG_FLAGS)"
 	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
+	@echo "    ZMQ_CFLAGS        = $(ZMQ_CFLAGS)"
+	@echo "    ZMQ_LDFLAGS       = $(ZMQ_LDFLAGS)"
 	@echo "    PYTHON_CFLAGS     = $(PYTHON_CFLAGS)"
 	@echo "    PYTHON_LDFLAGS    = $(PYTHON_LDFLAGS)"
 

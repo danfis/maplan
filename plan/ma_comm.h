@@ -2,6 +2,7 @@
 #define __PLAN_MA_COMM_H__
 
 #include <boruvka/compiler.h>
+#include <plan/config.h>
 #include <plan/ma_msg.h>
 
 #ifdef __cplusplus
@@ -13,6 +14,7 @@ extern "C" {
 typedef struct _plan_ma_comm_t plan_ma_comm_t;
 
 
+#ifdef PLAN_ZMQ
 struct _plan_ma_comm_net_conf_t {
     int node_id;   /*!< Id of the current node */
     char **addr;   /*!< TCP address of all nodes in cluster */
@@ -42,6 +44,7 @@ int planMACommNetConfAddNode(plan_ma_comm_net_conf_t *cfg,
  * Creates a communication channel based on network connection (TCP).
  */
 plan_ma_comm_t *planMACommNetNew(const plan_ma_comm_net_conf_t *cfg);
+#endif /* PLAN_ZMQ */
 
 
 /**

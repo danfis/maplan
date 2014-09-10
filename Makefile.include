@@ -85,10 +85,20 @@ LDFLAGS += -pthread
 LDFLAGS += $(SYSTEM_LDFLAGS)
 
 
+USE_ZMQ ?= auto
+
+ifeq '$(USE_ZMQ)' 'auto'
+  USE_ZMQ = $(shell if pkg-config --exists libzmq; then echo "yes"; else echo "no"; fi;)
+endif
+
+ifeq '$(USE_ZMQ)' 'yes'
+  ZMQ_CFLAGS ?= $(shell pkg-config --cflags libzmq)
+  ZMQ_LDFLAGS ?= $(shell pkg-config --libs libzmq)
+  CONFIG_FLAGS += -DUSE_ZMQ
+endif
+
 PROTOBUF_CFLAGS ?= $(shell pkg-config --cflags protobuf)
 PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs protobuf)
-PYTHON_CFLAGS  ?= $(shell $(PYTHON_CONFIG) --includes)
-PYTHON_LDFLAGS ?= $(shell $(PYTHON_CONFIG) --libs)
 
 
 PREFIX     ?= /usr/local

@@ -1,5 +1,5 @@
-#ifndef __PLAN_MA_COMM_H__
-#define __PLAN_MA_COMM_H__
+#ifndef __PLAN_MA_MSG_H__
+#define __PLAN_MA_MSG_H__
 
 #include <stdlib.h>
 
@@ -339,4 +339,4 @@ int planMAMsgSolutionMarkToken(const plan_ma_msg_t *msg);
 } /* extern "C" */
 #endif /* __cplusplus */
 
-#endif /* __PLAN_MA_COMM_H__ */
+#endif /* __PLAN_MA_MSG_H__ */

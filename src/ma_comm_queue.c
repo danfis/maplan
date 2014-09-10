@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <boruvka/alloc.h>
 
-#include "plan/ma_comm_queue.h"
+#include "plan/ma_comm.h"
 
 struct _msg_buf_t {
     uint8_t *buf;
@@ -10,9 +10,25 @@ struct _msg_buf_t {
 };
 typedef struct _msg_buf_t msg_buf_t;
 
+struct _plan_ma_comm_queue_t {
+    plan_ma_comm_t comm;
+    plan_ma_comm_queue_pool_t pool; /*!< Corresponding pool */
+};
+
+#define COMM_FROM_PARENT(parent) \
+    bor_container_of((parent), plan_ma_comm_queue_t, comm)
+
 /** Recieve message in blocking or non-blocking mode */
 static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block,
                            const struct timespec *timeout);
+
+static int planMACommQueueSendToNode(plan_ma_comm_t *comm,
+                                     int node_id,
+                                     const plan_ma_msg_t *msg);
+static plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_t *comm);
+static plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_t *comm);
+static plan_ma_msg_t *planMACommQueueRecvBlockTimeout(plan_ma_comm_t *comm,
+                                                      int timeout_in_ms);
 
 plan_ma_comm_queue_pool_t *planMACommQueuePoolNew(int num_nodes)
 {
@@ -46,8 +62,14 @@ plan_ma_comm_queue_pool_t *planMACommQueuePoolNew(int num_nodes)
 
     pool->queue = BOR_ALLOC_ARR(plan_ma_comm_queue_t, pool->node_size);
     for (i = 0; i < pool->node_size; ++i){
-        pool->queue[i].pool    = *pool;
-        pool->queue[i].node_id = i;
+        _planMACommInit(&pool->queue[i].comm,
+                        i, pool->node_size,
+                        NULL,
+                        planMACommQueueSendToNode,
+                        planMACommQueueRecv,
+                        planMACommQueueRecvBlock,
+                        planMACommQueueRecvBlockTimeout);
+        pool->queue[i].pool = *pool;
     }
 
     return pool;
@@ -70,6 +92,8 @@ void planMACommQueuePoolDel(plan_ma_comm_queue_pool_t *pool)
         pthread_mutex_destroy(&node->lock);
         sem_destroy(&node->full);
         sem_destroy(&node->empty);
+
+        _planMACommFree(&pool->queue[i].comm);
     }
 
     BOR_FREE(pool->node);
@@ -77,40 +101,21 @@ void planMACommQueuePoolDel(plan_ma_comm_queue_pool_t *pool)
     BOR_FREE(pool);
 }
 
-plan_ma_comm_queue_t *planMACommQueue(plan_ma_comm_queue_pool_t *pool,
-                                      int node_id)
+plan_ma_comm_t *planMACommQueue(plan_ma_comm_queue_pool_t *pool,
+                                int node_id)
 {
-    return &pool->queue[node_id];
+    return &pool->queue[node_id].comm;
 }
 
-int planMACommQueueSendToAll(plan_ma_comm_queue_t *comm,
-                             const plan_ma_msg_t *msg)
+static int planMACommQueueSendToNode(plan_ma_comm_t *_comm,
+                                     int node_id,
+                                     const plan_ma_msg_t *msg)
 {
-    int i;
-
-    for (i = 0; i < comm->pool.node_size; ++i){
-        if (i == comm->node_id)
-            continue;
-
-        if (planMACommQueueSendToNode(comm, i, msg) != 0)
-            return -1;
-    }
-
-    return 0;
-}
-
-int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
-                              int node_id,
-                              const plan_ma_msg_t *msg)
-{
+    plan_ma_comm_queue_t *comm = COMM_FROM_PARENT(_comm);
     msg_buf_t buf;
     plan_ma_comm_queue_node_t *node;
 
-    if (node_id == comm->node_id)
-        return -1;
-
     buf.buf = planMAMsgPacked(msg, &buf.size);
-
     node = comm->pool.node + node_id;
 
     // reserve item in queue
@@ -127,27 +132,23 @@ int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
     return 0;
 }
 
-int planMACommQueueSendInRing(plan_ma_comm_queue_t *comm,
-                              const plan_ma_msg_t *msg)
-{
-    int next_node_id;
-    next_node_id = (comm->node_id + 1) % comm->pool.node_size;
-    return planMACommQueueSendToNode(comm, next_node_id, msg);
-}
 
-plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_queue_t *comm)
+static plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_t *_comm)
 {
+    plan_ma_comm_queue_t *comm = COMM_FROM_PARENT(_comm);
     return recv(comm, 0, NULL);
 }
 
-plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_queue_t *comm)
+static plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_t *_comm)
 {
+    plan_ma_comm_queue_t *comm = COMM_FROM_PARENT(_comm);
     return recv(comm, 1, NULL);
 }
 
-plan_ma_msg_t *planMACommQueueRecvBlockTimeout(plan_ma_comm_queue_t *comm,
-                                               int timeout_in_ms)
+static plan_ma_msg_t *planMACommQueueRecvBlockTimeout(plan_ma_comm_t *_comm,
+                                                      int timeout_in_ms)
 {
+    plan_ma_comm_queue_t *comm = COMM_FROM_PARENT(_comm);
     struct timespec tm;
     int sec;
     long nsec;
@@ -165,11 +166,10 @@ plan_ma_msg_t *planMACommQueueRecvBlockTimeout(plan_ma_comm_queue_t *comm,
     return recv(comm, 1, &tm);
 }
 
-#include <errno.h>
 static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block,
                            const struct timespec *timeout)
 {
-    plan_ma_comm_queue_node_t *node = comm->pool.node + comm->node_id;
+    plan_ma_comm_queue_node_t *node = comm->pool.node + comm->comm.node_id;
     msg_buf_t *buf;
     uint8_t *packed;
     size_t size;

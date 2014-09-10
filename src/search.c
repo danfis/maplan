@@ -215,7 +215,7 @@ static int maHeur(plan_search_t *search, plan_heur_res_t *res)
 
     // Wait for update messages
     while (ma_res != 0
-            && (msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
+            && (msg = planMACommRecvBlock(search->ma_comm)) != NULL){
 
         if (planMAMsgIsHeurResponse(msg)){
             ma_res = planHeurMAUpdate(search->heur, search->ma_comm, msg, res);
@@ -435,6 +435,8 @@ int planSearchMARun(plan_search_t *search,
 
     search->ma = 1;
     search->ma_comm = ma_params->comm;
+    search->ma_comm_node_id = planMACommId(search->ma_comm);
+    search->ma_comm_node_size = planMACommSize(search->ma_comm);
     search->ma_terminated = 0;
     search->ma_path = path;
 
@@ -449,7 +451,7 @@ int planSearchMARun(plan_search_t *search,
 
         // Process all pending messages
         while (res == PLAN_SEARCH_CONT
-                    && (msg = planMACommQueueRecv(search->ma_comm)) != NULL){
+                    && (msg = planMACommRecv(search->ma_comm)) != NULL){
             res = maProcessMsg(search, msg);
         }
 
@@ -494,8 +496,8 @@ int planSearchMARun(plan_search_t *search,
         }else if (res == PLAN_SEARCH_NOT_FOUND){
             // If this agent reached dead-end, wait either for terminate
             // signal or for some public state it can continue from.
-            msg = planMACommQueueRecvBlockTimeout(search->ma_comm,
-                                                  SEARCH_MA_MAX_BLOCK_TIME);
+            msg = planMACommRecvBlockTimeout(search->ma_comm,
+                                             SEARCH_MA_MAX_BLOCK_TIME);
             if (msg != NULL){
                 res = maProcessMsg(search, msg);
 
@@ -598,7 +600,7 @@ static void maTerminate(plan_search_t *search)
     // comes back (or until TERMINATION signal is received).
     msg = planMAMsgNew();
     planMAMsgSetTerminateRequest(msg, search->ma_comm->node_id);
-    planMACommQueueSendInRing(search->ma_comm, msg);
+    planMACommSendInRing(search->ma_comm, msg);
     planMAMsgDel(msg);
 
     maTerminateWait(search);
@@ -609,7 +611,7 @@ static void maTerminateWait(plan_search_t *search)
     plan_ma_msg_t *msg;
     int agent_id;
 
-    while ((msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
+    while ((msg = planMACommRecvBlock(search->ma_comm)) != NULL){
         if (planMAMsgIsTerminate(msg)){
             // When TERMINATE signal is received, just terminate
             planMAMsgDel(msg);
@@ -628,14 +630,14 @@ static void maTerminateWait(plan_search_t *search)
                 planMAMsgDel(msg);
                 msg = planMAMsgNew();
                 planMAMsgSetTerminate(msg);
-                planMACommQueueSendToAll(search->ma_comm, msg);
+                planMACommSendToAll(search->ma_comm, msg);
                 planMAMsgDel(msg);
                 break;
 
             }else{
                 // The request is from some other agent, just is send it to
                 // the next agent in ring
-                planMACommQueueSendInRing(search->ma_comm, msg);
+                planMACommSendInRing(search->ma_comm, msg);
             }
         }
         // All other messages are ignored!
@@ -673,7 +675,7 @@ static int maSendPublicState(plan_search_t *search,
                             node->cost, node->heuristic);
     for (i = 0; i < len; ++i){
         if (peers[i] != search->ma_comm->node_id)
-            res = planMACommQueueSendToNode(search->ma_comm, peers[i], msg);
+            res = planMACommSendToNode(search->ma_comm, peers[i], msg);
     }
     planMAMsgDel(msg);
 
@@ -767,7 +769,7 @@ static int maProcessMsg(plan_search_t *search, plan_ma_msg_t *msg)
         // If we have received terminate-request it means some agent want
         // to terminate. So send the request to the next agent in ring and
         // wait for TERMINATE signal.
-        planMACommQueueSendInRing(search->ma_comm, msg);
+        planMACommSendInRing(search->ma_comm, msg);
         maTerminateWait(search);
         res = PLAN_SEARCH_ABORT;
 
@@ -903,7 +905,7 @@ static int maProcessTracePath(plan_search_t *search, plan_ma_msg_t *msg)
 
     res = maUpdateTracePathMsg(search, msg);
     if (res >= 0){
-        planMACommQueueSendToNode(search->ma_comm, res, msg);
+        planMACommSendToNode(search->ma_comm, res, msg);
         return PLAN_SEARCH_CONT;
 
     }else if (res == -1){
@@ -915,7 +917,7 @@ static int maProcessTracePath(plan_search_t *search, plan_ma_msg_t *msg)
         if (origin_agent != search->ma_comm->node_id){
             // If this is not the original agent sent the result to the
             // original agent
-            planMACommQueueSendToNode(search->ma_comm, origin_agent, msg);
+            planMACommSendToNode(search->ma_comm, origin_agent, msg);
             return PLAN_SEARCH_CONT;
 
         }else{
@@ -951,7 +953,7 @@ static int maTracePath(plan_search_t *search, plan_state_id_t goal_state)
         return res;
 
     // Wait for trace-path response or terminate signal
-    while ((msg = planMACommQueueRecvBlock(search->ma_comm)) != NULL){
+    while ((msg = planMACommRecvBlock(search->ma_comm)) != NULL){
         if (planMAMsgIsTracePath(msg) || planMAMsgIsTerminateType(msg)){
             res = maProcessMsg(search, msg);
             if (res != PLAN_SEARCH_CONT)
@@ -977,7 +979,7 @@ static void maSolutionVerifyInit2(plan_search_t *search)
 {
     plan_search_ma_solution_verify_t *ver = &search->ma_solution_verify;
 
-    ver->mark_size = search->ma_comm->pool.node_size;
+    ver->mark_size = search->ma_comm_node_size;
     ver->mark = BOR_REALLOC_ARR(ver->mark, int, ver->mark_size);
     ver->in_progress = 0;
 }
@@ -1092,7 +1094,7 @@ static int maSolutionVerifyNext(plan_search_t *search)
         return PLAN_SEARCH_CONT;
 
     // Send the solution message to peers
-    planMACommQueueSendToAll(search->ma_comm, msg);
+    planMACommSendToAll(search->ma_comm, msg);
 
     // Set in_progress flag and remember the important parts of the
     // solution
@@ -1212,7 +1214,7 @@ static void maSolutionAckSendMark(plan_search_t *search,
     // Send marks to all peers
     msg_out = planMAMsgNew();
     planMAMsgSetSolutionMark(msg_out, search->ma_comm->node_id, sol_ack->token);
-    planMACommQueueSendToAll(search->ma_comm, msg_out);
+    planMACommSendToAll(search->ma_comm, msg_out);
     planMAMsgDel(msg_out);
 }
 
@@ -1264,8 +1266,8 @@ static int maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg)
     sol_ack->cost_lower_bound = BOR_MIN(planSearchLowestCost(search),
                                         search->best_goal_cost);
     sol_ack->token = token;
-    sol_ack->mark = BOR_CALLOC_ARR(int, search->ma_comm->pool.node_size);
-    sol_ack->mark_remaining = search->ma_comm->pool.node_size - 1;
+    sol_ack->mark = BOR_CALLOC_ARR(int, search->ma_comm_node_size);
+    sol_ack->mark_remaining = search->ma_comm_node_size - 1;
     sol_ack->mark[agent_id] = 1;
     --sol_ack->mark_remaining;
     maSolutionAckSendMark(search, sol_ack);
@@ -1311,7 +1313,7 @@ static int maSolutionAckSendResponse(plan_search_t *search,
 
     msg = planMAMsgNew();
     planMAMsgSetSolutionAck(msg, search->ma_comm->node_id, ack, sol_ack->token);
-    planMACommQueueSendToNode(search->ma_comm, agent, msg);
+    planMACommSendToNode(search->ma_comm, agent, msg);
     planMAMsgDel(msg);
 
     if (ack == 0){

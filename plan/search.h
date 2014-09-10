@@ -2,13 +2,14 @@
 #define __PLAN_SEARCH_H__
 
 #include <boruvka/timer.h>
+#include <boruvka/fifo.h>
 
 #include <plan/problem.h>
 #include <plan/statespace.h>
 #include <plan/heur.h>
 #include <plan/list_lazy.h>
 #include <plan/path.h>
-#include <plan/ma_comm_queue.h>
+#include <plan/ma_comm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -119,7 +120,7 @@ typedef struct _plan_search_params_t plan_search_params_t;
 
 
 struct _plan_search_ma_params_t {
-    plan_ma_comm_queue_t *comm;
+    plan_ma_comm_t *comm;
 };
 typedef struct _plan_search_ma_params_t plan_search_ma_params_t;
 
@@ -360,13 +361,15 @@ struct _plan_search_t {
 
     plan_search_applicable_ops_t applicable_ops;
 
-    int ma;                        /*!< True if running in multi-agent mode */
-    plan_ma_comm_queue_t *ma_comm; /*!< Communication queue for MA search */
-    int ma_pub_state_reg;          /*!< ID of the registry that associates
-                                        received public state with state-id. */
-    int ma_terminated;             /*!< True if already terminated */
-    plan_path_t *ma_path;          /*!< Output path for multi-agent mode */
-    int ma_ack_solution;           /*!< True if solution should be ack'ed */
+    int ma;                  /*!< True if running in multi-agent mode */
+    plan_ma_comm_t *ma_comm; /*!< Communication queue for MA search */
+    int ma_comm_node_id;     /*!< ID of this node */
+    int ma_comm_node_size;   /*!< Number of nodes in cluster */
+    int ma_pub_state_reg;    /*!< ID of the registry that associates
+                                  received public state with state-id. */
+    int ma_terminated;       /*!< True if already terminated */
+    plan_path_t *ma_path;    /*!< Output path for multi-agent mode */
+    int ma_ack_solution;     /*!< True if solution should be ack'ed */
 
     /** Struct for verification of solutions */
     plan_search_ma_solution_verify_t ma_solution_verify;

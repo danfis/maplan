@@ -5,10 +5,12 @@ CFLAGS += -I../
 CFLAGS += -I../../boruvka
 CFLAGS += -I../../opts
 CFLAGS += $(PROTOBUF_CFLAGS)
+CFLAGS += $(ZMQ_CFLAGS)
 LDFLAGS += -L../ -lplan
 LDFLAGS += -L../../boruvka -lboruvka
 LDFLAGS += -L../../opts -lopts
 LDFLAGS += $(PROTOBUF_LDFLAGS)
+LDFLAGS += $(ZMQ_LDFLAGS)
 LDFLAGS += -pthread -lrt -lm
 LDFLAGS += -lstdc++
 

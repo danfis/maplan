@@ -144,7 +144,7 @@ static int maAddPeerOp(ma_t *ma, int id);
 /** Removes peer-operator from the registry */
 static void maDelPeerOp(ma_t *ma, int id);
 /** Sends HEUR_REQUEST message to the peer */
-static void maSendHeurRequest(plan_ma_comm_queue_t *comm,
+static void maSendHeurRequest(plan_ma_comm_t *comm,
                               int peer_id,
                               const factarr_t *state,
                               int op_id);
@@ -157,24 +157,24 @@ static const plan_op_t *maOpFromId(plan_heur_relax_t *heur, int op_id);
 /** Performs local exploration from the initial state stored in .ma.state
  *  to the specified goal. */
 static void maExploreLocal(plan_heur_relax_t *heur,
-                           plan_ma_comm_queue_t *comm,
+                           plan_ma_comm_t *comm,
                            const plan_part_state_t *goal,
                            plan_heur_res_t *res);
 /** Update relaxed plan by received local operator */
 static void maUpdateLocalOp(plan_heur_relax_t *heur,
-                            plan_ma_comm_queue_t *comm,
+                            plan_ma_comm_t *comm,
                             int op_id);
 
 static int planHeurRelaxFFMA(plan_heur_t *heur,
-                             plan_ma_comm_queue_t *comm,
+                             plan_ma_comm_t *comm,
                              const plan_state_t *state,
                              plan_heur_res_t *res);
 static int planHeurRelaxFFMAUpdate(plan_heur_t *heur,
-                                   plan_ma_comm_queue_t *comm,
+                                   plan_ma_comm_t *comm,
                                    const plan_ma_msg_t *msg,
                                    plan_heur_res_t *res);
 static void planHeurRelaxFFMARequest(plan_heur_t *heur,
-                                     plan_ma_comm_queue_t *comm,
+                                     plan_ma_comm_t *comm,
                                      const plan_ma_msg_t *msg);
 
 
@@ -695,7 +695,7 @@ static void maDelPeerOp(ma_t *ma, int id)
     }
 }
 
-static void maSendHeurRequest(plan_ma_comm_queue_t *comm,
+static void maSendHeurRequest(plan_ma_comm_t *comm,
                               int peer_id,
                               const factarr_t *state,
                               int op_id)
@@ -705,7 +705,7 @@ static void maSendHeurRequest(plan_ma_comm_queue_t *comm,
     msg = planMAMsgNew();
     planMAMsgSetHeurRequest(msg, comm->node_id,
                             state->fact, state->size, op_id);
-    planMACommQueueSendToNode(comm, peer_id, msg);
+    planMACommSendToNode(comm, peer_id, msg);
     planMAMsgDel(msg);
 }
 
@@ -739,7 +739,7 @@ static const plan_op_t *maOpFromId(plan_heur_relax_t *heur, int op_id)
 }
 
 static void maExploreLocal(plan_heur_relax_t *heur,
-                           plan_ma_comm_queue_t *comm,
+                           plan_ma_comm_t *comm,
                            const plan_part_state_t *goal,
                            plan_heur_res_t *res)
 {
@@ -783,7 +783,7 @@ static void maExploreLocal(plan_heur_relax_t *heur,
 }
 
 static void maUpdateLocalOp(plan_heur_relax_t *heur,
-                            plan_ma_comm_queue_t *comm,
+                            plan_ma_comm_t *comm,
                             int op_id)
 {
     const plan_op_t *op;
@@ -800,7 +800,7 @@ static void maUpdateLocalOp(plan_heur_relax_t *heur,
 }
 
 static int planHeurRelaxFFMA(plan_heur_t *_heur,
-                             plan_ma_comm_queue_t *comm,
+                             plan_ma_comm_t *comm,
                              const plan_state_t *state,
                              plan_heur_res_t *res)
 {
@@ -836,7 +836,7 @@ static int planHeurRelaxFFMA(plan_heur_t *_heur,
 }
 
 static int planHeurRelaxFFMAUpdate(plan_heur_t *_heur,
-                                   plan_ma_comm_queue_t *comm,
+                                   plan_ma_comm_t *comm,
                                    const plan_ma_msg_t *msg,
                                    plan_heur_res_t *res)
 {
@@ -874,19 +874,19 @@ static int planHeurRelaxFFMAUpdate(plan_heur_t *_heur,
     return 0;
 }
 
-static void maSendEmptyResponse(plan_ma_comm_queue_t *comm,
+static void maSendEmptyResponse(plan_ma_comm_t *comm,
                                 int peer_id, int op_id)
 {
     plan_ma_msg_t *resp;
 
     resp = planMAMsgNew();
     planMAMsgSetHeurResponse(resp, op_id);
-    planMACommQueueSendToNode(comm, peer_id, resp);
+    planMACommSendToNode(comm, peer_id, resp);
     planMAMsgDel(resp);
 }
 
 static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
-                                     plan_ma_comm_queue_t *comm,
+                                     plan_ma_comm_t *comm,
                                      const plan_ma_msg_t *msg)
 {
     plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
@@ -942,7 +942,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
             planMAMsgHeurResponseAddPeerOp(response, global_id, owner);
         }
     }
-    planMACommQueueSendToNode(comm, agent_id, response);
+    planMACommSendToNode(comm, agent_id, response);
 
     planMAMsgDel(response);
 }

@@ -39,7 +39,7 @@ void planHeur(plan_heur_t *heur, const plan_state_t *state,
 }
 
 int planHeurMA(plan_heur_t *heur,
-               plan_ma_comm_queue_t *comm,
+               plan_ma_comm_t *comm,
                const plan_state_t *state,
                plan_heur_res_t *res)
 {
@@ -53,7 +53,7 @@ int planHeurMA(plan_heur_t *heur,
 }
 
 int planHeurMAUpdate(plan_heur_t *heur,
-                     plan_ma_comm_queue_t *comm,
+                     plan_ma_comm_t *comm,
                      const plan_ma_msg_t *msg,
                      plan_heur_res_t *res)
 {
@@ -67,7 +67,7 @@ int planHeurMAUpdate(plan_heur_t *heur,
 }
 
 void planHeurMARequest(plan_heur_t *heur,
-                       plan_ma_comm_queue_t *comm,
+                       plan_ma_comm_t *comm,
                        const plan_ma_msg_t *msg)
 {
     if (heur->heur_ma_request_fn == NULL){

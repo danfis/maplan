@@ -5,7 +5,7 @@
 #include <semaphore.h>
 #include <boruvka/fifo.h>
 
-#include <plan/ma_msg.h>
+#include <plan/ma_comm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,11 +29,6 @@ struct _plan_ma_comm_queue_pool_t {
     plan_ma_comm_queue_t *queue;
 };
 
-struct _plan_ma_comm_queue_t {
-    plan_ma_comm_queue_pool_t pool; /*!< Corresponding pool */
-    int node_id;                    /*!< ID of the current node */
-};
-
 
 /**
  * Creates a pool of communication queues for specified number of nodes.
@@ -47,59 +42,12 @@ void planMACommQueuePoolDel(plan_ma_comm_queue_pool_t *pool);
 
 /**
  * Returns a queue corresponding to the specified node.
- * The returned queue is still owned by the pool.
+ * The returned queue is still owned by the pool and the call should NOT
+ * call planMACommDel() on it!
  */
-plan_ma_comm_queue_t *planMACommQueue(plan_ma_comm_queue_pool_t *pool,
-                                      int node_id);
+plan_ma_comm_t *planMACommQueue(plan_ma_comm_queue_pool_t *pool,
+                                int node_id);
 
-/**
- * Sends the message to all nodes.
- * Returns 0 on success.
- */
-int planMACommQueueSendToAll(plan_ma_comm_queue_t *comm,
-                             const plan_ma_msg_t *msg);
-
-/**
- * Sends the message to the specified node.
- * Returns 0 on success.
- */
-int planMACommQueueSendToNode(plan_ma_comm_queue_t *comm,
-                              int node_id,
-                              const plan_ma_msg_t *msg);
-
-/**
- * Sends the message to the next node in ring.
- * Returns 0 on success.
- */
-int planMACommQueueSendInRing(plan_ma_comm_queue_t *comm,
-                              const plan_ma_msg_t *msg);
-
-/**
- * Receives a next message in non-blocking mode.
- * It is caller's responsibility to destroy the returned message.
- */
-plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_queue_t *comm);
-
-/**
- * Receives a next message in blocking mode.
- * It is caller's responsibility to destroy the returned message.
- */
-plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_queue_t *comm);
-
-/**
- * Same as planMACommQueueRecvBlock() but unblocks after specified amount
- * of time if no message was received (and that case returns NULL).
- */
-plan_ma_msg_t *planMACommQueueRecvBlockTimeout(plan_ma_comm_queue_t *comm,
-                                               int timeout_in_ms);
-
-/**
- * Returns number of peers.
- */
-_bor_inline int planMACommQueueNumPeers(const plan_ma_comm_queue_t *comm)
-{
-    return comm->pool.node_size - 1;
-}
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -6,7 +6,7 @@
 
 struct _th_t {
     int id;
-    plan_ma_comm_queue_t *queue;
+    plan_ma_comm_t *queue;
     pthread_t thread;
 };
 typedef struct _th_t th_t;
@@ -25,11 +25,11 @@ void *thRun(void *_th)
 
     msg = planMAMsgNew();
     planMAMsgSetPublicState(msg, 0, "aa", 2, 1, th->id, 2 * th->id);
-    planMACommQueueSendToAll(th->queue, msg);
+    planMACommSendToAll(th->queue, msg);
     planMAMsgDel(msg);
 
     for (i = 0; i < NUM_NODES - 1; ++i){
-        msg = planMACommQueueRecvBlock(th->queue);
+        msg = planMACommRecvBlock(th->queue);
         assertNotEquals(msg, NULL);
 
         if (msg){
@@ -54,7 +54,7 @@ void *thRun(void *_th)
         }
     }
 
-    msg = planMACommQueueRecv(th->queue);
+    msg = planMACommRecv(th->queue);
     assertEquals(msg, NULL);
 
     return NULL;

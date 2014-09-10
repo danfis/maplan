@@ -1,6 +1,8 @@
 #include <boruvka/alloc.h>
 #include <boruvka/tasks.h>
-#include <plan/ma.h>
+
+#include "plan/ma.h"
+#include "plan/ma_comm_queue.h"
 
 struct _th_t {
     plan_search_t *search;

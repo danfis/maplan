@@ -3,7 +3,7 @@
 
 #include <plan/common.h>
 #include <plan/problem.h>
-#include <plan/ma_comm_queue.h>
+#include <plan/ma_comm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,7 +62,7 @@ typedef void (*plan_heur_fn)(plan_heur_t *heur, const plan_state_t *state,
  * Multi-agent version of plan_heur_fn
  */
 typedef int (*plan_heur_ma_fn)(plan_heur_t *heur,
-                               plan_ma_comm_queue_t *comm,
+                               plan_ma_comm_t *comm,
                                const plan_state_t *state,
                                plan_heur_res_t *res);
 
@@ -70,7 +70,7 @@ typedef int (*plan_heur_ma_fn)(plan_heur_t *heur,
  * Update function for multi-agent version of heuristic
  */
 typedef int (*plan_heur_ma_update_fn)(plan_heur_t *heur,
-                                      plan_ma_comm_queue_t *comm,
+                                      plan_ma_comm_t *comm,
                                       const plan_ma_msg_t *msg,
                                       plan_heur_res_t *res);
 
@@ -78,7 +78,7 @@ typedef int (*plan_heur_ma_update_fn)(plan_heur_t *heur,
  * Method for processing request from remote peer.
  */
 typedef void (*plan_heur_ma_request_fn)(plan_heur_t *heur,
-                                        plan_ma_comm_queue_t *comm,
+                                        plan_ma_comm_t *comm,
                                         const plan_ma_msg_t *msg);
 
 struct _plan_heur_t {
@@ -164,7 +164,7 @@ void planHeur(plan_heur_t *heur, const plan_state_t *state,
  * messages.
  */
 int planHeurMA(plan_heur_t *heur,
-               plan_ma_comm_queue_t *comm,
+               plan_ma_comm_t *comm,
                const plan_state_t *state,
                plan_heur_res_t *res);
 
@@ -175,7 +175,7 @@ int planHeurMA(plan_heur_t *heur,
  * computed.
  */
 int planHeurMAUpdate(plan_heur_t *heur,
-                     plan_ma_comm_queue_t *comm,
+                     plan_ma_comm_t *comm,
                      const plan_ma_msg_t *msg,
                      plan_heur_res_t *res);
 
@@ -183,7 +183,7 @@ int planHeurMAUpdate(plan_heur_t *heur,
  * Function that process multi-agent heur-request message.
  */
 void planHeurMARequest(plan_heur_t *heur,
-                       plan_ma_comm_queue_t *comm,
+                       plan_ma_comm_t *comm,
                        const plan_ma_msg_t *msg);
 
 /**

@@ -134,6 +134,9 @@ _bor_inline int planMACommSendToAll(plan_ma_comm_t *comm,
 {
     int i;
     for (i = 0; i < comm->node_size; ++i){
+        if (i == comm->node_id)
+            continue;
+
         if (comm->send_to_node_fn(comm, i, msg) != 0)
             return -1;
     }
@@ -144,6 +147,8 @@ _bor_inline int planMACommSendToNode(plan_ma_comm_t *comm,
                                      int node_id,
                                      const plan_ma_msg_t *msg)
 {
+    if (node_id == comm->node_id)
+        return -1;
     return comm->send_to_node_fn(comm, node_id, msg);
 }
 

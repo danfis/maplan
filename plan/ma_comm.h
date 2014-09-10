@@ -12,49 +12,37 @@ extern "C" {
 /** Forward declaration */
 typedef struct _plan_ma_comm_t plan_ma_comm_t;
 
-/**
- * Destructor.
- */
-typedef void (*plan_ma_comm_del_fn)(plan_ma_comm_t *comm);
 
-/**
- * Sends the message to the specified node.
- * Returns 0 on success.
- */
-typedef int (*plan_ma_comm_send_to_node_fn)(plan_ma_comm_t *comm,
-                                            int node_id,
-                                            const plan_ma_msg_t *msg);
-
-
-/**
- * Receives a next message in non-blocking mode.
- * It is caller's responsibility to destroy the returned message.
- */
-typedef plan_ma_msg_t *(*plan_ma_comm_recv_fn)(plan_ma_comm_t *comm);
-
-/**
- * Receives a next message in blocking mode.
- * It is caller's responsibility to destroy the returned message.
- */
-typedef plan_ma_msg_t *(*plan_ma_comm_recv_block_fn)(plan_ma_comm_t *comm);
-
-/**
- * Same as planMACommNetRecvBlock() but unblocks after specified amount
- * of time if no message was received (and that case returns NULL).
- */
-typedef plan_ma_msg_t *(*plan_ma_comm_recv_block_timeout_fn)(
-            plan_ma_comm_t *commm, int timeout_in_ms);
-
-
-struct _plan_ma_comm_t {
-    int node_id;
-    int node_size;
-    plan_ma_comm_del_fn del_fn;
-    plan_ma_comm_send_to_node_fn send_to_node_fn;
-    plan_ma_comm_recv_fn recv_fn;
-    plan_ma_comm_recv_block_fn recv_block_fn;
-    plan_ma_comm_recv_block_timeout_fn recv_block_timeout_fn;
+struct _plan_ma_comm_net_conf_t {
+    int node_id;   /*!< Id of the current node */
+    char **addr;   /*!< TCP address of all nodes in cluster */
+    int node_size; /*!< Number of nodes in cluster */
 };
+typedef struct _plan_ma_comm_net_conf_t plan_ma_comm_net_conf_t;
+
+
+/**
+ * Initialize config structure.
+ */
+void planMACommNetConfInit(plan_ma_comm_net_conf_t *cfg);
+
+/**
+ * Frees resources allocate with connection with conf structure.
+ */
+void planMACommNetConfFree(plan_ma_comm_net_conf_t *cfg);
+
+/**
+ * Adds address of one node and returns its ID.
+ */
+int planMACommNetConfAddNode(plan_ma_comm_net_conf_t *cfg,
+                             const char *addr);
+
+
+/**
+ * Creates a communication channel based on network connection (TCP).
+ */
+plan_ma_comm_t *planMACommNetNew(const plan_ma_comm_net_conf_t *cfg);
+
 
 /**
  * Destroys a communication channel.
@@ -111,6 +99,52 @@ _bor_inline plan_ma_msg_t *planMACommRecvBlock(plan_ma_comm_t *comm);
  */
 _bor_inline plan_ma_msg_t *planMACommRecvBlockTimeout(plan_ma_comm_t *comm,
                                                       int timeout_in_ms);
+
+
+
+/**
+ * Destructor.
+ */
+typedef void (*plan_ma_comm_del_fn)(plan_ma_comm_t *comm);
+
+/**
+ * Sends the message to the specified node.
+ * Returns 0 on success.
+ */
+typedef int (*plan_ma_comm_send_to_node_fn)(plan_ma_comm_t *comm,
+                                            int node_id,
+                                            const plan_ma_msg_t *msg);
+
+
+/**
+ * Receives a next message in non-blocking mode.
+ * It is caller's responsibility to destroy the returned message.
+ */
+typedef plan_ma_msg_t *(*plan_ma_comm_recv_fn)(plan_ma_comm_t *comm);
+
+/**
+ * Receives a next message in blocking mode.
+ * It is caller's responsibility to destroy the returned message.
+ */
+typedef plan_ma_msg_t *(*plan_ma_comm_recv_block_fn)(plan_ma_comm_t *comm);
+
+/**
+ * Same as planMACommNetRecvBlock() but unblocks after specified amount
+ * of time if no message was received (and that case returns NULL).
+ */
+typedef plan_ma_msg_t *(*plan_ma_comm_recv_block_timeout_fn)(
+            plan_ma_comm_t *commm, int timeout_in_ms);
+
+
+struct _plan_ma_comm_t {
+    int node_id;
+    int node_size;
+    plan_ma_comm_del_fn del_fn;
+    plan_ma_comm_send_to_node_fn send_to_node_fn;
+    plan_ma_comm_recv_fn recv_fn;
+    plan_ma_comm_recv_block_fn recv_block_fn;
+    plan_ma_comm_recv_block_timeout_fn recv_block_timeout_fn;
+};
 
 
 /**** INLINES: ****/

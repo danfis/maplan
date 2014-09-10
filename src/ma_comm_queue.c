@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <boruvka/alloc.h>
 
-#include "plan/ma_comm_queue.h"
+#include "plan/ma_comm.h"
 
 struct _msg_buf_t {
     uint8_t *buf;

@@ -1,6 +1,6 @@
 #include <cu/cu.h>
 #include <stdio.h>
-#include "plan/ma_comm_queue.h"
+#include "plan/ma_comm.h"
 
 #define NUM_NODES 8
 

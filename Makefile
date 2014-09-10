@@ -140,6 +140,7 @@ help:
 	@echo "    M4         - Path to m4 macro processor  (=$(M4))"
 	@echo "    SCAN_BUILD - Path to scan-build          (=$(SCAN_BUILD))"
 	@echo "    PROTOC     - Path to protobuf compiler   (=$(PROTOC))"
+	@echo "    PYTHON2    - Path to python v2 interpret (=$(PYTHON2))"
 	@echo ""
 	@echo "    DEBUG      'yes'/'no' - Turn on/off debugging   (=$(DEBUG))"
 	@echo "    PROFIL     'yes'/'no' - Compiles profiling info (=$(PROFIL))"

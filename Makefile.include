@@ -3,6 +3,7 @@ CXX ?= g++
 M4 ?= m4
 SCAN_BUILD ?= scan-build
 PROTOC ?= protoc
+PYTHON2 ?= python2
 
 SYSTEM = $(shell uname)
 

@@ -167,7 +167,8 @@ static void agentAddOperator(plan_problem_t *dst,
     ++dst->op_size;
 }
 
-static void agentSplitOperators(plan_problem_agents_t *agents)
+static void agentSplitOperators(plan_problem_agents_t *agents,
+                                int *op_owner)
 {
     const plan_problem_t *prob = &agents->glob;
     int agent_size = agents->agent_size;
@@ -196,6 +197,7 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
         for (j = 0; j < agents->agent_size; ++j){
             if (strstr(glob_op->name, name_token[j].c_str()) != NULL){
                 agentAddOperator(ap + j, ap[j].state_pool, i, glob_op);
+                op_owner[i] = j;
                 inserted = 1;
             }
         }
@@ -206,6 +208,7 @@ static void agentSplitOperators(plan_problem_agents_t *agents)
             for (j = 0; j < agents->agent_size; ++j){
                 agentAddOperator(ap + j, ap[j].state_pool, i, glob_op);
             }
+            op_owner[i] = 0;
         }
     }
 
@@ -442,7 +445,8 @@ static void agentCreateProjectedOps(plan_problem_t *agent,
                                     int agent_id,
                                     const plan_op_t *ops,
                                     int ops_size,
-                                    const AgentVarVals &vals)
+                                    const AgentVarVals &vals,
+                                    const int *op_owner)
 {
     plan_op_t *proj_op;
 
@@ -457,7 +461,9 @@ static void agentCreateProjectedOps(plan_problem_t *agent,
         planOpCopy(proj_op, ops + opi);
 
         if (agentProjectOp(proj_op, agent_id, vals)){
-            planOpExtraMAProjOpSetOwner(proj_op, agent_id);
+            planOpExtraMAProjOpSetOwner(proj_op, op_owner[opi]);
+            fprintf(stderr, "%s: %d, %d\n", proj_op->name, agent_id,
+                    planOpExtraMAProjOpOwner(proj_op));
             planOpExtraMAProjOpSetGlobalId(proj_op, opi);
             ++agent->proj_op_size;
         }else{
@@ -477,6 +483,7 @@ static void loadAgents(plan_problem_agents_t *p,
 {
     int i;
     plan_problem_t *agent;
+    int *op_owner;
 
     p->agent_size = proto->agent_name_size();
     if (p->agent_size == 0){
@@ -494,7 +501,8 @@ static void loadAgents(plan_problem_agents_t *p,
     }
 
     // Split operators between agents
-    agentSplitOperators(p);
+    op_owner = BOR_CALLOC_ARR(int, p->glob.op_size);
+    agentSplitOperators(p, op_owner);
 
     // Determine which variable values are used by which agents' operators
     agentSetVarValUse(var_vals, p);
@@ -507,11 +515,14 @@ static void loadAgents(plan_problem_agents_t *p,
                            var_vals);
 
         agentCreateProjectedOps(p->agent + i, i,
-                                p->glob.op, p->glob.op_size, var_vals);
+                                p->glob.op, p->glob.op_size, var_vals,
+                                op_owner);
 
         p->agent[i].succ_gen = planSuccGenNew(p->agent[i].op,
                                               p->agent[i].op_size, NULL);
     }
+
+    BOR_FREE(op_owner);
 }
 
 static void loadVar(plan_problem_t *p, const PlanProblem *proto,

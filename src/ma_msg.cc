@@ -33,6 +33,19 @@ void planMAMsgDel(plan_ma_msg_t *_msg)
     delete msg;
 }
 
+int planMAMsgIsType(const plan_ma_msg_t *_msg, int msg_type)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    PlanMAMsg::Type type = msg->type();
+
+    if (msg_type == PLAN_MA_MSG_TYPE_HEUR){
+        if (type == PlanMAMsg::HEUR_REQUEST || type == PlanMAMsg::HEUR_RESPONSE)
+            return 1;
+    }
+
+    return 0;
+}
+
 int planMAMsgType(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);

@@ -7,6 +7,12 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/**
+ * All PLAN_HEUR_* messages.
+ */
+#define PLAN_MA_MSG_TYPE_HEUR 1
+
+
 typedef void plan_ma_msg_t;
 
 /**
@@ -25,6 +31,12 @@ plan_ma_msg_t *planMAMsgNew(void);
  * Deletes message.
  */
 void planMAMsgDel(plan_ma_msg_t *msg);
+
+/**
+ * Returns true if the message is of type msg_type (see PLAN_MA_MSG_TYPE_*
+ * above).
+ */
+int planMAMsgIsType(const plan_ma_msg_t *msg, int msg_type);
 
 /**
  * Returns type as integer -- just for testing.

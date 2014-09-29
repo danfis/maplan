@@ -128,21 +128,29 @@ _bor_inline int planMACommSendInRing(plan_ma_comm_t *comm,
  * Receives a next message in non-blocking mode.
  * It is caller's responsibility to destroy the returned message.
  */
-_bor_inline plan_ma_msg_t *planMACommRecv(plan_ma_comm_t *comm);
+plan_ma_msg_t *planMACommRecv(plan_ma_comm_t *comm);
 
 /**
  * Receives a next message in blocking mode.
  * It is caller's responsibility to destroy the returned message.
  */
-_bor_inline plan_ma_msg_t *planMACommRecvBlock(plan_ma_comm_t *comm);
+plan_ma_msg_t *planMACommRecvBlock(plan_ma_comm_t *comm);
 
 /**
  * Same as planMACommQueueRecvBlock() but unblocks after specified amount
  * of time if no message was received (and that case returns NULL).
  */
-_bor_inline plan_ma_msg_t *planMACommRecvBlockTimeout(plan_ma_comm_t *comm,
-                                                      int timeout_in_ms);
+plan_ma_msg_t *planMACommRecvBlockTimeout(plan_ma_comm_t *comm,
+                                          int timeout_in_ms);
 
+
+/**
+ * Same as planMACommRecvBlock() but filters out all messages that have
+ * different type. The filtered messages are not dropped but stored and
+ * next call of *Recv*() functions will return these messages first.
+ * For message types see PLAN_MA_MSG_TYPE_* in plan/ma_msg.h.
+ */
+plan_ma_msg_t *planMACommRecvBlockType(plan_ma_comm_t *comm, int msg_type);
 
 
 /**
@@ -187,6 +195,8 @@ struct _plan_ma_comm_t {
     plan_ma_comm_recv_fn recv_fn;
     plan_ma_comm_recv_block_fn recv_block_fn;
     plan_ma_comm_recv_block_timeout_fn recv_block_timeout_fn;
+
+    bor_fifo_t waitlist; /*!< Unprocessed waiting messages */
 };
 
 
@@ -235,22 +245,6 @@ _bor_inline int planMACommSendInRing(plan_ma_comm_t *comm,
     int node_id;
     node_id = (comm->node_id + 1) % comm->node_size;
     return comm->send_to_node_fn(comm, node_id, msg);
-}
-
-_bor_inline plan_ma_msg_t *planMACommRecv(plan_ma_comm_t *comm)
-{
-    return comm->recv_fn(comm);
-}
-
-_bor_inline plan_ma_msg_t *planMACommRecvBlock(plan_ma_comm_t *comm)
-{
-    return comm->recv_block_fn(comm);
-}
-
-_bor_inline plan_ma_msg_t *planMACommRecvBlockTimeout(plan_ma_comm_t *comm,
-                                                      int timeout_in_ms)
-{
-    return comm->recv_block_timeout_fn(comm, timeout_in_ms);
 }
 
 

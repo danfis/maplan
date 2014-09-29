@@ -51,6 +51,7 @@ OBJS += search_astar
 OBJS += heur
 OBJS += heur_goalcount
 OBJS += heur_relax
+OBJS += heur_ma_ff
 OBJS += heur_lm_cut
 OBJS += prioqueue
 OBJS += ma_comm

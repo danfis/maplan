@@ -33,6 +33,15 @@ void planMAMsgDel(plan_ma_msg_t *_msg)
     delete msg;
 }
 
+int planMAMsgIsType(const plan_ma_msg_t *msg, int msg_type)
+{
+    int type = planMAMsgType(msg);
+    msg_type = msg_type << 8;
+    if (type & msg_type)
+        return 1;
+    return 0;
+}
+
 int planMAMsgType(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
@@ -335,12 +344,13 @@ void planMAMsgHeurResponseAddOp(plan_ma_msg_t *_msg, int op_id, int cost)
 }
 
 void planMAMsgHeurResponseAddPeerOp(plan_ma_msg_t *_msg,
-                                    int op_id, int owner)
+                                    int op_id, int cost, int owner)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
     PlanMAMsgHeurResponse *res = msg->mutable_heur_response();
     PlanMAMsgHeurResponseOp *op = res->add_peer_op();
     op->set_op_id(op_id);
+    op->set_cost(cost);
     op->set_owner(owner);
 }
 
@@ -380,11 +390,13 @@ int planMAMsgHeurResponsePeerOpSize(const plan_ma_msg_t *_msg)
     return res.peer_op_size();
 }
 
-int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *_msg, int i, int *owner)
+int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *_msg, int i,
+                                int *cost, int *owner)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
     const PlanMAMsgHeurResponse &res = msg->heur_response();
     const PlanMAMsgHeurResponseOp &op = res.peer_op(i);
+    *cost = op.cost();
     *owner = op.owner();
     return op.op_id();
 }

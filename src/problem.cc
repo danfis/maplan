@@ -462,8 +462,6 @@ static void agentCreateProjectedOps(plan_problem_t *agent,
 
         if (agentProjectOp(proj_op, agent_id, vals)){
             planOpExtraMAProjOpSetOwner(proj_op, op_owner[opi]);
-            fprintf(stderr, "%s: %d, %d\n", proj_op->name, agent_id,
-                    planOpExtraMAProjOpOwner(proj_op));
             planOpExtraMAProjOpSetGlobalId(proj_op, opi);
             ++agent->proj_op_size;
         }else{

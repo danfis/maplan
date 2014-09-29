@@ -206,7 +206,7 @@ void _planSearchFindApplicableOps(plan_search_t *search,
 static int maHeur(plan_search_t *search, plan_heur_res_t *res)
 {
     plan_ma_msg_t *msg;
-    int ma_res, msg_res;
+    int ma_res, msg_res, msg_type;
 
     // First call of multi-agent heuristic
     ma_res = planHeurMA(search->heur, search->ma_comm, search->state, res);
@@ -214,8 +214,9 @@ static int maHeur(plan_search_t *search, plan_heur_res_t *res)
         return PLAN_SEARCH_CONT;
 
     // Wait for update messages
+    msg_type = ~PLAN_MA_MSG_TYPE_PUBLIC_STATE;
     while (ma_res != 0
-            && (msg = planMACommRecvBlock(search->ma_comm)) != NULL){
+            && (msg = planMACommRecvBlockType(search->ma_comm, msg_type)) != NULL){
 
         if (planMAMsgIsHeurResponse(msg)){
             ma_res = planHeurMAUpdate(search->heur, search->ma_comm, msg, res);

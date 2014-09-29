@@ -188,81 +188,91 @@ const char *planMAMsgTracePathOperator(const plan_ma_msg_t *msg, int i,
 
 
 /**
- * Sets HEUR_REQUEST type message.
- */
-void planMAMsgSetHeurRequest(plan_ma_msg_t *msg,
-                             int agent_id,
-                             const int *state, int state_size,
-                             int op_id);
-
-/**
- * Returns true if the message is of type HEUR_REQUEST.
+ * Returns true if the message if type of HEUR_REQUEST for any heuristic.
  */
 int planMAMsgIsHeurRequest(const plan_ma_msg_t *msg);
 
 /**
- * Returns agent_id stored in heur-request message.
- */
-int planMAMsgHeurRequestAgentId(const plan_ma_msg_t *msg);
-
-/**
- * Returns op_id stored in heur-request message.
- */
-int planMAMsgHeurRequestOpId(const plan_ma_msg_t *msg);
-
-/**
- * Returns var'th variable from the state stored in heur-request message.
- */
-int planMAMsgHeurRequestState(const plan_ma_msg_t *msg, int var);
-
-
-
-/**
- * Set heur-response type of message
- */
-void planMAMsgSetHeurResponse(plan_ma_msg_t *msg, int op_id);
-
-/**
- * Adds operator to the response
- */
-void planMAMsgHeurResponseAddOp(plan_ma_msg_t *msg, int op_id, int cost);
-
-/**
- * Adds peer operator to the response.
- */
-void planMAMsgHeurResponseAddPeerOp(plan_ma_msg_t *msg,
-                                    int op_id, int cost, int owner);
-
-/**
- * Returns true if the message is of type heur-response.
+ * Returns true if the message if type of HEUR_RESPONSE for any heuristic.
  */
 int planMAMsgIsHeurResponse(const plan_ma_msg_t *msg);
 
 /**
+ * Sets HEUR_FF_REQUEST type message.
+ */
+void planMAMsgSetHeurFFRequest(plan_ma_msg_t *msg,
+                               int agent_id,
+                               const int *state, int state_size,
+                               int op_id);
+
+/**
+ * Returns true if the message is of type HEUR_REQUEST.
+ */
+int planMAMsgIsHeurFFRequest(const plan_ma_msg_t *msg);
+
+/**
+ * Returns agent_id stored in heur-request message.
+ */
+int planMAMsgHeurFFRequestAgentId(const plan_ma_msg_t *msg);
+
+/**
+ * Returns op_id stored in heur-request message.
+ */
+int planMAMsgHeurFFRequestOpId(const plan_ma_msg_t *msg);
+
+/**
+ * Returns var'th variable from the state stored in heur-request message.
+ */
+int planMAMsgHeurFFRequestState(const plan_ma_msg_t *msg, int var);
+
+
+
+/**
+ * Set heur-response type of message for ff heuristic.
+ */
+void planMAMsgSetHeurFFResponse(plan_ma_msg_t *msg, int op_id);
+
+/**
+ * Adds operator to the response
+ */
+void planMAMsgHeurFFResponseAddOp(plan_ma_msg_t *msg, int op_id, int cost);
+
+/**
+ * Adds peer operator to the response.
+ */
+void planMAMsgHeurFFResponseAddPeerOp(plan_ma_msg_t *msg,
+                                      int op_id, int cost, int owner);
+
+/**
+ * Returns true if the message is of type heur-response.
+ */
+int planMAMsgIsHeurFFResponse(const plan_ma_msg_t *msg);
+
+/**
  * Returns ref_id from the message
  */
-int planMAMsgHeurResponseOpId(const plan_ma_msg_t *msg);
+int planMAMsgHeurFFResponseOpId(const plan_ma_msg_t *msg);
 
 /**
  * Returns number of operators stored in response.
  */
-int planMAMsgHeurResponseOpSize(const plan_ma_msg_t *msg);
+int planMAMsgHeurFFResponseOpSize(const plan_ma_msg_t *msg);
 
 /**
  * Returns i'th operator's ID and its cost.
  */
-int planMAMsgHeurResponseOp(const plan_ma_msg_t *msg, int i, int *cost);
+int planMAMsgHeurFFResponseOp(const plan_ma_msg_t *msg, int i, int *cost);
 
 /**
  * Returns number of peer-operators stored in response.
  */
-int planMAMsgHeurResponsePeerOpSize(const plan_ma_msg_t *msg);
+int planMAMsgHeurFFResponsePeerOpSize(const plan_ma_msg_t *msg);
 
 /**
  * Returns i'th peer-operator's ID and the corresponding owner.
  */
-int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *msg, int i,
-                                int *cost, int *owner);
+int planMAMsgHeurFFResponsePeerOp(const plan_ma_msg_t *msg, int i,
+                                  int *cost, int *owner);
 
 
 

@@ -6,7 +6,7 @@ message PlanMAMsgPublicState {
     required int32 heuristic = 5;
 }
 
-message PlanMAMsgHeurRequest {
+message PlanMAMsgHeurFFRequest {
     // Source agent
     required int32 agent_id = 1;
     // State from which to find heuristic value
@@ -15,19 +15,19 @@ message PlanMAMsgHeurRequest {
     required int32 op_id = 4;
 }
 
-message PlanMAMsgHeurResponseOp {
+message PlanMAMsgHeurFFResponseOp {
     required int32 op_id = 1;
     optional int32 cost = 2;
     optional int32 owner = 3;
 }
 
-message PlanMAMsgHeurResponse {
+message PlanMAMsgHeurFFResponse {
     // Operator for which this is response
     required int32 op_id = 1;
     // List of operators in relaxed plan
-    repeated PlanMAMsgHeurResponseOp op = 2;
+    repeated PlanMAMsgHeurFFResponseOp op = 2;
     // List of operators in relaxed plan that belong to other peers
-    repeated PlanMAMsgHeurResponseOp peer_op = 3;
+    repeated PlanMAMsgHeurFFResponseOp peer_op = 3;
 }
 
 message PlanMAMsgPathOperator {
@@ -79,8 +79,8 @@ message PlanMAMsg {
 
         SEARCH_PUBLIC_STATE = 0x0401;
 
-        HEUR_REQUEST  = 0x0801;
-        HEUR_RESPONSE = 0x0802;
+        HEUR_FF_REQUEST  = 0x0811;
+        HEUR_FF_RESPONSE = 0x0822;
 
         SOLUTION      = 0x1001;
         SOLUTION_ACK  = 0x1002;
@@ -91,8 +91,8 @@ message PlanMAMsg {
 
     optional PlanMAMsgPublicState public_state = 2;
     optional PlanMAMsgTracePath trace_path = 3;
-    optional PlanMAMsgHeurRequest heur_request = 4;
-    optional PlanMAMsgHeurResponse heur_response = 5;
+    optional PlanMAMsgHeurFFRequest heur_ff_request = 4;
+    optional PlanMAMsgHeurFFResponse heur_ff_response = 5;
     optional PlanMAMsgSolution solution = 6;
     optional PlanMAMsgSolutionAck solution_ack = 7;
     optional PlanMAMsgSolutionMark solution_mark = 8;

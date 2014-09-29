@@ -174,8 +174,8 @@ static void maSendHeurRequest(plan_ma_comm_t *comm,
     plan_ma_msg_t *msg;
 
     msg = planMAMsgNew();
-    planMAMsgSetHeurRequest(msg, comm->node_id,
-                            state->fact, state->size, op_id);
+    planMAMsgSetHeurFFRequest(msg, comm->node_id,
+                              state->fact, state->size, op_id);
     planMACommSendToNode(comm, peer_id, msg);
     planMAMsgDel(msg);
 }
@@ -309,19 +309,19 @@ static int planHeurRelaxFFMAUpdate(plan_heur_t *_heur,
     plan_heur_ma_ff_t *heur = HEUR_FF_FROM_PARENT(_heur);
     int i, len, op_id, cost, owner;
 
-    maDelPeerOp(heur, planMAMsgHeurResponseOpId(msg));
+    maDelPeerOp(heur, planMAMsgHeurFFResponseOpId(msg));
 
     // First insert all new operators
-    len = planMAMsgHeurResponseOpSize(msg);
+    len = planMAMsgHeurFFResponseOpSize(msg);
     for (i = 0; i < len; ++i){
-        op_id = planMAMsgHeurResponseOp(msg, i, &cost);
+        op_id = planMAMsgHeurFFResponseOp(msg, i, &cost);
         maAddOpToRelaxedPlan(heur, op_id, cost);
     }
 
     // Then explore all other peer-operators
-    len = planMAMsgHeurResponsePeerOpSize(msg);
+    len = planMAMsgHeurFFResponsePeerOpSize(msg);
     for (i = 0; i < len; ++i){
-        op_id = planMAMsgHeurResponsePeerOp(msg, i, &cost, &owner);
+        op_id = planMAMsgHeurFFResponsePeerOp(msg, i, &cost, &owner);
 
         if (owner == comm->node_id){
             maUpdateLocalOp(heur, comm, op_id);
@@ -347,7 +347,7 @@ static void maSendEmptyResponse(plan_ma_comm_t *comm,
     plan_ma_msg_t *resp;
 
     resp = planMAMsgNew();
-    planMAMsgSetHeurResponse(resp, op_id);
+    planMAMsgSetHeurFFResponse(resp, op_id);
     planMACommSendToNode(comm, peer_id, resp);
     planMAMsgDel(resp);
 }
@@ -364,12 +364,12 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
     int i, op_id, agent_id;
     int global_id, owner;
 
-    op_id = planMAMsgHeurRequestOpId(msg);
-    agent_id = planMAMsgHeurRequestAgentId(msg);
+    op_id = planMAMsgHeurFFRequestOpId(msg);
+    agent_id = planMAMsgHeurFFRequestAgentId(msg);
 
     // Initialize initial state
     for (i = 0; i < heur->heur_relax.data.vid.var_size; ++i){
-        state.val[i] = planMAMsgHeurRequestState(msg, i);
+        state.val[i] = planMAMsgHeurFFRequestState(msg, i);
     }
 
     // Find target operator
@@ -391,7 +391,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
     // Now .relaxed_plan is filled, so write to the response and send it
     // back.
     response = planMAMsgNew();
-    planMAMsgSetHeurResponse(response, op_id);
+    planMAMsgSetHeurFFResponse(response, op_id);
     for (i = 0; i < heur->heur_relax.data.actual_op_size; ++i){
         if (!heur->heur_relax.relaxed_plan[i])
             continue;
@@ -402,11 +402,11 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
 
         if (owner == comm->node_id){
             // Operator belongs to this agent
-            planMAMsgHeurResponseAddOp(response, global_id,
-                                       heur->heur_relax.data.op[i].cost);
+            planMAMsgHeurFFResponseAddOp(response, global_id,
+                                         heur->heur_relax.data.op[i].cost);
         }else{
             // Operator belongs to other agent
-            planMAMsgHeurResponseAddPeerOp(response, global_id, op->cost, owner);
+            planMAMsgHeurFFResponseAddPeerOp(response, global_id, op->cost, owner);
         }
     }
     planMACommSendToNode(comm, agent_id, response);

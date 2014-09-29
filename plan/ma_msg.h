@@ -10,7 +10,12 @@ extern "C" {
 /**
  * All PLAN_HEUR_* messages.
  */
-#define PLAN_MA_MSG_TYPE_HEUR 1
+#define PLAN_MA_MSG_TYPE_TERMINATE    0x01
+#define PLAN_MA_MSG_TYPE_TRACE_PATH   0x02
+#define PLAN_MA_MSG_TYPE_PUBLIC_STATE 0x04
+#define PLAN_MA_MSG_TYPE_HEUR         0x08
+#define PLAN_MA_MSG_TYPE_SOLUTION     0x10
+
 
 
 typedef void plan_ma_msg_t;
@@ -226,7 +231,7 @@ void planMAMsgHeurResponseAddOp(plan_ma_msg_t *msg, int op_id, int cost);
  * Adds peer operator to the response.
  */
 void planMAMsgHeurResponseAddPeerOp(plan_ma_msg_t *msg,
-                                    int op_id, int owner);
+                                    int op_id, int cost, int owner);
 
 /**
  * Returns true if the message is of type heur-response.
@@ -256,7 +261,8 @@ int planMAMsgHeurResponsePeerOpSize(const plan_ma_msg_t *msg);
 /**
  * Returns i'th peer-operator's ID and the corresponding owner.
  */
-int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *msg, int i, int *owner);
+int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *msg, int i,
+                                int *cost, int *owner);
 
 
 

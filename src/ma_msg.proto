@@ -72,19 +72,19 @@ message PlanMAMsgTerminateRequest {
 
 message PlanMAMsg {
     enum Type {
-        TRACE_PATH = 0x002;
+        TERMINATE         = 0x0101;
+        TERMINATE_REQUEST = 0x0102;
 
-        TERMINATE         = 0x100;
-        TERMINATE_REQUEST = 0x101;
+        TRACE_PATH = 0x0201;
 
-        SEARCH_PUBLIC_STATE = 0x201;
+        SEARCH_PUBLIC_STATE = 0x0401;
 
-        HEUR_REQUEST  = 0x301;
-        HEUR_RESPONSE = 0x302;
+        HEUR_REQUEST  = 0x0801;
+        HEUR_RESPONSE = 0x0802;
 
-        SOLUTION      = 0x401;
-        SOLUTION_ACK  = 0x402;
-        SOLUTION_MARK = 0x403;
+        SOLUTION      = 0x1001;
+        SOLUTION_ACK  = 0x1002;
+        SOLUTION_MARK = 0x1003;
     }
 
     required Type type = 1;

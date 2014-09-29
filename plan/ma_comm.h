@@ -145,7 +145,7 @@ plan_ma_msg_t *planMACommRecvBlockTimeout(plan_ma_comm_t *comm,
 
 
 /**
- * Same as planMACommRecvBlockType() but filters out all messages that have
+ * Same as planMACommRecvBlock() but filters out all messages that have
  * different type. The filtered messages are not dropped but stored and
  * next call of *Recv*() functions will return these messages first.
  * For message types see PLAN_MA_MSG_TYPE_* in plan/ma_msg.h.

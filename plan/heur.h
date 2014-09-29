@@ -140,6 +140,11 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
                               const plan_succ_gen_t *succ_gen);
 
 /**
+ * Creates an multi-agent version of max heuristic.
+ */
+plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *agent_def);
+
+/**
  * Creates an multi-agent version of FF heuristic.
  */
 plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *agent_def);

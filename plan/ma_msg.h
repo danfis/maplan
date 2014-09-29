@@ -275,6 +275,74 @@ int planMAMsgHeurFFResponsePeerOp(const plan_ma_msg_t *msg, int i,
                                   int *cost, int *owner);
 
 
+/**
+ * Creates a max-heuristic request.
+ */
+void planMAMsgSetHeurMaxRequest(plan_ma_msg_t *msg, int agent_id, 
+                                const int *state, int state_size);
+
+/**
+ * Adds operator and its value to heur-max-request.
+ */
+void planMAMsgHeurMaxRequestAddOp(plan_ma_msg_t *msg, int op_id, int val);
+
+/**
+ * Returns true if the messsage is HEUR_MAX_REQUEST.
+ */
+int planMAMsgIsHeurMaxRequest(const plan_ma_msg_t *msg);
+
+/**
+ * Returns agent-id
+ */
+int planMAMsgHeurMaxRequestAgent(const plan_ma_msg_t *msg);
+
+/**
+ * Returns value of the var'th variable from the state.
+ */
+int planMAMsgHeurMaxRequestState(const plan_ma_msg_t *msg, int var);
+
+/**
+ * Number of operators stored in request.
+ */
+int planMAMsgHeurMaxRequestOpSize(const plan_ma_msg_t *msg);
+
+/**
+ * Returns i'th operator ID and corresponding value.
+ */
+int planMAMsgHeurMaxRequestOp(const plan_ma_msg_t *msg, int i, int *value);
+
+
+/**
+ * Creates a max-heuristic response.
+ */
+void planMAMsgSetHeurMaxResponse(plan_ma_msg_t *msg, int agent_id);
+
+/**
+ * Adds operator and its value to heur-max-request.
+ */
+void planMAMsgHeurMaxResponseAddOp(plan_ma_msg_t *msg, int op_id, int val);
+
+/**
+ * Returns true if the messsage is HEUR_MAX_REQUEST.
+ */
+int planMAMsgIsHeurMaxResponse(const plan_ma_msg_t *msg);
+
+/**
+ * Returns agent-id
+ */
+int planMAMsgHeurMaxResponseAgent(const plan_ma_msg_t *msg);
+
+/**
+ * Number of operators stored in request.
+ */
+int planMAMsgHeurMaxResponseOpSize(const plan_ma_msg_t *msg);
+
+/**
+ * Returns i'th operator ID and corresponding value.
+ */
+int planMAMsgHeurMaxResponseOp(const plan_ma_msg_t *msg, int i, int *value);
+
+
 
 /**
  * Creates SOLUTION message.

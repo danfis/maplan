@@ -417,6 +417,115 @@ int planMAMsgHeurFFResponsePeerOp(const plan_ma_msg_t *_msg, int i,
 
 
 
+void planMAMsgSetHeurMaxRequest(plan_ma_msg_t *_msg, int agent_id, 
+                                const int *state, int state_size)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurMaxRequest *req;
+
+    msg->set_type(PlanMAMsg::HEUR_MAX_REQUEST);
+    req = msg->mutable_heur_max_request();
+    req->set_agent_id(agent_id);
+    for (int i = 0; i < state_size; ++i)
+        req->add_state(state[i]);
+}
+
+void planMAMsgHeurMaxRequestAddOp(plan_ma_msg_t *_msg, int op_id, int val)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurMaxRequest *req = msg->mutable_heur_max_request();
+    PlanMAMsgHeurMaxOp *op;
+    op = req->add_op();
+    op->set_op_id(op_id);
+    op->set_value(val);
+}
+
+int planMAMsgIsHeurMaxRequest(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type() == PlanMAMsg::HEUR_MAX_REQUEST;
+}
+
+int planMAMsgHeurMaxRequestAgent(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxRequest &req = msg->heur_max_request();
+    return req.agent_id();
+}
+
+int planMAMsgHeurMaxRequestState(const plan_ma_msg_t *_msg, int var)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxRequest &req = msg->heur_max_request();
+    return req.state(var);
+}
+
+int planMAMsgHeurMaxRequestOpSize(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxRequest &req = msg->heur_max_request();
+    return req.op_size();
+}
+
+int planMAMsgHeurMaxRequestOp(const plan_ma_msg_t *_msg, int i, int *value)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxRequest &req = msg->heur_max_request();
+    const PlanMAMsgHeurMaxOp &op = req.op(i);
+    *value = op.value();
+    return op.op_id();
+}
+
+
+void planMAMsgSetHeurMaxResponse(plan_ma_msg_t *_msg, int agent_id)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurMaxResponse *res = msg->mutable_heur_max_response();
+    msg->set_type(PlanMAMsg::HEUR_MAX_RESPONSE);
+    res->set_agent_id(agent_id);
+}
+
+void planMAMsgHeurMaxResponseAddOp(plan_ma_msg_t *_msg, int op_id, int val)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurMaxResponse *res = msg->mutable_heur_max_response();
+    PlanMAMsgHeurMaxOp *op = res->add_op();
+    op->set_op_id(op_id);
+    op->set_value(val);
+}
+
+int planMAMsgIsHeurMaxResponse(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type() == PlanMAMsg::HEUR_MAX_RESPONSE;
+}
+
+int planMAMsgHeurMaxResponseAgent(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxResponse &res = msg->heur_max_response();
+    return res.agent_id();
+}
+
+int planMAMsgHeurMaxResponseOpSize(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxResponse &res = msg->heur_max_response();
+    return res.op_size();
+}
+
+int planMAMsgHeurMaxResponseOp(const plan_ma_msg_t *_msg, int i, int *value)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxResponse &res = msg->heur_max_response();
+    const PlanMAMsgHeurMaxOp &op = res.op(i);
+    *value = op.value();
+    return op.op_id();
+}
+
+
+
+
 void planMAMsgSetSolution(plan_ma_msg_t *_msg, int agent_id,
                           const void *state, size_t state_size,
                           int state_id,

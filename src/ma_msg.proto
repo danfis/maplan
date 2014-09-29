@@ -30,6 +30,27 @@ message PlanMAMsgHeurFFResponse {
     repeated PlanMAMsgHeurFFResponseOp peer_op = 3;
 }
 
+message PlanMAMsgHeurMaxOp {
+    required int32 op_id = 1;
+    required int32 value = 2;
+}
+
+message PlanMAMsgHeurMaxRequest {
+    // Source agent
+    required int32 agent_id = 1;
+    // State from which to find heuristic value
+    repeated int32 state = 3;
+    // Projected/public operators and their values
+    repeated PlanMAMsgHeurMaxOp op = 4;
+}
+
+message PlanMAMsgHeurMaxResponse {
+    // Source agent
+    required int32 agent_id = 1;
+    // Projected/public operators and their values
+    repeated PlanMAMsgHeurMaxOp op = 4;
+}
+
 message PlanMAMsgPathOperator {
     // Name of the operator
     required string name = 1;
@@ -80,7 +101,9 @@ message PlanMAMsg {
         SEARCH_PUBLIC_STATE = 0x0401;
 
         HEUR_FF_REQUEST  = 0x0811;
-        HEUR_FF_RESPONSE = 0x0822;
+        HEUR_FF_RESPONSE = 0x0821;
+        HEUR_MAX_REQUEST  = 0x0812;
+        HEUR_MAX_RESPONSE = 0x0822;
 
         SOLUTION      = 0x1001;
         SOLUTION_ACK  = 0x1002;
@@ -97,4 +120,6 @@ message PlanMAMsg {
     optional PlanMAMsgSolutionAck solution_ack = 7;
     optional PlanMAMsgSolutionMark solution_mark = 8;
     optional PlanMAMsgTerminateRequest terminate_request = 9;
+    optional PlanMAMsgHeurMaxRequest heur_max_request = 10;
+    optional PlanMAMsgHeurMaxResponse heur_max_response = 11;
 }

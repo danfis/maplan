@@ -162,6 +162,7 @@ static void maDelPeerOp(plan_heur_ma_ff_t *ma, int id)
     if (n != NULL){
         borRBTreeIntRemove(ma->peer_op, n);
         --ma->peer_op_size;
+        BOR_FREE(n);
     }
 }
 

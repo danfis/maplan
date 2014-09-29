@@ -222,8 +222,7 @@ static void maExploreLocal(plan_heur_ma_ff_t *heur,
         state.val[i] = heur->state.fact[i];
     }
 
-    // Compute heuristic from the initial state to the precondition of the
-    // requested operator.
+    // Compute heuristic from the initial state to the specified goal
     planHeurRelax2(&heur->heur_relax.heur, &state, goal, res);
     if (res->heur == PLAN_HEUR_DEAD_END)
         return;
@@ -237,9 +236,6 @@ static void maExploreLocal(plan_heur_ma_ff_t *heur,
         global_id = planOpExtraMAProjOpGlobalId(op);
         owner = planOpExtraMAProjOpOwner(op);
 
-        // Add the operator to the relaxed plan
-        maAddOpToRelaxedPlan(heur, global_id, op->cost);
-
         if (owner != comm->node_id){
             // The operator is owned by remote peer.
             // Add it to the set of operators we are waiting for from
@@ -249,6 +245,9 @@ static void maExploreLocal(plan_heur_ma_ff_t *heur,
                 maSendHeurRequest(comm, owner, &heur->state, global_id);
             }
         }
+
+        // Add the operator to the relaxed plan
+        maAddOpToRelaxedPlan(heur, global_id, op->cost);
     }
 }
 
@@ -277,11 +276,6 @@ static int planHeurRelaxFFMA(plan_heur_t *_heur,
     plan_heur_ma_ff_t *heur = HEUR_FF_FROM_PARENT(_heur);
     int i;
 
-    // First run non-MA heuristic algorithm
-    planHeurRelax(_heur, state, res);
-    if (res->heur == PLAN_HEUR_DEAD_END)
-        return 0;
-
     // Remember the state for which we want to compute heuristic
     for (i = 0; i < heur->state.size; ++i)
         heur->state.fact[i] = planStateGet(state, i);
@@ -290,15 +284,16 @@ static int planHeurRelaxFFMA(plan_heur_t *_heur,
     for (i = 0; i < heur->relaxed_plan.size; ++i)
         heur->relaxed_plan.op[i] = -1;
 
-    // Explore local state space
+    // Explore projected state space
     maExploreLocal(heur, comm, NULL, res);
     if (res->heur == PLAN_HEUR_DEAD_END)
         return 0;
 
-    // If we are waiting to responses from other peers, postpone actual
+    // If we are waiting for responses from other peers, postpone actual
     // computation of the heuristic value.
-    if (heur->peer_op_size > 0)
+    if (heur->peer_op_size > 0){
         return -1;
+    }
 
     // Compute heuristic value
     maHeur(heur, res);
@@ -325,7 +320,7 @@ static int planHeurRelaxFFMAUpdate(plan_heur_t *_heur,
     // Then explore all other peer-operators
     len = planMAMsgHeurResponsePeerOpSize(msg);
     for (i = 0; i < len; ++i){
-        op_id = planMAMsgHeurResponsePeerOp(msg, i, &owner);
+        op_id = planMAMsgHeurResponsePeerOp(msg, i, &cost, &owner);
 
         if (owner == comm->node_id){
             maUpdateLocalOp(heur, comm, op_id);
@@ -334,6 +329,7 @@ static int planHeurRelaxFFMAUpdate(plan_heur_t *_heur,
             if (maAddPeerOp(heur, op_id) == 0){
                 maSendHeurRequest(comm, owner, &heur->state, op_id);
             }
+            maAddOpToRelaxedPlan(heur, op_id, cost);
         }
     }
 
@@ -409,7 +405,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
                                        heur->heur_relax.data.op[i].cost);
         }else{
             // Operator belongs to other agent
-            planMAMsgHeurResponseAddPeerOp(response, global_id, owner);
+            planMAMsgHeurResponseAddPeerOp(response, global_id, op->cost, owner);
         }
     }
     planMACommSendToNode(comm, agent_id, response);

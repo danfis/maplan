@@ -30,7 +30,6 @@ typedef struct _fact_t fact_t;
 #include "_heur.c"
 
 struct _plan_heur_relax_t {
-    plan_heur_t heur;
     int type;
 
     heur_fact_op_t data;
@@ -49,9 +48,6 @@ struct _plan_heur_relax_t {
     plan_prio_queue_t queue;
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
-
-#define HEUR_FROM_PARENT(parent) \
-    bor_container_of((parent), plan_heur_relax_t, heur)
 
 /** Initializes main structure for computing relaxed solution. */
 static void ctxInit(plan_heur_relax_t *heur, const plan_part_state_t *goal);
@@ -103,9 +99,10 @@ static void prefOpsSelectorMarkPreferredOp(pref_ops_selector_t *sel,
                                            int op_id);
 
 /** Main function that returns heuristic value. */
-static void planHeurRelax(plan_heur_t *heur, const plan_state_t *state,
-                          plan_heur_res_t *res);
-static void planHeurRelax2(plan_heur_t *heur,
+BOR_UNUSED(static void planHeurRelax(plan_heur_relax_t *heur,
+                                     const plan_state_t *state,
+                                     plan_heur_res_t *res));
+static void planHeurRelax2(plan_heur_relax_t *heur,
                            const plan_state_t *state,
                            const plan_part_state_t *goal,
                            plan_heur_res_t *res);
@@ -144,7 +141,6 @@ static void planHeurRelaxInit(plan_heur_relax_t *heur, int type,
 
 static void planHeurRelaxFree(plan_heur_relax_t *heur)
 {
-    _planHeurFree(&heur->heur);
     BOR_FREE(heur->fact);
     BOR_FREE(heur->op);
     BOR_FREE(heur->relaxed_plan);
@@ -153,18 +149,17 @@ static void planHeurRelaxFree(plan_heur_relax_t *heur)
         BOR_FREE(heur->goal.fact);
 }
 
-static void planHeurRelax(plan_heur_t *_heur, const plan_state_t *state,
+static void planHeurRelax(plan_heur_relax_t *heur, const plan_state_t *state,
                           plan_heur_res_t *res)
 {
-    planHeurRelax2(_heur, state, NULL, res);
+    planHeurRelax2(heur, state, NULL, res);
 }
 
-static void planHeurRelax2(plan_heur_t *_heur,
+static void planHeurRelax2(plan_heur_relax_t *heur,
                            const plan_state_t *state,
                            const plan_part_state_t *goal,
                            plan_heur_res_t *res)
 {
-    plan_heur_relax_t *heur = HEUR_FROM_PARENT(_heur);
     plan_cost_t h = PLAN_HEUR_DEAD_END;
 
     ctxInit(heur, goal);

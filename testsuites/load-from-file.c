@@ -326,6 +326,54 @@ TEST(testLoadAgentFromProto)
     if (agents == NULL)
         return;
 
+    assertEquals(agents->agent[0].private_val_size, 7);
+    assertEquals(agents->agent[0].private_val[0].var, 0);
+    assertEquals(agents->agent[0].private_val[0].val, 0);
+    assertEquals(agents->agent[0].private_val[1].var, 0);
+    assertEquals(agents->agent[0].private_val[1].val, 1);
+    assertEquals(agents->agent[0].private_val[2].var, 0);
+    assertEquals(agents->agent[0].private_val[2].val, 2);
+    assertEquals(agents->agent[0].private_val[3].var, 2);
+    assertEquals(agents->agent[0].private_val[3].val, 1);
+    assertEquals(agents->agent[0].private_val[4].var, 3);
+    assertEquals(agents->agent[0].private_val[4].val, 1);
+    assertEquals(agents->agent[0].private_val[5].var, 10);
+    assertEquals(agents->agent[0].private_val[5].val, 0);
+    assertEquals(agents->agent[0].private_val[6].var, 10);
+    assertEquals(agents->agent[0].private_val[6].val, 1);
+
+    assertEquals(agents->agent[1].private_val_size, 15);
+    assertEquals(agents->agent[1].private_val[0].var, 1);
+    assertEquals(agents->agent[1].private_val[0].val, 0);
+    assertEquals(agents->agent[1].private_val[1].var, 1);
+    assertEquals(agents->agent[1].private_val[1].val, 1);
+    assertEquals(agents->agent[1].private_val[2].var, 1);
+    assertEquals(agents->agent[1].private_val[2].val, 2);
+    assertEquals(agents->agent[1].private_val[3].var, 1);
+    assertEquals(agents->agent[1].private_val[3].val, 3);
+    assertEquals(agents->agent[1].private_val[4].var, 2);
+    assertEquals(agents->agent[1].private_val[4].val, 2);
+    assertEquals(agents->agent[1].private_val[5].var, 3);
+    assertEquals(agents->agent[1].private_val[5].val, 2);
+    assertEquals(agents->agent[1].private_val[6].var, 4);
+    assertEquals(agents->agent[1].private_val[6].val, 0);
+    assertEquals(agents->agent[1].private_val[7].var, 4);
+    assertEquals(agents->agent[1].private_val[7].val, 1);
+    assertEquals(agents->agent[1].private_val[8].var, 5);
+    assertEquals(agents->agent[1].private_val[8].val, 0);
+    assertEquals(agents->agent[1].private_val[9].var, 5);
+    assertEquals(agents->agent[1].private_val[9].val, 1);
+    assertEquals(agents->agent[1].private_val[10].var, 6);
+    assertEquals(agents->agent[1].private_val[10].val, 0);
+    assertEquals(agents->agent[1].private_val[11].var, 6);
+    assertEquals(agents->agent[1].private_val[11].val, 1);
+    assertEquals(agents->agent[1].private_val[12].var, 11);
+    assertEquals(agents->agent[1].private_val[12].val, 0);
+    assertEquals(agents->agent[1].private_val[13].var, 11);
+    assertEquals(agents->agent[1].private_val[13].val, 1);
+    assertEquals(agents->agent[1].private_val[14].var, 12);
+    assertEquals(agents->agent[1].private_val[14].val, 0);
+
     for (api = 0; api < agents->agent_size; ++api){
         p = agents->agent + api;
 

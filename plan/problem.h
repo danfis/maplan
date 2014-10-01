@@ -15,6 +15,12 @@ extern "C" {
  */
 #define PLAN_PROBLEM_USE_CG 0x1
 
+struct _plan_problem_private_val_t {
+    int var;
+    int val;
+};
+typedef struct _plan_problem_private_val_t plan_problem_private_val_t;
+
 struct _plan_problem_t {
     plan_var_t *var;               /*!< Definitions of variables */
     int var_size;                  /*!< Number of variables */
@@ -29,6 +35,8 @@ struct _plan_problem_t {
     char *agent_name;   /*!< Name of the corresponding agent */
     plan_op_t *proj_op; /*!< Projected operators */
     int proj_op_size;   /*!< Number of projected operators */
+    plan_problem_private_val_t *private_val; /*!< List of private values */
+    int private_val_size;
 };
 typedef struct _plan_problem_t plan_problem_t;
 

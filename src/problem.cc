@@ -218,6 +218,16 @@ static void agentSplitOperators(plan_problem_agents_t *agents,
     }
 }
 
+static bool sortCmpPrivateVals(const plan_problem_private_val_t &v1,
+                               const plan_problem_private_val_t &v2)
+{
+    if (v1.var < v2.var)
+        return true;
+    if (v1.var == v2.var && v1.val < v2.val)
+        return true;
+    return false;
+}
+
 struct AgentVarVal {
     std::vector<bool> use; /*!< true for each agent if the value is used
                                 in precondition or effect of its operator */
@@ -237,6 +247,7 @@ struct AgentVarVal {
 
 class AgentVarVals {
     std::vector<std::vector<AgentVarVal> > val;
+    std::vector<std::vector<plan_problem_private_val_t> > private_vals;
 
   public:
     AgentVarVals(const plan_problem_t *prob, int agent_size)
@@ -248,6 +259,8 @@ class AgentVarVals {
                 val[i][j].resize(agent_size);
             }
         }
+
+        private_vals.resize(agent_size);
     }
 
     /**
@@ -269,20 +282,38 @@ class AgentVarVals {
 
     /**
      * Sets variables' values as public if they are used by more than one
-     * agent.
+     * agent and sets them as private otherwise.
      */
     void determinePublicVals()
     {
+        plan_problem_private_val_t private_val;
+
         for (size_t i = 0; i < val.size(); ++i){
             for (size_t j = 0; j < val[i].size(); ++j){
                 int sum = 0;
-                for (size_t k = 0; k < val[i][j].use.size() && sum < 2; ++k)
-                    sum += val[i][j].use[k];
-                if (sum > 1)
+                int owner = -1;
+                for (size_t k = 0; k < val[i][j].use.size() && sum < 2; ++k){
+                    if (val[i][j].use[k]){
+                        ++sum;
+                        owner = k;
+                    }
+                }
+                if (sum > 1){
                     val[i][j].pub = true;
+                }else if (sum == 1){
+                    private_val.var = i;
+                    private_val.val = j;
+                    private_vals[owner].push_back(private_val);
+                }
             }
         }
+
+        for (size_t i = 0; i < private_vals.size(); ++i){
+            std::sort(private_vals[i].begin(), private_vals[i].end(),
+                      sortCmpPrivateVals);
+        }
     }
+
     /**
      * Returns true if the value is used by the specified agent.
      */
@@ -306,6 +337,11 @@ class AgentVarVals {
     bool isPublic(int var, int value) const
     {
         return val[var][value].pub;
+    }
+
+    const std::vector<plan_problem_private_val_t> &privateVals(int agent_id) const
+    {
+        return private_vals[agent_id];
     }
 };
 
@@ -475,6 +511,20 @@ static void agentCreateProjectedOps(plan_problem_t *agent,
                                      agent->proj_op_size);
 }
 
+static void agentPrivateVals(plan_problem_t *agent, int agent_id,
+                             const AgentVarVals &vals)
+{
+    const std::vector<plan_problem_private_val_t> &pv
+                = vals.privateVals(agent_id);
+
+    agent->private_val_size = pv.size();
+    agent->private_val = BOR_ALLOC_ARR(plan_problem_private_val_t,
+                                       agent->private_val_size);
+    for (size_t i = 0; i < pv.size(); ++i){
+        agent->private_val[i] = pv[i];
+    }
+}
+
 static void loadAgents(plan_problem_agents_t *p,
                        const PlanProblem *proto,
                        int flags)
@@ -518,6 +568,8 @@ static void loadAgents(plan_problem_agents_t *p,
 
         p->agent[i].succ_gen = planSuccGenNew(p->agent[i].op,
                                               p->agent[i].op_size, NULL);
+
+        agentPrivateVals(p->agent + i, i, var_vals);
     }
 
     BOR_FREE(op_owner);

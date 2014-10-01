@@ -28,6 +28,7 @@ OBJS += search_ehc.o
 OBJS += search_lazy.o
 OBJS += search_astar.o
 OBJS += heur.o
+OBJS += heur_ma.o
 OBJS += list_lazy.o
 OBJS += list.o
 OBJS += t_ma_comm_queue.o

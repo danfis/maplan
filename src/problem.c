@@ -56,6 +56,9 @@ void planProblemFree(plan_problem_t *plan)
     if (plan->proj_op)
         freeOps(plan->proj_op, plan->proj_op_size);
 
+    if (plan->private_val)
+        BOR_FREE(plan->private_val);
+
     bzero(plan, sizeof(*plan));
 }
 

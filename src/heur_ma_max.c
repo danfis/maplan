@@ -55,7 +55,7 @@ struct _plan_heur_ma_max_t {
                             agent. */
     plan_heur_factarr_t cur_state; /*!< Current state for which h^max is computed */
 
-    private_t private;
+    private_t private; /*!< Data for processing requests */
 };
 typedef struct _plan_heur_ma_max_t plan_heur_ma_max_t;
 
@@ -178,8 +178,7 @@ static void heurDel(plan_heur_t *_heur)
     plan_heur_ma_max_t *heur = HEUR(_heur);
     int i;
 
-    _planHeurFree(&heur->heur);
-    planHeurRelaxFree(&heur->relax);
+    privateFree(&heur->private, &heur->relax.data);
 
     for (i = 0; i < heur->agent_size; ++i){
         if (heur->agent_op[i].op)
@@ -191,9 +190,11 @@ static void heurDel(plan_heur_t *_heur)
         BOR_FREE(heur->agent_change);
     if (heur->cur_state.fact)
         BOR_FREE(heur->cur_state.fact);
+    if (heur->op_glob_id_to_id)
+        BOR_FREE(heur->op_glob_id_to_id);
 
-    privateFree(&heur->private, &heur->relax.data);
-
+    planHeurRelaxFree(&heur->relax);
+    _planHeurFree(&heur->heur);
     BOR_FREE(heur);
 }
 
@@ -250,7 +251,7 @@ static int heurMAMax(plan_heur_t *_heur, plan_ma_comm_t *comm,
 static int updateFactValue(plan_heur_ma_max_t *heur, int fact_id)
 {
     plan_heur_oparr_t *ops;
-    int i, original_value, value, op_id;
+    int i, original_value, value;
 
     // Remember original value before change
     original_value = heur->relax.fact[fact_id].value;
@@ -380,6 +381,7 @@ static int heurMAMaxUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
         return -1;
     }
 
+    // Mark the agent we are receiving from as change-free
     heur->agent_change[other_agent_id] = 0;
 
     planPrioQueueInit(&heur->relax.queue);
@@ -402,6 +404,8 @@ static int heurMAMaxUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
 
     // Update h^max values of facts and operators
     updateHMax(heur);
+
+    planPrioQueueFree(&heur->relax.queue);
 
     if (!needsUpdate(heur)){
         res->heur = ctxHeur(&heur->relax, NULL);

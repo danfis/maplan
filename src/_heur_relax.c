@@ -42,11 +42,11 @@ struct _plan_heur_relax_t {
                                    value of its pointer. */
     plan_heur_op_t *op;
     fact_t *fact;
-    int *relaxed_plan;   /*!< Prepared array for relaxed plan */
+    int *relaxed_plan;        /*!< Prepared array for relaxed plan */
 
-    int goal_unsat_init; /*!< Number of unsatisfied goal variables */
-    int goal_unsat;      /*!< Counter of unsatisfied goals */
-    factarr_t goal;      /*!< Current goal */
+    int goal_unsat_init;      /*!< Number of unsatisfied goal variables */
+    int goal_unsat;           /*!< Counter of unsatisfied goals */
+    plan_heur_factarr_t goal; /*!< Current goal */
     plan_prio_queue_t queue;
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;

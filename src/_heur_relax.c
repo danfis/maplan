@@ -123,8 +123,8 @@ static void planHeurRelaxInit(plan_heur_relax_t *heur, int type,
     heur->base_op = op;
 
     flags = 0;
-    heurFactOpInit(&heur->data, var, var_size, goal,
-                   op, op_size, succ_gen, flags);
+    planHeurFactOpInit(&heur->data, var, var_size, goal,
+                       op, op_size, succ_gen, flags);
 
     heur->op = BOR_ALLOC_ARR(plan_heur_op_t, heur->data.op_size);
     heur->fact = BOR_ALLOC_ARR(fact_t, heur->data.fact_size);
@@ -145,7 +145,7 @@ static void planHeurRelaxFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->fact);
     BOR_FREE(heur->op);
     BOR_FREE(heur->relaxed_plan);
-    heurFactOpFree(&heur->data);
+    planHeurFactOpFree(&heur->data);
     if (heur->goal.fact)
         BOR_FREE(heur->goal.fact);
 }

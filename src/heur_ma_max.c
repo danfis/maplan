@@ -244,9 +244,9 @@ static void freePrivateFactOp(plan_heur_ma_max_t *heur)
 {
     BOR_FREE(heur->private_fact_id);
     BOR_FREE(heur->private_fact);
-    factarrFree(heur->private_op_eff, heur->relax.data.op_size);
-    oparrFree(heur->private_fact_pre, heur->relax.data.fact_size);
-    oparrFree(heur->private_fact_eff, heur->relax.data.fact_size);
+    planHeurFactarrFree(heur->private_op_eff, heur->relax.data.op_size);
+    planHeurOparrFree(heur->private_fact_pre, heur->relax.data.fact_size);
+    planHeurOparrFree(heur->private_fact_eff, heur->relax.data.fact_size);
     BOR_FREE(heur->private_op);
 }
 

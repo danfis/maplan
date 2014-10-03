@@ -151,7 +151,7 @@ _bor_inline int planHeurFactId(const plan_heur_fact_id_t *factid,
 /** Frees plan_heur_oparr_t array */
 static void planHeurOparrFree(plan_heur_oparr_t *oparr, int size);
 /** Frees plan_heur_factarr_t array */
-static void factarrFree(plan_heur_factarr_t *factarr, int size);
+static void planHeurFactarrFree(plan_heur_factarr_t *factarr, int size);
 /** Initializes and frees .goal structure */
 static void goalInit(plan_heur_fact_op_t *fact_op,
                      const plan_part_state_t *goal);
@@ -247,12 +247,12 @@ static void planHeurFactOpInit(plan_heur_fact_op_t *fact_op,
 static void planHeurFactOpFree(plan_heur_fact_op_t *fact_op)
 {
     planHeurFactIdFree(&fact_op->fact_id);
-    oparrFree(fact_op->fact_pre, fact_op->fact_size);
+    planHeurOparrFree(fact_op->fact_pre, fact_op->fact_size);
 #ifdef HEUR_FACT_OP_FACT_EFF
-    oparrFree(fact_op->fact_eff, fact_op->fact_size);
+    planHeurOparrFree(fact_op->fact_eff, fact_op->fact_size);
 #endif /* HEUR_FACT_OP_FACT_EFF */
-    factarrFree(fact_op->op_pre, fact_op->op_size);
-    factarrFree(fact_op->op_eff, fact_op->op_size);
+    planHeurFactarrFree(fact_op->op_pre, fact_op->op_size);
+    planHeurFactarrFree(fact_op->op_eff, fact_op->op_size);
     opFree(fact_op);
 
 #ifdef HEUR_FACT_OP_FACT_T
@@ -314,7 +314,7 @@ static void planHeurOparrFree(plan_heur_oparr_t *oparr, int size)
     BOR_FREE(oparr);
 }
 
-static void factarrFree(plan_heur_factarr_t *factarr, int size)
+static void planHeurFactarrFree(plan_heur_factarr_t *factarr, int size)
 {
     int i;
 

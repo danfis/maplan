@@ -286,7 +286,7 @@ TEST(testHeurMAMax)
     plan_state_t *state[5];
     plan_ma_comm_queue_pool_t *comm_pool;
     plan_ma_comm_t *comm[5];
-    int i, var;
+    int i, var, agent_id;
 
     p = planProblemAgentsFromProto("../data/ma-benchmarks/depot/pfile5.proto",
                                    PLAN_PROBLEM_USE_CG);
@@ -297,12 +297,14 @@ TEST(testHeurMAMax)
         comm[i] = planMACommQueue(comm_pool, i);
     }
 
-    for (i = 0; i < h_max_depot5_test_len; ++i){
-        for (var = 0; var < 38; ++var)
-            planStateSet(state[0], var, h_max_depot5_test[i].state[var]);
-        testMAHeur(heur, comm, 5, 0, state[0], h_max_depot5_test[i].heur);
+    for (agent_id = 0; agent_id < 5; ++agent_id){
+        for (i = 0; i < h_max_depot5_test_len; ++i){
+            for (var = 0; var < 38; ++var)
+                planStateSet(state[agent_id], var, h_max_depot5_test[i].state[var]);
+            testMAHeur(heur, comm, 5, agent_id, state[agent_id],
+                       h_max_depot5_test[i].heur);
+        }
     }
-
 
     for (i = 0; i < 5; ++i){
         planStateDel(state[i]);

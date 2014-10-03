@@ -239,9 +239,7 @@ static int heurMAMax(plan_heur_t *_heur, plan_ma_comm_t *comm,
     }
 
     heur->agent_id = comm->node_id;
-    heur->cur_agent = 0;
-    if (comm->node_id == 0)
-        heur->cur_agent = 1;
+    heur->cur_agent = (heur->agent_id + 1) % heur->agent_size;
 
     sendRequest(heur, comm, heur->cur_agent);
 

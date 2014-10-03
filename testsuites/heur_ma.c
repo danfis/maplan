@@ -243,6 +243,8 @@ plan_ma_msg_t *nextMsg(plan_ma_comm_t **comm, int agent_size, int *agent_id)
             }
         }
     }
+
+    return NULL;
 }
 static void testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
                        int agent_size, int agent_id,
@@ -257,14 +259,10 @@ static void testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
     status = planHeurMA(heur[agent_id], comm[agent_id], state, &res);
     while (status != 0){
         msg = nextMsg(comm, agent_size, &msg_agent_id);
-        fprintf(stderr, "msg type: %x\n", planMAMsgType(msg));
-
         if (planMAMsgIsHeurMaxRequest(msg)){
-            fprintf(stderr, "req\n");
             planHeurMARequest(heur[msg_agent_id], comm[msg_agent_id], msg);
 
         }else if (planMAMsgIsHeurMaxResponse(msg)){
-            fprintf(stderr, "resp\n");
             status = planHeurMAUpdate(heur[msg_agent_id], comm[msg_agent_id],
                                       msg, &res);
 
@@ -276,9 +274,7 @@ static void testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
         }
 
         planMAMsgDel(msg);
-        break;
     }
-    fprintf(stderr, "status: %d\n", status);
 
     assertEquals(res.heur, target);
 }
@@ -305,7 +301,6 @@ TEST(testHeurMAMax)
         for (var = 0; var < 38; ++var)
             planStateSet(state[0], var, h_max_depot5_test[i].state[var]);
         testMAHeur(heur, comm, 5, 0, state[0], h_max_depot5_test[i].heur);
-        break;
     }
 
 

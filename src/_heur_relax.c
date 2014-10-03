@@ -4,9 +4,21 @@
 #include "plan/heur.h"
 #include "plan/prioqueue.h"
 
-#define TYPE_ADD   0
-#define TYPE_MAX   1
-#define TYPE_FF    2
+/**
+ * Available options for this module:
+ * HEUR_RELAX_ADD
+ *      If defined h^add heuristic is created
+ * HEUR_RELAX_MAX
+ *      If defined h^max heuristic is created
+ * HEUR_RELAX_FF
+ *      If defined h^ff heuristic is created
+ */
+
+#if !defined(HEUR_RELAX_ADD) \
+        && !defined(HEUR_RELAX_MAX) \
+        && !defined(HEUR_RELAX_FF)
+# error "One of HEUR_RELAX_{ADD,MAX,FF} must be defined"
+#endif
 
 /**
  * Structure representing a single fact.
@@ -32,8 +44,6 @@ typedef struct _fact_t fact_t;
 #include "_heur_fact_op.c"
 
 struct _plan_heur_relax_t {
-    int type;
-
     plan_heur_fact_op_t data;
 
     const plan_op_t *base_op; /*!< Pointer to the input operators.
@@ -74,13 +84,11 @@ static void markRelaxedPlan(plan_heur_relax_t *heur);
 
 struct _pref_ops_selector_t {
     plan_heur_res_t *pref_ops; /*!< In/Out data structure */
-    plan_op_t *base_op;  /*!< Base pointer to the source
-                                    operator array. */
-    plan_op_t **cur;     /*!< Cursor pointing to the next
-                                    operator in .pref_ops->op[] */
+    plan_op_t *base_op;  /*!< Base pointer to the source operator array. */
+    plan_op_t **cur;     /*!< Cursor pointing to the next operator in
+                              .pref_ops->op[] */
     plan_op_t **end;     /*!< Points after .pref_ops->op[] */
-    plan_op_t **ins;     /*!< Next insert position for
-                                    preferred operator. */
+    plan_op_t **ins;     /*!< Next insert position for preferred operator. */
 };
 typedef struct _pref_ops_selector_t pref_ops_selector_t;
 
@@ -110,21 +118,18 @@ static void planHeurRelax2(plan_heur_relax_t *heur,
                            plan_heur_res_t *res);
 
 
-static void planHeurRelaxInit(plan_heur_relax_t *heur, int type,
+static void planHeurRelaxInit(plan_heur_relax_t *heur,
                               const plan_var_t *var, int var_size,
                               const plan_part_state_t *goal,
                               const plan_op_t *op, int op_size,
                               const plan_succ_gen_t *succ_gen)
 {
-    unsigned flags;
     int i;
 
-    heur->type = type;
     heur->base_op = op;
 
-    flags = 0;
     planHeurFactOpInit(&heur->data, var, var_size, goal,
-                       op, op_size, succ_gen, flags);
+                       op, op_size, succ_gen);
 
     heur->op = BOR_ALLOC_ARR(plan_heur_op_t, heur->data.op_size);
     heur->fact = BOR_ALLOC_ARR(fact_t, heur->data.fact_size);
@@ -145,6 +150,7 @@ static void planHeurRelaxFree(plan_heur_relax_t *heur)
     BOR_FREE(heur->fact);
     BOR_FREE(heur->op);
     BOR_FREE(heur->relaxed_plan);
+
     planHeurFactOpFree(&heur->data);
     if (heur->goal.fact)
         BOR_FREE(heur->goal.fact);
@@ -260,23 +266,16 @@ static void ctxAddEffects(plan_heur_relax_t *heur, int op_id)
     }
 }
 
-_bor_inline plan_cost_t relaxHeurOpValue(int type,
-                                         plan_cost_t op_cost,
-                                         plan_cost_t op_value,
-                                         plan_cost_t fact_value)
-{
-    if (type == TYPE_ADD || type == TYPE_FF)
-        return op_value + fact_value;
-    return BOR_MAX(op_cost + fact_value, op_value);
-}
-
 static void ctxProcessOp(plan_heur_relax_t *heur, int op_id, fact_t *fact)
 {
     // update operator value
-    heur->op[op_id].value = relaxHeurOpValue(heur->type,
-                                             heur->op[op_id].cost,
-                                             heur->op[op_id].value,
-                                             fact->value);
+#if defined(HEUR_RELAX_FF) || defined(HEUR_RELAX_ADD)
+    heur->op[op_id].value = heur->op[op_id].value + fact->value;
+#elif defined(HEUR_RELAX_MAX)
+    plan_cost_t value = heur->op[op_id].value;
+    plan_cost_t cost = heur->op[op_id].cost;
+    heur->op[op_id].value = BOR_MAX(value, cost + fact->value);
+#endif
 
     // satisfy operator precondition
     heur->op[op_id].unsat = BOR_MAX(heur->op[op_id].unsat - 1, 0);
@@ -322,17 +321,9 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
 }
 
 
-_bor_inline plan_cost_t relaxHeurValue(int type,
-                                       plan_cost_t value1,
-                                       plan_cost_t value2)
-{
-    if (type == TYPE_ADD)
-        return value1 + value2;
-    return BOR_MAX(value1, value2);
-}
-
-static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur,
-                                   plan_heur_res_t *pref_ops)
+#if defined(HEUR_RELAX_ADD) || defined(HEUR_RELAX_MAX)
+static plan_cost_t relaxHeur(plan_heur_relax_t *heur,
+                             plan_heur_res_t *pref_ops)
 {
     int i, id;
     plan_cost_t h;
@@ -340,7 +331,11 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur,
     h = PLAN_COST_ZERO;
     for (i = 0; i < heur->goal.size; ++i){
         id = heur->goal.fact[i];
-        h = relaxHeurValue(heur->type, h, heur->fact[id].value);
+#ifdef HEUR_RELAX_ADD
+        h = h + heur->fact[id].value;
+#elif defined(HEUR_RELAX_MAX)
+        h = BOR_MAX(h, heur->fact[id].value);
+#endif
     }
 
     if (pref_ops != NULL && pref_ops->pref_op != NULL){
@@ -357,11 +352,10 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur,
     return h;
 }
 
+#elif defined(HEUR_RELAX_FF)
 
-
-
-static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
-                               plan_heur_res_t *preferred_ops)
+static plan_cost_t relaxHeur(plan_heur_relax_t *heur,
+                             plan_heur_res_t *preferred_ops)
 {
     int i;
     plan_cost_t h = PLAN_COST_ZERO;
@@ -389,15 +383,12 @@ static plan_cost_t relaxHeurFF(plan_heur_relax_t *heur,
 
     return h;
 }
+#endif
 
 static plan_cost_t ctxHeur(plan_heur_relax_t *heur,
                            plan_heur_res_t *preferred_ops)
 {
-    if (heur->type == TYPE_ADD || heur->type == TYPE_MAX){
-        return relaxHeurAddMax(heur, preferred_ops);
-    }else{ // heur->type == TYPE_FF
-        return relaxHeurFF(heur, preferred_ops);
-    }
+    return relaxHeur(heur, preferred_ops);
 }
 
 

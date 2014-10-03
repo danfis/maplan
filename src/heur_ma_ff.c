@@ -1,3 +1,6 @@
+#include "plan/heur.h"
+
+#define HEUR_RELAX_FF
 #include "_heur_relax.c"
 
 struct _plan_heur_ma_ff_t {
@@ -75,7 +78,7 @@ plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
     _planHeurMAInit(&heur->heur, planHeurRelaxFFMA,
                     planHeurRelaxFFMAUpdate, planHeurRelaxFFMARequest);
 
-    planHeurRelaxInit(&heur->relax, TYPE_FF, 
+    planHeurRelaxInit(&heur->relax,
                       prob->var, prob->var_size,
                       prob->goal,
                       prob->proj_op, prob->proj_op_size,

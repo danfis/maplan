@@ -1,5 +1,6 @@
 #include "plan/heur.h"
 
+#define HEUR_RELAX_MAX
 #define HEUR_FACT_OP_FACT_EFF
 #include "_heur_relax.c"
 
@@ -260,7 +261,7 @@ plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob)
     _planHeurMAInit(&heur->heur, heurMAMax,
                     heurMAMaxUpdate, heurMAMaxRequest);
 
-    planHeurRelaxInit(&heur->relax, TYPE_MAX,
+    planHeurRelaxInit(&heur->relax,
                       prob->var, prob->var_size,
                       prob->goal,
                       prob->proj_op, prob->proj_op_size,

@@ -129,8 +129,7 @@ static void planHeurFactOpInit(plan_heur_fact_op_t *fact_op,
                                const plan_var_t *var, int var_size,
                                const plan_part_state_t *goal,
                                const plan_op_t *op, int op_size,
-                               const plan_succ_gen_t *_succ_gen,
-                               unsigned flags);
+                               const plan_succ_gen_t *_succ_gen);
 
 /**
  * Frees heur_fact_op_t structure.
@@ -197,8 +196,7 @@ static void planHeurFactOpInit(plan_heur_fact_op_t *fact_op,
                                const plan_var_t *var, int var_size,
                                const plan_part_state_t *goal,
                                const plan_op_t *op, int op_size,
-                               const plan_succ_gen_t *_succ_gen,
-                               unsigned flags)
+                               const plan_succ_gen_t *_succ_gen)
 {
 #ifdef HEUR_FACT_OP_SIMPLIFY
     plan_succ_gen_t *succ_gen;

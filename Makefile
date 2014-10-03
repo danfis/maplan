@@ -50,7 +50,9 @@ OBJS += search_lazy
 OBJS += search_astar
 OBJS += heur
 OBJS += heur_goalcount
-OBJS += heur_relax
+OBJS += heur_relax_add
+OBJS += heur_relax_max
+OBJS += heur_relax_ff
 OBJS += heur_ma_ff
 OBJS += heur_ma_max
 OBJS += heur_lm_cut
@@ -84,6 +86,13 @@ plan/config.h: plan/config.h.m4
 src/%.pb.h src/%.pb.cc: src/%.proto
 	cd src && $(PROTOC) --cpp_out=. $(notdir $<)
 
+.objs/heur_relax_%.o: src/heur_relax_%.c src/_heur_fact_op.c src/_heur_relax.c \
+		src/_heur_relax_impl.c plan/heur.h plan/config.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+.objs/heur_ma_ff.o: src/heur_ma_ff.c src/_heur_fact_op.c src/_heur_relax.c plan/heur.h plan/config.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+.objs/heur_ma_max.o: src/heur_ma_max.c src/_heur_fact_op.c src/_heur_relax.c plan/heur.h plan/config.h
+	$(CC) $(CFLAGS) -c -o $@ $<
 .objs/%.o: src/%.c plan/%.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 .objs/%.o: src/%.c plan/config.h

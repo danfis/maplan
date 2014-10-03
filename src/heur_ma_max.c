@@ -24,6 +24,23 @@ struct _private_op_t {
 };
 typedef struct _private_op_t private_op_t;
 
+struct _private_t {
+    int fact_size;     /*!< Number of private facts */
+    int op_size;       /*!< Number of private operators */
+    int *fact_id;      /*!< List of all private facts IDs */
+    int *op_id;        /*!< List of all private ops IDs */
+    int *fact;         /*!< Working array for facts */
+    private_op_t *op;  /*!< Working array for operators */
+    private_op_t *op_init;
+
+    plan_heur_factarr_t *op_eff; /*!< Unrolled private effects of operators */
+    plan_heur_oparr_t *fact_pre; /*!< Operators for which is the private
+                                      fact is precondition */
+    plan_heur_oparr_t *fact_eff; /*!< Operators for which is the private
+                                      fact is effect */
+};
+typedef struct _private_t private_t;
+
 struct _plan_heur_ma_max_t {
     plan_heur_t heur;
     plan_heur_relax_t relax;
@@ -38,19 +55,7 @@ struct _plan_heur_ma_max_t {
                             agent. */
     plan_heur_factarr_t cur_state; /*!< Current state for which h^max is computed */
 
-    int private_fact_size;     /*!< Number of private facts */
-    int private_op_size;       /*!< Number of private operators */
-    int *private_fact_id;      /*!< List of all private facts IDs */
-    int *private_op_id;        /*!< List of all private ops IDs */
-    int *private_fact;         /*!< Working array for facts */
-    private_op_t *private_op;  /*!< Working array for operators */
-    private_op_t *private_op_init;
-    plan_heur_factarr_t *private_op_eff; /*!< Unrolled private effects of
-                                              operators */
-    plan_heur_oparr_t *private_fact_pre; /*!< Operators for which is the
-                                              private fact is precondition */
-    plan_heur_oparr_t *private_fact_eff; /*!< Operators for which is the
-                                              private fact is effect */
+    private_t private;
 };
 typedef struct _plan_heur_ma_max_t plan_heur_ma_max_t;
 
@@ -64,6 +69,25 @@ static int heurMAMaxUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
                            const plan_ma_msg_t *msg, plan_heur_res_t *res);
 static void heurMAMaxRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
                              const plan_ma_msg_t *msg);
+
+/** Initializes private_t struct from problem definition */
+static void privateInit(private_t *private,
+                        const plan_heur_fact_op_t *fact_op,
+                        const plan_problem_t *prob);
+/** Frees allocated resources */
+static void privateFree(private_t *private,
+                        const plan_heur_fact_op_t *fact_op);
+
+
+
+
+
+
+
+
+
+
+
 
 static int maxGlobId(const plan_op_t *op, int size)
 {
@@ -113,145 +137,6 @@ static void initAgentOp(plan_heur_ma_max_t *heur,
     }
 }
 
-static void initPrivateFact(plan_heur_ma_max_t *heur,
-                            const plan_problem_t *prob)
-{
-    int i, len, fact_id;
-    plan_problem_private_val_t *val;
-    plan_heur_fact_id_t *fid = &heur->relax.data.fact_id;
-
-    heur->private_fact_id = BOR_ALLOC_ARR(int, heur->relax.data.fact_size);
-    heur->private_fact_size = 0;
-    heur->private_fact = BOR_ALLOC_ARR(int, heur->relax.data.fact_size);
-
-    len = prob->private_val_size;
-    val = prob->private_val;
-    for (i = 0; i < len; ++i){
-        fact_id = planHeurFactId(fid, val[i].var, val[i].val);
-        heur->private_fact_id[heur->private_fact_size++] = fact_id;
-    }
-
-    heur->private_fact_id = BOR_REALLOC_ARR(heur->private_fact_id, int,
-                                            heur->private_fact_size);
-}
-
-static void initProjectPrivateOpEff(plan_heur_ma_max_t *heur, int op_id)
-{
-    int i, j, op_size, fact_size;
-    int *fact;
-    plan_heur_factarr_t *dst_fact;
-
-    dst_fact = heur->private_op_eff + op_id;
-
-    fact_size = heur->relax.data.op_eff[op_id].size;
-    fact = heur->relax.data.op_eff[op_id].fact;
-    for (i = 0, j = 0; i < fact_size && j < heur->private_fact_size;){
-        if (fact[i] == heur->private_fact_id[j]){
-            ++dst_fact->size;
-            dst_fact->fact = BOR_REALLOC_ARR(dst_fact->fact, int,
-                                             dst_fact->size);
-            dst_fact->fact[dst_fact->size - 1] = fact[i];
-
-            ++i;
-            ++j;
-        }else if (fact[i] < heur->private_fact_id[j]){
-            ++i;
-        }else{
-            ++j;
-        }
-    }
-}
-
-static void initProjectPrivateFact(plan_heur_ma_max_t *heur)
-{
-    int i, j, fact_id;
-    plan_heur_oparr_t *src, *dst;
-
-    for (i = 0; i < heur->private_fact_size; ++i){
-        fact_id = heur->private_fact_id[i];
-
-        dst = heur->private_fact_pre + fact_id;
-        src = heur->relax.data.fact_pre + fact_id;
-        dst->size = src->size;
-        dst->op = BOR_ALLOC_ARR(int, dst->size);
-        memcpy(dst->op, src->op, sizeof(int) * dst->size);
-
-        for (j = 0; j < dst->size; ++j){
-            heur->private_op_init[dst->op[j]].unsat += 1;
-        }
-
-        dst = heur->private_fact_eff + fact_id;
-        src = heur->relax.data.fact_eff + fact_id;
-        dst->size = src->size;
-        dst->op = BOR_ALLOC_ARR(int, dst->size);
-        memcpy(dst->op, src->op, sizeof(int) * dst->size);
-    }
-}
-
-static void initPrivateOp(plan_heur_ma_max_t *heur,
-                          const plan_problem_t *prob)
-{
-    int i, op_size;
-
-    op_size = heur->relax.data.op_size;
-    heur->private_op = BOR_ALLOC_ARR(private_op_t, op_size);
-    heur->private_op_init = BOR_CALLOC_ARR(private_op_t, op_size);
-    heur->private_op_eff = BOR_CALLOC_ARR(plan_heur_factarr_t, op_size);
-    heur->private_fact_pre = BOR_CALLOC_ARR(plan_heur_oparr_t,
-                                            heur->relax.data.fact_size);
-    heur->private_fact_eff = BOR_CALLOC_ARR(plan_heur_oparr_t,
-                                            heur->relax.data.fact_size);
-
-    for (i = 0; i < op_size; ++i){
-        initProjectPrivateOpEff(heur, i);
-        heur->private_op_init[i].cost = heur->relax.data.op[i].cost;
-    }
-    initProjectPrivateFact(heur);
-}
-
-static void initPrivateFactOp(plan_heur_ma_max_t *heur,
-                              const plan_problem_t *prob)
-{
-    int i, j;
-    int *private_op_id;
-
-    initPrivateFact(heur, prob);
-    initPrivateOp(heur, prob);
-
-    private_op_id = BOR_CALLOC_ARR(int, heur->relax.data.op_size);
-    for (i = 0; i < heur->relax.data.op_size; ++i){
-        if (heur->private_op_eff[i].size > 0)
-            private_op_id[i] = 1;
-    }
-
-    for (i = 0; i < heur->relax.data.fact_size; ++i){
-        for (j = 0; j < heur->private_fact_pre[i].size; ++j){
-            private_op_id[heur->private_fact_pre[i].op[j]] = 1;
-        }
-    }
-
-    heur->private_op_size = 0;
-    for (i = 0; i < heur->relax.data.op_size; ++i)
-        heur->private_op_size += private_op_id[i];
-
-    heur->private_op_id = BOR_ALLOC_ARR(int, heur->private_op_size);
-    for (i = 0, j = 0; i < heur->relax.data.op_size; ++i){
-        if (private_op_id[i])
-            heur->private_op_id[j++] = i;
-    }
-    BOR_FREE(private_op_id);
-}
-
-static void freePrivateFactOp(plan_heur_ma_max_t *heur)
-{
-    BOR_FREE(heur->private_fact_id);
-    BOR_FREE(heur->private_fact);
-    planHeurFactarrFree(heur->private_op_eff, heur->relax.data.op_size);
-    planHeurOparrFree(heur->private_fact_pre, heur->relax.data.fact_size);
-    planHeurOparrFree(heur->private_fact_eff, heur->relax.data.fact_size);
-    BOR_FREE(heur->private_op);
-}
-
 plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob)
 {
     plan_heur_ma_max_t *heur;
@@ -283,7 +168,7 @@ plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob)
     heur->cur_state.fact = BOR_ALLOC_ARR(int, prob->var_size);
     heur->cur_state.size = prob->var_size;
 
-    initPrivateFactOp(heur, prob);
+    privateInit(&heur->private, &heur->relax.data, prob);
 
     return &heur->heur;
 }
@@ -306,7 +191,8 @@ static void heurDel(plan_heur_t *_heur)
         BOR_FREE(heur->agent_change);
     if (heur->cur_state.fact)
         BOR_FREE(heur->cur_state.fact);
-    freePrivateFactOp(heur);
+
+    privateFree(&heur->private, &heur->relax.data);
 
     BOR_FREE(heur);
 }
@@ -533,87 +419,96 @@ static int heurMAMaxUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
 
 
 
-static void requestInitFact(plan_heur_ma_max_t *heur, int fact_id)
+
+
+
+/** Request Processing **/
+
+static void requestInitFact(private_t *private, int fact_id)
 {
     int i, len, *ops;
     plan_cost_t value;
 
-    len = heur->private_fact_eff[fact_id].size;
-    ops = heur->private_fact_eff[fact_id].op;
+    len = private->fact_eff[fact_id].size;
+    ops = private->fact_eff[fact_id].op;
     value = PLAN_COST_MAX;
     for (i = 0; i < len; ++i){
-        value = BOR_MIN(value, heur->private_op[ops[i]].value);
+        value = BOR_MIN(value, private->op[ops[i]].value);
     }
 
     if (len == 0)
         value = 0;
 
-    heur->private_fact[fact_id] = value;
+    private->fact[fact_id] = value;
 }
 
-static void requestInit(plan_heur_ma_max_t *heur, const plan_ma_msg_t *msg)
+static void requestInit(private_t *private,
+                        const plan_heur_fact_op_t *fact_op,
+                        const int *op_glob_id_to_id,
+                        const plan_ma_msg_t *msg)
 {
     int i, op_id, op_len, op_value, fact_id;
 
     // First initialize operators values
-    memcpy(heur->private_op, heur->private_op_init,
-           sizeof(private_op_t) * heur->relax.data.op_size);
+    memcpy(private->op, private->op_init,
+           sizeof(private_op_t) * fact_op->op_size);
 
     op_len = planMAMsgHeurMaxRequestOpSize(msg);
     for (i = 0; i < op_len; ++i){
         op_id = planMAMsgHeurMaxRequestOp(msg, i, &op_value);
-        op_id = heur->op_glob_id_to_id[op_id];
-        heur->private_op[op_id].value = op_value;
+        op_id = op_glob_id_to_id[op_id];
+        private->op[op_id].value = op_value;
     }
 
     // Then initialize facts as min() from incoming operators
-    for (i = 0; i < heur->private_fact_size; ++i){
-        fact_id = heur->private_fact_id[i];
-        requestInitFact(heur, fact_id);
+    for (i = 0; i < private->fact_size; ++i){
+        fact_id = private->fact_id[i];
+        requestInitFact(private, fact_id);
     }
 
     // Force initial facts to zero
-    for (i = 0; i < heur->relax.data.fact_id.var_size; ++i){
-        fact_id = planHeurFactId(&heur->relax.data.fact_id, i,
+    for (i = 0; i < fact_op->fact_id.var_size; ++i){
+        fact_id = planHeurFactId(&fact_op->fact_id, i,
                                  planMAMsgHeurMaxRequestState(msg, i));
-        heur->private_fact[fact_id] = 0;
+        private->fact[fact_id] = 0;
     }
 }
 
-static void requestEnqueueAllFacts(plan_heur_ma_max_t *heur,
+static void requestEnqueueAllFacts(private_t *private,
                                    plan_prio_queue_t *queue)
 {
     int i, value, fact_id;
 
-    for (i = 0; i < heur->private_fact_size; ++i){
-        fact_id = heur->private_fact_id[i];
-        value = heur->private_fact[fact_id];
+    for (i = 0; i < private->fact_size; ++i){
+        fact_id = private->fact_id[i];
+        value = private->fact[fact_id];
         planPrioQueuePush(queue, value, fact_id);
     }
 }
 
-static void requestEnqueueOpEff(plan_heur_ma_max_t *heur, int op_id,
+static void requestEnqueueOpEff(private_t *private, int op_id,
                                 plan_prio_queue_t *queue)
 {
     int op_value, fact_value;
     int i, len, *fact_id;
 
-    op_value = heur->private_op[op_id].value;
+    op_value = private->op[op_id].value;
 
-    len     = heur->private_op_eff[op_id].size;
-    fact_id = heur->private_op_eff[op_id].fact;
+    len     = private->op_eff[op_id].size;
+    fact_id = private->op_eff[op_id].fact;
     for (i = 0; i < len; ++i){
-        fact_value = heur->private_fact[fact_id[i]];
+        fact_value = private->fact[fact_id[i]];
         if (op_value < fact_value){
             fact_value = op_value;
-            heur->private_fact[fact_id[i]] = fact_value;
+            private->fact[fact_id[i]] = fact_value;
             planPrioQueuePush(queue, fact_value, fact_id[i]);
         }
     }
 }
 
-static void requestSendResponse(plan_heur_ma_max_t *heur,
+static void requestSendResponse(private_t *private,
                                 plan_ma_comm_t *comm,
+                                const int *op_glob_id_to_id,
                                 const plan_ma_msg_t *req_msg)
 {
     plan_ma_msg_t *msg;
@@ -626,8 +521,8 @@ static void requestSendResponse(plan_heur_ma_max_t *heur,
     for (i = 0; i < len; ++i){
         op_id = planMAMsgHeurMaxRequestOp(req_msg, i, &old_value);
 
-        loc_op_id = heur->op_glob_id_to_id[op_id];
-        new_value = heur->private_op[loc_op_id].value;
+        loc_op_id = op_glob_id_to_id[op_id];
+        new_value = private->op[loc_op_id].value;
         if (new_value != old_value){
             planMAMsgHeurMaxResponseAddOp(msg, op_id, new_value);
         }
@@ -664,40 +559,192 @@ static void heurMAMaxRequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
         return;
     }
 
-    if (heur->private_op_size == 0){
+    // Early exit if we have no private operators
+    if (heur->private.op_size == 0){
         requestSendEmptyResponse(comm, msg);
         return;
     }
 
     // Initialize work arrays
-    requestInit(heur, msg);
+    requestInit(&heur->private, &heur->relax.data, heur->op_glob_id_to_id, msg);
 
     // Initialize priority queue with all private facts
     planPrioQueueInit(&queue);
-    requestEnqueueAllFacts(heur, &queue);
+    requestEnqueueAllFacts(&heur->private, &queue);
 
     while (!planPrioQueueEmpty(&queue)){
         fact_id = planPrioQueuePop(&queue, &fact_value);
-        if (fact_value != heur->private_fact[fact_id])
+        if (fact_value != heur->private.fact[fact_id])
             continue;
 
-        op_len = heur->private_fact_pre[fact_id].size;
-        ops    = heur->private_fact_pre[fact_id].op;
+        op_len = heur->private.fact_pre[fact_id].size;
+        ops    = heur->private.fact_pre[fact_id].op;
         for (i = 0; i < op_len; ++i){
             op_id = ops[i];
-            op_value = heur->private_op[op_id].value;
-            op_value2 = heur->private_op[op_id].cost + fact_value;
-            heur->private_op[op_id].value = BOR_MAX(op_value, op_value2);
+            op_value = heur->private.op[op_id].value;
+            op_value2 = heur->private.op[op_id].cost + fact_value;
+            heur->private.op[op_id].value = BOR_MAX(op_value, op_value2);
 
-            --heur->private_op[op_id].unsat;
-            if (heur->private_op[op_id].unsat == 0){
-                requestEnqueueOpEff(heur, op_id, &queue);
+            --heur->private.op[op_id].unsat;
+            if (heur->private.op[op_id].unsat == 0){
+                requestEnqueueOpEff(&heur->private, op_id, &queue);
             }
         }
     }
 
     // Send operator's new values back as response
-    requestSendResponse(heur, comm, msg);
+    requestSendResponse(&heur->private, comm, heur->op_glob_id_to_id, msg);
 
     planPrioQueueFree(&queue);
+}
+
+
+
+
+/** Private Part Initialization **/
+
+/** Finds all private facts and stores them in internal structure. */
+static void privateCollectFacts(private_t *private,
+                                const plan_heur_fact_id_t *fid,
+                                const plan_problem_t *prob)
+{
+    int i, len, fact_id;
+    plan_problem_private_val_t *val;
+
+    len = prob->private_val_size;
+    val = prob->private_val;
+    private->fact_size = 0;
+    for (i = 0; i < len; ++i){
+        fact_id = planHeurFactId(fid, val[i].var, val[i].val);
+        private->fact_id[private->fact_size++] = fact_id;
+    }
+}
+
+/** Project private facts of operators */
+static void privateProjectOps(private_t *private,
+                              const plan_heur_fact_op_t *fact_op)
+{
+    int i, j, k;
+    plan_heur_factarr_t *dst;
+    const plan_heur_factarr_t *src;
+
+    for (i = 0; i < fact_op->op_size; ++i){
+        dst = private->op_eff + i;
+        src = fact_op->op_eff + i;
+
+        dst->fact = BOR_ALLOC_ARR(int, src->size);
+        dst->size = 0;
+        for (j = 0, k = 0; j < src->size && k < private->fact_size;){
+            if (src->fact[j] == private->fact_id[k]){
+                dst->fact[dst->size++] = private->fact_id[k];
+                ++j;
+                ++k;
+            }else if (src->fact[j] < private->fact_id[k]){
+                ++j;
+            }else{
+                ++k;
+            }
+        }
+
+        dst->fact = BOR_REALLOC_ARR(dst->fact, int, dst->size);
+    }
+}
+
+/** Projects private facts */
+static void privateProjectFacts(private_t *private,
+                                const plan_heur_fact_op_t *fact_op)
+{
+    int i, j, fact_id;
+    plan_heur_oparr_t *src, *dst;
+
+    for (i = 0; i < private->fact_size; ++i){
+        fact_id = private->fact_id[i];
+
+        dst = private->fact_pre + fact_id;
+        src = fact_op->fact_pre + fact_id;
+        dst->size = src->size;
+        dst->op = BOR_ALLOC_ARR(int, dst->size);
+        memcpy(dst->op, src->op, sizeof(int) * dst->size);
+
+        for (j = 0; j < dst->size; ++j){
+            private->op_init[dst->op[j]].unsat += 1;
+        }
+
+        dst = private->fact_eff + fact_id;
+        src = fact_op->fact_eff + fact_id;
+        dst->size = src->size;
+        dst->op = BOR_ALLOC_ARR(int, dst->size);
+        memcpy(dst->op, src->op, sizeof(int) * dst->size);
+    }
+}
+
+static void privateInitOps(private_t *private,
+                           const plan_heur_fact_op_t *fact_op)
+{
+    int i, j;
+    int *private_op_id;
+
+    // Set 0/1 flag for each operator that is private (contains at least
+    // one private fact in pre or eff)
+    private_op_id = BOR_CALLOC_ARR(int, fact_op->op_size);
+    for (i = 0; i < fact_op->op_size; ++i){
+        if (private->op_eff[i].size > 0)
+            private_op_id[i] = 1;
+    }
+    for (i = 0; i < fact_op->fact_size; ++i){
+        for (j = 0; j < private->fact_pre[i].size; ++j){
+            private_op_id[private->fact_pre[i].op[j]] = 1;
+        }
+    }
+
+    // Record IDs private operators and also set operator's cost
+    private->op_size = 0;
+    for (i = 0, j = 0; i < fact_op->op_size; ++i){
+        if (private_op_id[i]){
+            private->op_id[private->op_size++] = i;
+            private->op_init[i].cost = fact_op->op[i].cost;
+        }
+    }
+
+    // Give back some memory
+    private->op_id = BOR_REALLOC_ARR(private->op_id, int, private->op_size);
+
+    BOR_FREE(private_op_id);
+}
+
+static void privateInit(private_t *private,
+                        const plan_heur_fact_op_t *fact_op,
+                        const plan_problem_t *prob)
+{
+    // First allocate all memory
+    private->fact_id  = BOR_ALLOC_ARR(int, prob->private_val_size);
+    private->op_id    = BOR_CALLOC_ARR(int, fact_op->op_size);
+    private->fact     = BOR_ALLOC_ARR(int, fact_op->fact_size);
+    private->op       = BOR_ALLOC_ARR(private_op_t, fact_op->op_size);
+    private->op_init  = BOR_CALLOC_ARR(private_op_t, fact_op->op_size);
+    private->op_eff   = BOR_CALLOC_ARR(plan_heur_factarr_t, fact_op->op_size);
+    private->fact_pre = BOR_CALLOC_ARR(plan_heur_oparr_t, fact_op->fact_size);
+    private->fact_eff = BOR_CALLOC_ARR(plan_heur_oparr_t, fact_op->fact_size);
+
+    // Set up .fact_id[] and .fact_size
+    privateCollectFacts(private, &fact_op->fact_id, prob);
+    // Set up .op_eff[]
+    privateProjectOps(private, fact_op);
+    // Set up .fact_pre[] and .fact_eff[] and .op_init[].unsat
+    privateProjectFacts(private, fact_op);
+    // Fininsh .op_init[] and fill .op_id[] and set .op_size
+    privateInitOps(private, fact_op);
+}
+
+static void privateFree(private_t *private,
+                        const plan_heur_fact_op_t *fact_op)
+{
+    BOR_FREE(private->fact_id);
+    BOR_FREE(private->op_id);
+    BOR_FREE(private->fact);
+    BOR_FREE(private->op);
+    BOR_FREE(private->op_init);
+    planHeurFactarrFree(private->op_eff, fact_op->op_size);
+    planHeurOparrFree(private->fact_pre, fact_op->fact_size);
+    planHeurOparrFree(private->fact_eff, fact_op->fact_size);
 }

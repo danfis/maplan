@@ -81,7 +81,7 @@ typedef struct _plan_heur_fact_id_t plan_heur_fact_id_t;
 /**
  * Unrolled cross-referenced facts and operators.
  */
-struct _heur_fact_op_t {
+struct _plan_heur_fact_op_t {
     plan_heur_fact_id_t fact_id; /*!< Translation from variable-value pair
                                       to fact ID */
 #ifdef HEUR_FACT_OP_FACT_T
@@ -120,22 +120,22 @@ struct _heur_fact_op_t {
                                 operators without preconditions */
 #endif /* HEUR_FACT_OP_NO_PRE_FACT */
 };
-typedef struct _heur_fact_op_t heur_fact_op_t;
+typedef struct _plan_heur_fact_op_t plan_heur_fact_op_t;
 
 /**
  * Initializes heur_fact_op_t structure.
  */
-static void heurFactOpInit(heur_fact_op_t *fact_op,
-                           const plan_var_t *var, int var_size,
-                           const plan_part_state_t *goal,
-                           const plan_op_t *op, int op_size,
-                           const plan_succ_gen_t *_succ_gen,
-                           unsigned flags);
+static void planHeurFactOpInit(plan_heur_fact_op_t *fact_op,
+                               const plan_var_t *var, int var_size,
+                               const plan_part_state_t *goal,
+                               const plan_op_t *op, int op_size,
+                               const plan_succ_gen_t *_succ_gen,
+                               unsigned flags);
 
 /**
  * Frees heur_fact_op_t structure.
  */
-static void heurFactOpFree(heur_fact_op_t *fact_op);
+static void planHeurFactOpFree(plan_heur_fact_op_t *fact_op);
 
 
 
@@ -153,31 +153,31 @@ static void planHeurOparrFree(plan_heur_oparr_t *oparr, int size);
 /** Frees plan_heur_factarr_t array */
 static void factarrFree(plan_heur_factarr_t *factarr, int size);
 /** Initializes and frees .goal structure */
-static void goalInit(heur_fact_op_t *fact_op,
+static void goalInit(plan_heur_fact_op_t *fact_op,
                      const plan_part_state_t *goal);
-static void goalFree(heur_fact_op_t *fact_op);
+static void goalFree(plan_heur_fact_op_t *fact_op);
 
 #ifdef HEUR_FACT_OP_FACT_T
 /** Initializes and frees .fact structures */
-static void factInit(heur_fact_op_t *fact_op);
-static void factFree(heur_fact_op_t *fact_op);
+static void factInit(plan_heur_fact_op_t *fact_op);
+static void factFree(plan_heur_fact_op_t *fact_op);
 #endif /* HEUR_FACT_OP_FACT_T */
 
 /** Initializes and frees .op* srtuctures */
-static void opInit(heur_fact_op_t *fact_op,
+static void opInit(plan_heur_fact_op_t *fact_op,
                    const plan_op_t *ops, int ops_size);
-static void opFree(heur_fact_op_t *fact_op);
+static void opFree(plan_heur_fact_op_t *fact_op);
 /** Initializes and frees .precond structures. */
-static void opPreInit(heur_fact_op_t *fact_op,
+static void opPreInit(plan_heur_fact_op_t *fact_op,
                       const plan_op_t *ops, int ops_size);
 /** Initializes and frees .eff* structures */
-static void opEffInit(heur_fact_op_t *fact_op,
+static void opEffInit(plan_heur_fact_op_t *fact_op,
                       const plan_op_t *ops, int ops_size);
 /** Initializes .fact_pre structures */
-static void factPreInit(heur_fact_op_t *fact_op);
+static void factPreInit(plan_heur_fact_op_t *fact_op);
 #ifdef HEUR_FACT_OP_FACT_EFF
 /** Initializes .fact_eff structures */
-static void factEffInit(heur_fact_op_t *fact_op);
+static void factEffInit(plan_heur_fact_op_t *fact_op);
 #endif /* HEUR_FACT_OP_FACT_EFF */
 
 #ifdef HEUR_FACT_OP_SIMPLIFY
@@ -187,18 +187,18 @@ static void opSimplifyEffects(plan_heur_factarr_t *ref_eff,
                               plan_cost_t ref_cost, plan_cost_t op_cost);
 /** Simplifies internal representation of operators so that there are no
  *  two operators applicable in the same time with the same effect. */
-static void opSimplify(heur_fact_op_t *fact_op,
+static void opSimplify(plan_heur_fact_op_t *fact_op,
                        const plan_op_t *op,
                        const plan_succ_gen_t *succ_gen);
 #endif /* HEUR_FACT_OP_SIMPLIFY */
 
 
-static void heurFactOpInit(heur_fact_op_t *fact_op,
-                           const plan_var_t *var, int var_size,
-                           const plan_part_state_t *goal,
-                           const plan_op_t *op, int op_size,
-                           const plan_succ_gen_t *_succ_gen,
-                           unsigned flags)
+static void planHeurFactOpInit(plan_heur_fact_op_t *fact_op,
+                               const plan_var_t *var, int var_size,
+                               const plan_part_state_t *goal,
+                               const plan_op_t *op, int op_size,
+                               const plan_succ_gen_t *_succ_gen,
+                               unsigned flags)
 {
 #ifdef HEUR_FACT_OP_SIMPLIFY
     plan_succ_gen_t *succ_gen;
@@ -244,7 +244,7 @@ static void heurFactOpInit(heur_fact_op_t *fact_op,
 #endif /* HEUR_FACT_OP_FACT_EFF */
 }
 
-static void heurFactOpFree(heur_fact_op_t *fact_op)
+static void planHeurFactOpFree(plan_heur_fact_op_t *fact_op)
 {
     planHeurFactIdFree(&fact_op->fact_id);
     oparrFree(fact_op->fact_pre, fact_op->fact_size);
@@ -328,7 +328,7 @@ static void factarrFree(plan_heur_factarr_t *factarr, int size)
     BOR_FREE(factarr);
 }
 
-static void goalInit(heur_fact_op_t *fact_op,
+static void goalInit(plan_heur_fact_op_t *fact_op,
                      const plan_part_state_t *goal)
 {
     int i, id;
@@ -343,14 +343,14 @@ static void goalInit(heur_fact_op_t *fact_op,
     }
 }
 
-static void goalFree(heur_fact_op_t *fact_op)
+static void goalFree(plan_heur_fact_op_t *fact_op)
 {
     if (fact_op->goal.fact)
         BOR_FREE(fact_op->goal.fact);
 }
 
 #ifdef HEUR_FACT_OP_FACT_T
-static void factInit(heur_fact_op_t *fact_op)
+static void factInit(plan_heur_fact_op_t *fact_op)
 {
     int i;
 
@@ -363,13 +363,13 @@ static void factInit(heur_fact_op_t *fact_op)
     }
 }
 
-static void factFree(heur_fact_op_t *fact_op)
+static void factFree(plan_heur_fact_op_t *fact_op)
 {
     BOR_FREE(fact_op->fact);
 }
 #endif /* HEUR_FACT_OP_FACT_T */
 
-static void opInit(heur_fact_op_t *fact_op,
+static void opInit(plan_heur_fact_op_t *fact_op,
                    const plan_op_t *ops, int ops_size)
 {
     int i, j, cond_eff_size;
@@ -431,7 +431,7 @@ static void opInit(heur_fact_op_t *fact_op,
 #endif /* HEUR_FACT_OP_ARTIFICIAL_GOAL */
 }
 
-static void opFree(heur_fact_op_t *fact_op)
+static void opFree(plan_heur_fact_op_t *fact_op)
 {
     BOR_FREE(fact_op->op);
     BOR_FREE(fact_op->op_id);
@@ -468,7 +468,7 @@ static void opPrecondCondEffInit(plan_heur_factarr_t *precond,
     }
 }
 
-static void opPreInit(heur_fact_op_t *fact_op,
+static void opPreInit(plan_heur_fact_op_t *fact_op,
                       const plan_op_t *ops, int ops_size)
 {
     int i, j, id, cond_eff_ins;
@@ -515,7 +515,8 @@ static void opPreInit(heur_fact_op_t *fact_op,
 #endif /* HEUR_FACT_OP_ARTIFICIAL_GOAL */
 }
 
-static void opEffCondEffInit(heur_fact_op_t *fact_op, plan_heur_factarr_t *eff,
+static void opEffCondEffInit(plan_heur_fact_op_t *fact_op,
+                             plan_heur_factarr_t *eff,
                              const plan_op_cond_eff_t *cond_eff)
 {
     int j;
@@ -534,7 +535,7 @@ static void opEffCondEffInit(heur_fact_op_t *fact_op, plan_heur_factarr_t *eff,
     }
 }
 
-static void opEffInit(heur_fact_op_t *fact_op,
+static void opEffInit(plan_heur_fact_op_t *fact_op,
                       const plan_op_t *ops, int ops_size)
 {
     int i, j, cond_eff_ins;
@@ -597,7 +598,7 @@ static void crossReferenceInit(plan_heur_oparr_t **dst, int fact_size,
     }
 }
 
-static void factPreInit(heur_fact_op_t *fact_op)
+static void factPreInit(plan_heur_fact_op_t *fact_op)
 {
     crossReferenceInit(&fact_op->fact_pre, fact_op->fact_size,
                        fact_op->op_pre, fact_op->op_size,
@@ -605,7 +606,7 @@ static void factPreInit(heur_fact_op_t *fact_op)
 }
 
 #ifdef HEUR_FACT_OP_FACT_EFF
-static void factEffInit(heur_fact_op_t *fact_op)
+static void factEffInit(plan_heur_fact_op_t *fact_op)
 {
     crossReferenceInit(&fact_op->fact_eff, fact_op->fact_size,
                        fact_op->op_eff, fact_op->op_size, NULL);
@@ -654,7 +655,7 @@ static void opSimplifyEffects(plan_heur_factarr_t *ref_eff,
     }
 }
 
-static void opSimplify(heur_fact_op_t *fact_op,
+static void opSimplify(plan_heur_fact_op_t *fact_op,
                        const plan_op_t *op,
                        const plan_succ_gen_t *succ_gen)
 {

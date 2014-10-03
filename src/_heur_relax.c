@@ -34,7 +34,7 @@ typedef struct _fact_t fact_t;
 struct _plan_heur_relax_t {
     int type;
 
-    heur_fact_op_t data;
+    plan_heur_fact_op_t data;
 
     const plan_op_t *base_op; /*!< Pointer to the input operators.
                                    This value is used for computing

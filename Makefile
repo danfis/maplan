@@ -62,6 +62,7 @@ ifeq '$(USE_ZMQ)' 'yes'
 endif
 OBJS += ma
 OBJS += causalgraph
+OBJS += _problem
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg

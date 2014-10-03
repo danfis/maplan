@@ -1,13 +1,18 @@
+#include "plan/heur.h"
+
+#define HEUR_RELAX_FF
 #include "_heur_relax.c"
 
 struct _plan_heur_ma_ff_t {
     plan_heur_t heur;
     plan_heur_relax_t relax;
 
-    factarr_t state;      /*!< State for which the heuristic is computed */
-    oparr_t relaxed_plan; /*!< Relaxed plan computed on all operators.
-                               It means that the operators are identified
-                               by its global ID */
+    plan_heur_factarr_t state;      /*!< State for which the heuristic is
+                                         computed */
+    plan_heur_oparr_t relaxed_plan; /*!< Relaxed plan computed on all
+                                         operators.  It means that the
+                                         operators are identified by its
+                                         global ID */
 
     bor_rbtree_int_t *peer_op;          /*!< Set of operators that are
                                              requested from other peers */
@@ -31,7 +36,7 @@ static void maDelPeerOp(plan_heur_ma_ff_t *ma, int id);
 /** Sends HEUR_REQUEST message to the peer */
 static void maSendHeurRequest(plan_ma_comm_t *comm,
                               int peer_id,
-                              const factarr_t *state,
+                              const plan_heur_factarr_t *state,
                               int op_id);
 /** Computes heuristic value from the relaxed plan */
 static void maHeur(plan_heur_ma_ff_t *heur,
@@ -73,7 +78,7 @@ plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
     _planHeurMAInit(&heur->heur, planHeurRelaxFFMA,
                     planHeurRelaxFFMAUpdate, planHeurRelaxFFMARequest);
 
-    planHeurRelaxInit(&heur->relax, TYPE_FF, 
+    planHeurRelaxInit(&heur->relax,
                       prob->var, prob->var_size,
                       prob->goal,
                       prob->proj_op, prob->proj_op_size,
@@ -169,7 +174,7 @@ static void maDelPeerOp(plan_heur_ma_ff_t *ma, int id)
 
 static void maSendHeurRequest(plan_ma_comm_t *comm,
                               int peer_id,
-                              const factarr_t *state,
+                              const plan_heur_factarr_t *state,
                               int op_id)
 {
     plan_ma_msg_t *msg;
@@ -215,12 +220,12 @@ static void maExploreLocal(plan_heur_ma_ff_t *heur,
                            const plan_part_state_t *goal,
                            plan_heur_res_t *res)
 {
-    PLAN_STATE_STACK(state, heur->relax.data.vid.var_size);
+    PLAN_STATE_STACK(state, heur->relax.data.fact_id.var_size);
     const plan_op_t *op;
     int i, global_id, owner;
 
     // Initialize initial state
-    for (i = 0; i < heur->relax.data.vid.var_size; ++i){
+    for (i = 0; i < heur->relax.data.fact_id.var_size; ++i){
         state.val[i] = heur->state.fact[i];
     }
 
@@ -358,7 +363,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
                                      const plan_ma_msg_t *msg)
 {
     plan_heur_ma_ff_t *heur = HEUR(_heur);
-    PLAN_STATE_STACK(state, heur->relax.data.vid.var_size);
+    PLAN_STATE_STACK(state, heur->relax.data.fact_id.var_size);
     plan_heur_res_t res;
     plan_ma_msg_t *response;
     const plan_op_t *op;
@@ -369,7 +374,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
     agent_id = planMAMsgHeurFFRequestAgentId(msg);
 
     // Initialize initial state
-    for (i = 0; i < heur->relax.data.vid.var_size; ++i){
+    for (i = 0; i < heur->relax.data.fact_id.var_size; ++i){
         state.val[i] = planMAMsgHeurFFRequestState(msg, i);
     }
 

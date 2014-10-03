@@ -20,14 +20,14 @@ struct _fact_t {
                                           during finding a relaxed plan */
 };
 typedef struct _fact_t fact_t;
-#define HEUR_FACT_OP_FACT_T
+#define HEUR_FACT_OP_FACT_T fact_t
 #define HEUR_FACT_OP_FACT_INIT(fact) \
     (fact)->value = -1; \
     (fact)->reached_by_op = -1; \
     (fact)->goal = 0; \
     (fact)->relaxed_plan_visited = 0
 
-#include "_heur.c"
+#include "_heur_fact_op.c"
 
 struct _plan_heur_relax_t {
     int type;
@@ -38,7 +38,7 @@ struct _plan_heur_relax_t {
                                    This value is used for computing
                                    ID of the operator based on the
                                    value of its pointer. */
-    op_t *op;
+    plan_heur_op_t *op;
     fact_t *fact;
     int *relaxed_plan;   /*!< Prepared array for relaxed plan */
 
@@ -122,10 +122,12 @@ static void planHeurRelaxInit(plan_heur_relax_t *heur, int type,
 
     flags  = HEUR_FACT_OP_SIMPLIFY;
     flags |= HEUR_FACT_OP_NO_PRE_FACT;
+    // TODO
+    flags |= HEUR_FACT_OP_INIT_FACT_EFF;
     heurFactOpInit(&heur->data, var, var_size, goal,
                    op, op_size, succ_gen, flags);
 
-    heur->op = BOR_ALLOC_ARR(op_t, heur->data.op_size);
+    heur->op = BOR_ALLOC_ARR(plan_heur_op_t, heur->data.op_size);
     heur->fact = BOR_ALLOC_ARR(fact_t, heur->data.fact_size);
     heur->relaxed_plan = BOR_ALLOC_ARR(int, op_size);
 
@@ -175,7 +177,7 @@ static void planHeurRelax2(plan_heur_relax_t *heur,
 
 static void ctxInit(plan_heur_relax_t *heur, const plan_part_state_t *goal)
 {
-    memcpy(heur->op, heur->data.op, sizeof(op_t) * heur->data.op_size);
+    memcpy(heur->op, heur->data.op, sizeof(plan_heur_op_t) * heur->data.op_size);
     memcpy(heur->fact, heur->data.fact, sizeof(fact_t) * heur->data.fact_size);
     memcpy(heur->goal.fact, heur->data.goal.fact,
            sizeof(int) * heur->data.goal.size);
@@ -194,7 +196,7 @@ static void ctxInit(plan_heur_relax_t *heur, const plan_part_state_t *goal)
 
         // Correctly set goal flags in .fact[] array and goal IDs in .goal
         PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
-            id = valToId(&heur->data.vid, var, val);
+            id = planHeurFactId(&heur->data.fact_id, var, val);
             heur->fact[id].goal = 1;
             heur->goal.fact[i] = id;
         }
@@ -233,7 +235,7 @@ static void ctxAddInitState(plan_heur_relax_t *heur,
     // insert all facts from the initial state into priority queue
     len = planStateSize(state);
     for (i = 0; i < len; ++i){
-        id = valToId(&heur->data.vid, i, planStateGet(state, i));
+        id = planHeurFactId(&heur->data.fact_id, i, planStateGet(state, i));
         ctxUpdateFact(heur, id, -1, 0);
     }
     // Deal with operators w/o preconditions
@@ -300,9 +302,10 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
         if (fact->goal){
             fact->goal = 0;
             --heur->goal_unsat;
-            if (heur->goal_unsat == 0){
-                return 0;
-            }
+            // TODO
+            //if (heur->goal_unsat == 0){
+            //    return 0;
+           // }
         }
 
         size = heur->data.fact_pre[id].size;
@@ -311,6 +314,10 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
             ctxProcessOp(heur, precond[i], fact);
         }
     }
+
+    // TODO
+    if (heur->goal_unsat == 0)
+        return 0;
 
     return -1;
 }
@@ -337,7 +344,7 @@ static plan_cost_t relaxHeurAddMax(plan_heur_relax_t *heur,
         h = relaxHeurValue(heur->type, h, heur->fact[id].value);
     }
 
-    if (pref_ops->pref_op != NULL){
+    if (pref_ops != NULL && pref_ops->pref_op != NULL){
         pref_ops_selector_t pref_ops_selector;
         markRelaxedPlan(heur);
         prefOpsSelectorInit(&pref_ops_selector, pref_ops, heur->base_op);

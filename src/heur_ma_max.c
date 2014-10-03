@@ -54,6 +54,7 @@ struct _plan_heur_ma_max_t {
     int *agent_change; /*!< Flag for each agent whether change affects that
                             agent. */
     plan_heur_factarr_t cur_state; /*!< Current state for which h^max is computed */
+    int *cur_state_flag; /*!< 1 for each fact in .cur_state */
 
     private_t private; /*!< Data for processing requests */
 };
@@ -77,14 +78,6 @@ static void privateInit(private_t *private,
 /** Frees allocated resources */
 static void privateFree(private_t *private,
                         const plan_heur_fact_op_t *fact_op);
-
-
-
-
-
-
-
-
 
 
 
@@ -167,6 +160,7 @@ plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob)
     heur->agent_change = BOR_ALLOC_ARR(int, heur->agent_size);
     heur->cur_state.fact = BOR_ALLOC_ARR(int, prob->var_size);
     heur->cur_state.size = prob->var_size;
+    heur->cur_state_flag = BOR_ALLOC_ARR(int, heur->relax.data.fact_id.fact_size);
 
     privateInit(&heur->private, &heur->relax.data, prob);
 
@@ -190,6 +184,8 @@ static void heurDel(plan_heur_t *_heur)
         BOR_FREE(heur->agent_change);
     if (heur->cur_state.fact)
         BOR_FREE(heur->cur_state.fact);
+    if (heur->cur_state_flag)
+        BOR_FREE(heur->cur_state_flag);
     if (heur->op_glob_id_to_id)
         BOR_FREE(heur->op_glob_id_to_id);
 
@@ -223,11 +219,15 @@ static int heurMAMax(plan_heur_t *_heur, plan_ma_comm_t *comm,
                      const plan_state_t *state, plan_heur_res_t *res)
 {
     plan_heur_ma_max_t *heur = HEUR(_heur);
-    int i;
+    int i, fact_id;
 
     // Remember current state
-    for (i = 0; i < heur->cur_state.size; ++i)
+    bzero(heur->cur_state_flag, sizeof(int) * heur->relax.data.fact_id.fact_size);
+    for (i = 0; i < heur->cur_state.size; ++i){
         heur->cur_state.fact[i] = state->val[i];
+        fact_id = planHeurFactId(&heur->relax.data.fact_id, i, state->val[i]);
+        heur->cur_state_flag[fact_id] = 1;
+    }
 
     // Compute heuristic on projected problem
     planHeurRelax(&heur->relax, state, res);
@@ -253,21 +253,11 @@ static int updateFactValue(plan_heur_ma_max_t *heur, int fact_id)
     plan_heur_oparr_t *ops;
     int i, original_value, value;
 
+    if (heur->cur_state_flag[fact_id])
+        return 0;
+
     // Remember original value before change
     original_value = heur->relax.fact[fact_id].value;
-
-    // TODO: This has to be solved differently (maybe) because of zero-cost
-    // operators
-    {
-        int i, fid;
-        for (i = 0; i < heur->cur_state.size; ++i){
-            fid = planHeurFactId(&heur->relax.data.fact_id, i,
-                                 heur->cur_state.fact[i]);
-            if (fid == fact_id){
-                return 0;
-            }
-        }
-    }
 
     // Determine correct value of fact
     value = INT_MAX;

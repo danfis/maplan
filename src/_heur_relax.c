@@ -12,12 +12,19 @@
  *      If defined h^max heuristic is created
  * HEUR_RELAX_FF
  *      If defined h^ff heuristic is created
+ * HEUR_RELAX_MAX_FULL
+ *      If defined max heuristic is computed for all facts and does not
+ *      stop in goals.
  */
 
 #if !defined(HEUR_RELAX_ADD) \
         && !defined(HEUR_RELAX_MAX) \
         && !defined(HEUR_RELAX_FF)
 # error "One of HEUR_RELAX_{ADD,MAX,FF} must be defined"
+#endif
+
+#if defined(HEUR_RELAX_MAX_FULL) && !defined(HEUR_RELAX_MAX)
+# error "HEUR_RELAX_MAX_FULL is defined but not HEUR_RELAX_MAX"
 #endif
 
 /**
@@ -300,10 +307,11 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
         if (fact->goal){
             fact->goal = 0;
             --heur->goal_unsat;
-            // TODO
-            //if (heur->goal_unsat == 0){
-            //    return 0;
-           // }
+#ifndef HEUR_RELAX_MAX_FULL
+            if (heur->goal_unsat == 0){
+                return 0;
+            }
+#endif /* HEUR_RELAX_MAX_FULL */
         }
 
         size = heur->data.fact_pre[id].size;
@@ -313,10 +321,8 @@ static int ctxMainLoop(plan_heur_relax_t *heur)
         }
     }
 
-    // TODO
     if (heur->goal_unsat == 0)
         return 0;
-
     return -1;
 }
 

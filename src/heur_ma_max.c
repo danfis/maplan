@@ -1,6 +1,7 @@
 #include "plan/heur.h"
 
 #define HEUR_RELAX_MAX
+#define HEUR_RELAX_MAX_FULL
 #define HEUR_FACT_OP_FACT_EFF
 #include "_heur_relax.c"
 

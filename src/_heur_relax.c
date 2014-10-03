@@ -27,6 +27,7 @@ typedef struct _fact_t fact_t;
     (fact)->goal = 0; \
     (fact)->relaxed_plan_visited = 0
 
+#define HEUR_FACT_OP_NO_PRE_FACT
 #include "_heur_fact_op.c"
 
 struct _plan_heur_relax_t {
@@ -121,7 +122,6 @@ static void planHeurRelaxInit(plan_heur_relax_t *heur, int type,
     heur->base_op = op;
 
     flags  = HEUR_FACT_OP_SIMPLIFY;
-    flags |= HEUR_FACT_OP_NO_PRE_FACT;
     // TODO
     flags |= HEUR_FACT_OP_INIT_FACT_EFF;
     heurFactOpInit(&heur->data, var, var_size, goal,

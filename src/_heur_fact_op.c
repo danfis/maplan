@@ -17,6 +17,11 @@
  * HEUR_FACT_OP_EXTRA_OP_INIT(dst, src, is_cond_eff)
  *      Initializes plan_heur_op_t structure -- this is called after
  *      initialization of fixed members plan_heur_op_t.
+ * HEUR_FACT_OP_ARTIFICIAL_GOAL
+ *      Define if you want to have defined artificial goal.
+ * HEUR_FACT_OP_NO_PRE_FACT
+ *      Artificical fact as precondition for operators w/o preconditions is
+ *      created
  */
 
 #ifdef HEUR_FACT_OP_FACT_T
@@ -97,9 +102,15 @@ struct _heur_fact_op_t {
     int op_size;           /*!< Number of operators */
     int actual_op_size;    /*!< The actual number of operators (op_size
                                 without conditional effects). */
+
+#ifdef HEUR_FACT_OP_ARTIFICIAL_GOAL
     int artificial_goal;   /*!< Fact ID of the artificial goal */
+#endif /* HEUR_FACT_OP_ARTIFICIAL_GOAL */
+
+#ifdef HEUR_FACT_OP_NO_PRE_FACT
     int no_pre_fact;       /*!< Artificial precondition fact for all
                                 operators without preconditions */
+#endif /* HEUR_FACT_OP_NO_PRE_FACT */
 };
 typedef struct _heur_fact_op_t heur_fact_op_t;
 
@@ -146,18 +157,14 @@ static void factFree(heur_fact_op_t *fact_op);
 
 /** Initializes and frees .op* srtuctures */
 static void opInit(heur_fact_op_t *fact_op,
-                   const plan_op_t *ops, int ops_size,
-                   int artificial_goal);
+                   const plan_op_t *ops, int ops_size);
 static void opFree(heur_fact_op_t *fact_op);
 /** Initializes and frees .precond structures. */
 static void opPreInit(heur_fact_op_t *fact_op,
-                      const plan_op_t *ops, int ops_size,
-                      int artificial_goal,
-                      int no_pre_fact);
+                      const plan_op_t *ops, int ops_size);
 /** Initializes and frees .eff* structures */
 static void opEffInit(heur_fact_op_t *fact_op,
-                      const plan_op_t *ops, int ops_size,
-                      int artificial_goal);
+                      const plan_op_t *ops, int ops_size);
 /** Initializes .fact_pre structures */
 static void factPreInit(heur_fact_op_t *fact_op);
 /** Initializes .fact_eff structures */
@@ -175,11 +182,6 @@ static void opSimplify(heur_fact_op_t *fact_op,
 #define HEUR_FACT_OP_INIT_FACT_EFF 0x1
 /** Set to flags if simplification should be run */
 #define HEUR_FACT_OP_SIMPLIFY 0x2
-/** Set to flags if artificial goal should be created */
-#define HEUR_FACT_OP_ARTIFICIAL_GOAL 0x4
-/** Artificical fact as precondition for operators w/o preconditions is
- *  created */
-#define HEUR_FACT_OP_NO_PRE_FACT 0x8
 
 static void heurFactOpInit(heur_fact_op_t *fact_op,
                            const plan_var_t *var, int var_size,
@@ -188,36 +190,31 @@ static void heurFactOpInit(heur_fact_op_t *fact_op,
                            const plan_succ_gen_t *_succ_gen,
                            unsigned flags)
 {
-    int artificial_goal = 0;
-    int no_pre_fact = 0;
     plan_succ_gen_t *succ_gen;
-
-    if ((flags & HEUR_FACT_OP_ARTIFICIAL_GOAL))
-        artificial_goal = 1;
-    if ((flags & HEUR_FACT_OP_NO_PRE_FACT))
-        no_pre_fact = 1;
-
 
     bzero(fact_op, sizeof(*fact_op));
     planHeurFactIdInit(&fact_op->fact_id, var, var_size);
     goalInit(fact_op, goal);
 
     fact_op->fact_size = fact_op->fact_id.fact_size;
-    if (artificial_goal){
-        fact_op->fact_size += 1;
-        fact_op->artificial_goal = fact_op->fact_size - 1;
-    }
-    if (no_pre_fact){
-        fact_op->fact_size += 1;
-        fact_op->no_pre_fact = fact_op->fact_size - 1;
-    }
+
+#ifdef HEUR_FACT_OP_ARTIFICIAL_GOAL
+    fact_op->fact_size += 1;
+    fact_op->artificial_goal = fact_op->fact_size - 1;
+#endif /* HEUR_FACT_OP_ARTIFICIAL_GOAL */
+
+#ifdef HEUR_FACT_OP_NO_PRE_FACT
+    fact_op->fact_size += 1;
+    fact_op->no_pre_fact = fact_op->fact_size - 1;
+#endif /* HEUR_FACT_OP_NO_PRE_FACT */
+
 #ifdef HEUR_FACT_OP_FACT_T
     factInit(fact_op);
 #endif /* HEUR_FACT_OP_FACT_T */
 
-    opInit(fact_op, op, op_size, artificial_goal);
-    opPreInit(fact_op, op, op_size, artificial_goal, no_pre_fact);
-    opEffInit(fact_op, op, op_size, artificial_goal);
+    opInit(fact_op, op, op_size);
+    opPreInit(fact_op, op, op_size);
+    opEffInit(fact_op, op, op_size);
 
     if (flags & HEUR_FACT_OP_SIMPLIFY){
         succ_gen = (plan_succ_gen_t *)_succ_gen;
@@ -357,8 +354,7 @@ static void factFree(heur_fact_op_t *fact_op)
 #endif /* HEUR_FACT_OP_FACT_T */
 
 static void opInit(heur_fact_op_t *fact_op,
-                   const plan_op_t *ops, int ops_size,
-                   int artificial_goal)
+                   const plan_op_t *ops, int ops_size)
 {
     int i, j, cond_eff_size;
     int cond_eff_ins;
@@ -372,8 +368,9 @@ static void opInit(heur_fact_op_t *fact_op,
 
     // prepare operator arrays
     fact_op->op_size = ops_size + cond_eff_size;
-    if (artificial_goal)
-        fact_op->op_size += 1;
+#ifdef HEUR_FACT_OP_ARTIFICIAL_GOAL
+    fact_op->op_size += 1;
+#endif /* HEUR_FACT_OP_ARTIFICIAL_GOAL */
     fact_op->actual_op_size = ops_size;
     fact_op->op = BOR_ALLOC_ARR(plan_heur_op_t, fact_op->op_size);
     fact_op->op_id = BOR_ALLOC_ARR(int, fact_op->op_size);
@@ -410,12 +407,12 @@ static void opInit(heur_fact_op_t *fact_op,
         }
     }
 
-    if (artificial_goal){
-        fact_op->op[fact_op->op_size - 1].unsat = fact_op->goal.size;
-        fact_op->op[fact_op->op_size - 1].value = 0;
-        fact_op->op[fact_op->op_size - 1].cost  = 0;
-        fact_op->op_id[i] = -1;
-    }
+#ifdef HEUR_FACT_OP_ARTIFICIAL_GOAL
+    fact_op->op[fact_op->op_size - 1].unsat = fact_op->goal.size;
+    fact_op->op[fact_op->op_size - 1].value = 0;
+    fact_op->op[fact_op->op_size - 1].cost  = 0;
+    fact_op->op_id[i] = -1;
+#endif /* HEUR_FACT_OP_ARTIFICIAL_GOAL */
 }
 
 static void opFree(heur_fact_op_t *fact_op)
@@ -456,9 +453,7 @@ static void opPrecondCondEffInit(factarr_t *precond,
 }
 
 static void opPreInit(heur_fact_op_t *fact_op,
-                      const plan_op_t *ops, int ops_size,
-                      int artificial_goal,
-                      int no_pre_fact)
+                      const plan_op_t *ops, int ops_size)
 {
     int i, j, id, cond_eff_ins;
     plan_var_id_t var;
@@ -479,11 +474,13 @@ static void opPreInit(heur_fact_op_t *fact_op,
             precond->fact[j] = id;
         }
 
-        if (precond->size == 0 && no_pre_fact){
+#ifdef HEUR_FACT_OP_NO_PRE_FACT
+        if (precond->size == 0){
             precond->size = 1;
             precond->fact = BOR_REALLOC_ARR(precond->fact, int, 1);
             precond->fact[0] = fact_op->no_pre_fact;
         }
+#endif /* HEUR_FACT_OP_NO_PRE_FACT */
 
         for (j = 0; j < ops[i].cond_eff_size; ++j){
             opPrecondCondEffInit(fact_op->op_pre + cond_eff_ins,
@@ -493,12 +490,12 @@ static void opPreInit(heur_fact_op_t *fact_op,
         }
     }
 
-    if (artificial_goal){
-        precond = fact_op->op_pre + fact_op->op_size - 1;
-        precond->size = fact_op->goal.size;
-        precond->fact = BOR_ALLOC_ARR(int, precond->size);
-        memcpy(precond->fact, fact_op->goal.fact, sizeof(int) * precond->size);
-    }
+#ifdef HEUR_FACT_OP_ARTIFICIAL_GOAL
+    precond = fact_op->op_pre + fact_op->op_size - 1;
+    precond->size = fact_op->goal.size;
+    precond->fact = BOR_ALLOC_ARR(int, precond->size);
+    memcpy(precond->fact, fact_op->goal.fact, sizeof(int) * precond->size);
+#endif /* HEUR_FACT_OP_ARTIFICIAL_GOAL */
 }
 
 static void opEffCondEffInit(heur_fact_op_t *fact_op, factarr_t *eff,
@@ -521,8 +518,7 @@ static void opEffCondEffInit(heur_fact_op_t *fact_op, factarr_t *eff,
 }
 
 static void opEffInit(heur_fact_op_t *fact_op,
-                      const plan_op_t *ops, int ops_size,
-                      int artificial_goal)
+                      const plan_op_t *ops, int ops_size)
 {
     int i, j, cond_eff_ins;
     plan_var_id_t var;
@@ -549,12 +545,12 @@ static void opEffInit(heur_fact_op_t *fact_op,
         }
     }
 
-    if (artificial_goal){
-        eff = fact_op->op_eff + fact_op->op_size - 1;
-        eff->size = 1;
-        eff->fact = BOR_ALLOC_ARR(int, 1);
-        eff->fact[0] = fact_op->artificial_goal;
-    }
+#ifdef HEUR_FACT_OP_ARTIFICIAL_GOAL
+    eff = fact_op->op_eff + fact_op->op_size - 1;
+    eff->size = 1;
+    eff->fact = BOR_ALLOC_ARR(int, 1);
+    eff->fact[0] = fact_op->artificial_goal;
+#endif /* HEUR_FACT_OP_ARTIFICIAL_GOAL */
 }
 
 static void crossReferenceInit(oparr_t **dst, int fact_size,

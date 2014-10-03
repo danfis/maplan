@@ -25,6 +25,9 @@
  * HEUR_FACT_OP_FACT_EFF
  *      If defined .fact_eff[] will contain IDs of operators that have the
  *      corresponding fact as an effect.
+ * HEUR_FACT_OP_SIMPLIFY
+ *      Simplifies internal representation of operators so that there are
+ *      no two operators applicable in the same time with the same effect.
  */
 
 #ifdef HEUR_FACT_OP_FACT_T
@@ -176,6 +179,8 @@ static void factPreInit(heur_fact_op_t *fact_op);
 /** Initializes .fact_eff structures */
 static void factEffInit(heur_fact_op_t *fact_op);
 #endif /* HEUR_FACT_OP_FACT_EFF */
+
+#ifdef HEUR_FACT_OP_SIMPLIFY
 /** Remove same effects where its cost is higher */
 static void opSimplifyEffects(factarr_t *ref_eff, factarr_t *op_eff,
                               plan_cost_t ref_cost, plan_cost_t op_cost);
@@ -184,9 +189,8 @@ static void opSimplifyEffects(factarr_t *ref_eff, factarr_t *op_eff,
 static void opSimplify(heur_fact_op_t *fact_op,
                        const plan_op_t *op,
                        const plan_succ_gen_t *succ_gen);
+#endif /* HEUR_FACT_OP_SIMPLIFY */
 
-/** Set to flags if simplification should be run */
-#define HEUR_FACT_OP_SIMPLIFY 0x2
 
 static void heurFactOpInit(heur_fact_op_t *fact_op,
                            const plan_var_t *var, int var_size,
@@ -195,7 +199,9 @@ static void heurFactOpInit(heur_fact_op_t *fact_op,
                            const plan_succ_gen_t *_succ_gen,
                            unsigned flags)
 {
+#ifdef HEUR_FACT_OP_SIMPLIFY
     plan_succ_gen_t *succ_gen;
+#endif /* HEUR_FACT_OP_SIMPLIFY */
 
     bzero(fact_op, sizeof(*fact_op));
     planHeurFactIdInit(&fact_op->fact_id, var, var_size);
@@ -221,14 +227,14 @@ static void heurFactOpInit(heur_fact_op_t *fact_op,
     opPreInit(fact_op, op, op_size);
     opEffInit(fact_op, op, op_size);
 
-    if (flags & HEUR_FACT_OP_SIMPLIFY){
-        succ_gen = (plan_succ_gen_t *)_succ_gen;
-        if (_succ_gen == NULL)
-            succ_gen = planSuccGenNew(op, op_size, NULL);
-        opSimplify(fact_op, op, succ_gen);
-        if (_succ_gen == NULL)
-            planSuccGenDel(succ_gen);
-    }
+#ifdef HEUR_FACT_OP_SIMPLIFY
+    succ_gen = (plan_succ_gen_t *)_succ_gen;
+    if (_succ_gen == NULL)
+        succ_gen = planSuccGenNew(op, op_size, NULL);
+    opSimplify(fact_op, op, succ_gen);
+    if (_succ_gen == NULL)
+        planSuccGenDel(succ_gen);
+#endif /* HEUR_FACT_OP_SIMPLIFY */
 
     factPreInit(fact_op);
 
@@ -604,6 +610,7 @@ static void factEffInit(heur_fact_op_t *fact_op)
 }
 #endif /* HEUR_FACT_OP_FACT_EFF */
 
+#ifdef HEUR_FACT_OP_SIMPLIFY
 static void effRemoveId(factarr_t *eff, int pos)
 {
     int i;
@@ -686,3 +693,4 @@ static void opSimplify(heur_fact_op_t *fact_op,
 
     BOR_FREE(ops);
 }
+#endif /* HEUR_FACT_OP_SIMPLIFY */

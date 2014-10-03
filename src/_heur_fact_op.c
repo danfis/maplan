@@ -47,11 +47,11 @@ typedef struct _plan_heur_op_t plan_heur_op_t;
 /**
  * IDs of operators for wich the fact is effect or precondition.
  */
-struct _oparr_t {
+struct _plan_heur_oparr_t {
     int *op;  /*!< List of operator IDs */
     int size; /*!< Size of op[] array */
 };
-typedef struct _oparr_t oparr_t;
+typedef struct _plan_heur_oparr_t plan_heur_oparr_t;
 
 /**
  * Effects or preconditions of the operator.
@@ -87,10 +87,11 @@ struct _heur_fact_op_t {
                                 index of operator. This is here because of
                                 conditional effects. Note that
                                 .op_id[i] != i only for i >= .actual_op_size */
-    oparr_t *fact_pre;     /*!< Operators for which the corresponding fact
-                                is precondition -- the size of this array
-                                equals to .fact_size */
-    oparr_t *fact_eff;     /*!< Operators for which the corresponding fact
+    plan_heur_oparr_t *fact_pre;     /*!< Operators for which the
+                                          corresponding fact is
+                                          precondition -- the size of this
+                                          array equals to .fact_size */
+    plan_heur_oparr_t *fact_eff;     /*!< Operators for which the corresponding fact
                                 is effect. This array is created only in
                                 case of lm-cut heuristic. */
     factarr_t *op_eff;     /*!< Unrolled effects of operators. Size of this
@@ -140,8 +141,8 @@ static void planHeurFactIdFree(plan_heur_fact_id_t *factid);
 _bor_inline int planHeurFactId(const plan_heur_fact_id_t *factid,
                                plan_var_id_t var, plan_val_t val);
 
-/** Frees oparr_t array */
-static void oparrFree(oparr_t *oparr, int size);
+/** Frees plan_heur_oparr_t array */
+static void planHeurOparrFree(plan_heur_oparr_t *oparr, int size);
 /** Frees factarr_t array */
 static void factarrFree(factarr_t *factarr, int size);
 /** Initializes and frees .goal structure */
@@ -284,7 +285,7 @@ _bor_inline int planHeurFactId(const plan_heur_fact_id_t *fid,
     return fid->fact_id[var][val];
 }
 
-static void oparrFree(oparr_t *oparr, int size)
+static void planHeurOparrFree(plan_heur_oparr_t *oparr, int size)
 {
     int i;
 
@@ -553,15 +554,15 @@ static void opEffInit(heur_fact_op_t *fact_op,
 #endif /* HEUR_FACT_OP_ARTIFICIAL_GOAL */
 }
 
-static void crossReferenceInit(oparr_t **dst, int fact_size,
+static void crossReferenceInit(plan_heur_oparr_t **dst, int fact_size,
                                factarr_t *src, int op_size,
                                factarr_t *test)
 {
     int i, opi, fact_id;
-    oparr_t *fact, *update;
+    plan_heur_oparr_t *fact, *update;
     factarr_t *cur, *end;
 
-    *dst = BOR_CALLOC_ARR(oparr_t, fact_size);
+    *dst = BOR_CALLOC_ARR(plan_heur_oparr_t, fact_size);
     fact = *dst;
 
     end = src + op_size;

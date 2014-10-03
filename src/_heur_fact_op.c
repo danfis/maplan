@@ -22,6 +22,9 @@
  * HEUR_FACT_OP_NO_PRE_FACT
  *      Artificical fact as precondition for operators w/o preconditions is
  *      created
+ * HEUR_FACT_OP_FACT_EFF
+ *      If defined .fact_eff[] will contain IDs of operators that have the
+ *      corresponding fact as an effect.
  */
 
 #ifdef HEUR_FACT_OP_FACT_T
@@ -87,13 +90,14 @@ struct _heur_fact_op_t {
                                 index of operator. This is here because of
                                 conditional effects. Note that
                                 .op_id[i] != i only for i >= .actual_op_size */
-    plan_heur_oparr_t *fact_pre;     /*!< Operators for which the
-                                          corresponding fact is
-                                          precondition -- the size of this
-                                          array equals to .fact_size */
-    plan_heur_oparr_t *fact_eff;     /*!< Operators for which the corresponding fact
-                                is effect. This array is created only in
-                                case of lm-cut heuristic. */
+    plan_heur_oparr_t *fact_pre; /*!< Operators for which the corresponding
+                                   fact is precondition -- the size of this
+                                   array equals to .fact_size */
+#ifdef HEUR_FACT_OP_FACT_EFF
+    plan_heur_oparr_t *fact_eff; /*!< Operators for which the corresponding
+                                      fact is effect. This array is created
+                                      only in case of lm-cut heuristic. */
+#endif /* HEUR_FACT_OP_FACT_EFF */
     factarr_t *op_eff;     /*!< Unrolled effects of operators. Size of this
                                 array equals to .op_size */
     factarr_t *op_pre;     /*!< Precondition facts of operators. Size of
@@ -168,8 +172,10 @@ static void opEffInit(heur_fact_op_t *fact_op,
                       const plan_op_t *ops, int ops_size);
 /** Initializes .fact_pre structures */
 static void factPreInit(heur_fact_op_t *fact_op);
+#ifdef HEUR_FACT_OP_FACT_EFF
 /** Initializes .fact_eff structures */
 static void factEffInit(heur_fact_op_t *fact_op);
+#endif /* HEUR_FACT_OP_FACT_EFF */
 /** Remove same effects where its cost is higher */
 static void opSimplifyEffects(factarr_t *ref_eff, factarr_t *op_eff,
                               plan_cost_t ref_cost, plan_cost_t op_cost);
@@ -179,8 +185,6 @@ static void opSimplify(heur_fact_op_t *fact_op,
                        const plan_op_t *op,
                        const plan_succ_gen_t *succ_gen);
 
-/** Set to flags if you want .fact_eff initialized */
-#define HEUR_FACT_OP_INIT_FACT_EFF 0x1
 /** Set to flags if simplification should be run */
 #define HEUR_FACT_OP_SIMPLIFY 0x2
 
@@ -227,15 +231,19 @@ static void heurFactOpInit(heur_fact_op_t *fact_op,
     }
 
     factPreInit(fact_op);
-    if (flags & HEUR_FACT_OP_INIT_FACT_EFF)
-        factEffInit(fact_op);
+
+#ifdef HEUR_FACT_OP_FACT_EFF
+    factEffInit(fact_op);
+#endif /* HEUR_FACT_OP_FACT_EFF */
 }
 
 static void heurFactOpFree(heur_fact_op_t *fact_op)
 {
     planHeurFactIdFree(&fact_op->fact_id);
     oparrFree(fact_op->fact_pre, fact_op->fact_size);
+#ifdef HEUR_FACT_OP_FACT_EFF
     oparrFree(fact_op->fact_eff, fact_op->fact_size);
+#endif /* HEUR_FACT_OP_FACT_EFF */
     factarrFree(fact_op->op_pre, fact_op->op_size);
     factarrFree(fact_op->op_eff, fact_op->op_size);
     opFree(fact_op);
@@ -588,11 +596,13 @@ static void factPreInit(heur_fact_op_t *fact_op)
                        fact_op->op_eff);
 }
 
+#ifdef HEUR_FACT_OP_FACT_EFF
 static void factEffInit(heur_fact_op_t *fact_op)
 {
     crossReferenceInit(&fact_op->fact_eff, fact_op->fact_size,
                        fact_op->op_eff, fact_op->op_size, NULL);
 }
+#endif /* HEUR_FACT_OP_FACT_EFF */
 
 static void effRemoveId(factarr_t *eff, int pos)
 {

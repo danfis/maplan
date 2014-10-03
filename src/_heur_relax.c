@@ -122,8 +122,6 @@ static void planHeurRelaxInit(plan_heur_relax_t *heur, int type,
     heur->base_op = op;
 
     flags  = HEUR_FACT_OP_SIMPLIFY;
-    // TODO
-    flags |= HEUR_FACT_OP_INIT_FACT_EFF;
     heurFactOpInit(&heur->data, var, var_size, goal,
                    op, op_size, succ_gen, flags);
 

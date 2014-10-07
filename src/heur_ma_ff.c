@@ -1,6 +1,7 @@
 #include "plan/heur.h"
 
 #define HEUR_RELAX_FF
+#define HEUR_FACT_OP_SIMPLIFY
 #include "_heur_relax.c"
 
 struct _plan_heur_ma_ff_t {

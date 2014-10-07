@@ -47,7 +47,6 @@ typedef struct _fact_t fact_t;
     (fact)->relaxed_plan_visited = 0
 
 #define HEUR_FACT_OP_NO_PRE_FACT
-#define HEUR_FACT_OP_SIMPLIFY
 #include "_heur_fact_op.c"
 
 struct _plan_heur_relax_t {

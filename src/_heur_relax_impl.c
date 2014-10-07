@@ -1,3 +1,4 @@
+#define HEUR_FACT_OP_SIMPLIFY
 #include "_heur_relax.c"
 
 struct _plan_heur_relax_impl_t {

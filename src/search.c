@@ -208,13 +208,23 @@ static int maHeur(plan_search_t *search, plan_heur_res_t *res)
     plan_ma_msg_t *msg;
     int ma_res, msg_res, msg_type;
 
+    // Check if the node wasn't terminated already
+    if (search->ma_terminated){
+        res->heur = PLAN_HEUR_DEAD_END;
+        return PLAN_SEARCH_ABORT;
+    }
+
     // First call of multi-agent heuristic
     ma_res = planHeurMA(search->heur, search->ma_comm, search->state, res);
     if (ma_res == 0)
         return PLAN_SEARCH_CONT;
 
     // Wait for update messages
-    msg_type = ~PLAN_MA_MSG_TYPE_PUBLIC_STATE;
+    //msg_type = ~PLAN_MA_MSG_TYPE_PUBLIC_STATE;
+    //msg_type &= ~PLAN_MA_MSG_TYPE_SOLUTION;
+    msg_type  = PLAN_MA_MSG_TYPE_HEUR;
+    msg_type |= PLAN_MA_MSG_TYPE_TERMINATE;
+    msg_type |= PLAN_MA_MSG_TYPE_TRACE_PATH;
     while (ma_res != 0
             && (msg = planMACommRecvBlockType(search->ma_comm, msg_type)) != NULL){
 
@@ -445,7 +455,7 @@ int planSearchMARun(plan_search_t *search,
         maSolutionVerifyInit2(search);
 
     res = search->init_fn(search);
-    while (res == PLAN_SEARCH_CONT){
+    while (!search->ma_terminated && res == PLAN_SEARCH_CONT){
         // Start verifying next solution if queued
         if (search->ma_ack_solution)
             res = maSolutionVerifyNext(search);
@@ -464,6 +474,9 @@ int planSearchMARun(plan_search_t *search,
         res = search->step_fn(search);
         ++steps;
 
+        if (search->ma_terminated)
+            break;
+
         // call progress callback
         if (res == PLAN_SEARCH_CONT
                 && search->params.progress_fn
@@ -473,6 +486,8 @@ int planSearchMARun(plan_search_t *search,
                                              search->params.progress_data);
             steps = 0;
         }
+        if (search->ma_terminated)
+            break;
 
         if (res == PLAN_SEARCH_ABORT){
             maTerminate(search);

@@ -403,15 +403,16 @@ static int heurMAMaxUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
     int other_agent_id;
 
     if (!planMAMsgIsHeurMaxResponse(msg)){
-        fprintf(stderr, "Error: Heur response isn't for h^max heuristic.\n");
+        fprintf(stderr, "Error[%d]: Heur response isn't for h^max"
+                        " heuristic.\n", comm->node_id);
         return -1;
     }
 
     other_agent_id = planMAMsgHeurMaxResponseAgent(msg);
     if (other_agent_id != heur->cur_agent){
-        fprintf(stderr, "Error: Heur response from %d is expected, instead"
+        fprintf(stderr, "Error[%d]: Heur response from %d is expected, instead"
                         " response from %d is received.\n",
-                        heur->cur_agent, other_agent_id);
+                        comm->node_id, heur->cur_agent, other_agent_id);
         return -1;
     }
 
@@ -598,7 +599,8 @@ static void heurMAMaxRequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
     plan_prio_queue_t queue;
 
     if (!planMAMsgIsHeurMaxRequest(msg)){
-        fprintf(stderr, "Error: Heur request isn't for h^max heuristic.\n");
+        fprintf(stderr, "Error[%d]: Heur request isn't for h^max"
+                        " heuristic.\n", comm->node_id);
         return;
     }
 

@@ -265,6 +265,7 @@ static int updateFactValue(plan_heur_ma_max_t *heur, int fact_id)
     // Determine correct value of fact and operator by which it is reached
     ops = heur->relax.data.fact_eff[fact_id].op;
     value = INT_MAX;
+    reached_by_op = heur->relax.fact[fact_id].reached_by_op;
     for (num = 0, i = 0; i < size; ++i){
         op_id = ops[i];
 

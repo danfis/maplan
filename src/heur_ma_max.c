@@ -248,28 +248,42 @@ static int heurMAMax(plan_heur_t *_heur, plan_ma_comm_t *comm,
 
 static int updateFactValue(plan_heur_ma_max_t *heur, int fact_id)
 {
-    plan_heur_oparr_t *ops;
     int i, original_value, value, reached_by_op;
+    int size, *ops, op_id, num;
 
     // Skip facts from initial state
     if (heur->cur_state_flag[fact_id])
         return 0;
 
-    ops = heur->relax.data.fact_eff + fact_id;
-    if (ops->size == 0)
+    size = heur->relax.data.fact_eff[fact_id].size;
+    if (size == 0)
         return 0;
 
     // Remember original value before change
     original_value = heur->relax.fact[fact_id].value;
 
     // Determine correct value of fact and operator by which it is reached
+    ops = heur->relax.data.fact_eff[fact_id].op;
     value = INT_MAX;
-    for (i = 0; i < ops->size; ++i){
-        if (value > heur->relax.op[ops->op[i]].value){
-            value = heur->relax.op[ops->op[i]].value;
-            reached_by_op = ops->op[i];
+    for (num = 0, i = 0; i < size; ++i){
+        op_id = ops[i];
+
+        // Consider only operators that are somehow reachable from initial
+        // state. Since we started from projected problem, the operators
+        // that have zero .unsat cannot be reachable even in non-projected
+        // problem.
+        if (heur->relax.op[op_id].unsat != 0)
+            continue;
+
+        ++num;
+        if (value > heur->relax.op[op_id].value){
+            value = heur->relax.op[op_id].value;
+            reached_by_op = op_id;
         }
     }
+
+    if (num == 0)
+        return 0;
 
     // Record new value and supporting operator
     heur->relax.fact[fact_id].value = value;
@@ -291,14 +305,13 @@ static void updateQueueWithEffects(plan_heur_ma_max_t *heur,
     for (i = 0; i < eff->size; ++i){
         fact_id = eff->fact[i];
         supp_op = heur->relax.fact[fact_id].reached_by_op;
-        if (supp_op >= 0 && supp_op != op_id)
+        if (supp_op != op_id)
             continue;
 
         if (updateFactValue(heur, fact_id) != 0){
             value = heur->relax.fact[fact_id].value;
             planPrioQueuePush(queue, value, fact_id);
         }
-        supp_op = heur->relax.fact[fact_id].reached_by_op;
     }
 }
 

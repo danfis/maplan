@@ -249,29 +249,34 @@ static int heurMAMax(plan_heur_t *_heur, plan_ma_comm_t *comm,
 static int updateFactValue(plan_heur_ma_max_t *heur, int fact_id)
 {
     plan_heur_oparr_t *ops;
-    int i, original_value, value;
+    int i, original_value, value, reached_by_op;
 
+    // Skip facts from initial state
     if (heur->cur_state_flag[fact_id])
+        return 0;
+
+    ops = heur->relax.data.fact_eff + fact_id;
+    if (ops->size == 0)
         return 0;
 
     // Remember original value before change
     original_value = heur->relax.fact[fact_id].value;
 
-    // Determine correct value of fact
+    // Determine correct value of fact and operator by which it is reached
     value = INT_MAX;
-    ops = heur->relax.data.fact_eff + fact_id;
     for (i = 0; i < ops->size; ++i){
-        value = BOR_MIN(value, heur->relax.op[ops->op[i]].value);
+        if (value > heur->relax.op[ops->op[i]].value){
+            value = heur->relax.op[ops->op[i]].value;
+            reached_by_op = ops->op[i];
+        }
     }
 
-    if (ops->size == 0)
-        value = 0;
+    // Record new value and supporting operator
+    heur->relax.fact[fact_id].value = value;
+    heur->relax.fact[fact_id].reached_by_op = reached_by_op;
 
-    if (original_value != value){
-        heur->relax.fact[fact_id].value = value;
+    if (value != original_value)
         return -1;
-    }
-
     return 0;
 }
 
@@ -279,27 +284,22 @@ static void updateQueueWithEffects(plan_heur_ma_max_t *heur,
                                    plan_prio_queue_t *queue,
                                    int op_id)
 {
-    int i, fact_id, value;
+    int i, fact_id, value, supp_op;
     plan_heur_factarr_t *eff;
 
     eff = heur->relax.data.op_eff + op_id;
     for (i = 0; i < eff->size; ++i){
         fact_id = eff->fact[i];
+        supp_op = heur->relax.fact[fact_id].reached_by_op;
+        if (supp_op >= 0 && supp_op != op_id)
+            continue;
+
         if (updateFactValue(heur, fact_id) != 0){
             value = heur->relax.fact[fact_id].value;
             planPrioQueuePush(queue, value, fact_id);
         }
+        supp_op = heur->relax.fact[fact_id].reached_by_op;
     }
-}
-
-static void updateQueueWithResponseOp(plan_heur_ma_max_t *heur,
-                                      int op_id, int value)
-{
-    // Update operator's value
-    heur->relax.op[op_id].value = value;
-
-    // Update queue with changed facts
-    updateQueueWithEffects(heur, &heur->relax.queue, op_id);
 }
 
 static void updateHMaxFact(plan_heur_ma_max_t *heur,
@@ -348,12 +348,44 @@ static int needsUpdate(const plan_heur_ma_max_t *heur)
     return val;
 }
 
+static void updateOpValue(plan_heur_ma_max_t *heur, const plan_ma_msg_t *msg)
+{
+    int i, *update_op, update_op_size, op_id, value;
+    int response_op_size, response_op_id, response_value;
+
+    response_op_size = planMAMsgHeurMaxResponseOpSize(msg);
+    update_op = alloca(sizeof(int) * response_op_size);
+    update_op_size = 0;
+    for (i = 0; i < response_op_size; ++i){
+        // Read data for operator
+        response_op_id = planMAMsgHeurMaxResponseOp(msg, i, &response_value);
+
+        // Translate operator ID from response to local ID
+        op_id = heur->op_glob_id_to_id[response_op_id];
+
+        // Determine current value of operator
+        value = heur->relax.op[op_id].value;
+
+        // Record updated value of operator and remember operator for
+        // later.
+        if (value != response_value){
+            heur->relax.op[op_id].value = response_value;
+            update_op[update_op_size++] = op_id;
+        }
+    }
+
+    // All updated values are record now we can check the effects of the
+    // changed operators.
+    for (i = 0; i < update_op_size; ++i){
+        // Update queue with changed facts
+        updateQueueWithEffects(heur, &heur->relax.queue, update_op[i]);
+    }
+}
+
 static int heurMAMaxUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
                            const plan_ma_msg_t *msg, plan_heur_res_t *res)
 {
     plan_heur_ma_max_t *heur = HEUR(_heur);
-    int i, response_op_size, response_op_id, response_value;
-    int op_id, value;
     int other_agent_id;
 
     if (!planMAMsgIsHeurMaxResponse(msg)){
@@ -373,22 +405,9 @@ static int heurMAMaxUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
     heur->agent_change[other_agent_id] = 0;
 
     planPrioQueueInit(&heur->relax.queue);
-    response_op_size = planMAMsgHeurMaxResponseOpSize(msg);
-    for (i = 0; i < response_op_size; ++i){
-        // Read data for operator
-        response_op_id = planMAMsgHeurMaxResponseOp(msg, i, &response_value);
 
-        // Translate operator ID from response to local ID
-        op_id = heur->op_glob_id_to_id[response_op_id];
-
-        // Determine current value of operator
-        value = heur->relax.op[op_id].value;
-
-        // Update queue of facts using this operator if we received changed
-        // h^max value
-        if (value != response_value)
-            updateQueueWithResponseOp(heur, op_id, response_value);
-    }
+    // Update values of the operators in response
+    updateOpValue(heur, msg);
 
     // Update h^max values of facts and operators
     updateHMax(heur);

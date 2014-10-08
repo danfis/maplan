@@ -1,6 +1,7 @@
 #include <cu/cu.h>
 #include "plan/problem.h"
 #include "plan/heur.h"
+#include "state_pool.h"
 
 #define RELAX_TEST_STATE_SIZE 9
 struct _relax_test_t {
@@ -546,29 +547,48 @@ lm_cut_test_t lm_cut_test[] = {
 };
 int lm_cut_test_len = sizeof(lm_cut_test) / sizeof(lm_cut_test_t);
 
-TEST(testHeurRelaxLMCut)
+static void runTestHeurRelaxLMCut(const char *proto, const char *states)
 {
     plan_problem_t *p;
-    plan_heur_t *heur;
+    state_pool_t state_pool;
     plan_state_t *state;
+    plan_heur_t *heur;
     plan_heur_res_t res;
-    int i, var;
+    int i, si;
 
-    p = planProblemFromFD("../data/ma-benchmarks/depot/pfile5.sas");
+    printf("-----\nLM-CUT\n%s\n", proto);
+    p = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
+    state = planStateNew(p->state_pool);
+    statePoolInit(&state_pool, states);
+
     heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
                             p->op, p->op_size, p->succ_gen);
 
-    state = planStateNew(p->state_pool);
-
-    for (i = 0; i < lm_cut_test_len; ++i){
-        for (var = 0; var < 38; ++var)
-            planStateSet(state, var, lm_cut_test[i].state[var]);
+    for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
         planHeurResInit(&res);
         planHeur(heur, state, &res);
-        assertEquals(res.heur, lm_cut_test[i].heur);
+        printf("[%d] %d ::", si, res.heur);
+        for (i = 0; i < planStateSize(state); ++i){
+            printf(" %d", planStateGet(state, i));
+        }
+        printf("\n");
     }
 
-    planStateDel(state);
     planHeurDel(heur);
+    statePoolFree(&state_pool);
+    planStateDel(state);
     planProblemDel(p);
+    printf("-----\n");
+}
+
+TEST(testHeurRelaxLMCut)
+{
+    runTestHeurRelaxLMCut("../data/ma-benchmarks/depot/pfile1.proto",
+                          "states/depot-pfile1.txt");
+    runTestHeurRelaxLMCut("../data/ma-benchmarks/depot/pfile5.proto",
+                          "states/depot-pfile5.txt");
+    runTestHeurRelaxLMCut("../data/ma-benchmarks/rovers/p03.proto",
+                          "states/rovers-p03.txt");
+    runTestHeurRelaxLMCut("../data/ma-benchmarks/rovers/p15.proto",
+                          "states/rovers-p15.txt");
 }

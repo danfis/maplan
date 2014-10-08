@@ -10,8 +10,6 @@ SYSTEM = $(shell uname)
 SYSTEM_CXXFLAGS =
 SYSTEM_LDFLAGS =
 CONFIG_FLAGS =
-CFLAGS += -Wall -pedantic --std=gnu99
-CXXFLAGS += -Wall -pedantic
 
 ifeq '$(SYSTEM)' 'FreeBSD'
   SYSTEM_CXXFLAGS = -Wno-long-long
@@ -26,8 +24,8 @@ ifeq '$(PROFIL)' 'yes'
 endif
 
 ifeq '$(DEBUG)' 'yes'
-  CFLAGS = -g
-  CXXFLAGS = -g
+  CFLAGS = -g -Wno-unused-function
+  CXXFLAGS = -g -Wno-unused-function
   CONFIG_FLAGS += -DDEBUG
 else
   # force to use optimizations
@@ -38,6 +36,8 @@ ifeq '$(PROFIL)' 'yes'
   CFLAGS += -pg
   CXXFLAGS += -pg
 endif
+CFLAGS += -Wall -pedantic --std=gnu99
+CXXFLAGS += -Wall -pedantic
 
 LDFLAGS += -pthread
 LDFLAGS += $(SYSTEM_LDFLAGS)

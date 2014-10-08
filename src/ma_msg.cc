@@ -279,16 +279,30 @@ const char *planMAMsgTracePathOperator(const plan_ma_msg_t *_msg, int i,
     return op.name().c_str();
 }
 
-void planMAMsgSetHeurRequest(plan_ma_msg_t *_msg,
-                             int agent_id,
-                             const int *state, int state_size,
-                             int op_id)
+int planMAMsgIsHeurRequest(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    int type = msg->type();
+    return (type & 0x0810) == 0x0810;
+}
+
+int planMAMsgIsHeurResponse(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    int type = msg->type();
+    return (type & 0x0820) == 0x0820;
+}
+
+void planMAMsgSetHeurFFRequest(plan_ma_msg_t *_msg,
+                               int agent_id,
+                               const int *state, int state_size,
+                               int op_id)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
-    PlanMAMsgHeurRequest *req;
+    PlanMAMsgHeurFFRequest *req;
 
-    msg->set_type(PlanMAMsg::HEUR_REQUEST);
-    req = msg->mutable_heur_request();
+    msg->set_type(PlanMAMsg::HEUR_FF_REQUEST);
+    req = msg->mutable_heur_ff_request();
     req->set_agent_id(agent_id);
     req->set_op_id(op_id);
 
@@ -296,110 +310,219 @@ void planMAMsgSetHeurRequest(plan_ma_msg_t *_msg,
         req->add_state(state[i]);
 }
 
-int planMAMsgIsHeurRequest(const plan_ma_msg_t *_msg)
+int planMAMsgIsHeurFFRequest(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    return msg->type() == PlanMAMsg::HEUR_REQUEST;
+    return msg->type() == PlanMAMsg::HEUR_FF_REQUEST;
 }
 
-int planMAMsgHeurRequestAgentId(const plan_ma_msg_t *_msg)
+int planMAMsgHeurFFRequestAgentId(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgHeurRequest &req = msg->heur_request();
+    const PlanMAMsgHeurFFRequest &req = msg->heur_ff_request();
     return req.agent_id();
 }
 
-int planMAMsgHeurRequestOpId(const plan_ma_msg_t *_msg)
+int planMAMsgHeurFFRequestOpId(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgHeurRequest &req = msg->heur_request();
+    const PlanMAMsgHeurFFRequest &req = msg->heur_ff_request();
     return req.op_id();
 }
 
-int planMAMsgHeurRequestState(const plan_ma_msg_t *_msg, int var)
+int planMAMsgHeurFFRequestState(const plan_ma_msg_t *_msg, int var)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgHeurRequest &req = msg->heur_request();
+    const PlanMAMsgHeurFFRequest &req = msg->heur_ff_request();
     return req.state(var);
 }
 
 
-void planMAMsgSetHeurResponse(plan_ma_msg_t *_msg, int op_id)
+void planMAMsgSetHeurFFResponse(plan_ma_msg_t *_msg, int op_id)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
-    PlanMAMsgHeurResponse *res;
+    PlanMAMsgHeurFFResponse *res;
 
-    msg->set_type(PlanMAMsg::HEUR_RESPONSE);
-    res = msg->mutable_heur_response();
+    msg->set_type(PlanMAMsg::HEUR_FF_RESPONSE);
+    res = msg->mutable_heur_ff_response();
     res->set_op_id(op_id);
 }
 
-void planMAMsgHeurResponseAddOp(plan_ma_msg_t *_msg, int op_id, int cost)
+void planMAMsgHeurFFResponseAddOp(plan_ma_msg_t *_msg, int op_id, int cost)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
-    PlanMAMsgHeurResponse *res = msg->mutable_heur_response();
-    PlanMAMsgHeurResponseOp *op = res->add_op();
+    PlanMAMsgHeurFFResponse *res = msg->mutable_heur_ff_response();
+    PlanMAMsgHeurFFResponseOp *op = res->add_op();
     op->set_op_id(op_id);
     op->set_cost(cost);
 }
 
-void planMAMsgHeurResponseAddPeerOp(plan_ma_msg_t *_msg,
-                                    int op_id, int cost, int owner)
+void planMAMsgHeurFFResponseAddPeerOp(plan_ma_msg_t *_msg,
+                                      int op_id, int cost, int owner)
 {
     PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
-    PlanMAMsgHeurResponse *res = msg->mutable_heur_response();
-    PlanMAMsgHeurResponseOp *op = res->add_peer_op();
+    PlanMAMsgHeurFFResponse *res = msg->mutable_heur_ff_response();
+    PlanMAMsgHeurFFResponseOp *op = res->add_peer_op();
     op->set_op_id(op_id);
     op->set_cost(cost);
     op->set_owner(owner);
 }
 
-int planMAMsgIsHeurResponse(const plan_ma_msg_t *_msg)
+int planMAMsgIsHeurFFResponse(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    return msg->type() == PlanMAMsg::HEUR_RESPONSE;
+    return msg->type() == PlanMAMsg::HEUR_FF_RESPONSE;
 }
 
-int planMAMsgHeurResponseOpId(const plan_ma_msg_t *_msg)
+int planMAMsgHeurFFResponseOpId(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgHeurResponse &res = msg->heur_response();
+    const PlanMAMsgHeurFFResponse &res = msg->heur_ff_response();
     return res.op_id();
 }
 
-int planMAMsgHeurResponseOpSize(const plan_ma_msg_t *_msg)
+int planMAMsgHeurFFResponseOpSize(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgHeurResponse &res = msg->heur_response();
+    const PlanMAMsgHeurFFResponse &res = msg->heur_ff_response();
     return res.op_size();
 }
 
-int planMAMsgHeurResponseOp(const plan_ma_msg_t *_msg, int i, int *cost)
+int planMAMsgHeurFFResponseOp(const plan_ma_msg_t *_msg, int i, int *cost)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgHeurResponse &res = msg->heur_response();
-    const PlanMAMsgHeurResponseOp &op = res.op(i);
+    const PlanMAMsgHeurFFResponse &res = msg->heur_ff_response();
+    const PlanMAMsgHeurFFResponseOp &op = res.op(i);
     *cost = op.cost();
     return op.op_id();
 }
 
-int planMAMsgHeurResponsePeerOpSize(const plan_ma_msg_t *_msg)
+int planMAMsgHeurFFResponsePeerOpSize(const plan_ma_msg_t *_msg)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgHeurResponse &res = msg->heur_response();
+    const PlanMAMsgHeurFFResponse &res = msg->heur_ff_response();
     return res.peer_op_size();
 }
 
-int planMAMsgHeurResponsePeerOp(const plan_ma_msg_t *_msg, int i,
-                                int *cost, int *owner)
+int planMAMsgHeurFFResponsePeerOp(const plan_ma_msg_t *_msg, int i,
+                                  int *cost, int *owner)
 {
     const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    const PlanMAMsgHeurResponse &res = msg->heur_response();
-    const PlanMAMsgHeurResponseOp &op = res.peer_op(i);
+    const PlanMAMsgHeurFFResponse &res = msg->heur_ff_response();
+    const PlanMAMsgHeurFFResponseOp &op = res.peer_op(i);
     *cost = op.cost();
     *owner = op.owner();
     return op.op_id();
 }
+
+
+
+void planMAMsgSetHeurMaxRequest(plan_ma_msg_t *_msg, int agent_id, 
+                                const int *state, int state_size)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurMaxRequest *req;
+
+    msg->set_type(PlanMAMsg::HEUR_MAX_REQUEST);
+    req = msg->mutable_heur_max_request();
+    req->set_agent_id(agent_id);
+    for (int i = 0; i < state_size; ++i)
+        req->add_state(state[i]);
+}
+
+void planMAMsgHeurMaxRequestAddOp(plan_ma_msg_t *_msg, int op_id, int val)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurMaxRequest *req = msg->mutable_heur_max_request();
+    PlanMAMsgHeurMaxOp *op;
+    op = req->add_op();
+    op->set_op_id(op_id);
+    op->set_value(val);
+}
+
+int planMAMsgIsHeurMaxRequest(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type() == PlanMAMsg::HEUR_MAX_REQUEST;
+}
+
+int planMAMsgHeurMaxRequestAgent(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxRequest &req = msg->heur_max_request();
+    return req.agent_id();
+}
+
+int planMAMsgHeurMaxRequestState(const plan_ma_msg_t *_msg, int var)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxRequest &req = msg->heur_max_request();
+    return req.state(var);
+}
+
+int planMAMsgHeurMaxRequestOpSize(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxRequest &req = msg->heur_max_request();
+    return req.op_size();
+}
+
+int planMAMsgHeurMaxRequestOp(const plan_ma_msg_t *_msg, int i, int *value)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxRequest &req = msg->heur_max_request();
+    const PlanMAMsgHeurMaxOp &op = req.op(i);
+    *value = op.value();
+    return op.op_id();
+}
+
+
+void planMAMsgSetHeurMaxResponse(plan_ma_msg_t *_msg, int agent_id)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurMaxResponse *res = msg->mutable_heur_max_response();
+    msg->set_type(PlanMAMsg::HEUR_MAX_RESPONSE);
+    res->set_agent_id(agent_id);
+}
+
+void planMAMsgHeurMaxResponseAddOp(plan_ma_msg_t *_msg, int op_id, int val)
+{
+    PlanMAMsg *msg = static_cast<PlanMAMsg *>(_msg);
+    PlanMAMsgHeurMaxResponse *res = msg->mutable_heur_max_response();
+    PlanMAMsgHeurMaxOp *op = res->add_op();
+    op->set_op_id(op_id);
+    op->set_value(val);
+}
+
+int planMAMsgIsHeurMaxResponse(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    return msg->type() == PlanMAMsg::HEUR_MAX_RESPONSE;
+}
+
+int planMAMsgHeurMaxResponseAgent(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxResponse &res = msg->heur_max_response();
+    return res.agent_id();
+}
+
+int planMAMsgHeurMaxResponseOpSize(const plan_ma_msg_t *_msg)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxResponse &res = msg->heur_max_response();
+    return res.op_size();
+}
+
+int planMAMsgHeurMaxResponseOp(const plan_ma_msg_t *_msg, int i, int *value)
+{
+    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
+    const PlanMAMsgHeurMaxResponse &res = msg->heur_max_response();
+    const PlanMAMsgHeurMaxOp &op = res.op(i);
+    *value = op.value();
+    return op.op_id();
+}
+
 
 
 

@@ -101,7 +101,7 @@ static void *thRunType(void *_th)
 
     msg = planMAMsgNew();
     state = 1;
-    planMAMsgSetHeurRequest(msg, th->id, &state, 1, 0);
+    planMAMsgSetHeurFFRequest(msg, th->id, &state, 1, 0);
     planMACommSendToAll(th->queue, msg);
     planMAMsgDel(msg);
 

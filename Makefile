@@ -65,6 +65,7 @@ endif
 OBJS += ma
 OBJS += causalgraph
 OBJS += _problem
+OBJS += fact_id
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg

@@ -19,6 +19,7 @@ static int max_mem = 1024 * 1024; // 1GB
 static int progress_freq = 10000;
 static int use_preferred_ops = 0;
 static int use_pathmax = 0;
+static char *print_dot_graph = NULL;
 
 
 static void optUsePreferredOps(const char *l, char s, const char *val)
@@ -72,6 +73,9 @@ static int readOpts(int argc, char *argv[])
                 " seconds. (default: 30 minutes).");
     optsAddDesc("max-mem", 0x0, OPTS_INT, &max_mem, NULL,
                 "Maximal memory (peak memory) in kb. (default: 1GB)");
+    optsAddDesc("dot-graph", 0x0, OPTS_STR, &print_dot_graph, NULL,
+                "Prints problem definition as graph in DOT format in"
+                " specified file. (default: None)");
 
     if (opts(&argc, argv) != 0){
         return -1;
@@ -438,6 +442,26 @@ int main(int argc, char *argv[])
     }else{
         fprintf(stderr, "Error: Could not load problem definition.\n");
         return -1;
+    }
+
+    if (print_dot_graph){
+        if (prob != NULL){
+            // TODO
+            fprintf(stderr, "Error: Dot graph for seq problem is not"
+                            " defined.\n");
+            return -1;
+
+        }else if (ma_prob != NULL){
+            FILE *fout = fopen(print_dot_graph, "w");
+            if (fout == NULL){
+                fprintf(stderr, "Error: Could not open file `%s' for"
+                                " writing DOT graph.\n", print_dot_graph);
+                return -1;
+            }
+            planProblemAgentsDotGraph(ma_prob, fout);
+            fclose(fout);
+            return 0;
+        }
     }
 
     borTimerStop(&timer);

@@ -90,6 +90,12 @@ plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags);
 void planProblemAgentsDel(plan_problem_agents_t *agents);
 
 /**
+ * Prints problem definition as graph in DOT format.
+ */
+void planProblemAgentsDotGraph(const plan_problem_agents_t *agents,
+                               FILE *fout);
+
+/**
  * Returns true if the given state is the goal.
  */
 _bor_inline int planProblemCheckGoal(plan_problem_t *p,

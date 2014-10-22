@@ -272,6 +272,9 @@ int _planSearchHeuristic(plan_search_t *search,
     }
 
     if (state_id == 0){
+        if (search->ma){
+            fprintf(stdout, "[%d] ", search->ma_comm->node_id);
+        }
         fprintf(stdout, "Heur for init state: %d\n", (int)res.heur);
         fflush(stdout);
     }

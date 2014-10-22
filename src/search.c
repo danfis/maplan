@@ -499,7 +499,7 @@ int planSearchMARun(plan_search_t *search,
             break;
 
         }else if (res == PLAN_SEARCH_FOUND){
-            if (search->ma_ack_solution){
+            if (search->ma_ack_solution && search->ma_comm_node_size > 1){
                 maSolutionVerifyStart(search, search->goal_state);
                 res = PLAN_SEARCH_CONT;
 
@@ -1292,6 +1292,13 @@ static int maSolutionAckUpdate(plan_search_t *search, const plan_ma_msg_t *msg)
     sol_ack->mark[agent_id] = 1;
     --sol_ack->mark_remaining;
     maSolutionAckSendMark(search, sol_ack);
+
+    if (sol_ack->mark_remaining == 0){
+        // The lower bound was already completely computed
+        if (maSolutionAckSendResponse(search, sol_ack) != 0)
+            res = PLAN_SEARCH_ABORT;
+        maSolutionAckDel(search, search->ma_solution_ack_size - 1);
+    }
 
     return res;
 }

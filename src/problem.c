@@ -130,7 +130,7 @@ static void dotGraphOpLabel(const plan_problem_agents_t *agents,
     }
 
     if (num_projs == 1){
-        size += sprintf(op_label + size, ",fontcolor=10");
+        size += sprintf(op_label + size, ",arrowhead=empty");
     }
 }
 

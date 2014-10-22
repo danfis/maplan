@@ -271,6 +271,11 @@ int _planSearchHeuristic(plan_search_t *search,
         preferred_ops->op_preferred = res.pref_size;
     }
 
+    if (state_id == 0){
+        fprintf(stdout, "Heur for init state: %d\n", (int)res.heur);
+        fflush(stdout);
+    }
+
     *heur_val = res.heur;
     return fres;
 }

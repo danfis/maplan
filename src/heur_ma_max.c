@@ -3,6 +3,7 @@
 #define HEUR_RELAX_MAX
 #define HEUR_RELAX_MAX_FULL
 #define HEUR_FACT_OP_FACT_EFF
+#define HEUR_FACT_OP_NO_OPTIMIZE_FACT_PRE
 #include "_heur_relax.c"
 
 struct _proj_op_t {

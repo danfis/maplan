@@ -2,6 +2,7 @@
 
 #define HEUR_RELAX_FF
 #define HEUR_FACT_OP_SIMPLIFY
+#define HEUR_FACT_OP_NO_OPTIMIZE_FACT_PRE
 #include "_heur_relax.c"
 
 struct _plan_heur_ma_ff_t {

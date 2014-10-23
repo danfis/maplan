@@ -231,11 +231,15 @@ _bor_inline void ctxUpdateFact(plan_heur_relax_t *heur, int fact_id,
     fact->value = op_value;
     fact->reached_by_op = op_id;
 
+#ifndef HEUR_RELAX_NO_OPTIMIZE_FACT_ENQUEUE
     // Insert only those facts that can be used later, i.e., can satisfy
     // goal or some operators have them as preconditions.
     // It should speed it up a little.
     if (fact->goal || heur->data.fact_pre[fact_id].size > 0)
         planPrioQueuePush(&heur->queue, fact->value, fact_id);
+#else /* HEUR_RELAX_NO_OPTIMIZE_FACT_ENQUEUE */
+    planPrioQueuePush(&heur->queue, fact->value, fact_id);
+#endif /* HEUR_RELAX_NO_OPTIMIZE_FACT_ENQUEUE */
 }
 
 static void ctxAddInitState(plan_heur_relax_t *heur,

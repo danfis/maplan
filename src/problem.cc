@@ -472,7 +472,7 @@ static bool agentProjectOp(plan_op_t *op, int agent_id,
     agentProjectPartState(op->pre, agent_id, vals);
     agentProjectPartState(op->eff, agent_id, vals);
 
-    if (op->eff->vals_size > 0)
+    if (op->eff->vals_size > 0 || op->pre->vals_size > 0)
         return true;
     return false;
 }

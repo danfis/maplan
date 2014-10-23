@@ -125,6 +125,12 @@ static void runTestHeurMAMax(const char *proto, const char *states)
     planProblemAgentsDel(p);
 }
 
+TEST(testHeurMAMaxSimple)
+{
+    runTestHeurMAMax("../data/simple/pfile.proto",
+                     "states/simple.txt");
+}
+
 TEST(testHeurMAMaxDepotPfile1)
 {
     runTestHeurMAMax("../data/ma-benchmarks/depot/pfile1.proto",

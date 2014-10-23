@@ -598,9 +598,14 @@ static void crossReferenceInit(plan_heur_oparr_t **dst, int fact_size,
 
 static void factPreInit(plan_heur_fact_op_t *fact_op)
 {
+#ifdef HEUR_FACT_OP_NO_OPTIMIZE_FACT_PRE
+    crossReferenceInit(&fact_op->fact_pre, fact_op->fact_size,
+                       fact_op->op_pre, fact_op->op_size, NULL);
+#else /* HEUR_FACT_OP_NO_OPTIMIZE_FACT_PRE */
     crossReferenceInit(&fact_op->fact_pre, fact_op->fact_size,
                        fact_op->op_pre, fact_op->op_size,
                        fact_op->op_eff);
+#endif /* HEUR_FACT_OP_NO_OPTIMIZE_FACT_PRE */
 }
 
 #ifdef HEUR_FACT_OP_FACT_EFF

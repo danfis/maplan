@@ -319,6 +319,7 @@ TEST(testLoadAgentFromProto)
     plan_problem_t *p;
     plan_state_t *initial_state;
     int i, api;
+    const char *n;
 
     agents = planProblemAgentsFromProto("../data/ma-benchmarks/rovers/p03.proto",
                                         PLAN_PROBLEM_USE_CG);
@@ -470,13 +471,10 @@ TEST(testLoadAgentFromProto)
     for (i = 20; i <= 33; ++i)
         assertTrue(planOpExtraMAOpIsPrivate(agent->op + i));
 
-    for (i = 0; i < 13; ++i)
-        assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + i), i);
-    assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + 13), 14);
-    for (i = 14; i < 20; ++i)
-        assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + i), i + 5);
-    for (i = 20; i < 36; ++i)
-        assertEquals(planOpExtraMAProjOpGlobalId(agent->proj_op + i), i + 7);
+    for (i = 0; i < agent->proj_op_size; ++i){
+        n = agents->glob.op[planOpExtraMAProjOpGlobalId(agent->proj_op + i)].name;
+        assertEquals(strcmp(agent->proj_op[i].name, n), 0);
+    }
 
     planProblemAgentsDel(agents);
 }

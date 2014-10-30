@@ -149,6 +149,10 @@ static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
         // Find cut operators, i.e., operators connected with effects in
         // goal-zone
         lmCutFindCut(heur, state);
+        if (heur->cut.size == 0){
+            h = PLAN_HEUR_DEAD_END;
+            break;
+        }
 
         // Determine the minimal cost from all cut-operators. Substract
         // this cost from their cost and add it to the final heuristic
@@ -318,8 +322,6 @@ static void lmCutFindCut(plan_heur_lm_cut_t *heur, const plan_state_t *state)
 
         for (i = 0; i < heur->data.fact_pre[fact_id].size; ++i){
             op_id = heur->data.fact_pre[fact_id].op[i];
-            if (heur->op[op_id].cost == 0)
-                continue;
 
             if (heur->op[op_id].supporter == fact_id){
                 lmCutFindCutEnqueueEffects(heur, op_id, &queue);

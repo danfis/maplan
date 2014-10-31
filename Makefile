@@ -66,6 +66,7 @@ OBJS += ma
 OBJS += causalgraph
 OBJS += _problem
 OBJS += fact_id
+OBJS += ma_search
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg

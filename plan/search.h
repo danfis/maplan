@@ -23,44 +23,6 @@ typedef struct _plan_search_t plan_search_t;
  * ==================
  */
 
-/**
- * Status that search can (and should) continue. Mostly for internal use.
- */
-#define PLAN_SEARCH_CONT       0
-
-/**
- * Status signaling that a solution was found.
- */
-#define PLAN_SEARCH_FOUND      1
-
-/**
- * No solution was found.
- */
-#define PLAN_SEARCH_NOT_FOUND -1
-
-/**
- * The search process was aborted from outside, e.g., from progress
- * callback.
- */
-#define PLAN_SEARCH_ABORT     -2
-
-
-/**
- * Preferred operators are not used.
- */
-#define PLAN_SEARCH_PREFERRED_NONE 0
-
-/**
- * Preferred operators are preferenced over the other ones. This depends on
- * a particular search algorithm.
- */
-#define PLAN_SEARCH_PREFERRED_PREF 1
-
-/**
- * Only the preferred operators are used.
- */
-#define PLAN_SEARCH_PREFERRED_ONLY 2
-
 
 /**
  * Struct for statistics from search.

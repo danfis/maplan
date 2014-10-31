@@ -8,6 +8,35 @@
  *  fairly high number. */
 #define SEARCH_MA_MAX_BLOCK_TIME (600 * 1000) // 10 minutes
 
+
+/**** TODO: A* --> refactor ****/
+#include "plan/list.h"
+#include "plan/statespace.h"
+struct _plan_search_astar_t {
+    plan_state_id_t initial_state;
+    const plan_part_state_t *goal;
+    plan_state_pool_t *state_pool;
+    plan_state_space_t *state_space;
+    plan_state_t *state;
+    plan_heur_t *heur;
+
+    plan_list_t *list; /*!< Open-list */
+    int pathmax;       /*!< Use pathmax correction */
+};
+typedef struct _plan_search_astar_t plan_search_astar_t;
+
+static void astarInit(plan_search_astar_t *search,
+                      plan_state_id_t initial_state,
+                      const plan_part_state_t *goal,
+                      plan_state_pool_t *state_pool,
+                      plan_state_space_t *state_space,
+                      plan_heur_t *heur);
+static void astarFree(plan_search_astar_t *search);
+static int astarInitStep(plan_search_astar_t *search);
+static int astarStep(plan_search_astar_t *search);
+
+
+
 struct _plan_ma_search_th_t {
     pthread_t thread; /*!< Thread with running search algorithm */
 
@@ -129,3 +158,180 @@ static int searchThreadProcessMsgs(plan_ma_search_th_t *th)
     return PLAN_SEARCH_ABORT;
 }
 
+
+static plan_cost_t planSearchHeur(plan_search_astar_t *search,
+                                  plan_state_id_t state_id)
+{
+    plan_heur_res_t res;
+
+    planStatePoolGetState(search->state_pool, state_id, search->state);
+
+    planHeurResInit(&res);
+    planHeur(search->heur, search->state, &res);
+    return res.heur;
+}
+
+static int planSearchCheckGoal(plan_search_astar_t *search,
+                               plan_state_space_node_t *node)
+{
+    int res = planStatePoolPartStateIsSubset(search->state_pool,
+                                             search->goal,
+                                             node->state_id);
+    return res;
+}
+
+static void astarInit(plan_search_astar_t *search,
+                      plan_state_id_t initial_state,
+                      const plan_part_state_t *goal,
+                      plan_state_pool_t *state_pool,
+                      plan_state_space_t *state_space,
+                      plan_heur_t *heur)
+{
+    search->initial_state = initial_state;
+    search->goal = goal;
+    search->state_pool = state_pool;
+    search->state_space = state_space;
+    search->heur = heur;
+
+    search->list = planListTieBreaking(2);
+    search->pathmax = 0;
+}
+
+static void astarFree(plan_search_astar_t *search)
+{
+    if (search->list)
+        planListDel(search->list);
+}
+
+
+static int astarInsertState(plan_search_astar_t *search,
+                            plan_state_space_node_t *node,
+                            plan_op_t *op,
+                            plan_state_space_node_t *parent_node)
+{
+    plan_cost_t cost[2];
+    plan_cost_t heur, g_cost = 0;
+    plan_state_id_t parent_state_id = PLAN_NO_STATE;
+
+    // Force to open the node and compute heuristic if necessary
+    if (planStateSpaceNodeIsNew(node)){
+        planStateSpaceOpen(search->state_space, node);
+
+        // TODO: handle re-computing heuristic and max() of heuristics
+        // etc...
+        heur = planSearchHeur(search, node->state_id);
+        if (search->pathmax && op != NULL && parent_node != NULL){
+            heur = BOR_MAX(heur, parent_node->heuristic - op->cost);
+        }
+
+    }else{
+        if (planStateSpaceNodeIsClosed(node)){
+            planStateSpaceReopen(search->state_space, node);
+        }
+
+        // The node was already opened, so we have already computed
+        // heuristic
+        heur = node->heuristic;
+    }
+
+    // Skip dead-end states
+    if (heur == PLAN_HEUR_DEAD_END)
+        return PLAN_SEARCH_CONT;
+
+    if (parent_node){
+        g_cost += parent_node->cost;
+        parent_state_id = parent_node->state_id;
+    }
+
+    if (op){
+        g_cost += op->cost;
+    }
+
+    // Set up costs for open-list -- ties are broken by heuristic value
+    cost[0] = g_cost + heur; // f-value: f() = g() + h()
+    cost[1] = heur; // tie-breaking value
+
+    // Set correct values
+    node->parent_state_id = parent_state_id;
+    node->op              = op;
+    node->cost            = g_cost;
+    node->heuristic       = heur;
+
+    // Insert into open-list
+    planListPush(search->list, cost, node->state_id);
+    // TODO: planSearchStatIncGeneratedStates(&search->search.stat);
+
+    return PLAN_SEARCH_CONT;
+}
+
+static int astarInitStep(plan_search_astar_t *search)
+{
+    plan_state_id_t init_state;
+    plan_state_space_node_t *node;
+
+    init_state = search->initial_state;
+    node = planStateSpaceNode(search->state_space, init_state);
+    return astarInsertState(search, node, NULL, NULL);
+}
+
+static int astarStep(plan_search_astar_t *search)
+{
+    plan_cost_t cost[2], g_cost;
+    plan_state_id_t cur_state, next_state;
+    plan_state_space_node_t *cur_node, *next_node;
+    int i, op_size, res;
+    plan_op_t **op;
+
+    // Get next state from open list
+    if (planListPop(search->list, &cur_state, cost) != 0)
+        return PLAN_SEARCH_NOT_FOUND;
+
+    // Get corresponding state space node
+    cur_node = planStateSpaceNode(search->state_space, cur_state);
+
+    // Skip already closed nodes
+    if (!planStateSpaceNodeIsOpen(cur_node))
+        return PLAN_SEARCH_CONT;
+
+    // Close the current state node
+    planStateSpaceClose(search->state_space, cur_node);
+
+    // Check whether it is a goal
+    if (planSearchCheckGoal(search, cur_node)){
+        return PLAN_SEARCH_FOUND;
+    }
+
+    // Find all applicable operators
+    // TODO: _planSearchFindApplicableOps(&search->search, cur_state);
+    // TODO: planSearchStatIncExpandedStates(&search->search.stat);
+
+    // Useful only in MA node
+    // TODO: _planSearchMASendState(&search->search, cur_node);
+
+    // Add states created by applicable operators
+    /* TODO:
+    op      = search->search.applicable_ops.op;
+    op_size = search->search.applicable_ops.op_found;
+    for (i = 0; i < op_size; ++i){
+        // Create a new state
+        next_state = planOpApply(op[i], cur_state);
+        // Compute its g() value
+        g_cost = cur_node->cost + op[i]->cost;
+
+        // Obtain corresponding node from state space
+        next_node = planStateSpaceNode(search->search.state_space,
+                                       next_state);
+
+        // Decide whether to insert the state into open-list
+        if (planStateSpaceNodeIsNew(next_node)
+                || next_node->cost > g_cost){
+            res = astarInsertState(search, next_state, next_node,
+                                   cur_state, op[i], g_cost,
+                                   cur_node->heuristic);
+            if (res != PLAN_SEARCH_CONT)
+                return res;
+        }
+    }
+    */
+    return PLAN_SEARCH_CONT;
+}

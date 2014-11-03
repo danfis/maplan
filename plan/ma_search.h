@@ -21,7 +21,6 @@ struct _plan_ma_search_params_t {
     plan_state_id_t initial_state;
     const plan_part_state_t *goal;
     plan_state_pool_t *state_pool;
-    plan_state_space_t *state_space;
     plan_heur_t *heur;
     const plan_succ_gen_t *succ_gen;
 };

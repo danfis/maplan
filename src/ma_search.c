@@ -34,7 +34,6 @@ static void astarInit(plan_search_astar_t *search,
                       plan_state_id_t initial_state,
                       const plan_part_state_t *goal,
                       plan_state_pool_t *state_pool,
-                      plan_state_space_t *state_space,
                       plan_heur_t *heur,
                       const plan_succ_gen_t *succ_gen);
 static void astarFree(plan_search_astar_t *search);
@@ -92,7 +91,6 @@ int planMASearchRun(plan_ma_search_t *search, plan_path_t *path)
               search->params->initial_state,
               search->params->goal,
               search->params->state_pool,
-              search->params->state_space,
               search->params->heur,
               search->params->succ_gen);
 
@@ -156,6 +154,8 @@ static void *searchThread(void *_th)
 
     // Remember the final state
     th->final_state = state;
+    fprintf(stderr, "Final state: %d\n", state);
+    fflush(stderr);
     // TODO: Let the parent thread know that we ended (using some internal
     // message or by closing communication channel)
 
@@ -174,7 +174,7 @@ static int searchThreadStep(plan_ma_search_th_t *th)
 
 static int searchThreadProcessMsgs(plan_ma_search_th_t *th)
 {
-    return PLAN_SEARCH_ABORT;
+    return PLAN_SEARCH_CONT;
 }
 
 
@@ -224,14 +224,13 @@ static void astarInit(plan_search_astar_t *search,
                       plan_state_id_t initial_state,
                       const plan_part_state_t *goal,
                       plan_state_pool_t *state_pool,
-                      plan_state_space_t *state_space,
                       plan_heur_t *heur,
                       const plan_succ_gen_t *succ_gen)
 {
     search->initial_state = initial_state;
     search->goal = goal;
     search->state_pool = state_pool;
-    search->state_space = state_space;
+    search->state_space = planStateSpaceNew(state_pool);
     search->heur = heur;
     search->succ_gen = succ_gen;
     search->state_id = PLAN_NO_STATE;
@@ -249,6 +248,8 @@ static void astarFree(plan_search_astar_t *search)
         planListDel(search->list);
     if (search->state)
         planStateDel(search->state);
+    if (search->state_space)
+        planStateSpaceDel(search->state_space);
     planSearchApplicableOpsFree(&search->app_ops);
 }
 

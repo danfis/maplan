@@ -14,6 +14,7 @@
 #include "list.h"
 #include "t_ma_comm_queue.h"
 #include "causalgraph.h"
+#include "ma_search.h"
 
 TEST(protobufTearDown)
 {
@@ -35,6 +36,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSList),
     TEST_SUITE_ADD(TSMACommQueue),
     TEST_SUITE_ADD(TSCausalGraph),
+    TEST_SUITE_ADD(TSMASearch),
     TEST_SUITES_CLOSURE
 };
 

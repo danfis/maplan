@@ -34,6 +34,7 @@ OBJS += list.o
 OBJS += t_ma_comm_queue.o
 OBJS += causalgraph.o
 OBJS += state_pool.o
+OBJS += ma_search.o
 
 all: $(TARGETS)
 

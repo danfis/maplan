@@ -12,13 +12,18 @@
 /**** TODO: A* --> refactor ****/
 #include "plan/list.h"
 #include "plan/statespace.h"
+#include "search_applicable_ops.h"
 struct _plan_search_astar_t {
     plan_state_id_t initial_state;
     const plan_part_state_t *goal;
     plan_state_pool_t *state_pool;
     plan_state_space_t *state_space;
     plan_state_t *state;
+    plan_state_id_t state_id;
     plan_heur_t *heur;
+    const plan_succ_gen_t *succ_gen;
+
+    plan_search_applicable_ops_t app_ops;
 
     plan_list_t *list; /*!< Open-list */
     int pathmax;       /*!< Use pathmax correction */
@@ -30,7 +35,8 @@ static void astarInit(plan_search_astar_t *search,
                       const plan_part_state_t *goal,
                       plan_state_pool_t *state_pool,
                       plan_state_space_t *state_space,
-                      plan_heur_t *heur);
+                      plan_heur_t *heur,
+                      const plan_succ_gen_t *succ_gen);
 static void astarFree(plan_search_astar_t *search);
 static int astarInitStep(plan_search_astar_t *search);
 static int astarStep(plan_search_astar_t *search);
@@ -45,6 +51,8 @@ struct _plan_ma_search_th_t {
     pthread_mutex_t msg_queue_lock;
 
     int final_state; /*!< State in which the algorithm ended */
+
+    plan_search_astar_t search;
 };
 typedef struct _plan_ma_search_th_t plan_ma_search_th_t;
 
@@ -67,6 +75,8 @@ void planMASearchInit(plan_ma_search_t *search,
 {
     search->comm = params->comm;
     search->terminated = 0;
+
+    search->params = params;
 }
 
 void planMASearchFree(plan_ma_search_t *search)
@@ -77,6 +87,14 @@ int planMASearchRun(plan_ma_search_t *search, plan_path_t *path)
 {
     plan_ma_search_th_t search_thread;
     plan_ma_msg_t *msg;
+
+    astarInit(&search_thread.search,
+              search->params->initial_state,
+              search->params->goal,
+              search->params->state_pool,
+              search->params->state_space,
+              search->params->heur,
+              search->params->succ_gen);
 
     // Initialize search structure
     search->terminated = 0;
@@ -107,6 +125,7 @@ int planMASearchRun(plan_ma_search_t *search, plan_path_t *path)
     // Free resources allocated for search thread
     searchThreadFree(&search_thread);
 
+    astarFree(&search_thread.search);
     return PLAN_SEARCH_ABORT;
 }
 
@@ -145,12 +164,12 @@ static void *searchThread(void *_th)
 
 static int searchThreadInitStep(plan_ma_search_th_t *th)
 {
-    return PLAN_SEARCH_ABORT;
+    return astarInitStep(&th->search);
 }
 
 static int searchThreadStep(plan_ma_search_th_t *th)
 {
-    return PLAN_SEARCH_ABORT;
+    return astarStep(&th->search);
 }
 
 static int searchThreadProcessMsgs(plan_ma_search_th_t *th)
@@ -159,13 +178,24 @@ static int searchThreadProcessMsgs(plan_ma_search_th_t *th)
 }
 
 
+
+
+
+_bor_inline void planSearchLoadState(plan_search_astar_t *search,
+                                     plan_state_id_t state_id)
+{
+    if (search->state_id == state_id)
+        return;
+    planStatePoolGetState(search->state_pool, state_id, search->state);
+    search->state_id = state_id;
+}
+
 static plan_cost_t planSearchHeur(plan_search_astar_t *search,
                                   plan_state_id_t state_id)
 {
     plan_heur_res_t res;
 
-    planStatePoolGetState(search->state_pool, state_id, search->state);
-
+    planSearchLoadState(search, state_id);
     planHeurResInit(&res);
     planHeur(search->heur, search->state, &res);
     return res.heur;
@@ -180,18 +210,34 @@ static int planSearchCheckGoal(plan_search_astar_t *search,
     return res;
 }
 
+static void planSearchFindApplicableOps(plan_search_astar_t *search,
+                                        plan_state_id_t state_id)
+{
+    planSearchLoadState(search, state_id);
+    planSearchApplicableOpsFind(&search->app_ops, search->state, state_id,
+                                search->succ_gen);
+}
+
+
+
 static void astarInit(plan_search_astar_t *search,
                       plan_state_id_t initial_state,
                       const plan_part_state_t *goal,
                       plan_state_pool_t *state_pool,
                       plan_state_space_t *state_space,
-                      plan_heur_t *heur)
+                      plan_heur_t *heur,
+                      const plan_succ_gen_t *succ_gen)
 {
     search->initial_state = initial_state;
     search->goal = goal;
     search->state_pool = state_pool;
     search->state_space = state_space;
     search->heur = heur;
+    search->succ_gen = succ_gen;
+    search->state_id = PLAN_NO_STATE;
+    search->state = planStateNew(state_pool);
+
+    planSearchApplicableOpsInit(&search->app_ops, succ_gen->num_operators);
 
     search->list = planListTieBreaking(2);
     search->pathmax = 0;
@@ -201,6 +247,9 @@ static void astarFree(plan_search_astar_t *search)
 {
     if (search->list)
         planListDel(search->list);
+    if (search->state)
+        planStateDel(search->state);
+    planSearchApplicableOpsFree(&search->app_ops);
 }
 
 
@@ -302,16 +351,15 @@ static int astarStep(plan_search_astar_t *search)
     }
 
     // Find all applicable operators
-    // TODO: _planSearchFindApplicableOps(&search->search, cur_state);
+    planSearchFindApplicableOps(search, cur_state);
     // TODO: planSearchStatIncExpandedStates(&search->search.stat);
 
     // Useful only in MA node
     // TODO: _planSearchMASendState(&search->search, cur_node);
 
     // Add states created by applicable operators
-    /* TODO:
-    op      = search->search.applicable_ops.op;
-    op_size = search->search.applicable_ops.op_found;
+    op      = search->app_ops.op;
+    op_size = search->app_ops.op_found;
     for (i = 0; i < op_size; ++i){
         // Create a new state
         next_state = planOpApply(op[i], cur_state);
@@ -319,19 +367,16 @@ static int astarStep(plan_search_astar_t *search)
         g_cost = cur_node->cost + op[i]->cost;
 
         // Obtain corresponding node from state space
-        next_node = planStateSpaceNode(search->search.state_space,
+        next_node = planStateSpaceNode(search->state_space,
                                        next_state);
 
         // Decide whether to insert the state into open-list
         if (planStateSpaceNodeIsNew(next_node)
                 || next_node->cost > g_cost){
-            res = astarInsertState(search, next_state, next_node,
-                                   cur_state, op[i], g_cost,
-                                   cur_node->heuristic);
+            res = astarInsertState(search, next_node, op[i], cur_node);
             if (res != PLAN_SEARCH_CONT)
                 return res;
         }
     }
-    */
     return PLAN_SEARCH_CONT;
 }

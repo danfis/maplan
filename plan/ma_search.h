@@ -3,6 +3,7 @@
 
 #include <plan/heur.h>
 #include <plan/path.h>
+#include <plan/statespace.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,13 +13,17 @@ extern "C" {
  * Common parameters for all search algorithms.
  */
 struct _plan_ma_search_params_t {
-    plan_heur_t *heur; /*!< Heuristic function */
-    int heur_del;      /*!< True if .heur should be deleted in
-                            planMASearchDel() */
     plan_ma_comm_t *comm; /*!< Communication channel between agents */
 
     int verify_solution;  /*!< Set to true if you want verify optimal
                                solution with other agents */
+
+    plan_state_id_t initial_state;
+    const plan_part_state_t *goal;
+    plan_state_pool_t *state_pool;
+    plan_state_space_t *state_space;
+    plan_heur_t *heur;
+    const plan_succ_gen_t *succ_gen;
 };
 typedef struct _plan_ma_search_params_t plan_ma_search_params_t;
 
@@ -34,6 +39,7 @@ void planMASearchParamsInit(plan_ma_search_params_t *params);
 struct _plan_ma_search_t {
     plan_ma_comm_t *comm; /*!< Communication channel between agents */
     int terminated;       /*!< True if search was already terminated */
+    const plan_ma_search_params_t *params;
 };
 typedef struct _plan_ma_search_t plan_ma_search_t;
 

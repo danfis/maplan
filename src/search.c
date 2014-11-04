@@ -32,6 +32,12 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     res = search->init_step_fn(search);
     while (res == PLAN_SEARCH_CONT){
         res = search->step_fn(search);
+        if (res != PLAN_SEARCH_CONT)
+            search->result = res;
+
+        if (search->poststep_fn){
+            res = search->poststep_fn(search, search->poststep_data);
+        }
 
         ++steps;
         if (res == PLAN_SEARCH_CONT
@@ -58,6 +64,12 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     return res;
 }
 
+void planSearchSetPostStep(plan_search_t *search,
+                           plan_search_poststep_fn fn, void *userdata)
+{
+    search->poststep_fn = fn;
+    search->poststep_data = userdata;
+}
 
 void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
@@ -77,12 +89,15 @@ void _planSearchInit(plan_search_t *search,
     search->del_fn  = del_fn;
     search->init_step_fn = init_step_fn;
     search->step_fn = step_fn;
+    search->poststep_fn = NULL;
+    search->poststep_data = NULL;
 
     search->state    = planStateNew(search->state_pool);
     search->state_id = PLAN_NO_STATE;
     planSearchStatInit(&search->stat);
     planSearchApplicableOpsInit(&search->app_ops, params->prob->op_size);
     search->goal_state  = PLAN_NO_STATE;
+    search->result = PLAN_SEARCH_CONT;
 }
 
 void _planSearchFree(plan_search_t *search)

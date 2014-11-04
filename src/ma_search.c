@@ -38,6 +38,8 @@ static void searchThreadJoin(plan_ma_search_th_t *th);
 static void searchThreadFree(plan_ma_search_th_t *th);
 /** Main search function */
 static void *searchTh(void *);
+/** plan_search_t post-step callback */
+static int searchThreadPostStep(plan_search_t *search, void *ud);
 
 void planMASearchParamsInit(plan_ma_search_params_t *params)
 {
@@ -132,8 +134,31 @@ static void searchThreadFree(plan_ma_search_th_t *th)
 static void *searchTh(void *data)
 {
     plan_ma_search_th_t *th = data;
+
+    planSearchSetPostStep(th->search, searchThreadPostStep, th);
+
     th->res = planSearchRun(th->search, th->path);
     if (th->res == PLAN_SEARCH_FOUND)
         planMASearchTerminate(th->comm);
     return NULL;
+}
+
+static int searchThreadPostStep(plan_search_t *search, void *ud)
+{
+    plan_ma_search_th_t *th = ud;
+
+    if (search->result == PLAN_SEARCH_FOUND){
+        // TODO: Verify solution
+        return PLAN_SEARCH_FOUND;
+
+    }else if (search->result == PLAN_SEARCH_NOT_FOUND){
+        // TODO: Block until public-state or terminate isn't received
+        fprintf(stderr, "[%d] NOT FOUND\n", th->comm->node_id);
+        fflush(stderr);
+
+    }else{
+        // TODO: Process messages
+    }
+
+    return search->result;
 }

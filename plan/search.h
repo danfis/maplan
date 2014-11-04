@@ -152,12 +152,15 @@ void planSearchDel(plan_search_t *search);
  */
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
+
+typedef int (*plan_search_poststep_fn)(plan_search_t *search, void *userdata);
+
 /**
- * Runs search in multi-agent mode.
+ * Sets post-step callback, i.e., function that is called after each step
+ * is performed.
  */
-int planSearchMARun(plan_search_t *search,
-                    plan_search_ma_params_t *ma_params,
-                    plan_path_t *path);
+void planSearchSetPostStep(plan_search_t *search,
+                           plan_search_poststep_fn fn, void *userdata);
 
 /**
  * Internals
@@ -187,6 +190,13 @@ typedef int (*plan_search_init_step_fn)(plan_search_t *);
  */
 typedef int (*plan_search_step_fn)(plan_search_t *);
 
+struct _plan_search_block_t {
+    pthread_mutex_t lock;
+    pthread_cond_t cond;
+    int terminate;
+};
+typedef struct _plan_search_block_t plan_search_block_t;
+
 /**
  * Common base struct for all search algorithms.
  */
@@ -203,12 +213,15 @@ struct _plan_search_t {
     plan_search_del_fn del_fn;
     plan_search_init_step_fn init_step_fn;
     plan_search_step_fn step_fn;
+    plan_search_poststep_fn poststep_fn;
+    void *poststep_data;
 
     plan_state_t *state;             /*!< Preallocated state */
     plan_state_id_t state_id;        /*!< ID of .state -- used for caching*/
     plan_search_stat_t stat;
     plan_search_applicable_ops_t app_ops;
 
+    int result; /*!< Result of planSearchRun() */
     plan_state_id_t goal_state; /*!< The found state satisfying the goal */
 };
 

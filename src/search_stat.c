@@ -9,10 +9,19 @@ void planSearchStatInit(plan_search_stat_t *stat)
     stat->expanded_states = 0L;
     stat->generated_states = 0L;
     stat->peak_memory = 0L;
-    stat->found = 0;
-    stat->not_found = 0;
+    stat->found = -1;
 }
 
+void planSearchStatStartTimer(plan_search_stat_t *stat)
+{
+    borTimerStart(&stat->timer);
+}
+
+void planSearchStatUpdate(plan_search_stat_t *stat)
+{
+    planSearchStatUpdatePeakMemory(stat);
+    stat->elapsed_time = borTimerElapsedInSF(&stat->timer);
+}
 
 void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat)
 {

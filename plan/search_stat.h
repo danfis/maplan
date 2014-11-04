@@ -2,14 +2,6 @@
 #define __PLAN_SEARCH_STAT_H__
 
 #include <boruvka/timer.h>
-#include <boruvka/fifo.h>
-
-#include <plan/problem.h>
-#include <plan/statespace.h>
-#include <plan/heur.h>
-#include <plan/list_lazy.h>
-#include <plan/path.h>
-#include <plan/ma_comm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,6 +11,8 @@ extern "C" {
  * Struct for statistics from search.
  */
 struct _plan_search_stat_t {
+    bor_timer_t timer;
+
     float elapsed_time;
     long steps;
     long evaluated_states;
@@ -26,7 +20,6 @@ struct _plan_search_stat_t {
     long generated_states;
     long peak_memory;
     int found;
-    int not_found;
 };
 typedef struct _plan_search_stat_t plan_search_stat_t;
 
@@ -34,6 +27,18 @@ typedef struct _plan_search_stat_t plan_search_stat_t;
  * Initializes stat struct.
  */
 void planSearchStatInit(plan_search_stat_t *stat);
+
+/**
+ * Starts internal timer.
+ */
+void planSearchStatStartTimer(plan_search_stat_t *stat);
+
+/**
+ * Updates .peak_memory and .elapsed_time members.
+ * Note that .elapsed_time is computed from last call of
+ * planSearchStatStartTimer().
+ */
+void planSearchStatUpdate(plan_search_stat_t *stat);
 
 /**
  * Updates .peak_memory value of stat structure.
@@ -58,7 +63,7 @@ _bor_inline void planSearchStatIncGeneratedStates(plan_search_stat_t *stat);
 /**
  * Set "found" flag which means that solution was found.
  */
-_bor_inline void planSearchStatSetFoundSolution(plan_search_stat_t *stat);
+_bor_inline void planSearchStatSetFound(plan_search_stat_t *stat);
 
 /**
  * Sets "not_found" flag meaning no solution was found.
@@ -81,14 +86,14 @@ _bor_inline void planSearchStatIncGeneratedStates(plan_search_stat_t *stat)
     ++stat->generated_states;
 }
 
-_bor_inline void planSearchStatSetFoundSolution(plan_search_stat_t *stat)
+_bor_inline void planSearchStatSetFound(plan_search_stat_t *stat)
 {
     stat->found = 1;
 }
 
 _bor_inline void planSearchStatSetNotFound(plan_search_stat_t *stat)
 {
-    stat->not_found = 1;
+    stat->found = 0;
 }
 
 #ifdef __cplusplus

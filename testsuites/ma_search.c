@@ -3,72 +3,84 @@
 #include <plan/ma_search.h>
 
 struct _th_t {
-    plan_problem_agents_t *p;
+    plan_search_t *search;
     plan_ma_comm_t *comm;
+    plan_path_t path;
+    int res;
 };
 typedef struct _th_t th_t;
 
 static void maLMCutTask(int id, void *data, const bor_tasks_thinfo_t *_)
 {
-    plan_heur_t *heur;
+    th_t *th = data;
     plan_ma_search_params_t params;
-    plan_ma_search_t ma_search;
-    plan_path_t path;
-    plan_problem_agents_t *p = ((th_t *)data)->p;
-    plan_ma_comm_t *comm = ((th_t *)data)->comm;
-
-    heur = planHeurLMCutNew(p->glob.var, p->glob.var_size,
-                            p->glob.goal,
-                            p->glob.op, p->glob.op_size,
-                            p->glob.succ_gen);
+    plan_ma_search_t *ma_search;
 
     planMASearchParamsInit(&params);
-    params.comm = comm;
-    params.initial_state = p->glob.initial_state;
-    params.goal = p->glob.goal;
-    params.state_pool = p->glob.state_pool;
-    params.heur = heur;
-    params.succ_gen = p->glob.succ_gen;
+    params.comm = th->comm;
+    params.search = th->search;
 
-    planMASearchInit(&ma_search, &params);
-
-    planPathInit(&path);
-    //planMASearchRun(&ma_search, &path);
-
-    planMASearchFree(&ma_search);
-
-    planHeurDel(heur);
+    ma_search = planMASearchNew(&params);
+    th->res = planMASearchRun(ma_search, &th->path);
+    planMASearchDel(ma_search);
 }
 
 static void runMALMCut(plan_problem_agents_t *p,
                        plan_ma_comm_queue_pool_t *comm_pool)
 {
+    plan_search_astar_params_t params;
+    plan_search_t *search;
+    plan_heur_t *heur;
     bor_tasks_t *tasks;
     th_t th[p->agent_size];
     int i;
 
+
     tasks = borTasksNew(p->agent_size);
     for (i = 0; i < p->agent_size; ++i){
-        th[i].p = p;
+        heur = planHeurLMCutNew(p->agent[i].var, p->agent[i].var_size,
+                                p->agent[i].goal,
+                                p->agent[i].proj_op, p->agent[i].proj_op_size,
+                                NULL);
+
+        planSearchAStarParamsInit(&params);
+        params.search.heur = heur;
+        params.search.heur_del = 1;
+        params.search.prob = &p->agent[i];
+        search = planSearchAStarNew(&params);
+
+        th[i].search = search;
         th[i].comm = planMACommQueue(comm_pool, i);
+        planPathInit(&th[i].path);
         borTasksAdd(tasks, maLMCutTask, i, th + i);
     }
 
     borTasksRun(tasks);
     borTasksDel(tasks);
+
+    for (i = 0; i < p->agent_size; ++i){
+        fprintf(stdout, "[%d] Res: %d\n", i, th[i].res);
+
+        planSearchDel(th[i].search);
+        planPathFree(&th[i].path);
+    }
 }
 
-TEST(testMASearch)
+static void maSearch(const char *proto)
 {
     plan_problem_agents_t *p;
     plan_ma_comm_queue_pool_t *comm_pool;
 
-    p = planProblemAgentsFromProto("../data/ma-benchmarks/driverlog/pfile3.proto",
-                                   PLAN_PROBLEM_USE_CG);
+    p = planProblemAgentsFromProto(proto, PLAN_PROBLEM_USE_CG);
     comm_pool = planMACommQueuePoolNew(p->agent_size);
 
     runMALMCut(p, comm_pool);
 
     planMACommQueuePoolDel(comm_pool);
     planProblemAgentsDel(p);
+}
+
+TEST(testMASearch)
+{
+    maSearch("../data/ma-benchmarks/driverlog/pfile3.proto");
 }

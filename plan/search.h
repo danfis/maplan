@@ -10,6 +10,7 @@
 #include <plan/list_lazy.h>
 #include <plan/path.h>
 #include <plan/ma_comm.h>
+#include <plan/search_stat.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,27 +23,6 @@ typedef struct _plan_search_t plan_search_t;
  * Search Algorithms
  * ==================
  */
-
-
-/**
- * Struct for statistics from search.
- */
-struct _plan_search_stat_t {
-    float elapsed_time;
-    long steps;
-    long evaluated_states;
-    long expanded_states;
-    long generated_states;
-    long peak_memory;
-    int found;
-    int not_found;
-};
-typedef struct _plan_search_stat_t plan_search_stat_t;
-
-/**
- * Initializes stat struct.
- */
-void planSearchStatInit(plan_search_stat_t *stat);
 
 
 /**
@@ -194,36 +174,6 @@ int planSearchMARun(plan_search_t *search,
  * algorithms.
  */
 void planSearchParamsInit(plan_search_params_t *params);
-
-/**
- * Updates .peak_memory value of stat structure.
- */
-void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat);
-
-/**
- * Increments number of evaluated states by one.
- */
-_bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat);
-
-/**
- * Increments number of expanded states by one.
- */
-_bor_inline void planSearchStatIncExpandedStates(plan_search_stat_t *stat);
-
-/**
- * Increments number of generated states by one.
- */
-_bor_inline void planSearchStatIncGeneratedStates(plan_search_stat_t *stat);
-
-/**
- * Set "found" flag which means that solution was found.
- */
-_bor_inline void planSearchStatSetFoundSolution(plan_search_stat_t *stat);
-
-/**
- * Sets "not_found" flag meaning no solution was found.
- */
-_bor_inline void planSearchStatSetNotFound(plan_search_stat_t *stat);
 
 
 /**
@@ -439,32 +389,6 @@ void _planUpdateStat(plan_search_stat_t *stat,
  * remembered.
  */
 int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node);
-
-/**** INLINES ****/
-_bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)
-{
-    ++stat->evaluated_states;
-}
-
-_bor_inline void planSearchStatIncExpandedStates(plan_search_stat_t *stat)
-{
-    ++stat->expanded_states;
-}
-
-_bor_inline void planSearchStatIncGeneratedStates(plan_search_stat_t *stat)
-{
-    ++stat->generated_states;
-}
-
-_bor_inline void planSearchStatSetFoundSolution(plan_search_stat_t *stat)
-{
-    stat->found = 1;
-}
-
-_bor_inline void planSearchStatSetNotFound(plan_search_stat_t *stat)
-{
-    stat->not_found = 1;
-}
 
 #ifdef __cplusplus
 } /* extern "C" */

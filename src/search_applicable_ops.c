@@ -1,6 +1,6 @@
 #include <boruvka/alloc.h>
 
-#include "search_applicable_ops.h"
+#include "plan/search_applicable_ops.h"
 
 
 void planSearchApplicableOpsInit(plan_search_applicable_ops_t *app_ops,

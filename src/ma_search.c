@@ -12,7 +12,7 @@
 /**** TODO: A* --> refactor ****/
 #include "plan/list.h"
 #include "plan/statespace.h"
-#include "search_applicable_ops.h"
+#include "plan/search_applicable_ops.h"
 struct _plan_search_astar_t {
     plan_state_id_t initial_state;
     const plan_part_state_t *goal;

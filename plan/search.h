@@ -11,6 +11,7 @@
 #include <plan/path.h>
 #include <plan/ma_comm.h>
 #include <plan/search_stat.h>
+#include <plan/search_applicable_ops.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -207,18 +208,6 @@ typedef int (*plan_search_inject_state_fn)(plan_search_t *search,
  */
 typedef plan_cost_t (*plan_search_lowest_cost_fn)(plan_search_t *search);
 
-struct _plan_search_applicable_ops_t {
-    plan_op_t **op;        /*!< Array of applicable operators. This array
-                                must be big enough to hold all operators. */
-    int op_size;           /*!< Size of .op[] */
-    int op_found;          /*!< Number of found applicable operators */
-    int op_preferred;      /*!< Number of preferred operators (that are
-                                stored at the beggining of .op[] array */
-    plan_state_id_t state; /*!< State in which these operators are
-                                applicable */
-};
-typedef struct _plan_search_applicable_ops_t plan_search_applicable_ops_t;
-
 struct _plan_search_ma_solution_verify_t {
     bor_fifo_t waitlist; /*!< Solution messages waiting for verification */
     int in_progress;     /*!< True if we are in the middle of erification
@@ -268,10 +257,12 @@ struct _plan_search_t {
     plan_state_pool_t *state_pool;   /*!< State pool from params.prob */
     plan_state_space_t *state_space;
     plan_state_t *state;             /*!< Preallocated state */
+    plan_state_id_t state_id;        /*!< ID of .state -- used for caching*/
     plan_state_id_t goal_state;      /*!< The found state satisfying the goal */
     plan_cost_t best_goal_cost;
+    const plan_succ_gen_t *succ_gen;
 
-    plan_search_applicable_ops_t applicable_ops;
+    plan_search_applicable_ops_t app_ops;
 
     int ma;                  /*!< True if running in multi-agent mode */
     plan_ma_comm_t *ma_comm; /*!< Communication queue for MA search */

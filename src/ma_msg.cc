@@ -3,6 +3,78 @@
 #include "plan/ma_msg.h"
 #include "ma_msg.pb.h"
 
+#define PROTO(msg) ((PlanMAMsg *)(((char *)(msg)) + sizeof(plan_ma_msg_t)))
+
+void planShutdownProtobuf(void)
+{
+    google::protobuf::ShutdownProtobufLibrary();
+}
+
+plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
+{
+    plan_ma_msg_t *msg;
+    size_t size;
+    PlanMAMsg *protobuf;
+
+    size = sizeof(plan_ma_msg_t) + sizeof(PlanMAMsg);
+    msg = (plan_ma_msg_t *)borRealloc(NULL, size);
+    msg->type = (subtype << 4) | type;
+
+    protobuf = PROTO(msg);
+    new (protobuf) PlanMAMsg;
+    protobuf->set_type(msg->type);
+    protobuf->set_agent_id(-1);
+
+    return msg;
+}
+
+void planMAMsgDel(plan_ma_msg_t *msg)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->~PlanMAMsg();
+    BOR_FREE(msg);
+}
+
+int planMAMsgAgent(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->agent_id();
+}
+
+void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    void *buf;
+
+    *size = proto->ByteSize();
+    buf = BOR_ALLOC_ARR(char, *size);
+    proto->SerializeToArray(buf, *size);
+    return buf;
+}
+
+plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
+{
+    plan_ma_msg_t *msg = planMAMsgNew(0, 0, 0);
+    PlanMAMsg *proto = PROTO(msg);
+    proto->ParseFromArray(buf, size);
+    msg->type = proto->type();
+    return msg;
+}
+
+
+void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_terminate_agent_id(agent_id);
+}
+
+int planMAMsgTerminateAgent(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->terminate_agent_id();
+}
+
+#if 0
 static void setPublicState(PlanMAMsgPublicState *public_state, int agent_id,
                            const void *state, size_t state_size,
                            int state_id,
@@ -13,11 +85,6 @@ static void setPublicState(PlanMAMsgPublicState *public_state, int agent_id,
     public_state->set_state_id(state_id);
     public_state->set_cost(cost);
     public_state->set_heuristic(heuristic);
-}
-
-void planShutdownProtobuf(void)
-{
-    google::protobuf::ShutdownProtobufLibrary();
 }
 
 plan_ma_msg_t *planMAMsgNew(void)
@@ -48,23 +115,6 @@ int planMAMsgType(const plan_ma_msg_t *_msg)
     return msg->type();
 }
 
-void *planMAMsgPacked(const plan_ma_msg_t *_msg, size_t *size)
-{
-    const PlanMAMsg *msg = static_cast<const PlanMAMsg *>(_msg);
-    void *buf;
-
-    *size = msg->ByteSize();
-    buf = BOR_ALLOC_ARR(char, *size);
-    msg->SerializeToArray(buf, *size);
-    return buf;
-}
-
-plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
-{
-    PlanMAMsg *msg = new PlanMAMsg;
-    msg->ParseFromArray(buf, size);
-    return msg;
-}
 
 int planMAMsgIsSearchType(const plan_ma_msg_t *_msg)
 {
@@ -654,3 +704,4 @@ int planMAMsgSolutionMarkToken(const plan_ma_msg_t *_msg)
     const PlanMAMsgSolutionMark &res = msg->solution_mark();
     return res.token();
 }
+#endif

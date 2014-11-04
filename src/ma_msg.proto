@@ -1,3 +1,4 @@
+/*
 message PlanMAMsgPublicState {
     required int32 agent_id = 1;
     required bytes state = 2;
@@ -122,4 +123,12 @@ message PlanMAMsg {
     optional PlanMAMsgTerminateRequest terminate_request = 9;
     optional PlanMAMsgHeurMaxRequest heur_max_request = 10;
     optional PlanMAMsgHeurMaxResponse heur_max_response = 11;
+}
+*/
+
+message PlanMAMsg {
+    required int32 type = 1;
+    required int32 agent_id = 2;
+
+    optional int32 terminate_agent_id = 3;
 }

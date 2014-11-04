@@ -2,23 +2,34 @@
 #define __PLAN_MA_MSG_H__
 
 #include <stdlib.h>
+#include <boruvka/core.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 /**
- * All PLAN_HEUR_* messages.
+ * Message types:
  */
-#define PLAN_MA_MSG_TYPE_TERMINATE    0x01
-#define PLAN_MA_MSG_TYPE_TRACE_PATH   0x02
-#define PLAN_MA_MSG_TYPE_PUBLIC_STATE 0x04
-#define PLAN_MA_MSG_TYPE_HEUR         0x08
-#define PLAN_MA_MSG_TYPE_SOLUTION     0x10
+#define PLAN_MA_MSG_TERMINATE    0x0
+#define PLAN_MA_MSG_TRACE_PATH   0x1
+#define PLAN_MA_MSG_PUBLIC_STATE 0x2
+#define PLAN_MA_MSG_HEUR         0x3
+#define PLAN_MA_MSG_SOLUTION     0x4
+
+
+/**
+ * Message sub-types:
+ */
+#define PLAN_MA_MSG_TERMINATE_REQUEST 0x0
+#define PLAN_MA_MSG_TERMINATE_FINAL   0x1
 
 
 
-typedef void plan_ma_msg_t;
+struct _plan_ma_msg_t {
+    int type;
+};
+typedef struct _plan_ma_msg_t plan_ma_msg_t;
 
 /**
  * Frees global memory allocated by google protobuffers.
@@ -26,6 +37,67 @@ typedef void plan_ma_msg_t;
  *      google::protobuf::ShutdownProtobufLibrary().
  */
 void planShutdownProtobuf(void);
+
+/**
+ * Creates a new message of specified type and subtype.
+ */
+plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id);
+
+/**
+ * Deletes the message.
+ */
+void planMAMsgDel(plan_ma_msg_t *msg);
+
+/**
+ * Returns type (PLAN_MA_MSG_TYPE_*).
+ */
+_bor_inline int planMAMsgType(const plan_ma_msg_t *msg);
+
+/**
+ * Returns a sub-type (PLAN_MA_MSG_SUBTYPE_*).
+ */
+_bor_inline int planMAMsgSubType(const plan_ma_msg_t *msg);
+
+/**
+ * Returns the originating agent.
+ */
+int planMAMsgAgent(const plan_ma_msg_t *msg);
+
+/**
+ * Returns heap-allocated packed message and its size.
+ */
+void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
+
+/**
+ * Returns a new message unpacked from the given buffer.
+ */
+plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
+
+
+/**
+ * Set terminate-agent-id to TERMINATE message.
+ */
+void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id);
+
+/**
+ * Returns ID of agent that started termination.
+ */
+int planMAMsgTerminateAgent(const plan_ma_msg_t *msg);
+
+
+/**** INLINES: ****/
+_bor_inline int planMAMsgType(const plan_ma_msg_t *msg)
+{
+    return msg->type & 0xf;
+}
+
+_bor_inline int planMAMsgSubType(const plan_ma_msg_t *msg)
+{
+    return msg->type >> 4;
+}
+
+#if 0
+typedef void plan_ma_msg_t;
 
 /**
  * Creates a new message.
@@ -430,6 +502,7 @@ int planMAMsgSolutionMarkAgent(const plan_ma_msg_t *msg);
  * Returns token of stop-mark message.
  */
 int planMAMsgSolutionMarkToken(const plan_ma_msg_t *msg);
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

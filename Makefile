@@ -69,6 +69,7 @@ OBJS += fact_id
 OBJS += ma_search
 OBJS += search_applicable_ops
 OBJS += search_stat
+OBJS += ma_search_msg_handler
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg

@@ -3,6 +3,8 @@
 
 #include "plan/ma_search.h"
 
+#include "ma_search_msg_handler.h"
+
 /** Maximal time (in ms) for which is multi-agent thread blocked when
  *  dead-end is reached. This constant is here basicaly to prevent
  *  dead-lock when all threads are in dead-end. So, it should be set to
@@ -61,27 +63,36 @@ void planMASearchDel(plan_ma_search_t *ma_search)
 int planMASearchRun(plan_ma_search_t *ma_search, plan_path_t *path)
 {
     plan_ma_search_th_t th;
-    plan_ma_msg_t *msg;
+    plan_ma_search_msg_handler_t handler;
+    plan_ma_msg_t *msg = NULL;
     int res;
 
     ma_search->terminated = 0;
+
+    // Initialize message handler
+    planMASearchMsgHandlerInit(&handler, ma_search->comm);
 
     // Start search algorithm
     searchThreadCreate(&th, ma_search->search, ma_search->comm, path);
 
     // The main thread is here for processing messages
-    while (0 && !ma_search->terminated){
+    while (1){
         // Wait for the next message
         msg = planMACommRecvBlock(ma_search->comm, SEARCH_MA_MAX_BLOCK_TIME);
         if (msg == NULL){
-            // Timeout -- terminate ma-search
-            ma_search->terminated = 1;
-            // TODO: cancel search-thread
+            // TODO
+            break;
+
         }else{
-            // TODO: Call handler
-            planMAMsgDel(msg);
+            if (planMASearchMsgHandler(&handler, msg) != 0)
+                break;
         }
+
+        planMAMsgDel(msg);
     }
+
+    if (msg)
+        planMAMsgDel(msg);
 
     // Wait for search algorithm to end
     searchThreadJoin(&th);
@@ -90,6 +101,7 @@ int planMASearchRun(plan_ma_search_t *ma_search, plan_path_t *path)
     // Free resources
     searchThreadFree(&th);
 
+    planMASearchMsgHandlerFree(&handler);
     return res;
 }
 
@@ -121,5 +133,7 @@ static void *searchTh(void *data)
 {
     plan_ma_search_th_t *th = data;
     th->res = planSearchRun(th->search, th->path);
+    if (th->res == PLAN_SEARCH_FOUND)
+        planMASearchTerminate(th->comm);
     return NULL;
 }

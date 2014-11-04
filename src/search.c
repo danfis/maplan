@@ -118,10 +118,8 @@ void planSearchParamsInit(plan_search_params_t *params)
 void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
-                     plan_search_init_fn init_fn,
-                     plan_search_step_fn step_fn,
-                     plan_search_inject_state_fn inject_state_fn,
-                     plan_search_lowest_cost_fn lowest_cost_fn)
+                     plan_search_init_step_fn init_step_fn,
+                     plan_search_step_fn step_fn)
 {
     ma_pub_state_data_t msg_init;
 
@@ -129,17 +127,19 @@ void _planSearchInit(plan_search_t *search,
     search->heur_del = params->heur_del;
 
     search->del_fn  = del_fn;
-    search->init_fn = init_fn;
+    search->init_step_fn = init_step_fn;
     search->step_fn = step_fn;
-    search->inject_state_fn = inject_state_fn;
-    search->lowest_cost_fn = lowest_cost_fn;
+    //TODO search->inject_state_fn = inject_state_fn;
+    //search->lowest_cost_fn = lowest_cost_fn;
     search->params = *params;
 
     planSearchStatInit(&search->stat);
 
+    search->initial_state = params->prob->initial_state;
     search->state_pool  = params->prob->state_pool;
     search->state_space = planStateSpaceNew(search->state_pool);
     search->state       = planStateNew(search->state_pool);
+    search->state_id    = PLAN_NO_STATE;
     search->goal_state  = PLAN_NO_STATE;
     search->best_goal_cost = PLAN_COST_MAX;
     search->succ_gen = params->prob->succ_gen;
@@ -260,8 +260,8 @@ int _planSearchHeuristic(plan_search_t *search,
         if (search->ma){
             fprintf(stdout, "[%d] ", search->ma_comm->node_id);
         }
-        fprintf(stdout, "Heur for init state: %d\n", (int)res.heur);
-        fflush(stdout);
+        //TODO: fprintf(stdout, "Heur for init state: %d\n", (int)res.heur);
+        //fflush(stdout);
     }
 
     *heur_val = res.heur;
@@ -398,7 +398,7 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
 
     borTimerStart(&timer);
 
-    res = search->init_fn(search);
+    res = search->init_step_fn(search);
     while (res == PLAN_SEARCH_CONT){
         res = search->step_fn(search);
 
@@ -447,7 +447,7 @@ int planSearchMARun(plan_search_t *search,
     if (search->ma_ack_solution)
         maSolutionVerifyInit2(search);
 
-    res = search->init_fn(search);
+    res = search->init_step_fn(search);
     while (!search->ma_terminated && res == PLAN_SEARCH_CONT){
         // Start verifying next solution if queued
         if (search->ma_ack_solution)

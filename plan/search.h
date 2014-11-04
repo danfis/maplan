@@ -185,7 +185,7 @@ typedef void (*plan_search_del_fn)(plan_search_t *);
 /**
  * Initialize algorithm -- first step of algorithm.
  */
-typedef int (*plan_search_init_fn)(plan_search_t *);
+typedef int (*plan_search_init_step_fn)(plan_search_t *);
 
 /**
  * Perform one step of algorithm.
@@ -246,14 +246,17 @@ struct _plan_search_t {
     int heur_del;           /*!< True if .heur should be deleted */
 
     plan_search_del_fn del_fn;
-    plan_search_init_fn init_fn;
+    plan_search_init_step_fn init_step_fn;
     plan_search_step_fn step_fn;
+
+    /** TODO: **/
     plan_search_inject_state_fn inject_state_fn;
     plan_search_lowest_cost_fn lowest_cost_fn;
 
     plan_search_params_t params;
     plan_search_stat_t stat;
 
+    plan_state_id_t initial_state;
     plan_state_pool_t *state_pool;   /*!< State pool from params.prob */
     plan_state_space_t *state_space;
     plan_state_t *state;             /*!< Preallocated state */
@@ -289,10 +292,8 @@ struct _plan_search_t {
 void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
-                     plan_search_init_fn init_fn,
-                     plan_search_step_fn step_fn,
-                     plan_search_inject_state_fn inject_state_fn,
-                     plan_search_lowest_cost_fn lowest_cost_fn);
+                     plan_search_init_step_fn init_step_fn,
+                     plan_search_step_fn step_fn);
 
 /**
  * Frees allocated resources.

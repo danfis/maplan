@@ -20,9 +20,8 @@ static int planMACommNetSendToNode(plan_ma_comm_t *comm,
                                    int node_id,
                                    const plan_ma_msg_t *msg);
 static plan_ma_msg_t *planMACommNetRecv(plan_ma_comm_t *comm);
-static plan_ma_msg_t *planMACommNetRecvBlock(plan_ma_comm_t *comm);
-static plan_ma_msg_t *planMACommNetRecvBlockTimeout(plan_ma_comm_t *comm,
-                                                    int timeout_in_ms);
+static plan_ma_msg_t *planMACommNetRecvBlock(plan_ma_comm_t *comm,
+                                             int timeout_in_ms);
 
 
 void planMACommNetConfInit(plan_ma_comm_net_conf_t *cfg)
@@ -70,8 +69,7 @@ plan_ma_comm_t *planMACommNetNew(const plan_ma_comm_net_conf_t *cfg)
                     planMACommNetDel,
                     planMACommNetSendToNode,
                     planMACommNetRecv,
-                    planMACommNetRecvBlock,
-                    planMACommNetRecvBlockTimeout);
+                    planMACommNetRecvBlock);
 
     comm->context = zmq_ctx_new();
     if (comm->context == NULL){
@@ -231,16 +229,9 @@ static plan_ma_msg_t *planMACommNetRecv(plan_ma_comm_t *_comm)
     return recv(comm, ZMQ_DONTWAIT);
 }
 
-static plan_ma_msg_t *planMACommNetRecvBlock(plan_ma_comm_t *_comm)
+static plan_ma_msg_t *recvBlockTimeout(plan_ma_comm_net_t *comm,
+                                       int timeout_in_ms)
 {
-    plan_ma_comm_net_t *comm = COMM_FROM_PARENT(_comm);
-    return recv(comm, 0);
-}
-
-static plan_ma_msg_t *planMACommNetRecvBlockTimeout(plan_ma_comm_t *_comm,
-                                                    int timeout_in_ms)
-{
-    plan_ma_comm_net_t *comm = COMM_FROM_PARENT(_comm);
     plan_ma_msg_t *msg;
     int milisec;
 
@@ -255,4 +246,13 @@ static plan_ma_msg_t *planMACommNetRecvBlockTimeout(plan_ma_comm_t *_comm,
     milisec = -1;
     zmq_setsockopt(comm->readsock, ZMQ_RCVTIMEO, &milisec, sizeof(int));
     return msg;
+}
+
+static plan_ma_msg_t *planMACommNetRecvBlock(plan_ma_comm_t *_comm,
+                                             int timeout_in_ms)
+{
+    plan_ma_comm_net_t *comm = COMM_FROM_PARENT(_comm);
+    if (timeout_in_ms == 0)
+        return recv(comm, 0);
+    return recvBlockTimeout(comm, timeout_in_ms);
 }

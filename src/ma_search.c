@@ -72,7 +72,7 @@ int planMASearchRun(plan_ma_search_t *ma_search, plan_path_t *path)
     // The main thread is here for processing messages
     while (0 && !ma_search->terminated){
         // Wait for the next message
-        msg = planMACommRecvBlockTimeout(ma_search->comm, SEARCH_MA_MAX_BLOCK_TIME);
+        msg = planMACommRecvBlock(ma_search->comm, SEARCH_MA_MAX_BLOCK_TIME);
         if (msg == NULL){
             // Timeout -- terminate ma-search
             ma_search->terminated = 1;

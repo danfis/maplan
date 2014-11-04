@@ -26,9 +26,8 @@ static int planMACommQueueSendToNode(plan_ma_comm_t *comm,
                                      int node_id,
                                      const plan_ma_msg_t *msg);
 static plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_t *comm);
-static plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_t *comm);
-static plan_ma_msg_t *planMACommQueueRecvBlockTimeout(plan_ma_comm_t *comm,
-                                                      int timeout_in_ms);
+static plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_t *comm,
+                                               int timeout_in_ms);
 
 plan_ma_comm_queue_pool_t *planMACommQueuePoolNew(int num_nodes)
 {
@@ -67,8 +66,7 @@ plan_ma_comm_queue_pool_t *planMACommQueuePoolNew(int num_nodes)
                         NULL,
                         planMACommQueueSendToNode,
                         planMACommQueueRecv,
-                        planMACommQueueRecvBlock,
-                        planMACommQueueRecvBlockTimeout);
+                        planMACommQueueRecvBlock);
         pool->queue[i].pool = *pool;
     }
 
@@ -139,16 +137,9 @@ static plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_t *_comm)
     return recv(comm, 0, NULL);
 }
 
-static plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_t *_comm)
+static plan_ma_msg_t *recvBlockTimeout(plan_ma_comm_queue_t *comm,
+                                       int timeout_in_ms)
 {
-    plan_ma_comm_queue_t *comm = COMM_FROM_PARENT(_comm);
-    return recv(comm, 1, NULL);
-}
-
-static plan_ma_msg_t *planMACommQueueRecvBlockTimeout(plan_ma_comm_t *_comm,
-                                                      int timeout_in_ms)
-{
-    plan_ma_comm_queue_t *comm = COMM_FROM_PARENT(_comm);
     struct timespec tm;
     int sec;
     long nsec;
@@ -165,6 +156,17 @@ static plan_ma_msg_t *planMACommQueueRecvBlockTimeout(plan_ma_comm_t *_comm,
     }
     return recv(comm, 1, &tm);
 }
+
+static plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_t *_comm,
+                                               int timeout_in_ms)
+{
+    plan_ma_comm_queue_t *comm = COMM_FROM_PARENT(_comm);
+
+    if (timeout_in_ms == 0)
+        return recv(comm, 1, NULL);
+    return recvBlockTimeout(comm, timeout_in_ms);
+}
+
 
 static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block,
                            const struct timespec *timeout)

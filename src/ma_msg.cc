@@ -23,7 +23,7 @@ plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
     protobuf = PROTO(msg);
     new (protobuf) PlanMAMsg;
     protobuf->set_type(msg->type);
-    protobuf->set_agent_id(-1);
+    protobuf->set_agent_id(agent_id);
 
     return msg;
 }

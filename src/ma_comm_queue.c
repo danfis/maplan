@@ -1,8 +1,13 @@
 #include <limits.h>
 #include <stdio.h>
 #include <boruvka/alloc.h>
+#include <boruvka/fifo-sem.h>
 
 #include "plan/ma_comm.h"
+
+struct _plan_ma_comm_queue_node_t {
+    bor_fifo_sem_t queue;
+};
 
 struct _msg_buf_t {
     uint8_t *buf;
@@ -17,10 +22,6 @@ struct _plan_ma_comm_queue_t {
 
 #define COMM_FROM_PARENT(parent) \
     bor_container_of((parent), plan_ma_comm_queue_t, comm)
-
-/** Recieve message in blocking or non-blocking mode */
-static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block,
-                           const struct timespec *timeout);
 
 static int planMACommQueueSendToNode(plan_ma_comm_t *comm,
                                      int node_id,
@@ -41,22 +42,8 @@ plan_ma_comm_queue_pool_t *planMACommQueuePoolNew(int num_nodes)
     pool->node = BOR_ALLOC_ARR(plan_ma_comm_queue_node_t, pool->node_size);
     for (i = 0; i < pool->node_size; ++i){
         node = pool->node + i;
-        borFifoInit(&node->fifo, sizeof(msg_buf_t));
-
-        if (pthread_mutex_init(&node->lock, NULL) != 0){
-            fprintf(stderr, "Error: Could not initialize mutex!\n");
+        if (borFifoSemInit(&node->queue, sizeof(msg_buf_t)) != 0)
             return NULL;
-        }
-
-        if (sem_init(&node->full, 0, 0) != 0){
-            fprintf(stderr, "Error: Could not initialize semaphore (full)!\n");
-            return NULL;
-        }
-
-        if (sem_init(&node->empty, 0, SEM_VALUE_MAX) != 0){
-            fprintf(stderr, "Error: Could not initialize semaphore (empty)!\n");
-            return NULL;
-        }
     }
 
     pool->queue = BOR_ALLOC_ARR(plan_ma_comm_queue_t, pool->node_size);
@@ -82,14 +69,12 @@ void planMACommQueuePoolDel(plan_ma_comm_queue_pool_t *pool)
     for (i = 0; i < pool->node_size; ++i){
         node = pool->node + i;
 
-        while (!borFifoEmpty(&node->fifo)){
-            buf = borFifoFront(&node->fifo);
+        while (!borFifoEmpty(&node->queue.fifo)){
+            buf = borFifoFront(&node->queue.fifo);
             BOR_FREE(buf->buf);
-            borFifoPop(&node->fifo);
+            borFifoPop(&node->queue.fifo);
         }
-        pthread_mutex_destroy(&node->lock);
-        sem_destroy(&node->full);
-        sem_destroy(&node->empty);
+        borFifoSemFree(&node->queue);
 
         _planMACommFree(&pool->queue[i].comm);
     }
@@ -116,17 +101,7 @@ static int planMACommQueueSendToNode(plan_ma_comm_t *_comm,
     buf.buf = planMAMsgPacked(msg, &buf.size);
     node = comm->pool.node + node_id;
 
-    // reserve item in queue
-    sem_wait(&node->empty);
-
-    // add message to the queue
-    pthread_mutex_lock(&node->lock);
-    borFifoPush(&node->fifo, &buf);
-    pthread_mutex_unlock(&node->lock);
-
-    // unblock waiting thread
-    sem_post(&node->full);
-
+    borFifoSemPush(&node->queue, &buf);
     return 0;
 }
 
@@ -134,78 +109,35 @@ static int planMACommQueueSendToNode(plan_ma_comm_t *_comm,
 static plan_ma_msg_t *planMACommQueueRecv(plan_ma_comm_t *_comm)
 {
     plan_ma_comm_queue_t *comm = COMM_FROM_PARENT(_comm);
-    return recv(comm, 0, NULL);
-}
+    plan_ma_comm_queue_node_t *node = comm->pool.node + comm->comm.node_id;
+    msg_buf_t buf;
+    plan_ma_msg_t *msg;
 
-static plan_ma_msg_t *recvBlockTimeout(plan_ma_comm_queue_t *comm,
-                                       int timeout_in_ms)
-{
-    struct timespec tm;
-    int sec;
-    long nsec;
+    if (borFifoSemPop(&node->queue, &buf) != 0)
+        return NULL;
 
-    sec = timeout_in_ms / 1000;
-    nsec = (timeout_in_ms % 1000L) * 1000L * 1000L;
-
-    clock_gettime(CLOCK_REALTIME, &tm);
-    tm.tv_sec += sec;
-    tm.tv_nsec += nsec;
-    if (tm.tv_nsec > 1000L * 1000L * 1000L){
-        tm.tv_nsec %= 1000L * 1000L * 1000L;
-        tm.tv_sec += 1;
-    }
-    return recv(comm, 1, &tm);
+    msg = planMAMsgUnpacked(buf.buf, buf.size);
+    BOR_FREE(buf.buf);
+    return msg;
 }
 
 static plan_ma_msg_t *planMACommQueueRecvBlock(plan_ma_comm_t *_comm,
                                                int timeout_in_ms)
 {
     plan_ma_comm_queue_t *comm = COMM_FROM_PARENT(_comm);
-
-    if (timeout_in_ms == 0)
-        return recv(comm, 1, NULL);
-    return recvBlockTimeout(comm, timeout_in_ms);
-}
-
-
-static plan_ma_msg_t *recv(plan_ma_comm_queue_t *comm, int block,
-                           const struct timespec *timeout)
-{
     plan_ma_comm_queue_node_t *node = comm->pool.node + comm->comm.node_id;
-    msg_buf_t *buf;
-    uint8_t *packed;
-    size_t size;
+    msg_buf_t buf;
     plan_ma_msg_t *msg;
 
-    if (block){
-        // wait for available messages
-        if (timeout){
-            if (sem_timedwait(&node->full, timeout) != 0)
-                return NULL;
-        }else{
-            sem_wait(&node->full);
-        }
+    if (timeout_in_ms > 0){
+        if (borFifoSemPopBlockTimeout(&node->queue, timeout_in_ms, &buf) != 0)
+            return NULL;
     }else{
-        // wait for available messages or exit if there is none
-        if (sem_trywait(&node->full) != 0)
+        if (borFifoSemPopBlock(&node->queue, &buf) != 0)
             return NULL;
     }
 
-    // pick up message and remove the message from fifo
-    pthread_mutex_lock(&node->lock);
-    buf = borFifoFront(&node->fifo);
-    packed = buf->buf;
-    size = buf->size;
-
-    borFifoPop(&node->fifo);
-    pthread_mutex_unlock(&node->lock);
-
-    // free room for next message
-    sem_post(&node->empty);
-
-    // unpack message and return it
-    msg = planMAMsgUnpacked(packed, size);
-    BOR_FREE(packed);
-
+    msg = planMAMsgUnpacked(buf.buf, buf.size);
+    BOR_FREE(buf.buf);
     return msg;
 }

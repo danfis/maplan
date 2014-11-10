@@ -22,7 +22,6 @@ struct _plan_ma_search_th_t {
 };
 typedef struct _plan_ma_search_th_t plan_ma_search_th_t;
 
-
 /**
  * Initializes search thread.
  */

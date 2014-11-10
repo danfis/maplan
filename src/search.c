@@ -32,11 +32,9 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     res = search->init_step_fn(search);
     while (res == PLAN_SEARCH_CONT){
         res = search->step_fn(search);
-        if (res != PLAN_SEARCH_CONT)
-            search->result = res;
 
         if (search->poststep_fn){
-            res = search->poststep_fn(search, search->poststep_data);
+            res = search->poststep_fn(search, res, search->poststep_data);
         }
 
         ++steps;
@@ -97,7 +95,6 @@ void _planSearchInit(plan_search_t *search,
     planSearchStatInit(&search->stat);
     planSearchApplicableOpsInit(&search->app_ops, params->prob->op_size);
     search->goal_state  = PLAN_NO_STATE;
-    search->result = PLAN_SEARCH_CONT;
 }
 
 void _planSearchFree(plan_search_t *search)

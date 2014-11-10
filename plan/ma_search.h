@@ -29,6 +29,7 @@ struct _plan_ma_search_t {
     plan_search_t *search;
     plan_ma_comm_t *comm; /*!< Communication channel between agents */
     int terminated;       /*!< True if search was already terminated */
+    int termination;      /*!< ma-search is in the middle of termination */
 };
 typedef struct _plan_ma_search_t plan_ma_search_t;
 

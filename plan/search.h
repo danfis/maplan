@@ -153,7 +153,11 @@ void planSearchDel(plan_search_t *search);
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
 
-typedef int (*plan_search_poststep_fn)(plan_search_t *search, void *userdata);
+/**
+ * Callback that is called after each step.
+ */
+typedef int (*plan_search_poststep_fn)(plan_search_t *search, int res,
+                                       void *userdata);
 
 /**
  * Sets post-step callback, i.e., function that is called after each step
@@ -221,7 +225,6 @@ struct _plan_search_t {
     plan_search_stat_t stat;
     plan_search_applicable_ops_t app_ops;
 
-    int result; /*!< Result of planSearchRun() */
     plan_state_id_t goal_state; /*!< The found state satisfying the goal */
 };
 

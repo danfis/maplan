@@ -82,5 +82,6 @@ static void maSearch(const char *proto)
 
 TEST(testMASearch)
 {
-    maSearch("../data/ma-benchmarks/driverlog/pfile3.proto");
+    //maSearch("../data/ma-benchmarks/driverlog/pfile3.proto");
+    maSearch("../data/ma-benchmarks/depot/pfile1.proto");
 }

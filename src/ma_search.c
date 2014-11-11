@@ -13,7 +13,8 @@
 
 /** Process one message. Returns 0 if process should continue, -1 otherwise */
 static int processMsg(plan_ma_search_t *ma_search,
-                      plan_ma_msg_t *msg);
+                      plan_ma_msg_t *msg,
+                      bor_fifo_sem_t *th_queue);
 /** Process TERMINATE message */
 static int msgTerminate(plan_ma_search_t *ma_search,
                         plan_ma_msg_t *msg);
@@ -61,9 +62,8 @@ int planMASearchRun(plan_ma_search_t *ma_search, plan_path_t *path)
             planMASearchTerminate(ma_search->comm);
 
         }else{
-            if (processMsg(ma_search, msg) != 0)
+            if (processMsg(ma_search, msg, &th.msg_queue) != 0)
                 cont = 0;
-            planMAMsgDel(msg);
         }
     }
 
@@ -78,16 +78,26 @@ int planMASearchRun(plan_ma_search_t *ma_search, plan_path_t *path)
 }
 
 static int processMsg(plan_ma_search_t *ma_search,
-                      plan_ma_msg_t *msg)
+                      plan_ma_msg_t *msg,
+                      bor_fifo_sem_t *th_queue)
 {
     int type = planMAMsgType(msg);
+    int res = 0;
 
     fprintf(stderr, "[%d] msg: %d\n", ma_search->comm->node_id, type);
     fflush(stderr);
-    if (type == PLAN_MA_MSG_TERMINATE)
-        return msgTerminate(ma_search, msg);
+    if (type == PLAN_MA_MSG_TERMINATE){
+        res = msgTerminate(ma_search, msg);
 
-    return 0;
+    }else if (type == PLAN_MA_MSG_PUBLIC_STATE){
+        // Forward message to search thread
+        borFifoSemPush(th_queue, &msg);
+        msg = NULL;
+    }
+
+    if (msg)
+        planMAMsgDel(msg);
+    return res;
 }
 
 static int msgTerminate(plan_ma_search_t *ma_search,

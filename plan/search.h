@@ -152,6 +152,11 @@ void planSearchDel(plan_search_t *search);
  */
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
+/**
+ * (Re-)Inserts node to the open-list
+ */
+void planSearchInsertNode(plan_search_t *search,
+                          plan_state_space_node_t *node);
 
 /**
  * Callback that is called after each step.
@@ -208,6 +213,14 @@ typedef int (*plan_search_init_step_fn)(plan_search_t *);
  */
 typedef int (*plan_search_step_fn)(plan_search_t *);
 
+/**
+ * (Re-)Inserts node into open list.
+ * This function should not re-compute heuristic or do any other operation
+ * other than (re-)inserting into open-list.
+ */
+typedef void (*plan_search_insert_node_fn)(plan_search_t *,
+                                           plan_state_space_node_t *node);
+
 struct _plan_search_block_t {
     pthread_mutex_t lock;
     pthread_cond_t cond;
@@ -231,6 +244,7 @@ struct _plan_search_t {
     plan_search_del_fn del_fn;
     plan_search_init_step_fn init_step_fn;
     plan_search_step_fn step_fn;
+    plan_search_insert_node_fn insert_node_fn;
     plan_search_poststep_fn poststep_fn;
     void *poststep_data;
     plan_search_expanded_node_fn expanded_node_fn;
@@ -253,7 +267,8 @@ void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
                      plan_search_init_step_fn init_step_fn,
-                     plan_search_step_fn step_fn);
+                     plan_search_step_fn step_fn,
+                     plan_search_insert_node_fn insert_node_fn);
 
 /**
  * Frees allocated resources.

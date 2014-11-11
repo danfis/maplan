@@ -92,6 +92,27 @@ void planMAMsgPublicStateSetState(plan_ma_msg_t *msg,
                                   size_t statebuf_size,
                                   int state_id, int cost, int heur);
 
+/**
+ * Returns pointer to the state buffer.
+ */
+const void *planMAMsgPublicStateStateBuf(const plan_ma_msg_t *msg);
+
+/**
+ * Returns state-id of the state in the source agent's pool.
+ */
+int planMAMsgPublicStateStateId(const plan_ma_msg_t *msg);
+
+/**
+ * Returns cost of the path from initial state to this state as computed by
+ * remote agent.
+ */
+int planMAMsgPublicStateCost(const plan_ma_msg_t *msg);
+
+/**
+ * Returns heuristic value computed by the remote agent.
+ */
+int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg);
+
 /**** INLINES: ****/
 _bor_inline int planMAMsgType(const plan_ma_msg_t *msg)
 {

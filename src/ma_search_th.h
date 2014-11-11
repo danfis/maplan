@@ -16,6 +16,7 @@ struct _plan_ma_search_th_t {
     plan_ma_comm_t *comm;
     plan_path_t *path;
 
+    int pub_state_reg;
     bor_fifo_sem_t msg_queue;
 
     int res; /*!< Result of search */

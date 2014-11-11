@@ -20,6 +20,9 @@ static void planSearchAStarDel(plan_search_t *_search);
 static int planSearchAStarInit(plan_search_t *_search);
 /** Performes one step in the algorithm. */
 static int planSearchAStarStep(plan_search_t *_search);
+/** Inserts node into open-list */
+static void planSearchAStarInsertNode(plan_search_t *search,
+                                      plan_state_space_node_t *node);
 
 
 void planSearchAStarParamsInit(plan_search_astar_params_t *p)
@@ -37,7 +40,8 @@ plan_search_t *planSearchAStarNew(const plan_search_astar_params_t *params)
     _planSearchInit(&astar->search, &params->search,
                     planSearchAStarDel,
                     planSearchAStarInit,
-                    planSearchAStarStep);
+                    planSearchAStarStep,
+                    planSearchAStarInsertNode);
 
     astar->list     = planListTieBreaking(2);
     astar->pathmax  = params->pathmax;
@@ -182,4 +186,21 @@ static int planSearchAStarStep(plan_search_t *search)
         }
     }
     return PLAN_SEARCH_CONT;
+}
+
+static void planSearchAStarInsertNode(plan_search_t *search,
+                                      plan_state_space_node_t *node)
+{
+    plan_search_astar_t *astar = SEARCH_FROM_PARENT(search);
+    plan_cost_t cost[2];
+
+    cost[0] = node->cost + node->heuristic;
+    cost[1] = node->heuristic;
+
+    if (planStateSpaceNodeIsNew(node)){
+        planStateSpaceOpen(search->state_space, node);
+    }else{
+        planStateSpaceReopen(search->state_space, node);
+    }
+    planListPush(astar->list, cost, node->state_id);
 }

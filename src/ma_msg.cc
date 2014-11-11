@@ -86,6 +86,30 @@ void planMAMsgPublicStateSetState(plan_ma_msg_t *msg,
     proto->set_heur(heur);
 }
 
+const void *planMAMsgPublicStateStateBuf(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->state().data();
+}
+
+int planMAMsgPublicStateStateId(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->state_id();
+}
+
+int planMAMsgPublicStateCost(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->cost();
+}
+
+int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->heur();
+}
+
 #if 0
 static void setPublicState(PlanMAMsgPublicState *public_state, int agent_id,
                            const void *state, size_t state_size,

@@ -62,6 +62,13 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     return res;
 }
 
+void planSearchInsertNode(plan_search_t *search,
+                          plan_state_space_node_t *node)
+{
+    if (search->insert_node_fn)
+        search->insert_node_fn(search, node);
+}
+
 void planSearchSetPostStep(plan_search_t *search,
                            plan_search_poststep_fn fn, void *userdata)
 {
@@ -80,7 +87,8 @@ void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
                      plan_search_init_step_fn init_step_fn,
-                     plan_search_step_fn step_fn)
+                     plan_search_step_fn step_fn,
+                     plan_search_insert_node_fn insert_node_fn)
 {
     search->heur          = params->heur;
     search->heur_del      = params->heur_del;
@@ -94,6 +102,7 @@ void _planSearchInit(plan_search_t *search,
     search->del_fn  = del_fn;
     search->init_step_fn = init_step_fn;
     search->step_fn = step_fn;
+    search->insert_node_fn = insert_node_fn;
     search->poststep_fn = NULL;
     search->poststep_data = NULL;
     search->expanded_node_fn = NULL;

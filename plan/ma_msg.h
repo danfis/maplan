@@ -84,6 +84,13 @@ void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id);
  */
 int planMAMsgTerminateAgent(const plan_ma_msg_t *msg);
 
+/**
+ * Sets public-state message data.
+ */
+void planMAMsgPublicStateSetState(plan_ma_msg_t *msg,
+                                  const void *statebuf,
+                                  size_t statebuf_size,
+                                  int state_id, int cost, int heur);
 
 /**** INLINES: ****/
 _bor_inline int planMAMsgType(const plan_ma_msg_t *msg)

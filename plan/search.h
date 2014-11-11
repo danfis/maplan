@@ -167,6 +167,20 @@ void planSearchSetPostStep(plan_search_t *search,
                            plan_search_poststep_fn fn, void *userdata);
 
 /**
+ * Callback function that is called on each expanded state.
+ */
+typedef void (*plan_search_expanded_node_fn)(plan_search_t *search,
+                                             plan_state_space_node_t *node,
+                                             void *userdata);
+
+/**
+ * Callback that is called for each expanded node (must be implemented in
+ * particular search algorithm).
+ */
+void planSearchSetExpandedNode(plan_search_t *search,
+                               plan_search_expanded_node_fn cb, void *ud);
+
+/**
  * Internals
  * ----------
  */
@@ -219,6 +233,8 @@ struct _plan_search_t {
     plan_search_step_fn step_fn;
     plan_search_poststep_fn poststep_fn;
     void *poststep_data;
+    plan_search_expanded_node_fn expanded_node_fn;
+    void *expanded_node_data;
 
     plan_state_t *state;             /*!< Preallocated state */
     plan_state_id_t state_id;        /*!< ID of .state -- used for caching*/
@@ -269,6 +285,22 @@ int _planSearchHeuristic(plan_search_t *search,
  * remembered.
  */
 int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node);
+
+/**
+ * Calls expanded_node_fn if set.
+ */
+_bor_inline void _planSearchExpandedNode(plan_search_t *search,
+                                         plan_state_space_node_t *node);
+
+
+/**** INLINES: ****/
+_bor_inline void _planSearchExpandedNode(plan_search_t *search,
+                                         plan_state_space_node_t *node)
+{
+    if (search->expanded_node_fn){
+        search->expanded_node_fn(search, node, search->expanded_node_data);
+    }
+}
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -131,4 +131,8 @@ message PlanMAMsg {
     required int32 agent_id = 2;
 
     optional int32 terminate_agent_id = 3;
+    optional bytes state = 4;
+    optional int32 state_id = 5;
+    optional int32 cost = 6;
+    optional int32 heur = 7;
 }

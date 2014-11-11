@@ -159,9 +159,7 @@ static int planSearchAStarStep(plan_search_t *search)
     // Find all applicable operators
     _planSearchFindApplicableOps(search, cur_state);
     planSearchStatIncExpandedStates(&search->stat);
-
-    // Useful only in MA node
-    // TODO: _planSearchMASendState(search, cur_node);
+    _planSearchExpandedNode(search, cur_node);
 
     // Add states created by applicable operators
     op      = search->app_ops.op;

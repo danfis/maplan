@@ -3,6 +3,8 @@
 
 static void *searchThread(void *data);
 static int searchThreadPostStep(plan_search_t *search, int res, void *ud);
+static void searchThreadExpandedNode(plan_search_t *search,
+                                     plan_state_space_node_t *node, void *ud);
 static void processMsg(plan_ma_search_th_t *th, plan_ma_msg_t *msg);
 
 void planMASearchThInit(plan_ma_search_th_t *th,
@@ -50,6 +52,7 @@ static void *searchThread(void *data)
     plan_ma_search_th_t *th = data;
 
     planSearchSetPostStep(th->search, searchThreadPostStep, th);
+    planSearchSetExpandedNode(th->search, searchThreadExpandedNode, th);
     planSearchRun(th->search, th->path);
 
     return NULL;
@@ -71,7 +74,7 @@ static int searchThreadPostStep(plan_search_t *search, int res, void *ud)
         // Initialize termination of a whole cluster
         planMASearchTerminate(th->comm);
 
-        // Ignore all messages except terminate
+        // Ignore all messages except terminate (which is empty)
         do {
             borFifoSemPopBlock(&th->msg_queue, &msg);
             if (msg)
@@ -110,6 +113,40 @@ static int searchThreadPostStep(plan_search_t *search, int res, void *ud)
     }
 
     return res;
+}
+
+static void searchThreadExpandedNode(plan_search_t *search,
+                                     plan_state_space_node_t *node, void *ud)
+{
+    plan_ma_search_th_t *th = ud;
+    const void *statebuf;
+    size_t statebuf_size;
+    int i, len;
+    const int *peers;
+    plan_ma_msg_t *msg;
+
+    if (node->op == NULL || planOpExtraMAOpIsPrivate(node->op))
+        return;
+
+    statebuf = planStatePoolGetPackedState(search->state_pool, node->state_id);
+    statebuf_size = planStatePackerBufSize(search->state_pool->packer);
+    if (statebuf == NULL)
+        return;
+
+    peers = planOpExtraMAOpRecvAgents(node->op, &len);
+    if (len == 0)
+        return;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_PUBLIC_STATE, 0, th->comm->node_id);
+    planMAMsgPublicStateSetState(msg, statebuf, statebuf_size,
+                                 node->state_id, node->cost,
+                                 node->heuristic);
+
+    for (i = 0; i < len; ++i){
+        if (peers[i] != th->comm->node_id)
+            planMACommSendToNode(th->comm, peers[i], msg);
+    }
+    planMAMsgDel(msg);
 }
 
 static void processMsg(plan_ma_search_th_t *th, plan_ma_msg_t *msg)

@@ -69,6 +69,13 @@ void planSearchSetPostStep(plan_search_t *search,
     search->poststep_data = userdata;
 }
 
+void planSearchSetExpandedNode(plan_search_t *search,
+                               plan_search_expanded_node_fn cb, void *ud)
+{
+    search->expanded_node_fn = cb;
+    search->expanded_node_data = ud;
+}
+
 void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
@@ -89,6 +96,8 @@ void _planSearchInit(plan_search_t *search,
     search->step_fn = step_fn;
     search->poststep_fn = NULL;
     search->poststep_data = NULL;
+    search->expanded_node_fn = NULL;
+    search->expanded_node_data = NULL;
 
     search->state    = planStateNew(search->state_pool);
     search->state_id = PLAN_NO_STATE;

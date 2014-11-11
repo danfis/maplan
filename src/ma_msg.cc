@@ -74,6 +74,18 @@ int planMAMsgTerminateAgent(const plan_ma_msg_t *msg)
     return proto->terminate_agent_id();
 }
 
+void planMAMsgPublicStateSetState(plan_ma_msg_t *msg,
+                                  const void *statebuf,
+                                  size_t statebuf_size,
+                                  int state_id, int cost, int heur)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_state(statebuf, statebuf_size);
+    proto->set_state_id(state_id);
+    proto->set_cost(cost);
+    proto->set_heur(heur);
+}
+
 #if 0
 static void setPublicState(PlanMAMsgPublicState *public_state, int agent_id,
                            const void *state, size_t state_size,

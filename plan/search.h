@@ -153,6 +153,14 @@ void planSearchDel(plan_search_t *search);
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
 /**
+ * Extracts path between initial state and the specified goal state.
+ * Returns initial state ID where path was extracted from the goal state.
+ */
+plan_state_id_t planSearchExtractPath(const plan_search_t *search,
+                                      plan_state_id_t goal_state,
+                                      plan_path_t *path);
+
+/**
  * (Re-)Inserts node to the open-list
  */
 void planSearchInsertNode(plan_search_t *search,

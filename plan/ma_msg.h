@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <boruvka/core.h>
 
+#include <plan/path.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -122,7 +124,24 @@ void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id);
 /**
  * Adds next operator to the path.
  */
-void planMAMsgTracePathAddOp(plan_ma_msg_t *msg, const char *name, int cost);
+void planMAMsgTracePathAddPath(plan_ma_msg_t *msg, const plan_path_t *path);
+
+/**
+ * Returns ID of the last state the path was tracked to.
+ */
+int planMAMsgTracePathStateId(const plan_ma_msg_t *msg);
+
+/**
+ * Extracts path from the message to path object.
+ */
+void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
+                                   plan_path_t *path);
+
+
+/**
+ * Returns ID of the initiator.
+ */
+int planMAMsgTracePathInitAgent(const plan_ma_msg_t *msg);
 
 /**** INLINES: ****/
 _bor_inline int planMAMsgType(const plan_ma_msg_t *msg)

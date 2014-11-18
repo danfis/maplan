@@ -104,25 +104,24 @@ static void usage(const char *progname)
 
 static int progress(const plan_search_stat_t *stat, void *data)
 {
-    if (data != NULL){
-        fprintf(stderr, "%02d::", *(int *)data);
-    }
+    int agent_id = *(int *)data;
 
-    fprintf(stderr, "[%.3f s, %ld kb] %ld steps, %ld evaluated,"
+    fprintf(stderr, "%02d:: [%.3f s, %ld MB] %ld steps, %ld evaluated,"
                     " %ld expanded, %ld generated, found: %d\n",
+            agent_id,
             stat->elapsed_time, stat->peak_memory,
             stat->steps, stat->evaluated_states, stat->expanded_states,
             stat->generated_states,
             stat->found);
 
     if (max_time > 0 && stat->elapsed_time > max_time){
-        fprintf(stderr, "Abort: Exceeded max-time.\n");
+        fprintf(stderr, "%02d:: Abort: Exceeded max-time.\n", agent_id);
         printf("Abort: Exceeded max-time.\n");
         return PLAN_SEARCH_ABORT;
     }
 
     if (max_mem > 0 && stat->peak_memory > max_mem){
-        fprintf(stderr, "Abort: Exceeded max-mem.\n");
+        fprintf(stderr, "%02d:: Abort: Exceeded max-mem.\n", agent_id);
         printf("Abort: Exceeded max-mem.\n");
         return PLAN_SEARCH_ABORT;
     }
@@ -278,7 +277,7 @@ static void printResults(int res, plan_path_t *path)
     if (res == PLAN_SEARCH_FOUND){
         printf("Solution found.\n");
 
-        if (plan_output_fn != NULL){
+        if (plan_output_fn != NULL && path){
             fout = fopen(plan_output_fn, "w");
             if (fout != NULL){
                 planPathPrint(path, fout);

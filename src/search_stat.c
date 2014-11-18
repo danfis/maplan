@@ -20,6 +20,8 @@ void planSearchStatStartTimer(plan_search_stat_t *stat)
 void planSearchStatUpdate(plan_search_stat_t *stat)
 {
     planSearchStatUpdatePeakMemory(stat);
+
+    borTimerStop(&stat->timer);
     stat->elapsed_time = borTimerElapsedInSF(&stat->timer);
 }
 
@@ -28,6 +30,6 @@ void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat)
     struct rusage usg;
 
     if (getrusage(RUSAGE_SELF, &usg) == 0){
-        stat->peak_memory = usg.ru_maxrss;
+        stat->peak_memory = usg.ru_maxrss / 1024;
     }
 }

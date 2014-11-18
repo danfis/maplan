@@ -18,6 +18,7 @@ struct _plan_ma_search_th_t {
 
     int pub_state_reg;
     bor_fifo_sem_t msg_queue;
+    int accept_public_state;
 
     int res; /*!< Result of search */
 };

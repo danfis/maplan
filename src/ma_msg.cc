@@ -5,6 +5,12 @@
 
 #define PROTO(msg) ((PlanMAMsg *)(((char *)(msg)) + sizeof(plan_ma_msg_t)))
 
+static int stateId(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->state_id();
+}
+
 void planShutdownProtobuf(void)
 {
     google::protobuf::ShutdownProtobufLibrary();
@@ -26,7 +32,7 @@ plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
     protobuf->set_agent_id(agent_id);
 
     if (type == PLAN_MA_MSG_TRACE_PATH)
-        protobuf->set_initial_agent_id(agent_id);
+        protobuf->set_initiator_agent_id(agent_id);
 
     return msg;
 }
@@ -97,8 +103,7 @@ const void *planMAMsgPublicStateStateBuf(const plan_ma_msg_t *msg)
 
 int planMAMsgPublicStateStateId(const plan_ma_msg_t *msg)
 {
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->state_id();
+    return stateId(msg);
 }
 
 int planMAMsgPublicStateCost(const plan_ma_msg_t *msg)
@@ -119,12 +124,43 @@ void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id)
     proto->set_state_id(state_id);
 }
 
-void planMAMsgTracePathAddOp(plan_ma_msg_t *msg, const char *name, int cost)
+void planMAMsgTracePathAddPath(plan_ma_msg_t *msg, const plan_path_t *path)
 {
     PlanMAMsg *proto = PROTO(msg);
-    PlanMAMsgOp *op = proto->add_op();
-    op->set_name(name);
-    op->set_cost(cost);
+    bor_list_t *item;
+    const plan_path_op_t *p;
+
+    for (item = path->prev; item != path; item = item->prev){
+        p = BOR_LIST_ENTRY(item, plan_path_op_t, path);
+
+        PlanMAMsgOp *op = proto->add_op();
+        op->set_name(p->name);
+        op->set_cost(p->cost);
+    }
+}
+
+int planMAMsgTracePathStateId(const plan_ma_msg_t *msg)
+{
+    return stateId(msg);
+}
+
+void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
+                                   plan_path_t *path)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    int size;
+
+    size = proto->op_size();
+    for (int i = 0; i < size; ++i){
+        const PlanMAMsgOp &op = proto->op(i);
+        planPathPrepend2(path, op.name().c_str(), op.cost());
+    }
+}
+
+int planMAMsgTracePathInitAgent(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->initiator_agent_id();
 }
 
 #if 0

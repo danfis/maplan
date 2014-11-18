@@ -113,6 +113,17 @@ int planMAMsgPublicStateCost(const plan_ma_msg_t *msg);
  */
 int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg);
 
+
+/**
+ * Sets next state-id to trace-path message.
+ */
+void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id);
+
+/**
+ * Adds next operator to the path.
+ */
+void planMAMsgTracePathAddOp(plan_ma_msg_t *msg, const char *name, int cost);
+
 /**** INLINES: ****/
 _bor_inline int planMAMsgType(const plan_ma_msg_t *msg)
 {

@@ -25,6 +25,9 @@ plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
     protobuf->set_type(msg->type);
     protobuf->set_agent_id(agent_id);
 
+    if (type == PLAN_MA_MSG_TRACE_PATH)
+        protobuf->set_initial_agent_id(agent_id);
+
     return msg;
 }
 
@@ -108,6 +111,20 @@ int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg)
 {
     const PlanMAMsg *proto = PROTO(msg);
     return proto->heur();
+}
+
+void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_state_id(state_id);
+}
+
+void planMAMsgTracePathAddOp(plan_ma_msg_t *msg, const char *name, int cost)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    PlanMAMsgOp *op = proto->add_op();
+    op->set_name(name);
+    op->set_cost(cost);
 }
 
 #if 0

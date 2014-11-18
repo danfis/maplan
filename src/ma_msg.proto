@@ -126,6 +126,13 @@ message PlanMAMsg {
 }
 */
 
+message PlanMAMsgOp {
+    optional int32 op_id = 1;
+    optional string name = 2;
+    optional int32 cost = 3;
+}
+
+
 message PlanMAMsg {
     required int32 type = 1;
     required int32 agent_id = 2;
@@ -135,4 +142,6 @@ message PlanMAMsg {
     optional int32 state_id = 5;
     optional int32 cost = 6;
     optional int32 heur = 7;
+    optional int32 initial_agent_id = 8;
+    repeated PlanMAMsgOp op = 9;
 }

@@ -84,12 +84,11 @@ static int processMsg(plan_ma_search_t *ma_search,
     int type = planMAMsgType(msg);
     int res = 0;
 
-    fprintf(stderr, "[%d] msg: %d\n", ma_search->comm->node_id, type);
-    fflush(stderr);
     if (type == PLAN_MA_MSG_TERMINATE){
         res = msgTerminate(ma_search, msg);
 
-    }else if (type == PLAN_MA_MSG_PUBLIC_STATE){
+    }else if (type == PLAN_MA_MSG_PUBLIC_STATE
+                || type == PLAN_MA_MSG_TRACE_PATH){
         // Forward message to search thread
         borFifoSemPush(th_queue, &msg);
         msg = NULL;
@@ -107,9 +106,6 @@ static int msgTerminate(plan_ma_search_t *ma_search,
     int agent_id;
     plan_ma_msg_t *term_msg;
 
-    fprintf(stderr, "[%d] terminate msg: %d\n",
-            ma_search->comm->node_id, subtype);
-    fflush(stderr);
     if (subtype == PLAN_MA_MSG_TERMINATE_FINAL){
         // When TERMINATE signal is received, just terminate
         return -1;

@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <boruvka/core.h>
 
+#include <plan/path.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -14,16 +16,28 @@ extern "C" {
 #define PLAN_MA_MSG_TERMINATE    0x0
 #define PLAN_MA_MSG_TRACE_PATH   0x1
 #define PLAN_MA_MSG_PUBLIC_STATE 0x2
-#define PLAN_MA_MSG_HEUR         0x3
-#define PLAN_MA_MSG_SOLUTION     0x4
+#define PLAN_MA_MSG_SNAPSHOT     0x3
+#define PLAN_MA_MSG_HEUR         0x4
+#define PLAN_MA_MSG_SOLUTION     0x5
 
 
 /**
- * Message sub-types:
+ * Terminate sub-types:
  */
 #define PLAN_MA_MSG_TERMINATE_REQUEST 0x0
 #define PLAN_MA_MSG_TERMINATE_FINAL   0x1
 
+/**
+ * Snapshot sub-types
+ */
+#define PLAN_MA_MSG_SNAPSHOT_INIT     0x0
+#define PLAN_MA_MSG_SNAPSHOT_MARK     0x1
+#define PLAN_MA_MSG_SNAPSHOT_RESPONSE 0x2
+
+/**
+ * Snapshot specific types (see planMAMsgSnapshotSetType()).
+ */
+#define PLAN_MA_MSG_SOLUTION_VERIFICATION 0x0
 
 
 struct _plan_ma_msg_t {
@@ -112,6 +126,61 @@ int planMAMsgPublicStateCost(const plan_ma_msg_t *msg);
  * Returns heuristic value computed by the remote agent.
  */
 int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg);
+
+
+/**
+ * Sets next state-id to trace-path message.
+ */
+void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id);
+
+/**
+ * Adds next operator to the path.
+ */
+void planMAMsgTracePathAddPath(plan_ma_msg_t *msg, const plan_path_t *path);
+
+/**
+ * Returns ID of the last state the path was tracked to.
+ */
+int planMAMsgTracePathStateId(const plan_ma_msg_t *msg);
+
+/**
+ * Extracts path from the message to path object.
+ */
+void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
+                                   plan_path_t *path);
+
+
+/**
+ * Returns ID of the initiator.
+ */
+int planMAMsgTracePathInitAgent(const plan_ma_msg_t *msg);
+
+/**
+ * Sets snapshot type, see above for list of types.
+ */
+void planMAMsgSnapshotSetType(plan_ma_msg_t *msg, int type);
+
+/**
+ * Returns snapshot type
+ */
+int planMAMsgSnapshotType(const plan_ma_msg_t *msg);
+
+/**
+ * Returns assigned snapshot token.
+ */
+long planMAMsgSnapshotToken(const plan_ma_msg_t *msg);
+
+/**
+ * Creates a new SNAPSHOT_MARK message from SNAPSHOT_INIT message.
+ */
+plan_ma_msg_t *planMAMsgSnapshotNewMark(const plan_ma_msg_t *snapshot_init,
+                                        int agent_id);
+
+/**
+ * Creates a new SNAPSHOT_RESPONSE message from a SNAPSHOT_INIT message.
+ */
+plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
+                                            int agent_id);
 
 /**** INLINES: ****/
 _bor_inline int planMAMsgType(const plan_ma_msg_t *msg)

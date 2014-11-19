@@ -19,6 +19,8 @@ void planPathFree(plan_path_t *path)
             BOR_FREE(op->name);
         BOR_FREE(op);
     }
+
+    borListInit(path);
 }
 
 void planPathCopy(plan_path_t *dst, const plan_path_t *src)

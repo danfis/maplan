@@ -153,6 +153,14 @@ void planSearchDel(plan_search_t *search);
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
 /**
+ * Extracts path between initial state and the specified goal state.
+ * Returns initial state ID where path was extracted from the goal state.
+ */
+plan_state_id_t planSearchExtractPath(const plan_search_t *search,
+                                      plan_state_id_t goal_state,
+                                      plan_path_t *path);
+
+/**
  * (Re-)Inserts node to the open-list
  */
 void planSearchInsertNode(plan_search_t *search,
@@ -184,6 +192,22 @@ typedef void (*plan_search_expanded_node_fn)(plan_search_t *search,
  */
 void planSearchSetExpandedNode(plan_search_t *search,
                                plan_search_expanded_node_fn cb, void *ud);
+
+
+/**
+ * Callback for planSearchSetReachedGoal()
+ */
+typedef void (*plan_search_reached_goal_fn)(plan_search_t *search,
+                                            plan_state_space_node_t *node,
+                                            void *userdata);
+
+/**
+ * Sets callback that is called whenever the state satisficing goals is
+ * reached.
+ */
+void planSearchSetReachedGoal(plan_search_t *search,
+                              plan_search_reached_goal_fn cb,
+                              void *userdata);
 
 /**
  * Internals
@@ -249,6 +273,8 @@ struct _plan_search_t {
     void *poststep_data;
     plan_search_expanded_node_fn expanded_node_fn;
     void *expanded_node_data;
+    plan_search_reached_goal_fn reached_goal_fn;
+    void *reached_goal_data;
 
     plan_state_t *state;             /*!< Preallocated state */
     plan_state_id_t state_id;        /*!< ID of .state -- used for caching*/

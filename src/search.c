@@ -3,9 +3,9 @@
 
 #include "plan/search.h"
 
-static void extractPath(plan_state_space_t *state_space,
-                        plan_state_id_t goal_state,
-                        plan_path_t *path);
+static plan_state_id_t extractPath(plan_state_space_t *state_space,
+                                   plan_state_id_t goal_state,
+                                   plan_path_t *path);
 static void _planSearchLoadState(plan_search_t *search,
                                  plan_state_id_t state_id);
 
@@ -33,10 +33,6 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     while (res == PLAN_SEARCH_CONT){
         res = search->step_fn(search);
 
-        if (search->poststep_fn){
-            res = search->poststep_fn(search, res, search->poststep_data);
-        }
-
         ++steps;
         if (res == PLAN_SEARCH_CONT
                 && search->progress.fn
@@ -44,6 +40,10 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
             planSearchStatUpdate(&search->stat);
             res = search->progress.fn(&search->stat, search->progress.data);
             steps = 0;
+        }
+
+        if (search->poststep_fn){
+            res = search->poststep_fn(search, res, search->poststep_data);
         }
     }
 
@@ -60,6 +60,13 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     }
 
     return res;
+}
+
+plan_state_id_t planSearchExtractPath(const plan_search_t *search,
+                                      plan_state_id_t goal_state,
+                                      plan_path_t *path)
+{
+    return extractPath(search->state_space, goal_state, path);
 }
 
 void planSearchInsertNode(plan_search_t *search,
@@ -81,6 +88,14 @@ void planSearchSetExpandedNode(plan_search_t *search,
 {
     search->expanded_node_fn = cb;
     search->expanded_node_data = ud;
+}
+
+void planSearchSetReachedGoal(plan_search_t *search,
+                              plan_search_reached_goal_fn cb,
+                              void *userdata)
+{
+    search->reached_goal_fn = cb;
+    search->reached_goal_data = userdata;
 }
 
 void _planSearchInit(plan_search_t *search,
@@ -107,6 +122,8 @@ void _planSearchInit(plan_search_t *search,
     search->poststep_data = NULL;
     search->expanded_node_fn = NULL;
     search->expanded_node_data = NULL;
+    search->reached_goal_fn = NULL;
+    search->reached_goal_data = NULL;
 
     search->state    = planStateNew(search->state_pool);
     search->state_id = PLAN_NO_STATE;
@@ -167,17 +184,20 @@ int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node)
 
     found = planStatePoolPartStateIsSubset(search->state_pool,
                                            search->goal, node->state_id);
-    if (found)
+    if (found){
         search->goal_state = node->state_id;
+        if (search->reached_goal_fn)
+            search->reached_goal_fn(search, node, search->reached_goal_data);
+    }
     return found;
 }
 
 
 
 
-static void extractPath(plan_state_space_t *state_space,
-                        plan_state_id_t goal_state,
-                        plan_path_t *path)
+static plan_state_id_t extractPath(plan_state_space_t *state_space,
+                                   plan_state_id_t goal_state,
+                                   plan_path_t *path)
 {
     plan_state_space_node_t *node;
 
@@ -189,6 +209,10 @@ static void extractPath(plan_state_space_t *state_space,
                         node->parent_state_id, node->state_id);
         node = planStateSpaceNode(state_space, node->parent_state_id);
     }
+
+    if (node)
+        return node->state_id;
+    return PLAN_NO_STATE;
 }
 
 static void _planSearchLoadState(plan_search_t *search,

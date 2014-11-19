@@ -5,6 +5,14 @@
 
 #define PROTO(msg) ((PlanMAMsg *)(((char *)(msg)) + sizeof(plan_ma_msg_t)))
 
+static int snapshot_token_counter = 0;
+
+static int stateId(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->state_id();
+}
+
 void planShutdownProtobuf(void)
 {
     google::protobuf::ShutdownProtobufLibrary();
@@ -24,6 +32,16 @@ plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
     new (protobuf) PlanMAMsg;
     protobuf->set_type(msg->type);
     protobuf->set_agent_id(agent_id);
+
+    if (type == PLAN_MA_MSG_TRACE_PATH){
+        protobuf->set_initiator_agent_id(agent_id);
+
+    }else if (type == PLAN_MA_MSG_SNAPSHOT
+                && subtype == PLAN_MA_MSG_SNAPSHOT_INIT){
+        uint64_t token = __sync_fetch_and_add(&snapshot_token_counter, 1);
+        token = token << 32;
+        token = token | (uint32_t)agent_id;
+    }
 
     return msg;
 }
@@ -94,8 +112,7 @@ const void *planMAMsgPublicStateStateBuf(const plan_ma_msg_t *msg)
 
 int planMAMsgPublicStateStateId(const plan_ma_msg_t *msg)
 {
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->state_id();
+    return stateId(msg);
 }
 
 int planMAMsgPublicStateCost(const plan_ma_msg_t *msg)
@@ -108,6 +125,92 @@ int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg)
 {
     const PlanMAMsg *proto = PROTO(msg);
     return proto->heur();
+}
+
+void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_state_id(state_id);
+}
+
+void planMAMsgTracePathAddPath(plan_ma_msg_t *msg, const plan_path_t *path)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    bor_list_t *item;
+    const plan_path_op_t *p;
+
+    for (item = path->prev; item != path; item = item->prev){
+        p = BOR_LIST_ENTRY(item, plan_path_op_t, path);
+
+        PlanMAMsgOp *op = proto->add_op();
+        op->set_name(p->name);
+        op->set_cost(p->cost);
+    }
+}
+
+int planMAMsgTracePathStateId(const plan_ma_msg_t *msg)
+{
+    return stateId(msg);
+}
+
+void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
+                                   plan_path_t *path)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    int size;
+
+    size = proto->op_size();
+    for (int i = 0; i < size; ++i){
+        const PlanMAMsgOp &op = proto->op(i);
+        planPathPrepend2(path, op.name().c_str(), op.cost());
+    }
+}
+
+int planMAMsgTracePathInitAgent(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->initiator_agent_id();
+}
+
+
+void planMAMsgSnapshotSetType(plan_ma_msg_t *msg, int type)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_snapshot_type(type);
+}
+
+int planMAMsgSnapshotType(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->snapshot_type();
+}
+
+long planMAMsgSnapshotToken(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->snapshot_token();
+}
+
+plan_ma_msg_t *planMAMsgSnapshotNewMark(const plan_ma_msg_t *snapshot_init,
+                                        int agent_id)
+{
+    plan_ma_msg_t *msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT,
+                                      PLAN_MA_MSG_SNAPSHOT_MARK, agent_id);
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_snapshot_token(planMAMsgSnapshotToken(snapshot_init));
+    planMAMsgSnapshotSetType(msg, planMAMsgSnapshotType(snapshot_init));
+    return msg;
+}
+
+plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
+                                            int agent_id)
+{
+    plan_ma_msg_t *msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT,
+                                      PLAN_MA_MSG_SNAPSHOT_RESPONSE, agent_id);
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_snapshot_token(planMAMsgSnapshotToken(sshot_init));
+    planMAMsgSnapshotSetType(msg, planMAMsgSnapshotType(sshot_init));
+    return msg;
 }
 
 #if 0

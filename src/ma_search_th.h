@@ -18,9 +18,10 @@ struct _plan_ma_search_th_t {
 
     int pub_state_reg;
     bor_fifo_sem_t msg_queue;
-    int accept_public_state;
 
     int res; /*!< Result of search */
+    plan_state_id_t goal;
+    plan_cost_t goal_cost;
 };
 typedef struct _plan_ma_search_th_t plan_ma_search_th_t;
 

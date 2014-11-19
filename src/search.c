@@ -90,6 +90,14 @@ void planSearchSetExpandedNode(plan_search_t *search,
     search->expanded_node_data = ud;
 }
 
+void planSearchSetReachedGoal(plan_search_t *search,
+                              plan_search_reached_goal_fn cb,
+                              void *userdata)
+{
+    search->reached_goal_fn = cb;
+    search->reached_goal_data = userdata;
+}
+
 void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
@@ -114,6 +122,8 @@ void _planSearchInit(plan_search_t *search,
     search->poststep_data = NULL;
     search->expanded_node_fn = NULL;
     search->expanded_node_data = NULL;
+    search->reached_goal_fn = NULL;
+    search->reached_goal_data = NULL;
 
     search->state    = planStateNew(search->state_pool);
     search->state_id = PLAN_NO_STATE;
@@ -174,8 +184,11 @@ int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node)
 
     found = planStatePoolPartStateIsSubset(search->state_pool,
                                            search->goal, node->state_id);
-    if (found)
+    if (found){
         search->goal_state = node->state_id;
+        if (search->reached_goal_fn)
+            search->reached_goal_fn(search, node, search->reached_goal_data);
+    }
     return found;
 }
 

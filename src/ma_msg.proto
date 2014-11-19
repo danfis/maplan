@@ -144,4 +144,6 @@ message PlanMAMsg {
     optional int32 heur = 7;
     optional int32 initiator_agent_id = 8;
     repeated PlanMAMsgOp op = 9;
+    optional int64 snapshot_token = 10;
+    optional int32 snapshot_type = 11;
 }

@@ -3,8 +3,8 @@
 #include "ma_snapshot.h"
 
 static void planMASnapshotUpdate(plan_ma_snapshot_t *s, plan_ma_msg_t *msg);
-static void planMASnapshotSnapshotMsg(plan_ma_snapshot_t *s,
-                                      plan_ma_msg_t *msg);
+static int planMASnapshotSnapshotMsg(plan_ma_snapshot_t *s,
+                                     plan_ma_msg_t *msg);
 
 void planMASnapshotRegInit(plan_ma_snapshot_reg_t *reg,
                            int agent_size)
@@ -41,7 +41,9 @@ int planMASnapshotRegMsg(plan_ma_snapshot_reg_t *reg, plan_ma_msg_t *msg)
 
         for (i = 0; i < reg->size; ++i){
             if (reg->snapshot[i]->token == token){
-                planMASnapshotSnapshotMsg(reg->snapshot[i], msg);
+                if (planMASnapshotSnapshotMsg(reg->snapshot[i], msg) == 1){
+                    reg->snapshot[i] = reg->snapshot[--reg->size];
+                }
                 return 0;
             }
         }
@@ -98,13 +100,14 @@ static void planMASnapshotUpdate(plan_ma_snapshot_t *s, plan_ma_msg_t *msg)
     s->update_fn(s, msg);
 }
 
-static void planMASnapshotSnapshotMsg(plan_ma_snapshot_t *s,
-                                      plan_ma_msg_t *msg)
+static int planMASnapshotSnapshotMsg(plan_ma_snapshot_t *s,
+                                     plan_ma_msg_t *msg)
 {
     int subtype = planMAMsgSubType(msg);
     int agent = planMAMsgAgent(msg);
     int mark_finalize = 0;
     int resp_finalize = 0;
+    int del = 0;
 
     // snapshot-init works also as a mark message
     if (subtype == PLAN_MA_MSG_SNAPSHOT_INIT
@@ -132,20 +135,29 @@ static void planMASnapshotSnapshotMsg(plan_ma_snapshot_t *s,
     }
 
     if (subtype == PLAN_MA_MSG_SNAPSHOT_INIT){
-        s->init_fn(s, msg);
+        if (s->init_fn)
+            s->init_fn(s, msg);
     }else if (subtype == PLAN_MA_MSG_SNAPSHOT_MARK){
-        s->mark_fn(s, msg);
+        if (s->mark_fn)
+            s->mark_fn(s, msg);
     }else if (subtype == PLAN_MA_MSG_SNAPSHOT_RESPONSE){
-        s->response_fn(s, msg);
+        if (s->response_fn)
+            s->response_fn(s, msg);
     }
 
     if (mark_finalize){
-        if (s->mark_finalize_fn(s) == -1)
+        if (s->mark_finalize_fn && s->mark_finalize_fn(s) == -1){
             s->del_fn(s);
+            del = 1;
+        }
     }
 
     if (resp_finalize){
-        s->response_finalize_fn(s);
+        if (s->response_finalize_fn)
+            s->response_finalize_fn(s);
         s->del_fn(s);
+        del = 1;
     }
+
+    return del;
 }

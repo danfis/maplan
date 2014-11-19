@@ -1,3 +1,5 @@
+#include <boruvka/alloc.h>
+
 #include "ma_search_th.h"
 #include "ma_search_common.h"
 
@@ -11,19 +13,15 @@ struct _pub_state_data_t {
 };
 typedef struct _pub_state_data_t pub_state_data_t;
 
-/** Initiator of solution verify process */
-struct _solution_verify_master_t {
+/** Solution verification object */
+struct _solution_verify_t {
     plan_ma_snapshot_t snapshot;
+    plan_ma_search_th_t *th;
+    plan_cost_t lowest_cost;
+    int initiator;
     plan_ma_msg_t *init_msg;
 };
-typedef struct _solution_verify_master_t solution_verify_master_t;
-
-/** Solution verify receiver */
-struct _solution_verify_slave_t {
-    plan_ma_snapshot_t snapshot;
-    plan_ma_msg_t *init_msg;
-};
-typedef struct _solution_verify_slave_t solution_verify_slave_t;
+typedef struct _solution_verify_t solution_verify_t;
 
 static void *searchThread(void *data);
 static int searchThreadPostStep(plan_search_t *search, int res, void *ud);
@@ -57,8 +55,23 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
                                plan_ma_comm_t *comm,
                                plan_path_t *path);
 
+#define SOLUTION_VERIFY(s) bor_container_of((s), solution_verify_t, snapshot)
+
 /** Starts verification of a solution */
 static void solutionVerify(plan_ma_search_th_t *th, plan_state_id_t goal);
+static solution_verify_t *solutionVerifyNew(plan_ma_search_th_t *th,
+                                            plan_ma_msg_t *msg,
+                                            int initiator);
+static void solutionVerifyDel(plan_ma_snapshot_t *s);
+static void solutionVerifyUpdate(plan_ma_snapshot_t *s,
+                                 plan_ma_msg_t *msg);
+static void solutionVerifyInitMsg(plan_ma_snapshot_t *s,
+                                  plan_ma_msg_t *msg);
+static void solutionVerifyResponseMsg(plan_ma_snapshot_t *s,
+                                      plan_ma_msg_t *msg);
+static int solutionVerifyMarkFinalize(plan_ma_snapshot_t *s);
+static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s);
+
 
 void planMASearchThInit(plan_ma_search_th_t *th,
                         plan_search_t *search,
@@ -84,6 +97,7 @@ void planMASearchThInit(plan_ma_search_th_t *th,
     th->res = -1;
     th->goal = PLAN_NO_STATE;
     th->goal_cost = PLAN_COST_MAX;
+    th->lowest_cost = PLAN_COST_MAX;
 }
 
 void planMASearchThFree(plan_ma_search_th_t *th)
@@ -186,6 +200,7 @@ static void searchThreadExpandedNode(plan_search_t *search,
                                      plan_state_space_node_t *node, void *ud)
 {
     plan_ma_search_th_t *th = ud;
+    th->lowest_cost = BOR_MIN(th->lowest_cost, node->cost);
     publicStateSend(th, node);
 }
 
@@ -478,5 +493,104 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
 
 static void solutionVerify(plan_ma_search_th_t *th, plan_state_id_t goal)
 {
-    tracePath(th);
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT, PLAN_MA_MSG_SNAPSHOT_INIT,
+                       th->comm->node_id);
+    planMAMsgSnapshotSetType(msg, PLAN_MA_MSG_SOLUTION_VERIFICATION);
+    // TODO: Create solutionVerifyNew(), set up public state, send to all
+    planMAMsgDel(msg);
 }
+
+static solution_verify_t *solutionVerifyNew(plan_ma_search_th_t *th,
+                                            plan_ma_msg_t *msg,
+                                            int initiator)
+{
+    solution_verify_t *ver;
+    int subtype;
+
+    ver = BOR_ALLOC(solution_verify_t);
+    ver->th = th;
+    ver->initiator = initiator;
+    ver->init_msg = NULL;
+
+    subtype = planMAMsgSubType(msg);
+    if (subtype == PLAN_MA_MSG_SNAPSHOT_INIT)
+        ver->init_msg = planMAMsgClone(msg);
+
+    if (initiator){
+        _planMASnapshotInit(&ver->snapshot, planMAMsgSnapshotToken(msg),
+                            th->comm->node_id, th->comm->node_size,
+                            solutionVerifyDel,
+                            solutionVerifyUpdate,
+                            NULL,
+                            NULL,
+                            solutionVerifyResponseMsg,
+                            NULL,
+                            solutionVerifyResponseFinalize);
+    }else{
+        _planMASnapshotInit(&ver->snapshot, planMAMsgSnapshotToken(msg),
+                            th->comm->node_id, th->comm->node_size,
+                            solutionVerifyDel,
+                            solutionVerifyUpdate,
+                            solutionVerifyInitMsg,
+                            NULL,
+                            NULL,
+                            solutionVerifyMarkFinalize,
+                            NULL);
+    }
+
+    return ver;
+}
+
+static void solutionVerifyDel(plan_ma_snapshot_t *s)
+{
+    solution_verify_t *ver = SOLUTION_VERIFY(s);
+    _planMASnapshotFree(s);
+    if (ver->init_msg)
+        planMAMsgDel(ver->init_msg);
+    BOR_FREE(ver);
+}
+
+static void solutionVerifyUpdate(plan_ma_snapshot_t *s,
+                                 plan_ma_msg_t *msg)
+{
+    solution_verify_t *ver = SOLUTION_VERIFY(s);
+    plan_cost_t cost;
+
+    if (planMAMsgType(msg) != PLAN_MA_MSG_PUBLIC_STATE)
+        return;
+
+    cost = planMAMsgPublicStateCost(msg);
+    ver->lowest_cost = BOR_MIN(ver->lowest_cost, cost);
+}
+
+static void solutionVerifyInitMsg(plan_ma_snapshot_t *s,
+                                  plan_ma_msg_t *msg)
+{
+    solution_verify_t *ver = SOLUTION_VERIFY(s);
+    if (ver->init_msg){
+        // TODO
+        fprintf(stderr, "Error: Already received snapshot-init message.\n");
+        exit(-1);
+    }
+    ver->init_msg = planMAMsgClone(msg);
+}
+
+static void solutionVerifyResponseMsg(plan_ma_snapshot_t *s,
+                                      plan_ma_msg_t *msg)
+{
+    // TODO: get ack or nack
+}
+
+static int solutionVerifyMarkFinalize(plan_ma_snapshot_t *s)
+{
+    // TODO: Check solution and reinsert state if needed
+    return -1;
+}
+
+static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s)
+{
+    // TODO: Verify solution or not
+}
+

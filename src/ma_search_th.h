@@ -25,6 +25,7 @@ struct _plan_ma_search_th_t {
     int res; /*!< Result of search */
     plan_state_id_t goal;
     plan_cost_t goal_cost;
+    plan_cost_t last_cost;
 };
 typedef struct _plan_ma_search_th_t plan_ma_search_th_t;
 

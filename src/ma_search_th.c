@@ -11,6 +11,20 @@ struct _pub_state_data_t {
 };
 typedef struct _pub_state_data_t pub_state_data_t;
 
+/** Initiator of solution verify process */
+struct _solution_verify_master_t {
+    plan_ma_snapshot_t snapshot;
+    plan_ma_msg_t *init_msg;
+};
+typedef struct _solution_verify_master_t solution_verify_master_t;
+
+/** Solution verify receiver */
+struct _solution_verify_slave_t {
+    plan_ma_snapshot_t snapshot;
+    plan_ma_msg_t *init_msg;
+};
+typedef struct _solution_verify_slave_t solution_verify_slave_t;
+
 static void *searchThread(void *data);
 static int searchThreadPostStep(plan_search_t *search, int res, void *ud);
 static void searchThreadExpandedNode(plan_search_t *search,
@@ -23,6 +37,8 @@ static void publicStateSend(plan_ma_search_th_t *th,
 static void publicStateRecv(plan_ma_search_th_t *th,
                             plan_ma_msg_t *msg);
 
+/** Starts trace-path process */
+static void tracePath(plan_ma_search_th_t *th);
 /** Initialize path tracing for the specified goal state.
  *  Return 0 if the path was fully recovered and thus stored in path
  *  argument. 1 is returned in case the communication with other agents was
@@ -41,6 +57,9 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
                                plan_ma_comm_t *comm,
                                plan_path_t *path);
 
+/** Starts verification of a solution */
+static void solutionVerify(plan_ma_search_th_t *th, plan_state_id_t goal);
+
 void planMASearchThInit(plan_ma_search_th_t *th,
                         plan_search_t *search,
                         plan_ma_comm_t *comm,
@@ -51,6 +70,7 @@ void planMASearchThInit(plan_ma_search_th_t *th,
     th->search = search;
     th->comm = comm;
     th->path = path;
+    th->solution_verify = 1; // TODO: Make it an option
 
     msg_init.agent_id = -1;
     msg_init.cost = PLAN_COST_MAX;
@@ -59,6 +79,7 @@ void planMASearchThInit(plan_ma_search_th_t *th,
                                                  sizeof(pub_state_data_t),
                                                  NULL, &msg_init);
     borFifoSemInit(&th->msg_queue, sizeof(plan_ma_msg_t *));
+    planMASnapshotRegInit(&th->snapshot, th->comm->node_size);
 
     th->res = -1;
     th->goal = PLAN_NO_STATE;
@@ -74,6 +95,7 @@ void planMASearchThFree(plan_ma_search_th_t *th)
         planMAMsgDel(msg);
     }
     borFifoSemFree(&th->msg_queue);
+    planMASnapshotRegFree(&th->snapshot);
 }
 
 void planMASearchThRun(plan_ma_search_th_t *th)
@@ -108,21 +130,12 @@ static int searchThreadPostStep(plan_search_t *search, int res, void *ud)
     plan_ma_search_th_t *th = ud;
     plan_ma_msg_t *msg = NULL;
     int type = -1;
-    int trace_path;
 
     if (res == PLAN_SEARCH_FOUND){
-        // TODO: Verify solution
-
-        // TODO: Trace path
-        trace_path = tracePathInit(th->search, th->search->goal_state,
-                                   th->pub_state_reg, th->comm, th->path);
-        if (trace_path == -1){
-            planMASearchTerminate(th->comm);
-            th->res = PLAN_SEARCH_ABORT;
-
-        }else if (trace_path == 0){
-            planMASearchTerminate(th->comm);
-            th->res = PLAN_SEARCH_FOUND;
+        if (th->solution_verify){
+            solutionVerify(th, th->goal);
+        }else{
+            tracePath(th);
         }
 
         res = PLAN_SEARCH_CONT;
@@ -180,8 +193,6 @@ static void searchThreadReachedGoal(plan_search_t *search,
                                     plan_state_space_node_t *node, void *ud)
 {
     plan_ma_search_th_t *th = ud;
-    fprintf(stderr, "[%d] REACHED GOAL %d\n", th->comm->node_id,
-            node->state_id);
 
     if (node->cost < th->goal_cost){
         th->goal = node->state_id;
@@ -191,10 +202,35 @@ static void searchThreadReachedGoal(plan_search_t *search,
 
 static void processMsg(plan_ma_search_th_t *th, plan_ma_msg_t *msg)
 {
-    int type; 
+    int type, snapshot_type;
     int res;
+    plan_ma_snapshot_t *snapshot = NULL;
+
+    if (th->res != PLAN_SEARCH_NOT_FOUND)
+        return;
 
     type = planMAMsgType(msg);
+
+    if (!planMASnapshotRegEmpty(&th->snapshot)
+            || type == PLAN_MA_MSG_SNAPSHOT){
+
+        // Process message in snapshot object(s)
+        if (planMASnapshotRegMsg(&th->snapshot, msg) != 0){
+            // Create snapshot object if the message wasn't accepted (and
+            // thus we know the message is of type PLAN_MA_MSG_SNAPSHOT).
+            snapshot_type = planMAMsgSnapshotType(msg);
+            if (snapshot_type == PLAN_MA_MSG_SOLUTION_VERIFICATION){
+                // TODO
+                snapshot = NULL;
+            }
+
+            if (snapshot){
+                planMASnapshotRegAdd(&th->snapshot, snapshot);
+                planMASnapshotRegMsg(&th->snapshot, msg);
+            }
+        }
+    }
+
     if (type == PLAN_MA_MSG_PUBLIC_STATE){
         publicStateRecv(th, msg);
 
@@ -208,6 +244,7 @@ static void processMsg(plan_ma_search_th_t *th, plan_ma_msg_t *msg)
             th->res = PLAN_SEARCH_ABORT;
             planMASearchTerminate(th->comm);
         }
+
     }
 }
 
@@ -319,38 +356,59 @@ static void publicStateRecv(plan_ma_search_th_t *th,
 }
 
 
+static void tracePath(plan_ma_search_th_t *th)
+{
+    int trace_path;
+
+    trace_path = tracePathInit(th->search, th->search->goal_state,
+                               th->pub_state_reg, th->comm, th->path);
+    if (trace_path == -1){
+        th->res = PLAN_SEARCH_ABORT;
+        planMASearchTerminate(th->comm);
+
+    }else if (trace_path == 0){
+        th->res = PLAN_SEARCH_FOUND;
+        planMASearchTerminate(th->comm);
+    }
+}
+
 static int tracePathInit(const plan_search_t *search,
                          plan_state_id_t goal_state,
                          int state_pool_pub_reg,
                          plan_ma_comm_t *comm,
-                         plan_path_t *path)
+                         plan_path_t *path_out)
 {
     plan_state_id_t init_state;
     plan_ma_msg_t *msg;
     const pub_state_data_t *pub_state;
+    plan_path_t path;
 
-    init_state = planSearchExtractPath(search, goal_state, path);
-    if (init_state == 0)
+    planPathInit(&path);
+    init_state = planSearchExtractPath(search, goal_state, &path);
+    if (init_state == 0){
+        planPathCopy(path_out, &path);
+        planPathFree(&path);
         return 0;
-    if (init_state == PLAN_NO_STATE){
-        planPathFree(path);
+
+    }else if (init_state == PLAN_NO_STATE){
+        planPathFree(&path);
         return -1;
     }
 
     pub_state = planStatePoolData(search->state_pool, state_pool_pub_reg,
                                   init_state);
     if (pub_state->agent_id == -1){
-        planPathFree(path);
+        planPathFree(&path);
         return -1;
     }
 
     msg = planMAMsgNew(PLAN_MA_MSG_TRACE_PATH, 0, comm->node_id);
-    planMAMsgTracePathAddPath(msg, path);
+    planMAMsgTracePathAddPath(msg, &path);
     planMAMsgTracePathSetStateId(msg, pub_state->state_id);
     planMACommSendToNode(comm, pub_state->agent_id, msg);
     planMAMsgDel(msg);
 
-    planPathFree(path);
+    planPathFree(&path);
     return 1;
 }
 
@@ -358,29 +416,32 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
                                const plan_search_t *search,
                                int state_pool_pub_reg,
                                plan_ma_comm_t *comm,
-                               plan_path_t *path)
+                               plan_path_t *path_out)
 {
     plan_state_id_t state_id;
     const pub_state_data_t *pub_state;
     int init_agent;
+    plan_path_t path;
 
     // Get state id from which to trace path. If this agent was the
     // initiator (thus state_id == -1) return extracted path.
     state_id = planMAMsgTracePathStateId(msg);
     if (state_id == -1){
-        planMAMsgTracePathExtractPath(msg, path);
+        planMAMsgTracePathExtractPath(msg, path_out);
         return 0;
     }
 
     // Trace next part of the path
-    state_id = planSearchExtractPath(search, state_id, path);
+    planPathInit(&path);
+    state_id = planSearchExtractPath(search, state_id, &path);
     if (state_id == PLAN_NO_STATE){
-        planPathFree(path);
+        planPathFree(&path);
         return -1;
     }
 
     // Add the partial path to the message
-    planMAMsgTracePathAddPath(msg, path);
+    planMAMsgTracePathAddPath(msg, &path);
+    planPathFree(&path);
 
     // If the path was traced to the initial state check whether this agent
     // is the initiator.
@@ -390,8 +451,7 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
         if (init_agent == comm->node_id){
             // If the current agent is the initiator, extract path and
             // return zero
-            planPathFree(path);
-            planMAMsgTracePathExtractPath(msg, path);
+            planMAMsgTracePathExtractPath(msg, path_out);
             return 0;
 
         }else{
@@ -406,14 +466,17 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
     pub_state = planStatePoolData(search->state_pool, state_pool_pub_reg,
                                   state_id);
     if (pub_state->agent_id == -1){
-        planPathFree(path);
         return -1;
     }
 
     // Send the message to the owner of the public state
     planMAMsgTracePathSetStateId(msg, pub_state->state_id);
     planMACommSendToNode(comm, pub_state->agent_id, msg);
-    planPathFree(path);
     return 1;
 }
 
+
+static void solutionVerify(plan_ma_search_th_t *th, plan_state_id_t goal)
+{
+    tracePath(th);
+}

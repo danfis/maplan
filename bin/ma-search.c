@@ -322,7 +322,7 @@ static int run(plan_problem_agents_t *prob)
     int heur_op_size;
     plan_succ_gen_t *heur_succ_gen;
     plan_ma_comm_queue_pool_t *comm_pool;
-    int i, res;
+    int i;
 
     comm_pool = planMACommQueuePoolNew(prob->agent_size);
 
@@ -364,14 +364,14 @@ static int run(plan_problem_agents_t *prob)
     borTasksRun(tasks);
     borTasksDel(tasks);
 
-    res = 0;
     for (i = 0; i < prob->agent_size; ++i){
         if (th[i].res != PLAN_SEARCH_NOT_FOUND){
             printResults(th[i].res, &th[i].path);
-            res = 1;
+            break;
+
         }
     }
-    if (res == 0)
+    if (i == prob->agent_size)
         printResults(PLAN_SEARCH_NOT_FOUND, NULL);
 
     for (i = 0; i < prob->agent_size; ++i){

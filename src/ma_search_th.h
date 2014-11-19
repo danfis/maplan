@@ -5,6 +5,7 @@
 #include <boruvka/fifo-sem.h>
 
 #include <plan/search.h>
+#include "ma_snapshot.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,9 +16,11 @@ struct _plan_ma_search_th_t {
     plan_search_t *search;
     plan_ma_comm_t *comm;
     plan_path_t *path;
+    int solution_verify;
 
     int pub_state_reg;
     bor_fifo_sem_t msg_queue;
+    plan_ma_snapshot_reg_t snapshot;
 
     int res; /*!< Result of search */
     plan_state_id_t goal;

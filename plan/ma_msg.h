@@ -18,7 +18,6 @@ extern "C" {
 #define PLAN_MA_MSG_PUBLIC_STATE 0x2
 #define PLAN_MA_MSG_SNAPSHOT     0x3
 #define PLAN_MA_MSG_HEUR         0x4
-#define PLAN_MA_MSG_SOLUTION     0x5
 
 
 /**

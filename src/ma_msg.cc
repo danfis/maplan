@@ -53,6 +53,19 @@ void planMAMsgDel(plan_ma_msg_t *msg)
     BOR_FREE(msg);
 }
 
+plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg_in)
+{
+    const PlanMAMsg *proto_in = PROTO(msg_in);
+    PlanMAMsg *proto;
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(planMAMsgType(msg_in), planMAMsgSubType(msg_in),
+                       planMAMsgAgent(msg_in));
+    proto = PROTO(msg);
+    *proto = *proto_in;
+    return msg;
+}
+
 int planMAMsgAgent(const plan_ma_msg_t *msg)
 {
     const PlanMAMsg *proto = PROTO(msg);

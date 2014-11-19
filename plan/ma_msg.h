@@ -62,6 +62,11 @@ plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id);
 void planMAMsgDel(plan_ma_msg_t *msg);
 
 /**
+ * Creates a complete copy of the message.
+ */
+plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg);
+
+/**
  * Returns type (PLAN_MA_MSG_TYPE_*).
  */
 _bor_inline int planMAMsgType(const plan_ma_msg_t *msg);

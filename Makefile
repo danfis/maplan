@@ -71,6 +71,7 @@ OBJS += search_applicable_ops
 OBJS += search_stat
 OBJS += ma_search_th
 OBJS += ma_search_common
+OBJS += ma_snapshot
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg
@@ -98,6 +99,8 @@ src/%.pb.h src/%.pb.cc: src/%.proto
 .objs/heur_ma_ff.o: src/heur_ma_ff.c src/_heur_fact_op.c src/_heur_relax.c plan/heur.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 .objs/heur_ma_max.o: src/heur_ma_max.c src/_heur_fact_op.c src/_heur_relax.c plan/heur.h plan/config.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+.objs/%.o: src/%.c src/%.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 .objs/%.o: src/%.c plan/%.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<

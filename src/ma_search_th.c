@@ -20,6 +20,7 @@ struct _solution_verify_t {
     plan_cost_t lowest_cost;
     int initiator;
     plan_ma_msg_t *init_msg;
+    int ack;
 };
 typedef struct _solution_verify_t solution_verify_t;
 
@@ -56,6 +57,11 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
                                plan_path_t *path);
 
 #define SOLUTION_VERIFY(s) bor_container_of((s), solution_verify_t, snapshot)
+#define DBG_SOLUTION_VERIFY(ver, M) \
+    fprintf(stderr, "[%d] T%ld " M " lowest_cost: %d, ack: %d, goal-cost: %d\n", \
+            (ver)->th->comm->node_id, (ver)->snapshot.token, \
+            (ver)->lowest_cost, (ver)->ack, \
+            ((ver)->init_msg ? planMAMsgPublicStateCost((ver)->init_msg) : -1))
 
 /** Starts verification of a solution */
 static void solutionVerify(plan_ma_search_th_t *th, plan_state_id_t goal);
@@ -97,7 +103,6 @@ void planMASearchThInit(plan_ma_search_th_t *th,
     th->res = -1;
     th->goal = PLAN_NO_STATE;
     th->goal_cost = PLAN_COST_MAX;
-    th->lowest_cost = PLAN_COST_MAX;
 }
 
 void planMASearchThFree(plan_ma_search_th_t *th)
@@ -143,15 +148,8 @@ static int searchThreadPostStep(plan_search_t *search, int res, void *ud)
 {
     plan_ma_search_th_t *th = ud;
     plan_ma_msg_t *msg = NULL;
-    int type = -1;
 
     if (res == PLAN_SEARCH_FOUND){
-        if (th->solution_verify){
-            solutionVerify(th, th->goal);
-        }else{
-            tracePath(th);
-        }
-
         res = PLAN_SEARCH_CONT;
 
     }else if (res == PLAN_SEARCH_ABORT){
@@ -166,20 +164,15 @@ static int searchThreadPostStep(plan_search_t *search, int res, void *ud)
         } while (msg);
 
     }else if (res == PLAN_SEARCH_NOT_FOUND){
-        // Block until public-state or terminate isn't received
-        do {
-            borFifoSemPopBlock(&th->msg_queue, &msg);
-            if (msg){
-                type = planMAMsgType(msg);
-                processMsg(th, msg);
-                planMAMsgDel(msg);
-            }
-        } while (msg && type != PLAN_MA_MSG_PUBLIC_STATE);
-
-        // Empty message means to terminate
-        if (!msg)
+        // Block until some message unblocks the process
+        borFifoSemPopBlock(&th->msg_queue, &msg);
+        if (msg){
+            processMsg(th, msg);
+            planMAMsgDel(msg);
+            res = PLAN_SEARCH_CONT;
+        }else{
             return PLAN_SEARCH_ABORT;
-        res = PLAN_SEARCH_CONT;
+        }
     }
 
     // Process all messages
@@ -200,7 +193,6 @@ static void searchThreadExpandedNode(plan_search_t *search,
                                      plan_state_space_node_t *node, void *ud)
 {
     plan_ma_search_th_t *th = ud;
-    th->lowest_cost = BOR_MIN(th->lowest_cost, node->cost);
     publicStateSend(th, node);
 }
 
@@ -209,9 +201,19 @@ static void searchThreadReachedGoal(plan_search_t *search,
 {
     plan_ma_search_th_t *th = ud;
 
-    if (node->cost < th->goal_cost){
+    fprintf(stderr, "[%d] reached goal %d, cost %d\n",
+            th->comm->node_id, node->state_id, node->cost);
+    if (node->cost < th->goal_cost || node->state_id == th->goal){
+        fprintf(stderr, "[%d] reached goal %d, cost %d CHECK\n",
+                th->comm->node_id, node->state_id, node->cost);
         th->goal = node->state_id;
         th->goal_cost = node->cost;
+
+        if (th->solution_verify){
+            solutionVerify(th, th->goal);
+        }else{
+            tracePath(th);
+        }
     }
 }
 
@@ -220,6 +222,7 @@ static void processMsg(plan_ma_search_th_t *th, plan_ma_msg_t *msg)
     int type, snapshot_type;
     int res;
     plan_ma_snapshot_t *snapshot = NULL;
+    solution_verify_t *ver;
 
     if (th->res != PLAN_SEARCH_NOT_FOUND)
         return;
@@ -229,14 +232,18 @@ static void processMsg(plan_ma_search_th_t *th, plan_ma_msg_t *msg)
     if (!planMASnapshotRegEmpty(&th->snapshot)
             || type == PLAN_MA_MSG_SNAPSHOT){
 
+        fprintf(stderr, "[%d] Msg %d from %d\n",
+                th->comm->node_id, planMAMsgType(msg), planMAMsgAgent(msg));
         // Process message in snapshot object(s)
         if (planMASnapshotRegMsg(&th->snapshot, msg) != 0){
             // Create snapshot object if the message wasn't accepted (and
             // thus we know the message is of type PLAN_MA_MSG_SNAPSHOT).
             snapshot_type = planMAMsgSnapshotType(msg);
             if (snapshot_type == PLAN_MA_MSG_SOLUTION_VERIFICATION){
-                // TODO
-                snapshot = NULL;
+                fprintf(stderr, "[%d] Create snapshot object\n",
+                        th->comm->node_id);
+                ver = solutionVerifyNew(th, msg, 0);
+                snapshot = &ver->snapshot;
             }
 
             if (snapshot){
@@ -263,11 +270,37 @@ static void processMsg(plan_ma_search_th_t *th, plan_ma_msg_t *msg)
     }
 }
 
-static void publicStateSend(plan_ma_search_th_t *th,
-                            plan_state_space_node_t *node)
+static int publicStateSet(plan_ma_msg_t *msg,
+                          plan_state_pool_t *state_pool,
+                          plan_state_space_node_t *node)
 {
     const void *statebuf;
     size_t statebuf_size;
+
+    statebuf = planStatePoolGetPackedState(state_pool, node->state_id);
+    statebuf_size = planStatePackerBufSize(state_pool->packer);
+    if (statebuf == NULL)
+        return -1;
+
+    planMAMsgPublicStateSetState(msg, statebuf, statebuf_size,
+                                 node->state_id, node->cost,
+                                 node->heuristic);
+    return 0;
+}
+
+static int publicStateSet2(plan_ma_msg_t *msg,
+                           plan_state_pool_t *state_pool,
+                           plan_state_space_t *state_space,
+                           plan_state_id_t state_id)
+{
+    plan_state_space_node_t *node;
+    node = planStateSpaceNode(state_space, state_id);
+    return publicStateSet(msg, state_pool, node);
+}
+
+static void publicStateSend(plan_ma_search_th_t *th,
+                            plan_state_space_node_t *node)
+{
     int i, len;
     const int *peers;
     const pub_state_data_t *pub_state;
@@ -286,20 +319,12 @@ static void publicStateSend(plan_ma_search_th_t *th,
     if (pub_state->agent_id != -1)
         return;
 
-    statebuf = planStatePoolGetPackedState(th->search->state_pool,
-                                           node->state_id);
-    statebuf_size = planStatePackerBufSize(th->search->state_pool->packer);
-    if (statebuf == NULL)
-        return;
-
     peers = planOpExtraMAOpRecvAgents(node->op, &len);
     if (len == 0)
         return;
 
     msg = planMAMsgNew(PLAN_MA_MSG_PUBLIC_STATE, 0, th->comm->node_id);
-    planMAMsgPublicStateSetState(msg, statebuf, statebuf_size,
-                                 node->state_id, node->cost,
-                                 node->heuristic);
+    publicStateSet(msg, th->search->state_pool, node);
 
     for (i = 0; i < len; ++i){
         if (peers[i] != th->comm->node_id)
@@ -350,14 +375,16 @@ static void publicStateRecv(plan_ma_search_th_t *th,
     }else if (planStateSpaceNodeIsOpen(node) && node->heuristic > heur){
         // Reinsert node if already in open-list and we got better
         // heuristic
-        planSearchInsertNode(th->search, node);
+        //planSearchInsertNode(th->search, node);
 
     }else if (planStateSpaceNodeIsClosed(node) && node->cost > cost){
+    }else if (node->cost > cost){
         // If other agent found shorter path, set up the node so that path
         // will be traced trough that agent
         node->parent_state_id = PLAN_NO_STATE;
         node->op              = NULL;
         node->cost            = cost;
+        planSearchInsertNode(th->search, node);
     }
 
     // Set the reference data only if the new cost is smaller than the
@@ -494,11 +521,22 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
 static void solutionVerify(plan_ma_search_th_t *th, plan_state_id_t goal)
 {
     plan_ma_msg_t *msg;
+    solution_verify_t *ver;
 
+    // Create snapshot-init message
     msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT, PLAN_MA_MSG_SNAPSHOT_INIT,
                        th->comm->node_id);
     planMAMsgSnapshotSetType(msg, PLAN_MA_MSG_SOLUTION_VERIFICATION);
-    // TODO: Create solutionVerifyNew(), set up public state, send to all
+    publicStateSet2(msg, th->search->state_pool, th->search->state_space, goal);
+
+    // Create snapshot object
+    ver = solutionVerifyNew(th, msg, 1);
+    planMASnapshotRegAdd(&th->snapshot, &ver->snapshot);
+
+    DBG_SOLUTION_VERIFY(ver, "solutionVerify");
+
+    // Send message to all agents
+    planMACommSendToAll(th->comm, msg);
     planMAMsgDel(msg);
 }
 
@@ -507,18 +545,18 @@ static solution_verify_t *solutionVerifyNew(plan_ma_search_th_t *th,
                                             int initiator)
 {
     solution_verify_t *ver;
-    int subtype;
+    plan_ma_msg_t *mark_msg;
 
     ver = BOR_ALLOC(solution_verify_t);
     ver->th = th;
     ver->initiator = initiator;
     ver->init_msg = NULL;
-
-    subtype = planMAMsgSubType(msg);
-    if (subtype == PLAN_MA_MSG_SNAPSHOT_INIT)
-        ver->init_msg = planMAMsgClone(msg);
+    ver->lowest_cost = planSearchTopNodeCost(th->search);
+    ver->lowest_cost = BOR_MIN(ver->lowest_cost, th->goal_cost);
+    ver->ack = 1;
 
     if (initiator){
+        ver->init_msg = planMAMsgClone(msg);
         _planMASnapshotInit(&ver->snapshot, planMAMsgSnapshotToken(msg),
                             th->comm->node_id, th->comm->node_size,
                             solutionVerifyDel,
@@ -528,6 +566,7 @@ static solution_verify_t *solutionVerifyNew(plan_ma_search_th_t *th,
                             solutionVerifyResponseMsg,
                             NULL,
                             solutionVerifyResponseFinalize);
+        DBG_SOLUTION_VERIFY(ver, "new");
     }else{
         _planMASnapshotInit(&ver->snapshot, planMAMsgSnapshotToken(msg),
                             th->comm->node_id, th->comm->node_size,
@@ -538,6 +577,12 @@ static solution_verify_t *solutionVerifyNew(plan_ma_search_th_t *th,
                             NULL,
                             solutionVerifyMarkFinalize,
                             NULL);
+        DBG_SOLUTION_VERIFY(ver, "new");
+
+        // Send mark message to all agents
+        mark_msg = planMAMsgSnapshotNewMark(msg, th->comm->node_id);
+        planMACommSendToAll(th->comm, mark_msg);
+        planMAMsgDel(mark_msg);
     }
 
     return ver;
@@ -546,6 +591,7 @@ static solution_verify_t *solutionVerifyNew(plan_ma_search_th_t *th,
 static void solutionVerifyDel(plan_ma_snapshot_t *s)
 {
     solution_verify_t *ver = SOLUTION_VERIFY(s);
+    DBG_SOLUTION_VERIFY(ver, "del");
     _planMASnapshotFree(s);
     if (ver->init_msg)
         planMAMsgDel(ver->init_msg);
@@ -563,6 +609,7 @@ static void solutionVerifyUpdate(plan_ma_snapshot_t *s,
 
     cost = planMAMsgPublicStateCost(msg);
     ver->lowest_cost = BOR_MIN(ver->lowest_cost, cost);
+    DBG_SOLUTION_VERIFY(ver, "update");
 }
 
 static void solutionVerifyInitMsg(plan_ma_snapshot_t *s,
@@ -571,26 +618,74 @@ static void solutionVerifyInitMsg(plan_ma_snapshot_t *s,
     solution_verify_t *ver = SOLUTION_VERIFY(s);
     if (ver->init_msg){
         // TODO
-        fprintf(stderr, "Error: Already received snapshot-init message.\n");
+        fprintf(stderr, "[%d] Error: Already received snapshot-init message.\n",
+                ver->th->comm->node_id);
         exit(-1);
     }
     ver->init_msg = planMAMsgClone(msg);
+    DBG_SOLUTION_VERIFY(ver, "init-msg");
 }
 
 static void solutionVerifyResponseMsg(plan_ma_snapshot_t *s,
                                       plan_ma_msg_t *msg)
 {
-    // TODO: get ack or nack
+    solution_verify_t *ver = SOLUTION_VERIFY(s);
+    ver->ack &= planMAMsgSnapshotAck(msg);
+    fprintf(stderr, "[%d] Got response. token: %ld, ack: %d\n",
+            ver->th->comm->node_id, ver->snapshot.token, ver->ack);
+    DBG_SOLUTION_VERIFY(ver, "response-msg");
 }
 
 static int solutionVerifyMarkFinalize(plan_ma_snapshot_t *s)
 {
-    // TODO: Check solution and reinsert state if needed
+    solution_verify_t *ver = SOLUTION_VERIFY(s);
+    plan_ma_msg_t *msg;
+    int ack;
+
+    if (!ver->init_msg){
+        // TODO
+        fprintf(stderr, "Error: init msg not set!!\n");
+        exit(-1);
+    }
+
+    ack = 0;
+    if (ver->lowest_cost >= planMAMsgPublicStateCost(ver->init_msg))
+        ack = 1;
+
+    DBG_SOLUTION_VERIFY(ver, "mark-final");
+    fprintf(stderr, "[%d] Token: %ld Ack: %d\n",
+            ver->th->comm->node_id, ver->snapshot.token, ack);
+
+    // Construct response message and send it to the initiator
+    msg = planMAMsgSnapshotNewResponse(ver->init_msg, ver->th->comm->node_id);
+    planMAMsgSnapshotSetAck(msg, ack);
+    planMACommSendToNode(ver->th->comm, planMAMsgAgent(ver->init_msg), msg);
+    planMAMsgDel(msg);
+
     return -1;
 }
 
 static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s)
 {
-    // TODO: Verify solution or not
+    solution_verify_t *ver = SOLUTION_VERIFY(s);
+    plan_state_space_node_t *node;
+    plan_cost_t goal_cost;
+    plan_state_id_t goal_id;
+
+    goal_cost = planMAMsgPublicStateCost(ver->init_msg);
+    if (ver->ack && ver->lowest_cost >= goal_cost){
+        ver->th->goal_cost = goal_cost;
+        ver->th->goal = planMAMsgPublicStateStateId(ver->init_msg);
+        DBG_SOLUTION_VERIFY(ver, "response-final-trace-path");
+        tracePath(ver->th);
+    }else{
+        goal_id = planMAMsgPublicStateStateId(ver->init_msg);
+        node = planStateSpaceNode(ver->th->search->state_space, goal_id);
+        planSearchInsertNode(ver->th->search, node);
+        DBG_SOLUTION_VERIFY(ver, "response-final-ins");
+        fprintf(stderr, "[%d] insert node %d\n", ver->th->comm->node_id,
+                goal_id);
+    }
+
 }
 

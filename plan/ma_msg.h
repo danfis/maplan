@@ -186,6 +186,16 @@ plan_ma_msg_t *planMAMsgSnapshotNewMark(const plan_ma_msg_t *snapshot_init,
 plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
                                             int agent_id);
 
+/**
+ * Sets ack flag to the specified value.
+ */
+void planMAMsgSnapshotSetAck(plan_ma_msg_t *msg, int ack);
+
+/**
+ * Returns ack flag.
+ */
+int planMAMsgSnapshotAck(const plan_ma_msg_t *msg);
+
 /**** INLINES: ****/
 _bor_inline int planMAMsgType(const plan_ma_msg_t *msg)
 {

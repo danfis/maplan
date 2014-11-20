@@ -137,7 +137,7 @@ void _planMASnapshotFree(plan_ma_snapshot_t *s);
 /**** INLINES: ****/
 _bor_inline int planMASnapshotRegEmpty(const plan_ma_snapshot_reg_t *reg)
 {
-    return reg->size;
+    return reg->size == 0;
 }
 
 #ifdef __cplusplus

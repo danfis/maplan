@@ -423,12 +423,11 @@ int main(int argc, char *argv[])
     printf("\n");
 
     prob = planProblemAgentsFromProto(def_proto_problem, PLAN_PROBLEM_USE_CG);
-
     if (prob == NULL){
-        printProblem(prob);
         fprintf(stderr, "Error: Could not load problem definition.\n");
         return -1;
     }
+    printProblem(prob);
 
     if (print_dot_graph){
         if (prob != NULL){

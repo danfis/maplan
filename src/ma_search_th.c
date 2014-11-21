@@ -16,7 +16,6 @@ struct _solution_verify_t {
     plan_ma_snapshot_t snapshot;
     plan_ma_search_th_t *th;
     plan_cost_t lowest_cost;
-    int initiator;
     plan_ma_msg_t *init_msg;
     int ack;
 };
@@ -508,7 +507,7 @@ static void solutionVerify(plan_ma_search_th_t *th, plan_state_id_t goal)
     planMAMsgSnapshotSetType(msg, PLAN_MA_MSG_SOLUTION_VERIFICATION);
     publicStateSet2(msg, th->search->state_pool, th->search->state_space, goal);
 
-    // Create snapshot object
+    // Create snapshot object and register it
     ver = solutionVerifyNew(th, msg, 1);
     planMASnapshotRegAdd(&th->snapshot, &ver->snapshot);
 
@@ -528,11 +527,12 @@ static solution_verify_t *solutionVerifyNew(plan_ma_search_th_t *th,
 
     ver = BOR_ALLOC(solution_verify_t);
     ver->th = th;
-    ver->initiator = initiator;
     ver->init_msg = NULL;
+    ver->ack = 1;
+
+    // Initialize to lowest currently known value
     ver->lowest_cost = planSearchTopNodeCost(th->search);
     ver->lowest_cost = BOR_MIN(ver->lowest_cost, th->goal_cost);
-    ver->ack = 1;
 
     if (initiator){
         ver->init_msg = planMAMsgClone(msg);
@@ -586,6 +586,7 @@ static void solutionVerifyUpdate(plan_ma_snapshot_t *s,
     if (planMAMsgType(msg) != PLAN_MA_MSG_PUBLIC_STATE)
         return;
 
+    // Update lowest cost from the public state received before snapshot-mark
     cost = planMAMsgPublicStateCost(msg);
     ver->lowest_cost = BOR_MIN(ver->lowest_cost, cost);
     DBG_SOLUTION_VERIFY(ver, "update");
@@ -637,6 +638,8 @@ static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s)
 
     goal_cost = planMAMsgPublicStateCost(ver->init_msg);
     if (ver->ack && ver->lowest_cost >= goal_cost){
+        // All other agents ack'ed the solution and this agent also has
+        // processed all states with lower cost, so we are done.
         ver->th->goal_cost = goal_cost;
         ver->th->goal = planMAMsgPublicStateStateId(ver->init_msg);
         DBG_SOLUTION_VERIFY(ver, "response-final-trace-path");
@@ -647,6 +650,5 @@ static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s)
         planSearchInsertNode(ver->th->search, node);
         DBG_SOLUTION_VERIFY(ver, "response-final-ins");
     }
-
 }
 

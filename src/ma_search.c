@@ -88,7 +88,8 @@ static int processMsg(plan_ma_search_t *ma_search,
         res = msgTerminate(ma_search, msg);
 
     }else if (type == PLAN_MA_MSG_PUBLIC_STATE
-                || type == PLAN_MA_MSG_TRACE_PATH){
+                || type == PLAN_MA_MSG_TRACE_PATH
+                || type == PLAN_MA_MSG_SNAPSHOT){
         // Forward message to search thread
         borFifoSemPush(th_queue, &msg);
         msg = NULL;

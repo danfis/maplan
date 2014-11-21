@@ -18,7 +18,6 @@ extern "C" {
 #define PLAN_MA_MSG_PUBLIC_STATE 0x2
 #define PLAN_MA_MSG_SNAPSHOT     0x3
 #define PLAN_MA_MSG_HEUR         0x4
-#define PLAN_MA_MSG_SOLUTION     0x5
 
 
 /**
@@ -61,6 +60,11 @@ plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id);
  * Deletes the message.
  */
 void planMAMsgDel(plan_ma_msg_t *msg);
+
+/**
+ * Creates a complete copy of the message.
+ */
+plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg);
 
 /**
  * Returns type (PLAN_MA_MSG_TYPE_*).
@@ -181,6 +185,16 @@ plan_ma_msg_t *planMAMsgSnapshotNewMark(const plan_ma_msg_t *snapshot_init,
  */
 plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
                                             int agent_id);
+
+/**
+ * Sets ack flag to the specified value.
+ */
+void planMAMsgSnapshotSetAck(plan_ma_msg_t *msg, int ack);
+
+/**
+ * Returns ack flag.
+ */
+int planMAMsgSnapshotAck(const plan_ma_msg_t *msg);
 
 /**** INLINES: ****/
 _bor_inline int planMAMsgType(const plan_ma_msg_t *msg)

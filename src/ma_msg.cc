@@ -41,6 +41,7 @@ plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
         uint64_t token = __sync_fetch_and_add(&snapshot_token_counter, 1);
         token = token << 32;
         token = token | (uint32_t)agent_id;
+        protobuf->set_snapshot_token(token);
     }
 
     return msg;
@@ -51,6 +52,19 @@ void planMAMsgDel(plan_ma_msg_t *msg)
     PlanMAMsg *proto = PROTO(msg);
     proto->~PlanMAMsg();
     BOR_FREE(msg);
+}
+
+plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg_in)
+{
+    const PlanMAMsg *proto_in = PROTO(msg_in);
+    PlanMAMsg *proto;
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(planMAMsgType(msg_in), planMAMsgSubType(msg_in),
+                       planMAMsgAgent(msg_in));
+    proto = PROTO(msg);
+    *proto = *proto_in;
+    return msg;
 }
 
 int planMAMsgAgent(const plan_ma_msg_t *msg)
@@ -211,6 +225,18 @@ plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
     proto->set_snapshot_token(planMAMsgSnapshotToken(sshot_init));
     planMAMsgSnapshotSetType(msg, planMAMsgSnapshotType(sshot_init));
     return msg;
+}
+
+void planMAMsgSnapshotSetAck(plan_ma_msg_t *msg, int ack)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_snapshot_ack(ack);
+}
+
+int planMAMsgSnapshotAck(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->snapshot_ack();
 }
 
 #if 0

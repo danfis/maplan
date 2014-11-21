@@ -595,12 +595,6 @@ static void solutionVerifyInitMsg(plan_ma_snapshot_t *s,
                                   plan_ma_msg_t *msg)
 {
     solution_verify_t *ver = SOLUTION_VERIFY(s);
-    if (ver->init_msg){
-        // TODO
-        fprintf(stderr, "[%d] Error: Already received snapshot-init message.\n",
-                ver->th->comm->node_id);
-        exit(-1);
-    }
     ver->init_msg = planMAMsgClone(msg);
     DBG_SOLUTION_VERIFY(ver, "init-msg");
 }
@@ -618,12 +612,6 @@ static int solutionVerifyMarkFinalize(plan_ma_snapshot_t *s)
     solution_verify_t *ver = SOLUTION_VERIFY(s);
     plan_ma_msg_t *msg;
     int ack;
-
-    if (!ver->init_msg){
-        // TODO
-        fprintf(stderr, "Error: init msg not set!!\n");
-        exit(-1);
-    }
 
     ack = 0;
     if (ver->lowest_cost >= planMAMsgPublicStateCost(ver->init_msg))

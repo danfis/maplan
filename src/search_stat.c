@@ -30,6 +30,6 @@ void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat)
     struct rusage usg;
 
     if (getrusage(RUSAGE_SELF, &usg) == 0){
-        stat->peak_memory = usg.ru_maxrss / 1024;
+        stat->peak_memory = usg.ru_maxrss / 1024L;
     }
 }

@@ -115,8 +115,6 @@ static int astarInsertState(plan_search_astar_t *astar,
 
     // Set correct values
     node->parent_state_id = parent_state_id;
-    fprintf(stderr, "parent state %d %d\n", node->parent_state_id,
-            parent_state_id);
     node->op              = op;
     node->cost            = g_cost;
     node->heuristic       = heur;

@@ -6,8 +6,6 @@
 /** Reference data for the received public states */
 struct _pub_state_data_t {
     int agent_id;             /*!< ID of the source agent */
-    plan_cost_t cost;         /*!< Cost of the path to this state as found
-                                   by the remote agent. */
     plan_state_id_t state_id; /*!< ID of the state in remote agent's state
                                    pool. This is used for back-tracking. */
 };
@@ -37,7 +35,7 @@ static void publicStateRecv(plan_ma_search_th_t *th,
                             plan_ma_msg_t *msg);
 
 /** Starts trace-path process */
-static void tracePath(plan_ma_search_th_t *th);
+static void tracePath(plan_ma_search_th_t *th, plan_state_id_t goal_state);
 /** Initialize path tracing for the specified goal state.
  *  Return 0 if the path was fully recovered and thus stored in path
  *  argument. 1 is returned in case the communication with other agents was
@@ -57,11 +55,15 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
                                plan_path_t *path);
 
 #define SOLUTION_VERIFY(s) bor_container_of((s), solution_verify_t, snapshot)
+#if 0
 #define DBG_SOLUTION_VERIFY(ver, M) \
     fprintf(stderr, "[%d] T%ld " M " lowest_cost: %d, ack: %d, goal-cost: %d\n", \
             (ver)->th->comm->node_id, (ver)->snapshot.token, \
             (ver)->lowest_cost, (ver)->ack, \
             ((ver)->init_msg ? planMAMsgPublicStateCost((ver)->init_msg) : -1))
+#else
+#define DBG_SOLUTION_VERIFY(ver, M)
+#endif
 
 /** Starts verification of a solution */
 static void solutionVerify(plan_ma_search_th_t *th, plan_state_id_t goal);
@@ -92,7 +94,6 @@ void planMASearchThInit(plan_ma_search_th_t *th,
     th->solution_verify = 1; // TODO: Make it an option
 
     msg_init.agent_id = -1;
-    msg_init.cost = PLAN_COST_MAX;
     msg_init.state_id = PLAN_NO_STATE;
     th->pub_state_reg = planStatePoolDataReserve(search->state_pool,
                                                  sizeof(pub_state_data_t),
@@ -201,18 +202,14 @@ static void searchThreadReachedGoal(plan_search_t *search,
 {
     plan_ma_search_th_t *th = ud;
 
-    fprintf(stderr, "[%d] reached goal %d, cost %d\n",
-            th->comm->node_id, node->state_id, node->cost);
     if (node->cost < th->goal_cost || node->state_id == th->goal){
-        fprintf(stderr, "[%d] reached goal %d, cost %d CHECK\n",
-                th->comm->node_id, node->state_id, node->cost);
         th->goal = node->state_id;
         th->goal_cost = node->cost;
 
         if (th->solution_verify){
             solutionVerify(th, th->goal);
         }else{
-            tracePath(th);
+            tracePath(th, th->goal);
         }
     }
 }
@@ -232,16 +229,12 @@ static void processMsg(plan_ma_search_th_t *th, plan_ma_msg_t *msg)
     if (!planMASnapshotRegEmpty(&th->snapshot)
             || type == PLAN_MA_MSG_SNAPSHOT){
 
-        fprintf(stderr, "[%d] Msg %d from %d\n",
-                th->comm->node_id, planMAMsgType(msg), planMAMsgAgent(msg));
         // Process message in snapshot object(s)
         if (planMASnapshotRegMsg(&th->snapshot, msg) != 0){
             // Create snapshot object if the message wasn't accepted (and
             // thus we know the message is of type PLAN_MA_MSG_SNAPSHOT).
             snapshot_type = planMAMsgSnapshotType(msg);
             if (snapshot_type == PLAN_MA_MSG_SOLUTION_VERIFICATION){
-                fprintf(stderr, "[%d] Create snapshot object\n",
-                        th->comm->node_id);
                 ver = solutionVerifyNew(th, msg, 0);
                 snapshot = &ver->snapshot;
             }
@@ -364,45 +357,31 @@ static void publicStateRecv(plan_ma_search_th_t *th,
 
     // TODO: Heuristic re-computation
 
-    if (planStateSpaceNodeIsNew(node)){
+    if (planStateSpaceNodeIsNew(node) || node->cost > cost){
         // Insert node into open-list of not already there
         node->parent_state_id = PLAN_NO_STATE;
         node->op              = NULL;
         node->cost            = cost;
-        node->heuristic       = heur;
-        planSearchInsertNode(th->search, node);
 
-    }else if (planStateSpaceNodeIsOpen(node) && node->heuristic > heur){
-        // Reinsert node if already in open-list and we got better
-        // heuristic
-        //planSearchInsertNode(th->search, node);
+        if (node->heuristic == -1){
+            node->heuristic = heur;
+        }else{
+            node->heuristic = BOR_MAX(heur, node->heuristic);
+        }
 
-    }else if (planStateSpaceNodeIsClosed(node) && node->cost > cost){
-    }else if (node->cost > cost){
-        // If other agent found shorter path, set up the node so that path
-        // will be traced trough that agent
-        node->parent_state_id = PLAN_NO_STATE;
-        node->op              = NULL;
-        node->cost            = cost;
-        planSearchInsertNode(th->search, node);
-    }
-
-    // Set the reference data only if the new cost is smaller than the
-    // current one. This means that either the state is brand new or the
-    // previously inserted state had bigger cost.
-    if (pub_state->cost > cost){
         pub_state->agent_id = planMAMsgAgent(msg);
-        pub_state->cost     = cost;
         pub_state->state_id = planMAMsgPublicStateStateId(msg);
+
+        planSearchInsertNode(th->search, node);
     }
 }
 
 
-static void tracePath(plan_ma_search_th_t *th)
+static void tracePath(plan_ma_search_th_t *th, plan_state_id_t goal_state)
 {
     int trace_path;
 
-    trace_path = tracePathInit(th->search, th->search->goal_state,
+    trace_path = tracePathInit(th->search, goal_state,
                                th->pub_state_reg, th->comm, th->path);
     if (trace_path == -1){
         th->res = PLAN_SEARCH_ABORT;
@@ -631,8 +610,6 @@ static void solutionVerifyResponseMsg(plan_ma_snapshot_t *s,
 {
     solution_verify_t *ver = SOLUTION_VERIFY(s);
     ver->ack &= planMAMsgSnapshotAck(msg);
-    fprintf(stderr, "[%d] Got response. token: %ld, ack: %d\n",
-            ver->th->comm->node_id, ver->snapshot.token, ver->ack);
     DBG_SOLUTION_VERIFY(ver, "response-msg");
 }
 
@@ -653,8 +630,6 @@ static int solutionVerifyMarkFinalize(plan_ma_snapshot_t *s)
         ack = 1;
 
     DBG_SOLUTION_VERIFY(ver, "mark-final");
-    fprintf(stderr, "[%d] Token: %ld Ack: %d\n",
-            ver->th->comm->node_id, ver->snapshot.token, ack);
 
     // Construct response message and send it to the initiator
     msg = planMAMsgSnapshotNewResponse(ver->init_msg, ver->th->comm->node_id);
@@ -677,14 +652,12 @@ static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s)
         ver->th->goal_cost = goal_cost;
         ver->th->goal = planMAMsgPublicStateStateId(ver->init_msg);
         DBG_SOLUTION_VERIFY(ver, "response-final-trace-path");
-        tracePath(ver->th);
+        tracePath(ver->th, planMAMsgPublicStateStateId(ver->init_msg));
     }else{
         goal_id = planMAMsgPublicStateStateId(ver->init_msg);
         node = planStateSpaceNode(ver->th->search->state_space, goal_id);
         planSearchInsertNode(ver->th->search, node);
         DBG_SOLUTION_VERIFY(ver, "response-final-ins");
-        fprintf(stderr, "[%d] insert node %d\n", ver->th->comm->node_id,
-                goal_id);
     }
 
 }

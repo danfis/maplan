@@ -3,13 +3,6 @@
 #include "plan/ma_search.h"
 
 #include "ma_snapshot.h"
-#include "ma_search_common.h"
-
-/** Maximal time (in ms) for which is multi-agent thread blocked when
- *  dead-end is reached. This constant is here basicaly to prevent
- *  dead-lock when all threads are in dead-end. So, it should be set to
- *  fairly high number. */
-#define SEARCH_MA_MAX_BLOCK_TIME (600 * 1000) // 10 minutes
 
 
 /** Main mutli-agent search structure. */
@@ -57,6 +50,8 @@ static void publicStateSend(plan_ma_search_t *ma,
 static void publicStateRecv(plan_ma_search_t *ma,
                             plan_ma_msg_t *msg);
 
+/** Starts termination schema */
+static void terminate(plan_ma_comm_t *comm);
 /** Process TERMINATE message */
 static int terminateMsg(plan_ma_search_t *ma_search,
                         plan_ma_msg_t *msg);
@@ -176,7 +171,7 @@ static int searchPostStep(plan_search_t *search, int res, void *ud)
 
     }else if (res == PLAN_SEARCH_ABORT){
         // Initialize termination of a whole cluster
-        planMASearchTerminate(ma->comm);
+        terminate(ma->comm);
         ma->terminate = 1;
 
     }else if (res == PLAN_SEARCH_NOT_FOUND){
@@ -282,10 +277,10 @@ static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg)
                                   ma->comm, &ma->path);
         if (res == 0){
             ma->res = PLAN_SEARCH_FOUND;
-            planMASearchTerminate(ma->comm);
+            terminate(ma->comm);
         }else if (res == -1){
             ma->res = PLAN_SEARCH_ABORT;
-            planMASearchTerminate(ma->comm);
+            terminate(ma->comm);
         }
     }
 
@@ -406,6 +401,18 @@ static void publicStateRecv(plan_ma_search_t *ma,
 }
 
 
+static void terminate(plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
+                       PLAN_MA_MSG_TERMINATE_REQUEST,
+                       comm->node_id);
+    planMAMsgTerminateSetAgent(msg, comm->node_id);
+    planMACommSendToAll(comm, msg);
+    planMAMsgDel(msg);
+}
+
 static int terminateMsg(plan_ma_search_t *ma_search,
                         plan_ma_msg_t *msg)
 {
@@ -454,11 +461,11 @@ static void tracePath(plan_ma_search_t *ma, plan_state_id_t goal_state)
                                ma->pub_state_reg, ma->comm, &ma->path);
     if (trace_path == -1){
         ma->res = PLAN_SEARCH_ABORT;
-        planMASearchTerminate(ma->comm);
+        terminate(ma->comm);
 
     }else if (trace_path == 0){
         ma->res = PLAN_SEARCH_FOUND;
-        planMASearchTerminate(ma->comm);
+        terminate(ma->comm);
     }
 }
 

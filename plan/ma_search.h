@@ -2,10 +2,14 @@
 #define __PLAN_MA_SEARCH_H__
 
 #include <plan/search.h>
+#include <plan/ma_comm.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+/** Forward declaration */
+typedef struct _plan_ma_search_t plan_ma_search_t;
 
 /**
  * Common parameters for all search algorithms.
@@ -20,18 +24,6 @@ typedef struct _plan_ma_search_params_t plan_ma_search_params_t;
  * Initialize parameters.
  */
 void planMASearchParamsInit(plan_ma_search_params_t *params);
-
-
-/**
- * Main mutli-agent search structure.
- */
-struct _plan_ma_search_t {
-    plan_search_t *search;
-    plan_ma_comm_t *comm; /*!< Communication channel between agents */
-    int terminated;       /*!< True if search was already terminated */
-    int termination;      /*!< ma-search is in the middle of termination */
-};
-typedef struct _plan_ma_search_t plan_ma_search_t;
 
 
 /**

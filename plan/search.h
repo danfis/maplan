@@ -161,6 +161,11 @@ plan_state_id_t planSearchExtractPath(const plan_search_t *search,
                                       plan_path_t *path);
 
 /**
+ * Returns cost of the node on top of the open-list.
+ */
+_bor_inline plan_cost_t planSearchTopNodeCost(const plan_search_t *search);
+
+/**
  * (Re-)Inserts node to the open-list
  */
 void planSearchInsertNode(plan_search_t *search,
@@ -245,6 +250,11 @@ typedef int (*plan_search_step_fn)(plan_search_t *);
 typedef void (*plan_search_insert_node_fn)(plan_search_t *,
                                            plan_state_space_node_t *node);
 
+/**
+ * Returns cost of the node on top of the open-list.
+ */
+typedef plan_cost_t (*plan_search_top_node_cost_fn)(const plan_search_t *s);
+
 struct _plan_search_block_t {
     pthread_mutex_t lock;
     pthread_cond_t cond;
@@ -269,6 +279,7 @@ struct _plan_search_t {
     plan_search_init_step_fn init_step_fn;
     plan_search_step_fn step_fn;
     plan_search_insert_node_fn insert_node_fn;
+    plan_search_top_node_cost_fn top_node_cost_fn;
     plan_search_poststep_fn poststep_fn;
     void *poststep_data;
     plan_search_expanded_node_fn expanded_node_fn;
@@ -294,7 +305,8 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_del_fn del_fn,
                      plan_search_init_step_fn init_step_fn,
                      plan_search_step_fn step_fn,
-                     plan_search_insert_node_fn insert_node_fn);
+                     plan_search_insert_node_fn insert_node_fn,
+                     plan_search_top_node_cost_fn top_node_cost_fn);
 
 /**
  * Frees allocated resources.
@@ -341,6 +353,13 @@ _bor_inline void _planSearchExpandedNode(plan_search_t *search,
     if (search->expanded_node_fn){
         search->expanded_node_fn(search, node, search->expanded_node_data);
     }
+}
+
+_bor_inline plan_cost_t planSearchTopNodeCost(const plan_search_t *search)
+{
+    if (search->top_node_cost_fn)
+        return search->top_node_cost_fn(search);
+    return PLAN_COST_MAX;
 }
 
 #ifdef __cplusplus

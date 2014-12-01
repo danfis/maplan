@@ -23,6 +23,7 @@ static int planSearchAStarStep(plan_search_t *_search);
 /** Inserts node into open-list */
 static void planSearchAStarInsertNode(plan_search_t *search,
                                       plan_state_space_node_t *node);
+static plan_cost_t planSearchAStarTopNodeCost(const plan_search_t *search);
 
 
 void planSearchAStarParamsInit(plan_search_astar_params_t *p)
@@ -41,7 +42,8 @@ plan_search_t *planSearchAStarNew(const plan_search_astar_params_t *params)
                     planSearchAStarDel,
                     planSearchAStarInit,
                     planSearchAStarStep,
-                    planSearchAStarInsertNode);
+                    planSearchAStarInsertNode,
+                    planSearchAStarTopNodeCost);
 
     astar->list     = planListTieBreaking(2);
     astar->pathmax  = params->pathmax;
@@ -203,4 +205,15 @@ static void planSearchAStarInsertNode(plan_search_t *search,
         planStateSpaceReopen(search->state_space, node);
     }
     planListPush(astar->list, cost, node->state_id);
+}
+
+static plan_cost_t planSearchAStarTopNodeCost(const plan_search_t *search)
+{
+    plan_search_astar_t *astar = SEARCH_FROM_PARENT(search);
+    plan_state_id_t state_id;
+    plan_cost_t cost[2];
+
+    if (planListTop(astar->list, &state_id, cost) == 0)
+        return cost[0] - cost[1];
+    return PLAN_COST_MAX;
 }

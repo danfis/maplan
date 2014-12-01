@@ -103,7 +103,8 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_del_fn del_fn,
                      plan_search_init_step_fn init_step_fn,
                      plan_search_step_fn step_fn,
-                     plan_search_insert_node_fn insert_node_fn)
+                     plan_search_insert_node_fn insert_node_fn,
+                     plan_search_top_node_cost_fn top_node_cost_fn)
 {
     search->heur          = params->heur;
     search->heur_del      = params->heur_del;
@@ -118,6 +119,7 @@ void _planSearchInit(plan_search_t *search,
     search->init_step_fn = init_step_fn;
     search->step_fn = step_fn;
     search->insert_node_fn = insert_node_fn;
+    search->top_node_cost_fn = top_node_cost_fn;
     search->poststep_fn = NULL;
     search->poststep_data = NULL;
     search->expanded_node_fn = NULL;

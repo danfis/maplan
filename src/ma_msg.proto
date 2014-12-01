@@ -146,4 +146,5 @@ message PlanMAMsg {
     repeated PlanMAMsgOp op = 9;
     optional int64 snapshot_token = 10;
     optional int32 snapshot_type = 11;
+    optional int32 snapshot_ack = 12;
 }

@@ -51,7 +51,7 @@ static void publicStateRecv(plan_ma_search_t *ma,
                             plan_ma_msg_t *msg);
 
 /** Starts termination schema */
-static void terminate(plan_ma_comm_t *comm);
+static void terminate(plan_ma_search_t *ma);
 /** Process TERMINATE message */
 static int terminateMsg(plan_ma_search_t *ma_search,
                         plan_ma_msg_t *msg);
@@ -171,7 +171,7 @@ static int searchPostStep(plan_search_t *search, int res, void *ud)
 
     }else if (res == PLAN_SEARCH_ABORT){
         // Initialize termination of a whole cluster
-        terminate(ma->comm);
+        terminate(ma);
         ma->terminate = 1;
 
     }else if (res == PLAN_SEARCH_NOT_FOUND){
@@ -277,10 +277,10 @@ static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg)
                                   ma->comm, &ma->path);
         if (res == 0){
             ma->res = PLAN_SEARCH_FOUND;
-            terminate(ma->comm);
+            terminate(ma);
         }else if (res == -1){
             ma->res = PLAN_SEARCH_ABORT;
-            terminate(ma->comm);
+            terminate(ma);
         }
     }
 
@@ -401,16 +401,21 @@ static void publicStateRecv(plan_ma_search_t *ma,
 }
 
 
-static void terminate(plan_ma_comm_t *comm)
+static void terminate(plan_ma_search_t *ma)
 {
     plan_ma_msg_t *msg;
 
+    if (ma->terminate)
+        return;
+
     msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
                        PLAN_MA_MSG_TERMINATE_REQUEST,
-                       comm->node_id);
-    planMAMsgTerminateSetAgent(msg, comm->node_id);
-    planMACommSendToAll(comm, msg);
+                       ma->comm->node_id);
+    planMAMsgTerminateSetAgent(msg, ma->comm->node_id);
+    planMACommSendToAll(ma->comm, msg);
     planMAMsgDel(msg);
+
+    ma->terminate = 1;
 }
 
 static int terminateMsg(plan_ma_search_t *ma_search,
@@ -461,11 +466,11 @@ static void tracePath(plan_ma_search_t *ma, plan_state_id_t goal_state)
                                ma->pub_state_reg, ma->comm, &ma->path);
     if (trace_path == -1){
         ma->res = PLAN_SEARCH_ABORT;
-        terminate(ma->comm);
+        terminate(ma);
 
     }else if (trace_path == 0){
         ma->res = PLAN_SEARCH_FOUND;
-        terminate(ma->comm);
+        terminate(ma);
     }
 }
 

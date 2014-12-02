@@ -2,30 +2,7 @@
 #include <boruvka/alloc.h>
 #include "plan/problem.h"
 #include "plan/succgen.h"
-
-#define NUM_STATES 20
-static unsigned states[NUM_STATES][9] = {
-    { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0, 1, 0, 0, 1 },
-    { 0, 1, 1, 0, 1, 0, 2, 1, 0 },
-    { 1, 0, 1, 0, 0, 0, 0, 2, 0 },
-    { 0, 1, 0, 1, 0, 1, 0, 3, 2 },
-    { 2, 0, 0, 0, 0, 0, 4, 2, 1 },
-    { 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-    { 0, 1, 0, 1, 0, 1, 0, 4, 3 },
-    { 3, 0, 0, 0, 0, 0, 3, 2, 0 },
-    { 4, 1, 1, 0, 0, 0, 0, 2, 0 },
-    { 0, 1, 0, 0, 1, 0, 0, 1, 4 },
-    { 1, 0, 0, 1, 0, 0, 0, 1, 4 },
-    { 1, 1, 1, 0, 0, 1, 2, 1, 4 },
-    { 0, 0, 0, 0, 1, 0, 3, 2, 4 },
-    { 1, 1, 1, 1, 0, 0, 0, 0, 4 },
-    { 0, 0, 0, 0, 1, 0, 4, 1, 4 },
-    { 0, 1, 0, 0, 1, 1, 4, 2, 4 },
-    { 3, 1, 0, 1, 0, 0, 4, 1, 4 },
-    { 2, 1, 1, 1, 1, 1, 0, 0, 4 },
-    { 1, 1, 0, 0, 1, 0, 0, 3, 4 },
-};
+#include "state_pool.h"
 
 static int sortOpsCmp(const void *a, const void *b)
 {
@@ -68,8 +45,7 @@ static int findOpsSG(const plan_succ_gen_t *sg,
     return found;
 }
 
-
-TEST(testSuccGen)
+static void test(const char *proto, const char *states)
 {
     plan_problem_t *prob;
     plan_succ_gen_t *sg;
@@ -77,8 +53,10 @@ TEST(testSuccGen)
     plan_state_id_t sid;
     int ops_size, found1, found2, i, j;
     plan_state_t *state;
+    state_pool_t state_pool;
 
-    prob = planProblemFromFD("load-from-file.in1.sas");
+    prob = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
+    statePoolInit(&state_pool, states);
 
     sg = planSuccGenNew(prob->op, prob->op_size, NULL);
 
@@ -87,11 +65,7 @@ TEST(testSuccGen)
     ops2 = BOR_ALLOC_ARR(plan_op_t *, ops_size);
     state = planStateNew(prob->state_pool);
 
-    for (i = 0; i < NUM_STATES; ++i){
-        for (j = 0; j < 9; ++j){
-            planStateSet(state, j, states[i][j]);
-        }
-
+    for (i = 0; statePoolNext(&state_pool, state) == 0; ++i){
         sid = planStatePoolInsert(prob->state_pool, state);
         found1 = findOpsLinear(prob->state_pool, prob->op, prob->op_size, sid, ops1);
         found2 = findOpsSG(sg, state, ops2, ops_size);
@@ -111,4 +85,15 @@ TEST(testSuccGen)
     planSuccGenDel(sg);
 
     planProblemDel(prob);
+
+    statePoolFree(&state_pool);
+}
+
+
+TEST(testSuccGen)
+{
+    test("../data/ma-benchmarks/depot/pfile1.proto", "states/depot-pfile1.txt");
+    test("../data/ma-benchmarks/depot/pfile5.proto", "states/depot-pfile5.txt");
+    test("../data/ma-benchmarks/rovers/p03.proto", "states/rovers-p03.txt");
+    test("../data/ma-benchmarks/rovers/p15.proto", "states/rovers-p15.txt");
 }

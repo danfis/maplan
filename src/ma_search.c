@@ -4,6 +4,9 @@
 
 #include "ma_snapshot.h"
 
+/** Timeout before dead-end verification is started */
+#define DEAD_END_BLOCK_TIME 1000 // 1 second
+
 
 /** Main mutli-agent search structure. */
 struct _plan_ma_search_t {
@@ -18,6 +21,7 @@ struct _plan_ma_search_t {
     int res; /*!< Result of search */
     plan_state_id_t goal;
     plan_cost_t goal_cost;
+    int blocked;
     int terminate;
 };
 
@@ -28,16 +32,6 @@ struct _pub_state_data_t {
                                    pool. This is used for back-tracking. */
 };
 typedef struct _pub_state_data_t pub_state_data_t;
-
-/** Solution verification object */
-struct _solution_verify_t {
-    plan_ma_snapshot_t snapshot;
-    plan_ma_search_t *ma;
-    plan_cost_t lowest_cost;
-    plan_ma_msg_t *init_msg;
-    int ack;
-};
-typedef struct _solution_verify_t solution_verify_t;
 
 static int searchPostStep(plan_search_t *search, int res, void *ud);
 static void searchExpandedNode(plan_search_t *search,
@@ -76,6 +70,17 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
                                plan_ma_comm_t *comm,
                                plan_path_t *path);
 
+
+/** Solution verification object */
+struct _solution_verify_t {
+    plan_ma_snapshot_t snapshot;
+    plan_ma_search_t *ma;
+    plan_cost_t lowest_cost;
+    plan_ma_msg_t *init_msg;
+    int ack;
+};
+typedef struct _solution_verify_t solution_verify_t;
+
 #define SOLUTION_VERIFY(s) bor_container_of((s), solution_verify_t, snapshot)
 #if 0
 #define DBG_SOLUTION_VERIFY(ver, M) \
@@ -101,6 +106,33 @@ static void solutionVerifyResponseMsg(plan_ma_snapshot_t *s,
                                       plan_ma_msg_t *msg);
 static int solutionVerifyMarkFinalize(plan_ma_snapshot_t *s);
 static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s);
+
+
+/** Struct for verification of global dead end using distributed snapshot */
+struct _dead_end_verify_t {
+    plan_ma_snapshot_t snapshot;
+    plan_ma_search_t *ma;
+    plan_ma_msg_t *init_msg;
+    int ack;
+};
+typedef struct _dead_end_verify_t dead_end_verify_t;
+
+#define DEAD_END_VERIFY(s) bor_container_of((s), dead_end_verify_t, snapshot)
+
+/** Starts verification of global dead end */
+static void deadEndVerify(plan_ma_search_t *ma);
+static dead_end_verify_t *deadEndVerifyNew(plan_ma_search_t *ma,
+                                           plan_ma_msg_t *msg,
+                                           int initiator);
+static void deadEndVerifyDel(plan_ma_snapshot_t *s);
+static void deadEndVerifyResponse(plan_ma_snapshot_t *s, plan_ma_msg_t *msg);
+static void deadEndVerifyInitMsg(plan_ma_snapshot_t *s, plan_ma_msg_t *msg);
+static void deadEndVerifyMarkMsg(plan_ma_snapshot_t *s, plan_ma_msg_t *msg);
+static int deadEndVerifyMarkFinalize(plan_ma_snapshot_t *s);
+static void deadEndVerifyResponseFinalize(plan_ma_snapshot_t *s);
+
+
+
 
 void planMASearchParamsInit(plan_ma_search_params_t *params)
 {
@@ -128,6 +160,7 @@ plan_ma_search_t *planMASearchNew(plan_ma_search_params_t *params)
     ma_search->res = -1;
     ma_search->goal = PLAN_NO_STATE;
     ma_search->goal_cost = PLAN_COST_MAX;
+    ma_search->blocked = 0;
     ma_search->terminate = 0;
 
     return ma_search;
@@ -176,10 +209,17 @@ static int searchPostStep(plan_search_t *search, int res, void *ud)
 
     }else if (res == PLAN_SEARCH_NOT_FOUND){
         // Block until some message unblocks the process
-        msg = planMACommRecvBlock(ma->comm, -1);
+        ma->blocked = 1;
+        msg = planMACommRecvBlock(ma->comm, DEAD_END_BLOCK_TIME);
+        while (msg == NULL){
+            if (ma->comm->node_id == 0)
+                deadEndVerify(ma);
+            msg = planMACommRecvBlock(ma->comm, DEAD_END_BLOCK_TIME);
+        }
         processMsg(ma, msg);
         planMAMsgDel(msg);
         res = PLAN_SEARCH_CONT;
+        ma->blocked = 0;
     }
 
     // Process all messages -- non-blocking
@@ -240,6 +280,7 @@ static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg)
     int res;
     plan_ma_snapshot_t *snapshot = NULL;
     solution_verify_t *ver;
+    dead_end_verify_t *dead_end_ver;
 
     type = planMAMsgType(msg);
     if (type == PLAN_MA_MSG_TERMINATE){
@@ -260,6 +301,10 @@ static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg)
             if (snapshot_type == PLAN_MA_MSG_SOLUTION_VERIFICATION){
                 ver = solutionVerifyNew(ma, msg, 0);
                 snapshot = &ver->snapshot;
+
+            }else if (snapshot_type == PLAN_MA_MSG_DEAD_END_VERIFICATION){
+                dead_end_ver = deadEndVerifyNew(ma, msg, 0);
+                snapshot = &dead_end_ver->snapshot;
             }
 
             if (snapshot){
@@ -785,4 +830,113 @@ static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s)
         planSearchInsertNode(ver->ma->search, node);
         DBG_SOLUTION_VERIFY(ver, "response-final-ins");
     }
+}
+
+static void deadEndVerify(plan_ma_search_t *ma)
+{
+    plan_ma_msg_t *msg;
+    dead_end_verify_t *ver;
+
+    // Create snapshot-init message
+    msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT, PLAN_MA_MSG_SNAPSHOT_INIT,
+                       ma->comm->node_id);
+    planMAMsgSnapshotSetType(msg, PLAN_MA_MSG_DEAD_END_VERIFICATION);
+
+    // Create snapshot object and register it
+    ver = deadEndVerifyNew(ma, msg, 1);
+    planMASnapshotRegAdd(&ma->snapshot, &ver->snapshot);
+
+    // Send message to all agents
+    planMACommSendToAll(ma->comm, msg);
+    planMAMsgDel(msg);
+}
+
+static dead_end_verify_t *deadEndVerifyNew(plan_ma_search_t *ma,
+                                           plan_ma_msg_t *msg,
+                                           int initiator)
+{
+    dead_end_verify_t *ver;
+    plan_ma_msg_t *mark_msg;
+
+    ver = BOR_ALLOC(dead_end_verify_t);
+    ver->ma = ma;
+    ver->ack = 1;
+    ver->init_msg = NULL;
+
+    if (initiator){
+        ver->init_msg = planMAMsgClone(msg);
+        _planMASnapshotInit(&ver->snapshot, planMAMsgSnapshotToken(msg),
+                            ma->comm->node_id, ma->comm->node_size,
+                            deadEndVerifyDel,
+                            NULL,
+                            NULL,
+                            NULL,
+                            deadEndVerifyResponse,
+                            NULL,
+                            deadEndVerifyResponseFinalize);
+    }else{
+        _planMASnapshotInit(&ver->snapshot, planMAMsgSnapshotToken(msg),
+                            ma->comm->node_id, ma->comm->node_size,
+                            deadEndVerifyDel,
+                            NULL,
+                            deadEndVerifyInitMsg,
+                            deadEndVerifyMarkMsg,
+                            NULL,
+                            deadEndVerifyMarkFinalize,
+                            NULL);
+
+        // Send mark message to all agents
+        mark_msg = planMAMsgSnapshotNewMark(msg, ma->comm->node_id);
+        planMACommSendToAll(ma->comm, mark_msg);
+        planMAMsgDel(mark_msg);
+    }
+
+    return ver;
+}
+
+static void deadEndVerifyDel(plan_ma_snapshot_t *s)
+{
+    dead_end_verify_t *ver = DEAD_END_VERIFY(s);
+    BOR_FREE(ver);
+}
+
+static void deadEndVerifyInitMsg(plan_ma_snapshot_t *s, plan_ma_msg_t *msg)
+{
+    dead_end_verify_t *ver = DEAD_END_VERIFY(s);
+    ver->init_msg = planMAMsgClone(msg);
+    ver->ack &= ver->ma->blocked;
+}
+
+static void deadEndVerifyMarkMsg(plan_ma_snapshot_t *s, plan_ma_msg_t *msg)
+{
+    dead_end_verify_t *ver = DEAD_END_VERIFY(s);
+    ver->ack &= ver->ma->blocked;
+}
+
+static int deadEndVerifyMarkFinalize(plan_ma_snapshot_t *s)
+{
+    dead_end_verify_t *ver = DEAD_END_VERIFY(s);
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgSnapshotNewResponse(ver->init_msg, ver->ma->comm->node_id);
+    planMAMsgSnapshotSetAck(msg, ver->ack);
+    planMACommSendToNode(ver->ma->comm, planMAMsgAgent(ver->init_msg), msg);
+    planMAMsgDel(msg);
+
+    return -1;
+}
+
+
+static void deadEndVerifyResponse(plan_ma_snapshot_t *s, plan_ma_msg_t *msg)
+{
+    dead_end_verify_t *ver = DEAD_END_VERIFY(s);
+    ver->ack &= planMAMsgSnapshotAck(msg);
+    ver->ack &= ver->ma->blocked;
+}
+
+static void deadEndVerifyResponseFinalize(plan_ma_snapshot_t *s)
+{
+    dead_end_verify_t *ver = DEAD_END_VERIFY(s);
+    if (!ver->ack)
+        terminate(ver->ma);
 }

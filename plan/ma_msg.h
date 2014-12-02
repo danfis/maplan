@@ -37,6 +37,7 @@ extern "C" {
  * Snapshot specific types (see planMAMsgSnapshotSetType()).
  */
 #define PLAN_MA_MSG_SOLUTION_VERIFICATION 0x0
+#define PLAN_MA_MSG_DEAD_END_VERIFICATION 0x1
 
 
 struct _plan_ma_msg_t {

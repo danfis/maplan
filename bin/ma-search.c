@@ -49,6 +49,7 @@ static void optUsePreferredOps(const char *l, char s, const char *val)
 static int readOpts(int argc, char *argv[])
 {
     int help;
+    int i;
 
     optsAddDesc("help", 'h', OPTS_NONE, &help, NULL,
                 "Print this help.");
@@ -83,6 +84,13 @@ static int readOpts(int argc, char *argv[])
                 "Prints heuristic for the initial state at the end.");
 
     if (opts(&argc, argv) != 0){
+        return -1;
+    }
+    if (argc != 1){
+        fprintf(stderr, "Unrecognized options:");
+        for (i = 1; i < argc; ++i)
+            fprintf(stderr, " `%s'", argv[i]);
+        fprintf(stderr, "\n");
         return -1;
     }
 

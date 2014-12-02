@@ -26,7 +26,8 @@ static void maLMCutTask(int id, void *data, const bor_tasks_thinfo_t *_)
 }
 
 static void runMALMCut(plan_problem_agents_t *p,
-                       plan_ma_comm_queue_pool_t *comm_pool)
+                       plan_ma_comm_queue_pool_t *comm_pool,
+                       int optimal_cost)
 {
     plan_search_astar_params_t params;
     plan_search_t *search;
@@ -34,6 +35,7 @@ static void runMALMCut(plan_problem_agents_t *p,
     bor_tasks_t *tasks;
     th_t th[p->agent_size];
     int i;
+    int found = 0;
 
 
     tasks = borTasksNew(p->agent_size);
@@ -59,14 +61,19 @@ static void runMALMCut(plan_problem_agents_t *p,
     borTasksDel(tasks);
 
     for (i = 0; i < p->agent_size; ++i){
-        fprintf(stdout, "[%d] Res: %d\n", i, th[i].res);
+        if (th[i].res == PLAN_SEARCH_FOUND){
+            assertEquals(planPathCost(&th[i].path), optimal_cost);
+            found = 1;
+        }
 
         planSearchDel(th[i].search);
         planPathFree(&th[i].path);
     }
+
+    assertTrue(found);
 }
 
-static void maSearch(const char *proto)
+static void maSearch(const char *proto, int optimal_cost)
 {
     plan_problem_agents_t *p;
     plan_ma_comm_queue_pool_t *comm_pool;
@@ -74,7 +81,7 @@ static void maSearch(const char *proto)
     p = planProblemAgentsFromProto(proto, PLAN_PROBLEM_USE_CG);
     comm_pool = planMACommQueuePoolNew(p->agent_size);
 
-    runMALMCut(p, comm_pool);
+    runMALMCut(p, comm_pool, optimal_cost);
 
     planMACommQueuePoolDel(comm_pool);
     planProblemAgentsDel(p);
@@ -83,5 +90,5 @@ static void maSearch(const char *proto)
 TEST(testMASearch)
 {
     //maSearch("../data/ma-benchmarks/driverlog/pfile3.proto");
-    maSearch("../data/ma-benchmarks/depot/pfile1.proto");
+    maSearch("../data/ma-benchmarks/depot/pfile1.proto", 10);
 }

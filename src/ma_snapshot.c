@@ -16,6 +16,12 @@ void planMASnapshotRegInit(plan_ma_snapshot_reg_t *reg,
 
 void planMASnapshotRegFree(plan_ma_snapshot_reg_t *reg)
 {
+    int i;
+
+    for (i = 0; i < reg->size; ++i){
+        reg->snapshot[i]->del_fn(reg->snapshot[i]);
+    }
+
     if (reg->snapshot)
         BOR_FREE(reg->snapshot);
 }

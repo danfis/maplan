@@ -897,6 +897,9 @@ static dead_end_verify_t *deadEndVerifyNew(plan_ma_search_t *ma,
 static void deadEndVerifyDel(plan_ma_snapshot_t *s)
 {
     dead_end_verify_t *ver = DEAD_END_VERIFY(s);
+    _planMASnapshotFree(s);
+    if (ver->init_msg)
+        planMAMsgDel(ver->init_msg);
     BOR_FREE(ver);
 }
 

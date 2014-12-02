@@ -85,6 +85,22 @@ TEST(testLoadFromProto)
     planProblemDel(p);
 }
 
+TEST(testLoadFromProtoCondEff)
+{
+    plan_problem_t *p;
+
+    p = planProblemFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+                             PLAN_PROBLEM_USE_CG);
+    printf("---- testLoadFromProtoCondEff ----\n");
+    pVar(p->var, p->var_size);
+    pInitState(p->state_pool, p->initial_state);
+    pGoal(p->goal);
+    pOp(p->op, p->op_size);
+    printf("Succ Gen: %d\n", (int)(p->succ_gen != NULL));
+    printf("---- testLoadFromProtoCondEff END ----\n");
+    planProblemDel(p);
+}
+
 TEST(testLoadAgentFromProto)
 {
     plan_problem_agents_t *agents;

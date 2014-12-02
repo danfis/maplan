@@ -104,3 +104,3096 @@ Ops[43]:
 [42] pre: 1:1 6:0, eff: 6:1
 Succ Gen: 1
 ---- testLoadFromProto END ----
+---- testLoadFromProtoCondEff ----
+Vars[246]:
+[0] name: `var6', range: 2
+[1] name: `var16', range: 2
+[2] name: `var18', range: 2
+[3] name: `var19', range: 2
+[4] name: `var20', range: 2
+[5] name: `var21', range: 2
+[6] name: `var22', range: 2
+[7] name: `var23', range: 2
+[8] name: `var24', range: 2
+[9] name: `var25', range: 2
+[10] name: `var26', range: 2
+[11] name: `var27', range: 2
+[12] name: `var28', range: 2
+[13] name: `var29', range: 2
+[14] name: `var30', range: 2
+[15] name: `var31', range: 2
+[16] name: `var32', range: 2
+[17] name: `var33', range: 2
+[18] name: `var34', range: 2
+[19] name: `var35', range: 2
+[20] name: `var36', range: 2
+[21] name: `var37', range: 2
+[22] name: `var38', range: 2
+[23] name: `var39', range: 2
+[24] name: `var40', range: 2
+[25] name: `var41', range: 2
+[26] name: `var42', range: 2
+[27] name: `var43', range: 2
+[28] name: `var44', range: 2
+[29] name: `var45', range: 2
+[30] name: `var46', range: 2
+[31] name: `var47', range: 2
+[32] name: `var48', range: 2
+[33] name: `var49', range: 2
+[34] name: `var50', range: 2
+[35] name: `var51', range: 2
+[36] name: `var52', range: 2
+[37] name: `var53', range: 2
+[38] name: `var54', range: 2
+[39] name: `var55', range: 2
+[40] name: `var56', range: 2
+[41] name: `var57', range: 2
+[42] name: `var58', range: 2
+[43] name: `var59', range: 2
+[44] name: `var60', range: 2
+[45] name: `var61', range: 2
+[46] name: `var62', range: 2
+[47] name: `var63', range: 2
+[48] name: `var64', range: 2
+[49] name: `var65', range: 2
+[50] name: `var66', range: 2
+[51] name: `var67', range: 2
+[52] name: `var68', range: 2
+[53] name: `var69', range: 2
+[54] name: `var70', range: 2
+[55] name: `var71', range: 2
+[56] name: `var72', range: 2
+[57] name: `var73', range: 2
+[58] name: `var74', range: 2
+[59] name: `var75', range: 2
+[60] name: `var76', range: 2
+[61] name: `var77', range: 2
+[62] name: `var78', range: 2
+[63] name: `var79', range: 2
+[64] name: `var80', range: 2
+[65] name: `var81', range: 2
+[66] name: `var82', range: 2
+[67] name: `var83', range: 2
+[68] name: `var84', range: 2
+[69] name: `var85', range: 2
+[70] name: `var86', range: 2
+[71] name: `var87', range: 2
+[72] name: `var88', range: 2
+[73] name: `var89', range: 2
+[74] name: `var90', range: 2
+[75] name: `var91', range: 2
+[76] name: `var92', range: 2
+[77] name: `var93', range: 2
+[78] name: `var94', range: 2
+[79] name: `var95', range: 2
+[80] name: `var96', range: 2
+[81] name: `var97', range: 2
+[82] name: `var98', range: 2
+[83] name: `var99', range: 2
+[84] name: `var100', range: 2
+[85] name: `var101', range: 2
+[86] name: `var102', range: 2
+[87] name: `var103', range: 2
+[88] name: `var104', range: 2
+[89] name: `var105', range: 2
+[90] name: `var106', range: 2
+[91] name: `var107', range: 2
+[92] name: `var108', range: 2
+[93] name: `var109', range: 2
+[94] name: `var110', range: 2
+[95] name: `var111', range: 2
+[96] name: `var112', range: 2
+[97] name: `var113', range: 2
+[98] name: `var114', range: 2
+[99] name: `var115', range: 2
+[100] name: `var116', range: 2
+[101] name: `var117', range: 2
+[102] name: `var118', range: 2
+[103] name: `var119', range: 2
+[104] name: `var120', range: 2
+[105] name: `var121', range: 2
+[106] name: `var122', range: 2
+[107] name: `var123', range: 2
+[108] name: `var124', range: 2
+[109] name: `var125', range: 2
+[110] name: `var126', range: 2
+[111] name: `var127', range: 2
+[112] name: `var128', range: 2
+[113] name: `var129', range: 2
+[114] name: `var130', range: 2
+[115] name: `var131', range: 2
+[116] name: `var132', range: 2
+[117] name: `var133', range: 2
+[118] name: `var134', range: 2
+[119] name: `var135', range: 2
+[120] name: `var136', range: 2
+[121] name: `var137', range: 2
+[122] name: `var138', range: 2
+[123] name: `var139', range: 2
+[124] name: `var140', range: 2
+[125] name: `var141', range: 2
+[126] name: `var142', range: 2
+[127] name: `var143', range: 2
+[128] name: `var144', range: 2
+[129] name: `var145', range: 2
+[130] name: `var146', range: 2
+[131] name: `var147', range: 2
+[132] name: `var148', range: 2
+[133] name: `var149', range: 2
+[134] name: `var150', range: 2
+[135] name: `var151', range: 2
+[136] name: `var152', range: 2
+[137] name: `var153', range: 2
+[138] name: `var154', range: 2
+[139] name: `var155', range: 2
+[140] name: `var156', range: 2
+[141] name: `var157', range: 2
+[142] name: `var158', range: 2
+[143] name: `var159', range: 2
+[144] name: `var160', range: 2
+[145] name: `var161', range: 2
+[146] name: `var162', range: 2
+[147] name: `var163', range: 2
+[148] name: `var164', range: 2
+[149] name: `var165', range: 2
+[150] name: `var166', range: 2
+[151] name: `var167', range: 2
+[152] name: `var168', range: 2
+[153] name: `var169', range: 2
+[154] name: `var170', range: 2
+[155] name: `var171', range: 2
+[156] name: `var172', range: 2
+[157] name: `var173', range: 2
+[158] name: `var174', range: 2
+[159] name: `var175', range: 2
+[160] name: `var176', range: 2
+[161] name: `var177', range: 2
+[162] name: `var178', range: 2
+[163] name: `var179', range: 2
+[164] name: `var180', range: 2
+[165] name: `var181', range: 2
+[166] name: `var182', range: 2
+[167] name: `var183', range: 2
+[168] name: `var184', range: 2
+[169] name: `var185', range: 2
+[170] name: `var186', range: 2
+[171] name: `var187', range: 2
+[172] name: `var188', range: 2
+[173] name: `var189', range: 2
+[174] name: `var190', range: 2
+[175] name: `var191', range: 2
+[176] name: `var192', range: 2
+[177] name: `var193', range: 2
+[178] name: `var194', range: 2
+[179] name: `var195', range: 2
+[180] name: `var196', range: 2
+[181] name: `var197', range: 2
+[182] name: `var198', range: 2
+[183] name: `var199', range: 2
+[184] name: `var200', range: 2
+[185] name: `var201', range: 2
+[186] name: `var202', range: 2
+[187] name: `var203', range: 2
+[188] name: `var204', range: 2
+[189] name: `var205', range: 2
+[190] name: `var206', range: 2
+[191] name: `var207', range: 2
+[192] name: `var208', range: 2
+[193] name: `var209', range: 2
+[194] name: `var210', range: 2
+[195] name: `var211', range: 2
+[196] name: `var212', range: 2
+[197] name: `var213', range: 2
+[198] name: `var214', range: 2
+[199] name: `var215', range: 2
+[200] name: `var216', range: 2
+[201] name: `var217', range: 2
+[202] name: `var218', range: 2
+[203] name: `var219', range: 2
+[204] name: `var220', range: 2
+[205] name: `var221', range: 2
+[206] name: `var222', range: 2
+[207] name: `var223', range: 2
+[208] name: `var224', range: 2
+[209] name: `var225', range: 2
+[210] name: `var226', range: 2
+[211] name: `var227', range: 2
+[212] name: `var228', range: 2
+[213] name: `var229', range: 2
+[214] name: `var230', range: 2
+[215] name: `var231', range: 2
+[216] name: `var232', range: 2
+[217] name: `var233', range: 2
+[218] name: `var234', range: 2
+[219] name: `var235', range: 2
+[220] name: `var236', range: 2
+[221] name: `var237', range: 2
+[222] name: `var238', range: 2
+[223] name: `var239', range: 2
+[224] name: `var240', range: 2
+[225] name: `var241', range: 2
+[226] name: `var242', range: 2
+[227] name: `var243', range: 2
+[228] name: `var244', range: 2
+[229] name: `var245', range: 2
+[230] name: `var246', range: 2
+[231] name: `var247', range: 2
+[232] name: `var248', range: 2
+[233] name: `var249', range: 2
+[234] name: `var250', range: 2
+[235] name: `var251', range: 2
+[236] name: `var252', range: 2
+[237] name: `var253', range: 2
+[238] name: `var254', range: 2
+[239] name: `var255', range: 2
+[240] name: `var256', range: 2
+[241] name: `var257', range: 2
+[242] name: `var258', range: 2
+[243] name: `var259', range: 2
+[244] name: `var260', range: 2
+[245] name: `var261', range: 2
+Initial state: 0:1 1:1 2:1 3:1 4:1 5:1 6:1 7:1 8:1 9:1 10:1 11:1 12:1 13:1 14:1 15:1 16:1 17:1 18:1 19:1 20:1 21:1 22:1 23:1 24:1 25:1 26:1 27:1 28:1 29:1 30:0 31:0 32:0 33:0 34:0 35:0 36:0 37:0 38:0 39:1 40:1 41:1 42:1 43:1 44:1 45:1 46:1 47:1 48:1 49:1 50:1 51:1 52:1 53:1 54:1 55:1 56:1 57:1 58:1 59:1 60:1 61:1 62:1 63:1 64:1 65:1 66:1 67:1 68:1 69:1 70:1 71:1 72:1 73:1 74:1 75:1 76:1 77:1 78:1 79:1 80:1 81:1 82:1 83:1 84:1 85:1 86:1 87:1 88:1 89:1 90:1 91:1 92:1 93:1 94:1 95:1 96:1 97:1 98:1 99:1 100:1 101:1 102:1 103:1 104:1 105:1 106:1 107:1 108:1 109:1 110:1 111:1 112:1 113:1 114:1 115:1 116:1 117:1 118:1 119:1 120:1 121:1 122:1 123:1 124:1 125:1 126:1 127:1 128:1 129:1 130:1 131:1 132:1 133:1 134:1 135:1 136:1 137:1 138:1 139:1 140:1 141:1 142:1 143:1 144:1 145:1 146:1 147:1 148:1 149:1 150:1 151:1 152:1 153:1 154:1 155:1 156:1 157:1 158:1 159:1 160:1 161:1 162:1 163:1 164:1 165:1 166:1 167:1 168:1 169:1 170:1 171:1 172:1 173:1 174:1 175:1 176:1 177:1 178:1 179:1 180:1 181:1 182:1 183:1 184:1 185:1 186:1 187:1 188:1 189:1 190:1 191:1 192:1 193:1 194:1 195:1 196:1 197:1 198:1 199:1 200:1 201:1 202:1 203:1 204:1 205:1 206:1 207:1 208:1 209:1 210:1 211:1 212:1 213:1 214:1 215:1 216:1 217:1 218:1 219:1 220:1 221:1 222:1 223:1 224:1 225:1 226:1 227:1 228:1 229:1 230:1 231:1 232:1 233:1 234:1 235:1 236:1 237:1 238:1 239:1 240:1 241:1 242:1 243:1 244:0 245:0
+Goal: 0:0 1:0
+Ops[1220]:
+[0] name: `build_diagonal_oneway junction0-0 junction1-1 road0', cost: 30
+[0] pre: 34:0 39:1, eff: 39:0 46:0
+[1] name: `build_diagonal_oneway junction0-0 junction1-1 road1', cost: 30
+[1] pre: 34:0 40:1, eff: 40:0 86:0
+[2] name: `build_diagonal_oneway junction0-0 junction1-1 road2', cost: 30
+[2] pre: 34:0 41:1, eff: 41:0 126:0
+[3] name: `build_diagonal_oneway junction0-0 junction1-1 road3', cost: 30
+[3] pre: 34:0 42:1, eff: 42:0 166:0
+[4] name: `build_diagonal_oneway junction0-0 junction1-1 road4', cost: 30
+[4] pre: 34:0 43:1, eff: 43:0 206:0
+[5] name: `build_diagonal_oneway junction0-1 junction1-0 road0', cost: 30
+[5] pre: 33:0 39:1, eff: 39:0 49:0
+[6] name: `build_diagonal_oneway junction0-1 junction1-0 road1', cost: 30
+[6] pre: 33:0 40:1, eff: 40:0 89:0
+[7] name: `build_diagonal_oneway junction0-1 junction1-0 road2', cost: 30
+[7] pre: 33:0 41:1, eff: 41:0 129:0
+[8] name: `build_diagonal_oneway junction0-1 junction1-0 road3', cost: 30
+[8] pre: 33:0 42:1, eff: 42:0 169:0
+[9] name: `build_diagonal_oneway junction0-1 junction1-0 road4', cost: 30
+[9] pre: 33:0 43:1, eff: 43:0 209:0
+[10] name: `build_diagonal_oneway junction0-1 junction1-2 road0', cost: 30
+[10] pre: 35:0 39:1, eff: 39:0 51:0
+[11] name: `build_diagonal_oneway junction0-1 junction1-2 road1', cost: 30
+[11] pre: 35:0 40:1, eff: 40:0 91:0
+[12] name: `build_diagonal_oneway junction0-1 junction1-2 road2', cost: 30
+[12] pre: 35:0 41:1, eff: 41:0 131:0
+[13] name: `build_diagonal_oneway junction0-1 junction1-2 road3', cost: 30
+[13] pre: 35:0 42:1, eff: 42:0 171:0
+[14] name: `build_diagonal_oneway junction0-1 junction1-2 road4', cost: 30
+[14] pre: 35:0 43:1, eff: 43:0 211:0
+[15] name: `build_diagonal_oneway junction0-2 junction1-1 road0', cost: 30
+[15] pre: 34:0 39:1, eff: 39:0 53:0
+[16] name: `build_diagonal_oneway junction0-2 junction1-1 road1', cost: 30
+[16] pre: 34:0 40:1, eff: 40:0 93:0
+[17] name: `build_diagonal_oneway junction0-2 junction1-1 road2', cost: 30
+[17] pre: 34:0 41:1, eff: 41:0 133:0
+[18] name: `build_diagonal_oneway junction0-2 junction1-1 road3', cost: 30
+[18] pre: 34:0 42:1, eff: 42:0 173:0
+[19] name: `build_diagonal_oneway junction0-2 junction1-1 road4', cost: 30
+[19] pre: 34:0 43:1, eff: 43:0 213:0
+[20] name: `build_diagonal_oneway junction1-0 junction0-1 road0', cost: 30
+[20] pre: 31:0 39:1, eff: 39:0 56:0
+[21] name: `build_diagonal_oneway junction1-0 junction0-1 road1', cost: 30
+[21] pre: 31:0 40:1, eff: 40:0 96:0
+[22] name: `build_diagonal_oneway junction1-0 junction0-1 road2', cost: 30
+[22] pre: 31:0 41:1, eff: 41:0 136:0
+[23] name: `build_diagonal_oneway junction1-0 junction0-1 road3', cost: 30
+[23] pre: 31:0 42:1, eff: 42:0 176:0
+[24] name: `build_diagonal_oneway junction1-0 junction0-1 road4', cost: 30
+[24] pre: 31:0 43:1, eff: 43:0 216:0
+[25] name: `build_diagonal_oneway junction1-0 junction2-1 road0', cost: 30
+[25] pre: 37:0 39:1, eff: 39:0 59:0
+[26] name: `build_diagonal_oneway junction1-0 junction2-1 road1', cost: 30
+[26] pre: 37:0 40:1, eff: 40:0 99:0
+[27] name: `build_diagonal_oneway junction1-0 junction2-1 road2', cost: 30
+[27] pre: 37:0 41:1, eff: 41:0 139:0
+[28] name: `build_diagonal_oneway junction1-0 junction2-1 road3', cost: 30
+[28] pre: 37:0 42:1, eff: 42:0 179:0
+[29] name: `build_diagonal_oneway junction1-0 junction2-1 road4', cost: 30
+[29] pre: 37:0 43:1, eff: 43:0 219:0
+[30] name: `build_diagonal_oneway junction1-1 junction0-0 road0', cost: 30
+[30] pre: 30:0 39:1, eff: 39:0 60:0
+[31] name: `build_diagonal_oneway junction1-1 junction0-0 road1', cost: 30
+[31] pre: 30:0 40:1, eff: 40:0 100:0
+[32] name: `build_diagonal_oneway junction1-1 junction0-0 road2', cost: 30
+[32] pre: 30:0 41:1, eff: 41:0 140:0
+[33] name: `build_diagonal_oneway junction1-1 junction0-0 road3', cost: 30
+[33] pre: 30:0 42:1, eff: 42:0 180:0
+[34] name: `build_diagonal_oneway junction1-1 junction0-0 road4', cost: 30
+[34] pre: 30:0 43:1, eff: 43:0 220:0
+[35] name: `build_diagonal_oneway junction1-1 junction0-2 road0', cost: 30
+[35] pre: 32:0 39:1, eff: 39:0 62:0
+[36] name: `build_diagonal_oneway junction1-1 junction0-2 road1', cost: 30
+[36] pre: 32:0 40:1, eff: 40:0 102:0
+[37] name: `build_diagonal_oneway junction1-1 junction0-2 road2', cost: 30
+[37] pre: 32:0 41:1, eff: 41:0 142:0
+[38] name: `build_diagonal_oneway junction1-1 junction0-2 road3', cost: 30
+[38] pre: 32:0 42:1, eff: 42:0 182:0
+[39] name: `build_diagonal_oneway junction1-1 junction0-2 road4', cost: 30
+[39] pre: 32:0 43:1, eff: 43:0 222:0
+[40] name: `build_diagonal_oneway junction1-1 junction2-0 road0', cost: 30
+[40] pre: 36:0 39:1, eff: 39:0 65:0
+[41] name: `build_diagonal_oneway junction1-1 junction2-0 road1', cost: 30
+[41] pre: 36:0 40:1, eff: 40:0 105:0
+[42] name: `build_diagonal_oneway junction1-1 junction2-0 road2', cost: 30
+[42] pre: 36:0 41:1, eff: 41:0 145:0
+[43] name: `build_diagonal_oneway junction1-1 junction2-0 road3', cost: 30
+[43] pre: 36:0 42:1, eff: 42:0 185:0
+[44] name: `build_diagonal_oneway junction1-1 junction2-0 road4', cost: 30
+[44] pre: 36:0 43:1, eff: 43:0 225:0
+[45] name: `build_diagonal_oneway junction1-1 junction2-2 road0', cost: 30
+[45] pre: 38:0 39:1, eff: 39:0 67:0
+[46] name: `build_diagonal_oneway junction1-1 junction2-2 road1', cost: 30
+[46] pre: 38:0 40:1, eff: 40:0 107:0
+[47] name: `build_diagonal_oneway junction1-1 junction2-2 road2', cost: 30
+[47] pre: 38:0 41:1, eff: 41:0 147:0
+[48] name: `build_diagonal_oneway junction1-1 junction2-2 road3', cost: 30
+[48] pre: 38:0 42:1, eff: 42:0 187:0
+[49] name: `build_diagonal_oneway junction1-1 junction2-2 road4', cost: 30
+[49] pre: 38:0 43:1, eff: 43:0 227:0
+[50] name: `build_diagonal_oneway junction1-2 junction0-1 road0', cost: 30
+[50] pre: 31:0 39:1, eff: 39:0 68:0
+[51] name: `build_diagonal_oneway junction1-2 junction0-1 road1', cost: 30
+[51] pre: 31:0 40:1, eff: 40:0 108:0
+[52] name: `build_diagonal_oneway junction1-2 junction0-1 road2', cost: 30
+[52] pre: 31:0 41:1, eff: 41:0 148:0
+[53] name: `build_diagonal_oneway junction1-2 junction0-1 road3', cost: 30
+[53] pre: 31:0 42:1, eff: 42:0 188:0
+[54] name: `build_diagonal_oneway junction1-2 junction0-1 road4', cost: 30
+[54] pre: 31:0 43:1, eff: 43:0 228:0
+[55] name: `build_diagonal_oneway junction1-2 junction2-1 road0', cost: 30
+[55] pre: 37:0 39:1, eff: 39:0 71:0
+[56] name: `build_diagonal_oneway junction1-2 junction2-1 road1', cost: 30
+[56] pre: 37:0 40:1, eff: 40:0 111:0
+[57] name: `build_diagonal_oneway junction1-2 junction2-1 road2', cost: 30
+[57] pre: 37:0 41:1, eff: 41:0 151:0
+[58] name: `build_diagonal_oneway junction1-2 junction2-1 road3', cost: 30
+[58] pre: 37:0 42:1, eff: 42:0 191:0
+[59] name: `build_diagonal_oneway junction1-2 junction2-1 road4', cost: 30
+[59] pre: 37:0 43:1, eff: 43:0 231:0
+[60] name: `build_diagonal_oneway junction2-0 junction1-1 road0', cost: 30
+[60] pre: 34:0 39:1, eff: 39:0 74:0
+[61] name: `build_diagonal_oneway junction2-0 junction1-1 road1', cost: 30
+[61] pre: 34:0 40:1, eff: 40:0 114:0
+[62] name: `build_diagonal_oneway junction2-0 junction1-1 road2', cost: 30
+[62] pre: 34:0 41:1, eff: 41:0 154:0
+[63] name: `build_diagonal_oneway junction2-0 junction1-1 road3', cost: 30
+[63] pre: 34:0 42:1, eff: 42:0 194:0
+[64] name: `build_diagonal_oneway junction2-0 junction1-1 road4', cost: 30
+[64] pre: 34:0 43:1, eff: 43:0 234:0
+[65] name: `build_diagonal_oneway junction2-1 junction1-0 road0', cost: 30
+[65] pre: 33:0 39:1, eff: 39:0 76:0
+[66] name: `build_diagonal_oneway junction2-1 junction1-0 road1', cost: 30
+[66] pre: 33:0 40:1, eff: 40:0 116:0
+[67] name: `build_diagonal_oneway junction2-1 junction1-0 road2', cost: 30
+[67] pre: 33:0 41:1, eff: 41:0 156:0
+[68] name: `build_diagonal_oneway junction2-1 junction1-0 road3', cost: 30
+[68] pre: 33:0 42:1, eff: 42:0 196:0
+[69] name: `build_diagonal_oneway junction2-1 junction1-0 road4', cost: 30
+[69] pre: 33:0 43:1, eff: 43:0 236:0
+[70] name: `build_diagonal_oneway junction2-1 junction1-2 road0', cost: 30
+[70] pre: 35:0 39:1, eff: 39:0 78:0
+[71] name: `build_diagonal_oneway junction2-1 junction1-2 road1', cost: 30
+[71] pre: 35:0 40:1, eff: 40:0 118:0
+[72] name: `build_diagonal_oneway junction2-1 junction1-2 road2', cost: 30
+[72] pre: 35:0 41:1, eff: 41:0 158:0
+[73] name: `build_diagonal_oneway junction2-1 junction1-2 road3', cost: 30
+[73] pre: 35:0 42:1, eff: 42:0 198:0
+[74] name: `build_diagonal_oneway junction2-1 junction1-2 road4', cost: 30
+[74] pre: 35:0 43:1, eff: 43:0 238:0
+[75] name: `build_diagonal_oneway junction2-2 junction1-1 road0', cost: 30
+[75] pre: 34:0 39:1, eff: 39:0 81:0
+[76] name: `build_diagonal_oneway junction2-2 junction1-1 road1', cost: 30
+[76] pre: 34:0 40:1, eff: 40:0 121:0
+[77] name: `build_diagonal_oneway junction2-2 junction1-1 road2', cost: 30
+[77] pre: 34:0 41:1, eff: 41:0 161:0
+[78] name: `build_diagonal_oneway junction2-2 junction1-1 road3', cost: 30
+[78] pre: 34:0 42:1, eff: 42:0 201:0
+[79] name: `build_diagonal_oneway junction2-2 junction1-1 road4', cost: 30
+[79] pre: 34:0 43:1, eff: 43:0 241:0
+[80] name: `build_straight_oneway junction0-0 junction0-1 road0', cost: 20
+[80] pre: 31:0 39:1, eff: 39:0 44:0
+[81] name: `build_straight_oneway junction0-0 junction0-1 road1', cost: 20
+[81] pre: 31:0 40:1, eff: 40:0 84:0
+[82] name: `build_straight_oneway junction0-0 junction0-1 road2', cost: 20
+[82] pre: 31:0 41:1, eff: 41:0 124:0
+[83] name: `build_straight_oneway junction0-0 junction0-1 road3', cost: 20
+[83] pre: 31:0 42:1, eff: 42:0 164:0
+[84] name: `build_straight_oneway junction0-0 junction0-1 road4', cost: 20
+[84] pre: 31:0 43:1, eff: 43:0 204:0
+[85] name: `build_straight_oneway junction0-0 junction1-0 road0', cost: 20
+[85] pre: 33:0 39:1, eff: 39:0 45:0
+[86] name: `build_straight_oneway junction0-0 junction1-0 road1', cost: 20
+[86] pre: 33:0 40:1, eff: 40:0 85:0
+[87] name: `build_straight_oneway junction0-0 junction1-0 road2', cost: 20
+[87] pre: 33:0 41:1, eff: 41:0 125:0
+[88] name: `build_straight_oneway junction0-0 junction1-0 road3', cost: 20
+[88] pre: 33:0 42:1, eff: 42:0 165:0
+[89] name: `build_straight_oneway junction0-0 junction1-0 road4', cost: 20
+[89] pre: 33:0 43:1, eff: 43:0 205:0
+[90] name: `build_straight_oneway junction0-1 junction0-0 road0', cost: 20
+[90] pre: 30:0 39:1, eff: 39:0 47:0
+[91] name: `build_straight_oneway junction0-1 junction0-0 road1', cost: 20
+[91] pre: 30:0 40:1, eff: 40:0 87:0
+[92] name: `build_straight_oneway junction0-1 junction0-0 road2', cost: 20
+[92] pre: 30:0 41:1, eff: 41:0 127:0
+[93] name: `build_straight_oneway junction0-1 junction0-0 road3', cost: 20
+[93] pre: 30:0 42:1, eff: 42:0 167:0
+[94] name: `build_straight_oneway junction0-1 junction0-0 road4', cost: 20
+[94] pre: 30:0 43:1, eff: 43:0 207:0
+[95] name: `build_straight_oneway junction0-1 junction0-2 road0', cost: 20
+[95] pre: 32:0 39:1, eff: 39:0 48:0
+[96] name: `build_straight_oneway junction0-1 junction0-2 road1', cost: 20
+[96] pre: 32:0 40:1, eff: 40:0 88:0
+[97] name: `build_straight_oneway junction0-1 junction0-2 road2', cost: 20
+[97] pre: 32:0 41:1, eff: 41:0 128:0
+[98] name: `build_straight_oneway junction0-1 junction0-2 road3', cost: 20
+[98] pre: 32:0 42:1, eff: 42:0 168:0
+[99] name: `build_straight_oneway junction0-1 junction0-2 road4', cost: 20
+[99] pre: 32:0 43:1, eff: 43:0 208:0
+[100] name: `build_straight_oneway junction0-1 junction1-1 road0', cost: 20
+[100] pre: 34:0 39:1, eff: 39:0 50:0
+[101] name: `build_straight_oneway junction0-1 junction1-1 road1', cost: 20
+[101] pre: 34:0 40:1, eff: 40:0 90:0
+[102] name: `build_straight_oneway junction0-1 junction1-1 road2', cost: 20
+[102] pre: 34:0 41:1, eff: 41:0 130:0
+[103] name: `build_straight_oneway junction0-1 junction1-1 road3', cost: 20
+[103] pre: 34:0 42:1, eff: 42:0 170:0
+[104] name: `build_straight_oneway junction0-1 junction1-1 road4', cost: 20
+[104] pre: 34:0 43:1, eff: 43:0 210:0
+[105] name: `build_straight_oneway junction0-2 junction0-1 road0', cost: 20
+[105] pre: 31:0 39:1, eff: 39:0 52:0
+[106] name: `build_straight_oneway junction0-2 junction0-1 road1', cost: 20
+[106] pre: 31:0 40:1, eff: 40:0 92:0
+[107] name: `build_straight_oneway junction0-2 junction0-1 road2', cost: 20
+[107] pre: 31:0 41:1, eff: 41:0 132:0
+[108] name: `build_straight_oneway junction0-2 junction0-1 road3', cost: 20
+[108] pre: 31:0 42:1, eff: 42:0 172:0
+[109] name: `build_straight_oneway junction0-2 junction0-1 road4', cost: 20
+[109] pre: 31:0 43:1, eff: 43:0 212:0
+[110] name: `build_straight_oneway junction0-2 junction1-2 road0', cost: 20
+[110] pre: 35:0 39:1, eff: 39:0 54:0
+[111] name: `build_straight_oneway junction0-2 junction1-2 road1', cost: 20
+[111] pre: 35:0 40:1, eff: 40:0 94:0
+[112] name: `build_straight_oneway junction0-2 junction1-2 road2', cost: 20
+[112] pre: 35:0 41:1, eff: 41:0 134:0
+[113] name: `build_straight_oneway junction0-2 junction1-2 road3', cost: 20
+[113] pre: 35:0 42:1, eff: 42:0 174:0
+[114] name: `build_straight_oneway junction0-2 junction1-2 road4', cost: 20
+[114] pre: 35:0 43:1, eff: 43:0 214:0
+[115] name: `build_straight_oneway junction1-0 junction0-0 road0', cost: 20
+[115] pre: 30:0 39:1, eff: 39:0 55:0
+[116] name: `build_straight_oneway junction1-0 junction0-0 road1', cost: 20
+[116] pre: 30:0 40:1, eff: 40:0 95:0
+[117] name: `build_straight_oneway junction1-0 junction0-0 road2', cost: 20
+[117] pre: 30:0 41:1, eff: 41:0 135:0
+[118] name: `build_straight_oneway junction1-0 junction0-0 road3', cost: 20
+[118] pre: 30:0 42:1, eff: 42:0 175:0
+[119] name: `build_straight_oneway junction1-0 junction0-0 road4', cost: 20
+[119] pre: 30:0 43:1, eff: 43:0 215:0
+[120] name: `build_straight_oneway junction1-0 junction1-1 road0', cost: 20
+[120] pre: 34:0 39:1, eff: 39:0 57:0
+[121] name: `build_straight_oneway junction1-0 junction1-1 road1', cost: 20
+[121] pre: 34:0 40:1, eff: 40:0 97:0
+[122] name: `build_straight_oneway junction1-0 junction1-1 road2', cost: 20
+[122] pre: 34:0 41:1, eff: 41:0 137:0
+[123] name: `build_straight_oneway junction1-0 junction1-1 road3', cost: 20
+[123] pre: 34:0 42:1, eff: 42:0 177:0
+[124] name: `build_straight_oneway junction1-0 junction1-1 road4', cost: 20
+[124] pre: 34:0 43:1, eff: 43:0 217:0
+[125] name: `build_straight_oneway junction1-0 junction2-0 road0', cost: 20
+[125] pre: 36:0 39:1, eff: 39:0 58:0
+[126] name: `build_straight_oneway junction1-0 junction2-0 road1', cost: 20
+[126] pre: 36:0 40:1, eff: 40:0 98:0
+[127] name: `build_straight_oneway junction1-0 junction2-0 road2', cost: 20
+[127] pre: 36:0 41:1, eff: 41:0 138:0
+[128] name: `build_straight_oneway junction1-0 junction2-0 road3', cost: 20
+[128] pre: 36:0 42:1, eff: 42:0 178:0
+[129] name: `build_straight_oneway junction1-0 junction2-0 road4', cost: 20
+[129] pre: 36:0 43:1, eff: 43:0 218:0
+[130] name: `build_straight_oneway junction1-1 junction0-1 road0', cost: 20
+[130] pre: 31:0 39:1, eff: 39:0 61:0
+[131] name: `build_straight_oneway junction1-1 junction0-1 road1', cost: 20
+[131] pre: 31:0 40:1, eff: 40:0 101:0
+[132] name: `build_straight_oneway junction1-1 junction0-1 road2', cost: 20
+[132] pre: 31:0 41:1, eff: 41:0 141:0
+[133] name: `build_straight_oneway junction1-1 junction0-1 road3', cost: 20
+[133] pre: 31:0 42:1, eff: 42:0 181:0
+[134] name: `build_straight_oneway junction1-1 junction0-1 road4', cost: 20
+[134] pre: 31:0 43:1, eff: 43:0 221:0
+[135] name: `build_straight_oneway junction1-1 junction1-0 road0', cost: 20
+[135] pre: 33:0 39:1, eff: 39:0 63:0
+[136] name: `build_straight_oneway junction1-1 junction1-0 road1', cost: 20
+[136] pre: 33:0 40:1, eff: 40:0 103:0
+[137] name: `build_straight_oneway junction1-1 junction1-0 road2', cost: 20
+[137] pre: 33:0 41:1, eff: 41:0 143:0
+[138] name: `build_straight_oneway junction1-1 junction1-0 road3', cost: 20
+[138] pre: 33:0 42:1, eff: 42:0 183:0
+[139] name: `build_straight_oneway junction1-1 junction1-0 road4', cost: 20
+[139] pre: 33:0 43:1, eff: 43:0 223:0
+[140] name: `build_straight_oneway junction1-1 junction1-2 road0', cost: 20
+[140] pre: 35:0 39:1, eff: 39:0 64:0
+[141] name: `build_straight_oneway junction1-1 junction1-2 road1', cost: 20
+[141] pre: 35:0 40:1, eff: 40:0 104:0
+[142] name: `build_straight_oneway junction1-1 junction1-2 road2', cost: 20
+[142] pre: 35:0 41:1, eff: 41:0 144:0
+[143] name: `build_straight_oneway junction1-1 junction1-2 road3', cost: 20
+[143] pre: 35:0 42:1, eff: 42:0 184:0
+[144] name: `build_straight_oneway junction1-1 junction1-2 road4', cost: 20
+[144] pre: 35:0 43:1, eff: 43:0 224:0
+[145] name: `build_straight_oneway junction1-1 junction2-1 road0', cost: 20
+[145] pre: 37:0 39:1, eff: 39:0 66:0
+[146] name: `build_straight_oneway junction1-1 junction2-1 road1', cost: 20
+[146] pre: 37:0 40:1, eff: 40:0 106:0
+[147] name: `build_straight_oneway junction1-1 junction2-1 road2', cost: 20
+[147] pre: 37:0 41:1, eff: 41:0 146:0
+[148] name: `build_straight_oneway junction1-1 junction2-1 road3', cost: 20
+[148] pre: 37:0 42:1, eff: 42:0 186:0
+[149] name: `build_straight_oneway junction1-1 junction2-1 road4', cost: 20
+[149] pre: 37:0 43:1, eff: 43:0 226:0
+[150] name: `build_straight_oneway junction1-2 junction0-2 road0', cost: 20
+[150] pre: 32:0 39:1, eff: 39:0 69:0
+[151] name: `build_straight_oneway junction1-2 junction0-2 road1', cost: 20
+[151] pre: 32:0 40:1, eff: 40:0 109:0
+[152] name: `build_straight_oneway junction1-2 junction0-2 road2', cost: 20
+[152] pre: 32:0 41:1, eff: 41:0 149:0
+[153] name: `build_straight_oneway junction1-2 junction0-2 road3', cost: 20
+[153] pre: 32:0 42:1, eff: 42:0 189:0
+[154] name: `build_straight_oneway junction1-2 junction0-2 road4', cost: 20
+[154] pre: 32:0 43:1, eff: 43:0 229:0
+[155] name: `build_straight_oneway junction1-2 junction1-1 road0', cost: 20
+[155] pre: 34:0 39:1, eff: 39:0 70:0
+[156] name: `build_straight_oneway junction1-2 junction1-1 road1', cost: 20
+[156] pre: 34:0 40:1, eff: 40:0 110:0
+[157] name: `build_straight_oneway junction1-2 junction1-1 road2', cost: 20
+[157] pre: 34:0 41:1, eff: 41:0 150:0
+[158] name: `build_straight_oneway junction1-2 junction1-1 road3', cost: 20
+[158] pre: 34:0 42:1, eff: 42:0 190:0
+[159] name: `build_straight_oneway junction1-2 junction1-1 road4', cost: 20
+[159] pre: 34:0 43:1, eff: 43:0 230:0
+[160] name: `build_straight_oneway junction1-2 junction2-2 road0', cost: 20
+[160] pre: 38:0 39:1, eff: 39:0 72:0
+[161] name: `build_straight_oneway junction1-2 junction2-2 road1', cost: 20
+[161] pre: 38:0 40:1, eff: 40:0 112:0
+[162] name: `build_straight_oneway junction1-2 junction2-2 road2', cost: 20
+[162] pre: 38:0 41:1, eff: 41:0 152:0
+[163] name: `build_straight_oneway junction1-2 junction2-2 road3', cost: 20
+[163] pre: 38:0 42:1, eff: 42:0 192:0
+[164] name: `build_straight_oneway junction1-2 junction2-2 road4', cost: 20
+[164] pre: 38:0 43:1, eff: 43:0 232:0
+[165] name: `build_straight_oneway junction2-0 junction1-0 road0', cost: 20
+[165] pre: 33:0 39:1, eff: 39:0 73:0
+[166] name: `build_straight_oneway junction2-0 junction1-0 road1', cost: 20
+[166] pre: 33:0 40:1, eff: 40:0 113:0
+[167] name: `build_straight_oneway junction2-0 junction1-0 road2', cost: 20
+[167] pre: 33:0 41:1, eff: 41:0 153:0
+[168] name: `build_straight_oneway junction2-0 junction1-0 road3', cost: 20
+[168] pre: 33:0 42:1, eff: 42:0 193:0
+[169] name: `build_straight_oneway junction2-0 junction1-0 road4', cost: 20
+[169] pre: 33:0 43:1, eff: 43:0 233:0
+[170] name: `build_straight_oneway junction2-0 junction2-1 road0', cost: 20
+[170] pre: 37:0 39:1, eff: 39:0 75:0
+[171] name: `build_straight_oneway junction2-0 junction2-1 road1', cost: 20
+[171] pre: 37:0 40:1, eff: 40:0 115:0
+[172] name: `build_straight_oneway junction2-0 junction2-1 road2', cost: 20
+[172] pre: 37:0 41:1, eff: 41:0 155:0
+[173] name: `build_straight_oneway junction2-0 junction2-1 road3', cost: 20
+[173] pre: 37:0 42:1, eff: 42:0 195:0
+[174] name: `build_straight_oneway junction2-0 junction2-1 road4', cost: 20
+[174] pre: 37:0 43:1, eff: 43:0 235:0
+[175] name: `build_straight_oneway junction2-1 junction1-1 road0', cost: 20
+[175] pre: 34:0 39:1, eff: 39:0 77:0
+[176] name: `build_straight_oneway junction2-1 junction1-1 road1', cost: 20
+[176] pre: 34:0 40:1, eff: 40:0 117:0
+[177] name: `build_straight_oneway junction2-1 junction1-1 road2', cost: 20
+[177] pre: 34:0 41:1, eff: 41:0 157:0
+[178] name: `build_straight_oneway junction2-1 junction1-1 road3', cost: 20
+[178] pre: 34:0 42:1, eff: 42:0 197:0
+[179] name: `build_straight_oneway junction2-1 junction1-1 road4', cost: 20
+[179] pre: 34:0 43:1, eff: 43:0 237:0
+[180] name: `build_straight_oneway junction2-1 junction2-0 road0', cost: 20
+[180] pre: 36:0 39:1, eff: 39:0 79:0
+[181] name: `build_straight_oneway junction2-1 junction2-0 road1', cost: 20
+[181] pre: 36:0 40:1, eff: 40:0 119:0
+[182] name: `build_straight_oneway junction2-1 junction2-0 road2', cost: 20
+[182] pre: 36:0 41:1, eff: 41:0 159:0
+[183] name: `build_straight_oneway junction2-1 junction2-0 road3', cost: 20
+[183] pre: 36:0 42:1, eff: 42:0 199:0
+[184] name: `build_straight_oneway junction2-1 junction2-0 road4', cost: 20
+[184] pre: 36:0 43:1, eff: 43:0 239:0
+[185] name: `build_straight_oneway junction2-1 junction2-2 road0', cost: 20
+[185] pre: 38:0 39:1, eff: 39:0 80:0
+[186] name: `build_straight_oneway junction2-1 junction2-2 road1', cost: 20
+[186] pre: 38:0 40:1, eff: 40:0 120:0
+[187] name: `build_straight_oneway junction2-1 junction2-2 road2', cost: 20
+[187] pre: 38:0 41:1, eff: 41:0 160:0
+[188] name: `build_straight_oneway junction2-1 junction2-2 road3', cost: 20
+[188] pre: 38:0 42:1, eff: 42:0 200:0
+[189] name: `build_straight_oneway junction2-1 junction2-2 road4', cost: 20
+[189] pre: 38:0 43:1, eff: 43:0 240:0
+[190] name: `build_straight_oneway junction2-2 junction1-2 road0', cost: 20
+[190] pre: 35:0 39:1, eff: 39:0 82:0
+[191] name: `build_straight_oneway junction2-2 junction1-2 road1', cost: 20
+[191] pre: 35:0 40:1, eff: 40:0 122:0
+[192] name: `build_straight_oneway junction2-2 junction1-2 road2', cost: 20
+[192] pre: 35:0 41:1, eff: 41:0 162:0
+[193] name: `build_straight_oneway junction2-2 junction1-2 road3', cost: 20
+[193] pre: 35:0 42:1, eff: 42:0 202:0
+[194] name: `build_straight_oneway junction2-2 junction1-2 road4', cost: 20
+[194] pre: 35:0 43:1, eff: 43:0 242:0
+[195] name: `build_straight_oneway junction2-2 junction2-1 road0', cost: 20
+[195] pre: 37:0 39:1, eff: 39:0 83:0
+[196] name: `build_straight_oneway junction2-2 junction2-1 road1', cost: 20
+[196] pre: 37:0 40:1, eff: 40:0 123:0
+[197] name: `build_straight_oneway junction2-2 junction2-1 road2', cost: 20
+[197] pre: 37:0 41:1, eff: 41:0 163:0
+[198] name: `build_straight_oneway junction2-2 junction2-1 road3', cost: 20
+[198] pre: 37:0 42:1, eff: 42:0 203:0
+[199] name: `build_straight_oneway junction2-2 junction2-1 road4', cost: 20
+[199] pre: 37:0 43:1, eff: 43:0 243:0
+[200] name: `car_arrived junction0-0 car0', cost: 0
+[200] pre: 2:0, eff: 2:1 30:0
+[201] name: `car_arrived junction0-0 car1', cost: 0
+[201] pre: 11:0, eff: 11:1 30:0
+[202] name: `car_arrived junction0-1 car0', cost: 0
+[202] pre: 3:0, eff: 3:1 31:0
+[203] name: `car_arrived junction0-1 car1', cost: 0
+[203] pre: 12:0, eff: 12:1 31:0
+[204] name: `car_arrived junction0-2 car0', cost: 0
+[204] pre: 4:0, eff: 4:1 32:0
+[205] name: `car_arrived junction0-2 car1', cost: 0
+[205] pre: 13:0, eff: 13:1 32:0
+[206] name: `car_arrived junction1-0 car0', cost: 0
+[206] pre: 5:0, eff: 5:1 33:0
+[207] name: `car_arrived junction1-0 car1', cost: 0
+[207] pre: 14:0, eff: 14:1 33:0
+[208] name: `car_arrived junction1-1 car0', cost: 0
+[208] pre: 6:0, eff: 6:1 34:0
+[209] name: `car_arrived junction1-1 car1', cost: 0
+[209] pre: 15:0, eff: 15:1 34:0
+[210] name: `car_arrived junction1-2 car0', cost: 0
+[210] pre: 7:0, eff: 7:1 35:0
+[211] name: `car_arrived junction1-2 car1', cost: 0
+[211] pre: 16:0, eff: 16:1 35:0
+[212] name: `car_arrived junction2-0 car0', cost: 0
+[212] pre: 8:0, eff: 0:0 8:1 36:0
+[213] name: `car_arrived junction2-0 car1', cost: 0
+[213] pre: 17:0, eff: 17:1 36:0
+[214] name: `car_arrived junction2-1 car0', cost: 0
+[214] pre: 9:0, eff: 9:1 37:0
+[215] name: `car_arrived junction2-1 car1', cost: 0
+[215] pre: 18:0, eff: 1:0 18:1 37:0
+[216] name: `car_arrived junction2-2 car0', cost: 0
+[216] pre: 10:0, eff: 10:1 38:0
+[217] name: `car_arrived junction2-2 car1', cost: 0
+[217] pre: 19:0, eff: 19:1 38:0
+[218] name: `car_start junction0-0 car0 garage0', cost: 0
+[218] pre: 30:0 244:0, eff: 2:0 30:1 244:1
+[219] name: `car_start junction0-0 car1 garage1', cost: 0
+[219] pre: 30:0 245:0, eff: 11:0 30:1 245:1
+[220] name: `destroy_road junction0-0 junction0-1 road0', cost: 10
+[220] pre: 39:0 44:0, eff: 20:1 25:1 39:1 44:1
+[220] cond_eff[0]: pre: 20:0, eff: 2:0
+[220] cond_eff[1]: pre: 25:0, eff: 11:0
+[221] name: `destroy_road junction0-0 junction0-1 road1', cost: 10
+[221] pre: 40:0 84:0, eff: 21:1 26:1 40:1 84:1
+[221] cond_eff[0]: pre: 21:0, eff: 2:0
+[221] cond_eff[1]: pre: 26:0, eff: 11:0
+[222] name: `destroy_road junction0-0 junction0-1 road2', cost: 10
+[222] pre: 41:0 124:0, eff: 22:1 27:1 41:1 124:1
+[222] cond_eff[0]: pre: 22:0, eff: 2:0
+[222] cond_eff[1]: pre: 27:0, eff: 11:0
+[223] name: `destroy_road junction0-0 junction0-1 road3', cost: 10
+[223] pre: 42:0 164:0, eff: 23:1 28:1 42:1 164:1
+[223] cond_eff[0]: pre: 23:0, eff: 2:0
+[223] cond_eff[1]: pre: 28:0, eff: 11:0
+[224] name: `destroy_road junction0-0 junction0-1 road4', cost: 10
+[224] pre: 43:0 204:0, eff: 24:1 29:1 43:1 204:1
+[224] cond_eff[0]: pre: 24:0, eff: 2:0
+[224] cond_eff[1]: pre: 29:0, eff: 11:0
+[225] name: `destroy_road junction0-0 junction1-0 road0', cost: 10
+[225] pre: 39:0 45:0, eff: 20:1 25:1 39:1 45:1
+[225] cond_eff[0]: pre: 20:0, eff: 2:0
+[225] cond_eff[1]: pre: 25:0, eff: 11:0
+[226] name: `destroy_road junction0-0 junction1-0 road1', cost: 10
+[226] pre: 40:0 85:0, eff: 21:1 26:1 40:1 85:1
+[226] cond_eff[0]: pre: 21:0, eff: 2:0
+[226] cond_eff[1]: pre: 26:0, eff: 11:0
+[227] name: `destroy_road junction0-0 junction1-0 road2', cost: 10
+[227] pre: 41:0 125:0, eff: 22:1 27:1 41:1 125:1
+[227] cond_eff[0]: pre: 22:0, eff: 2:0
+[227] cond_eff[1]: pre: 27:0, eff: 11:0
+[228] name: `destroy_road junction0-0 junction1-0 road3', cost: 10
+[228] pre: 42:0 165:0, eff: 23:1 28:1 42:1 165:1
+[228] cond_eff[0]: pre: 23:0, eff: 2:0
+[228] cond_eff[1]: pre: 28:0, eff: 11:0
+[229] name: `destroy_road junction0-0 junction1-0 road4', cost: 10
+[229] pre: 43:0 205:0, eff: 24:1 29:1 43:1 205:1
+[229] cond_eff[0]: pre: 24:0, eff: 2:0
+[229] cond_eff[1]: pre: 29:0, eff: 11:0
+[230] name: `destroy_road junction0-0 junction1-1 road0', cost: 10
+[230] pre: 39:0 46:0, eff: 20:1 25:1 39:1 46:1
+[230] cond_eff[0]: pre: 20:0, eff: 2:0
+[230] cond_eff[1]: pre: 25:0, eff: 11:0
+[231] name: `destroy_road junction0-0 junction1-1 road1', cost: 10
+[231] pre: 40:0 86:0, eff: 21:1 26:1 40:1 86:1
+[231] cond_eff[0]: pre: 21:0, eff: 2:0
+[231] cond_eff[1]: pre: 26:0, eff: 11:0
+[232] name: `destroy_road junction0-0 junction1-1 road2', cost: 10
+[232] pre: 41:0 126:0, eff: 22:1 27:1 41:1 126:1
+[232] cond_eff[0]: pre: 22:0, eff: 2:0
+[232] cond_eff[1]: pre: 27:0, eff: 11:0
+[233] name: `destroy_road junction0-0 junction1-1 road3', cost: 10
+[233] pre: 42:0 166:0, eff: 23:1 28:1 42:1 166:1
+[233] cond_eff[0]: pre: 23:0, eff: 2:0
+[233] cond_eff[1]: pre: 28:0, eff: 11:0
+[234] name: `destroy_road junction0-0 junction1-1 road4', cost: 10
+[234] pre: 43:0 206:0, eff: 24:1 29:1 43:1 206:1
+[234] cond_eff[0]: pre: 24:0, eff: 2:0
+[234] cond_eff[1]: pre: 29:0, eff: 11:0
+[235] name: `destroy_road junction0-1 junction0-0 road0', cost: 10
+[235] pre: 39:0 47:0, eff: 20:1 25:1 39:1 47:1
+[235] cond_eff[0]: pre: 20:0, eff: 3:0
+[235] cond_eff[1]: pre: 25:0, eff: 12:0
+[236] name: `destroy_road junction0-1 junction0-0 road1', cost: 10
+[236] pre: 40:0 87:0, eff: 21:1 26:1 40:1 87:1
+[236] cond_eff[0]: pre: 21:0, eff: 3:0
+[236] cond_eff[1]: pre: 26:0, eff: 12:0
+[237] name: `destroy_road junction0-1 junction0-0 road2', cost: 10
+[237] pre: 41:0 127:0, eff: 22:1 27:1 41:1 127:1
+[237] cond_eff[0]: pre: 22:0, eff: 3:0
+[237] cond_eff[1]: pre: 27:0, eff: 12:0
+[238] name: `destroy_road junction0-1 junction0-0 road3', cost: 10
+[238] pre: 42:0 167:0, eff: 23:1 28:1 42:1 167:1
+[238] cond_eff[0]: pre: 23:0, eff: 3:0
+[238] cond_eff[1]: pre: 28:0, eff: 12:0
+[239] name: `destroy_road junction0-1 junction0-0 road4', cost: 10
+[239] pre: 43:0 207:0, eff: 24:1 29:1 43:1 207:1
+[239] cond_eff[0]: pre: 24:0, eff: 3:0
+[239] cond_eff[1]: pre: 29:0, eff: 12:0
+[240] name: `destroy_road junction0-1 junction0-2 road0', cost: 10
+[240] pre: 39:0 48:0, eff: 20:1 25:1 39:1 48:1
+[240] cond_eff[0]: pre: 20:0, eff: 3:0
+[240] cond_eff[1]: pre: 25:0, eff: 12:0
+[241] name: `destroy_road junction0-1 junction0-2 road1', cost: 10
+[241] pre: 40:0 88:0, eff: 21:1 26:1 40:1 88:1
+[241] cond_eff[0]: pre: 21:0, eff: 3:0
+[241] cond_eff[1]: pre: 26:0, eff: 12:0
+[242] name: `destroy_road junction0-1 junction0-2 road2', cost: 10
+[242] pre: 41:0 128:0, eff: 22:1 27:1 41:1 128:1
+[242] cond_eff[0]: pre: 22:0, eff: 3:0
+[242] cond_eff[1]: pre: 27:0, eff: 12:0
+[243] name: `destroy_road junction0-1 junction0-2 road3', cost: 10
+[243] pre: 42:0 168:0, eff: 23:1 28:1 42:1 168:1
+[243] cond_eff[0]: pre: 23:0, eff: 3:0
+[243] cond_eff[1]: pre: 28:0, eff: 12:0
+[244] name: `destroy_road junction0-1 junction0-2 road4', cost: 10
+[244] pre: 43:0 208:0, eff: 24:1 29:1 43:1 208:1
+[244] cond_eff[0]: pre: 24:0, eff: 3:0
+[244] cond_eff[1]: pre: 29:0, eff: 12:0
+[245] name: `destroy_road junction0-1 junction1-0 road0', cost: 10
+[245] pre: 39:0 49:0, eff: 20:1 25:1 39:1 49:1
+[245] cond_eff[0]: pre: 20:0, eff: 3:0
+[245] cond_eff[1]: pre: 25:0, eff: 12:0
+[246] name: `destroy_road junction0-1 junction1-0 road1', cost: 10
+[246] pre: 40:0 89:0, eff: 21:1 26:1 40:1 89:1
+[246] cond_eff[0]: pre: 21:0, eff: 3:0
+[246] cond_eff[1]: pre: 26:0, eff: 12:0
+[247] name: `destroy_road junction0-1 junction1-0 road2', cost: 10
+[247] pre: 41:0 129:0, eff: 22:1 27:1 41:1 129:1
+[247] cond_eff[0]: pre: 22:0, eff: 3:0
+[247] cond_eff[1]: pre: 27:0, eff: 12:0
+[248] name: `destroy_road junction0-1 junction1-0 road3', cost: 10
+[248] pre: 42:0 169:0, eff: 23:1 28:1 42:1 169:1
+[248] cond_eff[0]: pre: 23:0, eff: 3:0
+[248] cond_eff[1]: pre: 28:0, eff: 12:0
+[249] name: `destroy_road junction0-1 junction1-0 road4', cost: 10
+[249] pre: 43:0 209:0, eff: 24:1 29:1 43:1 209:1
+[249] cond_eff[0]: pre: 24:0, eff: 3:0
+[249] cond_eff[1]: pre: 29:0, eff: 12:0
+[250] name: `destroy_road junction0-1 junction1-1 road0', cost: 10
+[250] pre: 39:0 50:0, eff: 20:1 25:1 39:1 50:1
+[250] cond_eff[0]: pre: 20:0, eff: 3:0
+[250] cond_eff[1]: pre: 25:0, eff: 12:0
+[251] name: `destroy_road junction0-1 junction1-1 road1', cost: 10
+[251] pre: 40:0 90:0, eff: 21:1 26:1 40:1 90:1
+[251] cond_eff[0]: pre: 21:0, eff: 3:0
+[251] cond_eff[1]: pre: 26:0, eff: 12:0
+[252] name: `destroy_road junction0-1 junction1-1 road2', cost: 10
+[252] pre: 41:0 130:0, eff: 22:1 27:1 41:1 130:1
+[252] cond_eff[0]: pre: 22:0, eff: 3:0
+[252] cond_eff[1]: pre: 27:0, eff: 12:0
+[253] name: `destroy_road junction0-1 junction1-1 road3', cost: 10
+[253] pre: 42:0 170:0, eff: 23:1 28:1 42:1 170:1
+[253] cond_eff[0]: pre: 23:0, eff: 3:0
+[253] cond_eff[1]: pre: 28:0, eff: 12:0
+[254] name: `destroy_road junction0-1 junction1-1 road4', cost: 10
+[254] pre: 43:0 210:0, eff: 24:1 29:1 43:1 210:1
+[254] cond_eff[0]: pre: 24:0, eff: 3:0
+[254] cond_eff[1]: pre: 29:0, eff: 12:0
+[255] name: `destroy_road junction0-1 junction1-2 road0', cost: 10
+[255] pre: 39:0 51:0, eff: 20:1 25:1 39:1 51:1
+[255] cond_eff[0]: pre: 20:0, eff: 3:0
+[255] cond_eff[1]: pre: 25:0, eff: 12:0
+[256] name: `destroy_road junction0-1 junction1-2 road1', cost: 10
+[256] pre: 40:0 91:0, eff: 21:1 26:1 40:1 91:1
+[256] cond_eff[0]: pre: 21:0, eff: 3:0
+[256] cond_eff[1]: pre: 26:0, eff: 12:0
+[257] name: `destroy_road junction0-1 junction1-2 road2', cost: 10
+[257] pre: 41:0 131:0, eff: 22:1 27:1 41:1 131:1
+[257] cond_eff[0]: pre: 22:0, eff: 3:0
+[257] cond_eff[1]: pre: 27:0, eff: 12:0
+[258] name: `destroy_road junction0-1 junction1-2 road3', cost: 10
+[258] pre: 42:0 171:0, eff: 23:1 28:1 42:1 171:1
+[258] cond_eff[0]: pre: 23:0, eff: 3:0
+[258] cond_eff[1]: pre: 28:0, eff: 12:0
+[259] name: `destroy_road junction0-1 junction1-2 road4', cost: 10
+[259] pre: 43:0 211:0, eff: 24:1 29:1 43:1 211:1
+[259] cond_eff[0]: pre: 24:0, eff: 3:0
+[259] cond_eff[1]: pre: 29:0, eff: 12:0
+[260] name: `destroy_road junction0-2 junction0-1 road0', cost: 10
+[260] pre: 39:0 52:0, eff: 20:1 25:1 39:1 52:1
+[260] cond_eff[0]: pre: 20:0, eff: 4:0
+[260] cond_eff[1]: pre: 25:0, eff: 13:0
+[261] name: `destroy_road junction0-2 junction0-1 road1', cost: 10
+[261] pre: 40:0 92:0, eff: 21:1 26:1 40:1 92:1
+[261] cond_eff[0]: pre: 21:0, eff: 4:0
+[261] cond_eff[1]: pre: 26:0, eff: 13:0
+[262] name: `destroy_road junction0-2 junction0-1 road2', cost: 10
+[262] pre: 41:0 132:0, eff: 22:1 27:1 41:1 132:1
+[262] cond_eff[0]: pre: 22:0, eff: 4:0
+[262] cond_eff[1]: pre: 27:0, eff: 13:0
+[263] name: `destroy_road junction0-2 junction0-1 road3', cost: 10
+[263] pre: 42:0 172:0, eff: 23:1 28:1 42:1 172:1
+[263] cond_eff[0]: pre: 23:0, eff: 4:0
+[263] cond_eff[1]: pre: 28:0, eff: 13:0
+[264] name: `destroy_road junction0-2 junction0-1 road4', cost: 10
+[264] pre: 43:0 212:0, eff: 24:1 29:1 43:1 212:1
+[264] cond_eff[0]: pre: 24:0, eff: 4:0
+[264] cond_eff[1]: pre: 29:0, eff: 13:0
+[265] name: `destroy_road junction0-2 junction1-1 road0', cost: 10
+[265] pre: 39:0 53:0, eff: 20:1 25:1 39:1 53:1
+[265] cond_eff[0]: pre: 20:0, eff: 4:0
+[265] cond_eff[1]: pre: 25:0, eff: 13:0
+[266] name: `destroy_road junction0-2 junction1-1 road1', cost: 10
+[266] pre: 40:0 93:0, eff: 21:1 26:1 40:1 93:1
+[266] cond_eff[0]: pre: 21:0, eff: 4:0
+[266] cond_eff[1]: pre: 26:0, eff: 13:0
+[267] name: `destroy_road junction0-2 junction1-1 road2', cost: 10
+[267] pre: 41:0 133:0, eff: 22:1 27:1 41:1 133:1
+[267] cond_eff[0]: pre: 22:0, eff: 4:0
+[267] cond_eff[1]: pre: 27:0, eff: 13:0
+[268] name: `destroy_road junction0-2 junction1-1 road3', cost: 10
+[268] pre: 42:0 173:0, eff: 23:1 28:1 42:1 173:1
+[268] cond_eff[0]: pre: 23:0, eff: 4:0
+[268] cond_eff[1]: pre: 28:0, eff: 13:0
+[269] name: `destroy_road junction0-2 junction1-1 road4', cost: 10
+[269] pre: 43:0 213:0, eff: 24:1 29:1 43:1 213:1
+[269] cond_eff[0]: pre: 24:0, eff: 4:0
+[269] cond_eff[1]: pre: 29:0, eff: 13:0
+[270] name: `destroy_road junction0-2 junction1-2 road0', cost: 10
+[270] pre: 39:0 54:0, eff: 20:1 25:1 39:1 54:1
+[270] cond_eff[0]: pre: 20:0, eff: 4:0
+[270] cond_eff[1]: pre: 25:0, eff: 13:0
+[271] name: `destroy_road junction0-2 junction1-2 road1', cost: 10
+[271] pre: 40:0 94:0, eff: 21:1 26:1 40:1 94:1
+[271] cond_eff[0]: pre: 21:0, eff: 4:0
+[271] cond_eff[1]: pre: 26:0, eff: 13:0
+[272] name: `destroy_road junction0-2 junction1-2 road2', cost: 10
+[272] pre: 41:0 134:0, eff: 22:1 27:1 41:1 134:1
+[272] cond_eff[0]: pre: 22:0, eff: 4:0
+[272] cond_eff[1]: pre: 27:0, eff: 13:0
+[273] name: `destroy_road junction0-2 junction1-2 road3', cost: 10
+[273] pre: 42:0 174:0, eff: 23:1 28:1 42:1 174:1
+[273] cond_eff[0]: pre: 23:0, eff: 4:0
+[273] cond_eff[1]: pre: 28:0, eff: 13:0
+[274] name: `destroy_road junction0-2 junction1-2 road4', cost: 10
+[274] pre: 43:0 214:0, eff: 24:1 29:1 43:1 214:1
+[274] cond_eff[0]: pre: 24:0, eff: 4:0
+[274] cond_eff[1]: pre: 29:0, eff: 13:0
+[275] name: `destroy_road junction1-0 junction0-0 road0', cost: 10
+[275] pre: 39:0 55:0, eff: 20:1 25:1 39:1 55:1
+[275] cond_eff[0]: pre: 20:0, eff: 5:0
+[275] cond_eff[1]: pre: 25:0, eff: 14:0
+[276] name: `destroy_road junction1-0 junction0-0 road1', cost: 10
+[276] pre: 40:0 95:0, eff: 21:1 26:1 40:1 95:1
+[276] cond_eff[0]: pre: 21:0, eff: 5:0
+[276] cond_eff[1]: pre: 26:0, eff: 14:0
+[277] name: `destroy_road junction1-0 junction0-0 road2', cost: 10
+[277] pre: 41:0 135:0, eff: 22:1 27:1 41:1 135:1
+[277] cond_eff[0]: pre: 22:0, eff: 5:0
+[277] cond_eff[1]: pre: 27:0, eff: 14:0
+[278] name: `destroy_road junction1-0 junction0-0 road3', cost: 10
+[278] pre: 42:0 175:0, eff: 23:1 28:1 42:1 175:1
+[278] cond_eff[0]: pre: 23:0, eff: 5:0
+[278] cond_eff[1]: pre: 28:0, eff: 14:0
+[279] name: `destroy_road junction1-0 junction0-0 road4', cost: 10
+[279] pre: 43:0 215:0, eff: 24:1 29:1 43:1 215:1
+[279] cond_eff[0]: pre: 24:0, eff: 5:0
+[279] cond_eff[1]: pre: 29:0, eff: 14:0
+[280] name: `destroy_road junction1-0 junction0-1 road0', cost: 10
+[280] pre: 39:0 56:0, eff: 20:1 25:1 39:1 56:1
+[280] cond_eff[0]: pre: 20:0, eff: 5:0
+[280] cond_eff[1]: pre: 25:0, eff: 14:0
+[281] name: `destroy_road junction1-0 junction0-1 road1', cost: 10
+[281] pre: 40:0 96:0, eff: 21:1 26:1 40:1 96:1
+[281] cond_eff[0]: pre: 21:0, eff: 5:0
+[281] cond_eff[1]: pre: 26:0, eff: 14:0
+[282] name: `destroy_road junction1-0 junction0-1 road2', cost: 10
+[282] pre: 41:0 136:0, eff: 22:1 27:1 41:1 136:1
+[282] cond_eff[0]: pre: 22:0, eff: 5:0
+[282] cond_eff[1]: pre: 27:0, eff: 14:0
+[283] name: `destroy_road junction1-0 junction0-1 road3', cost: 10
+[283] pre: 42:0 176:0, eff: 23:1 28:1 42:1 176:1
+[283] cond_eff[0]: pre: 23:0, eff: 5:0
+[283] cond_eff[1]: pre: 28:0, eff: 14:0
+[284] name: `destroy_road junction1-0 junction0-1 road4', cost: 10
+[284] pre: 43:0 216:0, eff: 24:1 29:1 43:1 216:1
+[284] cond_eff[0]: pre: 24:0, eff: 5:0
+[284] cond_eff[1]: pre: 29:0, eff: 14:0
+[285] name: `destroy_road junction1-0 junction1-1 road0', cost: 10
+[285] pre: 39:0 57:0, eff: 20:1 25:1 39:1 57:1
+[285] cond_eff[0]: pre: 20:0, eff: 5:0
+[285] cond_eff[1]: pre: 25:0, eff: 14:0
+[286] name: `destroy_road junction1-0 junction1-1 road1', cost: 10
+[286] pre: 40:0 97:0, eff: 21:1 26:1 40:1 97:1
+[286] cond_eff[0]: pre: 21:0, eff: 5:0
+[286] cond_eff[1]: pre: 26:0, eff: 14:0
+[287] name: `destroy_road junction1-0 junction1-1 road2', cost: 10
+[287] pre: 41:0 137:0, eff: 22:1 27:1 41:1 137:1
+[287] cond_eff[0]: pre: 22:0, eff: 5:0
+[287] cond_eff[1]: pre: 27:0, eff: 14:0
+[288] name: `destroy_road junction1-0 junction1-1 road3', cost: 10
+[288] pre: 42:0 177:0, eff: 23:1 28:1 42:1 177:1
+[288] cond_eff[0]: pre: 23:0, eff: 5:0
+[288] cond_eff[1]: pre: 28:0, eff: 14:0
+[289] name: `destroy_road junction1-0 junction1-1 road4', cost: 10
+[289] pre: 43:0 217:0, eff: 24:1 29:1 43:1 217:1
+[289] cond_eff[0]: pre: 24:0, eff: 5:0
+[289] cond_eff[1]: pre: 29:0, eff: 14:0
+[290] name: `destroy_road junction1-0 junction2-0 road0', cost: 10
+[290] pre: 39:0 58:0, eff: 20:1 25:1 39:1 58:1
+[290] cond_eff[0]: pre: 20:0, eff: 5:0
+[290] cond_eff[1]: pre: 25:0, eff: 14:0
+[291] name: `destroy_road junction1-0 junction2-0 road1', cost: 10
+[291] pre: 40:0 98:0, eff: 21:1 26:1 40:1 98:1
+[291] cond_eff[0]: pre: 21:0, eff: 5:0
+[291] cond_eff[1]: pre: 26:0, eff: 14:0
+[292] name: `destroy_road junction1-0 junction2-0 road2', cost: 10
+[292] pre: 41:0 138:0, eff: 22:1 27:1 41:1 138:1
+[292] cond_eff[0]: pre: 22:0, eff: 5:0
+[292] cond_eff[1]: pre: 27:0, eff: 14:0
+[293] name: `destroy_road junction1-0 junction2-0 road3', cost: 10
+[293] pre: 42:0 178:0, eff: 23:1 28:1 42:1 178:1
+[293] cond_eff[0]: pre: 23:0, eff: 5:0
+[293] cond_eff[1]: pre: 28:0, eff: 14:0
+[294] name: `destroy_road junction1-0 junction2-0 road4', cost: 10
+[294] pre: 43:0 218:0, eff: 24:1 29:1 43:1 218:1
+[294] cond_eff[0]: pre: 24:0, eff: 5:0
+[294] cond_eff[1]: pre: 29:0, eff: 14:0
+[295] name: `destroy_road junction1-0 junction2-1 road0', cost: 10
+[295] pre: 39:0 59:0, eff: 20:1 25:1 39:1 59:1
+[295] cond_eff[0]: pre: 20:0, eff: 5:0
+[295] cond_eff[1]: pre: 25:0, eff: 14:0
+[296] name: `destroy_road junction1-0 junction2-1 road1', cost: 10
+[296] pre: 40:0 99:0, eff: 21:1 26:1 40:1 99:1
+[296] cond_eff[0]: pre: 21:0, eff: 5:0
+[296] cond_eff[1]: pre: 26:0, eff: 14:0
+[297] name: `destroy_road junction1-0 junction2-1 road2', cost: 10
+[297] pre: 41:0 139:0, eff: 22:1 27:1 41:1 139:1
+[297] cond_eff[0]: pre: 22:0, eff: 5:0
+[297] cond_eff[1]: pre: 27:0, eff: 14:0
+[298] name: `destroy_road junction1-0 junction2-1 road3', cost: 10
+[298] pre: 42:0 179:0, eff: 23:1 28:1 42:1 179:1
+[298] cond_eff[0]: pre: 23:0, eff: 5:0
+[298] cond_eff[1]: pre: 28:0, eff: 14:0
+[299] name: `destroy_road junction1-0 junction2-1 road4', cost: 10
+[299] pre: 43:0 219:0, eff: 24:1 29:1 43:1 219:1
+[299] cond_eff[0]: pre: 24:0, eff: 5:0
+[299] cond_eff[1]: pre: 29:0, eff: 14:0
+[300] name: `destroy_road junction1-1 junction0-0 road0', cost: 10
+[300] pre: 39:0 60:0, eff: 20:1 25:1 39:1 60:1
+[300] cond_eff[0]: pre: 20:0, eff: 6:0
+[300] cond_eff[1]: pre: 25:0, eff: 15:0
+[301] name: `destroy_road junction1-1 junction0-0 road1', cost: 10
+[301] pre: 40:0 100:0, eff: 21:1 26:1 40:1 100:1
+[301] cond_eff[0]: pre: 21:0, eff: 6:0
+[301] cond_eff[1]: pre: 26:0, eff: 15:0
+[302] name: `destroy_road junction1-1 junction0-0 road2', cost: 10
+[302] pre: 41:0 140:0, eff: 22:1 27:1 41:1 140:1
+[302] cond_eff[0]: pre: 22:0, eff: 6:0
+[302] cond_eff[1]: pre: 27:0, eff: 15:0
+[303] name: `destroy_road junction1-1 junction0-0 road3', cost: 10
+[303] pre: 42:0 180:0, eff: 23:1 28:1 42:1 180:1
+[303] cond_eff[0]: pre: 23:0, eff: 6:0
+[303] cond_eff[1]: pre: 28:0, eff: 15:0
+[304] name: `destroy_road junction1-1 junction0-0 road4', cost: 10
+[304] pre: 43:0 220:0, eff: 24:1 29:1 43:1 220:1
+[304] cond_eff[0]: pre: 24:0, eff: 6:0
+[304] cond_eff[1]: pre: 29:0, eff: 15:0
+[305] name: `destroy_road junction1-1 junction0-1 road0', cost: 10
+[305] pre: 39:0 61:0, eff: 20:1 25:1 39:1 61:1
+[305] cond_eff[0]: pre: 20:0, eff: 6:0
+[305] cond_eff[1]: pre: 25:0, eff: 15:0
+[306] name: `destroy_road junction1-1 junction0-1 road1', cost: 10
+[306] pre: 40:0 101:0, eff: 21:1 26:1 40:1 101:1
+[306] cond_eff[0]: pre: 21:0, eff: 6:0
+[306] cond_eff[1]: pre: 26:0, eff: 15:0
+[307] name: `destroy_road junction1-1 junction0-1 road2', cost: 10
+[307] pre: 41:0 141:0, eff: 22:1 27:1 41:1 141:1
+[307] cond_eff[0]: pre: 22:0, eff: 6:0
+[307] cond_eff[1]: pre: 27:0, eff: 15:0
+[308] name: `destroy_road junction1-1 junction0-1 road3', cost: 10
+[308] pre: 42:0 181:0, eff: 23:1 28:1 42:1 181:1
+[308] cond_eff[0]: pre: 23:0, eff: 6:0
+[308] cond_eff[1]: pre: 28:0, eff: 15:0
+[309] name: `destroy_road junction1-1 junction0-1 road4', cost: 10
+[309] pre: 43:0 221:0, eff: 24:1 29:1 43:1 221:1
+[309] cond_eff[0]: pre: 24:0, eff: 6:0
+[309] cond_eff[1]: pre: 29:0, eff: 15:0
+[310] name: `destroy_road junction1-1 junction0-2 road0', cost: 10
+[310] pre: 39:0 62:0, eff: 20:1 25:1 39:1 62:1
+[310] cond_eff[0]: pre: 20:0, eff: 6:0
+[310] cond_eff[1]: pre: 25:0, eff: 15:0
+[311] name: `destroy_road junction1-1 junction0-2 road1', cost: 10
+[311] pre: 40:0 102:0, eff: 21:1 26:1 40:1 102:1
+[311] cond_eff[0]: pre: 21:0, eff: 6:0
+[311] cond_eff[1]: pre: 26:0, eff: 15:0
+[312] name: `destroy_road junction1-1 junction0-2 road2', cost: 10
+[312] pre: 41:0 142:0, eff: 22:1 27:1 41:1 142:1
+[312] cond_eff[0]: pre: 22:0, eff: 6:0
+[312] cond_eff[1]: pre: 27:0, eff: 15:0
+[313] name: `destroy_road junction1-1 junction0-2 road3', cost: 10
+[313] pre: 42:0 182:0, eff: 23:1 28:1 42:1 182:1
+[313] cond_eff[0]: pre: 23:0, eff: 6:0
+[313] cond_eff[1]: pre: 28:0, eff: 15:0
+[314] name: `destroy_road junction1-1 junction0-2 road4', cost: 10
+[314] pre: 43:0 222:0, eff: 24:1 29:1 43:1 222:1
+[314] cond_eff[0]: pre: 24:0, eff: 6:0
+[314] cond_eff[1]: pre: 29:0, eff: 15:0
+[315] name: `destroy_road junction1-1 junction1-0 road0', cost: 10
+[315] pre: 39:0 63:0, eff: 20:1 25:1 39:1 63:1
+[315] cond_eff[0]: pre: 20:0, eff: 6:0
+[315] cond_eff[1]: pre: 25:0, eff: 15:0
+[316] name: `destroy_road junction1-1 junction1-0 road1', cost: 10
+[316] pre: 40:0 103:0, eff: 21:1 26:1 40:1 103:1
+[316] cond_eff[0]: pre: 21:0, eff: 6:0
+[316] cond_eff[1]: pre: 26:0, eff: 15:0
+[317] name: `destroy_road junction1-1 junction1-0 road2', cost: 10
+[317] pre: 41:0 143:0, eff: 22:1 27:1 41:1 143:1
+[317] cond_eff[0]: pre: 22:0, eff: 6:0
+[317] cond_eff[1]: pre: 27:0, eff: 15:0
+[318] name: `destroy_road junction1-1 junction1-0 road3', cost: 10
+[318] pre: 42:0 183:0, eff: 23:1 28:1 42:1 183:1
+[318] cond_eff[0]: pre: 23:0, eff: 6:0
+[318] cond_eff[1]: pre: 28:0, eff: 15:0
+[319] name: `destroy_road junction1-1 junction1-0 road4', cost: 10
+[319] pre: 43:0 223:0, eff: 24:1 29:1 43:1 223:1
+[319] cond_eff[0]: pre: 24:0, eff: 6:0
+[319] cond_eff[1]: pre: 29:0, eff: 15:0
+[320] name: `destroy_road junction1-1 junction1-2 road0', cost: 10
+[320] pre: 39:0 64:0, eff: 20:1 25:1 39:1 64:1
+[320] cond_eff[0]: pre: 20:0, eff: 6:0
+[320] cond_eff[1]: pre: 25:0, eff: 15:0
+[321] name: `destroy_road junction1-1 junction1-2 road1', cost: 10
+[321] pre: 40:0 104:0, eff: 21:1 26:1 40:1 104:1
+[321] cond_eff[0]: pre: 21:0, eff: 6:0
+[321] cond_eff[1]: pre: 26:0, eff: 15:0
+[322] name: `destroy_road junction1-1 junction1-2 road2', cost: 10
+[322] pre: 41:0 144:0, eff: 22:1 27:1 41:1 144:1
+[322] cond_eff[0]: pre: 22:0, eff: 6:0
+[322] cond_eff[1]: pre: 27:0, eff: 15:0
+[323] name: `destroy_road junction1-1 junction1-2 road3', cost: 10
+[323] pre: 42:0 184:0, eff: 23:1 28:1 42:1 184:1
+[323] cond_eff[0]: pre: 23:0, eff: 6:0
+[323] cond_eff[1]: pre: 28:0, eff: 15:0
+[324] name: `destroy_road junction1-1 junction1-2 road4', cost: 10
+[324] pre: 43:0 224:0, eff: 24:1 29:1 43:1 224:1
+[324] cond_eff[0]: pre: 24:0, eff: 6:0
+[324] cond_eff[1]: pre: 29:0, eff: 15:0
+[325] name: `destroy_road junction1-1 junction2-0 road0', cost: 10
+[325] pre: 39:0 65:0, eff: 20:1 25:1 39:1 65:1
+[325] cond_eff[0]: pre: 20:0, eff: 6:0
+[325] cond_eff[1]: pre: 25:0, eff: 15:0
+[326] name: `destroy_road junction1-1 junction2-0 road1', cost: 10
+[326] pre: 40:0 105:0, eff: 21:1 26:1 40:1 105:1
+[326] cond_eff[0]: pre: 21:0, eff: 6:0
+[326] cond_eff[1]: pre: 26:0, eff: 15:0
+[327] name: `destroy_road junction1-1 junction2-0 road2', cost: 10
+[327] pre: 41:0 145:0, eff: 22:1 27:1 41:1 145:1
+[327] cond_eff[0]: pre: 22:0, eff: 6:0
+[327] cond_eff[1]: pre: 27:0, eff: 15:0
+[328] name: `destroy_road junction1-1 junction2-0 road3', cost: 10
+[328] pre: 42:0 185:0, eff: 23:1 28:1 42:1 185:1
+[328] cond_eff[0]: pre: 23:0, eff: 6:0
+[328] cond_eff[1]: pre: 28:0, eff: 15:0
+[329] name: `destroy_road junction1-1 junction2-0 road4', cost: 10
+[329] pre: 43:0 225:0, eff: 24:1 29:1 43:1 225:1
+[329] cond_eff[0]: pre: 24:0, eff: 6:0
+[329] cond_eff[1]: pre: 29:0, eff: 15:0
+[330] name: `destroy_road junction1-1 junction2-1 road0', cost: 10
+[330] pre: 39:0 66:0, eff: 20:1 25:1 39:1 66:1
+[330] cond_eff[0]: pre: 20:0, eff: 6:0
+[330] cond_eff[1]: pre: 25:0, eff: 15:0
+[331] name: `destroy_road junction1-1 junction2-1 road1', cost: 10
+[331] pre: 40:0 106:0, eff: 21:1 26:1 40:1 106:1
+[331] cond_eff[0]: pre: 21:0, eff: 6:0
+[331] cond_eff[1]: pre: 26:0, eff: 15:0
+[332] name: `destroy_road junction1-1 junction2-1 road2', cost: 10
+[332] pre: 41:0 146:0, eff: 22:1 27:1 41:1 146:1
+[332] cond_eff[0]: pre: 22:0, eff: 6:0
+[332] cond_eff[1]: pre: 27:0, eff: 15:0
+[333] name: `destroy_road junction1-1 junction2-1 road3', cost: 10
+[333] pre: 42:0 186:0, eff: 23:1 28:1 42:1 186:1
+[333] cond_eff[0]: pre: 23:0, eff: 6:0
+[333] cond_eff[1]: pre: 28:0, eff: 15:0
+[334] name: `destroy_road junction1-1 junction2-1 road4', cost: 10
+[334] pre: 43:0 226:0, eff: 24:1 29:1 43:1 226:1
+[334] cond_eff[0]: pre: 24:0, eff: 6:0
+[334] cond_eff[1]: pre: 29:0, eff: 15:0
+[335] name: `destroy_road junction1-1 junction2-2 road0', cost: 10
+[335] pre: 39:0 67:0, eff: 20:1 25:1 39:1 67:1
+[335] cond_eff[0]: pre: 20:0, eff: 6:0
+[335] cond_eff[1]: pre: 25:0, eff: 15:0
+[336] name: `destroy_road junction1-1 junction2-2 road1', cost: 10
+[336] pre: 40:0 107:0, eff: 21:1 26:1 40:1 107:1
+[336] cond_eff[0]: pre: 21:0, eff: 6:0
+[336] cond_eff[1]: pre: 26:0, eff: 15:0
+[337] name: `destroy_road junction1-1 junction2-2 road2', cost: 10
+[337] pre: 41:0 147:0, eff: 22:1 27:1 41:1 147:1
+[337] cond_eff[0]: pre: 22:0, eff: 6:0
+[337] cond_eff[1]: pre: 27:0, eff: 15:0
+[338] name: `destroy_road junction1-1 junction2-2 road3', cost: 10
+[338] pre: 42:0 187:0, eff: 23:1 28:1 42:1 187:1
+[338] cond_eff[0]: pre: 23:0, eff: 6:0
+[338] cond_eff[1]: pre: 28:0, eff: 15:0
+[339] name: `destroy_road junction1-1 junction2-2 road4', cost: 10
+[339] pre: 43:0 227:0, eff: 24:1 29:1 43:1 227:1
+[339] cond_eff[0]: pre: 24:0, eff: 6:0
+[339] cond_eff[1]: pre: 29:0, eff: 15:0
+[340] name: `destroy_road junction1-2 junction0-1 road0', cost: 10
+[340] pre: 39:0 68:0, eff: 20:1 25:1 39:1 68:1
+[340] cond_eff[0]: pre: 20:0, eff: 7:0
+[340] cond_eff[1]: pre: 25:0, eff: 16:0
+[341] name: `destroy_road junction1-2 junction0-1 road1', cost: 10
+[341] pre: 40:0 108:0, eff: 21:1 26:1 40:1 108:1
+[341] cond_eff[0]: pre: 21:0, eff: 7:0
+[341] cond_eff[1]: pre: 26:0, eff: 16:0
+[342] name: `destroy_road junction1-2 junction0-1 road2', cost: 10
+[342] pre: 41:0 148:0, eff: 22:1 27:1 41:1 148:1
+[342] cond_eff[0]: pre: 22:0, eff: 7:0
+[342] cond_eff[1]: pre: 27:0, eff: 16:0
+[343] name: `destroy_road junction1-2 junction0-1 road3', cost: 10
+[343] pre: 42:0 188:0, eff: 23:1 28:1 42:1 188:1
+[343] cond_eff[0]: pre: 23:0, eff: 7:0
+[343] cond_eff[1]: pre: 28:0, eff: 16:0
+[344] name: `destroy_road junction1-2 junction0-1 road4', cost: 10
+[344] pre: 43:0 228:0, eff: 24:1 29:1 43:1 228:1
+[344] cond_eff[0]: pre: 24:0, eff: 7:0
+[344] cond_eff[1]: pre: 29:0, eff: 16:0
+[345] name: `destroy_road junction1-2 junction0-2 road0', cost: 10
+[345] pre: 39:0 69:0, eff: 20:1 25:1 39:1 69:1
+[345] cond_eff[0]: pre: 20:0, eff: 7:0
+[345] cond_eff[1]: pre: 25:0, eff: 16:0
+[346] name: `destroy_road junction1-2 junction0-2 road1', cost: 10
+[346] pre: 40:0 109:0, eff: 21:1 26:1 40:1 109:1
+[346] cond_eff[0]: pre: 21:0, eff: 7:0
+[346] cond_eff[1]: pre: 26:0, eff: 16:0
+[347] name: `destroy_road junction1-2 junction0-2 road2', cost: 10
+[347] pre: 41:0 149:0, eff: 22:1 27:1 41:1 149:1
+[347] cond_eff[0]: pre: 22:0, eff: 7:0
+[347] cond_eff[1]: pre: 27:0, eff: 16:0
+[348] name: `destroy_road junction1-2 junction0-2 road3', cost: 10
+[348] pre: 42:0 189:0, eff: 23:1 28:1 42:1 189:1
+[348] cond_eff[0]: pre: 23:0, eff: 7:0
+[348] cond_eff[1]: pre: 28:0, eff: 16:0
+[349] name: `destroy_road junction1-2 junction0-2 road4', cost: 10
+[349] pre: 43:0 229:0, eff: 24:1 29:1 43:1 229:1
+[349] cond_eff[0]: pre: 24:0, eff: 7:0
+[349] cond_eff[1]: pre: 29:0, eff: 16:0
+[350] name: `destroy_road junction1-2 junction1-1 road0', cost: 10
+[350] pre: 39:0 70:0, eff: 20:1 25:1 39:1 70:1
+[350] cond_eff[0]: pre: 20:0, eff: 7:0
+[350] cond_eff[1]: pre: 25:0, eff: 16:0
+[351] name: `destroy_road junction1-2 junction1-1 road1', cost: 10
+[351] pre: 40:0 110:0, eff: 21:1 26:1 40:1 110:1
+[351] cond_eff[0]: pre: 21:0, eff: 7:0
+[351] cond_eff[1]: pre: 26:0, eff: 16:0
+[352] name: `destroy_road junction1-2 junction1-1 road2', cost: 10
+[352] pre: 41:0 150:0, eff: 22:1 27:1 41:1 150:1
+[352] cond_eff[0]: pre: 22:0, eff: 7:0
+[352] cond_eff[1]: pre: 27:0, eff: 16:0
+[353] name: `destroy_road junction1-2 junction1-1 road3', cost: 10
+[353] pre: 42:0 190:0, eff: 23:1 28:1 42:1 190:1
+[353] cond_eff[0]: pre: 23:0, eff: 7:0
+[353] cond_eff[1]: pre: 28:0, eff: 16:0
+[354] name: `destroy_road junction1-2 junction1-1 road4', cost: 10
+[354] pre: 43:0 230:0, eff: 24:1 29:1 43:1 230:1
+[354] cond_eff[0]: pre: 24:0, eff: 7:0
+[354] cond_eff[1]: pre: 29:0, eff: 16:0
+[355] name: `destroy_road junction1-2 junction2-1 road0', cost: 10
+[355] pre: 39:0 71:0, eff: 20:1 25:1 39:1 71:1
+[355] cond_eff[0]: pre: 20:0, eff: 7:0
+[355] cond_eff[1]: pre: 25:0, eff: 16:0
+[356] name: `destroy_road junction1-2 junction2-1 road1', cost: 10
+[356] pre: 40:0 111:0, eff: 21:1 26:1 40:1 111:1
+[356] cond_eff[0]: pre: 21:0, eff: 7:0
+[356] cond_eff[1]: pre: 26:0, eff: 16:0
+[357] name: `destroy_road junction1-2 junction2-1 road2', cost: 10
+[357] pre: 41:0 151:0, eff: 22:1 27:1 41:1 151:1
+[357] cond_eff[0]: pre: 22:0, eff: 7:0
+[357] cond_eff[1]: pre: 27:0, eff: 16:0
+[358] name: `destroy_road junction1-2 junction2-1 road3', cost: 10
+[358] pre: 42:0 191:0, eff: 23:1 28:1 42:1 191:1
+[358] cond_eff[0]: pre: 23:0, eff: 7:0
+[358] cond_eff[1]: pre: 28:0, eff: 16:0
+[359] name: `destroy_road junction1-2 junction2-1 road4', cost: 10
+[359] pre: 43:0 231:0, eff: 24:1 29:1 43:1 231:1
+[359] cond_eff[0]: pre: 24:0, eff: 7:0
+[359] cond_eff[1]: pre: 29:0, eff: 16:0
+[360] name: `destroy_road junction1-2 junction2-2 road0', cost: 10
+[360] pre: 39:0 72:0, eff: 20:1 25:1 39:1 72:1
+[360] cond_eff[0]: pre: 20:0, eff: 7:0
+[360] cond_eff[1]: pre: 25:0, eff: 16:0
+[361] name: `destroy_road junction1-2 junction2-2 road1', cost: 10
+[361] pre: 40:0 112:0, eff: 21:1 26:1 40:1 112:1
+[361] cond_eff[0]: pre: 21:0, eff: 7:0
+[361] cond_eff[1]: pre: 26:0, eff: 16:0
+[362] name: `destroy_road junction1-2 junction2-2 road2', cost: 10
+[362] pre: 41:0 152:0, eff: 22:1 27:1 41:1 152:1
+[362] cond_eff[0]: pre: 22:0, eff: 7:0
+[362] cond_eff[1]: pre: 27:0, eff: 16:0
+[363] name: `destroy_road junction1-2 junction2-2 road3', cost: 10
+[363] pre: 42:0 192:0, eff: 23:1 28:1 42:1 192:1
+[363] cond_eff[0]: pre: 23:0, eff: 7:0
+[363] cond_eff[1]: pre: 28:0, eff: 16:0
+[364] name: `destroy_road junction1-2 junction2-2 road4', cost: 10
+[364] pre: 43:0 232:0, eff: 24:1 29:1 43:1 232:1
+[364] cond_eff[0]: pre: 24:0, eff: 7:0
+[364] cond_eff[1]: pre: 29:0, eff: 16:0
+[365] name: `destroy_road junction2-0 junction1-0 road0', cost: 10
+[365] pre: 39:0 73:0, eff: 20:1 25:1 39:1 73:1
+[365] cond_eff[0]: pre: 20:0, eff: 8:0
+[365] cond_eff[1]: pre: 25:0, eff: 17:0
+[366] name: `destroy_road junction2-0 junction1-0 road1', cost: 10
+[366] pre: 40:0 113:0, eff: 21:1 26:1 40:1 113:1
+[366] cond_eff[0]: pre: 21:0, eff: 8:0
+[366] cond_eff[1]: pre: 26:0, eff: 17:0
+[367] name: `destroy_road junction2-0 junction1-0 road2', cost: 10
+[367] pre: 41:0 153:0, eff: 22:1 27:1 41:1 153:1
+[367] cond_eff[0]: pre: 22:0, eff: 8:0
+[367] cond_eff[1]: pre: 27:0, eff: 17:0
+[368] name: `destroy_road junction2-0 junction1-0 road3', cost: 10
+[368] pre: 42:0 193:0, eff: 23:1 28:1 42:1 193:1
+[368] cond_eff[0]: pre: 23:0, eff: 8:0
+[368] cond_eff[1]: pre: 28:0, eff: 17:0
+[369] name: `destroy_road junction2-0 junction1-0 road4', cost: 10
+[369] pre: 43:0 233:0, eff: 24:1 29:1 43:1 233:1
+[369] cond_eff[0]: pre: 24:0, eff: 8:0
+[369] cond_eff[1]: pre: 29:0, eff: 17:0
+[370] name: `destroy_road junction2-0 junction1-1 road0', cost: 10
+[370] pre: 39:0 74:0, eff: 20:1 25:1 39:1 74:1
+[370] cond_eff[0]: pre: 20:0, eff: 8:0
+[370] cond_eff[1]: pre: 25:0, eff: 17:0
+[371] name: `destroy_road junction2-0 junction1-1 road1', cost: 10
+[371] pre: 40:0 114:0, eff: 21:1 26:1 40:1 114:1
+[371] cond_eff[0]: pre: 21:0, eff: 8:0
+[371] cond_eff[1]: pre: 26:0, eff: 17:0
+[372] name: `destroy_road junction2-0 junction1-1 road2', cost: 10
+[372] pre: 41:0 154:0, eff: 22:1 27:1 41:1 154:1
+[372] cond_eff[0]: pre: 22:0, eff: 8:0
+[372] cond_eff[1]: pre: 27:0, eff: 17:0
+[373] name: `destroy_road junction2-0 junction1-1 road3', cost: 10
+[373] pre: 42:0 194:0, eff: 23:1 28:1 42:1 194:1
+[373] cond_eff[0]: pre: 23:0, eff: 8:0
+[373] cond_eff[1]: pre: 28:0, eff: 17:0
+[374] name: `destroy_road junction2-0 junction1-1 road4', cost: 10
+[374] pre: 43:0 234:0, eff: 24:1 29:1 43:1 234:1
+[374] cond_eff[0]: pre: 24:0, eff: 8:0
+[374] cond_eff[1]: pre: 29:0, eff: 17:0
+[375] name: `destroy_road junction2-0 junction2-1 road0', cost: 10
+[375] pre: 39:0 75:0, eff: 20:1 25:1 39:1 75:1
+[375] cond_eff[0]: pre: 20:0, eff: 8:0
+[375] cond_eff[1]: pre: 25:0, eff: 17:0
+[376] name: `destroy_road junction2-0 junction2-1 road1', cost: 10
+[376] pre: 40:0 115:0, eff: 21:1 26:1 40:1 115:1
+[376] cond_eff[0]: pre: 21:0, eff: 8:0
+[376] cond_eff[1]: pre: 26:0, eff: 17:0
+[377] name: `destroy_road junction2-0 junction2-1 road2', cost: 10
+[377] pre: 41:0 155:0, eff: 22:1 27:1 41:1 155:1
+[377] cond_eff[0]: pre: 22:0, eff: 8:0
+[377] cond_eff[1]: pre: 27:0, eff: 17:0
+[378] name: `destroy_road junction2-0 junction2-1 road3', cost: 10
+[378] pre: 42:0 195:0, eff: 23:1 28:1 42:1 195:1
+[378] cond_eff[0]: pre: 23:0, eff: 8:0
+[378] cond_eff[1]: pre: 28:0, eff: 17:0
+[379] name: `destroy_road junction2-0 junction2-1 road4', cost: 10
+[379] pre: 43:0 235:0, eff: 24:1 29:1 43:1 235:1
+[379] cond_eff[0]: pre: 24:0, eff: 8:0
+[379] cond_eff[1]: pre: 29:0, eff: 17:0
+[380] name: `destroy_road junction2-1 junction1-0 road0', cost: 10
+[380] pre: 39:0 76:0, eff: 20:1 25:1 39:1 76:1
+[380] cond_eff[0]: pre: 20:0, eff: 9:0
+[380] cond_eff[1]: pre: 25:0, eff: 18:0
+[381] name: `destroy_road junction2-1 junction1-0 road1', cost: 10
+[381] pre: 40:0 116:0, eff: 21:1 26:1 40:1 116:1
+[381] cond_eff[0]: pre: 21:0, eff: 9:0
+[381] cond_eff[1]: pre: 26:0, eff: 18:0
+[382] name: `destroy_road junction2-1 junction1-0 road2', cost: 10
+[382] pre: 41:0 156:0, eff: 22:1 27:1 41:1 156:1
+[382] cond_eff[0]: pre: 22:0, eff: 9:0
+[382] cond_eff[1]: pre: 27:0, eff: 18:0
+[383] name: `destroy_road junction2-1 junction1-0 road3', cost: 10
+[383] pre: 42:0 196:0, eff: 23:1 28:1 42:1 196:1
+[383] cond_eff[0]: pre: 23:0, eff: 9:0
+[383] cond_eff[1]: pre: 28:0, eff: 18:0
+[384] name: `destroy_road junction2-1 junction1-0 road4', cost: 10
+[384] pre: 43:0 236:0, eff: 24:1 29:1 43:1 236:1
+[384] cond_eff[0]: pre: 24:0, eff: 9:0
+[384] cond_eff[1]: pre: 29:0, eff: 18:0
+[385] name: `destroy_road junction2-1 junction1-1 road0', cost: 10
+[385] pre: 39:0 77:0, eff: 20:1 25:1 39:1 77:1
+[385] cond_eff[0]: pre: 20:0, eff: 9:0
+[385] cond_eff[1]: pre: 25:0, eff: 18:0
+[386] name: `destroy_road junction2-1 junction1-1 road1', cost: 10
+[386] pre: 40:0 117:0, eff: 21:1 26:1 40:1 117:1
+[386] cond_eff[0]: pre: 21:0, eff: 9:0
+[386] cond_eff[1]: pre: 26:0, eff: 18:0
+[387] name: `destroy_road junction2-1 junction1-1 road2', cost: 10
+[387] pre: 41:0 157:0, eff: 22:1 27:1 41:1 157:1
+[387] cond_eff[0]: pre: 22:0, eff: 9:0
+[387] cond_eff[1]: pre: 27:0, eff: 18:0
+[388] name: `destroy_road junction2-1 junction1-1 road3', cost: 10
+[388] pre: 42:0 197:0, eff: 23:1 28:1 42:1 197:1
+[388] cond_eff[0]: pre: 23:0, eff: 9:0
+[388] cond_eff[1]: pre: 28:0, eff: 18:0
+[389] name: `destroy_road junction2-1 junction1-1 road4', cost: 10
+[389] pre: 43:0 237:0, eff: 24:1 29:1 43:1 237:1
+[389] cond_eff[0]: pre: 24:0, eff: 9:0
+[389] cond_eff[1]: pre: 29:0, eff: 18:0
+[390] name: `destroy_road junction2-1 junction1-2 road0', cost: 10
+[390] pre: 39:0 78:0, eff: 20:1 25:1 39:1 78:1
+[390] cond_eff[0]: pre: 20:0, eff: 9:0
+[390] cond_eff[1]: pre: 25:0, eff: 18:0
+[391] name: `destroy_road junction2-1 junction1-2 road1', cost: 10
+[391] pre: 40:0 118:0, eff: 21:1 26:1 40:1 118:1
+[391] cond_eff[0]: pre: 21:0, eff: 9:0
+[391] cond_eff[1]: pre: 26:0, eff: 18:0
+[392] name: `destroy_road junction2-1 junction1-2 road2', cost: 10
+[392] pre: 41:0 158:0, eff: 22:1 27:1 41:1 158:1
+[392] cond_eff[0]: pre: 22:0, eff: 9:0
+[392] cond_eff[1]: pre: 27:0, eff: 18:0
+[393] name: `destroy_road junction2-1 junction1-2 road3', cost: 10
+[393] pre: 42:0 198:0, eff: 23:1 28:1 42:1 198:1
+[393] cond_eff[0]: pre: 23:0, eff: 9:0
+[393] cond_eff[1]: pre: 28:0, eff: 18:0
+[394] name: `destroy_road junction2-1 junction1-2 road4', cost: 10
+[394] pre: 43:0 238:0, eff: 24:1 29:1 43:1 238:1
+[394] cond_eff[0]: pre: 24:0, eff: 9:0
+[394] cond_eff[1]: pre: 29:0, eff: 18:0
+[395] name: `destroy_road junction2-1 junction2-0 road0', cost: 10
+[395] pre: 39:0 79:0, eff: 20:1 25:1 39:1 79:1
+[395] cond_eff[0]: pre: 20:0, eff: 9:0
+[395] cond_eff[1]: pre: 25:0, eff: 18:0
+[396] name: `destroy_road junction2-1 junction2-0 road1', cost: 10
+[396] pre: 40:0 119:0, eff: 21:1 26:1 40:1 119:1
+[396] cond_eff[0]: pre: 21:0, eff: 9:0
+[396] cond_eff[1]: pre: 26:0, eff: 18:0
+[397] name: `destroy_road junction2-1 junction2-0 road2', cost: 10
+[397] pre: 41:0 159:0, eff: 22:1 27:1 41:1 159:1
+[397] cond_eff[0]: pre: 22:0, eff: 9:0
+[397] cond_eff[1]: pre: 27:0, eff: 18:0
+[398] name: `destroy_road junction2-1 junction2-0 road3', cost: 10
+[398] pre: 42:0 199:0, eff: 23:1 28:1 42:1 199:1
+[398] cond_eff[0]: pre: 23:0, eff: 9:0
+[398] cond_eff[1]: pre: 28:0, eff: 18:0
+[399] name: `destroy_road junction2-1 junction2-0 road4', cost: 10
+[399] pre: 43:0 239:0, eff: 24:1 29:1 43:1 239:1
+[399] cond_eff[0]: pre: 24:0, eff: 9:0
+[399] cond_eff[1]: pre: 29:0, eff: 18:0
+[400] name: `destroy_road junction2-1 junction2-2 road0', cost: 10
+[400] pre: 39:0 80:0, eff: 20:1 25:1 39:1 80:1
+[400] cond_eff[0]: pre: 20:0, eff: 9:0
+[400] cond_eff[1]: pre: 25:0, eff: 18:0
+[401] name: `destroy_road junction2-1 junction2-2 road1', cost: 10
+[401] pre: 40:0 120:0, eff: 21:1 26:1 40:1 120:1
+[401] cond_eff[0]: pre: 21:0, eff: 9:0
+[401] cond_eff[1]: pre: 26:0, eff: 18:0
+[402] name: `destroy_road junction2-1 junction2-2 road2', cost: 10
+[402] pre: 41:0 160:0, eff: 22:1 27:1 41:1 160:1
+[402] cond_eff[0]: pre: 22:0, eff: 9:0
+[402] cond_eff[1]: pre: 27:0, eff: 18:0
+[403] name: `destroy_road junction2-1 junction2-2 road3', cost: 10
+[403] pre: 42:0 200:0, eff: 23:1 28:1 42:1 200:1
+[403] cond_eff[0]: pre: 23:0, eff: 9:0
+[403] cond_eff[1]: pre: 28:0, eff: 18:0
+[404] name: `destroy_road junction2-1 junction2-2 road4', cost: 10
+[404] pre: 43:0 240:0, eff: 24:1 29:1 43:1 240:1
+[404] cond_eff[0]: pre: 24:0, eff: 9:0
+[404] cond_eff[1]: pre: 29:0, eff: 18:0
+[405] name: `destroy_road junction2-2 junction1-1 road0', cost: 10
+[405] pre: 39:0 81:0, eff: 20:1 25:1 39:1 81:1
+[405] cond_eff[0]: pre: 20:0, eff: 10:0
+[405] cond_eff[1]: pre: 25:0, eff: 19:0
+[406] name: `destroy_road junction2-2 junction1-1 road1', cost: 10
+[406] pre: 40:0 121:0, eff: 21:1 26:1 40:1 121:1
+[406] cond_eff[0]: pre: 21:0, eff: 10:0
+[406] cond_eff[1]: pre: 26:0, eff: 19:0
+[407] name: `destroy_road junction2-2 junction1-1 road2', cost: 10
+[407] pre: 41:0 161:0, eff: 22:1 27:1 41:1 161:1
+[407] cond_eff[0]: pre: 22:0, eff: 10:0
+[407] cond_eff[1]: pre: 27:0, eff: 19:0
+[408] name: `destroy_road junction2-2 junction1-1 road3', cost: 10
+[408] pre: 42:0 201:0, eff: 23:1 28:1 42:1 201:1
+[408] cond_eff[0]: pre: 23:0, eff: 10:0
+[408] cond_eff[1]: pre: 28:0, eff: 19:0
+[409] name: `destroy_road junction2-2 junction1-1 road4', cost: 10
+[409] pre: 43:0 241:0, eff: 24:1 29:1 43:1 241:1
+[409] cond_eff[0]: pre: 24:0, eff: 10:0
+[409] cond_eff[1]: pre: 29:0, eff: 19:0
+[410] name: `destroy_road junction2-2 junction1-2 road0', cost: 10
+[410] pre: 39:0 82:0, eff: 20:1 25:1 39:1 82:1
+[410] cond_eff[0]: pre: 20:0, eff: 10:0
+[410] cond_eff[1]: pre: 25:0, eff: 19:0
+[411] name: `destroy_road junction2-2 junction1-2 road1', cost: 10
+[411] pre: 40:0 122:0, eff: 21:1 26:1 40:1 122:1
+[411] cond_eff[0]: pre: 21:0, eff: 10:0
+[411] cond_eff[1]: pre: 26:0, eff: 19:0
+[412] name: `destroy_road junction2-2 junction1-2 road2', cost: 10
+[412] pre: 41:0 162:0, eff: 22:1 27:1 41:1 162:1
+[412] cond_eff[0]: pre: 22:0, eff: 10:0
+[412] cond_eff[1]: pre: 27:0, eff: 19:0
+[413] name: `destroy_road junction2-2 junction1-2 road3', cost: 10
+[413] pre: 42:0 202:0, eff: 23:1 28:1 42:1 202:1
+[413] cond_eff[0]: pre: 23:0, eff: 10:0
+[413] cond_eff[1]: pre: 28:0, eff: 19:0
+[414] name: `destroy_road junction2-2 junction1-2 road4', cost: 10
+[414] pre: 43:0 242:0, eff: 24:1 29:1 43:1 242:1
+[414] cond_eff[0]: pre: 24:0, eff: 10:0
+[414] cond_eff[1]: pre: 29:0, eff: 19:0
+[415] name: `destroy_road junction2-2 junction2-1 road0', cost: 10
+[415] pre: 39:0 83:0, eff: 20:1 25:1 39:1 83:1
+[415] cond_eff[0]: pre: 20:0, eff: 10:0
+[415] cond_eff[1]: pre: 25:0, eff: 19:0
+[416] name: `destroy_road junction2-2 junction2-1 road1', cost: 10
+[416] pre: 40:0 123:0, eff: 21:1 26:1 40:1 123:1
+[416] cond_eff[0]: pre: 21:0, eff: 10:0
+[416] cond_eff[1]: pre: 26:0, eff: 19:0
+[417] name: `destroy_road junction2-2 junction2-1 road2', cost: 10
+[417] pre: 41:0 163:0, eff: 22:1 27:1 41:1 163:1
+[417] cond_eff[0]: pre: 22:0, eff: 10:0
+[417] cond_eff[1]: pre: 27:0, eff: 19:0
+[418] name: `destroy_road junction2-2 junction2-1 road3', cost: 10
+[418] pre: 42:0 203:0, eff: 23:1 28:1 42:1 203:1
+[418] cond_eff[0]: pre: 23:0, eff: 10:0
+[418] cond_eff[1]: pre: 28:0, eff: 19:0
+[419] name: `destroy_road junction2-2 junction2-1 road4', cost: 10
+[419] pre: 43:0 243:0, eff: 24:1 29:1 43:1 243:1
+[419] cond_eff[0]: pre: 24:0, eff: 10:0
+[419] cond_eff[1]: pre: 29:0, eff: 19:0
+[420] name: `move_car_in_road junction0-0 junction0-1 car0 road0', cost: 1
+[420] pre: 2:0 39:0 44:0, eff: 2:1 20:0 30:0
+[421] name: `move_car_in_road junction0-0 junction0-1 car0 road1', cost: 1
+[421] pre: 2:0 40:0 84:0, eff: 2:1 21:0 30:0
+[422] name: `move_car_in_road junction0-0 junction0-1 car0 road2', cost: 1
+[422] pre: 2:0 41:0 124:0, eff: 2:1 22:0 30:0
+[423] name: `move_car_in_road junction0-0 junction0-1 car0 road3', cost: 1
+[423] pre: 2:0 42:0 164:0, eff: 2:1 23:0 30:0
+[424] name: `move_car_in_road junction0-0 junction0-1 car0 road4', cost: 1
+[424] pre: 2:0 43:0 204:0, eff: 2:1 24:0 30:0
+[425] name: `move_car_in_road junction0-0 junction0-1 car1 road0', cost: 1
+[425] pre: 11:0 39:0 44:0, eff: 11:1 25:0 30:0
+[426] name: `move_car_in_road junction0-0 junction0-1 car1 road1', cost: 1
+[426] pre: 11:0 40:0 84:0, eff: 11:1 26:0 30:0
+[427] name: `move_car_in_road junction0-0 junction0-1 car1 road2', cost: 1
+[427] pre: 11:0 41:0 124:0, eff: 11:1 27:0 30:0
+[428] name: `move_car_in_road junction0-0 junction0-1 car1 road3', cost: 1
+[428] pre: 11:0 42:0 164:0, eff: 11:1 28:0 30:0
+[429] name: `move_car_in_road junction0-0 junction0-1 car1 road4', cost: 1
+[429] pre: 11:0 43:0 204:0, eff: 11:1 29:0 30:0
+[430] name: `move_car_in_road junction0-0 junction1-0 car0 road0', cost: 1
+[430] pre: 2:0 39:0 45:0, eff: 2:1 20:0 30:0
+[431] name: `move_car_in_road junction0-0 junction1-0 car0 road1', cost: 1
+[431] pre: 2:0 40:0 85:0, eff: 2:1 21:0 30:0
+[432] name: `move_car_in_road junction0-0 junction1-0 car0 road2', cost: 1
+[432] pre: 2:0 41:0 125:0, eff: 2:1 22:0 30:0
+[433] name: `move_car_in_road junction0-0 junction1-0 car0 road3', cost: 1
+[433] pre: 2:0 42:0 165:0, eff: 2:1 23:0 30:0
+[434] name: `move_car_in_road junction0-0 junction1-0 car0 road4', cost: 1
+[434] pre: 2:0 43:0 205:0, eff: 2:1 24:0 30:0
+[435] name: `move_car_in_road junction0-0 junction1-0 car1 road0', cost: 1
+[435] pre: 11:0 39:0 45:0, eff: 11:1 25:0 30:0
+[436] name: `move_car_in_road junction0-0 junction1-0 car1 road1', cost: 1
+[436] pre: 11:0 40:0 85:0, eff: 11:1 26:0 30:0
+[437] name: `move_car_in_road junction0-0 junction1-0 car1 road2', cost: 1
+[437] pre: 11:0 41:0 125:0, eff: 11:1 27:0 30:0
+[438] name: `move_car_in_road junction0-0 junction1-0 car1 road3', cost: 1
+[438] pre: 11:0 42:0 165:0, eff: 11:1 28:0 30:0
+[439] name: `move_car_in_road junction0-0 junction1-0 car1 road4', cost: 1
+[439] pre: 11:0 43:0 205:0, eff: 11:1 29:0 30:0
+[440] name: `move_car_in_road junction0-0 junction1-1 car0 road0', cost: 1
+[440] pre: 2:0 39:0 46:0, eff: 2:1 20:0 30:0
+[441] name: `move_car_in_road junction0-0 junction1-1 car0 road1', cost: 1
+[441] pre: 2:0 40:0 86:0, eff: 2:1 21:0 30:0
+[442] name: `move_car_in_road junction0-0 junction1-1 car0 road2', cost: 1
+[442] pre: 2:0 41:0 126:0, eff: 2:1 22:0 30:0
+[443] name: `move_car_in_road junction0-0 junction1-1 car0 road3', cost: 1
+[443] pre: 2:0 42:0 166:0, eff: 2:1 23:0 30:0
+[444] name: `move_car_in_road junction0-0 junction1-1 car0 road4', cost: 1
+[444] pre: 2:0 43:0 206:0, eff: 2:1 24:0 30:0
+[445] name: `move_car_in_road junction0-0 junction1-1 car1 road0', cost: 1
+[445] pre: 11:0 39:0 46:0, eff: 11:1 25:0 30:0
+[446] name: `move_car_in_road junction0-0 junction1-1 car1 road1', cost: 1
+[446] pre: 11:0 40:0 86:0, eff: 11:1 26:0 30:0
+[447] name: `move_car_in_road junction0-0 junction1-1 car1 road2', cost: 1
+[447] pre: 11:0 41:0 126:0, eff: 11:1 27:0 30:0
+[448] name: `move_car_in_road junction0-0 junction1-1 car1 road3', cost: 1
+[448] pre: 11:0 42:0 166:0, eff: 11:1 28:0 30:0
+[449] name: `move_car_in_road junction0-0 junction1-1 car1 road4', cost: 1
+[449] pre: 11:0 43:0 206:0, eff: 11:1 29:0 30:0
+[450] name: `move_car_in_road junction0-1 junction0-0 car0 road0', cost: 1
+[450] pre: 3:0 39:0 47:0, eff: 3:1 20:0 31:0
+[451] name: `move_car_in_road junction0-1 junction0-0 car0 road1', cost: 1
+[451] pre: 3:0 40:0 87:0, eff: 3:1 21:0 31:0
+[452] name: `move_car_in_road junction0-1 junction0-0 car0 road2', cost: 1
+[452] pre: 3:0 41:0 127:0, eff: 3:1 22:0 31:0
+[453] name: `move_car_in_road junction0-1 junction0-0 car0 road3', cost: 1
+[453] pre: 3:0 42:0 167:0, eff: 3:1 23:0 31:0
+[454] name: `move_car_in_road junction0-1 junction0-0 car0 road4', cost: 1
+[454] pre: 3:0 43:0 207:0, eff: 3:1 24:0 31:0
+[455] name: `move_car_in_road junction0-1 junction0-0 car1 road0', cost: 1
+[455] pre: 12:0 39:0 47:0, eff: 12:1 25:0 31:0
+[456] name: `move_car_in_road junction0-1 junction0-0 car1 road1', cost: 1
+[456] pre: 12:0 40:0 87:0, eff: 12:1 26:0 31:0
+[457] name: `move_car_in_road junction0-1 junction0-0 car1 road2', cost: 1
+[457] pre: 12:0 41:0 127:0, eff: 12:1 27:0 31:0
+[458] name: `move_car_in_road junction0-1 junction0-0 car1 road3', cost: 1
+[458] pre: 12:0 42:0 167:0, eff: 12:1 28:0 31:0
+[459] name: `move_car_in_road junction0-1 junction0-0 car1 road4', cost: 1
+[459] pre: 12:0 43:0 207:0, eff: 12:1 29:0 31:0
+[460] name: `move_car_in_road junction0-1 junction0-2 car0 road0', cost: 1
+[460] pre: 3:0 39:0 48:0, eff: 3:1 20:0 31:0
+[461] name: `move_car_in_road junction0-1 junction0-2 car0 road1', cost: 1
+[461] pre: 3:0 40:0 88:0, eff: 3:1 21:0 31:0
+[462] name: `move_car_in_road junction0-1 junction0-2 car0 road2', cost: 1
+[462] pre: 3:0 41:0 128:0, eff: 3:1 22:0 31:0
+[463] name: `move_car_in_road junction0-1 junction0-2 car0 road3', cost: 1
+[463] pre: 3:0 42:0 168:0, eff: 3:1 23:0 31:0
+[464] name: `move_car_in_road junction0-1 junction0-2 car0 road4', cost: 1
+[464] pre: 3:0 43:0 208:0, eff: 3:1 24:0 31:0
+[465] name: `move_car_in_road junction0-1 junction0-2 car1 road0', cost: 1
+[465] pre: 12:0 39:0 48:0, eff: 12:1 25:0 31:0
+[466] name: `move_car_in_road junction0-1 junction0-2 car1 road1', cost: 1
+[466] pre: 12:0 40:0 88:0, eff: 12:1 26:0 31:0
+[467] name: `move_car_in_road junction0-1 junction0-2 car1 road2', cost: 1
+[467] pre: 12:0 41:0 128:0, eff: 12:1 27:0 31:0
+[468] name: `move_car_in_road junction0-1 junction0-2 car1 road3', cost: 1
+[468] pre: 12:0 42:0 168:0, eff: 12:1 28:0 31:0
+[469] name: `move_car_in_road junction0-1 junction0-2 car1 road4', cost: 1
+[469] pre: 12:0 43:0 208:0, eff: 12:1 29:0 31:0
+[470] name: `move_car_in_road junction0-1 junction1-0 car0 road0', cost: 1
+[470] pre: 3:0 39:0 49:0, eff: 3:1 20:0 31:0
+[471] name: `move_car_in_road junction0-1 junction1-0 car0 road1', cost: 1
+[471] pre: 3:0 40:0 89:0, eff: 3:1 21:0 31:0
+[472] name: `move_car_in_road junction0-1 junction1-0 car0 road2', cost: 1
+[472] pre: 3:0 41:0 129:0, eff: 3:1 22:0 31:0
+[473] name: `move_car_in_road junction0-1 junction1-0 car0 road3', cost: 1
+[473] pre: 3:0 42:0 169:0, eff: 3:1 23:0 31:0
+[474] name: `move_car_in_road junction0-1 junction1-0 car0 road4', cost: 1
+[474] pre: 3:0 43:0 209:0, eff: 3:1 24:0 31:0
+[475] name: `move_car_in_road junction0-1 junction1-0 car1 road0', cost: 1
+[475] pre: 12:0 39:0 49:0, eff: 12:1 25:0 31:0
+[476] name: `move_car_in_road junction0-1 junction1-0 car1 road1', cost: 1
+[476] pre: 12:0 40:0 89:0, eff: 12:1 26:0 31:0
+[477] name: `move_car_in_road junction0-1 junction1-0 car1 road2', cost: 1
+[477] pre: 12:0 41:0 129:0, eff: 12:1 27:0 31:0
+[478] name: `move_car_in_road junction0-1 junction1-0 car1 road3', cost: 1
+[478] pre: 12:0 42:0 169:0, eff: 12:1 28:0 31:0
+[479] name: `move_car_in_road junction0-1 junction1-0 car1 road4', cost: 1
+[479] pre: 12:0 43:0 209:0, eff: 12:1 29:0 31:0
+[480] name: `move_car_in_road junction0-1 junction1-1 car0 road0', cost: 1
+[480] pre: 3:0 39:0 50:0, eff: 3:1 20:0 31:0
+[481] name: `move_car_in_road junction0-1 junction1-1 car0 road1', cost: 1
+[481] pre: 3:0 40:0 90:0, eff: 3:1 21:0 31:0
+[482] name: `move_car_in_road junction0-1 junction1-1 car0 road2', cost: 1
+[482] pre: 3:0 41:0 130:0, eff: 3:1 22:0 31:0
+[483] name: `move_car_in_road junction0-1 junction1-1 car0 road3', cost: 1
+[483] pre: 3:0 42:0 170:0, eff: 3:1 23:0 31:0
+[484] name: `move_car_in_road junction0-1 junction1-1 car0 road4', cost: 1
+[484] pre: 3:0 43:0 210:0, eff: 3:1 24:0 31:0
+[485] name: `move_car_in_road junction0-1 junction1-1 car1 road0', cost: 1
+[485] pre: 12:0 39:0 50:0, eff: 12:1 25:0 31:0
+[486] name: `move_car_in_road junction0-1 junction1-1 car1 road1', cost: 1
+[486] pre: 12:0 40:0 90:0, eff: 12:1 26:0 31:0
+[487] name: `move_car_in_road junction0-1 junction1-1 car1 road2', cost: 1
+[487] pre: 12:0 41:0 130:0, eff: 12:1 27:0 31:0
+[488] name: `move_car_in_road junction0-1 junction1-1 car1 road3', cost: 1
+[488] pre: 12:0 42:0 170:0, eff: 12:1 28:0 31:0
+[489] name: `move_car_in_road junction0-1 junction1-1 car1 road4', cost: 1
+[489] pre: 12:0 43:0 210:0, eff: 12:1 29:0 31:0
+[490] name: `move_car_in_road junction0-1 junction1-2 car0 road0', cost: 1
+[490] pre: 3:0 39:0 51:0, eff: 3:1 20:0 31:0
+[491] name: `move_car_in_road junction0-1 junction1-2 car0 road1', cost: 1
+[491] pre: 3:0 40:0 91:0, eff: 3:1 21:0 31:0
+[492] name: `move_car_in_road junction0-1 junction1-2 car0 road2', cost: 1
+[492] pre: 3:0 41:0 131:0, eff: 3:1 22:0 31:0
+[493] name: `move_car_in_road junction0-1 junction1-2 car0 road3', cost: 1
+[493] pre: 3:0 42:0 171:0, eff: 3:1 23:0 31:0
+[494] name: `move_car_in_road junction0-1 junction1-2 car0 road4', cost: 1
+[494] pre: 3:0 43:0 211:0, eff: 3:1 24:0 31:0
+[495] name: `move_car_in_road junction0-1 junction1-2 car1 road0', cost: 1
+[495] pre: 12:0 39:0 51:0, eff: 12:1 25:0 31:0
+[496] name: `move_car_in_road junction0-1 junction1-2 car1 road1', cost: 1
+[496] pre: 12:0 40:0 91:0, eff: 12:1 26:0 31:0
+[497] name: `move_car_in_road junction0-1 junction1-2 car1 road2', cost: 1
+[497] pre: 12:0 41:0 131:0, eff: 12:1 27:0 31:0
+[498] name: `move_car_in_road junction0-1 junction1-2 car1 road3', cost: 1
+[498] pre: 12:0 42:0 171:0, eff: 12:1 28:0 31:0
+[499] name: `move_car_in_road junction0-1 junction1-2 car1 road4', cost: 1
+[499] pre: 12:0 43:0 211:0, eff: 12:1 29:0 31:0
+[500] name: `move_car_in_road junction0-2 junction0-1 car0 road0', cost: 1
+[500] pre: 4:0 39:0 52:0, eff: 4:1 20:0 32:0
+[501] name: `move_car_in_road junction0-2 junction0-1 car0 road1', cost: 1
+[501] pre: 4:0 40:0 92:0, eff: 4:1 21:0 32:0
+[502] name: `move_car_in_road junction0-2 junction0-1 car0 road2', cost: 1
+[502] pre: 4:0 41:0 132:0, eff: 4:1 22:0 32:0
+[503] name: `move_car_in_road junction0-2 junction0-1 car0 road3', cost: 1
+[503] pre: 4:0 42:0 172:0, eff: 4:1 23:0 32:0
+[504] name: `move_car_in_road junction0-2 junction0-1 car0 road4', cost: 1
+[504] pre: 4:0 43:0 212:0, eff: 4:1 24:0 32:0
+[505] name: `move_car_in_road junction0-2 junction0-1 car1 road0', cost: 1
+[505] pre: 13:0 39:0 52:0, eff: 13:1 25:0 32:0
+[506] name: `move_car_in_road junction0-2 junction0-1 car1 road1', cost: 1
+[506] pre: 13:0 40:0 92:0, eff: 13:1 26:0 32:0
+[507] name: `move_car_in_road junction0-2 junction0-1 car1 road2', cost: 1
+[507] pre: 13:0 41:0 132:0, eff: 13:1 27:0 32:0
+[508] name: `move_car_in_road junction0-2 junction0-1 car1 road3', cost: 1
+[508] pre: 13:0 42:0 172:0, eff: 13:1 28:0 32:0
+[509] name: `move_car_in_road junction0-2 junction0-1 car1 road4', cost: 1
+[509] pre: 13:0 43:0 212:0, eff: 13:1 29:0 32:0
+[510] name: `move_car_in_road junction0-2 junction1-1 car0 road0', cost: 1
+[510] pre: 4:0 39:0 53:0, eff: 4:1 20:0 32:0
+[511] name: `move_car_in_road junction0-2 junction1-1 car0 road1', cost: 1
+[511] pre: 4:0 40:0 93:0, eff: 4:1 21:0 32:0
+[512] name: `move_car_in_road junction0-2 junction1-1 car0 road2', cost: 1
+[512] pre: 4:0 41:0 133:0, eff: 4:1 22:0 32:0
+[513] name: `move_car_in_road junction0-2 junction1-1 car0 road3', cost: 1
+[513] pre: 4:0 42:0 173:0, eff: 4:1 23:0 32:0
+[514] name: `move_car_in_road junction0-2 junction1-1 car0 road4', cost: 1
+[514] pre: 4:0 43:0 213:0, eff: 4:1 24:0 32:0
+[515] name: `move_car_in_road junction0-2 junction1-1 car1 road0', cost: 1
+[515] pre: 13:0 39:0 53:0, eff: 13:1 25:0 32:0
+[516] name: `move_car_in_road junction0-2 junction1-1 car1 road1', cost: 1
+[516] pre: 13:0 40:0 93:0, eff: 13:1 26:0 32:0
+[517] name: `move_car_in_road junction0-2 junction1-1 car1 road2', cost: 1
+[517] pre: 13:0 41:0 133:0, eff: 13:1 27:0 32:0
+[518] name: `move_car_in_road junction0-2 junction1-1 car1 road3', cost: 1
+[518] pre: 13:0 42:0 173:0, eff: 13:1 28:0 32:0
+[519] name: `move_car_in_road junction0-2 junction1-1 car1 road4', cost: 1
+[519] pre: 13:0 43:0 213:0, eff: 13:1 29:0 32:0
+[520] name: `move_car_in_road junction0-2 junction1-2 car0 road0', cost: 1
+[520] pre: 4:0 39:0 54:0, eff: 4:1 20:0 32:0
+[521] name: `move_car_in_road junction0-2 junction1-2 car0 road1', cost: 1
+[521] pre: 4:0 40:0 94:0, eff: 4:1 21:0 32:0
+[522] name: `move_car_in_road junction0-2 junction1-2 car0 road2', cost: 1
+[522] pre: 4:0 41:0 134:0, eff: 4:1 22:0 32:0
+[523] name: `move_car_in_road junction0-2 junction1-2 car0 road3', cost: 1
+[523] pre: 4:0 42:0 174:0, eff: 4:1 23:0 32:0
+[524] name: `move_car_in_road junction0-2 junction1-2 car0 road4', cost: 1
+[524] pre: 4:0 43:0 214:0, eff: 4:1 24:0 32:0
+[525] name: `move_car_in_road junction0-2 junction1-2 car1 road0', cost: 1
+[525] pre: 13:0 39:0 54:0, eff: 13:1 25:0 32:0
+[526] name: `move_car_in_road junction0-2 junction1-2 car1 road1', cost: 1
+[526] pre: 13:0 40:0 94:0, eff: 13:1 26:0 32:0
+[527] name: `move_car_in_road junction0-2 junction1-2 car1 road2', cost: 1
+[527] pre: 13:0 41:0 134:0, eff: 13:1 27:0 32:0
+[528] name: `move_car_in_road junction0-2 junction1-2 car1 road3', cost: 1
+[528] pre: 13:0 42:0 174:0, eff: 13:1 28:0 32:0
+[529] name: `move_car_in_road junction0-2 junction1-2 car1 road4', cost: 1
+[529] pre: 13:0 43:0 214:0, eff: 13:1 29:0 32:0
+[530] name: `move_car_in_road junction1-0 junction0-0 car0 road0', cost: 1
+[530] pre: 5:0 39:0 55:0, eff: 5:1 20:0 33:0
+[531] name: `move_car_in_road junction1-0 junction0-0 car0 road1', cost: 1
+[531] pre: 5:0 40:0 95:0, eff: 5:1 21:0 33:0
+[532] name: `move_car_in_road junction1-0 junction0-0 car0 road2', cost: 1
+[532] pre: 5:0 41:0 135:0, eff: 5:1 22:0 33:0
+[533] name: `move_car_in_road junction1-0 junction0-0 car0 road3', cost: 1
+[533] pre: 5:0 42:0 175:0, eff: 5:1 23:0 33:0
+[534] name: `move_car_in_road junction1-0 junction0-0 car0 road4', cost: 1
+[534] pre: 5:0 43:0 215:0, eff: 5:1 24:0 33:0
+[535] name: `move_car_in_road junction1-0 junction0-0 car1 road0', cost: 1
+[535] pre: 14:0 39:0 55:0, eff: 14:1 25:0 33:0
+[536] name: `move_car_in_road junction1-0 junction0-0 car1 road1', cost: 1
+[536] pre: 14:0 40:0 95:0, eff: 14:1 26:0 33:0
+[537] name: `move_car_in_road junction1-0 junction0-0 car1 road2', cost: 1
+[537] pre: 14:0 41:0 135:0, eff: 14:1 27:0 33:0
+[538] name: `move_car_in_road junction1-0 junction0-0 car1 road3', cost: 1
+[538] pre: 14:0 42:0 175:0, eff: 14:1 28:0 33:0
+[539] name: `move_car_in_road junction1-0 junction0-0 car1 road4', cost: 1
+[539] pre: 14:0 43:0 215:0, eff: 14:1 29:0 33:0
+[540] name: `move_car_in_road junction1-0 junction0-1 car0 road0', cost: 1
+[540] pre: 5:0 39:0 56:0, eff: 5:1 20:0 33:0
+[541] name: `move_car_in_road junction1-0 junction0-1 car0 road1', cost: 1
+[541] pre: 5:0 40:0 96:0, eff: 5:1 21:0 33:0
+[542] name: `move_car_in_road junction1-0 junction0-1 car0 road2', cost: 1
+[542] pre: 5:0 41:0 136:0, eff: 5:1 22:0 33:0
+[543] name: `move_car_in_road junction1-0 junction0-1 car0 road3', cost: 1
+[543] pre: 5:0 42:0 176:0, eff: 5:1 23:0 33:0
+[544] name: `move_car_in_road junction1-0 junction0-1 car0 road4', cost: 1
+[544] pre: 5:0 43:0 216:0, eff: 5:1 24:0 33:0
+[545] name: `move_car_in_road junction1-0 junction0-1 car1 road0', cost: 1
+[545] pre: 14:0 39:0 56:0, eff: 14:1 25:0 33:0
+[546] name: `move_car_in_road junction1-0 junction0-1 car1 road1', cost: 1
+[546] pre: 14:0 40:0 96:0, eff: 14:1 26:0 33:0
+[547] name: `move_car_in_road junction1-0 junction0-1 car1 road2', cost: 1
+[547] pre: 14:0 41:0 136:0, eff: 14:1 27:0 33:0
+[548] name: `move_car_in_road junction1-0 junction0-1 car1 road3', cost: 1
+[548] pre: 14:0 42:0 176:0, eff: 14:1 28:0 33:0
+[549] name: `move_car_in_road junction1-0 junction0-1 car1 road4', cost: 1
+[549] pre: 14:0 43:0 216:0, eff: 14:1 29:0 33:0
+[550] name: `move_car_in_road junction1-0 junction1-1 car0 road0', cost: 1
+[550] pre: 5:0 39:0 57:0, eff: 5:1 20:0 33:0
+[551] name: `move_car_in_road junction1-0 junction1-1 car0 road1', cost: 1
+[551] pre: 5:0 40:0 97:0, eff: 5:1 21:0 33:0
+[552] name: `move_car_in_road junction1-0 junction1-1 car0 road2', cost: 1
+[552] pre: 5:0 41:0 137:0, eff: 5:1 22:0 33:0
+[553] name: `move_car_in_road junction1-0 junction1-1 car0 road3', cost: 1
+[553] pre: 5:0 42:0 177:0, eff: 5:1 23:0 33:0
+[554] name: `move_car_in_road junction1-0 junction1-1 car0 road4', cost: 1
+[554] pre: 5:0 43:0 217:0, eff: 5:1 24:0 33:0
+[555] name: `move_car_in_road junction1-0 junction1-1 car1 road0', cost: 1
+[555] pre: 14:0 39:0 57:0, eff: 14:1 25:0 33:0
+[556] name: `move_car_in_road junction1-0 junction1-1 car1 road1', cost: 1
+[556] pre: 14:0 40:0 97:0, eff: 14:1 26:0 33:0
+[557] name: `move_car_in_road junction1-0 junction1-1 car1 road2', cost: 1
+[557] pre: 14:0 41:0 137:0, eff: 14:1 27:0 33:0
+[558] name: `move_car_in_road junction1-0 junction1-1 car1 road3', cost: 1
+[558] pre: 14:0 42:0 177:0, eff: 14:1 28:0 33:0
+[559] name: `move_car_in_road junction1-0 junction1-1 car1 road4', cost: 1
+[559] pre: 14:0 43:0 217:0, eff: 14:1 29:0 33:0
+[560] name: `move_car_in_road junction1-0 junction2-0 car0 road0', cost: 1
+[560] pre: 5:0 39:0 58:0, eff: 5:1 20:0 33:0
+[561] name: `move_car_in_road junction1-0 junction2-0 car0 road1', cost: 1
+[561] pre: 5:0 40:0 98:0, eff: 5:1 21:0 33:0
+[562] name: `move_car_in_road junction1-0 junction2-0 car0 road2', cost: 1
+[562] pre: 5:0 41:0 138:0, eff: 5:1 22:0 33:0
+[563] name: `move_car_in_road junction1-0 junction2-0 car0 road3', cost: 1
+[563] pre: 5:0 42:0 178:0, eff: 5:1 23:0 33:0
+[564] name: `move_car_in_road junction1-0 junction2-0 car0 road4', cost: 1
+[564] pre: 5:0 43:0 218:0, eff: 5:1 24:0 33:0
+[565] name: `move_car_in_road junction1-0 junction2-0 car1 road0', cost: 1
+[565] pre: 14:0 39:0 58:0, eff: 14:1 25:0 33:0
+[566] name: `move_car_in_road junction1-0 junction2-0 car1 road1', cost: 1
+[566] pre: 14:0 40:0 98:0, eff: 14:1 26:0 33:0
+[567] name: `move_car_in_road junction1-0 junction2-0 car1 road2', cost: 1
+[567] pre: 14:0 41:0 138:0, eff: 14:1 27:0 33:0
+[568] name: `move_car_in_road junction1-0 junction2-0 car1 road3', cost: 1
+[568] pre: 14:0 42:0 178:0, eff: 14:1 28:0 33:0
+[569] name: `move_car_in_road junction1-0 junction2-0 car1 road4', cost: 1
+[569] pre: 14:0 43:0 218:0, eff: 14:1 29:0 33:0
+[570] name: `move_car_in_road junction1-0 junction2-1 car0 road0', cost: 1
+[570] pre: 5:0 39:0 59:0, eff: 5:1 20:0 33:0
+[571] name: `move_car_in_road junction1-0 junction2-1 car0 road1', cost: 1
+[571] pre: 5:0 40:0 99:0, eff: 5:1 21:0 33:0
+[572] name: `move_car_in_road junction1-0 junction2-1 car0 road2', cost: 1
+[572] pre: 5:0 41:0 139:0, eff: 5:1 22:0 33:0
+[573] name: `move_car_in_road junction1-0 junction2-1 car0 road3', cost: 1
+[573] pre: 5:0 42:0 179:0, eff: 5:1 23:0 33:0
+[574] name: `move_car_in_road junction1-0 junction2-1 car0 road4', cost: 1
+[574] pre: 5:0 43:0 219:0, eff: 5:1 24:0 33:0
+[575] name: `move_car_in_road junction1-0 junction2-1 car1 road0', cost: 1
+[575] pre: 14:0 39:0 59:0, eff: 14:1 25:0 33:0
+[576] name: `move_car_in_road junction1-0 junction2-1 car1 road1', cost: 1
+[576] pre: 14:0 40:0 99:0, eff: 14:1 26:0 33:0
+[577] name: `move_car_in_road junction1-0 junction2-1 car1 road2', cost: 1
+[577] pre: 14:0 41:0 139:0, eff: 14:1 27:0 33:0
+[578] name: `move_car_in_road junction1-0 junction2-1 car1 road3', cost: 1
+[578] pre: 14:0 42:0 179:0, eff: 14:1 28:0 33:0
+[579] name: `move_car_in_road junction1-0 junction2-1 car1 road4', cost: 1
+[579] pre: 14:0 43:0 219:0, eff: 14:1 29:0 33:0
+[580] name: `move_car_in_road junction1-1 junction0-0 car0 road0', cost: 1
+[580] pre: 6:0 39:0 60:0, eff: 6:1 20:0 34:0
+[581] name: `move_car_in_road junction1-1 junction0-0 car0 road1', cost: 1
+[581] pre: 6:0 40:0 100:0, eff: 6:1 21:0 34:0
+[582] name: `move_car_in_road junction1-1 junction0-0 car0 road2', cost: 1
+[582] pre: 6:0 41:0 140:0, eff: 6:1 22:0 34:0
+[583] name: `move_car_in_road junction1-1 junction0-0 car0 road3', cost: 1
+[583] pre: 6:0 42:0 180:0, eff: 6:1 23:0 34:0
+[584] name: `move_car_in_road junction1-1 junction0-0 car0 road4', cost: 1
+[584] pre: 6:0 43:0 220:0, eff: 6:1 24:0 34:0
+[585] name: `move_car_in_road junction1-1 junction0-0 car1 road0', cost: 1
+[585] pre: 15:0 39:0 60:0, eff: 15:1 25:0 34:0
+[586] name: `move_car_in_road junction1-1 junction0-0 car1 road1', cost: 1
+[586] pre: 15:0 40:0 100:0, eff: 15:1 26:0 34:0
+[587] name: `move_car_in_road junction1-1 junction0-0 car1 road2', cost: 1
+[587] pre: 15:0 41:0 140:0, eff: 15:1 27:0 34:0
+[588] name: `move_car_in_road junction1-1 junction0-0 car1 road3', cost: 1
+[588] pre: 15:0 42:0 180:0, eff: 15:1 28:0 34:0
+[589] name: `move_car_in_road junction1-1 junction0-0 car1 road4', cost: 1
+[589] pre: 15:0 43:0 220:0, eff: 15:1 29:0 34:0
+[590] name: `move_car_in_road junction1-1 junction0-1 car0 road0', cost: 1
+[590] pre: 6:0 39:0 61:0, eff: 6:1 20:0 34:0
+[591] name: `move_car_in_road junction1-1 junction0-1 car0 road1', cost: 1
+[591] pre: 6:0 40:0 101:0, eff: 6:1 21:0 34:0
+[592] name: `move_car_in_road junction1-1 junction0-1 car0 road2', cost: 1
+[592] pre: 6:0 41:0 141:0, eff: 6:1 22:0 34:0
+[593] name: `move_car_in_road junction1-1 junction0-1 car0 road3', cost: 1
+[593] pre: 6:0 42:0 181:0, eff: 6:1 23:0 34:0
+[594] name: `move_car_in_road junction1-1 junction0-1 car0 road4', cost: 1
+[594] pre: 6:0 43:0 221:0, eff: 6:1 24:0 34:0
+[595] name: `move_car_in_road junction1-1 junction0-1 car1 road0', cost: 1
+[595] pre: 15:0 39:0 61:0, eff: 15:1 25:0 34:0
+[596] name: `move_car_in_road junction1-1 junction0-1 car1 road1', cost: 1
+[596] pre: 15:0 40:0 101:0, eff: 15:1 26:0 34:0
+[597] name: `move_car_in_road junction1-1 junction0-1 car1 road2', cost: 1
+[597] pre: 15:0 41:0 141:0, eff: 15:1 27:0 34:0
+[598] name: `move_car_in_road junction1-1 junction0-1 car1 road3', cost: 1
+[598] pre: 15:0 42:0 181:0, eff: 15:1 28:0 34:0
+[599] name: `move_car_in_road junction1-1 junction0-1 car1 road4', cost: 1
+[599] pre: 15:0 43:0 221:0, eff: 15:1 29:0 34:0
+[600] name: `move_car_in_road junction1-1 junction0-2 car0 road0', cost: 1
+[600] pre: 6:0 39:0 62:0, eff: 6:1 20:0 34:0
+[601] name: `move_car_in_road junction1-1 junction0-2 car0 road1', cost: 1
+[601] pre: 6:0 40:0 102:0, eff: 6:1 21:0 34:0
+[602] name: `move_car_in_road junction1-1 junction0-2 car0 road2', cost: 1
+[602] pre: 6:0 41:0 142:0, eff: 6:1 22:0 34:0
+[603] name: `move_car_in_road junction1-1 junction0-2 car0 road3', cost: 1
+[603] pre: 6:0 42:0 182:0, eff: 6:1 23:0 34:0
+[604] name: `move_car_in_road junction1-1 junction0-2 car0 road4', cost: 1
+[604] pre: 6:0 43:0 222:0, eff: 6:1 24:0 34:0
+[605] name: `move_car_in_road junction1-1 junction0-2 car1 road0', cost: 1
+[605] pre: 15:0 39:0 62:0, eff: 15:1 25:0 34:0
+[606] name: `move_car_in_road junction1-1 junction0-2 car1 road1', cost: 1
+[606] pre: 15:0 40:0 102:0, eff: 15:1 26:0 34:0
+[607] name: `move_car_in_road junction1-1 junction0-2 car1 road2', cost: 1
+[607] pre: 15:0 41:0 142:0, eff: 15:1 27:0 34:0
+[608] name: `move_car_in_road junction1-1 junction0-2 car1 road3', cost: 1
+[608] pre: 15:0 42:0 182:0, eff: 15:1 28:0 34:0
+[609] name: `move_car_in_road junction1-1 junction0-2 car1 road4', cost: 1
+[609] pre: 15:0 43:0 222:0, eff: 15:1 29:0 34:0
+[610] name: `move_car_in_road junction1-1 junction1-0 car0 road0', cost: 1
+[610] pre: 6:0 39:0 63:0, eff: 6:1 20:0 34:0
+[611] name: `move_car_in_road junction1-1 junction1-0 car0 road1', cost: 1
+[611] pre: 6:0 40:0 103:0, eff: 6:1 21:0 34:0
+[612] name: `move_car_in_road junction1-1 junction1-0 car0 road2', cost: 1
+[612] pre: 6:0 41:0 143:0, eff: 6:1 22:0 34:0
+[613] name: `move_car_in_road junction1-1 junction1-0 car0 road3', cost: 1
+[613] pre: 6:0 42:0 183:0, eff: 6:1 23:0 34:0
+[614] name: `move_car_in_road junction1-1 junction1-0 car0 road4', cost: 1
+[614] pre: 6:0 43:0 223:0, eff: 6:1 24:0 34:0
+[615] name: `move_car_in_road junction1-1 junction1-0 car1 road0', cost: 1
+[615] pre: 15:0 39:0 63:0, eff: 15:1 25:0 34:0
+[616] name: `move_car_in_road junction1-1 junction1-0 car1 road1', cost: 1
+[616] pre: 15:0 40:0 103:0, eff: 15:1 26:0 34:0
+[617] name: `move_car_in_road junction1-1 junction1-0 car1 road2', cost: 1
+[617] pre: 15:0 41:0 143:0, eff: 15:1 27:0 34:0
+[618] name: `move_car_in_road junction1-1 junction1-0 car1 road3', cost: 1
+[618] pre: 15:0 42:0 183:0, eff: 15:1 28:0 34:0
+[619] name: `move_car_in_road junction1-1 junction1-0 car1 road4', cost: 1
+[619] pre: 15:0 43:0 223:0, eff: 15:1 29:0 34:0
+[620] name: `move_car_in_road junction1-1 junction1-2 car0 road0', cost: 1
+[620] pre: 6:0 39:0 64:0, eff: 6:1 20:0 34:0
+[621] name: `move_car_in_road junction1-1 junction1-2 car0 road1', cost: 1
+[621] pre: 6:0 40:0 104:0, eff: 6:1 21:0 34:0
+[622] name: `move_car_in_road junction1-1 junction1-2 car0 road2', cost: 1
+[622] pre: 6:0 41:0 144:0, eff: 6:1 22:0 34:0
+[623] name: `move_car_in_road junction1-1 junction1-2 car0 road3', cost: 1
+[623] pre: 6:0 42:0 184:0, eff: 6:1 23:0 34:0
+[624] name: `move_car_in_road junction1-1 junction1-2 car0 road4', cost: 1
+[624] pre: 6:0 43:0 224:0, eff: 6:1 24:0 34:0
+[625] name: `move_car_in_road junction1-1 junction1-2 car1 road0', cost: 1
+[625] pre: 15:0 39:0 64:0, eff: 15:1 25:0 34:0
+[626] name: `move_car_in_road junction1-1 junction1-2 car1 road1', cost: 1
+[626] pre: 15:0 40:0 104:0, eff: 15:1 26:0 34:0
+[627] name: `move_car_in_road junction1-1 junction1-2 car1 road2', cost: 1
+[627] pre: 15:0 41:0 144:0, eff: 15:1 27:0 34:0
+[628] name: `move_car_in_road junction1-1 junction1-2 car1 road3', cost: 1
+[628] pre: 15:0 42:0 184:0, eff: 15:1 28:0 34:0
+[629] name: `move_car_in_road junction1-1 junction1-2 car1 road4', cost: 1
+[629] pre: 15:0 43:0 224:0, eff: 15:1 29:0 34:0
+[630] name: `move_car_in_road junction1-1 junction2-0 car0 road0', cost: 1
+[630] pre: 6:0 39:0 65:0, eff: 6:1 20:0 34:0
+[631] name: `move_car_in_road junction1-1 junction2-0 car0 road1', cost: 1
+[631] pre: 6:0 40:0 105:0, eff: 6:1 21:0 34:0
+[632] name: `move_car_in_road junction1-1 junction2-0 car0 road2', cost: 1
+[632] pre: 6:0 41:0 145:0, eff: 6:1 22:0 34:0
+[633] name: `move_car_in_road junction1-1 junction2-0 car0 road3', cost: 1
+[633] pre: 6:0 42:0 185:0, eff: 6:1 23:0 34:0
+[634] name: `move_car_in_road junction1-1 junction2-0 car0 road4', cost: 1
+[634] pre: 6:0 43:0 225:0, eff: 6:1 24:0 34:0
+[635] name: `move_car_in_road junction1-1 junction2-0 car1 road0', cost: 1
+[635] pre: 15:0 39:0 65:0, eff: 15:1 25:0 34:0
+[636] name: `move_car_in_road junction1-1 junction2-0 car1 road1', cost: 1
+[636] pre: 15:0 40:0 105:0, eff: 15:1 26:0 34:0
+[637] name: `move_car_in_road junction1-1 junction2-0 car1 road2', cost: 1
+[637] pre: 15:0 41:0 145:0, eff: 15:1 27:0 34:0
+[638] name: `move_car_in_road junction1-1 junction2-0 car1 road3', cost: 1
+[638] pre: 15:0 42:0 185:0, eff: 15:1 28:0 34:0
+[639] name: `move_car_in_road junction1-1 junction2-0 car1 road4', cost: 1
+[639] pre: 15:0 43:0 225:0, eff: 15:1 29:0 34:0
+[640] name: `move_car_in_road junction1-1 junction2-1 car0 road0', cost: 1
+[640] pre: 6:0 39:0 66:0, eff: 6:1 20:0 34:0
+[641] name: `move_car_in_road junction1-1 junction2-1 car0 road1', cost: 1
+[641] pre: 6:0 40:0 106:0, eff: 6:1 21:0 34:0
+[642] name: `move_car_in_road junction1-1 junction2-1 car0 road2', cost: 1
+[642] pre: 6:0 41:0 146:0, eff: 6:1 22:0 34:0
+[643] name: `move_car_in_road junction1-1 junction2-1 car0 road3', cost: 1
+[643] pre: 6:0 42:0 186:0, eff: 6:1 23:0 34:0
+[644] name: `move_car_in_road junction1-1 junction2-1 car0 road4', cost: 1
+[644] pre: 6:0 43:0 226:0, eff: 6:1 24:0 34:0
+[645] name: `move_car_in_road junction1-1 junction2-1 car1 road0', cost: 1
+[645] pre: 15:0 39:0 66:0, eff: 15:1 25:0 34:0
+[646] name: `move_car_in_road junction1-1 junction2-1 car1 road1', cost: 1
+[646] pre: 15:0 40:0 106:0, eff: 15:1 26:0 34:0
+[647] name: `move_car_in_road junction1-1 junction2-1 car1 road2', cost: 1
+[647] pre: 15:0 41:0 146:0, eff: 15:1 27:0 34:0
+[648] name: `move_car_in_road junction1-1 junction2-1 car1 road3', cost: 1
+[648] pre: 15:0 42:0 186:0, eff: 15:1 28:0 34:0
+[649] name: `move_car_in_road junction1-1 junction2-1 car1 road4', cost: 1
+[649] pre: 15:0 43:0 226:0, eff: 15:1 29:0 34:0
+[650] name: `move_car_in_road junction1-1 junction2-2 car0 road0', cost: 1
+[650] pre: 6:0 39:0 67:0, eff: 6:1 20:0 34:0
+[651] name: `move_car_in_road junction1-1 junction2-2 car0 road1', cost: 1
+[651] pre: 6:0 40:0 107:0, eff: 6:1 21:0 34:0
+[652] name: `move_car_in_road junction1-1 junction2-2 car0 road2', cost: 1
+[652] pre: 6:0 41:0 147:0, eff: 6:1 22:0 34:0
+[653] name: `move_car_in_road junction1-1 junction2-2 car0 road3', cost: 1
+[653] pre: 6:0 42:0 187:0, eff: 6:1 23:0 34:0
+[654] name: `move_car_in_road junction1-1 junction2-2 car0 road4', cost: 1
+[654] pre: 6:0 43:0 227:0, eff: 6:1 24:0 34:0
+[655] name: `move_car_in_road junction1-1 junction2-2 car1 road0', cost: 1
+[655] pre: 15:0 39:0 67:0, eff: 15:1 25:0 34:0
+[656] name: `move_car_in_road junction1-1 junction2-2 car1 road1', cost: 1
+[656] pre: 15:0 40:0 107:0, eff: 15:1 26:0 34:0
+[657] name: `move_car_in_road junction1-1 junction2-2 car1 road2', cost: 1
+[657] pre: 15:0 41:0 147:0, eff: 15:1 27:0 34:0
+[658] name: `move_car_in_road junction1-1 junction2-2 car1 road3', cost: 1
+[658] pre: 15:0 42:0 187:0, eff: 15:1 28:0 34:0
+[659] name: `move_car_in_road junction1-1 junction2-2 car1 road4', cost: 1
+[659] pre: 15:0 43:0 227:0, eff: 15:1 29:0 34:0
+[660] name: `move_car_in_road junction1-2 junction0-1 car0 road0', cost: 1
+[660] pre: 7:0 39:0 68:0, eff: 7:1 20:0 35:0
+[661] name: `move_car_in_road junction1-2 junction0-1 car0 road1', cost: 1
+[661] pre: 7:0 40:0 108:0, eff: 7:1 21:0 35:0
+[662] name: `move_car_in_road junction1-2 junction0-1 car0 road2', cost: 1
+[662] pre: 7:0 41:0 148:0, eff: 7:1 22:0 35:0
+[663] name: `move_car_in_road junction1-2 junction0-1 car0 road3', cost: 1
+[663] pre: 7:0 42:0 188:0, eff: 7:1 23:0 35:0
+[664] name: `move_car_in_road junction1-2 junction0-1 car0 road4', cost: 1
+[664] pre: 7:0 43:0 228:0, eff: 7:1 24:0 35:0
+[665] name: `move_car_in_road junction1-2 junction0-1 car1 road0', cost: 1
+[665] pre: 16:0 39:0 68:0, eff: 16:1 25:0 35:0
+[666] name: `move_car_in_road junction1-2 junction0-1 car1 road1', cost: 1
+[666] pre: 16:0 40:0 108:0, eff: 16:1 26:0 35:0
+[667] name: `move_car_in_road junction1-2 junction0-1 car1 road2', cost: 1
+[667] pre: 16:0 41:0 148:0, eff: 16:1 27:0 35:0
+[668] name: `move_car_in_road junction1-2 junction0-1 car1 road3', cost: 1
+[668] pre: 16:0 42:0 188:0, eff: 16:1 28:0 35:0
+[669] name: `move_car_in_road junction1-2 junction0-1 car1 road4', cost: 1
+[669] pre: 16:0 43:0 228:0, eff: 16:1 29:0 35:0
+[670] name: `move_car_in_road junction1-2 junction0-2 car0 road0', cost: 1
+[670] pre: 7:0 39:0 69:0, eff: 7:1 20:0 35:0
+[671] name: `move_car_in_road junction1-2 junction0-2 car0 road1', cost: 1
+[671] pre: 7:0 40:0 109:0, eff: 7:1 21:0 35:0
+[672] name: `move_car_in_road junction1-2 junction0-2 car0 road2', cost: 1
+[672] pre: 7:0 41:0 149:0, eff: 7:1 22:0 35:0
+[673] name: `move_car_in_road junction1-2 junction0-2 car0 road3', cost: 1
+[673] pre: 7:0 42:0 189:0, eff: 7:1 23:0 35:0
+[674] name: `move_car_in_road junction1-2 junction0-2 car0 road4', cost: 1
+[674] pre: 7:0 43:0 229:0, eff: 7:1 24:0 35:0
+[675] name: `move_car_in_road junction1-2 junction0-2 car1 road0', cost: 1
+[675] pre: 16:0 39:0 69:0, eff: 16:1 25:0 35:0
+[676] name: `move_car_in_road junction1-2 junction0-2 car1 road1', cost: 1
+[676] pre: 16:0 40:0 109:0, eff: 16:1 26:0 35:0
+[677] name: `move_car_in_road junction1-2 junction0-2 car1 road2', cost: 1
+[677] pre: 16:0 41:0 149:0, eff: 16:1 27:0 35:0
+[678] name: `move_car_in_road junction1-2 junction0-2 car1 road3', cost: 1
+[678] pre: 16:0 42:0 189:0, eff: 16:1 28:0 35:0
+[679] name: `move_car_in_road junction1-2 junction0-2 car1 road4', cost: 1
+[679] pre: 16:0 43:0 229:0, eff: 16:1 29:0 35:0
+[680] name: `move_car_in_road junction1-2 junction1-1 car0 road0', cost: 1
+[680] pre: 7:0 39:0 70:0, eff: 7:1 20:0 35:0
+[681] name: `move_car_in_road junction1-2 junction1-1 car0 road1', cost: 1
+[681] pre: 7:0 40:0 110:0, eff: 7:1 21:0 35:0
+[682] name: `move_car_in_road junction1-2 junction1-1 car0 road2', cost: 1
+[682] pre: 7:0 41:0 150:0, eff: 7:1 22:0 35:0
+[683] name: `move_car_in_road junction1-2 junction1-1 car0 road3', cost: 1
+[683] pre: 7:0 42:0 190:0, eff: 7:1 23:0 35:0
+[684] name: `move_car_in_road junction1-2 junction1-1 car0 road4', cost: 1
+[684] pre: 7:0 43:0 230:0, eff: 7:1 24:0 35:0
+[685] name: `move_car_in_road junction1-2 junction1-1 car1 road0', cost: 1
+[685] pre: 16:0 39:0 70:0, eff: 16:1 25:0 35:0
+[686] name: `move_car_in_road junction1-2 junction1-1 car1 road1', cost: 1
+[686] pre: 16:0 40:0 110:0, eff: 16:1 26:0 35:0
+[687] name: `move_car_in_road junction1-2 junction1-1 car1 road2', cost: 1
+[687] pre: 16:0 41:0 150:0, eff: 16:1 27:0 35:0
+[688] name: `move_car_in_road junction1-2 junction1-1 car1 road3', cost: 1
+[688] pre: 16:0 42:0 190:0, eff: 16:1 28:0 35:0
+[689] name: `move_car_in_road junction1-2 junction1-1 car1 road4', cost: 1
+[689] pre: 16:0 43:0 230:0, eff: 16:1 29:0 35:0
+[690] name: `move_car_in_road junction1-2 junction2-1 car0 road0', cost: 1
+[690] pre: 7:0 39:0 71:0, eff: 7:1 20:0 35:0
+[691] name: `move_car_in_road junction1-2 junction2-1 car0 road1', cost: 1
+[691] pre: 7:0 40:0 111:0, eff: 7:1 21:0 35:0
+[692] name: `move_car_in_road junction1-2 junction2-1 car0 road2', cost: 1
+[692] pre: 7:0 41:0 151:0, eff: 7:1 22:0 35:0
+[693] name: `move_car_in_road junction1-2 junction2-1 car0 road3', cost: 1
+[693] pre: 7:0 42:0 191:0, eff: 7:1 23:0 35:0
+[694] name: `move_car_in_road junction1-2 junction2-1 car0 road4', cost: 1
+[694] pre: 7:0 43:0 231:0, eff: 7:1 24:0 35:0
+[695] name: `move_car_in_road junction1-2 junction2-1 car1 road0', cost: 1
+[695] pre: 16:0 39:0 71:0, eff: 16:1 25:0 35:0
+[696] name: `move_car_in_road junction1-2 junction2-1 car1 road1', cost: 1
+[696] pre: 16:0 40:0 111:0, eff: 16:1 26:0 35:0
+[697] name: `move_car_in_road junction1-2 junction2-1 car1 road2', cost: 1
+[697] pre: 16:0 41:0 151:0, eff: 16:1 27:0 35:0
+[698] name: `move_car_in_road junction1-2 junction2-1 car1 road3', cost: 1
+[698] pre: 16:0 42:0 191:0, eff: 16:1 28:0 35:0
+[699] name: `move_car_in_road junction1-2 junction2-1 car1 road4', cost: 1
+[699] pre: 16:0 43:0 231:0, eff: 16:1 29:0 35:0
+[700] name: `move_car_in_road junction1-2 junction2-2 car0 road0', cost: 1
+[700] pre: 7:0 39:0 72:0, eff: 7:1 20:0 35:0
+[701] name: `move_car_in_road junction1-2 junction2-2 car0 road1', cost: 1
+[701] pre: 7:0 40:0 112:0, eff: 7:1 21:0 35:0
+[702] name: `move_car_in_road junction1-2 junction2-2 car0 road2', cost: 1
+[702] pre: 7:0 41:0 152:0, eff: 7:1 22:0 35:0
+[703] name: `move_car_in_road junction1-2 junction2-2 car0 road3', cost: 1
+[703] pre: 7:0 42:0 192:0, eff: 7:1 23:0 35:0
+[704] name: `move_car_in_road junction1-2 junction2-2 car0 road4', cost: 1
+[704] pre: 7:0 43:0 232:0, eff: 7:1 24:0 35:0
+[705] name: `move_car_in_road junction1-2 junction2-2 car1 road0', cost: 1
+[705] pre: 16:0 39:0 72:0, eff: 16:1 25:0 35:0
+[706] name: `move_car_in_road junction1-2 junction2-2 car1 road1', cost: 1
+[706] pre: 16:0 40:0 112:0, eff: 16:1 26:0 35:0
+[707] name: `move_car_in_road junction1-2 junction2-2 car1 road2', cost: 1
+[707] pre: 16:0 41:0 152:0, eff: 16:1 27:0 35:0
+[708] name: `move_car_in_road junction1-2 junction2-2 car1 road3', cost: 1
+[708] pre: 16:0 42:0 192:0, eff: 16:1 28:0 35:0
+[709] name: `move_car_in_road junction1-2 junction2-2 car1 road4', cost: 1
+[709] pre: 16:0 43:0 232:0, eff: 16:1 29:0 35:0
+[710] name: `move_car_in_road junction2-0 junction1-0 car0 road0', cost: 1
+[710] pre: 8:0 39:0 73:0, eff: 8:1 20:0 36:0
+[711] name: `move_car_in_road junction2-0 junction1-0 car0 road1', cost: 1
+[711] pre: 8:0 40:0 113:0, eff: 8:1 21:0 36:0
+[712] name: `move_car_in_road junction2-0 junction1-0 car0 road2', cost: 1
+[712] pre: 8:0 41:0 153:0, eff: 8:1 22:0 36:0
+[713] name: `move_car_in_road junction2-0 junction1-0 car0 road3', cost: 1
+[713] pre: 8:0 42:0 193:0, eff: 8:1 23:0 36:0
+[714] name: `move_car_in_road junction2-0 junction1-0 car0 road4', cost: 1
+[714] pre: 8:0 43:0 233:0, eff: 8:1 24:0 36:0
+[715] name: `move_car_in_road junction2-0 junction1-0 car1 road0', cost: 1
+[715] pre: 17:0 39:0 73:0, eff: 17:1 25:0 36:0
+[716] name: `move_car_in_road junction2-0 junction1-0 car1 road1', cost: 1
+[716] pre: 17:0 40:0 113:0, eff: 17:1 26:0 36:0
+[717] name: `move_car_in_road junction2-0 junction1-0 car1 road2', cost: 1
+[717] pre: 17:0 41:0 153:0, eff: 17:1 27:0 36:0
+[718] name: `move_car_in_road junction2-0 junction1-0 car1 road3', cost: 1
+[718] pre: 17:0 42:0 193:0, eff: 17:1 28:0 36:0
+[719] name: `move_car_in_road junction2-0 junction1-0 car1 road4', cost: 1
+[719] pre: 17:0 43:0 233:0, eff: 17:1 29:0 36:0
+[720] name: `move_car_in_road junction2-0 junction1-1 car0 road0', cost: 1
+[720] pre: 8:0 39:0 74:0, eff: 8:1 20:0 36:0
+[721] name: `move_car_in_road junction2-0 junction1-1 car0 road1', cost: 1
+[721] pre: 8:0 40:0 114:0, eff: 8:1 21:0 36:0
+[722] name: `move_car_in_road junction2-0 junction1-1 car0 road2', cost: 1
+[722] pre: 8:0 41:0 154:0, eff: 8:1 22:0 36:0
+[723] name: `move_car_in_road junction2-0 junction1-1 car0 road3', cost: 1
+[723] pre: 8:0 42:0 194:0, eff: 8:1 23:0 36:0
+[724] name: `move_car_in_road junction2-0 junction1-1 car0 road4', cost: 1
+[724] pre: 8:0 43:0 234:0, eff: 8:1 24:0 36:0
+[725] name: `move_car_in_road junction2-0 junction1-1 car1 road0', cost: 1
+[725] pre: 17:0 39:0 74:0, eff: 17:1 25:0 36:0
+[726] name: `move_car_in_road junction2-0 junction1-1 car1 road1', cost: 1
+[726] pre: 17:0 40:0 114:0, eff: 17:1 26:0 36:0
+[727] name: `move_car_in_road junction2-0 junction1-1 car1 road2', cost: 1
+[727] pre: 17:0 41:0 154:0, eff: 17:1 27:0 36:0
+[728] name: `move_car_in_road junction2-0 junction1-1 car1 road3', cost: 1
+[728] pre: 17:0 42:0 194:0, eff: 17:1 28:0 36:0
+[729] name: `move_car_in_road junction2-0 junction1-1 car1 road4', cost: 1
+[729] pre: 17:0 43:0 234:0, eff: 17:1 29:0 36:0
+[730] name: `move_car_in_road junction2-0 junction2-1 car0 road0', cost: 1
+[730] pre: 8:0 39:0 75:0, eff: 8:1 20:0 36:0
+[731] name: `move_car_in_road junction2-0 junction2-1 car0 road1', cost: 1
+[731] pre: 8:0 40:0 115:0, eff: 8:1 21:0 36:0
+[732] name: `move_car_in_road junction2-0 junction2-1 car0 road2', cost: 1
+[732] pre: 8:0 41:0 155:0, eff: 8:1 22:0 36:0
+[733] name: `move_car_in_road junction2-0 junction2-1 car0 road3', cost: 1
+[733] pre: 8:0 42:0 195:0, eff: 8:1 23:0 36:0
+[734] name: `move_car_in_road junction2-0 junction2-1 car0 road4', cost: 1
+[734] pre: 8:0 43:0 235:0, eff: 8:1 24:0 36:0
+[735] name: `move_car_in_road junction2-0 junction2-1 car1 road0', cost: 1
+[735] pre: 17:0 39:0 75:0, eff: 17:1 25:0 36:0
+[736] name: `move_car_in_road junction2-0 junction2-1 car1 road1', cost: 1
+[736] pre: 17:0 40:0 115:0, eff: 17:1 26:0 36:0
+[737] name: `move_car_in_road junction2-0 junction2-1 car1 road2', cost: 1
+[737] pre: 17:0 41:0 155:0, eff: 17:1 27:0 36:0
+[738] name: `move_car_in_road junction2-0 junction2-1 car1 road3', cost: 1
+[738] pre: 17:0 42:0 195:0, eff: 17:1 28:0 36:0
+[739] name: `move_car_in_road junction2-0 junction2-1 car1 road4', cost: 1
+[739] pre: 17:0 43:0 235:0, eff: 17:1 29:0 36:0
+[740] name: `move_car_in_road junction2-1 junction1-0 car0 road0', cost: 1
+[740] pre: 9:0 39:0 76:0, eff: 9:1 20:0 37:0
+[741] name: `move_car_in_road junction2-1 junction1-0 car0 road1', cost: 1
+[741] pre: 9:0 40:0 116:0, eff: 9:1 21:0 37:0
+[742] name: `move_car_in_road junction2-1 junction1-0 car0 road2', cost: 1
+[742] pre: 9:0 41:0 156:0, eff: 9:1 22:0 37:0
+[743] name: `move_car_in_road junction2-1 junction1-0 car0 road3', cost: 1
+[743] pre: 9:0 42:0 196:0, eff: 9:1 23:0 37:0
+[744] name: `move_car_in_road junction2-1 junction1-0 car0 road4', cost: 1
+[744] pre: 9:0 43:0 236:0, eff: 9:1 24:0 37:0
+[745] name: `move_car_in_road junction2-1 junction1-0 car1 road0', cost: 1
+[745] pre: 18:0 39:0 76:0, eff: 18:1 25:0 37:0
+[746] name: `move_car_in_road junction2-1 junction1-0 car1 road1', cost: 1
+[746] pre: 18:0 40:0 116:0, eff: 18:1 26:0 37:0
+[747] name: `move_car_in_road junction2-1 junction1-0 car1 road2', cost: 1
+[747] pre: 18:0 41:0 156:0, eff: 18:1 27:0 37:0
+[748] name: `move_car_in_road junction2-1 junction1-0 car1 road3', cost: 1
+[748] pre: 18:0 42:0 196:0, eff: 18:1 28:0 37:0
+[749] name: `move_car_in_road junction2-1 junction1-0 car1 road4', cost: 1
+[749] pre: 18:0 43:0 236:0, eff: 18:1 29:0 37:0
+[750] name: `move_car_in_road junction2-1 junction1-1 car0 road0', cost: 1
+[750] pre: 9:0 39:0 77:0, eff: 9:1 20:0 37:0
+[751] name: `move_car_in_road junction2-1 junction1-1 car0 road1', cost: 1
+[751] pre: 9:0 40:0 117:0, eff: 9:1 21:0 37:0
+[752] name: `move_car_in_road junction2-1 junction1-1 car0 road2', cost: 1
+[752] pre: 9:0 41:0 157:0, eff: 9:1 22:0 37:0
+[753] name: `move_car_in_road junction2-1 junction1-1 car0 road3', cost: 1
+[753] pre: 9:0 42:0 197:0, eff: 9:1 23:0 37:0
+[754] name: `move_car_in_road junction2-1 junction1-1 car0 road4', cost: 1
+[754] pre: 9:0 43:0 237:0, eff: 9:1 24:0 37:0
+[755] name: `move_car_in_road junction2-1 junction1-1 car1 road0', cost: 1
+[755] pre: 18:0 39:0 77:0, eff: 18:1 25:0 37:0
+[756] name: `move_car_in_road junction2-1 junction1-1 car1 road1', cost: 1
+[756] pre: 18:0 40:0 117:0, eff: 18:1 26:0 37:0
+[757] name: `move_car_in_road junction2-1 junction1-1 car1 road2', cost: 1
+[757] pre: 18:0 41:0 157:0, eff: 18:1 27:0 37:0
+[758] name: `move_car_in_road junction2-1 junction1-1 car1 road3', cost: 1
+[758] pre: 18:0 42:0 197:0, eff: 18:1 28:0 37:0
+[759] name: `move_car_in_road junction2-1 junction1-1 car1 road4', cost: 1
+[759] pre: 18:0 43:0 237:0, eff: 18:1 29:0 37:0
+[760] name: `move_car_in_road junction2-1 junction1-2 car0 road0', cost: 1
+[760] pre: 9:0 39:0 78:0, eff: 9:1 20:0 37:0
+[761] name: `move_car_in_road junction2-1 junction1-2 car0 road1', cost: 1
+[761] pre: 9:0 40:0 118:0, eff: 9:1 21:0 37:0
+[762] name: `move_car_in_road junction2-1 junction1-2 car0 road2', cost: 1
+[762] pre: 9:0 41:0 158:0, eff: 9:1 22:0 37:0
+[763] name: `move_car_in_road junction2-1 junction1-2 car0 road3', cost: 1
+[763] pre: 9:0 42:0 198:0, eff: 9:1 23:0 37:0
+[764] name: `move_car_in_road junction2-1 junction1-2 car0 road4', cost: 1
+[764] pre: 9:0 43:0 238:0, eff: 9:1 24:0 37:0
+[765] name: `move_car_in_road junction2-1 junction1-2 car1 road0', cost: 1
+[765] pre: 18:0 39:0 78:0, eff: 18:1 25:0 37:0
+[766] name: `move_car_in_road junction2-1 junction1-2 car1 road1', cost: 1
+[766] pre: 18:0 40:0 118:0, eff: 18:1 26:0 37:0
+[767] name: `move_car_in_road junction2-1 junction1-2 car1 road2', cost: 1
+[767] pre: 18:0 41:0 158:0, eff: 18:1 27:0 37:0
+[768] name: `move_car_in_road junction2-1 junction1-2 car1 road3', cost: 1
+[768] pre: 18:0 42:0 198:0, eff: 18:1 28:0 37:0
+[769] name: `move_car_in_road junction2-1 junction1-2 car1 road4', cost: 1
+[769] pre: 18:0 43:0 238:0, eff: 18:1 29:0 37:0
+[770] name: `move_car_in_road junction2-1 junction2-0 car0 road0', cost: 1
+[770] pre: 9:0 39:0 79:0, eff: 9:1 20:0 37:0
+[771] name: `move_car_in_road junction2-1 junction2-0 car0 road1', cost: 1
+[771] pre: 9:0 40:0 119:0, eff: 9:1 21:0 37:0
+[772] name: `move_car_in_road junction2-1 junction2-0 car0 road2', cost: 1
+[772] pre: 9:0 41:0 159:0, eff: 9:1 22:0 37:0
+[773] name: `move_car_in_road junction2-1 junction2-0 car0 road3', cost: 1
+[773] pre: 9:0 42:0 199:0, eff: 9:1 23:0 37:0
+[774] name: `move_car_in_road junction2-1 junction2-0 car0 road4', cost: 1
+[774] pre: 9:0 43:0 239:0, eff: 9:1 24:0 37:0
+[775] name: `move_car_in_road junction2-1 junction2-0 car1 road0', cost: 1
+[775] pre: 18:0 39:0 79:0, eff: 18:1 25:0 37:0
+[776] name: `move_car_in_road junction2-1 junction2-0 car1 road1', cost: 1
+[776] pre: 18:0 40:0 119:0, eff: 18:1 26:0 37:0
+[777] name: `move_car_in_road junction2-1 junction2-0 car1 road2', cost: 1
+[777] pre: 18:0 41:0 159:0, eff: 18:1 27:0 37:0
+[778] name: `move_car_in_road junction2-1 junction2-0 car1 road3', cost: 1
+[778] pre: 18:0 42:0 199:0, eff: 18:1 28:0 37:0
+[779] name: `move_car_in_road junction2-1 junction2-0 car1 road4', cost: 1
+[779] pre: 18:0 43:0 239:0, eff: 18:1 29:0 37:0
+[780] name: `move_car_in_road junction2-1 junction2-2 car0 road0', cost: 1
+[780] pre: 9:0 39:0 80:0, eff: 9:1 20:0 37:0
+[781] name: `move_car_in_road junction2-1 junction2-2 car0 road1', cost: 1
+[781] pre: 9:0 40:0 120:0, eff: 9:1 21:0 37:0
+[782] name: `move_car_in_road junction2-1 junction2-2 car0 road2', cost: 1
+[782] pre: 9:0 41:0 160:0, eff: 9:1 22:0 37:0
+[783] name: `move_car_in_road junction2-1 junction2-2 car0 road3', cost: 1
+[783] pre: 9:0 42:0 200:0, eff: 9:1 23:0 37:0
+[784] name: `move_car_in_road junction2-1 junction2-2 car0 road4', cost: 1
+[784] pre: 9:0 43:0 240:0, eff: 9:1 24:0 37:0
+[785] name: `move_car_in_road junction2-1 junction2-2 car1 road0', cost: 1
+[785] pre: 18:0 39:0 80:0, eff: 18:1 25:0 37:0
+[786] name: `move_car_in_road junction2-1 junction2-2 car1 road1', cost: 1
+[786] pre: 18:0 40:0 120:0, eff: 18:1 26:0 37:0
+[787] name: `move_car_in_road junction2-1 junction2-2 car1 road2', cost: 1
+[787] pre: 18:0 41:0 160:0, eff: 18:1 27:0 37:0
+[788] name: `move_car_in_road junction2-1 junction2-2 car1 road3', cost: 1
+[788] pre: 18:0 42:0 200:0, eff: 18:1 28:0 37:0
+[789] name: `move_car_in_road junction2-1 junction2-2 car1 road4', cost: 1
+[789] pre: 18:0 43:0 240:0, eff: 18:1 29:0 37:0
+[790] name: `move_car_in_road junction2-2 junction1-1 car0 road0', cost: 1
+[790] pre: 10:0 39:0 81:0, eff: 10:1 20:0 38:0
+[791] name: `move_car_in_road junction2-2 junction1-1 car0 road1', cost: 1
+[791] pre: 10:0 40:0 121:0, eff: 10:1 21:0 38:0
+[792] name: `move_car_in_road junction2-2 junction1-1 car0 road2', cost: 1
+[792] pre: 10:0 41:0 161:0, eff: 10:1 22:0 38:0
+[793] name: `move_car_in_road junction2-2 junction1-1 car0 road3', cost: 1
+[793] pre: 10:0 42:0 201:0, eff: 10:1 23:0 38:0
+[794] name: `move_car_in_road junction2-2 junction1-1 car0 road4', cost: 1
+[794] pre: 10:0 43:0 241:0, eff: 10:1 24:0 38:0
+[795] name: `move_car_in_road junction2-2 junction1-1 car1 road0', cost: 1
+[795] pre: 19:0 39:0 81:0, eff: 19:1 25:0 38:0
+[796] name: `move_car_in_road junction2-2 junction1-1 car1 road1', cost: 1
+[796] pre: 19:0 40:0 121:0, eff: 19:1 26:0 38:0
+[797] name: `move_car_in_road junction2-2 junction1-1 car1 road2', cost: 1
+[797] pre: 19:0 41:0 161:0, eff: 19:1 27:0 38:0
+[798] name: `move_car_in_road junction2-2 junction1-1 car1 road3', cost: 1
+[798] pre: 19:0 42:0 201:0, eff: 19:1 28:0 38:0
+[799] name: `move_car_in_road junction2-2 junction1-1 car1 road4', cost: 1
+[799] pre: 19:0 43:0 241:0, eff: 19:1 29:0 38:0
+[800] name: `move_car_in_road junction2-2 junction1-2 car0 road0', cost: 1
+[800] pre: 10:0 39:0 82:0, eff: 10:1 20:0 38:0
+[801] name: `move_car_in_road junction2-2 junction1-2 car0 road1', cost: 1
+[801] pre: 10:0 40:0 122:0, eff: 10:1 21:0 38:0
+[802] name: `move_car_in_road junction2-2 junction1-2 car0 road2', cost: 1
+[802] pre: 10:0 41:0 162:0, eff: 10:1 22:0 38:0
+[803] name: `move_car_in_road junction2-2 junction1-2 car0 road3', cost: 1
+[803] pre: 10:0 42:0 202:0, eff: 10:1 23:0 38:0
+[804] name: `move_car_in_road junction2-2 junction1-2 car0 road4', cost: 1
+[804] pre: 10:0 43:0 242:0, eff: 10:1 24:0 38:0
+[805] name: `move_car_in_road junction2-2 junction1-2 car1 road0', cost: 1
+[805] pre: 19:0 39:0 82:0, eff: 19:1 25:0 38:0
+[806] name: `move_car_in_road junction2-2 junction1-2 car1 road1', cost: 1
+[806] pre: 19:0 40:0 122:0, eff: 19:1 26:0 38:0
+[807] name: `move_car_in_road junction2-2 junction1-2 car1 road2', cost: 1
+[807] pre: 19:0 41:0 162:0, eff: 19:1 27:0 38:0
+[808] name: `move_car_in_road junction2-2 junction1-2 car1 road3', cost: 1
+[808] pre: 19:0 42:0 202:0, eff: 19:1 28:0 38:0
+[809] name: `move_car_in_road junction2-2 junction1-2 car1 road4', cost: 1
+[809] pre: 19:0 43:0 242:0, eff: 19:1 29:0 38:0
+[810] name: `move_car_in_road junction2-2 junction2-1 car0 road0', cost: 1
+[810] pre: 10:0 39:0 83:0, eff: 10:1 20:0 38:0
+[811] name: `move_car_in_road junction2-2 junction2-1 car0 road1', cost: 1
+[811] pre: 10:0 40:0 123:0, eff: 10:1 21:0 38:0
+[812] name: `move_car_in_road junction2-2 junction2-1 car0 road2', cost: 1
+[812] pre: 10:0 41:0 163:0, eff: 10:1 22:0 38:0
+[813] name: `move_car_in_road junction2-2 junction2-1 car0 road3', cost: 1
+[813] pre: 10:0 42:0 203:0, eff: 10:1 23:0 38:0
+[814] name: `move_car_in_road junction2-2 junction2-1 car0 road4', cost: 1
+[814] pre: 10:0 43:0 243:0, eff: 10:1 24:0 38:0
+[815] name: `move_car_in_road junction2-2 junction2-1 car1 road0', cost: 1
+[815] pre: 19:0 39:0 83:0, eff: 19:1 25:0 38:0
+[816] name: `move_car_in_road junction2-2 junction2-1 car1 road1', cost: 1
+[816] pre: 19:0 40:0 123:0, eff: 19:1 26:0 38:0
+[817] name: `move_car_in_road junction2-2 junction2-1 car1 road2', cost: 1
+[817] pre: 19:0 41:0 163:0, eff: 19:1 27:0 38:0
+[818] name: `move_car_in_road junction2-2 junction2-1 car1 road3', cost: 1
+[818] pre: 19:0 42:0 203:0, eff: 19:1 28:0 38:0
+[819] name: `move_car_in_road junction2-2 junction2-1 car1 road4', cost: 1
+[819] pre: 19:0 43:0 243:0, eff: 19:1 29:0 38:0
+[820] name: `move_car_out_road junction0-0 junction0-1 car0 road0', cost: 1
+[820] pre: 20:0 31:0 39:0 44:0, eff: 3:0 20:1 31:1
+[821] name: `move_car_out_road junction0-0 junction0-1 car0 road1', cost: 1
+[821] pre: 21:0 31:0 40:0 84:0, eff: 3:0 21:1 31:1
+[822] name: `move_car_out_road junction0-0 junction0-1 car0 road2', cost: 1
+[822] pre: 22:0 31:0 41:0 124:0, eff: 3:0 22:1 31:1
+[823] name: `move_car_out_road junction0-0 junction0-1 car0 road3', cost: 1
+[823] pre: 23:0 31:0 42:0 164:0, eff: 3:0 23:1 31:1
+[824] name: `move_car_out_road junction0-0 junction0-1 car0 road4', cost: 1
+[824] pre: 24:0 31:0 43:0 204:0, eff: 3:0 24:1 31:1
+[825] name: `move_car_out_road junction0-0 junction0-1 car1 road0', cost: 1
+[825] pre: 25:0 31:0 39:0 44:0, eff: 12:0 25:1 31:1
+[826] name: `move_car_out_road junction0-0 junction0-1 car1 road1', cost: 1
+[826] pre: 26:0 31:0 40:0 84:0, eff: 12:0 26:1 31:1
+[827] name: `move_car_out_road junction0-0 junction0-1 car1 road2', cost: 1
+[827] pre: 27:0 31:0 41:0 124:0, eff: 12:0 27:1 31:1
+[828] name: `move_car_out_road junction0-0 junction0-1 car1 road3', cost: 1
+[828] pre: 28:0 31:0 42:0 164:0, eff: 12:0 28:1 31:1
+[829] name: `move_car_out_road junction0-0 junction0-1 car1 road4', cost: 1
+[829] pre: 29:0 31:0 43:0 204:0, eff: 12:0 29:1 31:1
+[830] name: `move_car_out_road junction0-0 junction1-0 car0 road0', cost: 1
+[830] pre: 20:0 33:0 39:0 45:0, eff: 5:0 20:1 33:1
+[831] name: `move_car_out_road junction0-0 junction1-0 car0 road1', cost: 1
+[831] pre: 21:0 33:0 40:0 85:0, eff: 5:0 21:1 33:1
+[832] name: `move_car_out_road junction0-0 junction1-0 car0 road2', cost: 1
+[832] pre: 22:0 33:0 41:0 125:0, eff: 5:0 22:1 33:1
+[833] name: `move_car_out_road junction0-0 junction1-0 car0 road3', cost: 1
+[833] pre: 23:0 33:0 42:0 165:0, eff: 5:0 23:1 33:1
+[834] name: `move_car_out_road junction0-0 junction1-0 car0 road4', cost: 1
+[834] pre: 24:0 33:0 43:0 205:0, eff: 5:0 24:1 33:1
+[835] name: `move_car_out_road junction0-0 junction1-0 car1 road0', cost: 1
+[835] pre: 25:0 33:0 39:0 45:0, eff: 14:0 25:1 33:1
+[836] name: `move_car_out_road junction0-0 junction1-0 car1 road1', cost: 1
+[836] pre: 26:0 33:0 40:0 85:0, eff: 14:0 26:1 33:1
+[837] name: `move_car_out_road junction0-0 junction1-0 car1 road2', cost: 1
+[837] pre: 27:0 33:0 41:0 125:0, eff: 14:0 27:1 33:1
+[838] name: `move_car_out_road junction0-0 junction1-0 car1 road3', cost: 1
+[838] pre: 28:0 33:0 42:0 165:0, eff: 14:0 28:1 33:1
+[839] name: `move_car_out_road junction0-0 junction1-0 car1 road4', cost: 1
+[839] pre: 29:0 33:0 43:0 205:0, eff: 14:0 29:1 33:1
+[840] name: `move_car_out_road junction0-0 junction1-1 car0 road0', cost: 1
+[840] pre: 20:0 34:0 39:0 46:0, eff: 6:0 20:1 34:1
+[841] name: `move_car_out_road junction0-0 junction1-1 car0 road1', cost: 1
+[841] pre: 21:0 34:0 40:0 86:0, eff: 6:0 21:1 34:1
+[842] name: `move_car_out_road junction0-0 junction1-1 car0 road2', cost: 1
+[842] pre: 22:0 34:0 41:0 126:0, eff: 6:0 22:1 34:1
+[843] name: `move_car_out_road junction0-0 junction1-1 car0 road3', cost: 1
+[843] pre: 23:0 34:0 42:0 166:0, eff: 6:0 23:1 34:1
+[844] name: `move_car_out_road junction0-0 junction1-1 car0 road4', cost: 1
+[844] pre: 24:0 34:0 43:0 206:0, eff: 6:0 24:1 34:1
+[845] name: `move_car_out_road junction0-0 junction1-1 car1 road0', cost: 1
+[845] pre: 25:0 34:0 39:0 46:0, eff: 15:0 25:1 34:1
+[846] name: `move_car_out_road junction0-0 junction1-1 car1 road1', cost: 1
+[846] pre: 26:0 34:0 40:0 86:0, eff: 15:0 26:1 34:1
+[847] name: `move_car_out_road junction0-0 junction1-1 car1 road2', cost: 1
+[847] pre: 27:0 34:0 41:0 126:0, eff: 15:0 27:1 34:1
+[848] name: `move_car_out_road junction0-0 junction1-1 car1 road3', cost: 1
+[848] pre: 28:0 34:0 42:0 166:0, eff: 15:0 28:1 34:1
+[849] name: `move_car_out_road junction0-0 junction1-1 car1 road4', cost: 1
+[849] pre: 29:0 34:0 43:0 206:0, eff: 15:0 29:1 34:1
+[850] name: `move_car_out_road junction0-1 junction0-0 car0 road0', cost: 1
+[850] pre: 20:0 30:0 39:0 47:0, eff: 2:0 20:1 30:1
+[851] name: `move_car_out_road junction0-1 junction0-0 car0 road1', cost: 1
+[851] pre: 21:0 30:0 40:0 87:0, eff: 2:0 21:1 30:1
+[852] name: `move_car_out_road junction0-1 junction0-0 car0 road2', cost: 1
+[852] pre: 22:0 30:0 41:0 127:0, eff: 2:0 22:1 30:1
+[853] name: `move_car_out_road junction0-1 junction0-0 car0 road3', cost: 1
+[853] pre: 23:0 30:0 42:0 167:0, eff: 2:0 23:1 30:1
+[854] name: `move_car_out_road junction0-1 junction0-0 car0 road4', cost: 1
+[854] pre: 24:0 30:0 43:0 207:0, eff: 2:0 24:1 30:1
+[855] name: `move_car_out_road junction0-1 junction0-0 car1 road0', cost: 1
+[855] pre: 25:0 30:0 39:0 47:0, eff: 11:0 25:1 30:1
+[856] name: `move_car_out_road junction0-1 junction0-0 car1 road1', cost: 1
+[856] pre: 26:0 30:0 40:0 87:0, eff: 11:0 26:1 30:1
+[857] name: `move_car_out_road junction0-1 junction0-0 car1 road2', cost: 1
+[857] pre: 27:0 30:0 41:0 127:0, eff: 11:0 27:1 30:1
+[858] name: `move_car_out_road junction0-1 junction0-0 car1 road3', cost: 1
+[858] pre: 28:0 30:0 42:0 167:0, eff: 11:0 28:1 30:1
+[859] name: `move_car_out_road junction0-1 junction0-0 car1 road4', cost: 1
+[859] pre: 29:0 30:0 43:0 207:0, eff: 11:0 29:1 30:1
+[860] name: `move_car_out_road junction0-1 junction0-2 car0 road0', cost: 1
+[860] pre: 20:0 32:0 39:0 48:0, eff: 4:0 20:1 32:1
+[861] name: `move_car_out_road junction0-1 junction0-2 car0 road1', cost: 1
+[861] pre: 21:0 32:0 40:0 88:0, eff: 4:0 21:1 32:1
+[862] name: `move_car_out_road junction0-1 junction0-2 car0 road2', cost: 1
+[862] pre: 22:0 32:0 41:0 128:0, eff: 4:0 22:1 32:1
+[863] name: `move_car_out_road junction0-1 junction0-2 car0 road3', cost: 1
+[863] pre: 23:0 32:0 42:0 168:0, eff: 4:0 23:1 32:1
+[864] name: `move_car_out_road junction0-1 junction0-2 car0 road4', cost: 1
+[864] pre: 24:0 32:0 43:0 208:0, eff: 4:0 24:1 32:1
+[865] name: `move_car_out_road junction0-1 junction0-2 car1 road0', cost: 1
+[865] pre: 25:0 32:0 39:0 48:0, eff: 13:0 25:1 32:1
+[866] name: `move_car_out_road junction0-1 junction0-2 car1 road1', cost: 1
+[866] pre: 26:0 32:0 40:0 88:0, eff: 13:0 26:1 32:1
+[867] name: `move_car_out_road junction0-1 junction0-2 car1 road2', cost: 1
+[867] pre: 27:0 32:0 41:0 128:0, eff: 13:0 27:1 32:1
+[868] name: `move_car_out_road junction0-1 junction0-2 car1 road3', cost: 1
+[868] pre: 28:0 32:0 42:0 168:0, eff: 13:0 28:1 32:1
+[869] name: `move_car_out_road junction0-1 junction0-2 car1 road4', cost: 1
+[869] pre: 29:0 32:0 43:0 208:0, eff: 13:0 29:1 32:1
+[870] name: `move_car_out_road junction0-1 junction1-0 car0 road0', cost: 1
+[870] pre: 20:0 33:0 39:0 49:0, eff: 5:0 20:1 33:1
+[871] name: `move_car_out_road junction0-1 junction1-0 car0 road1', cost: 1
+[871] pre: 21:0 33:0 40:0 89:0, eff: 5:0 21:1 33:1
+[872] name: `move_car_out_road junction0-1 junction1-0 car0 road2', cost: 1
+[872] pre: 22:0 33:0 41:0 129:0, eff: 5:0 22:1 33:1
+[873] name: `move_car_out_road junction0-1 junction1-0 car0 road3', cost: 1
+[873] pre: 23:0 33:0 42:0 169:0, eff: 5:0 23:1 33:1
+[874] name: `move_car_out_road junction0-1 junction1-0 car0 road4', cost: 1
+[874] pre: 24:0 33:0 43:0 209:0, eff: 5:0 24:1 33:1
+[875] name: `move_car_out_road junction0-1 junction1-0 car1 road0', cost: 1
+[875] pre: 25:0 33:0 39:0 49:0, eff: 14:0 25:1 33:1
+[876] name: `move_car_out_road junction0-1 junction1-0 car1 road1', cost: 1
+[876] pre: 26:0 33:0 40:0 89:0, eff: 14:0 26:1 33:1
+[877] name: `move_car_out_road junction0-1 junction1-0 car1 road2', cost: 1
+[877] pre: 27:0 33:0 41:0 129:0, eff: 14:0 27:1 33:1
+[878] name: `move_car_out_road junction0-1 junction1-0 car1 road3', cost: 1
+[878] pre: 28:0 33:0 42:0 169:0, eff: 14:0 28:1 33:1
+[879] name: `move_car_out_road junction0-1 junction1-0 car1 road4', cost: 1
+[879] pre: 29:0 33:0 43:0 209:0, eff: 14:0 29:1 33:1
+[880] name: `move_car_out_road junction0-1 junction1-1 car0 road0', cost: 1
+[880] pre: 20:0 34:0 39:0 50:0, eff: 6:0 20:1 34:1
+[881] name: `move_car_out_road junction0-1 junction1-1 car0 road1', cost: 1
+[881] pre: 21:0 34:0 40:0 90:0, eff: 6:0 21:1 34:1
+[882] name: `move_car_out_road junction0-1 junction1-1 car0 road2', cost: 1
+[882] pre: 22:0 34:0 41:0 130:0, eff: 6:0 22:1 34:1
+[883] name: `move_car_out_road junction0-1 junction1-1 car0 road3', cost: 1
+[883] pre: 23:0 34:0 42:0 170:0, eff: 6:0 23:1 34:1
+[884] name: `move_car_out_road junction0-1 junction1-1 car0 road4', cost: 1
+[884] pre: 24:0 34:0 43:0 210:0, eff: 6:0 24:1 34:1
+[885] name: `move_car_out_road junction0-1 junction1-1 car1 road0', cost: 1
+[885] pre: 25:0 34:0 39:0 50:0, eff: 15:0 25:1 34:1
+[886] name: `move_car_out_road junction0-1 junction1-1 car1 road1', cost: 1
+[886] pre: 26:0 34:0 40:0 90:0, eff: 15:0 26:1 34:1
+[887] name: `move_car_out_road junction0-1 junction1-1 car1 road2', cost: 1
+[887] pre: 27:0 34:0 41:0 130:0, eff: 15:0 27:1 34:1
+[888] name: `move_car_out_road junction0-1 junction1-1 car1 road3', cost: 1
+[888] pre: 28:0 34:0 42:0 170:0, eff: 15:0 28:1 34:1
+[889] name: `move_car_out_road junction0-1 junction1-1 car1 road4', cost: 1
+[889] pre: 29:0 34:0 43:0 210:0, eff: 15:0 29:1 34:1
+[890] name: `move_car_out_road junction0-1 junction1-2 car0 road0', cost: 1
+[890] pre: 20:0 35:0 39:0 51:0, eff: 7:0 20:1 35:1
+[891] name: `move_car_out_road junction0-1 junction1-2 car0 road1', cost: 1
+[891] pre: 21:0 35:0 40:0 91:0, eff: 7:0 21:1 35:1
+[892] name: `move_car_out_road junction0-1 junction1-2 car0 road2', cost: 1
+[892] pre: 22:0 35:0 41:0 131:0, eff: 7:0 22:1 35:1
+[893] name: `move_car_out_road junction0-1 junction1-2 car0 road3', cost: 1
+[893] pre: 23:0 35:0 42:0 171:0, eff: 7:0 23:1 35:1
+[894] name: `move_car_out_road junction0-1 junction1-2 car0 road4', cost: 1
+[894] pre: 24:0 35:0 43:0 211:0, eff: 7:0 24:1 35:1
+[895] name: `move_car_out_road junction0-1 junction1-2 car1 road0', cost: 1
+[895] pre: 25:0 35:0 39:0 51:0, eff: 16:0 25:1 35:1
+[896] name: `move_car_out_road junction0-1 junction1-2 car1 road1', cost: 1
+[896] pre: 26:0 35:0 40:0 91:0, eff: 16:0 26:1 35:1
+[897] name: `move_car_out_road junction0-1 junction1-2 car1 road2', cost: 1
+[897] pre: 27:0 35:0 41:0 131:0, eff: 16:0 27:1 35:1
+[898] name: `move_car_out_road junction0-1 junction1-2 car1 road3', cost: 1
+[898] pre: 28:0 35:0 42:0 171:0, eff: 16:0 28:1 35:1
+[899] name: `move_car_out_road junction0-1 junction1-2 car1 road4', cost: 1
+[899] pre: 29:0 35:0 43:0 211:0, eff: 16:0 29:1 35:1
+[900] name: `move_car_out_road junction0-2 junction0-1 car0 road0', cost: 1
+[900] pre: 20:0 31:0 39:0 52:0, eff: 3:0 20:1 31:1
+[901] name: `move_car_out_road junction0-2 junction0-1 car0 road1', cost: 1
+[901] pre: 21:0 31:0 40:0 92:0, eff: 3:0 21:1 31:1
+[902] name: `move_car_out_road junction0-2 junction0-1 car0 road2', cost: 1
+[902] pre: 22:0 31:0 41:0 132:0, eff: 3:0 22:1 31:1
+[903] name: `move_car_out_road junction0-2 junction0-1 car0 road3', cost: 1
+[903] pre: 23:0 31:0 42:0 172:0, eff: 3:0 23:1 31:1
+[904] name: `move_car_out_road junction0-2 junction0-1 car0 road4', cost: 1
+[904] pre: 24:0 31:0 43:0 212:0, eff: 3:0 24:1 31:1
+[905] name: `move_car_out_road junction0-2 junction0-1 car1 road0', cost: 1
+[905] pre: 25:0 31:0 39:0 52:0, eff: 12:0 25:1 31:1
+[906] name: `move_car_out_road junction0-2 junction0-1 car1 road1', cost: 1
+[906] pre: 26:0 31:0 40:0 92:0, eff: 12:0 26:1 31:1
+[907] name: `move_car_out_road junction0-2 junction0-1 car1 road2', cost: 1
+[907] pre: 27:0 31:0 41:0 132:0, eff: 12:0 27:1 31:1
+[908] name: `move_car_out_road junction0-2 junction0-1 car1 road3', cost: 1
+[908] pre: 28:0 31:0 42:0 172:0, eff: 12:0 28:1 31:1
+[909] name: `move_car_out_road junction0-2 junction0-1 car1 road4', cost: 1
+[909] pre: 29:0 31:0 43:0 212:0, eff: 12:0 29:1 31:1
+[910] name: `move_car_out_road junction0-2 junction1-1 car0 road0', cost: 1
+[910] pre: 20:0 34:0 39:0 53:0, eff: 6:0 20:1 34:1
+[911] name: `move_car_out_road junction0-2 junction1-1 car0 road1', cost: 1
+[911] pre: 21:0 34:0 40:0 93:0, eff: 6:0 21:1 34:1
+[912] name: `move_car_out_road junction0-2 junction1-1 car0 road2', cost: 1
+[912] pre: 22:0 34:0 41:0 133:0, eff: 6:0 22:1 34:1
+[913] name: `move_car_out_road junction0-2 junction1-1 car0 road3', cost: 1
+[913] pre: 23:0 34:0 42:0 173:0, eff: 6:0 23:1 34:1
+[914] name: `move_car_out_road junction0-2 junction1-1 car0 road4', cost: 1
+[914] pre: 24:0 34:0 43:0 213:0, eff: 6:0 24:1 34:1
+[915] name: `move_car_out_road junction0-2 junction1-1 car1 road0', cost: 1
+[915] pre: 25:0 34:0 39:0 53:0, eff: 15:0 25:1 34:1
+[916] name: `move_car_out_road junction0-2 junction1-1 car1 road1', cost: 1
+[916] pre: 26:0 34:0 40:0 93:0, eff: 15:0 26:1 34:1
+[917] name: `move_car_out_road junction0-2 junction1-1 car1 road2', cost: 1
+[917] pre: 27:0 34:0 41:0 133:0, eff: 15:0 27:1 34:1
+[918] name: `move_car_out_road junction0-2 junction1-1 car1 road3', cost: 1
+[918] pre: 28:0 34:0 42:0 173:0, eff: 15:0 28:1 34:1
+[919] name: `move_car_out_road junction0-2 junction1-1 car1 road4', cost: 1
+[919] pre: 29:0 34:0 43:0 213:0, eff: 15:0 29:1 34:1
+[920] name: `move_car_out_road junction0-2 junction1-2 car0 road0', cost: 1
+[920] pre: 20:0 35:0 39:0 54:0, eff: 7:0 20:1 35:1
+[921] name: `move_car_out_road junction0-2 junction1-2 car0 road1', cost: 1
+[921] pre: 21:0 35:0 40:0 94:0, eff: 7:0 21:1 35:1
+[922] name: `move_car_out_road junction0-2 junction1-2 car0 road2', cost: 1
+[922] pre: 22:0 35:0 41:0 134:0, eff: 7:0 22:1 35:1
+[923] name: `move_car_out_road junction0-2 junction1-2 car0 road3', cost: 1
+[923] pre: 23:0 35:0 42:0 174:0, eff: 7:0 23:1 35:1
+[924] name: `move_car_out_road junction0-2 junction1-2 car0 road4', cost: 1
+[924] pre: 24:0 35:0 43:0 214:0, eff: 7:0 24:1 35:1
+[925] name: `move_car_out_road junction0-2 junction1-2 car1 road0', cost: 1
+[925] pre: 25:0 35:0 39:0 54:0, eff: 16:0 25:1 35:1
+[926] name: `move_car_out_road junction0-2 junction1-2 car1 road1', cost: 1
+[926] pre: 26:0 35:0 40:0 94:0, eff: 16:0 26:1 35:1
+[927] name: `move_car_out_road junction0-2 junction1-2 car1 road2', cost: 1
+[927] pre: 27:0 35:0 41:0 134:0, eff: 16:0 27:1 35:1
+[928] name: `move_car_out_road junction0-2 junction1-2 car1 road3', cost: 1
+[928] pre: 28:0 35:0 42:0 174:0, eff: 16:0 28:1 35:1
+[929] name: `move_car_out_road junction0-2 junction1-2 car1 road4', cost: 1
+[929] pre: 29:0 35:0 43:0 214:0, eff: 16:0 29:1 35:1
+[930] name: `move_car_out_road junction1-0 junction0-0 car0 road0', cost: 1
+[930] pre: 20:0 30:0 39:0 55:0, eff: 2:0 20:1 30:1
+[931] name: `move_car_out_road junction1-0 junction0-0 car0 road1', cost: 1
+[931] pre: 21:0 30:0 40:0 95:0, eff: 2:0 21:1 30:1
+[932] name: `move_car_out_road junction1-0 junction0-0 car0 road2', cost: 1
+[932] pre: 22:0 30:0 41:0 135:0, eff: 2:0 22:1 30:1
+[933] name: `move_car_out_road junction1-0 junction0-0 car0 road3', cost: 1
+[933] pre: 23:0 30:0 42:0 175:0, eff: 2:0 23:1 30:1
+[934] name: `move_car_out_road junction1-0 junction0-0 car0 road4', cost: 1
+[934] pre: 24:0 30:0 43:0 215:0, eff: 2:0 24:1 30:1
+[935] name: `move_car_out_road junction1-0 junction0-0 car1 road0', cost: 1
+[935] pre: 25:0 30:0 39:0 55:0, eff: 11:0 25:1 30:1
+[936] name: `move_car_out_road junction1-0 junction0-0 car1 road1', cost: 1
+[936] pre: 26:0 30:0 40:0 95:0, eff: 11:0 26:1 30:1
+[937] name: `move_car_out_road junction1-0 junction0-0 car1 road2', cost: 1
+[937] pre: 27:0 30:0 41:0 135:0, eff: 11:0 27:1 30:1
+[938] name: `move_car_out_road junction1-0 junction0-0 car1 road3', cost: 1
+[938] pre: 28:0 30:0 42:0 175:0, eff: 11:0 28:1 30:1
+[939] name: `move_car_out_road junction1-0 junction0-0 car1 road4', cost: 1
+[939] pre: 29:0 30:0 43:0 215:0, eff: 11:0 29:1 30:1
+[940] name: `move_car_out_road junction1-0 junction0-1 car0 road0', cost: 1
+[940] pre: 20:0 31:0 39:0 56:0, eff: 3:0 20:1 31:1
+[941] name: `move_car_out_road junction1-0 junction0-1 car0 road1', cost: 1
+[941] pre: 21:0 31:0 40:0 96:0, eff: 3:0 21:1 31:1
+[942] name: `move_car_out_road junction1-0 junction0-1 car0 road2', cost: 1
+[942] pre: 22:0 31:0 41:0 136:0, eff: 3:0 22:1 31:1
+[943] name: `move_car_out_road junction1-0 junction0-1 car0 road3', cost: 1
+[943] pre: 23:0 31:0 42:0 176:0, eff: 3:0 23:1 31:1
+[944] name: `move_car_out_road junction1-0 junction0-1 car0 road4', cost: 1
+[944] pre: 24:0 31:0 43:0 216:0, eff: 3:0 24:1 31:1
+[945] name: `move_car_out_road junction1-0 junction0-1 car1 road0', cost: 1
+[945] pre: 25:0 31:0 39:0 56:0, eff: 12:0 25:1 31:1
+[946] name: `move_car_out_road junction1-0 junction0-1 car1 road1', cost: 1
+[946] pre: 26:0 31:0 40:0 96:0, eff: 12:0 26:1 31:1
+[947] name: `move_car_out_road junction1-0 junction0-1 car1 road2', cost: 1
+[947] pre: 27:0 31:0 41:0 136:0, eff: 12:0 27:1 31:1
+[948] name: `move_car_out_road junction1-0 junction0-1 car1 road3', cost: 1
+[948] pre: 28:0 31:0 42:0 176:0, eff: 12:0 28:1 31:1
+[949] name: `move_car_out_road junction1-0 junction0-1 car1 road4', cost: 1
+[949] pre: 29:0 31:0 43:0 216:0, eff: 12:0 29:1 31:1
+[950] name: `move_car_out_road junction1-0 junction1-1 car0 road0', cost: 1
+[950] pre: 20:0 34:0 39:0 57:0, eff: 6:0 20:1 34:1
+[951] name: `move_car_out_road junction1-0 junction1-1 car0 road1', cost: 1
+[951] pre: 21:0 34:0 40:0 97:0, eff: 6:0 21:1 34:1
+[952] name: `move_car_out_road junction1-0 junction1-1 car0 road2', cost: 1
+[952] pre: 22:0 34:0 41:0 137:0, eff: 6:0 22:1 34:1
+[953] name: `move_car_out_road junction1-0 junction1-1 car0 road3', cost: 1
+[953] pre: 23:0 34:0 42:0 177:0, eff: 6:0 23:1 34:1
+[954] name: `move_car_out_road junction1-0 junction1-1 car0 road4', cost: 1
+[954] pre: 24:0 34:0 43:0 217:0, eff: 6:0 24:1 34:1
+[955] name: `move_car_out_road junction1-0 junction1-1 car1 road0', cost: 1
+[955] pre: 25:0 34:0 39:0 57:0, eff: 15:0 25:1 34:1
+[956] name: `move_car_out_road junction1-0 junction1-1 car1 road1', cost: 1
+[956] pre: 26:0 34:0 40:0 97:0, eff: 15:0 26:1 34:1
+[957] name: `move_car_out_road junction1-0 junction1-1 car1 road2', cost: 1
+[957] pre: 27:0 34:0 41:0 137:0, eff: 15:0 27:1 34:1
+[958] name: `move_car_out_road junction1-0 junction1-1 car1 road3', cost: 1
+[958] pre: 28:0 34:0 42:0 177:0, eff: 15:0 28:1 34:1
+[959] name: `move_car_out_road junction1-0 junction1-1 car1 road4', cost: 1
+[959] pre: 29:0 34:0 43:0 217:0, eff: 15:0 29:1 34:1
+[960] name: `move_car_out_road junction1-0 junction2-0 car0 road0', cost: 1
+[960] pre: 20:0 36:0 39:0 58:0, eff: 8:0 20:1 36:1
+[961] name: `move_car_out_road junction1-0 junction2-0 car0 road1', cost: 1
+[961] pre: 21:0 36:0 40:0 98:0, eff: 8:0 21:1 36:1
+[962] name: `move_car_out_road junction1-0 junction2-0 car0 road2', cost: 1
+[962] pre: 22:0 36:0 41:0 138:0, eff: 8:0 22:1 36:1
+[963] name: `move_car_out_road junction1-0 junction2-0 car0 road3', cost: 1
+[963] pre: 23:0 36:0 42:0 178:0, eff: 8:0 23:1 36:1
+[964] name: `move_car_out_road junction1-0 junction2-0 car0 road4', cost: 1
+[964] pre: 24:0 36:0 43:0 218:0, eff: 8:0 24:1 36:1
+[965] name: `move_car_out_road junction1-0 junction2-0 car1 road0', cost: 1
+[965] pre: 25:0 36:0 39:0 58:0, eff: 17:0 25:1 36:1
+[966] name: `move_car_out_road junction1-0 junction2-0 car1 road1', cost: 1
+[966] pre: 26:0 36:0 40:0 98:0, eff: 17:0 26:1 36:1
+[967] name: `move_car_out_road junction1-0 junction2-0 car1 road2', cost: 1
+[967] pre: 27:0 36:0 41:0 138:0, eff: 17:0 27:1 36:1
+[968] name: `move_car_out_road junction1-0 junction2-0 car1 road3', cost: 1
+[968] pre: 28:0 36:0 42:0 178:0, eff: 17:0 28:1 36:1
+[969] name: `move_car_out_road junction1-0 junction2-0 car1 road4', cost: 1
+[969] pre: 29:0 36:0 43:0 218:0, eff: 17:0 29:1 36:1
+[970] name: `move_car_out_road junction1-0 junction2-1 car0 road0', cost: 1
+[970] pre: 20:0 37:0 39:0 59:0, eff: 9:0 20:1 37:1
+[971] name: `move_car_out_road junction1-0 junction2-1 car0 road1', cost: 1
+[971] pre: 21:0 37:0 40:0 99:0, eff: 9:0 21:1 37:1
+[972] name: `move_car_out_road junction1-0 junction2-1 car0 road2', cost: 1
+[972] pre: 22:0 37:0 41:0 139:0, eff: 9:0 22:1 37:1
+[973] name: `move_car_out_road junction1-0 junction2-1 car0 road3', cost: 1
+[973] pre: 23:0 37:0 42:0 179:0, eff: 9:0 23:1 37:1
+[974] name: `move_car_out_road junction1-0 junction2-1 car0 road4', cost: 1
+[974] pre: 24:0 37:0 43:0 219:0, eff: 9:0 24:1 37:1
+[975] name: `move_car_out_road junction1-0 junction2-1 car1 road0', cost: 1
+[975] pre: 25:0 37:0 39:0 59:0, eff: 18:0 25:1 37:1
+[976] name: `move_car_out_road junction1-0 junction2-1 car1 road1', cost: 1
+[976] pre: 26:0 37:0 40:0 99:0, eff: 18:0 26:1 37:1
+[977] name: `move_car_out_road junction1-0 junction2-1 car1 road2', cost: 1
+[977] pre: 27:0 37:0 41:0 139:0, eff: 18:0 27:1 37:1
+[978] name: `move_car_out_road junction1-0 junction2-1 car1 road3', cost: 1
+[978] pre: 28:0 37:0 42:0 179:0, eff: 18:0 28:1 37:1
+[979] name: `move_car_out_road junction1-0 junction2-1 car1 road4', cost: 1
+[979] pre: 29:0 37:0 43:0 219:0, eff: 18:0 29:1 37:1
+[980] name: `move_car_out_road junction1-1 junction0-0 car0 road0', cost: 1
+[980] pre: 20:0 30:0 39:0 60:0, eff: 2:0 20:1 30:1
+[981] name: `move_car_out_road junction1-1 junction0-0 car0 road1', cost: 1
+[981] pre: 21:0 30:0 40:0 100:0, eff: 2:0 21:1 30:1
+[982] name: `move_car_out_road junction1-1 junction0-0 car0 road2', cost: 1
+[982] pre: 22:0 30:0 41:0 140:0, eff: 2:0 22:1 30:1
+[983] name: `move_car_out_road junction1-1 junction0-0 car0 road3', cost: 1
+[983] pre: 23:0 30:0 42:0 180:0, eff: 2:0 23:1 30:1
+[984] name: `move_car_out_road junction1-1 junction0-0 car0 road4', cost: 1
+[984] pre: 24:0 30:0 43:0 220:0, eff: 2:0 24:1 30:1
+[985] name: `move_car_out_road junction1-1 junction0-0 car1 road0', cost: 1
+[985] pre: 25:0 30:0 39:0 60:0, eff: 11:0 25:1 30:1
+[986] name: `move_car_out_road junction1-1 junction0-0 car1 road1', cost: 1
+[986] pre: 26:0 30:0 40:0 100:0, eff: 11:0 26:1 30:1
+[987] name: `move_car_out_road junction1-1 junction0-0 car1 road2', cost: 1
+[987] pre: 27:0 30:0 41:0 140:0, eff: 11:0 27:1 30:1
+[988] name: `move_car_out_road junction1-1 junction0-0 car1 road3', cost: 1
+[988] pre: 28:0 30:0 42:0 180:0, eff: 11:0 28:1 30:1
+[989] name: `move_car_out_road junction1-1 junction0-0 car1 road4', cost: 1
+[989] pre: 29:0 30:0 43:0 220:0, eff: 11:0 29:1 30:1
+[990] name: `move_car_out_road junction1-1 junction0-1 car0 road0', cost: 1
+[990] pre: 20:0 31:0 39:0 61:0, eff: 3:0 20:1 31:1
+[991] name: `move_car_out_road junction1-1 junction0-1 car0 road1', cost: 1
+[991] pre: 21:0 31:0 40:0 101:0, eff: 3:0 21:1 31:1
+[992] name: `move_car_out_road junction1-1 junction0-1 car0 road2', cost: 1
+[992] pre: 22:0 31:0 41:0 141:0, eff: 3:0 22:1 31:1
+[993] name: `move_car_out_road junction1-1 junction0-1 car0 road3', cost: 1
+[993] pre: 23:0 31:0 42:0 181:0, eff: 3:0 23:1 31:1
+[994] name: `move_car_out_road junction1-1 junction0-1 car0 road4', cost: 1
+[994] pre: 24:0 31:0 43:0 221:0, eff: 3:0 24:1 31:1
+[995] name: `move_car_out_road junction1-1 junction0-1 car1 road0', cost: 1
+[995] pre: 25:0 31:0 39:0 61:0, eff: 12:0 25:1 31:1
+[996] name: `move_car_out_road junction1-1 junction0-1 car1 road1', cost: 1
+[996] pre: 26:0 31:0 40:0 101:0, eff: 12:0 26:1 31:1
+[997] name: `move_car_out_road junction1-1 junction0-1 car1 road2', cost: 1
+[997] pre: 27:0 31:0 41:0 141:0, eff: 12:0 27:1 31:1
+[998] name: `move_car_out_road junction1-1 junction0-1 car1 road3', cost: 1
+[998] pre: 28:0 31:0 42:0 181:0, eff: 12:0 28:1 31:1
+[999] name: `move_car_out_road junction1-1 junction0-1 car1 road4', cost: 1
+[999] pre: 29:0 31:0 43:0 221:0, eff: 12:0 29:1 31:1
+[1000] name: `move_car_out_road junction1-1 junction0-2 car0 road0', cost: 1
+[1000] pre: 20:0 32:0 39:0 62:0, eff: 4:0 20:1 32:1
+[1001] name: `move_car_out_road junction1-1 junction0-2 car0 road1', cost: 1
+[1001] pre: 21:0 32:0 40:0 102:0, eff: 4:0 21:1 32:1
+[1002] name: `move_car_out_road junction1-1 junction0-2 car0 road2', cost: 1
+[1002] pre: 22:0 32:0 41:0 142:0, eff: 4:0 22:1 32:1
+[1003] name: `move_car_out_road junction1-1 junction0-2 car0 road3', cost: 1
+[1003] pre: 23:0 32:0 42:0 182:0, eff: 4:0 23:1 32:1
+[1004] name: `move_car_out_road junction1-1 junction0-2 car0 road4', cost: 1
+[1004] pre: 24:0 32:0 43:0 222:0, eff: 4:0 24:1 32:1
+[1005] name: `move_car_out_road junction1-1 junction0-2 car1 road0', cost: 1
+[1005] pre: 25:0 32:0 39:0 62:0, eff: 13:0 25:1 32:1
+[1006] name: `move_car_out_road junction1-1 junction0-2 car1 road1', cost: 1
+[1006] pre: 26:0 32:0 40:0 102:0, eff: 13:0 26:1 32:1
+[1007] name: `move_car_out_road junction1-1 junction0-2 car1 road2', cost: 1
+[1007] pre: 27:0 32:0 41:0 142:0, eff: 13:0 27:1 32:1
+[1008] name: `move_car_out_road junction1-1 junction0-2 car1 road3', cost: 1
+[1008] pre: 28:0 32:0 42:0 182:0, eff: 13:0 28:1 32:1
+[1009] name: `move_car_out_road junction1-1 junction0-2 car1 road4', cost: 1
+[1009] pre: 29:0 32:0 43:0 222:0, eff: 13:0 29:1 32:1
+[1010] name: `move_car_out_road junction1-1 junction1-0 car0 road0', cost: 1
+[1010] pre: 20:0 33:0 39:0 63:0, eff: 5:0 20:1 33:1
+[1011] name: `move_car_out_road junction1-1 junction1-0 car0 road1', cost: 1
+[1011] pre: 21:0 33:0 40:0 103:0, eff: 5:0 21:1 33:1
+[1012] name: `move_car_out_road junction1-1 junction1-0 car0 road2', cost: 1
+[1012] pre: 22:0 33:0 41:0 143:0, eff: 5:0 22:1 33:1
+[1013] name: `move_car_out_road junction1-1 junction1-0 car0 road3', cost: 1
+[1013] pre: 23:0 33:0 42:0 183:0, eff: 5:0 23:1 33:1
+[1014] name: `move_car_out_road junction1-1 junction1-0 car0 road4', cost: 1
+[1014] pre: 24:0 33:0 43:0 223:0, eff: 5:0 24:1 33:1
+[1015] name: `move_car_out_road junction1-1 junction1-0 car1 road0', cost: 1
+[1015] pre: 25:0 33:0 39:0 63:0, eff: 14:0 25:1 33:1
+[1016] name: `move_car_out_road junction1-1 junction1-0 car1 road1', cost: 1
+[1016] pre: 26:0 33:0 40:0 103:0, eff: 14:0 26:1 33:1
+[1017] name: `move_car_out_road junction1-1 junction1-0 car1 road2', cost: 1
+[1017] pre: 27:0 33:0 41:0 143:0, eff: 14:0 27:1 33:1
+[1018] name: `move_car_out_road junction1-1 junction1-0 car1 road3', cost: 1
+[1018] pre: 28:0 33:0 42:0 183:0, eff: 14:0 28:1 33:1
+[1019] name: `move_car_out_road junction1-1 junction1-0 car1 road4', cost: 1
+[1019] pre: 29:0 33:0 43:0 223:0, eff: 14:0 29:1 33:1
+[1020] name: `move_car_out_road junction1-1 junction1-2 car0 road0', cost: 1
+[1020] pre: 20:0 35:0 39:0 64:0, eff: 7:0 20:1 35:1
+[1021] name: `move_car_out_road junction1-1 junction1-2 car0 road1', cost: 1
+[1021] pre: 21:0 35:0 40:0 104:0, eff: 7:0 21:1 35:1
+[1022] name: `move_car_out_road junction1-1 junction1-2 car0 road2', cost: 1
+[1022] pre: 22:0 35:0 41:0 144:0, eff: 7:0 22:1 35:1
+[1023] name: `move_car_out_road junction1-1 junction1-2 car0 road3', cost: 1
+[1023] pre: 23:0 35:0 42:0 184:0, eff: 7:0 23:1 35:1
+[1024] name: `move_car_out_road junction1-1 junction1-2 car0 road4', cost: 1
+[1024] pre: 24:0 35:0 43:0 224:0, eff: 7:0 24:1 35:1
+[1025] name: `move_car_out_road junction1-1 junction1-2 car1 road0', cost: 1
+[1025] pre: 25:0 35:0 39:0 64:0, eff: 16:0 25:1 35:1
+[1026] name: `move_car_out_road junction1-1 junction1-2 car1 road1', cost: 1
+[1026] pre: 26:0 35:0 40:0 104:0, eff: 16:0 26:1 35:1
+[1027] name: `move_car_out_road junction1-1 junction1-2 car1 road2', cost: 1
+[1027] pre: 27:0 35:0 41:0 144:0, eff: 16:0 27:1 35:1
+[1028] name: `move_car_out_road junction1-1 junction1-2 car1 road3', cost: 1
+[1028] pre: 28:0 35:0 42:0 184:0, eff: 16:0 28:1 35:1
+[1029] name: `move_car_out_road junction1-1 junction1-2 car1 road4', cost: 1
+[1029] pre: 29:0 35:0 43:0 224:0, eff: 16:0 29:1 35:1
+[1030] name: `move_car_out_road junction1-1 junction2-0 car0 road0', cost: 1
+[1030] pre: 20:0 36:0 39:0 65:0, eff: 8:0 20:1 36:1
+[1031] name: `move_car_out_road junction1-1 junction2-0 car0 road1', cost: 1
+[1031] pre: 21:0 36:0 40:0 105:0, eff: 8:0 21:1 36:1
+[1032] name: `move_car_out_road junction1-1 junction2-0 car0 road2', cost: 1
+[1032] pre: 22:0 36:0 41:0 145:0, eff: 8:0 22:1 36:1
+[1033] name: `move_car_out_road junction1-1 junction2-0 car0 road3', cost: 1
+[1033] pre: 23:0 36:0 42:0 185:0, eff: 8:0 23:1 36:1
+[1034] name: `move_car_out_road junction1-1 junction2-0 car0 road4', cost: 1
+[1034] pre: 24:0 36:0 43:0 225:0, eff: 8:0 24:1 36:1
+[1035] name: `move_car_out_road junction1-1 junction2-0 car1 road0', cost: 1
+[1035] pre: 25:0 36:0 39:0 65:0, eff: 17:0 25:1 36:1
+[1036] name: `move_car_out_road junction1-1 junction2-0 car1 road1', cost: 1
+[1036] pre: 26:0 36:0 40:0 105:0, eff: 17:0 26:1 36:1
+[1037] name: `move_car_out_road junction1-1 junction2-0 car1 road2', cost: 1
+[1037] pre: 27:0 36:0 41:0 145:0, eff: 17:0 27:1 36:1
+[1038] name: `move_car_out_road junction1-1 junction2-0 car1 road3', cost: 1
+[1038] pre: 28:0 36:0 42:0 185:0, eff: 17:0 28:1 36:1
+[1039] name: `move_car_out_road junction1-1 junction2-0 car1 road4', cost: 1
+[1039] pre: 29:0 36:0 43:0 225:0, eff: 17:0 29:1 36:1
+[1040] name: `move_car_out_road junction1-1 junction2-1 car0 road0', cost: 1
+[1040] pre: 20:0 37:0 39:0 66:0, eff: 9:0 20:1 37:1
+[1041] name: `move_car_out_road junction1-1 junction2-1 car0 road1', cost: 1
+[1041] pre: 21:0 37:0 40:0 106:0, eff: 9:0 21:1 37:1
+[1042] name: `move_car_out_road junction1-1 junction2-1 car0 road2', cost: 1
+[1042] pre: 22:0 37:0 41:0 146:0, eff: 9:0 22:1 37:1
+[1043] name: `move_car_out_road junction1-1 junction2-1 car0 road3', cost: 1
+[1043] pre: 23:0 37:0 42:0 186:0, eff: 9:0 23:1 37:1
+[1044] name: `move_car_out_road junction1-1 junction2-1 car0 road4', cost: 1
+[1044] pre: 24:0 37:0 43:0 226:0, eff: 9:0 24:1 37:1
+[1045] name: `move_car_out_road junction1-1 junction2-1 car1 road0', cost: 1
+[1045] pre: 25:0 37:0 39:0 66:0, eff: 18:0 25:1 37:1
+[1046] name: `move_car_out_road junction1-1 junction2-1 car1 road1', cost: 1
+[1046] pre: 26:0 37:0 40:0 106:0, eff: 18:0 26:1 37:1
+[1047] name: `move_car_out_road junction1-1 junction2-1 car1 road2', cost: 1
+[1047] pre: 27:0 37:0 41:0 146:0, eff: 18:0 27:1 37:1
+[1048] name: `move_car_out_road junction1-1 junction2-1 car1 road3', cost: 1
+[1048] pre: 28:0 37:0 42:0 186:0, eff: 18:0 28:1 37:1
+[1049] name: `move_car_out_road junction1-1 junction2-1 car1 road4', cost: 1
+[1049] pre: 29:0 37:0 43:0 226:0, eff: 18:0 29:1 37:1
+[1050] name: `move_car_out_road junction1-1 junction2-2 car0 road0', cost: 1
+[1050] pre: 20:0 38:0 39:0 67:0, eff: 10:0 20:1 38:1
+[1051] name: `move_car_out_road junction1-1 junction2-2 car0 road1', cost: 1
+[1051] pre: 21:0 38:0 40:0 107:0, eff: 10:0 21:1 38:1
+[1052] name: `move_car_out_road junction1-1 junction2-2 car0 road2', cost: 1
+[1052] pre: 22:0 38:0 41:0 147:0, eff: 10:0 22:1 38:1
+[1053] name: `move_car_out_road junction1-1 junction2-2 car0 road3', cost: 1
+[1053] pre: 23:0 38:0 42:0 187:0, eff: 10:0 23:1 38:1
+[1054] name: `move_car_out_road junction1-1 junction2-2 car0 road4', cost: 1
+[1054] pre: 24:0 38:0 43:0 227:0, eff: 10:0 24:1 38:1
+[1055] name: `move_car_out_road junction1-1 junction2-2 car1 road0', cost: 1
+[1055] pre: 25:0 38:0 39:0 67:0, eff: 19:0 25:1 38:1
+[1056] name: `move_car_out_road junction1-1 junction2-2 car1 road1', cost: 1
+[1056] pre: 26:0 38:0 40:0 107:0, eff: 19:0 26:1 38:1
+[1057] name: `move_car_out_road junction1-1 junction2-2 car1 road2', cost: 1
+[1057] pre: 27:0 38:0 41:0 147:0, eff: 19:0 27:1 38:1
+[1058] name: `move_car_out_road junction1-1 junction2-2 car1 road3', cost: 1
+[1058] pre: 28:0 38:0 42:0 187:0, eff: 19:0 28:1 38:1
+[1059] name: `move_car_out_road junction1-1 junction2-2 car1 road4', cost: 1
+[1059] pre: 29:0 38:0 43:0 227:0, eff: 19:0 29:1 38:1
+[1060] name: `move_car_out_road junction1-2 junction0-1 car0 road0', cost: 1
+[1060] pre: 20:0 31:0 39:0 68:0, eff: 3:0 20:1 31:1
+[1061] name: `move_car_out_road junction1-2 junction0-1 car0 road1', cost: 1
+[1061] pre: 21:0 31:0 40:0 108:0, eff: 3:0 21:1 31:1
+[1062] name: `move_car_out_road junction1-2 junction0-1 car0 road2', cost: 1
+[1062] pre: 22:0 31:0 41:0 148:0, eff: 3:0 22:1 31:1
+[1063] name: `move_car_out_road junction1-2 junction0-1 car0 road3', cost: 1
+[1063] pre: 23:0 31:0 42:0 188:0, eff: 3:0 23:1 31:1
+[1064] name: `move_car_out_road junction1-2 junction0-1 car0 road4', cost: 1
+[1064] pre: 24:0 31:0 43:0 228:0, eff: 3:0 24:1 31:1
+[1065] name: `move_car_out_road junction1-2 junction0-1 car1 road0', cost: 1
+[1065] pre: 25:0 31:0 39:0 68:0, eff: 12:0 25:1 31:1
+[1066] name: `move_car_out_road junction1-2 junction0-1 car1 road1', cost: 1
+[1066] pre: 26:0 31:0 40:0 108:0, eff: 12:0 26:1 31:1
+[1067] name: `move_car_out_road junction1-2 junction0-1 car1 road2', cost: 1
+[1067] pre: 27:0 31:0 41:0 148:0, eff: 12:0 27:1 31:1
+[1068] name: `move_car_out_road junction1-2 junction0-1 car1 road3', cost: 1
+[1068] pre: 28:0 31:0 42:0 188:0, eff: 12:0 28:1 31:1
+[1069] name: `move_car_out_road junction1-2 junction0-1 car1 road4', cost: 1
+[1069] pre: 29:0 31:0 43:0 228:0, eff: 12:0 29:1 31:1
+[1070] name: `move_car_out_road junction1-2 junction0-2 car0 road0', cost: 1
+[1070] pre: 20:0 32:0 39:0 69:0, eff: 4:0 20:1 32:1
+[1071] name: `move_car_out_road junction1-2 junction0-2 car0 road1', cost: 1
+[1071] pre: 21:0 32:0 40:0 109:0, eff: 4:0 21:1 32:1
+[1072] name: `move_car_out_road junction1-2 junction0-2 car0 road2', cost: 1
+[1072] pre: 22:0 32:0 41:0 149:0, eff: 4:0 22:1 32:1
+[1073] name: `move_car_out_road junction1-2 junction0-2 car0 road3', cost: 1
+[1073] pre: 23:0 32:0 42:0 189:0, eff: 4:0 23:1 32:1
+[1074] name: `move_car_out_road junction1-2 junction0-2 car0 road4', cost: 1
+[1074] pre: 24:0 32:0 43:0 229:0, eff: 4:0 24:1 32:1
+[1075] name: `move_car_out_road junction1-2 junction0-2 car1 road0', cost: 1
+[1075] pre: 25:0 32:0 39:0 69:0, eff: 13:0 25:1 32:1
+[1076] name: `move_car_out_road junction1-2 junction0-2 car1 road1', cost: 1
+[1076] pre: 26:0 32:0 40:0 109:0, eff: 13:0 26:1 32:1
+[1077] name: `move_car_out_road junction1-2 junction0-2 car1 road2', cost: 1
+[1077] pre: 27:0 32:0 41:0 149:0, eff: 13:0 27:1 32:1
+[1078] name: `move_car_out_road junction1-2 junction0-2 car1 road3', cost: 1
+[1078] pre: 28:0 32:0 42:0 189:0, eff: 13:0 28:1 32:1
+[1079] name: `move_car_out_road junction1-2 junction0-2 car1 road4', cost: 1
+[1079] pre: 29:0 32:0 43:0 229:0, eff: 13:0 29:1 32:1
+[1080] name: `move_car_out_road junction1-2 junction1-1 car0 road0', cost: 1
+[1080] pre: 20:0 34:0 39:0 70:0, eff: 6:0 20:1 34:1
+[1081] name: `move_car_out_road junction1-2 junction1-1 car0 road1', cost: 1
+[1081] pre: 21:0 34:0 40:0 110:0, eff: 6:0 21:1 34:1
+[1082] name: `move_car_out_road junction1-2 junction1-1 car0 road2', cost: 1
+[1082] pre: 22:0 34:0 41:0 150:0, eff: 6:0 22:1 34:1
+[1083] name: `move_car_out_road junction1-2 junction1-1 car0 road3', cost: 1
+[1083] pre: 23:0 34:0 42:0 190:0, eff: 6:0 23:1 34:1
+[1084] name: `move_car_out_road junction1-2 junction1-1 car0 road4', cost: 1
+[1084] pre: 24:0 34:0 43:0 230:0, eff: 6:0 24:1 34:1
+[1085] name: `move_car_out_road junction1-2 junction1-1 car1 road0', cost: 1
+[1085] pre: 25:0 34:0 39:0 70:0, eff: 15:0 25:1 34:1
+[1086] name: `move_car_out_road junction1-2 junction1-1 car1 road1', cost: 1
+[1086] pre: 26:0 34:0 40:0 110:0, eff: 15:0 26:1 34:1
+[1087] name: `move_car_out_road junction1-2 junction1-1 car1 road2', cost: 1
+[1087] pre: 27:0 34:0 41:0 150:0, eff: 15:0 27:1 34:1
+[1088] name: `move_car_out_road junction1-2 junction1-1 car1 road3', cost: 1
+[1088] pre: 28:0 34:0 42:0 190:0, eff: 15:0 28:1 34:1
+[1089] name: `move_car_out_road junction1-2 junction1-1 car1 road4', cost: 1
+[1089] pre: 29:0 34:0 43:0 230:0, eff: 15:0 29:1 34:1
+[1090] name: `move_car_out_road junction1-2 junction2-1 car0 road0', cost: 1
+[1090] pre: 20:0 37:0 39:0 71:0, eff: 9:0 20:1 37:1
+[1091] name: `move_car_out_road junction1-2 junction2-1 car0 road1', cost: 1
+[1091] pre: 21:0 37:0 40:0 111:0, eff: 9:0 21:1 37:1
+[1092] name: `move_car_out_road junction1-2 junction2-1 car0 road2', cost: 1
+[1092] pre: 22:0 37:0 41:0 151:0, eff: 9:0 22:1 37:1
+[1093] name: `move_car_out_road junction1-2 junction2-1 car0 road3', cost: 1
+[1093] pre: 23:0 37:0 42:0 191:0, eff: 9:0 23:1 37:1
+[1094] name: `move_car_out_road junction1-2 junction2-1 car0 road4', cost: 1
+[1094] pre: 24:0 37:0 43:0 231:0, eff: 9:0 24:1 37:1
+[1095] name: `move_car_out_road junction1-2 junction2-1 car1 road0', cost: 1
+[1095] pre: 25:0 37:0 39:0 71:0, eff: 18:0 25:1 37:1
+[1096] name: `move_car_out_road junction1-2 junction2-1 car1 road1', cost: 1
+[1096] pre: 26:0 37:0 40:0 111:0, eff: 18:0 26:1 37:1
+[1097] name: `move_car_out_road junction1-2 junction2-1 car1 road2', cost: 1
+[1097] pre: 27:0 37:0 41:0 151:0, eff: 18:0 27:1 37:1
+[1098] name: `move_car_out_road junction1-2 junction2-1 car1 road3', cost: 1
+[1098] pre: 28:0 37:0 42:0 191:0, eff: 18:0 28:1 37:1
+[1099] name: `move_car_out_road junction1-2 junction2-1 car1 road4', cost: 1
+[1099] pre: 29:0 37:0 43:0 231:0, eff: 18:0 29:1 37:1
+[1100] name: `move_car_out_road junction1-2 junction2-2 car0 road0', cost: 1
+[1100] pre: 20:0 38:0 39:0 72:0, eff: 10:0 20:1 38:1
+[1101] name: `move_car_out_road junction1-2 junction2-2 car0 road1', cost: 1
+[1101] pre: 21:0 38:0 40:0 112:0, eff: 10:0 21:1 38:1
+[1102] name: `move_car_out_road junction1-2 junction2-2 car0 road2', cost: 1
+[1102] pre: 22:0 38:0 41:0 152:0, eff: 10:0 22:1 38:1
+[1103] name: `move_car_out_road junction1-2 junction2-2 car0 road3', cost: 1
+[1103] pre: 23:0 38:0 42:0 192:0, eff: 10:0 23:1 38:1
+[1104] name: `move_car_out_road junction1-2 junction2-2 car0 road4', cost: 1
+[1104] pre: 24:0 38:0 43:0 232:0, eff: 10:0 24:1 38:1
+[1105] name: `move_car_out_road junction1-2 junction2-2 car1 road0', cost: 1
+[1105] pre: 25:0 38:0 39:0 72:0, eff: 19:0 25:1 38:1
+[1106] name: `move_car_out_road junction1-2 junction2-2 car1 road1', cost: 1
+[1106] pre: 26:0 38:0 40:0 112:0, eff: 19:0 26:1 38:1
+[1107] name: `move_car_out_road junction1-2 junction2-2 car1 road2', cost: 1
+[1107] pre: 27:0 38:0 41:0 152:0, eff: 19:0 27:1 38:1
+[1108] name: `move_car_out_road junction1-2 junction2-2 car1 road3', cost: 1
+[1108] pre: 28:0 38:0 42:0 192:0, eff: 19:0 28:1 38:1
+[1109] name: `move_car_out_road junction1-2 junction2-2 car1 road4', cost: 1
+[1109] pre: 29:0 38:0 43:0 232:0, eff: 19:0 29:1 38:1
+[1110] name: `move_car_out_road junction2-0 junction1-0 car0 road0', cost: 1
+[1110] pre: 20:0 33:0 39:0 73:0, eff: 5:0 20:1 33:1
+[1111] name: `move_car_out_road junction2-0 junction1-0 car0 road1', cost: 1
+[1111] pre: 21:0 33:0 40:0 113:0, eff: 5:0 21:1 33:1
+[1112] name: `move_car_out_road junction2-0 junction1-0 car0 road2', cost: 1
+[1112] pre: 22:0 33:0 41:0 153:0, eff: 5:0 22:1 33:1
+[1113] name: `move_car_out_road junction2-0 junction1-0 car0 road3', cost: 1
+[1113] pre: 23:0 33:0 42:0 193:0, eff: 5:0 23:1 33:1
+[1114] name: `move_car_out_road junction2-0 junction1-0 car0 road4', cost: 1
+[1114] pre: 24:0 33:0 43:0 233:0, eff: 5:0 24:1 33:1
+[1115] name: `move_car_out_road junction2-0 junction1-0 car1 road0', cost: 1
+[1115] pre: 25:0 33:0 39:0 73:0, eff: 14:0 25:1 33:1
+[1116] name: `move_car_out_road junction2-0 junction1-0 car1 road1', cost: 1
+[1116] pre: 26:0 33:0 40:0 113:0, eff: 14:0 26:1 33:1
+[1117] name: `move_car_out_road junction2-0 junction1-0 car1 road2', cost: 1
+[1117] pre: 27:0 33:0 41:0 153:0, eff: 14:0 27:1 33:1
+[1118] name: `move_car_out_road junction2-0 junction1-0 car1 road3', cost: 1
+[1118] pre: 28:0 33:0 42:0 193:0, eff: 14:0 28:1 33:1
+[1119] name: `move_car_out_road junction2-0 junction1-0 car1 road4', cost: 1
+[1119] pre: 29:0 33:0 43:0 233:0, eff: 14:0 29:1 33:1
+[1120] name: `move_car_out_road junction2-0 junction1-1 car0 road0', cost: 1
+[1120] pre: 20:0 34:0 39:0 74:0, eff: 6:0 20:1 34:1
+[1121] name: `move_car_out_road junction2-0 junction1-1 car0 road1', cost: 1
+[1121] pre: 21:0 34:0 40:0 114:0, eff: 6:0 21:1 34:1
+[1122] name: `move_car_out_road junction2-0 junction1-1 car0 road2', cost: 1
+[1122] pre: 22:0 34:0 41:0 154:0, eff: 6:0 22:1 34:1
+[1123] name: `move_car_out_road junction2-0 junction1-1 car0 road3', cost: 1
+[1123] pre: 23:0 34:0 42:0 194:0, eff: 6:0 23:1 34:1
+[1124] name: `move_car_out_road junction2-0 junction1-1 car0 road4', cost: 1
+[1124] pre: 24:0 34:0 43:0 234:0, eff: 6:0 24:1 34:1
+[1125] name: `move_car_out_road junction2-0 junction1-1 car1 road0', cost: 1
+[1125] pre: 25:0 34:0 39:0 74:0, eff: 15:0 25:1 34:1
+[1126] name: `move_car_out_road junction2-0 junction1-1 car1 road1', cost: 1
+[1126] pre: 26:0 34:0 40:0 114:0, eff: 15:0 26:1 34:1
+[1127] name: `move_car_out_road junction2-0 junction1-1 car1 road2', cost: 1
+[1127] pre: 27:0 34:0 41:0 154:0, eff: 15:0 27:1 34:1
+[1128] name: `move_car_out_road junction2-0 junction1-1 car1 road3', cost: 1
+[1128] pre: 28:0 34:0 42:0 194:0, eff: 15:0 28:1 34:1
+[1129] name: `move_car_out_road junction2-0 junction1-1 car1 road4', cost: 1
+[1129] pre: 29:0 34:0 43:0 234:0, eff: 15:0 29:1 34:1
+[1130] name: `move_car_out_road junction2-0 junction2-1 car0 road0', cost: 1
+[1130] pre: 20:0 37:0 39:0 75:0, eff: 9:0 20:1 37:1
+[1131] name: `move_car_out_road junction2-0 junction2-1 car0 road1', cost: 1
+[1131] pre: 21:0 37:0 40:0 115:0, eff: 9:0 21:1 37:1
+[1132] name: `move_car_out_road junction2-0 junction2-1 car0 road2', cost: 1
+[1132] pre: 22:0 37:0 41:0 155:0, eff: 9:0 22:1 37:1
+[1133] name: `move_car_out_road junction2-0 junction2-1 car0 road3', cost: 1
+[1133] pre: 23:0 37:0 42:0 195:0, eff: 9:0 23:1 37:1
+[1134] name: `move_car_out_road junction2-0 junction2-1 car0 road4', cost: 1
+[1134] pre: 24:0 37:0 43:0 235:0, eff: 9:0 24:1 37:1
+[1135] name: `move_car_out_road junction2-0 junction2-1 car1 road0', cost: 1
+[1135] pre: 25:0 37:0 39:0 75:0, eff: 18:0 25:1 37:1
+[1136] name: `move_car_out_road junction2-0 junction2-1 car1 road1', cost: 1
+[1136] pre: 26:0 37:0 40:0 115:0, eff: 18:0 26:1 37:1
+[1137] name: `move_car_out_road junction2-0 junction2-1 car1 road2', cost: 1
+[1137] pre: 27:0 37:0 41:0 155:0, eff: 18:0 27:1 37:1
+[1138] name: `move_car_out_road junction2-0 junction2-1 car1 road3', cost: 1
+[1138] pre: 28:0 37:0 42:0 195:0, eff: 18:0 28:1 37:1
+[1139] name: `move_car_out_road junction2-0 junction2-1 car1 road4', cost: 1
+[1139] pre: 29:0 37:0 43:0 235:0, eff: 18:0 29:1 37:1
+[1140] name: `move_car_out_road junction2-1 junction1-0 car0 road0', cost: 1
+[1140] pre: 20:0 33:0 39:0 76:0, eff: 5:0 20:1 33:1
+[1141] name: `move_car_out_road junction2-1 junction1-0 car0 road1', cost: 1
+[1141] pre: 21:0 33:0 40:0 116:0, eff: 5:0 21:1 33:1
+[1142] name: `move_car_out_road junction2-1 junction1-0 car0 road2', cost: 1
+[1142] pre: 22:0 33:0 41:0 156:0, eff: 5:0 22:1 33:1
+[1143] name: `move_car_out_road junction2-1 junction1-0 car0 road3', cost: 1
+[1143] pre: 23:0 33:0 42:0 196:0, eff: 5:0 23:1 33:1
+[1144] name: `move_car_out_road junction2-1 junction1-0 car0 road4', cost: 1
+[1144] pre: 24:0 33:0 43:0 236:0, eff: 5:0 24:1 33:1
+[1145] name: `move_car_out_road junction2-1 junction1-0 car1 road0', cost: 1
+[1145] pre: 25:0 33:0 39:0 76:0, eff: 14:0 25:1 33:1
+[1146] name: `move_car_out_road junction2-1 junction1-0 car1 road1', cost: 1
+[1146] pre: 26:0 33:0 40:0 116:0, eff: 14:0 26:1 33:1
+[1147] name: `move_car_out_road junction2-1 junction1-0 car1 road2', cost: 1
+[1147] pre: 27:0 33:0 41:0 156:0, eff: 14:0 27:1 33:1
+[1148] name: `move_car_out_road junction2-1 junction1-0 car1 road3', cost: 1
+[1148] pre: 28:0 33:0 42:0 196:0, eff: 14:0 28:1 33:1
+[1149] name: `move_car_out_road junction2-1 junction1-0 car1 road4', cost: 1
+[1149] pre: 29:0 33:0 43:0 236:0, eff: 14:0 29:1 33:1
+[1150] name: `move_car_out_road junction2-1 junction1-1 car0 road0', cost: 1
+[1150] pre: 20:0 34:0 39:0 77:0, eff: 6:0 20:1 34:1
+[1151] name: `move_car_out_road junction2-1 junction1-1 car0 road1', cost: 1
+[1151] pre: 21:0 34:0 40:0 117:0, eff: 6:0 21:1 34:1
+[1152] name: `move_car_out_road junction2-1 junction1-1 car0 road2', cost: 1
+[1152] pre: 22:0 34:0 41:0 157:0, eff: 6:0 22:1 34:1
+[1153] name: `move_car_out_road junction2-1 junction1-1 car0 road3', cost: 1
+[1153] pre: 23:0 34:0 42:0 197:0, eff: 6:0 23:1 34:1
+[1154] name: `move_car_out_road junction2-1 junction1-1 car0 road4', cost: 1
+[1154] pre: 24:0 34:0 43:0 237:0, eff: 6:0 24:1 34:1
+[1155] name: `move_car_out_road junction2-1 junction1-1 car1 road0', cost: 1
+[1155] pre: 25:0 34:0 39:0 77:0, eff: 15:0 25:1 34:1
+[1156] name: `move_car_out_road junction2-1 junction1-1 car1 road1', cost: 1
+[1156] pre: 26:0 34:0 40:0 117:0, eff: 15:0 26:1 34:1
+[1157] name: `move_car_out_road junction2-1 junction1-1 car1 road2', cost: 1
+[1157] pre: 27:0 34:0 41:0 157:0, eff: 15:0 27:1 34:1
+[1158] name: `move_car_out_road junction2-1 junction1-1 car1 road3', cost: 1
+[1158] pre: 28:0 34:0 42:0 197:0, eff: 15:0 28:1 34:1
+[1159] name: `move_car_out_road junction2-1 junction1-1 car1 road4', cost: 1
+[1159] pre: 29:0 34:0 43:0 237:0, eff: 15:0 29:1 34:1
+[1160] name: `move_car_out_road junction2-1 junction1-2 car0 road0', cost: 1
+[1160] pre: 20:0 35:0 39:0 78:0, eff: 7:0 20:1 35:1
+[1161] name: `move_car_out_road junction2-1 junction1-2 car0 road1', cost: 1
+[1161] pre: 21:0 35:0 40:0 118:0, eff: 7:0 21:1 35:1
+[1162] name: `move_car_out_road junction2-1 junction1-2 car0 road2', cost: 1
+[1162] pre: 22:0 35:0 41:0 158:0, eff: 7:0 22:1 35:1
+[1163] name: `move_car_out_road junction2-1 junction1-2 car0 road3', cost: 1
+[1163] pre: 23:0 35:0 42:0 198:0, eff: 7:0 23:1 35:1
+[1164] name: `move_car_out_road junction2-1 junction1-2 car0 road4', cost: 1
+[1164] pre: 24:0 35:0 43:0 238:0, eff: 7:0 24:1 35:1
+[1165] name: `move_car_out_road junction2-1 junction1-2 car1 road0', cost: 1
+[1165] pre: 25:0 35:0 39:0 78:0, eff: 16:0 25:1 35:1
+[1166] name: `move_car_out_road junction2-1 junction1-2 car1 road1', cost: 1
+[1166] pre: 26:0 35:0 40:0 118:0, eff: 16:0 26:1 35:1
+[1167] name: `move_car_out_road junction2-1 junction1-2 car1 road2', cost: 1
+[1167] pre: 27:0 35:0 41:0 158:0, eff: 16:0 27:1 35:1
+[1168] name: `move_car_out_road junction2-1 junction1-2 car1 road3', cost: 1
+[1168] pre: 28:0 35:0 42:0 198:0, eff: 16:0 28:1 35:1
+[1169] name: `move_car_out_road junction2-1 junction1-2 car1 road4', cost: 1
+[1169] pre: 29:0 35:0 43:0 238:0, eff: 16:0 29:1 35:1
+[1170] name: `move_car_out_road junction2-1 junction2-0 car0 road0', cost: 1
+[1170] pre: 20:0 36:0 39:0 79:0, eff: 8:0 20:1 36:1
+[1171] name: `move_car_out_road junction2-1 junction2-0 car0 road1', cost: 1
+[1171] pre: 21:0 36:0 40:0 119:0, eff: 8:0 21:1 36:1
+[1172] name: `move_car_out_road junction2-1 junction2-0 car0 road2', cost: 1
+[1172] pre: 22:0 36:0 41:0 159:0, eff: 8:0 22:1 36:1
+[1173] name: `move_car_out_road junction2-1 junction2-0 car0 road3', cost: 1
+[1173] pre: 23:0 36:0 42:0 199:0, eff: 8:0 23:1 36:1
+[1174] name: `move_car_out_road junction2-1 junction2-0 car0 road4', cost: 1
+[1174] pre: 24:0 36:0 43:0 239:0, eff: 8:0 24:1 36:1
+[1175] name: `move_car_out_road junction2-1 junction2-0 car1 road0', cost: 1
+[1175] pre: 25:0 36:0 39:0 79:0, eff: 17:0 25:1 36:1
+[1176] name: `move_car_out_road junction2-1 junction2-0 car1 road1', cost: 1
+[1176] pre: 26:0 36:0 40:0 119:0, eff: 17:0 26:1 36:1
+[1177] name: `move_car_out_road junction2-1 junction2-0 car1 road2', cost: 1
+[1177] pre: 27:0 36:0 41:0 159:0, eff: 17:0 27:1 36:1
+[1178] name: `move_car_out_road junction2-1 junction2-0 car1 road3', cost: 1
+[1178] pre: 28:0 36:0 42:0 199:0, eff: 17:0 28:1 36:1
+[1179] name: `move_car_out_road junction2-1 junction2-0 car1 road4', cost: 1
+[1179] pre: 29:0 36:0 43:0 239:0, eff: 17:0 29:1 36:1
+[1180] name: `move_car_out_road junction2-1 junction2-2 car0 road0', cost: 1
+[1180] pre: 20:0 38:0 39:0 80:0, eff: 10:0 20:1 38:1
+[1181] name: `move_car_out_road junction2-1 junction2-2 car0 road1', cost: 1
+[1181] pre: 21:0 38:0 40:0 120:0, eff: 10:0 21:1 38:1
+[1182] name: `move_car_out_road junction2-1 junction2-2 car0 road2', cost: 1
+[1182] pre: 22:0 38:0 41:0 160:0, eff: 10:0 22:1 38:1
+[1183] name: `move_car_out_road junction2-1 junction2-2 car0 road3', cost: 1
+[1183] pre: 23:0 38:0 42:0 200:0, eff: 10:0 23:1 38:1
+[1184] name: `move_car_out_road junction2-1 junction2-2 car0 road4', cost: 1
+[1184] pre: 24:0 38:0 43:0 240:0, eff: 10:0 24:1 38:1
+[1185] name: `move_car_out_road junction2-1 junction2-2 car1 road0', cost: 1
+[1185] pre: 25:0 38:0 39:0 80:0, eff: 19:0 25:1 38:1
+[1186] name: `move_car_out_road junction2-1 junction2-2 car1 road1', cost: 1
+[1186] pre: 26:0 38:0 40:0 120:0, eff: 19:0 26:1 38:1
+[1187] name: `move_car_out_road junction2-1 junction2-2 car1 road2', cost: 1
+[1187] pre: 27:0 38:0 41:0 160:0, eff: 19:0 27:1 38:1
+[1188] name: `move_car_out_road junction2-1 junction2-2 car1 road3', cost: 1
+[1188] pre: 28:0 38:0 42:0 200:0, eff: 19:0 28:1 38:1
+[1189] name: `move_car_out_road junction2-1 junction2-2 car1 road4', cost: 1
+[1189] pre: 29:0 38:0 43:0 240:0, eff: 19:0 29:1 38:1
+[1190] name: `move_car_out_road junction2-2 junction1-1 car0 road0', cost: 1
+[1190] pre: 20:0 34:0 39:0 81:0, eff: 6:0 20:1 34:1
+[1191] name: `move_car_out_road junction2-2 junction1-1 car0 road1', cost: 1
+[1191] pre: 21:0 34:0 40:0 121:0, eff: 6:0 21:1 34:1
+[1192] name: `move_car_out_road junction2-2 junction1-1 car0 road2', cost: 1
+[1192] pre: 22:0 34:0 41:0 161:0, eff: 6:0 22:1 34:1
+[1193] name: `move_car_out_road junction2-2 junction1-1 car0 road3', cost: 1
+[1193] pre: 23:0 34:0 42:0 201:0, eff: 6:0 23:1 34:1
+[1194] name: `move_car_out_road junction2-2 junction1-1 car0 road4', cost: 1
+[1194] pre: 24:0 34:0 43:0 241:0, eff: 6:0 24:1 34:1
+[1195] name: `move_car_out_road junction2-2 junction1-1 car1 road0', cost: 1
+[1195] pre: 25:0 34:0 39:0 81:0, eff: 15:0 25:1 34:1
+[1196] name: `move_car_out_road junction2-2 junction1-1 car1 road1', cost: 1
+[1196] pre: 26:0 34:0 40:0 121:0, eff: 15:0 26:1 34:1
+[1197] name: `move_car_out_road junction2-2 junction1-1 car1 road2', cost: 1
+[1197] pre: 27:0 34:0 41:0 161:0, eff: 15:0 27:1 34:1
+[1198] name: `move_car_out_road junction2-2 junction1-1 car1 road3', cost: 1
+[1198] pre: 28:0 34:0 42:0 201:0, eff: 15:0 28:1 34:1
+[1199] name: `move_car_out_road junction2-2 junction1-1 car1 road4', cost: 1
+[1199] pre: 29:0 34:0 43:0 241:0, eff: 15:0 29:1 34:1
+[1200] name: `move_car_out_road junction2-2 junction1-2 car0 road0', cost: 1
+[1200] pre: 20:0 35:0 39:0 82:0, eff: 7:0 20:1 35:1
+[1201] name: `move_car_out_road junction2-2 junction1-2 car0 road1', cost: 1
+[1201] pre: 21:0 35:0 40:0 122:0, eff: 7:0 21:1 35:1
+[1202] name: `move_car_out_road junction2-2 junction1-2 car0 road2', cost: 1
+[1202] pre: 22:0 35:0 41:0 162:0, eff: 7:0 22:1 35:1
+[1203] name: `move_car_out_road junction2-2 junction1-2 car0 road3', cost: 1
+[1203] pre: 23:0 35:0 42:0 202:0, eff: 7:0 23:1 35:1
+[1204] name: `move_car_out_road junction2-2 junction1-2 car0 road4', cost: 1
+[1204] pre: 24:0 35:0 43:0 242:0, eff: 7:0 24:1 35:1
+[1205] name: `move_car_out_road junction2-2 junction1-2 car1 road0', cost: 1
+[1205] pre: 25:0 35:0 39:0 82:0, eff: 16:0 25:1 35:1
+[1206] name: `move_car_out_road junction2-2 junction1-2 car1 road1', cost: 1
+[1206] pre: 26:0 35:0 40:0 122:0, eff: 16:0 26:1 35:1
+[1207] name: `move_car_out_road junction2-2 junction1-2 car1 road2', cost: 1
+[1207] pre: 27:0 35:0 41:0 162:0, eff: 16:0 27:1 35:1
+[1208] name: `move_car_out_road junction2-2 junction1-2 car1 road3', cost: 1
+[1208] pre: 28:0 35:0 42:0 202:0, eff: 16:0 28:1 35:1
+[1209] name: `move_car_out_road junction2-2 junction1-2 car1 road4', cost: 1
+[1209] pre: 29:0 35:0 43:0 242:0, eff: 16:0 29:1 35:1
+[1210] name: `move_car_out_road junction2-2 junction2-1 car0 road0', cost: 1
+[1210] pre: 20:0 37:0 39:0 83:0, eff: 9:0 20:1 37:1
+[1211] name: `move_car_out_road junction2-2 junction2-1 car0 road1', cost: 1
+[1211] pre: 21:0 37:0 40:0 123:0, eff: 9:0 21:1 37:1
+[1212] name: `move_car_out_road junction2-2 junction2-1 car0 road2', cost: 1
+[1212] pre: 22:0 37:0 41:0 163:0, eff: 9:0 22:1 37:1
+[1213] name: `move_car_out_road junction2-2 junction2-1 car0 road3', cost: 1
+[1213] pre: 23:0 37:0 42:0 203:0, eff: 9:0 23:1 37:1
+[1214] name: `move_car_out_road junction2-2 junction2-1 car0 road4', cost: 1
+[1214] pre: 24:0 37:0 43:0 243:0, eff: 9:0 24:1 37:1
+[1215] name: `move_car_out_road junction2-2 junction2-1 car1 road0', cost: 1
+[1215] pre: 25:0 37:0 39:0 83:0, eff: 18:0 25:1 37:1
+[1216] name: `move_car_out_road junction2-2 junction2-1 car1 road1', cost: 1
+[1216] pre: 26:0 37:0 40:0 123:0, eff: 18:0 26:1 37:1
+[1217] name: `move_car_out_road junction2-2 junction2-1 car1 road2', cost: 1
+[1217] pre: 27:0 37:0 41:0 163:0, eff: 18:0 27:1 37:1
+[1218] name: `move_car_out_road junction2-2 junction2-1 car1 road3', cost: 1
+[1218] pre: 28:0 37:0 42:0 203:0, eff: 18:0 28:1 37:1
+[1219] name: `move_car_out_road junction2-2 junction2-1 car1 road4', cost: 1
+[1219] pre: 29:0 37:0 43:0 243:0, eff: 18:0 29:1 37:1
+Succ Gen: 1
+---- testLoadFromProtoCondEff END ----

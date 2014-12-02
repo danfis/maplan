@@ -761,21 +761,23 @@ static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s)
     plan_state_id_t goal_id;
 
     goal_cost = planMAMsgPublicStateCost(ver->init_msg);
+
+    // Ignore the solution if we have already seen better
+    if (ver->ma->goal_cost < goal_cost)
+        return;
+
     if (ver->ack && ver->lowest_cost >= goal_cost){
         // All other agents ack'ed the solution and this agent also has
         // processed all states with lower cost, so we are done.
-        if (ver->ma->goal_cost >= goal_cost){
-            ver->ma->goal_cost = goal_cost;
-            ver->ma->goal = planMAMsgPublicStateStateId(ver->init_msg);
-            DBG_SOLUTION_VERIFY(ver, "response-final-trace-path");
-            tracePath(ver->ma, planMAMsgPublicStateStateId(ver->init_msg));
-        }
+        ver->ma->goal_cost = goal_cost;
+        ver->ma->goal = planMAMsgPublicStateStateId(ver->init_msg);
+        DBG_SOLUTION_VERIFY(ver, "response-final-trace-path");
+        tracePath(ver->ma, planMAMsgPublicStateStateId(ver->init_msg));
+
     }else if (ver->lowest_cost < goal_cost){
-        if (ver->ma->goal_cost >= goal_cost){
-            goal_id = planMAMsgPublicStateStateId(ver->init_msg);
-            node = planStateSpaceNode(ver->ma->search->state_space, goal_id);
-            planSearchInsertNode(ver->ma->search, node);
-            DBG_SOLUTION_VERIFY(ver, "response-final-ins");
-        }
+        goal_id = planMAMsgPublicStateStateId(ver->init_msg);
+        node = planStateSpaceNode(ver->ma->search->state_space, goal_id);
+        planSearchInsertNode(ver->ma->search, node);
+        DBG_SOLUTION_VERIFY(ver, "response-final-ins");
     }
 }

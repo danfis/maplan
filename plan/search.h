@@ -161,6 +161,12 @@ plan_state_id_t planSearchExtractPath(const plan_search_t *search,
                                       plan_path_t *path);
 
 /**
+ * Returns computed heuristic for the specified state.
+ */
+plan_cost_t planSearchStateHeur(const plan_search_t *search,
+                                plan_state_id_t state_id);
+
+/**
  * Returns cost of the node on top of the open-list.
  */
 _bor_inline plan_cost_t planSearchTopNodeCost(const plan_search_t *search);

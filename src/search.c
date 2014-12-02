@@ -69,6 +69,14 @@ plan_state_id_t planSearchExtractPath(const plan_search_t *search,
     return extractPath(search->state_space, goal_state, path);
 }
 
+plan_cost_t planSearchStateHeur(const plan_search_t *search,
+                                plan_state_id_t state_id)
+{
+    plan_state_space_node_t *node;
+    node = planStateSpaceNode(search->state_space, state_id);
+    return node->heuristic;
+}
+
 void planSearchInsertNode(plan_search_t *search,
                           plan_state_space_node_t *node)
 {

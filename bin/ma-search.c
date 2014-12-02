@@ -27,6 +27,7 @@ static int max_mem = 1024; // 1GB
 static int progress_freq = 1000;
 static int use_preferred_ops = 0;
 static int use_pathmax = 0;
+static int heur_init_state = 0;
 static char *print_dot_graph = NULL;
 
 
@@ -78,6 +79,8 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("dot-graph", 0x0, OPTS_STR, &print_dot_graph, NULL,
                 "Prints problem definition as graph in DOT format in"
                 " specified file. (default: None)");
+    optsAddDesc("heur-init-state", 0x0, OPTS_NONE, &heur_init_state, NULL,
+                "Prints heuristic for the initial state at the end.");
 
     if (opts(&argc, argv) != 0){
         return -1;
@@ -382,6 +385,10 @@ static int run(plan_problem_agents_t *prob)
         printf("    Expanded States: %ld\n", th[i].search->stat.expanded_states);
         printf("    Generated States: %ld\n", th[i].search->stat.generated_states);
         printf("    Peak Memory: %ld kb\n", th[i].search->stat.peak_memory);
+        if (heur_init_state){
+            printf("    Init State Heur: %d\n",
+                   (int)planSearchStateHeur(th[i].search, 0));
+        }
 
         planSearchDel(th[i].search);
         planPathFree(&th[i].path);

@@ -71,6 +71,7 @@ OBJS += search_applicable_ops
 OBJS += search_stat
 OBJS += ma_snapshot
 OBJS += fact_op_cross_ref
+OBJS += heur_relax
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg

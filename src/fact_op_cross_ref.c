@@ -22,9 +22,9 @@ static void crossRefPartState(const plan_part_state_t *ps,
     plan_var_id_t var;
     plan_val_t val;
 
-    op[op_id].size = planPartStateSize(ps);
+    op[op_id].size = ps->vals_size;
     if (ps2)
-        op[op_id].size = planPartStateSize(ps2);
+        op[op_id].size += ps2->vals_size;
     op[op_id].fact = BOR_ALLOC_ARR(int, op[op_id].size);
 
     ins = 0;
@@ -51,14 +51,14 @@ static void crossRefNoPre(plan_fact_op_cross_ref_t *cr, int op_id)
 static void crossRefOp(plan_fact_op_cross_ref_t *cr,
                        int id, const plan_op_t *op)
 {
-    if (planPartStateSize(op->pre) > 0){
+    if (op->pre->vals_size > 0){
         crossRefPartState(op->pre, NULL, id, &cr->fact_id,
                           cr->op_pre, cr->fact_pre);
     }else{
         crossRefNoPre(cr, id);
     }
 
-    if (planPartStateSize(op->eff) > 0){
+    if (op->eff->vals_size > 0){
         crossRefPartState(op->eff, NULL, id, &cr->fact_id,
                           cr->op_eff, cr->fact_eff);
     }
@@ -68,16 +68,14 @@ static void crossRefCondEff(plan_fact_op_cross_ref_t *cr, int id,
                             const plan_op_t *op,
                             const plan_op_cond_eff_t *cond_eff)
 {
-    if (planPartStateSize(op->pre) > 0
-            || planPartStateSize(cond_eff->pre) > 0){
+    if (op->pre->vals_size > 0 || cond_eff->pre->vals_size > 0){
         crossRefPartState(op->pre, cond_eff->pre, id, &cr->fact_id,
                           cr->op_pre, cr->fact_pre);
     }else{
         crossRefNoPre(cr, id);
     }
 
-    if (planPartStateSize(op->eff) > 0
-            || planPartStateSize(cond_eff->eff) > 0){
+    if (op->eff->vals_size > 0 || cond_eff->eff->vals_size > 0){
         crossRefPartState(op->eff, cond_eff->eff, id, &cr->fact_id,
                           cr->op_eff, cr->fact_eff);
     }
@@ -109,6 +107,21 @@ static void addGoalOp(plan_fact_op_cross_ref_t *cr,
     cr->fact_eff[cr->goal_id].size = 1;
     cr->fact_eff[cr->goal_id].op = BOR_ALLOC_ARR(int, 1);
     cr->fact_eff[cr->goal_id].op[0] = cr->goal_op_id;
+}
+
+static void setOpId(plan_fact_op_cross_ref_t *cr,
+                    const plan_op_t *op, int op_size)
+{
+    int i, j, cond_eff;
+
+    cr->op_id = BOR_ALLOC_ARR(int, cr->op_size);
+    cond_eff = op_size;
+    for (i = 0; i < op_size; ++i){
+        cr->op_id[i] = i;
+        for (j = 0; j < op[i].cond_eff_size; ++j)
+            cr->op_id[cond_eff++] = i;
+    }
+    cr->op_id[cr->goal_op_id] = -1;
 }
 
 void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
@@ -145,6 +158,9 @@ void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
 
     // Adds operator reaching artificial goal
     addGoalOp(cr, goal);
+
+    // Set up .op_id[] array
+    setOpId(cr, op, op_size);
 }
 
 void planFactOpCrossRefFree(plan_fact_op_cross_ref_t *cr)

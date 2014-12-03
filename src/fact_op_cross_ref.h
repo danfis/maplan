@@ -40,6 +40,8 @@ struct _plan_fact_op_cross_ref_t {
                                  .goal_id as an effect */
     int no_pre_id;          /*!< Artificial precondition fact for all
                                  operators without preconditions */
+    int *op_id;             /*!< Returns original operator ID. This is here
+                                 mainly because of the conditional effects */
 };
 typedef struct _plan_fact_op_cross_ref_t plan_fact_op_cross_ref_t;
 
@@ -56,6 +58,9 @@ void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
  * Frees allocated resources.
  */
 void planFactOpCrossRefFree(plan_fact_op_cross_ref_t *cr);
+
+#define PLAN_OPARR_FOR_EACH(oparr, i, op_id) \
+    for ((i) = 0; (i) < (size) && ((op_id) = (oparr)->op[(i)], 1); ++(i))
 
 #ifdef __cplusplus
 }

@@ -29,6 +29,9 @@ struct _plan_heur_relax_t {
     plan_heur_relax_op_t *op_init; /*!< Pre-initialization of .op[] array */
     plan_heur_relax_fact_t *fact;
     plan_heur_relax_fact_t *fact_init; /*!< Pre-init of .fact[] array */
+
+    int *plan_fact;
+    int *plan_op;
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
@@ -50,6 +53,12 @@ void planHeurRelaxFree(plan_heur_relax_t *relax);
  */
 void planHeurRelaxRun(plan_heur_relax_t *relax, int type,
                       const plan_state_t *state);
+
+/**
+ * Marks facts and operators in relaxed plan in .plan_fact[] and
+ * .plan_op[] arrays.
+ */
+void planHeurRelaxMarkPlan(plan_heur_relax_t *relax);
 
 #ifdef __cplusplus
 }

@@ -35,6 +35,9 @@ void planHeurRelaxInit(plan_heur_relax_t *relax,
             relax->op_init[i].cost = op[op_id].cost;
         }
     }
+
+    relax->plan_fact = NULL;
+    relax->plan_op = NULL;
 }
 
 void planHeurRelaxFree(plan_heur_relax_t *relax)
@@ -43,6 +46,10 @@ void planHeurRelaxFree(plan_heur_relax_t *relax)
     BOR_FREE(relax->op_init);
     BOR_FREE(relax->fact);
     BOR_FREE(relax->fact_init);
+    if (relax->plan_fact)
+        BOR_FREE(relax->plan_fact);
+    if (relax->plan_op)
+        BOR_FREE(relax->plan_op);
     planFactOpCrossRefFree(&relax->cref);
 }
 
@@ -147,4 +154,41 @@ void planHeurRelaxRun(plan_heur_relax_t *relax, int type,
     }
 
     planPrioQueueFree(&queue);
+}
+
+static void markPlan(plan_heur_relax_t *relax, int fact_id)
+{
+    plan_heur_relax_fact_t *fact = relax->fact + fact_id;
+    int i, size, *facts;
+
+    // mark fact in relaxed plan
+    relax->plan_fact[fact_id] = 1;
+
+    size  = relax->cref.op_pre[fact->reached_by_op].size;
+    facts = relax->cref.op_pre[fact->reached_by_op].fact;
+    for (i = 0; i < size; ++i){
+        fact_id = facts[i];
+
+        if (!relax->plan_fact[fact_id]
+                && relax->fact[fact_id].reached_by_op != -1){
+            markPlan(relax, fact_id);
+        }
+    }
+
+    // mark operator in relaxed plan
+    relax->plan_op[fact->reached_by_op] = 1;
+}
+
+void planHeurRelaxMarkPlan(plan_heur_relax_t *relax)
+{
+    if (relax->plan_fact == NULL)
+        relax->plan_fact = BOR_ALLOC_ARR(int, relax->cref.fact_size);
+    if (relax->plan_op == NULL)
+        relax->plan_op = BOR_ALLOC_ARR(int, relax->cref.op_size);
+
+    bzero(relax->plan_fact, sizeof(int) * relax->cref.fact_size);
+    bzero(relax->plan_op, sizeof(int) * relax->cref.op_size);
+
+    if (relax->fact[relax->cref.goal_id].value != PLAN_COST_MAX)
+        markPlan(relax, relax->cref.goal_id);
 }

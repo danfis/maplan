@@ -24,6 +24,8 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
     plan_heur_relax_add_t *heur = HEUR(_heur);
     planHeurRelaxRun(&heur->relax, PLAN_HEUR_RELAX_TYPE_ADD, state);
     res->heur = heur->relax.fact[heur->relax.cref.goal_id].value;
+    if (res->heur == PLAN_COST_MAX)
+        res->heur = PLAN_HEUR_DEAD_END;
 }
 
 plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,

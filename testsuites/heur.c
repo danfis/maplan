@@ -81,6 +81,8 @@ TEST(testHeurGoalCount)
             "states/rovers-p03.txt", goalCountNew);
     runTest("goal-count", "../data/ma-benchmarks/rovers/p15.proto",
             "states/rovers-p15.txt", goalCountNew);
+    runTest("goal-count", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", goalCountNew);
 }
 
 TEST(testHeurRelaxAdd)
@@ -93,6 +95,8 @@ TEST(testHeurRelaxAdd)
             "states/rovers-p03.txt", addNew);
     runTest("add", "../data/ma-benchmarks/rovers/p15.proto",
             "states/rovers-p15.txt", addNew);
+    runTest("add", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", addNew);
 }
 
 TEST(testHeurRelaxMax)
@@ -105,6 +109,8 @@ TEST(testHeurRelaxMax)
             "states/rovers-p03.txt", maxNew);
     runTest("max", "../data/ma-benchmarks/rovers/p15.proto",
             "states/rovers-p15.txt", maxNew);
+    runTest("max", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", maxNew);
 }
 
 TEST(testHeurRelaxFF)
@@ -117,6 +123,8 @@ TEST(testHeurRelaxFF)
             "states/rovers-p03.txt", ffNew);
     runTest("ff", "../data/ma-benchmarks/rovers/p15.proto",
             "states/rovers-p15.txt", ffNew);
+    runTest("ff", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", ffNew);
 }
 
 TEST(testHeurRelaxLMCut)
@@ -129,4 +137,8 @@ TEST(testHeurRelaxLMCut)
             "states/rovers-p03.txt", lmCutNew);
     runTest("LM-CUT", "../data/ma-benchmarks/rovers/p15.proto",
             "states/rovers-p15.txt", lmCutNew);
+    /*
+    runTest("LM-CUT", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", lmCutNew);
+    */
 }

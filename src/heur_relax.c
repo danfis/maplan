@@ -108,6 +108,8 @@ static void relaxOp(plan_heur_relax_t *relax, int type,
 
     // Update operator value
     if (type == PLAN_HEUR_RELAX_TYPE_ADD){
+        if (op->value == 0)
+            op->value = op->cost;
         op->value = op->value + fact_value;
     }else{ // PLAN_HEUR_RELAX_TYPE_MAX
         op->value = BOR_MAX(op->value, fact_value + op->cost);
@@ -118,7 +120,7 @@ static void relaxOp(plan_heur_relax_t *relax, int type,
 
     // If all preconditions are satisfied, insert effects of the operator
     if (op->unsat == 0)
-        relaxAddEffects(relax, queue, op_id, op->value + op->cost);
+        relaxAddEffects(relax, queue, op_id, op->value);
 }
 
 void planHeurRelaxRun(plan_heur_relax_t *relax, int type,

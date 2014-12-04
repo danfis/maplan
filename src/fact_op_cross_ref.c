@@ -184,6 +184,7 @@ void planFactOpCrossRefFree(plan_fact_op_cross_ref_t *cr)
     }
     BOR_FREE(cr->fact_pre);
     BOR_FREE(cr->fact_eff);
+    BOR_FREE(cr->op_id);
 
     planFactIdFree(&cr->fact_id);
 }

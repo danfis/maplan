@@ -101,22 +101,17 @@ static void relaxAddEffects(plan_heur_relax_t *relax,
     }
 }
 
-static void relaxOp(plan_heur_relax_t *relax, int type,
-                    plan_prio_queue_t *queue,
-                    int op_id,
-                    int fact_id,
-                    plan_cost_t fact_value)
+static void relaxOpAdd(plan_heur_relax_t *relax, int type,
+                       plan_prio_queue_t *queue,
+                       int op_id, int fact_id,
+                       plan_cost_t fact_value)
 {
     plan_heur_relax_op_t *op = relax->op + op_id;
 
     // Update operator value
-    if (type == PLAN_HEUR_RELAX_TYPE_ADD){
-        if (op->value == 0)
-            op->value = op->cost;
-        op->value = op->value + fact_value;
-    }else{ // PLAN_HEUR_RELAX_TYPE_MAX
-        op->value = BOR_MAX(op->value, fact_value + op->cost);
-    }
+    if (op->value == 0)
+        op->value = op->cost;
+    op->value = op->value + fact_value;
 
     // Decrese counter of unsatisfied preconditions
     --op->unsat;
@@ -124,6 +119,27 @@ static void relaxOp(plan_heur_relax_t *relax, int type,
     // If all preconditions are satisfied, insert effects of the operator
     if (op->unsat == 0){
         op->supp = fact_id;
+        relaxAddEffects(relax, queue, op_id, op->value);
+    }
+}
+
+static void relaxOpMax(plan_heur_relax_t *relax, int type,
+                       plan_prio_queue_t *queue,
+                       int op_id, int fact_id,
+                       plan_cost_t fact_value)
+{
+    plan_heur_relax_op_t *op = relax->op + op_id;
+
+    // Decrese counter of unsatisfied preconditions
+    --op->unsat;
+
+    // If all preconditions are satisfied, insert effects of the operator
+    if (op->unsat == 0){
+        op->supp = fact_id;
+        // We don't need to compute max value during the algorithm because
+        // we know that the last fact that enables this operator is also
+        // the one with highest value.
+        op->value = fact_value + op->cost;
         relaxAddEffects(relax, queue, op_id, op->value);
     }
 }
@@ -156,7 +172,11 @@ void planHeurRelaxRun(plan_heur_relax_t *relax, int type,
         op   = relax->cref.fact_pre[fact_id].op;
         for (i = 0; i < size; ++i){
             op_id = op[i];
-            relaxOp(relax, type, &queue, op_id, fact_id, value);
+            if (type == PLAN_HEUR_RELAX_TYPE_ADD){
+                relaxOpAdd(relax, type, &queue, op_id, fact_id, value);
+            }else{ // PLAN_HEUR_RELAX_TYPE_MAX
+                relaxOpMax(relax, type, &queue, op_id, fact_id, value);
+            }
         }
     }
 

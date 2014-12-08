@@ -14,12 +14,13 @@ struct _plan_heur_relax_op_t {
     int unsat;         /*!< Number of unsatisfied preconditions */
     plan_cost_t value; /*!< Value assigned to the operator */
     plan_cost_t cost;  /*!< Cost of the operator */
+    int supp;          /*!< Supporter: The fact that enabled the operator */
 };
 typedef struct _plan_heur_relax_op_t plan_heur_relax_op_t;
 
 struct _plan_heur_relax_fact_t {
     plan_cost_t value; /*!< Value assigned to the fact */
-    int reached_by_op; /*!< ID of the operator that reached this fact */
+    int supp;          /*!< Supporter; The op that enabled the fact */
 };
 typedef struct _plan_heur_relax_fact_t plan_heur_relax_fact_t;
 

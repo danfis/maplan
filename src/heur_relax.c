@@ -21,7 +21,7 @@ void planHeurRelaxInit(plan_heur_relax_t *relax,
     // Initialize facts
     for (i = 0; i < relax->cref.fact_size; ++i){
         relax->fact_init[i].value = PLAN_COST_MAX;
-        relax->fact_init[i].reached_by_op = -1;
+        relax->fact_init[i].supp = -1;
     }
 
     // Initialize operators
@@ -29,6 +29,7 @@ void planHeurRelaxInit(plan_heur_relax_t *relax,
         relax->op_init[i].unsat = relax->cref.op_pre[i].size;
         relax->op_init[i].value = 0;
         relax->op_init[i].cost = 0;
+        relax->op_init[i].supp = -1;
 
         op_id = relax->cref.op_id[i];
         if (op_id >= 0){
@@ -94,7 +95,7 @@ static void relaxAddEffects(plan_heur_relax_t *relax,
 
         if (fact->value > op_value){
             fact->value = op_value;
-            fact->reached_by_op = op_id;
+            fact->supp = op_id;
             planPrioQueuePush(queue, fact->value, fact_id);
         }
     }
@@ -102,7 +103,9 @@ static void relaxAddEffects(plan_heur_relax_t *relax,
 
 static void relaxOp(plan_heur_relax_t *relax, int type,
                     plan_prio_queue_t *queue,
-                    int op_id, plan_cost_t fact_value)
+                    int op_id,
+                    int fact_id,
+                    plan_cost_t fact_value)
 {
     plan_heur_relax_op_t *op = relax->op + op_id;
 
@@ -119,8 +122,10 @@ static void relaxOp(plan_heur_relax_t *relax, int type,
     --op->unsat;
 
     // If all preconditions are satisfied, insert effects of the operator
-    if (op->unsat == 0)
+    if (op->unsat == 0){
+        op->supp = fact_id;
         relaxAddEffects(relax, queue, op_id, op->value);
+    }
 }
 
 void planHeurRelaxRun(plan_heur_relax_t *relax, int type,
@@ -151,7 +156,7 @@ void planHeurRelaxRun(plan_heur_relax_t *relax, int type,
         op   = relax->cref.fact_pre[fact_id].op;
         for (i = 0; i < size; ++i){
             op_id = op[i];
-            relaxOp(relax, type, &queue, op_id, value);
+            relaxOp(relax, type, &queue, op_id, fact_id, value);
         }
     }
 
@@ -166,20 +171,20 @@ static void markPlan(plan_heur_relax_t *relax, int fact_id)
     // mark fact in relaxed plan
     relax->plan_fact[fact_id] = 1;
 
-    size  = relax->cref.op_pre[fact->reached_by_op].size;
-    facts = relax->cref.op_pre[fact->reached_by_op].fact;
+    size  = relax->cref.op_pre[fact->supp].size;
+    facts = relax->cref.op_pre[fact->supp].fact;
     for (i = 0; i < size; ++i){
         fact_id = facts[i];
 
         if (!relax->plan_fact[fact_id]
-                && relax->fact[fact_id].reached_by_op != -1){
+                && relax->fact[fact_id].supp != -1){
             markPlan(relax, fact_id);
         }
     }
 
     // Mark operator in relaxed plan but mark only the real operators not
     // the artificial ones or those made from condition effects.
-    op_id = relax->cref.op_id[fact->reached_by_op];
+    op_id = relax->cref.op_id[fact->supp];
     if (op_id >= 0)
         relax->plan_op[op_id] = 1;
 }

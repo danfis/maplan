@@ -20,6 +20,8 @@ void planOpInit(plan_op_t *op, plan_state_pool_t *state_pool)
     op->pre = planPartStateNew(state_pool);
     op->eff = planPartStateNew(state_pool);
     op->cost = PLAN_COST_ZERO;
+
+    op->owner = -1;
 }
 
 void planOpFree(plan_op_t *op)
@@ -58,6 +60,11 @@ void planOpCopy(plan_op_t *dst, const plan_op_t *src)
 
     dst->cost = src->cost;
     dst->name = strdup(src->name);
+
+    dst->global_id  = src->global_id;
+    dst->owner      = src->owner;
+    dst->is_private = src->is_private;
+    dst->recv_agent = src->recv_agent;
 }
 
 static void planOpCondEffInit(plan_op_cond_eff_t *ceff,
@@ -187,6 +194,13 @@ plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id)
                                             state_id);
     }
 }
+
+void planOpAddRecvAgent(plan_op_t *op, int agent_id)
+{
+    uint64_t recv = 1 << agent_id;
+    op->recv_agent |= recv;
+}
+
 
 void planOpExtraMAOpAddRecvAgent(plan_op_t *op, int agent_id)
 {

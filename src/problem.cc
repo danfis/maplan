@@ -412,7 +412,7 @@ static void agentSetSendPeers(plan_problem_t *prob,
 
             PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
                 if (vals.usedAsPre(var, val, peer)){
-                    planOpExtraMAOpAddRecvAgent(op, peer);
+                    planOpAddRecvAgent(op, peer);
                     break;
                 }
             }
@@ -444,7 +444,7 @@ static void agentSetPrivateOps(plan_op_t *ops, int op_size,
         op = ops + opi;
         if (!agentIsPartStatePublic(op->eff, vals)
                 && !agentIsPartStatePublic(op->pre, vals)){
-            planOpExtraMAOpSetPrivate(op);
+            op->is_private = 1;
         }
     }
 }
@@ -498,8 +498,7 @@ static void agentCreateProjectedOps(plan_problem_t *agent,
         planOpCopy(proj_op, ops + opi);
 
         if (agentProjectOp(proj_op, agent_id, vals)){
-            planOpExtraMAProjOpSetOwner(proj_op, op_owner[opi]);
-            planOpExtraMAProjOpSetGlobalId(proj_op, opi);
+            proj_op->owner = op_owner[opi];
             ++agent->proj_op_size;
         }else{
             planOpFree(proj_op);
@@ -658,6 +657,7 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
         planOpInit(op, p->state_pool);
         op->name = strdup(proto_op.name().c_str());
         op->cost = proto_op.cost();
+        op->global_id = ins;
 
         const PlanProblemPartState &proto_pre = proto_op.pre();
         for (int j = 0; j < proto_pre.val_size(); ++j){

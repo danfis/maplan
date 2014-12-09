@@ -40,6 +40,12 @@ extern "C" {
 #define PLAN_MA_MSG_DEAD_END_VERIFICATION 0x1
 
 
+/**
+ * Heur sub-types
+ */
+#define PLAN_MA_MSG_HEUR_FF_REQUEST 0x0
+#define PLAN_MA_MSG_HEUR_FF_RESPONSE 0x1
+
 struct _plan_ma_msg_t {
     int type;
 };

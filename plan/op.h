@@ -51,6 +51,12 @@ struct _plan_op_t {
     plan_state_pool_t *state_pool; /*!< Reference to the state-pool this
                                         operator is made from */
 
+    int global_id;       /*!< Globally unique ID of the operator */
+    int owner;           /*!< ID of the owner agent */
+    int is_private;      /*!< True if the operator is private for the owner agent */
+    uint64_t recv_agent; /*!< Bit array -- 1 for agent that should receive
+                              effects of this operator */
+
     union {
         plan_op_ma_op_t ma_op;
         plan_op_ma_proj_op_t ma_proj_op;
@@ -130,6 +136,11 @@ void planOpCondEffSimplify(plan_op_t *op);
  * returned.
  */
 plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id);
+
+/**
+ * Adds specified agent to the list of receiving agents.
+ */
+void planOpAddRecvAgent(plan_op_t *op, int agent_id);
 
 
 /**

@@ -15,6 +15,7 @@
 #include "ma_comm_queue.h"
 #include "causalgraph.h"
 #include "ma_search.h"
+#include "heur_admissible.h"
 
 TEST(protobufTearDown)
 {
@@ -37,6 +38,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSMACommQueue),
     TEST_SUITE_ADD(TSCausalGraph),
     TEST_SUITE_ADD(TSMASearch),
+    TEST_SUITE_ADD(TSHeurAdmissible),
     TEST_SUITES_CLOSURE
 };
 

@@ -205,7 +205,6 @@ static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
         h = 0;
 
     while (heur->relax.fact[heur->relax.cref.goal_id].value > 0){
-        fprintf(stderr, "goal: %d\n", heur->relax.fact[heur->relax.cref.goal_id].value);
         // Mark facts connected with a goal by zero-cost operators in
         // justification graph.
         markGoalZone(heur);
@@ -231,6 +230,5 @@ static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
         planHeurRelaxIncMax(&heur->relax, heur->cut.op, heur->cut.size);
     }
 
-    fprintf(stderr, "H: %d\n", heur->relax.fact[heur->relax.cref.goal_id].value);
     res->heur = h;
 }

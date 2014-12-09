@@ -33,7 +33,8 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
     heur = BOR_ALLOC(plan_heur_lm_cut_t);
     _planHeurInit(&heur->heur, planHeurLMCutDel,
                   planHeurLMCut);
-    planHeurRelaxInit(&heur->relax, var, var_size, goal, op, op_size);
+    planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_MAX,
+                      var, var_size, goal, op, op_size);
 
     heur->fact_goal_zone = BOR_ALLOC_ARR(int, heur->relax.cref.fact_size);
     heur->fact_in_queue  = BOR_ALLOC_ARR(int, heur->relax.cref.fact_size);
@@ -198,7 +199,7 @@ static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
     plan_cost_t h = PLAN_HEUR_DEAD_END;
 
     // Compute initial h^max
-    planHeurRelaxRun(&heur->relax, PLAN_HEUR_RELAX_TYPE_MAX, state);
+    planHeurRelax(&heur->relax, state);
 
     // Check whether the goal was reached, if so prepare output variable
     if (heur->relax.fact[heur->relax.cref.goal_id].value >= 0)

@@ -41,7 +41,11 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
     int i;
 
     // Compute relaxation heuristic and relaxed plan
-    planHeurRelaxRun(&heur->relax, PLAN_HEUR_RELAX_TYPE_ADD, state);
+    planHeurRelax(&heur->relax, state);
+    if (heur->relax.fact[heur->relax.cref.goal_id].value == PLAN_COST_MAX){
+        res->heur = PLAN_HEUR_DEAD_END;
+        return;
+    }
     planHeurRelaxMarkPlan(&heur->relax);
 
     // Pick up the value
@@ -66,7 +70,8 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
     heur = BOR_ALLOC(plan_heur_relax_ff_t);
     heur->base_op = op;
     _planHeurInit(&heur->heur, heurDel, heurVal);
-    planHeurRelaxInit(&heur->relax, var, var_size, goal, op, op_size);
+    planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_ADD,
+                      var, var_size, goal, op, op_size);
 
     return &heur->heur;
 }

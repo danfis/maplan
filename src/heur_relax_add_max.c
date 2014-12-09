@@ -7,7 +7,6 @@ struct _plan_heur_relax_add_max_t {
     plan_heur_t heur;
     plan_heur_relax_t relax;
     const plan_op_t *base_op;
-    int relax_op;
 };
 typedef struct _plan_heur_relax_add_max_t plan_heur_relax_add_max_t;
 
@@ -44,7 +43,7 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
     plan_heur_relax_add_max_t *heur = HEUR(_heur);
 
     // Compute relaxation heuristic
-    planHeurRelaxRun(&heur->relax, heur->relax_op, state);
+    planHeurRelax(&heur->relax, state);
 
     // Pick up the value
     res->heur = heur->relax.fact[heur->relax.cref.goal_id].value;
@@ -65,10 +64,10 @@ static plan_heur_t *heurNew(const plan_var_t *var, int var_size,
 
     heur = BOR_ALLOC(plan_heur_relax_add_max_t);
     heur->base_op = op;
-    heur->relax_op = relax_op;
     
     _planHeurInit(&heur->heur, heurDel, heurVal);
-    planHeurRelaxInit(&heur->relax, var, var_size, goal, op, op_size);
+    planHeurRelaxInit(&heur->relax, relax_op,
+                      var, var_size, goal, op, op_size);
 
     return &heur->heur;
 }

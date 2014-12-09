@@ -2,13 +2,14 @@
 #include "plan/prioqueue.h"
 #include "heur_relax.h"
 
-void planHeurRelaxInit(plan_heur_relax_t *relax,
+void planHeurRelaxInit(plan_heur_relax_t *relax, int type,
                        const plan_var_t *var, int var_size,
                        const plan_part_state_t *goal,
                        const plan_op_t *op, int op_size)
 {
     int i, op_id;
 
+    relax->type = type;
     planFactOpCrossRefInit(&relax->cref, var, var_size, goal, op, op_size);
 
     relax->op = BOR_ALLOC_ARR(plan_heur_relax_op_t, relax->cref.op_size);
@@ -144,12 +145,12 @@ static void relaxOpMax(plan_heur_relax_t *relax,
     }
 }
 
-void planHeurRelaxRun(plan_heur_relax_t *relax, int type,
-                      const plan_state_t *state)
+void planHeurRelax(plan_heur_relax_t *relax, const plan_state_t *state)
 {
     plan_prio_queue_t queue;
     int i, size, *op, op_id;
     int fact_id, goal_id;
+    int type = relax->type;
     plan_cost_t value;
     plan_heur_relax_fact_t *fact;
 

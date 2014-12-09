@@ -25,6 +25,7 @@ struct _plan_heur_relax_fact_t {
 typedef struct _plan_heur_relax_fact_t plan_heur_relax_fact_t;
 
 struct _plan_heur_relax_t {
+    int type;
     plan_fact_op_cross_ref_t cref; /*!< Cross referenced ops and facts */
     plan_heur_relax_op_t *op;
     plan_heur_relax_op_t *op_init; /*!< Pre-initialization of .op[] array */
@@ -39,7 +40,7 @@ typedef struct _plan_heur_relax_t plan_heur_relax_t;
 /**
  * Initialize relaxation heuristic.
  */
-void planHeurRelaxInit(plan_heur_relax_t *relax,
+void planHeurRelaxInit(plan_heur_relax_t *relax, int type,
                        const plan_var_t *var, int var_size,
                        const plan_part_state_t *goal,
                        const plan_op_t *op, int op_size);
@@ -52,8 +53,7 @@ void planHeurRelaxFree(plan_heur_relax_t *relax);
 /**
  * Runs relaxation from the specified state until goal is reached.
  */
-void planHeurRelaxRun(plan_heur_relax_t *relax, int type,
-                      const plan_state_t *state);
+void planHeurRelax(plan_heur_relax_t *relax, const plan_state_t *state);
 
 /**
  * Incrementally update h^max values considering changed costs of the

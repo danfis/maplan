@@ -56,6 +56,13 @@ void planHeurRelaxRun(plan_heur_relax_t *relax, int type,
                       const plan_state_t *state);
 
 /**
+ * Incrementally update h^max values considering changed costs of the
+ * speficied operators.
+ */
+void planHeurRelaxIncMax(plan_heur_relax_t *relax,
+                         const int *op, int op_size);
+
+/**
  * Marks facts and operators in relaxed plan in .plan_fact[] and
  * .plan_op[] arrays.
  */

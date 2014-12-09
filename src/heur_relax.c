@@ -101,7 +101,7 @@ static void relaxAddEffects(plan_heur_relax_t *relax,
     }
 }
 
-static void relaxOpAdd(plan_heur_relax_t *relax, int type,
+static void relaxOpAdd(plan_heur_relax_t *relax,
                        plan_prio_queue_t *queue,
                        int op_id, int fact_id,
                        plan_cost_t fact_value)
@@ -123,7 +123,7 @@ static void relaxOpAdd(plan_heur_relax_t *relax, int type,
     }
 }
 
-static void relaxOpMax(plan_heur_relax_t *relax, int type,
+static void relaxOpMax(plan_heur_relax_t *relax,
                        plan_prio_queue_t *queue,
                        int op_id, int fact_id,
                        plan_cost_t fact_value)
@@ -173,15 +173,98 @@ void planHeurRelaxRun(plan_heur_relax_t *relax, int type,
         for (i = 0; i < size; ++i){
             op_id = op[i];
             if (type == PLAN_HEUR_RELAX_TYPE_ADD){
-                relaxOpAdd(relax, type, &queue, op_id, fact_id, value);
+                relaxOpAdd(relax, &queue, op_id, fact_id, value);
             }else{ // PLAN_HEUR_RELAX_TYPE_MAX
-                relaxOpMax(relax, type, &queue, op_id, fact_id, value);
+                relaxOpMax(relax, &queue, op_id, fact_id, value);
             }
         }
     }
 
     planPrioQueueFree(&queue);
 }
+
+
+static void incUpdateOpMax(plan_heur_relax_t *relax, int op_id)
+{
+    plan_heur_relax_op_t *op = relax->op + op_id;
+    int i, len, *facts, fact_id, supp;
+    plan_cost_t value;
+
+    supp = op->supp;
+    value = relax->fact[supp].value;
+    len   = relax->cref.op_pre[op_id].size;
+    facts = relax->cref.op_pre[op_id].fact;
+    for (i = 0; i < len; ++i){
+        fact_id = facts[i];
+        if (relax->fact[fact_id].value > value){
+            supp = fact_id;
+            value = relax->fact[fact_id].value;
+        }
+    }
+
+    op->supp = supp;
+    op->value = value + op->cost;
+}
+
+static void incRelaxOpMax(plan_heur_relax_t *relax,
+                          plan_prio_queue_t *queue,
+                          int op_id, int fact_id,
+                          plan_cost_t fact_value)
+{
+    plan_heur_relax_op_t *op = relax->op + op_id;
+
+    // Consider this operator only if the enabling fact is the supporter
+    // because we know that the supporting fact maximizes the operator's
+    // value
+    if (op->supp != fact_id)
+        return;
+
+    // If the value does not correspond to the supporter's value, find out
+    // the correct value of the operator and update its effects.
+    if (op->value - op->cost != fact_value){
+        incUpdateOpMax(relax, op_id);
+        relaxAddEffects(relax, queue, op_id, op->value);
+    }
+}
+
+void planHeurRelaxIncMax(plan_heur_relax_t *relax,
+                         const int *changed_op, int changed_op_size)
+{
+    plan_prio_queue_t queue;
+    int i, size, *op, op_id;
+    int fact_id, goal_id;
+    plan_cost_t value;
+    plan_heur_relax_fact_t *fact;
+
+    planPrioQueueInit(&queue);
+
+    goal_id = relax->cref.goal_id;
+
+    for (i = 0; i < changed_op_size; ++i){
+        relaxAddEffects(relax, &queue, changed_op[i],
+                        relax->op[changed_op[i]].value);
+    }
+
+    while (!planPrioQueueEmpty(&queue)){
+        fact_id = planPrioQueuePop(&queue, &value);
+        fact = relax->fact + fact_id;
+        if (fact->value != value)
+            continue;
+
+        if (fact_id == goal_id)
+            break;
+
+        size = relax->cref.fact_pre[fact_id].size;
+        op   = relax->cref.fact_pre[fact_id].op;
+        for (i = 0; i < size; ++i){
+            op_id = op[i];
+            incRelaxOpMax(relax, &queue, op_id, fact_id, value);
+        }
+    }
+
+    planPrioQueueFree(&queue);
+}
+
 
 static void markPlan(plan_heur_relax_t *relax, int fact_id)
 {

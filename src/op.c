@@ -202,20 +202,6 @@ void planOpAddRecvAgent(plan_op_t *op, int agent_id)
 }
 
 
-void planOpExtraMAOpAddRecvAgent(plan_op_t *op, int agent_id)
-{
-    ++op->extra.ma_op.recv_agent_size;
-    op->extra.ma_op.recv_agent = BOR_REALLOC_ARR(op->extra.ma_op.recv_agent, int,
-                                                 op->extra.ma_op.recv_agent_size);
-    op->extra.ma_op.recv_agent[op->extra.ma_op.recv_agent_size - 1] = agent_id;
-}
-
-void planOpExtraMAOpFree(plan_op_t *op)
-{
-    if (op->extra.ma_op.recv_agent)
-        BOR_FREE(op->extra.ma_op.recv_agent);
-}
-
 static void planOpCondEffFree(plan_op_cond_eff_t *ceff)
 {
     planPartStateDel(ceff->pre);

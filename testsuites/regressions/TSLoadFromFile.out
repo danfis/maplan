@@ -3197,7 +3197,7 @@ Ops[1220]:
 [1219] pre: 29:0 37:0 43:0 243:0, eff: 18:0 29:1 37:1
 Succ Gen: 1
 ---- testLoadFromProtoCondEff END ----
----- testLoadAgentFromProto ----
+---- ../data/ma-benchmarks/rovers/p03.proto ----
 Vars[13]:
 [0] name: `var0', range: 3
 [1] name: `var1', range: 4
@@ -3303,6 +3303,7 @@ Ops[43]:
 [42] pre: 1:1 6:0, eff: 6:1
 Succ Gen: 1
 ++++ rover0 ++++
+Agent ID: 0
 Vars[13]:
 [0] name: `var0', range: 3
 [1] name: `var1', range: 4
@@ -3384,6 +3385,7 @@ Ops[20]:
 PrivateVal: 0:0 0:1 0:2 2:1 3:1 10:0 10:1
 ++++ rover0 END ++++
 ++++ rover1 ++++
+Agent ID: 1
 Vars[13]:
 [0] name: `var0', range: 3
 [1] name: `var1', range: 4
@@ -3550,4 +3552,1254 @@ Ops[38]:
 [37] pre: 1:1 6:0, eff: 6:1
 PrivateVal: 1:0 1:1 1:2 1:3 2:2 3:2 4:0 4:1 5:0 5:1 6:0 6:1 11:0 11:1 12:0
 ++++ rover1 END ++++
----- testLoadAgentFromProto END ----
+---- ../data/ma-benchmarks/rovers/p03.proto END ----
+---- ../data/ma-benchmarks/depot/pfile1.proto ----
+Vars[14]:
+[0] name: `var0', range: 4
+[1] name: `var1', range: 4
+[2] name: `var2', range: 3
+[3] name: `var3', range: 3
+[4] name: `var4', range: 2
+[5] name: `var5', range: 2
+[6] name: `var6', range: 2
+[7] name: `var7', range: 2
+[8] name: `var8', range: 2
+[9] name: `var9', range: 2
+[10] name: `var10', range: 2
+[11] name: `var11', range: 2
+[12] name: `var12', range: 9
+[13] name: `var13', range: 9
+Initial state: 0:1 1:0 2:2 3:0 4:0 5:0 6:0 7:0 8:0 9:1 10:1 11:0 12:7 13:6
+Goal: 12:8 13:7
+Ops[72]:
+[0] cost: 1, gid: 0, owner: -1 (b), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor0'
+[0] pre: 2:0, eff: 2:1
+[1] cost: 1, gid: 1, owner: -1 (d), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor1'
+[1] pre: 2:0, eff: 2:2
+[2] cost: 1, gid: 2, owner: -1 (b), private: 0, recv_agent: f, name: `drive truck0 distributor0 depot0'
+[2] pre: 2:1, eff: 2:0
+[3] cost: 1, gid: 3, owner: -1 (e), private: 0, recv_agent: f, name: `drive truck0 distributor0 distributor1'
+[3] pre: 2:1, eff: 2:2
+[4] cost: 1, gid: 4, owner: -1 (d), private: 0, recv_agent: f, name: `drive truck0 distributor1 depot0'
+[4] pre: 2:2, eff: 2:0
+[5] cost: 1, gid: 5, owner: -1 (e), private: 0, recv_agent: f, name: `drive truck0 distributor1 distributor0'
+[5] pre: 2:2, eff: 2:1
+[6] cost: 1, gid: 6, owner: -1 (13), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor0'
+[6] pre: 3:0, eff: 3:1
+[7] cost: 1, gid: 7, owner: -1 (15), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor1'
+[7] pre: 3:0, eff: 3:2
+[8] cost: 1, gid: 8, owner: -1 (13), private: 0, recv_agent: 17, name: `drive truck1 distributor0 depot0'
+[8] pre: 3:1, eff: 3:0
+[9] cost: 1, gid: 9, owner: -1 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor0 distributor1'
+[9] pre: 3:1, eff: 3:2
+[10] cost: 1, gid: 10, owner: -1 (15), private: 0, recv_agent: 17, name: `drive truck1 distributor1 depot0'
+[10] pre: 3:2, eff: 3:0
+[11] cost: 1, gid: 11, owner: -1 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor1 distributor0'
+[11] pre: 3:2, eff: 3:1
+[12] cost: 1, gid: 12, owner: -1 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 crate1 depot0'
+[12] pre: 1:0 8:0 12:2, eff: 0:0 4:0 7:0 8:1 12:5
+[13] cost: 1, gid: 13, owner: -1 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 pallet0 depot0'
+[13] pre: 9:0 12:2, eff: 0:0 4:0 7:0 9:1 12:6
+[14] cost: 1, gid: 14, owner: -1 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 crate0 depot0'
+[14] pre: 0:0 7:0 13:2, eff: 1:0 4:0 7:1 8:0 13:5
+[15] cost: 1, gid: 15, owner: -1 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 pallet0 depot0'
+[15] pre: 9:0 13:2, eff: 1:0 4:0 8:0 9:1 13:6
+[16] cost: 1, gid: 16, owner: -1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 crate1 distributor0'
+[16] pre: 1:1 8:0 12:3, eff: 0:1 5:0 7:0 8:1 12:5
+[17] cost: 1, gid: 17, owner: -1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 pallet1 distributor0'
+[17] pre: 10:0 12:3, eff: 0:1 5:0 7:0 10:1 12:7
+[18] cost: 1, gid: 18, owner: -1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 crate0 distributor0'
+[18] pre: 0:1 7:0 13:3, eff: 1:1 5:0 7:1 8:0 13:5
+[19] cost: 1, gid: 19, owner: -1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 pallet1 distributor0'
+[19] pre: 10:0 13:3, eff: 1:1 5:0 8:0 10:1 13:7
+[20] cost: 1, gid: 20, owner: -1 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 crate1 distributor1'
+[20] pre: 1:2 8:0 12:4, eff: 0:2 6:0 7:0 8:1 12:5
+[21] cost: 1, gid: 21, owner: -1 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 pallet2 distributor1'
+[21] pre: 11:0 12:4, eff: 0:2 6:0 7:0 11:1 12:8
+[22] cost: 1, gid: 22, owner: -1 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 crate0 distributor1'
+[22] pre: 0:2 7:0 13:4, eff: 1:2 6:0 7:1 8:0 13:5
+[23] cost: 1, gid: 23, owner: -1 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 pallet2 distributor1'
+[23] pre: 11:0 13:4, eff: 1:2 6:0 8:0 11:1 13:8
+[24] cost: 1, gid: 24, owner: -1 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate0 crate1 depot0'
+[24] pre: 0:0 4:0 7:0 12:5, eff: 0:3 4:1 7:1 8:0 12:2
+[25] cost: 1, gid: 25, owner: -1 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate0 pallet0 depot0'
+[25] pre: 0:0 4:0 7:0 12:6, eff: 0:3 4:1 7:1 9:0 12:2
+[26] cost: 1, gid: 26, owner: -1 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate0 pallet1 depot0'
+[26] pre: 0:0 4:0 7:0 12:7, eff: 0:3 4:1 7:1 10:0 12:2
+[27] cost: 1, gid: 27, owner: -1 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate0 pallet2 depot0'
+[27] pre: 0:0 4:0 7:0 12:8, eff: 0:3 4:1 7:1 11:0 12:2
+[28] cost: 1, gid: 28, owner: -1 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate1 crate0 depot0'
+[28] pre: 1:0 4:0 8:0 13:5, eff: 1:3 4:1 7:0 8:1 13:2
+[29] cost: 1, gid: 29, owner: -1 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate1 pallet0 depot0'
+[29] pre: 1:0 4:0 8:0 13:6, eff: 1:3 4:1 8:1 9:0 13:2
+[30] cost: 1, gid: 30, owner: -1 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate1 pallet1 depot0'
+[30] pre: 1:0 4:0 8:0 13:7, eff: 1:3 4:1 8:1 10:0 13:2
+[31] cost: 1, gid: 31, owner: -1 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate1 pallet2 depot0'
+[31] pre: 1:0 4:0 8:0 13:8, eff: 1:3 4:1 8:1 11:0 13:2
+[32] cost: 1, gid: 32, owner: -1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate0 crate1 distributor0'
+[32] pre: 0:1 5:0 7:0 12:5, eff: 0:3 5:1 7:1 8:0 12:3
+[33] cost: 1, gid: 33, owner: -1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate0 pallet0 distributor0'
+[33] pre: 0:1 5:0 7:0 12:6, eff: 0:3 5:1 7:1 9:0 12:3
+[34] cost: 1, gid: 34, owner: -1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate0 pallet1 distributor0'
+[34] pre: 0:1 5:0 7:0 12:7, eff: 0:3 5:1 7:1 10:0 12:3
+[35] cost: 1, gid: 35, owner: -1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate0 pallet2 distributor0'
+[35] pre: 0:1 5:0 7:0 12:8, eff: 0:3 5:1 7:1 11:0 12:3
+[36] cost: 1, gid: 36, owner: -1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate1 crate0 distributor0'
+[36] pre: 1:1 5:0 8:0 13:5, eff: 1:3 5:1 7:0 8:1 13:3
+[37] cost: 1, gid: 37, owner: -1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate1 pallet0 distributor0'
+[37] pre: 1:1 5:0 8:0 13:6, eff: 1:3 5:1 8:1 9:0 13:3
+[38] cost: 1, gid: 38, owner: -1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate1 pallet1 distributor0'
+[38] pre: 1:1 5:0 8:0 13:7, eff: 1:3 5:1 8:1 10:0 13:3
+[39] cost: 1, gid: 39, owner: -1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate1 pallet2 distributor0'
+[39] pre: 1:1 5:0 8:0 13:8, eff: 1:3 5:1 8:1 11:0 13:3
+[40] cost: 1, gid: 40, owner: -1 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate0 crate1 distributor1'
+[40] pre: 0:2 6:0 7:0 12:5, eff: 0:3 6:1 7:1 8:0 12:4
+[41] cost: 1, gid: 41, owner: -1 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate0 pallet0 distributor1'
+[41] pre: 0:2 6:0 7:0 12:6, eff: 0:3 6:1 7:1 9:0 12:4
+[42] cost: 1, gid: 42, owner: -1 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate0 pallet1 distributor1'
+[42] pre: 0:2 6:0 7:0 12:7, eff: 0:3 6:1 7:1 10:0 12:4
+[43] cost: 1, gid: 43, owner: -1 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate0 pallet2 distributor1'
+[43] pre: 0:2 6:0 7:0 12:8, eff: 0:3 6:1 7:1 11:0 12:4
+[44] cost: 1, gid: 44, owner: -1 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate1 crate0 distributor1'
+[44] pre: 1:2 6:0 8:0 13:5, eff: 1:3 6:1 7:0 8:1 13:4
+[45] cost: 1, gid: 45, owner: -1 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate1 pallet0 distributor1'
+[45] pre: 1:2 6:0 8:0 13:6, eff: 1:3 6:1 8:1 9:0 13:4
+[46] cost: 1, gid: 46, owner: -1 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate1 pallet1 distributor1'
+[46] pre: 1:2 6:0 8:0 13:7, eff: 1:3 6:1 8:1 10:0 13:4
+[47] cost: 1, gid: 47, owner: -1 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate1 pallet2 distributor1'
+[47] pre: 1:2 6:0 8:0 13:8, eff: 1:3 6:1 8:1 11:0 13:4
+[48] cost: 1, gid: 48, owner: -1 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck0 depot0'
+[48] pre: 2:0 12:2, eff: 4:0 12:0
+[49] cost: 1, gid: 49, owner: -1 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck1 depot0'
+[49] pre: 3:0 12:2, eff: 4:0 12:1
+[50] cost: 1, gid: 50, owner: -1 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck0 depot0'
+[50] pre: 2:0 13:2, eff: 4:0 13:0
+[51] cost: 1, gid: 51, owner: -1 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck1 depot0'
+[51] pre: 3:0 13:2, eff: 4:0 13:1
+[52] cost: 1, gid: 52, owner: -1 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck0 distributor0'
+[52] pre: 2:1 12:3, eff: 5:0 12:0
+[53] cost: 1, gid: 53, owner: -1 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck1 distributor0'
+[53] pre: 3:1 12:3, eff: 5:0 12:1
+[54] cost: 1, gid: 54, owner: -1 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck0 distributor0'
+[54] pre: 2:1 13:3, eff: 5:0 13:0
+[55] cost: 1, gid: 55, owner: -1 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck1 distributor0'
+[55] pre: 3:1 13:3, eff: 5:0 13:1
+[56] cost: 1, gid: 56, owner: -1 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck0 distributor1'
+[56] pre: 2:2 12:4, eff: 6:0 12:0
+[57] cost: 1, gid: 57, owner: -1 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck1 distributor1'
+[57] pre: 3:2 12:4, eff: 6:0 12:1
+[58] cost: 1, gid: 58, owner: -1 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck0 distributor1'
+[58] pre: 2:2 13:4, eff: 6:0 13:0
+[59] cost: 1, gid: 59, owner: -1 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck1 distributor1'
+[59] pre: 3:2 13:4, eff: 6:0 13:1
+[60] cost: 1, gid: 60, owner: -1 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck0 depot0'
+[60] pre: 2:0 4:0 12:0, eff: 4:1 12:2
+[61] cost: 1, gid: 61, owner: -1 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck1 depot0'
+[61] pre: 3:0 4:0 12:1, eff: 4:1 12:2
+[62] cost: 1, gid: 62, owner: -1 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck0 depot0'
+[62] pre: 2:0 4:0 13:0, eff: 4:1 13:2
+[63] cost: 1, gid: 63, owner: -1 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck1 depot0'
+[63] pre: 3:0 4:0 13:1, eff: 4:1 13:2
+[64] cost: 1, gid: 64, owner: -1 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck0 distributor0'
+[64] pre: 2:1 5:0 12:0, eff: 5:1 12:3
+[65] cost: 1, gid: 65, owner: -1 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck1 distributor0'
+[65] pre: 3:1 5:0 12:1, eff: 5:1 12:3
+[66] cost: 1, gid: 66, owner: -1 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck0 distributor0'
+[66] pre: 2:1 5:0 13:0, eff: 5:1 13:3
+[67] cost: 1, gid: 67, owner: -1 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck1 distributor0'
+[67] pre: 3:1 5:0 13:1, eff: 5:1 13:3
+[68] cost: 1, gid: 68, owner: -1 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck0 distributor1'
+[68] pre: 2:2 6:0 12:0, eff: 6:1 12:4
+[69] cost: 1, gid: 69, owner: -1 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck1 distributor1'
+[69] pre: 3:2 6:0 12:1, eff: 6:1 12:4
+[70] cost: 1, gid: 70, owner: -1 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck0 distributor1'
+[70] pre: 2:2 6:0 13:0, eff: 6:1 13:4
+[71] cost: 1, gid: 71, owner: -1 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck1 distributor1'
+[71] pre: 3:2 6:0 13:1, eff: 6:1 13:4
+Succ Gen: 1
+++++ depot0 ++++
+Agent ID: 0
+Vars[14]:
+[0] name: `var0', range: 4
+[1] name: `var1', range: 4
+[2] name: `var2', range: 3
+[3] name: `var3', range: 3
+[4] name: `var4', range: 2
+[5] name: `var5', range: 2
+[6] name: `var6', range: 2
+[7] name: `var7', range: 2
+[8] name: `var8', range: 2
+[9] name: `var9', range: 2
+[10] name: `var10', range: 2
+[11] name: `var11', range: 2
+[12] name: `var12', range: 9
+[13] name: `var13', range: 9
+Initial state: 0:1 1:0 2:2 3:0 4:0 5:0 6:0 7:0 8:0 9:1 10:1 11:0 12:7 13:6
+Goal: 12:8 13:7
+Ops[28]:
+[0] cost: 1, gid: 0, owner: 0 (b), private: 0, recv_agent: e, name: `drive truck0 depot0 distributor0'
+[0] pre: 2:0, eff: 2:1
+[1] cost: 1, gid: 1, owner: 0 (d), private: 0, recv_agent: e, name: `drive truck0 depot0 distributor1'
+[1] pre: 2:0, eff: 2:2
+[2] cost: 1, gid: 2, owner: 0 (b), private: 0, recv_agent: e, name: `drive truck0 distributor0 depot0'
+[2] pre: 2:1, eff: 2:0
+[3] cost: 1, gid: 4, owner: 0 (d), private: 0, recv_agent: e, name: `drive truck0 distributor1 depot0'
+[3] pre: 2:2, eff: 2:0
+[4] cost: 1, gid: 6, owner: 0 (13), private: 0, recv_agent: 16, name: `drive truck1 depot0 distributor0'
+[4] pre: 3:0, eff: 3:1
+[5] cost: 1, gid: 7, owner: 0 (15), private: 0, recv_agent: 16, name: `drive truck1 depot0 distributor1'
+[5] pre: 3:0, eff: 3:2
+[6] cost: 1, gid: 8, owner: 0 (13), private: 0, recv_agent: 16, name: `drive truck1 distributor0 depot0'
+[6] pre: 3:1, eff: 3:0
+[7] cost: 1, gid: 10, owner: 0 (15), private: 0, recv_agent: 16, name: `drive truck1 distributor1 depot0'
+[7] pre: 3:2, eff: 3:0
+[8] cost: 1, gid: 12, owner: 0 (1), private: 0, recv_agent: 1e, name: `drop hoist0 crate0 crate1 depot0'
+[8] pre: 1:0 8:0 12:2, eff: 0:0 4:0 7:0 8:1 12:5
+[9] cost: 1, gid: 13, owner: 0 (1), private: 0, recv_agent: 1e, name: `drop hoist0 crate0 pallet0 depot0'
+[9] pre: 9:0 12:2, eff: 0:0 4:0 7:0 9:1 12:6
+[10] cost: 1, gid: 14, owner: 0 (1), private: 0, recv_agent: 1e, name: `drop hoist0 crate1 crate0 depot0'
+[10] pre: 0:0 7:0 13:2, eff: 1:0 4:0 7:1 8:0 13:5
+[11] cost: 1, gid: 15, owner: 0 (1), private: 0, recv_agent: 1e, name: `drop hoist0 crate1 pallet0 depot0'
+[11] pre: 9:0 13:2, eff: 1:0 4:0 8:0 9:1 13:6
+[12] cost: 1, gid: 24, owner: 0 (1), private: 0, recv_agent: 1e, name: `lift hoist0 crate0 crate1 depot0'
+[12] pre: 0:0 4:0 7:0 12:5, eff: 0:3 4:1 7:1 8:0 12:2
+[13] cost: 1, gid: 25, owner: 0 (1), private: 0, recv_agent: 18, name: `lift hoist0 crate0 pallet0 depot0'
+[13] pre: 0:0 4:0 7:0 12:6, eff: 0:3 4:1 7:1 9:0 12:2
+[14] cost: 1, gid: 26, owner: 0 (1), private: 0, recv_agent: 1a, name: `lift hoist0 crate0 pallet1 depot0'
+[14] pre: 0:0 4:0 7:0 12:7, eff: 0:3 4:1 7:1 10:0 12:2
+[15] cost: 1, gid: 27, owner: 0 (1), private: 0, recv_agent: 1c, name: `lift hoist0 crate0 pallet2 depot0'
+[15] pre: 0:0 4:0 7:0 12:8, eff: 0:3 4:1 7:1 11:0 12:2
+[16] cost: 1, gid: 28, owner: 0 (1), private: 0, recv_agent: 1e, name: `lift hoist0 crate1 crate0 depot0'
+[16] pre: 1:0 4:0 8:0 13:5, eff: 1:3 4:1 7:0 8:1 13:2
+[17] cost: 1, gid: 29, owner: 0 (1), private: 0, recv_agent: 18, name: `lift hoist0 crate1 pallet0 depot0'
+[17] pre: 1:0 4:0 8:0 13:6, eff: 1:3 4:1 8:1 9:0 13:2
+[18] cost: 1, gid: 30, owner: 0 (1), private: 0, recv_agent: 1a, name: `lift hoist0 crate1 pallet1 depot0'
+[18] pre: 1:0 4:0 8:0 13:7, eff: 1:3 4:1 8:1 10:0 13:2
+[19] cost: 1, gid: 31, owner: 0 (1), private: 0, recv_agent: 1c, name: `lift hoist0 crate1 pallet2 depot0'
+[19] pre: 1:0 4:0 8:0 13:8, eff: 1:3 4:1 8:1 11:0 13:2
+[20] cost: 1, gid: 48, owner: 0 (9), private: 0, recv_agent: 1e, name: `load hoist0 crate0 truck0 depot0'
+[20] pre: 2:0 12:2, eff: 4:0 12:0
+[21] cost: 1, gid: 49, owner: 0 (11), private: 0, recv_agent: 1e, name: `load hoist0 crate0 truck1 depot0'
+[21] pre: 3:0 12:2, eff: 4:0 12:1
+[22] cost: 1, gid: 50, owner: 0 (9), private: 0, recv_agent: 1e, name: `load hoist0 crate1 truck0 depot0'
+[22] pre: 2:0 13:2, eff: 4:0 13:0
+[23] cost: 1, gid: 51, owner: 0 (11), private: 0, recv_agent: 1e, name: `load hoist0 crate1 truck1 depot0'
+[23] pre: 3:0 13:2, eff: 4:0 13:1
+[24] cost: 1, gid: 60, owner: 0 (9), private: 0, recv_agent: 18, name: `unload hoist0 crate0 truck0 depot0'
+[24] pre: 2:0 4:0 12:0, eff: 4:1 12:2
+[25] cost: 1, gid: 61, owner: 0 (11), private: 0, recv_agent: 18, name: `unload hoist0 crate0 truck1 depot0'
+[25] pre: 3:0 4:0 12:1, eff: 4:1 12:2
+[26] cost: 1, gid: 62, owner: 0 (9), private: 0, recv_agent: 18, name: `unload hoist0 crate1 truck0 depot0'
+[26] pre: 2:0 4:0 13:0, eff: 4:1 13:2
+[27] cost: 1, gid: 63, owner: 0 (11), private: 0, recv_agent: 18, name: `unload hoist0 crate1 truck1 depot0'
+[27] pre: 3:0 4:0 13:1, eff: 4:1 13:2
+Succ Gen: 1
+Proj op:
+Ops[72]:
+[0] cost: 1, gid: 0, owner: 0 (b), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor0'
+[0] pre: 2:0, eff: 2:1
+[1] cost: 1, gid: 1, owner: 0 (d), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor1'
+[1] pre: 2:0, eff: 2:2
+[2] cost: 1, gid: 2, owner: 0 (b), private: 0, recv_agent: f, name: `drive truck0 distributor0 depot0'
+[2] pre: 2:1, eff: 2:0
+[3] cost: 1, gid: 3, owner: 1 (e), private: 0, recv_agent: f, name: `drive truck0 distributor0 distributor1'
+[3] pre: 2:1, eff: 2:2
+[4] cost: 1, gid: 4, owner: 0 (d), private: 0, recv_agent: f, name: `drive truck0 distributor1 depot0'
+[4] pre: 2:2, eff: 2:0
+[5] cost: 1, gid: 5, owner: 1 (e), private: 0, recv_agent: f, name: `drive truck0 distributor1 distributor0'
+[5] pre: 2:2, eff: 2:1
+[6] cost: 1, gid: 6, owner: 0 (13), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor0'
+[6] pre: 3:0, eff: 3:1
+[7] cost: 1, gid: 7, owner: 0 (15), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor1'
+[7] pre: 3:0, eff: 3:2
+[8] cost: 1, gid: 8, owner: 0 (13), private: 0, recv_agent: 17, name: `drive truck1 distributor0 depot0'
+[8] pre: 3:1, eff: 3:0
+[9] cost: 1, gid: 9, owner: 1 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor0 distributor1'
+[9] pre: 3:1, eff: 3:2
+[10] cost: 1, gid: 10, owner: 0 (15), private: 0, recv_agent: 17, name: `drive truck1 distributor1 depot0'
+[10] pre: 3:2, eff: 3:0
+[11] cost: 1, gid: 11, owner: 1 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor1 distributor0'
+[11] pre: 3:2, eff: 3:1
+[12] cost: 1, gid: 12, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 crate1 depot0'
+[12] pre: 1:0 8:0 12:2, eff: 0:0 4:0 7:0 8:1 12:5
+[13] cost: 1, gid: 13, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 pallet0 depot0'
+[13] pre: 9:0 12:2, eff: 0:0 4:0 7:0 9:1 12:6
+[14] cost: 1, gid: 14, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 crate0 depot0'
+[14] pre: 0:0 7:0 13:2, eff: 1:0 4:0 7:1 8:0 13:5
+[15] cost: 1, gid: 15, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 pallet0 depot0'
+[15] pre: 9:0 13:2, eff: 1:0 4:0 8:0 9:1 13:6
+[16] cost: 1, gid: 16, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 crate1 distributor0'
+[16] pre: 8:0 12:3, eff: 5:0 7:0 8:1 12:5
+[17] cost: 1, gid: 17, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 pallet1 distributor0'
+[17] pre: 10:0 12:3, eff: 5:0 7:0 12:7
+[18] cost: 1, gid: 18, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 crate0 distributor0'
+[18] pre: 7:0 13:3, eff: 5:0 7:1 8:0 13:5
+[19] cost: 1, gid: 19, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 pallet1 distributor0'
+[19] pre: 10:0 13:3, eff: 5:0 8:0 13:7
+[20] cost: 1, gid: 20, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 crate1 distributor1'
+[20] pre: 8:0 12:4, eff: 6:0 7:0 8:1 12:5
+[21] cost: 1, gid: 21, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 pallet2 distributor1'
+[21] pre: 11:0 12:4, eff: 6:0 7:0 12:8
+[22] cost: 1, gid: 22, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 crate0 distributor1'
+[22] pre: 7:0 13:4, eff: 6:0 7:1 8:0 13:5
+[23] cost: 1, gid: 23, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 pallet2 distributor1'
+[23] pre: 11:0 13:4, eff: 6:0 8:0 13:8
+[24] cost: 1, gid: 24, owner: 0 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate0 crate1 depot0'
+[24] pre: 0:0 4:0 7:0 12:5, eff: 0:3 4:1 7:1 8:0 12:2
+[25] cost: 1, gid: 25, owner: 0 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate0 pallet0 depot0'
+[25] pre: 0:0 4:0 7:0 12:6, eff: 0:3 4:1 7:1 9:0 12:2
+[26] cost: 1, gid: 26, owner: 0 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate0 pallet1 depot0'
+[26] pre: 0:0 4:0 7:0 12:7, eff: 0:3 4:1 7:1 10:0 12:2
+[27] cost: 1, gid: 27, owner: 0 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate0 pallet2 depot0'
+[27] pre: 0:0 4:0 7:0 12:8, eff: 0:3 4:1 7:1 11:0 12:2
+[28] cost: 1, gid: 28, owner: 0 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate1 crate0 depot0'
+[28] pre: 1:0 4:0 8:0 13:5, eff: 1:3 4:1 7:0 8:1 13:2
+[29] cost: 1, gid: 29, owner: 0 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate1 pallet0 depot0'
+[29] pre: 1:0 4:0 8:0 13:6, eff: 1:3 4:1 8:1 9:0 13:2
+[30] cost: 1, gid: 30, owner: 0 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate1 pallet1 depot0'
+[30] pre: 1:0 4:0 8:0 13:7, eff: 1:3 4:1 8:1 10:0 13:2
+[31] cost: 1, gid: 31, owner: 0 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate1 pallet2 depot0'
+[31] pre: 1:0 4:0 8:0 13:8, eff: 1:3 4:1 8:1 11:0 13:2
+[32] cost: 1, gid: 32, owner: 1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate0 crate1 distributor0'
+[32] pre: 5:0 7:0 12:5, eff: 0:3 5:1 7:1 8:0 12:3
+[33] cost: 1, gid: 33, owner: 1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate0 pallet0 distributor0'
+[33] pre: 5:0 7:0 12:6, eff: 0:3 5:1 7:1 9:0 12:3
+[34] cost: 1, gid: 34, owner: 1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate0 pallet1 distributor0'
+[34] pre: 5:0 7:0 12:7, eff: 0:3 5:1 7:1 10:0 12:3
+[35] cost: 1, gid: 35, owner: 1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate0 pallet2 distributor0'
+[35] pre: 5:0 7:0 12:8, eff: 0:3 5:1 7:1 11:0 12:3
+[36] cost: 1, gid: 36, owner: 1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate1 crate0 distributor0'
+[36] pre: 5:0 8:0 13:5, eff: 1:3 5:1 7:0 8:1 13:3
+[37] cost: 1, gid: 37, owner: 1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate1 pallet0 distributor0'
+[37] pre: 5:0 8:0 13:6, eff: 1:3 5:1 8:1 9:0 13:3
+[38] cost: 1, gid: 38, owner: 1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate1 pallet1 distributor0'
+[38] pre: 5:0 8:0 13:7, eff: 1:3 5:1 8:1 10:0 13:3
+[39] cost: 1, gid: 39, owner: 1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate1 pallet2 distributor0'
+[39] pre: 5:0 8:0 13:8, eff: 1:3 5:1 8:1 11:0 13:3
+[40] cost: 1, gid: 40, owner: 2 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate0 crate1 distributor1'
+[40] pre: 6:0 7:0 12:5, eff: 0:3 6:1 7:1 8:0 12:4
+[41] cost: 1, gid: 41, owner: 2 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate0 pallet0 distributor1'
+[41] pre: 6:0 7:0 12:6, eff: 0:3 6:1 7:1 9:0 12:4
+[42] cost: 1, gid: 42, owner: 2 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate0 pallet1 distributor1'
+[42] pre: 6:0 7:0 12:7, eff: 0:3 6:1 7:1 10:0 12:4
+[43] cost: 1, gid: 43, owner: 2 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate0 pallet2 distributor1'
+[43] pre: 6:0 7:0 12:8, eff: 0:3 6:1 7:1 11:0 12:4
+[44] cost: 1, gid: 44, owner: 2 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate1 crate0 distributor1'
+[44] pre: 6:0 8:0 13:5, eff: 1:3 6:1 7:0 8:1 13:4
+[45] cost: 1, gid: 45, owner: 2 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate1 pallet0 distributor1'
+[45] pre: 6:0 8:0 13:6, eff: 1:3 6:1 8:1 9:0 13:4
+[46] cost: 1, gid: 46, owner: 2 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate1 pallet1 distributor1'
+[46] pre: 6:0 8:0 13:7, eff: 1:3 6:1 8:1 10:0 13:4
+[47] cost: 1, gid: 47, owner: 2 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate1 pallet2 distributor1'
+[47] pre: 6:0 8:0 13:8, eff: 1:3 6:1 8:1 11:0 13:4
+[48] cost: 1, gid: 48, owner: 0 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck0 depot0'
+[48] pre: 2:0 12:2, eff: 4:0 12:0
+[49] cost: 1, gid: 49, owner: 0 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck1 depot0'
+[49] pre: 3:0 12:2, eff: 4:0 12:1
+[50] cost: 1, gid: 50, owner: 0 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck0 depot0'
+[50] pre: 2:0 13:2, eff: 4:0 13:0
+[51] cost: 1, gid: 51, owner: 0 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck1 depot0'
+[51] pre: 3:0 13:2, eff: 4:0 13:1
+[52] cost: 1, gid: 52, owner: 1 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck0 distributor0'
+[52] pre: 2:1 12:3, eff: 5:0 12:0
+[53] cost: 1, gid: 53, owner: 1 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck1 distributor0'
+[53] pre: 3:1 12:3, eff: 5:0 12:1
+[54] cost: 1, gid: 54, owner: 1 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck0 distributor0'
+[54] pre: 2:1 13:3, eff: 5:0 13:0
+[55] cost: 1, gid: 55, owner: 1 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck1 distributor0'
+[55] pre: 3:1 13:3, eff: 5:0 13:1
+[56] cost: 1, gid: 56, owner: 2 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck0 distributor1'
+[56] pre: 2:2 12:4, eff: 6:0 12:0
+[57] cost: 1, gid: 57, owner: 2 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck1 distributor1'
+[57] pre: 3:2 12:4, eff: 6:0 12:1
+[58] cost: 1, gid: 58, owner: 2 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck0 distributor1'
+[58] pre: 2:2 13:4, eff: 6:0 13:0
+[59] cost: 1, gid: 59, owner: 2 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck1 distributor1'
+[59] pre: 3:2 13:4, eff: 6:0 13:1
+[60] cost: 1, gid: 60, owner: 0 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck0 depot0'
+[60] pre: 2:0 4:0 12:0, eff: 4:1 12:2
+[61] cost: 1, gid: 61, owner: 0 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck1 depot0'
+[61] pre: 3:0 4:0 12:1, eff: 4:1 12:2
+[62] cost: 1, gid: 62, owner: 0 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck0 depot0'
+[62] pre: 2:0 4:0 13:0, eff: 4:1 13:2
+[63] cost: 1, gid: 63, owner: 0 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck1 depot0'
+[63] pre: 3:0 4:0 13:1, eff: 4:1 13:2
+[64] cost: 1, gid: 64, owner: 1 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck0 distributor0'
+[64] pre: 2:1 5:0 12:0, eff: 5:1 12:3
+[65] cost: 1, gid: 65, owner: 1 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck1 distributor0'
+[65] pre: 3:1 5:0 12:1, eff: 5:1 12:3
+[66] cost: 1, gid: 66, owner: 1 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck0 distributor0'
+[66] pre: 2:1 5:0 13:0, eff: 5:1 13:3
+[67] cost: 1, gid: 67, owner: 1 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck1 distributor0'
+[67] pre: 3:1 5:0 13:1, eff: 5:1 13:3
+[68] cost: 1, gid: 68, owner: 2 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck0 distributor1'
+[68] pre: 2:2 6:0 12:0, eff: 6:1 12:4
+[69] cost: 1, gid: 69, owner: 2 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck1 distributor1'
+[69] pre: 3:2 6:0 12:1, eff: 6:1 12:4
+[70] cost: 1, gid: 70, owner: 2 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck0 distributor1'
+[70] pre: 2:2 6:0 13:0, eff: 6:1 13:4
+[71] cost: 1, gid: 71, owner: 2 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck1 distributor1'
+[71] pre: 3:2 6:0 13:1, eff: 6:1 13:4
+PrivateVal: 0:0 1:0 9:1
+++++ depot0 END ++++
+++++ distributor0 ++++
+Agent ID: 1
+Vars[14]:
+[0] name: `var0', range: 4
+[1] name: `var1', range: 4
+[2] name: `var2', range: 3
+[3] name: `var3', range: 3
+[4] name: `var4', range: 2
+[5] name: `var5', range: 2
+[6] name: `var6', range: 2
+[7] name: `var7', range: 2
+[8] name: `var8', range: 2
+[9] name: `var9', range: 2
+[10] name: `var10', range: 2
+[11] name: `var11', range: 2
+[12] name: `var12', range: 9
+[13] name: `var13', range: 9
+Initial state: 0:1 1:0 2:2 3:0 4:0 5:0 6:0 7:0 8:0 9:1 10:1 11:0 12:7 13:6
+Goal: 12:8 13:7
+Ops[28]:
+[0] cost: 1, gid: 0, owner: 1 (b), private: 0, recv_agent: d, name: `drive truck0 depot0 distributor0'
+[0] pre: 2:0, eff: 2:1
+[1] cost: 1, gid: 2, owner: 1 (b), private: 0, recv_agent: d, name: `drive truck0 distributor0 depot0'
+[1] pre: 2:1, eff: 2:0
+[2] cost: 1, gid: 3, owner: 1 (e), private: 0, recv_agent: d, name: `drive truck0 distributor0 distributor1'
+[2] pre: 2:1, eff: 2:2
+[3] cost: 1, gid: 5, owner: 1 (e), private: 0, recv_agent: d, name: `drive truck0 distributor1 distributor0'
+[3] pre: 2:2, eff: 2:1
+[4] cost: 1, gid: 6, owner: 1 (13), private: 0, recv_agent: 15, name: `drive truck1 depot0 distributor0'
+[4] pre: 3:0, eff: 3:1
+[5] cost: 1, gid: 8, owner: 1 (13), private: 0, recv_agent: 15, name: `drive truck1 distributor0 depot0'
+[5] pre: 3:1, eff: 3:0
+[6] cost: 1, gid: 9, owner: 1 (16), private: 0, recv_agent: 15, name: `drive truck1 distributor0 distributor1'
+[6] pre: 3:1, eff: 3:2
+[7] cost: 1, gid: 11, owner: 1 (16), private: 0, recv_agent: 15, name: `drive truck1 distributor1 distributor0'
+[7] pre: 3:2, eff: 3:1
+[8] cost: 1, gid: 16, owner: 1 (2), private: 0, recv_agent: 1d, name: `drop hoist1 crate0 crate1 distributor0'
+[8] pre: 1:1 8:0 12:3, eff: 0:1 5:0 7:0 8:1 12:5
+[9] cost: 1, gid: 17, owner: 1 (2), private: 0, recv_agent: 1d, name: `drop hoist1 crate0 pallet1 distributor0'
+[9] pre: 10:0 12:3, eff: 0:1 5:0 7:0 10:1 12:7
+[10] cost: 1, gid: 18, owner: 1 (2), private: 0, recv_agent: 1d, name: `drop hoist1 crate1 crate0 distributor0'
+[10] pre: 0:1 7:0 13:3, eff: 1:1 5:0 7:1 8:0 13:5
+[11] cost: 1, gid: 19, owner: 1 (2), private: 0, recv_agent: 1d, name: `drop hoist1 crate1 pallet1 distributor0'
+[11] pre: 10:0 13:3, eff: 1:1 5:0 8:0 10:1 13:7
+[12] cost: 1, gid: 32, owner: 1 (2), private: 0, recv_agent: 1d, name: `lift hoist1 crate0 crate1 distributor0'
+[12] pre: 0:1 5:0 7:0 12:5, eff: 0:3 5:1 7:1 8:0 12:3
+[13] cost: 1, gid: 33, owner: 1 (2), private: 0, recv_agent: 19, name: `lift hoist1 crate0 pallet0 distributor0'
+[13] pre: 0:1 5:0 7:0 12:6, eff: 0:3 5:1 7:1 9:0 12:3
+[14] cost: 1, gid: 34, owner: 1 (2), private: 0, recv_agent: 18, name: `lift hoist1 crate0 pallet1 distributor0'
+[14] pre: 0:1 5:0 7:0 12:7, eff: 0:3 5:1 7:1 10:0 12:3
+[15] cost: 1, gid: 35, owner: 1 (2), private: 0, recv_agent: 1c, name: `lift hoist1 crate0 pallet2 distributor0'
+[15] pre: 0:1 5:0 7:0 12:8, eff: 0:3 5:1 7:1 11:0 12:3
+[16] cost: 1, gid: 36, owner: 1 (2), private: 0, recv_agent: 1d, name: `lift hoist1 crate1 crate0 distributor0'
+[16] pre: 1:1 5:0 8:0 13:5, eff: 1:3 5:1 7:0 8:1 13:3
+[17] cost: 1, gid: 37, owner: 1 (2), private: 0, recv_agent: 19, name: `lift hoist1 crate1 pallet0 distributor0'
+[17] pre: 1:1 5:0 8:0 13:6, eff: 1:3 5:1 8:1 9:0 13:3
+[18] cost: 1, gid: 38, owner: 1 (2), private: 0, recv_agent: 18, name: `lift hoist1 crate1 pallet1 distributor0'
+[18] pre: 1:1 5:0 8:0 13:7, eff: 1:3 5:1 8:1 10:0 13:3
+[19] cost: 1, gid: 39, owner: 1 (2), private: 0, recv_agent: 1c, name: `lift hoist1 crate1 pallet2 distributor0'
+[19] pre: 1:1 5:0 8:0 13:8, eff: 1:3 5:1 8:1 11:0 13:3
+[20] cost: 1, gid: 52, owner: 1 (a), private: 0, recv_agent: 1d, name: `load hoist1 crate0 truck0 distributor0'
+[20] pre: 2:1 12:3, eff: 5:0 12:0
+[21] cost: 1, gid: 53, owner: 1 (12), private: 0, recv_agent: 1d, name: `load hoist1 crate0 truck1 distributor0'
+[21] pre: 3:1 12:3, eff: 5:0 12:1
+[22] cost: 1, gid: 54, owner: 1 (a), private: 0, recv_agent: 1d, name: `load hoist1 crate1 truck0 distributor0'
+[22] pre: 2:1 13:3, eff: 5:0 13:0
+[23] cost: 1, gid: 55, owner: 1 (12), private: 0, recv_agent: 1d, name: `load hoist1 crate1 truck1 distributor0'
+[23] pre: 3:1 13:3, eff: 5:0 13:1
+[24] cost: 1, gid: 64, owner: 1 (a), private: 0, recv_agent: 18, name: `unload hoist1 crate0 truck0 distributor0'
+[24] pre: 2:1 5:0 12:0, eff: 5:1 12:3
+[25] cost: 1, gid: 65, owner: 1 (12), private: 0, recv_agent: 18, name: `unload hoist1 crate0 truck1 distributor0'
+[25] pre: 3:1 5:0 12:1, eff: 5:1 12:3
+[26] cost: 1, gid: 66, owner: 1 (a), private: 0, recv_agent: 18, name: `unload hoist1 crate1 truck0 distributor0'
+[26] pre: 2:1 5:0 13:0, eff: 5:1 13:3
+[27] cost: 1, gid: 67, owner: 1 (12), private: 0, recv_agent: 18, name: `unload hoist1 crate1 truck1 distributor0'
+[27] pre: 3:1 5:0 13:1, eff: 5:1 13:3
+Succ Gen: 1
+Proj op:
+Ops[72]:
+[0] cost: 1, gid: 0, owner: 1 (b), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor0'
+[0] pre: 2:0, eff: 2:1
+[1] cost: 1, gid: 1, owner: 0 (d), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor1'
+[1] pre: 2:0, eff: 2:2
+[2] cost: 1, gid: 2, owner: 1 (b), private: 0, recv_agent: f, name: `drive truck0 distributor0 depot0'
+[2] pre: 2:1, eff: 2:0
+[3] cost: 1, gid: 3, owner: 1 (e), private: 0, recv_agent: f, name: `drive truck0 distributor0 distributor1'
+[3] pre: 2:1, eff: 2:2
+[4] cost: 1, gid: 4, owner: 0 (d), private: 0, recv_agent: f, name: `drive truck0 distributor1 depot0'
+[4] pre: 2:2, eff: 2:0
+[5] cost: 1, gid: 5, owner: 1 (e), private: 0, recv_agent: f, name: `drive truck0 distributor1 distributor0'
+[5] pre: 2:2, eff: 2:1
+[6] cost: 1, gid: 6, owner: 1 (13), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor0'
+[6] pre: 3:0, eff: 3:1
+[7] cost: 1, gid: 7, owner: 0 (15), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor1'
+[7] pre: 3:0, eff: 3:2
+[8] cost: 1, gid: 8, owner: 1 (13), private: 0, recv_agent: 17, name: `drive truck1 distributor0 depot0'
+[8] pre: 3:1, eff: 3:0
+[9] cost: 1, gid: 9, owner: 1 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor0 distributor1'
+[9] pre: 3:1, eff: 3:2
+[10] cost: 1, gid: 10, owner: 0 (15), private: 0, recv_agent: 17, name: `drive truck1 distributor1 depot0'
+[10] pre: 3:2, eff: 3:0
+[11] cost: 1, gid: 11, owner: 1 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor1 distributor0'
+[11] pre: 3:2, eff: 3:1
+[12] cost: 1, gid: 12, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 crate1 depot0'
+[12] pre: 8:0 12:2, eff: 4:0 7:0 8:1 12:5
+[13] cost: 1, gid: 13, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 pallet0 depot0'
+[13] pre: 9:0 12:2, eff: 4:0 7:0 12:6
+[14] cost: 1, gid: 14, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 crate0 depot0'
+[14] pre: 7:0 13:2, eff: 4:0 7:1 8:0 13:5
+[15] cost: 1, gid: 15, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 pallet0 depot0'
+[15] pre: 9:0 13:2, eff: 4:0 8:0 13:6
+[16] cost: 1, gid: 16, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 crate1 distributor0'
+[16] pre: 1:1 8:0 12:3, eff: 0:1 5:0 7:0 8:1 12:5
+[17] cost: 1, gid: 17, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 pallet1 distributor0'
+[17] pre: 10:0 12:3, eff: 0:1 5:0 7:0 10:1 12:7
+[18] cost: 1, gid: 18, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 crate0 distributor0'
+[18] pre: 0:1 7:0 13:3, eff: 1:1 5:0 7:1 8:0 13:5
+[19] cost: 1, gid: 19, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 pallet1 distributor0'
+[19] pre: 10:0 13:3, eff: 1:1 5:0 8:0 10:1 13:7
+[20] cost: 1, gid: 20, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 crate1 distributor1'
+[20] pre: 8:0 12:4, eff: 6:0 7:0 8:1 12:5
+[21] cost: 1, gid: 21, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 pallet2 distributor1'
+[21] pre: 11:0 12:4, eff: 6:0 7:0 12:8
+[22] cost: 1, gid: 22, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 crate0 distributor1'
+[22] pre: 7:0 13:4, eff: 6:0 7:1 8:0 13:5
+[23] cost: 1, gid: 23, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 pallet2 distributor1'
+[23] pre: 11:0 13:4, eff: 6:0 8:0 13:8
+[24] cost: 1, gid: 24, owner: 0 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate0 crate1 depot0'
+[24] pre: 4:0 7:0 12:5, eff: 0:3 4:1 7:1 8:0 12:2
+[25] cost: 1, gid: 25, owner: 0 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate0 pallet0 depot0'
+[25] pre: 4:0 7:0 12:6, eff: 0:3 4:1 7:1 9:0 12:2
+[26] cost: 1, gid: 26, owner: 0 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate0 pallet1 depot0'
+[26] pre: 4:0 7:0 12:7, eff: 0:3 4:1 7:1 10:0 12:2
+[27] cost: 1, gid: 27, owner: 0 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate0 pallet2 depot0'
+[27] pre: 4:0 7:0 12:8, eff: 0:3 4:1 7:1 11:0 12:2
+[28] cost: 1, gid: 28, owner: 0 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate1 crate0 depot0'
+[28] pre: 4:0 8:0 13:5, eff: 1:3 4:1 7:0 8:1 13:2
+[29] cost: 1, gid: 29, owner: 0 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate1 pallet0 depot0'
+[29] pre: 4:0 8:0 13:6, eff: 1:3 4:1 8:1 9:0 13:2
+[30] cost: 1, gid: 30, owner: 0 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate1 pallet1 depot0'
+[30] pre: 4:0 8:0 13:7, eff: 1:3 4:1 8:1 10:0 13:2
+[31] cost: 1, gid: 31, owner: 0 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate1 pallet2 depot0'
+[31] pre: 4:0 8:0 13:8, eff: 1:3 4:1 8:1 11:0 13:2
+[32] cost: 1, gid: 32, owner: 1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate0 crate1 distributor0'
+[32] pre: 0:1 5:0 7:0 12:5, eff: 0:3 5:1 7:1 8:0 12:3
+[33] cost: 1, gid: 33, owner: 1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate0 pallet0 distributor0'
+[33] pre: 0:1 5:0 7:0 12:6, eff: 0:3 5:1 7:1 9:0 12:3
+[34] cost: 1, gid: 34, owner: 1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate0 pallet1 distributor0'
+[34] pre: 0:1 5:0 7:0 12:7, eff: 0:3 5:1 7:1 10:0 12:3
+[35] cost: 1, gid: 35, owner: 1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate0 pallet2 distributor0'
+[35] pre: 0:1 5:0 7:0 12:8, eff: 0:3 5:1 7:1 11:0 12:3
+[36] cost: 1, gid: 36, owner: 1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate1 crate0 distributor0'
+[36] pre: 1:1 5:0 8:0 13:5, eff: 1:3 5:1 7:0 8:1 13:3
+[37] cost: 1, gid: 37, owner: 1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate1 pallet0 distributor0'
+[37] pre: 1:1 5:0 8:0 13:6, eff: 1:3 5:1 8:1 9:0 13:3
+[38] cost: 1, gid: 38, owner: 1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate1 pallet1 distributor0'
+[38] pre: 1:1 5:0 8:0 13:7, eff: 1:3 5:1 8:1 10:0 13:3
+[39] cost: 1, gid: 39, owner: 1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate1 pallet2 distributor0'
+[39] pre: 1:1 5:0 8:0 13:8, eff: 1:3 5:1 8:1 11:0 13:3
+[40] cost: 1, gid: 40, owner: 2 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate0 crate1 distributor1'
+[40] pre: 6:0 7:0 12:5, eff: 0:3 6:1 7:1 8:0 12:4
+[41] cost: 1, gid: 41, owner: 2 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate0 pallet0 distributor1'
+[41] pre: 6:0 7:0 12:6, eff: 0:3 6:1 7:1 9:0 12:4
+[42] cost: 1, gid: 42, owner: 2 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate0 pallet1 distributor1'
+[42] pre: 6:0 7:0 12:7, eff: 0:3 6:1 7:1 10:0 12:4
+[43] cost: 1, gid: 43, owner: 2 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate0 pallet2 distributor1'
+[43] pre: 6:0 7:0 12:8, eff: 0:3 6:1 7:1 11:0 12:4
+[44] cost: 1, gid: 44, owner: 2 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate1 crate0 distributor1'
+[44] pre: 6:0 8:0 13:5, eff: 1:3 6:1 7:0 8:1 13:4
+[45] cost: 1, gid: 45, owner: 2 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate1 pallet0 distributor1'
+[45] pre: 6:0 8:0 13:6, eff: 1:3 6:1 8:1 9:0 13:4
+[46] cost: 1, gid: 46, owner: 2 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate1 pallet1 distributor1'
+[46] pre: 6:0 8:0 13:7, eff: 1:3 6:1 8:1 10:0 13:4
+[47] cost: 1, gid: 47, owner: 2 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate1 pallet2 distributor1'
+[47] pre: 6:0 8:0 13:8, eff: 1:3 6:1 8:1 11:0 13:4
+[48] cost: 1, gid: 48, owner: 0 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck0 depot0'
+[48] pre: 2:0 12:2, eff: 4:0 12:0
+[49] cost: 1, gid: 49, owner: 0 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck1 depot0'
+[49] pre: 3:0 12:2, eff: 4:0 12:1
+[50] cost: 1, gid: 50, owner: 0 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck0 depot0'
+[50] pre: 2:0 13:2, eff: 4:0 13:0
+[51] cost: 1, gid: 51, owner: 0 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck1 depot0'
+[51] pre: 3:0 13:2, eff: 4:0 13:1
+[52] cost: 1, gid: 52, owner: 1 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck0 distributor0'
+[52] pre: 2:1 12:3, eff: 5:0 12:0
+[53] cost: 1, gid: 53, owner: 1 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck1 distributor0'
+[53] pre: 3:1 12:3, eff: 5:0 12:1
+[54] cost: 1, gid: 54, owner: 1 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck0 distributor0'
+[54] pre: 2:1 13:3, eff: 5:0 13:0
+[55] cost: 1, gid: 55, owner: 1 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck1 distributor0'
+[55] pre: 3:1 13:3, eff: 5:0 13:1
+[56] cost: 1, gid: 56, owner: 2 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck0 distributor1'
+[56] pre: 2:2 12:4, eff: 6:0 12:0
+[57] cost: 1, gid: 57, owner: 2 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck1 distributor1'
+[57] pre: 3:2 12:4, eff: 6:0 12:1
+[58] cost: 1, gid: 58, owner: 2 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck0 distributor1'
+[58] pre: 2:2 13:4, eff: 6:0 13:0
+[59] cost: 1, gid: 59, owner: 2 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck1 distributor1'
+[59] pre: 3:2 13:4, eff: 6:0 13:1
+[60] cost: 1, gid: 60, owner: 0 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck0 depot0'
+[60] pre: 2:0 4:0 12:0, eff: 4:1 12:2
+[61] cost: 1, gid: 61, owner: 0 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck1 depot0'
+[61] pre: 3:0 4:0 12:1, eff: 4:1 12:2
+[62] cost: 1, gid: 62, owner: 0 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck0 depot0'
+[62] pre: 2:0 4:0 13:0, eff: 4:1 13:2
+[63] cost: 1, gid: 63, owner: 0 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck1 depot0'
+[63] pre: 3:0 4:0 13:1, eff: 4:1 13:2
+[64] cost: 1, gid: 64, owner: 1 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck0 distributor0'
+[64] pre: 2:1 5:0 12:0, eff: 5:1 12:3
+[65] cost: 1, gid: 65, owner: 1 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck1 distributor0'
+[65] pre: 3:1 5:0 12:1, eff: 5:1 12:3
+[66] cost: 1, gid: 66, owner: 1 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck0 distributor0'
+[66] pre: 2:1 5:0 13:0, eff: 5:1 13:3
+[67] cost: 1, gid: 67, owner: 1 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck1 distributor0'
+[67] pre: 3:1 5:0 13:1, eff: 5:1 13:3
+[68] cost: 1, gid: 68, owner: 2 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck0 distributor1'
+[68] pre: 2:2 6:0 12:0, eff: 6:1 12:4
+[69] cost: 1, gid: 69, owner: 2 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck1 distributor1'
+[69] pre: 3:2 6:0 12:1, eff: 6:1 12:4
+[70] cost: 1, gid: 70, owner: 2 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck0 distributor1'
+[70] pre: 2:2 6:0 13:0, eff: 6:1 13:4
+[71] cost: 1, gid: 71, owner: 2 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck1 distributor1'
+[71] pre: 3:2 6:0 13:1, eff: 6:1 13:4
+PrivateVal: 0:1 1:1 10:1
+++++ distributor0 END ++++
+++++ distributor1 ++++
+Agent ID: 2
+Vars[14]:
+[0] name: `var0', range: 4
+[1] name: `var1', range: 4
+[2] name: `var2', range: 3
+[3] name: `var3', range: 3
+[4] name: `var4', range: 2
+[5] name: `var5', range: 2
+[6] name: `var6', range: 2
+[7] name: `var7', range: 2
+[8] name: `var8', range: 2
+[9] name: `var9', range: 2
+[10] name: `var10', range: 2
+[11] name: `var11', range: 2
+[12] name: `var12', range: 9
+[13] name: `var13', range: 9
+Initial state: 0:1 1:0 2:2 3:0 4:0 5:0 6:0 7:0 8:0 9:1 10:1 11:0 12:7 13:6
+Goal: 12:8 13:7
+Ops[28]:
+[0] cost: 1, gid: 1, owner: 2 (d), private: 0, recv_agent: b, name: `drive truck0 depot0 distributor1'
+[0] pre: 2:0, eff: 2:2
+[1] cost: 1, gid: 3, owner: 2 (e), private: 0, recv_agent: b, name: `drive truck0 distributor0 distributor1'
+[1] pre: 2:1, eff: 2:2
+[2] cost: 1, gid: 4, owner: 2 (d), private: 0, recv_agent: b, name: `drive truck0 distributor1 depot0'
+[2] pre: 2:2, eff: 2:0
+[3] cost: 1, gid: 5, owner: 2 (e), private: 0, recv_agent: b, name: `drive truck0 distributor1 distributor0'
+[3] pre: 2:2, eff: 2:1
+[4] cost: 1, gid: 7, owner: 2 (15), private: 0, recv_agent: 13, name: `drive truck1 depot0 distributor1'
+[4] pre: 3:0, eff: 3:2
+[5] cost: 1, gid: 9, owner: 2 (16), private: 0, recv_agent: 13, name: `drive truck1 distributor0 distributor1'
+[5] pre: 3:1, eff: 3:2
+[6] cost: 1, gid: 10, owner: 2 (15), private: 0, recv_agent: 13, name: `drive truck1 distributor1 depot0'
+[6] pre: 3:2, eff: 3:0
+[7] cost: 1, gid: 11, owner: 2 (16), private: 0, recv_agent: 13, name: `drive truck1 distributor1 distributor0'
+[7] pre: 3:2, eff: 3:1
+[8] cost: 1, gid: 20, owner: 2 (4), private: 0, recv_agent: 1b, name: `drop hoist2 crate0 crate1 distributor1'
+[8] pre: 1:2 8:0 12:4, eff: 0:2 6:0 7:0 8:1 12:5
+[9] cost: 1, gid: 21, owner: 2 (4), private: 0, recv_agent: 1b, name: `drop hoist2 crate0 pallet2 distributor1'
+[9] pre: 11:0 12:4, eff: 0:2 6:0 7:0 11:1 12:8
+[10] cost: 1, gid: 22, owner: 2 (4), private: 0, recv_agent: 1b, name: `drop hoist2 crate1 crate0 distributor1'
+[10] pre: 0:2 7:0 13:4, eff: 1:2 6:0 7:1 8:0 13:5
+[11] cost: 1, gid: 23, owner: 2 (4), private: 0, recv_agent: 1b, name: `drop hoist2 crate1 pallet2 distributor1'
+[11] pre: 11:0 13:4, eff: 1:2 6:0 8:0 11:1 13:8
+[12] cost: 1, gid: 40, owner: 2 (4), private: 0, recv_agent: 1b, name: `lift hoist2 crate0 crate1 distributor1'
+[12] pre: 0:2 6:0 7:0 12:5, eff: 0:3 6:1 7:1 8:0 12:4
+[13] cost: 1, gid: 41, owner: 2 (4), private: 0, recv_agent: 19, name: `lift hoist2 crate0 pallet0 distributor1'
+[13] pre: 0:2 6:0 7:0 12:6, eff: 0:3 6:1 7:1 9:0 12:4
+[14] cost: 1, gid: 42, owner: 2 (4), private: 0, recv_agent: 1a, name: `lift hoist2 crate0 pallet1 distributor1'
+[14] pre: 0:2 6:0 7:0 12:7, eff: 0:3 6:1 7:1 10:0 12:4
+[15] cost: 1, gid: 43, owner: 2 (4), private: 0, recv_agent: 18, name: `lift hoist2 crate0 pallet2 distributor1'
+[15] pre: 0:2 6:0 7:0 12:8, eff: 0:3 6:1 7:1 11:0 12:4
+[16] cost: 1, gid: 44, owner: 2 (4), private: 0, recv_agent: 1b, name: `lift hoist2 crate1 crate0 distributor1'
+[16] pre: 1:2 6:0 8:0 13:5, eff: 1:3 6:1 7:0 8:1 13:4
+[17] cost: 1, gid: 45, owner: 2 (4), private: 0, recv_agent: 19, name: `lift hoist2 crate1 pallet0 distributor1'
+[17] pre: 1:2 6:0 8:0 13:6, eff: 1:3 6:1 8:1 9:0 13:4
+[18] cost: 1, gid: 46, owner: 2 (4), private: 0, recv_agent: 1a, name: `lift hoist2 crate1 pallet1 distributor1'
+[18] pre: 1:2 6:0 8:0 13:7, eff: 1:3 6:1 8:1 10:0 13:4
+[19] cost: 1, gid: 47, owner: 2 (4), private: 0, recv_agent: 18, name: `lift hoist2 crate1 pallet2 distributor1'
+[19] pre: 1:2 6:0 8:0 13:8, eff: 1:3 6:1 8:1 11:0 13:4
+[20] cost: 1, gid: 56, owner: 2 (c), private: 0, recv_agent: 1b, name: `load hoist2 crate0 truck0 distributor1'
+[20] pre: 2:2 12:4, eff: 6:0 12:0
+[21] cost: 1, gid: 57, owner: 2 (14), private: 0, recv_agent: 1b, name: `load hoist2 crate0 truck1 distributor1'
+[21] pre: 3:2 12:4, eff: 6:0 12:1
+[22] cost: 1, gid: 58, owner: 2 (c), private: 0, recv_agent: 1b, name: `load hoist2 crate1 truck0 distributor1'
+[22] pre: 2:2 13:4, eff: 6:0 13:0
+[23] cost: 1, gid: 59, owner: 2 (14), private: 0, recv_agent: 1b, name: `load hoist2 crate1 truck1 distributor1'
+[23] pre: 3:2 13:4, eff: 6:0 13:1
+[24] cost: 1, gid: 68, owner: 2 (c), private: 0, recv_agent: 18, name: `unload hoist2 crate0 truck0 distributor1'
+[24] pre: 2:2 6:0 12:0, eff: 6:1 12:4
+[25] cost: 1, gid: 69, owner: 2 (14), private: 0, recv_agent: 18, name: `unload hoist2 crate0 truck1 distributor1'
+[25] pre: 3:2 6:0 12:1, eff: 6:1 12:4
+[26] cost: 1, gid: 70, owner: 2 (c), private: 0, recv_agent: 18, name: `unload hoist2 crate1 truck0 distributor1'
+[26] pre: 2:2 6:0 13:0, eff: 6:1 13:4
+[27] cost: 1, gid: 71, owner: 2 (14), private: 0, recv_agent: 18, name: `unload hoist2 crate1 truck1 distributor1'
+[27] pre: 3:2 6:0 13:1, eff: 6:1 13:4
+Succ Gen: 1
+Proj op:
+Ops[72]:
+[0] cost: 1, gid: 0, owner: 0 (b), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor0'
+[0] pre: 2:0, eff: 2:1
+[1] cost: 1, gid: 1, owner: 2 (d), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor1'
+[1] pre: 2:0, eff: 2:2
+[2] cost: 1, gid: 2, owner: 0 (b), private: 0, recv_agent: f, name: `drive truck0 distributor0 depot0'
+[2] pre: 2:1, eff: 2:0
+[3] cost: 1, gid: 3, owner: 2 (e), private: 0, recv_agent: f, name: `drive truck0 distributor0 distributor1'
+[3] pre: 2:1, eff: 2:2
+[4] cost: 1, gid: 4, owner: 2 (d), private: 0, recv_agent: f, name: `drive truck0 distributor1 depot0'
+[4] pre: 2:2, eff: 2:0
+[5] cost: 1, gid: 5, owner: 2 (e), private: 0, recv_agent: f, name: `drive truck0 distributor1 distributor0'
+[5] pre: 2:2, eff: 2:1
+[6] cost: 1, gid: 6, owner: 0 (13), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor0'
+[6] pre: 3:0, eff: 3:1
+[7] cost: 1, gid: 7, owner: 2 (15), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor1'
+[7] pre: 3:0, eff: 3:2
+[8] cost: 1, gid: 8, owner: 0 (13), private: 0, recv_agent: 17, name: `drive truck1 distributor0 depot0'
+[8] pre: 3:1, eff: 3:0
+[9] cost: 1, gid: 9, owner: 2 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor0 distributor1'
+[9] pre: 3:1, eff: 3:2
+[10] cost: 1, gid: 10, owner: 2 (15), private: 0, recv_agent: 17, name: `drive truck1 distributor1 depot0'
+[10] pre: 3:2, eff: 3:0
+[11] cost: 1, gid: 11, owner: 2 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor1 distributor0'
+[11] pre: 3:2, eff: 3:1
+[12] cost: 1, gid: 12, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 crate1 depot0'
+[12] pre: 8:0 12:2, eff: 4:0 7:0 8:1 12:5
+[13] cost: 1, gid: 13, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 pallet0 depot0'
+[13] pre: 9:0 12:2, eff: 4:0 7:0 12:6
+[14] cost: 1, gid: 14, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 crate0 depot0'
+[14] pre: 7:0 13:2, eff: 4:0 7:1 8:0 13:5
+[15] cost: 1, gid: 15, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 pallet0 depot0'
+[15] pre: 9:0 13:2, eff: 4:0 8:0 13:6
+[16] cost: 1, gid: 16, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 crate1 distributor0'
+[16] pre: 8:0 12:3, eff: 5:0 7:0 8:1 12:5
+[17] cost: 1, gid: 17, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 pallet1 distributor0'
+[17] pre: 10:0 12:3, eff: 5:0 7:0 12:7
+[18] cost: 1, gid: 18, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 crate0 distributor0'
+[18] pre: 7:0 13:3, eff: 5:0 7:1 8:0 13:5
+[19] cost: 1, gid: 19, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 pallet1 distributor0'
+[19] pre: 10:0 13:3, eff: 5:0 8:0 13:7
+[20] cost: 1, gid: 20, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 crate1 distributor1'
+[20] pre: 1:2 8:0 12:4, eff: 0:2 6:0 7:0 8:1 12:5
+[21] cost: 1, gid: 21, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 pallet2 distributor1'
+[21] pre: 11:0 12:4, eff: 0:2 6:0 7:0 11:1 12:8
+[22] cost: 1, gid: 22, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 crate0 distributor1'
+[22] pre: 0:2 7:0 13:4, eff: 1:2 6:0 7:1 8:0 13:5
+[23] cost: 1, gid: 23, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 pallet2 distributor1'
+[23] pre: 11:0 13:4, eff: 1:2 6:0 8:0 11:1 13:8
+[24] cost: 1, gid: 24, owner: 0 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate0 crate1 depot0'
+[24] pre: 4:0 7:0 12:5, eff: 0:3 4:1 7:1 8:0 12:2
+[25] cost: 1, gid: 25, owner: 0 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate0 pallet0 depot0'
+[25] pre: 4:0 7:0 12:6, eff: 0:3 4:1 7:1 9:0 12:2
+[26] cost: 1, gid: 26, owner: 0 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate0 pallet1 depot0'
+[26] pre: 4:0 7:0 12:7, eff: 0:3 4:1 7:1 10:0 12:2
+[27] cost: 1, gid: 27, owner: 0 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate0 pallet2 depot0'
+[27] pre: 4:0 7:0 12:8, eff: 0:3 4:1 7:1 11:0 12:2
+[28] cost: 1, gid: 28, owner: 0 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate1 crate0 depot0'
+[28] pre: 4:0 8:0 13:5, eff: 1:3 4:1 7:0 8:1 13:2
+[29] cost: 1, gid: 29, owner: 0 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate1 pallet0 depot0'
+[29] pre: 4:0 8:0 13:6, eff: 1:3 4:1 8:1 9:0 13:2
+[30] cost: 1, gid: 30, owner: 0 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate1 pallet1 depot0'
+[30] pre: 4:0 8:0 13:7, eff: 1:3 4:1 8:1 10:0 13:2
+[31] cost: 1, gid: 31, owner: 0 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate1 pallet2 depot0'
+[31] pre: 4:0 8:0 13:8, eff: 1:3 4:1 8:1 11:0 13:2
+[32] cost: 1, gid: 32, owner: 1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate0 crate1 distributor0'
+[32] pre: 5:0 7:0 12:5, eff: 0:3 5:1 7:1 8:0 12:3
+[33] cost: 1, gid: 33, owner: 1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate0 pallet0 distributor0'
+[33] pre: 5:0 7:0 12:6, eff: 0:3 5:1 7:1 9:0 12:3
+[34] cost: 1, gid: 34, owner: 1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate0 pallet1 distributor0'
+[34] pre: 5:0 7:0 12:7, eff: 0:3 5:1 7:1 10:0 12:3
+[35] cost: 1, gid: 35, owner: 1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate0 pallet2 distributor0'
+[35] pre: 5:0 7:0 12:8, eff: 0:3 5:1 7:1 11:0 12:3
+[36] cost: 1, gid: 36, owner: 1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate1 crate0 distributor0'
+[36] pre: 5:0 8:0 13:5, eff: 1:3 5:1 7:0 8:1 13:3
+[37] cost: 1, gid: 37, owner: 1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate1 pallet0 distributor0'
+[37] pre: 5:0 8:0 13:6, eff: 1:3 5:1 8:1 9:0 13:3
+[38] cost: 1, gid: 38, owner: 1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate1 pallet1 distributor0'
+[38] pre: 5:0 8:0 13:7, eff: 1:3 5:1 8:1 10:0 13:3
+[39] cost: 1, gid: 39, owner: 1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate1 pallet2 distributor0'
+[39] pre: 5:0 8:0 13:8, eff: 1:3 5:1 8:1 11:0 13:3
+[40] cost: 1, gid: 40, owner: 2 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate0 crate1 distributor1'
+[40] pre: 0:2 6:0 7:0 12:5, eff: 0:3 6:1 7:1 8:0 12:4
+[41] cost: 1, gid: 41, owner: 2 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate0 pallet0 distributor1'
+[41] pre: 0:2 6:0 7:0 12:6, eff: 0:3 6:1 7:1 9:0 12:4
+[42] cost: 1, gid: 42, owner: 2 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate0 pallet1 distributor1'
+[42] pre: 0:2 6:0 7:0 12:7, eff: 0:3 6:1 7:1 10:0 12:4
+[43] cost: 1, gid: 43, owner: 2 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate0 pallet2 distributor1'
+[43] pre: 0:2 6:0 7:0 12:8, eff: 0:3 6:1 7:1 11:0 12:4
+[44] cost: 1, gid: 44, owner: 2 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate1 crate0 distributor1'
+[44] pre: 1:2 6:0 8:0 13:5, eff: 1:3 6:1 7:0 8:1 13:4
+[45] cost: 1, gid: 45, owner: 2 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate1 pallet0 distributor1'
+[45] pre: 1:2 6:0 8:0 13:6, eff: 1:3 6:1 8:1 9:0 13:4
+[46] cost: 1, gid: 46, owner: 2 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate1 pallet1 distributor1'
+[46] pre: 1:2 6:0 8:0 13:7, eff: 1:3 6:1 8:1 10:0 13:4
+[47] cost: 1, gid: 47, owner: 2 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate1 pallet2 distributor1'
+[47] pre: 1:2 6:0 8:0 13:8, eff: 1:3 6:1 8:1 11:0 13:4
+[48] cost: 1, gid: 48, owner: 0 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck0 depot0'
+[48] pre: 2:0 12:2, eff: 4:0 12:0
+[49] cost: 1, gid: 49, owner: 0 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck1 depot0'
+[49] pre: 3:0 12:2, eff: 4:0 12:1
+[50] cost: 1, gid: 50, owner: 0 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck0 depot0'
+[50] pre: 2:0 13:2, eff: 4:0 13:0
+[51] cost: 1, gid: 51, owner: 0 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck1 depot0'
+[51] pre: 3:0 13:2, eff: 4:0 13:1
+[52] cost: 1, gid: 52, owner: 1 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck0 distributor0'
+[52] pre: 2:1 12:3, eff: 5:0 12:0
+[53] cost: 1, gid: 53, owner: 1 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck1 distributor0'
+[53] pre: 3:1 12:3, eff: 5:0 12:1
+[54] cost: 1, gid: 54, owner: 1 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck0 distributor0'
+[54] pre: 2:1 13:3, eff: 5:0 13:0
+[55] cost: 1, gid: 55, owner: 1 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck1 distributor0'
+[55] pre: 3:1 13:3, eff: 5:0 13:1
+[56] cost: 1, gid: 56, owner: 2 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck0 distributor1'
+[56] pre: 2:2 12:4, eff: 6:0 12:0
+[57] cost: 1, gid: 57, owner: 2 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck1 distributor1'
+[57] pre: 3:2 12:4, eff: 6:0 12:1
+[58] cost: 1, gid: 58, owner: 2 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck0 distributor1'
+[58] pre: 2:2 13:4, eff: 6:0 13:0
+[59] cost: 1, gid: 59, owner: 2 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck1 distributor1'
+[59] pre: 3:2 13:4, eff: 6:0 13:1
+[60] cost: 1, gid: 60, owner: 0 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck0 depot0'
+[60] pre: 2:0 4:0 12:0, eff: 4:1 12:2
+[61] cost: 1, gid: 61, owner: 0 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck1 depot0'
+[61] pre: 3:0 4:0 12:1, eff: 4:1 12:2
+[62] cost: 1, gid: 62, owner: 0 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck0 depot0'
+[62] pre: 2:0 4:0 13:0, eff: 4:1 13:2
+[63] cost: 1, gid: 63, owner: 0 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck1 depot0'
+[63] pre: 3:0 4:0 13:1, eff: 4:1 13:2
+[64] cost: 1, gid: 64, owner: 1 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck0 distributor0'
+[64] pre: 2:1 5:0 12:0, eff: 5:1 12:3
+[65] cost: 1, gid: 65, owner: 1 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck1 distributor0'
+[65] pre: 3:1 5:0 12:1, eff: 5:1 12:3
+[66] cost: 1, gid: 66, owner: 1 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck0 distributor0'
+[66] pre: 2:1 5:0 13:0, eff: 5:1 13:3
+[67] cost: 1, gid: 67, owner: 1 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck1 distributor0'
+[67] pre: 3:1 5:0 13:1, eff: 5:1 13:3
+[68] cost: 1, gid: 68, owner: 2 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck0 distributor1'
+[68] pre: 2:2 6:0 12:0, eff: 6:1 12:4
+[69] cost: 1, gid: 69, owner: 2 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck1 distributor1'
+[69] pre: 3:2 6:0 12:1, eff: 6:1 12:4
+[70] cost: 1, gid: 70, owner: 2 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck0 distributor1'
+[70] pre: 2:2 6:0 13:0, eff: 6:1 13:4
+[71] cost: 1, gid: 71, owner: 2 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck1 distributor1'
+[71] pre: 3:2 6:0 13:1, eff: 6:1 13:4
+PrivateVal: 0:2 1:2 11:1
+++++ distributor1 END ++++
+++++ truck0 ++++
+Agent ID: 3
+Vars[14]:
+[0] name: `var0', range: 4
+[1] name: `var1', range: 4
+[2] name: `var2', range: 3
+[3] name: `var3', range: 3
+[4] name: `var4', range: 2
+[5] name: `var5', range: 2
+[6] name: `var6', range: 2
+[7] name: `var7', range: 2
+[8] name: `var8', range: 2
+[9] name: `var9', range: 2
+[10] name: `var10', range: 2
+[11] name: `var11', range: 2
+[12] name: `var12', range: 9
+[13] name: `var13', range: 9
+Initial state: 0:1 1:0 2:2 3:0 4:0 5:0 6:0 7:0 8:0 9:1 10:1 11:0 12:7 13:6
+Goal: 12:8 13:7
+Ops[18]:
+[0] cost: 1, gid: 0, owner: 3 (b), private: 0, recv_agent: 7, name: `drive truck0 depot0 distributor0'
+[0] pre: 2:0, eff: 2:1
+[1] cost: 1, gid: 1, owner: 3 (d), private: 0, recv_agent: 7, name: `drive truck0 depot0 distributor1'
+[1] pre: 2:0, eff: 2:2
+[2] cost: 1, gid: 2, owner: 3 (b), private: 0, recv_agent: 7, name: `drive truck0 distributor0 depot0'
+[2] pre: 2:1, eff: 2:0
+[3] cost: 1, gid: 3, owner: 3 (e), private: 0, recv_agent: 7, name: `drive truck0 distributor0 distributor1'
+[3] pre: 2:1, eff: 2:2
+[4] cost: 1, gid: 4, owner: 3 (d), private: 0, recv_agent: 7, name: `drive truck0 distributor1 depot0'
+[4] pre: 2:2, eff: 2:0
+[5] cost: 1, gid: 5, owner: 3 (e), private: 0, recv_agent: 7, name: `drive truck0 distributor1 distributor0'
+[5] pre: 2:2, eff: 2:1
+[6] cost: 1, gid: 48, owner: 3 (9), private: 0, recv_agent: 17, name: `load hoist0 crate0 truck0 depot0'
+[6] pre: 2:0 12:2, eff: 4:0 12:0
+[7] cost: 1, gid: 50, owner: 3 (9), private: 0, recv_agent: 17, name: `load hoist0 crate1 truck0 depot0'
+[7] pre: 2:0 13:2, eff: 4:0 13:0
+[8] cost: 1, gid: 52, owner: 3 (a), private: 0, recv_agent: 17, name: `load hoist1 crate0 truck0 distributor0'
+[8] pre: 2:1 12:3, eff: 5:0 12:0
+[9] cost: 1, gid: 54, owner: 3 (a), private: 0, recv_agent: 17, name: `load hoist1 crate1 truck0 distributor0'
+[9] pre: 2:1 13:3, eff: 5:0 13:0
+[10] cost: 1, gid: 56, owner: 3 (c), private: 0, recv_agent: 17, name: `load hoist2 crate0 truck0 distributor1'
+[10] pre: 2:2 12:4, eff: 6:0 12:0
+[11] cost: 1, gid: 58, owner: 3 (c), private: 0, recv_agent: 17, name: `load hoist2 crate1 truck0 distributor1'
+[11] pre: 2:2 13:4, eff: 6:0 13:0
+[12] cost: 1, gid: 60, owner: 3 (9), private: 0, recv_agent: 11, name: `unload hoist0 crate0 truck0 depot0'
+[12] pre: 2:0 4:0 12:0, eff: 4:1 12:2
+[13] cost: 1, gid: 62, owner: 3 (9), private: 0, recv_agent: 11, name: `unload hoist0 crate1 truck0 depot0'
+[13] pre: 2:0 4:0 13:0, eff: 4:1 13:2
+[14] cost: 1, gid: 64, owner: 3 (a), private: 0, recv_agent: 12, name: `unload hoist1 crate0 truck0 distributor0'
+[14] pre: 2:1 5:0 12:0, eff: 5:1 12:3
+[15] cost: 1, gid: 66, owner: 3 (a), private: 0, recv_agent: 12, name: `unload hoist1 crate1 truck0 distributor0'
+[15] pre: 2:1 5:0 13:0, eff: 5:1 13:3
+[16] cost: 1, gid: 68, owner: 3 (c), private: 0, recv_agent: 14, name: `unload hoist2 crate0 truck0 distributor1'
+[16] pre: 2:2 6:0 12:0, eff: 6:1 12:4
+[17] cost: 1, gid: 70, owner: 3 (c), private: 0, recv_agent: 14, name: `unload hoist2 crate1 truck0 distributor1'
+[17] pre: 2:2 6:0 13:0, eff: 6:1 13:4
+Succ Gen: 1
+Proj op:
+Ops[72]:
+[0] cost: 1, gid: 0, owner: 3 (b), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor0'
+[0] pre: 2:0, eff: 2:1
+[1] cost: 1, gid: 1, owner: 3 (d), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor1'
+[1] pre: 2:0, eff: 2:2
+[2] cost: 1, gid: 2, owner: 3 (b), private: 0, recv_agent: f, name: `drive truck0 distributor0 depot0'
+[2] pre: 2:1, eff: 2:0
+[3] cost: 1, gid: 3, owner: 3 (e), private: 0, recv_agent: f, name: `drive truck0 distributor0 distributor1'
+[3] pre: 2:1, eff: 2:2
+[4] cost: 1, gid: 4, owner: 3 (d), private: 0, recv_agent: f, name: `drive truck0 distributor1 depot0'
+[4] pre: 2:2, eff: 2:0
+[5] cost: 1, gid: 5, owner: 3 (e), private: 0, recv_agent: f, name: `drive truck0 distributor1 distributor0'
+[5] pre: 2:2, eff: 2:1
+[6] cost: 1, gid: 6, owner: 0 (13), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor0'
+[6] pre: 3:0, eff: 3:1
+[7] cost: 1, gid: 7, owner: 0 (15), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor1'
+[7] pre: 3:0, eff: 3:2
+[8] cost: 1, gid: 8, owner: 0 (13), private: 0, recv_agent: 17, name: `drive truck1 distributor0 depot0'
+[8] pre: 3:1, eff: 3:0
+[9] cost: 1, gid: 9, owner: 1 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor0 distributor1'
+[9] pre: 3:1, eff: 3:2
+[10] cost: 1, gid: 10, owner: 0 (15), private: 0, recv_agent: 17, name: `drive truck1 distributor1 depot0'
+[10] pre: 3:2, eff: 3:0
+[11] cost: 1, gid: 11, owner: 1 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor1 distributor0'
+[11] pre: 3:2, eff: 3:1
+[12] cost: 1, gid: 12, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 crate1 depot0'
+[12] pre: 8:0 12:2, eff: 4:0 7:0 8:1 12:5
+[13] cost: 1, gid: 13, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 pallet0 depot0'
+[13] pre: 9:0 12:2, eff: 4:0 7:0 12:6
+[14] cost: 1, gid: 14, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 crate0 depot0'
+[14] pre: 7:0 13:2, eff: 4:0 7:1 8:0 13:5
+[15] cost: 1, gid: 15, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 pallet0 depot0'
+[15] pre: 9:0 13:2, eff: 4:0 8:0 13:6
+[16] cost: 1, gid: 16, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 crate1 distributor0'
+[16] pre: 8:0 12:3, eff: 5:0 7:0 8:1 12:5
+[17] cost: 1, gid: 17, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 pallet1 distributor0'
+[17] pre: 10:0 12:3, eff: 5:0 7:0 12:7
+[18] cost: 1, gid: 18, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 crate0 distributor0'
+[18] pre: 7:0 13:3, eff: 5:0 7:1 8:0 13:5
+[19] cost: 1, gid: 19, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 pallet1 distributor0'
+[19] pre: 10:0 13:3, eff: 5:0 8:0 13:7
+[20] cost: 1, gid: 20, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 crate1 distributor1'
+[20] pre: 8:0 12:4, eff: 6:0 7:0 8:1 12:5
+[21] cost: 1, gid: 21, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 pallet2 distributor1'
+[21] pre: 11:0 12:4, eff: 6:0 7:0 12:8
+[22] cost: 1, gid: 22, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 crate0 distributor1'
+[22] pre: 7:0 13:4, eff: 6:0 7:1 8:0 13:5
+[23] cost: 1, gid: 23, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 pallet2 distributor1'
+[23] pre: 11:0 13:4, eff: 6:0 8:0 13:8
+[24] cost: 1, gid: 24, owner: 0 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate0 crate1 depot0'
+[24] pre: 4:0 7:0 12:5, eff: 0:3 4:1 7:1 8:0 12:2
+[25] cost: 1, gid: 25, owner: 0 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate0 pallet0 depot0'
+[25] pre: 4:0 7:0 12:6, eff: 0:3 4:1 7:1 9:0 12:2
+[26] cost: 1, gid: 26, owner: 0 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate0 pallet1 depot0'
+[26] pre: 4:0 7:0 12:7, eff: 0:3 4:1 7:1 10:0 12:2
+[27] cost: 1, gid: 27, owner: 0 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate0 pallet2 depot0'
+[27] pre: 4:0 7:0 12:8, eff: 0:3 4:1 7:1 11:0 12:2
+[28] cost: 1, gid: 28, owner: 0 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate1 crate0 depot0'
+[28] pre: 4:0 8:0 13:5, eff: 1:3 4:1 7:0 8:1 13:2
+[29] cost: 1, gid: 29, owner: 0 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate1 pallet0 depot0'
+[29] pre: 4:0 8:0 13:6, eff: 1:3 4:1 8:1 9:0 13:2
+[30] cost: 1, gid: 30, owner: 0 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate1 pallet1 depot0'
+[30] pre: 4:0 8:0 13:7, eff: 1:3 4:1 8:1 10:0 13:2
+[31] cost: 1, gid: 31, owner: 0 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate1 pallet2 depot0'
+[31] pre: 4:0 8:0 13:8, eff: 1:3 4:1 8:1 11:0 13:2
+[32] cost: 1, gid: 32, owner: 1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate0 crate1 distributor0'
+[32] pre: 5:0 7:0 12:5, eff: 0:3 5:1 7:1 8:0 12:3
+[33] cost: 1, gid: 33, owner: 1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate0 pallet0 distributor0'
+[33] pre: 5:0 7:0 12:6, eff: 0:3 5:1 7:1 9:0 12:3
+[34] cost: 1, gid: 34, owner: 1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate0 pallet1 distributor0'
+[34] pre: 5:0 7:0 12:7, eff: 0:3 5:1 7:1 10:0 12:3
+[35] cost: 1, gid: 35, owner: 1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate0 pallet2 distributor0'
+[35] pre: 5:0 7:0 12:8, eff: 0:3 5:1 7:1 11:0 12:3
+[36] cost: 1, gid: 36, owner: 1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate1 crate0 distributor0'
+[36] pre: 5:0 8:0 13:5, eff: 1:3 5:1 7:0 8:1 13:3
+[37] cost: 1, gid: 37, owner: 1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate1 pallet0 distributor0'
+[37] pre: 5:0 8:0 13:6, eff: 1:3 5:1 8:1 9:0 13:3
+[38] cost: 1, gid: 38, owner: 1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate1 pallet1 distributor0'
+[38] pre: 5:0 8:0 13:7, eff: 1:3 5:1 8:1 10:0 13:3
+[39] cost: 1, gid: 39, owner: 1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate1 pallet2 distributor0'
+[39] pre: 5:0 8:0 13:8, eff: 1:3 5:1 8:1 11:0 13:3
+[40] cost: 1, gid: 40, owner: 2 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate0 crate1 distributor1'
+[40] pre: 6:0 7:0 12:5, eff: 0:3 6:1 7:1 8:0 12:4
+[41] cost: 1, gid: 41, owner: 2 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate0 pallet0 distributor1'
+[41] pre: 6:0 7:0 12:6, eff: 0:3 6:1 7:1 9:0 12:4
+[42] cost: 1, gid: 42, owner: 2 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate0 pallet1 distributor1'
+[42] pre: 6:0 7:0 12:7, eff: 0:3 6:1 7:1 10:0 12:4
+[43] cost: 1, gid: 43, owner: 2 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate0 pallet2 distributor1'
+[43] pre: 6:0 7:0 12:8, eff: 0:3 6:1 7:1 11:0 12:4
+[44] cost: 1, gid: 44, owner: 2 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate1 crate0 distributor1'
+[44] pre: 6:0 8:0 13:5, eff: 1:3 6:1 7:0 8:1 13:4
+[45] cost: 1, gid: 45, owner: 2 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate1 pallet0 distributor1'
+[45] pre: 6:0 8:0 13:6, eff: 1:3 6:1 8:1 9:0 13:4
+[46] cost: 1, gid: 46, owner: 2 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate1 pallet1 distributor1'
+[46] pre: 6:0 8:0 13:7, eff: 1:3 6:1 8:1 10:0 13:4
+[47] cost: 1, gid: 47, owner: 2 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate1 pallet2 distributor1'
+[47] pre: 6:0 8:0 13:8, eff: 1:3 6:1 8:1 11:0 13:4
+[48] cost: 1, gid: 48, owner: 3 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck0 depot0'
+[48] pre: 2:0 12:2, eff: 4:0 12:0
+[49] cost: 1, gid: 49, owner: 0 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck1 depot0'
+[49] pre: 3:0 12:2, eff: 4:0 12:1
+[50] cost: 1, gid: 50, owner: 3 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck0 depot0'
+[50] pre: 2:0 13:2, eff: 4:0 13:0
+[51] cost: 1, gid: 51, owner: 0 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck1 depot0'
+[51] pre: 3:0 13:2, eff: 4:0 13:1
+[52] cost: 1, gid: 52, owner: 3 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck0 distributor0'
+[52] pre: 2:1 12:3, eff: 5:0 12:0
+[53] cost: 1, gid: 53, owner: 1 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck1 distributor0'
+[53] pre: 3:1 12:3, eff: 5:0 12:1
+[54] cost: 1, gid: 54, owner: 3 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck0 distributor0'
+[54] pre: 2:1 13:3, eff: 5:0 13:0
+[55] cost: 1, gid: 55, owner: 1 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck1 distributor0'
+[55] pre: 3:1 13:3, eff: 5:0 13:1
+[56] cost: 1, gid: 56, owner: 3 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck0 distributor1'
+[56] pre: 2:2 12:4, eff: 6:0 12:0
+[57] cost: 1, gid: 57, owner: 2 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck1 distributor1'
+[57] pre: 3:2 12:4, eff: 6:0 12:1
+[58] cost: 1, gid: 58, owner: 3 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck0 distributor1'
+[58] pre: 2:2 13:4, eff: 6:0 13:0
+[59] cost: 1, gid: 59, owner: 2 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck1 distributor1'
+[59] pre: 3:2 13:4, eff: 6:0 13:1
+[60] cost: 1, gid: 60, owner: 3 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck0 depot0'
+[60] pre: 2:0 4:0 12:0, eff: 4:1 12:2
+[61] cost: 1, gid: 61, owner: 0 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck1 depot0'
+[61] pre: 3:0 4:0 12:1, eff: 4:1 12:2
+[62] cost: 1, gid: 62, owner: 3 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck0 depot0'
+[62] pre: 2:0 4:0 13:0, eff: 4:1 13:2
+[63] cost: 1, gid: 63, owner: 0 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck1 depot0'
+[63] pre: 3:0 4:0 13:1, eff: 4:1 13:2
+[64] cost: 1, gid: 64, owner: 3 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck0 distributor0'
+[64] pre: 2:1 5:0 12:0, eff: 5:1 12:3
+[65] cost: 1, gid: 65, owner: 1 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck1 distributor0'
+[65] pre: 3:1 5:0 12:1, eff: 5:1 12:3
+[66] cost: 1, gid: 66, owner: 3 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck0 distributor0'
+[66] pre: 2:1 5:0 13:0, eff: 5:1 13:3
+[67] cost: 1, gid: 67, owner: 1 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck1 distributor0'
+[67] pre: 3:1 5:0 13:1, eff: 5:1 13:3
+[68] cost: 1, gid: 68, owner: 3 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck0 distributor1'
+[68] pre: 2:2 6:0 12:0, eff: 6:1 12:4
+[69] cost: 1, gid: 69, owner: 2 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck1 distributor1'
+[69] pre: 3:2 6:0 12:1, eff: 6:1 12:4
+[70] cost: 1, gid: 70, owner: 3 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck0 distributor1'
+[70] pre: 2:2 6:0 13:0, eff: 6:1 13:4
+[71] cost: 1, gid: 71, owner: 2 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck1 distributor1'
+[71] pre: 3:2 6:0 13:1, eff: 6:1 13:4
+PrivateVal:
+++++ truck0 END ++++
+++++ truck1 ++++
+Agent ID: 4
+Vars[14]:
+[0] name: `var0', range: 4
+[1] name: `var1', range: 4
+[2] name: `var2', range: 3
+[3] name: `var3', range: 3
+[4] name: `var4', range: 2
+[5] name: `var5', range: 2
+[6] name: `var6', range: 2
+[7] name: `var7', range: 2
+[8] name: `var8', range: 2
+[9] name: `var9', range: 2
+[10] name: `var10', range: 2
+[11] name: `var11', range: 2
+[12] name: `var12', range: 9
+[13] name: `var13', range: 9
+Initial state: 0:1 1:0 2:2 3:0 4:0 5:0 6:0 7:0 8:0 9:1 10:1 11:0 12:7 13:6
+Goal: 12:8 13:7
+Ops[18]:
+[0] cost: 1, gid: 6, owner: 4 (13), private: 0, recv_agent: 7, name: `drive truck1 depot0 distributor0'
+[0] pre: 3:0, eff: 3:1
+[1] cost: 1, gid: 7, owner: 4 (15), private: 0, recv_agent: 7, name: `drive truck1 depot0 distributor1'
+[1] pre: 3:0, eff: 3:2
+[2] cost: 1, gid: 8, owner: 4 (13), private: 0, recv_agent: 7, name: `drive truck1 distributor0 depot0'
+[2] pre: 3:1, eff: 3:0
+[3] cost: 1, gid: 9, owner: 4 (16), private: 0, recv_agent: 7, name: `drive truck1 distributor0 distributor1'
+[3] pre: 3:1, eff: 3:2
+[4] cost: 1, gid: 10, owner: 4 (15), private: 0, recv_agent: 7, name: `drive truck1 distributor1 depot0'
+[4] pre: 3:2, eff: 3:0
+[5] cost: 1, gid: 11, owner: 4 (16), private: 0, recv_agent: 7, name: `drive truck1 distributor1 distributor0'
+[5] pre: 3:2, eff: 3:1
+[6] cost: 1, gid: 49, owner: 4 (11), private: 0, recv_agent: f, name: `load hoist0 crate0 truck1 depot0'
+[6] pre: 3:0 12:2, eff: 4:0 12:1
+[7] cost: 1, gid: 51, owner: 4 (11), private: 0, recv_agent: f, name: `load hoist0 crate1 truck1 depot0'
+[7] pre: 3:0 13:2, eff: 4:0 13:1
+[8] cost: 1, gid: 53, owner: 4 (12), private: 0, recv_agent: f, name: `load hoist1 crate0 truck1 distributor0'
+[8] pre: 3:1 12:3, eff: 5:0 12:1
+[9] cost: 1, gid: 55, owner: 4 (12), private: 0, recv_agent: f, name: `load hoist1 crate1 truck1 distributor0'
+[9] pre: 3:1 13:3, eff: 5:0 13:1
+[10] cost: 1, gid: 57, owner: 4 (14), private: 0, recv_agent: f, name: `load hoist2 crate0 truck1 distributor1'
+[10] pre: 3:2 12:4, eff: 6:0 12:1
+[11] cost: 1, gid: 59, owner: 4 (14), private: 0, recv_agent: f, name: `load hoist2 crate1 truck1 distributor1'
+[11] pre: 3:2 13:4, eff: 6:0 13:1
+[12] cost: 1, gid: 61, owner: 4 (11), private: 0, recv_agent: 9, name: `unload hoist0 crate0 truck1 depot0'
+[12] pre: 3:0 4:0 12:1, eff: 4:1 12:2
+[13] cost: 1, gid: 63, owner: 4 (11), private: 0, recv_agent: 9, name: `unload hoist0 crate1 truck1 depot0'
+[13] pre: 3:0 4:0 13:1, eff: 4:1 13:2
+[14] cost: 1, gid: 65, owner: 4 (12), private: 0, recv_agent: a, name: `unload hoist1 crate0 truck1 distributor0'
+[14] pre: 3:1 5:0 12:1, eff: 5:1 12:3
+[15] cost: 1, gid: 67, owner: 4 (12), private: 0, recv_agent: a, name: `unload hoist1 crate1 truck1 distributor0'
+[15] pre: 3:1 5:0 13:1, eff: 5:1 13:3
+[16] cost: 1, gid: 69, owner: 4 (14), private: 0, recv_agent: c, name: `unload hoist2 crate0 truck1 distributor1'
+[16] pre: 3:2 6:0 12:1, eff: 6:1 12:4
+[17] cost: 1, gid: 71, owner: 4 (14), private: 0, recv_agent: c, name: `unload hoist2 crate1 truck1 distributor1'
+[17] pre: 3:2 6:0 13:1, eff: 6:1 13:4
+Succ Gen: 1
+Proj op:
+Ops[72]:
+[0] cost: 1, gid: 0, owner: 0 (b), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor0'
+[0] pre: 2:0, eff: 2:1
+[1] cost: 1, gid: 1, owner: 0 (d), private: 0, recv_agent: f, name: `drive truck0 depot0 distributor1'
+[1] pre: 2:0, eff: 2:2
+[2] cost: 1, gid: 2, owner: 0 (b), private: 0, recv_agent: f, name: `drive truck0 distributor0 depot0'
+[2] pre: 2:1, eff: 2:0
+[3] cost: 1, gid: 3, owner: 1 (e), private: 0, recv_agent: f, name: `drive truck0 distributor0 distributor1'
+[3] pre: 2:1, eff: 2:2
+[4] cost: 1, gid: 4, owner: 0 (d), private: 0, recv_agent: f, name: `drive truck0 distributor1 depot0'
+[4] pre: 2:2, eff: 2:0
+[5] cost: 1, gid: 5, owner: 1 (e), private: 0, recv_agent: f, name: `drive truck0 distributor1 distributor0'
+[5] pre: 2:2, eff: 2:1
+[6] cost: 1, gid: 6, owner: 4 (13), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor0'
+[6] pre: 3:0, eff: 3:1
+[7] cost: 1, gid: 7, owner: 4 (15), private: 0, recv_agent: 17, name: `drive truck1 depot0 distributor1'
+[7] pre: 3:0, eff: 3:2
+[8] cost: 1, gid: 8, owner: 4 (13), private: 0, recv_agent: 17, name: `drive truck1 distributor0 depot0'
+[8] pre: 3:1, eff: 3:0
+[9] cost: 1, gid: 9, owner: 4 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor0 distributor1'
+[9] pre: 3:1, eff: 3:2
+[10] cost: 1, gid: 10, owner: 4 (15), private: 0, recv_agent: 17, name: `drive truck1 distributor1 depot0'
+[10] pre: 3:2, eff: 3:0
+[11] cost: 1, gid: 11, owner: 4 (16), private: 0, recv_agent: 17, name: `drive truck1 distributor1 distributor0'
+[11] pre: 3:2, eff: 3:1
+[12] cost: 1, gid: 12, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 crate1 depot0'
+[12] pre: 8:0 12:2, eff: 4:0 7:0 8:1 12:5
+[13] cost: 1, gid: 13, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate0 pallet0 depot0'
+[13] pre: 9:0 12:2, eff: 4:0 7:0 12:6
+[14] cost: 1, gid: 14, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 crate0 depot0'
+[14] pre: 7:0 13:2, eff: 4:0 7:1 8:0 13:5
+[15] cost: 1, gid: 15, owner: 0 (1), private: 0, recv_agent: 1f, name: `drop hoist0 crate1 pallet0 depot0'
+[15] pre: 9:0 13:2, eff: 4:0 8:0 13:6
+[16] cost: 1, gid: 16, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 crate1 distributor0'
+[16] pre: 8:0 12:3, eff: 5:0 7:0 8:1 12:5
+[17] cost: 1, gid: 17, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate0 pallet1 distributor0'
+[17] pre: 10:0 12:3, eff: 5:0 7:0 12:7
+[18] cost: 1, gid: 18, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 crate0 distributor0'
+[18] pre: 7:0 13:3, eff: 5:0 7:1 8:0 13:5
+[19] cost: 1, gid: 19, owner: 1 (2), private: 0, recv_agent: 1f, name: `drop hoist1 crate1 pallet1 distributor0'
+[19] pre: 10:0 13:3, eff: 5:0 8:0 13:7
+[20] cost: 1, gid: 20, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 crate1 distributor1'
+[20] pre: 8:0 12:4, eff: 6:0 7:0 8:1 12:5
+[21] cost: 1, gid: 21, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate0 pallet2 distributor1'
+[21] pre: 11:0 12:4, eff: 6:0 7:0 12:8
+[22] cost: 1, gid: 22, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 crate0 distributor1'
+[22] pre: 7:0 13:4, eff: 6:0 7:1 8:0 13:5
+[23] cost: 1, gid: 23, owner: 2 (4), private: 0, recv_agent: 1f, name: `drop hoist2 crate1 pallet2 distributor1'
+[23] pre: 11:0 13:4, eff: 6:0 8:0 13:8
+[24] cost: 1, gid: 24, owner: 0 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate0 crate1 depot0'
+[24] pre: 4:0 7:0 12:5, eff: 0:3 4:1 7:1 8:0 12:2
+[25] cost: 1, gid: 25, owner: 0 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate0 pallet0 depot0'
+[25] pre: 4:0 7:0 12:6, eff: 0:3 4:1 7:1 9:0 12:2
+[26] cost: 1, gid: 26, owner: 0 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate0 pallet1 depot0'
+[26] pre: 4:0 7:0 12:7, eff: 0:3 4:1 7:1 10:0 12:2
+[27] cost: 1, gid: 27, owner: 0 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate0 pallet2 depot0'
+[27] pre: 4:0 7:0 12:8, eff: 0:3 4:1 7:1 11:0 12:2
+[28] cost: 1, gid: 28, owner: 0 (1), private: 0, recv_agent: 1f, name: `lift hoist0 crate1 crate0 depot0'
+[28] pre: 4:0 8:0 13:5, eff: 1:3 4:1 7:0 8:1 13:2
+[29] cost: 1, gid: 29, owner: 0 (1), private: 0, recv_agent: 19, name: `lift hoist0 crate1 pallet0 depot0'
+[29] pre: 4:0 8:0 13:6, eff: 1:3 4:1 8:1 9:0 13:2
+[30] cost: 1, gid: 30, owner: 0 (1), private: 0, recv_agent: 1b, name: `lift hoist0 crate1 pallet1 depot0'
+[30] pre: 4:0 8:0 13:7, eff: 1:3 4:1 8:1 10:0 13:2
+[31] cost: 1, gid: 31, owner: 0 (1), private: 0, recv_agent: 1d, name: `lift hoist0 crate1 pallet2 depot0'
+[31] pre: 4:0 8:0 13:8, eff: 1:3 4:1 8:1 11:0 13:2
+[32] cost: 1, gid: 32, owner: 1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate0 crate1 distributor0'
+[32] pre: 5:0 7:0 12:5, eff: 0:3 5:1 7:1 8:0 12:3
+[33] cost: 1, gid: 33, owner: 1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate0 pallet0 distributor0'
+[33] pre: 5:0 7:0 12:6, eff: 0:3 5:1 7:1 9:0 12:3
+[34] cost: 1, gid: 34, owner: 1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate0 pallet1 distributor0'
+[34] pre: 5:0 7:0 12:7, eff: 0:3 5:1 7:1 10:0 12:3
+[35] cost: 1, gid: 35, owner: 1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate0 pallet2 distributor0'
+[35] pre: 5:0 7:0 12:8, eff: 0:3 5:1 7:1 11:0 12:3
+[36] cost: 1, gid: 36, owner: 1 (2), private: 0, recv_agent: 1f, name: `lift hoist1 crate1 crate0 distributor0'
+[36] pre: 5:0 8:0 13:5, eff: 1:3 5:1 7:0 8:1 13:3
+[37] cost: 1, gid: 37, owner: 1 (2), private: 0, recv_agent: 1b, name: `lift hoist1 crate1 pallet0 distributor0'
+[37] pre: 5:0 8:0 13:6, eff: 1:3 5:1 8:1 9:0 13:3
+[38] cost: 1, gid: 38, owner: 1 (2), private: 0, recv_agent: 1a, name: `lift hoist1 crate1 pallet1 distributor0'
+[38] pre: 5:0 8:0 13:7, eff: 1:3 5:1 8:1 10:0 13:3
+[39] cost: 1, gid: 39, owner: 1 (2), private: 0, recv_agent: 1e, name: `lift hoist1 crate1 pallet2 distributor0'
+[39] pre: 5:0 8:0 13:8, eff: 1:3 5:1 8:1 11:0 13:3
+[40] cost: 1, gid: 40, owner: 2 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate0 crate1 distributor1'
+[40] pre: 6:0 7:0 12:5, eff: 0:3 6:1 7:1 8:0 12:4
+[41] cost: 1, gid: 41, owner: 2 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate0 pallet0 distributor1'
+[41] pre: 6:0 7:0 12:6, eff: 0:3 6:1 7:1 9:0 12:4
+[42] cost: 1, gid: 42, owner: 2 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate0 pallet1 distributor1'
+[42] pre: 6:0 7:0 12:7, eff: 0:3 6:1 7:1 10:0 12:4
+[43] cost: 1, gid: 43, owner: 2 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate0 pallet2 distributor1'
+[43] pre: 6:0 7:0 12:8, eff: 0:3 6:1 7:1 11:0 12:4
+[44] cost: 1, gid: 44, owner: 2 (4), private: 0, recv_agent: 1f, name: `lift hoist2 crate1 crate0 distributor1'
+[44] pre: 6:0 8:0 13:5, eff: 1:3 6:1 7:0 8:1 13:4
+[45] cost: 1, gid: 45, owner: 2 (4), private: 0, recv_agent: 1d, name: `lift hoist2 crate1 pallet0 distributor1'
+[45] pre: 6:0 8:0 13:6, eff: 1:3 6:1 8:1 9:0 13:4
+[46] cost: 1, gid: 46, owner: 2 (4), private: 0, recv_agent: 1e, name: `lift hoist2 crate1 pallet1 distributor1'
+[46] pre: 6:0 8:0 13:7, eff: 1:3 6:1 8:1 10:0 13:4
+[47] cost: 1, gid: 47, owner: 2 (4), private: 0, recv_agent: 1c, name: `lift hoist2 crate1 pallet2 distributor1'
+[47] pre: 6:0 8:0 13:8, eff: 1:3 6:1 8:1 11:0 13:4
+[48] cost: 1, gid: 48, owner: 0 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck0 depot0'
+[48] pre: 2:0 12:2, eff: 4:0 12:0
+[49] cost: 1, gid: 49, owner: 4 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate0 truck1 depot0'
+[49] pre: 3:0 12:2, eff: 4:0 12:1
+[50] cost: 1, gid: 50, owner: 0 (9), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck0 depot0'
+[50] pre: 2:0 13:2, eff: 4:0 13:0
+[51] cost: 1, gid: 51, owner: 4 (11), private: 0, recv_agent: 1f, name: `load hoist0 crate1 truck1 depot0'
+[51] pre: 3:0 13:2, eff: 4:0 13:1
+[52] cost: 1, gid: 52, owner: 1 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck0 distributor0'
+[52] pre: 2:1 12:3, eff: 5:0 12:0
+[53] cost: 1, gid: 53, owner: 4 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate0 truck1 distributor0'
+[53] pre: 3:1 12:3, eff: 5:0 12:1
+[54] cost: 1, gid: 54, owner: 1 (a), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck0 distributor0'
+[54] pre: 2:1 13:3, eff: 5:0 13:0
+[55] cost: 1, gid: 55, owner: 4 (12), private: 0, recv_agent: 1f, name: `load hoist1 crate1 truck1 distributor0'
+[55] pre: 3:1 13:3, eff: 5:0 13:1
+[56] cost: 1, gid: 56, owner: 2 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck0 distributor1'
+[56] pre: 2:2 12:4, eff: 6:0 12:0
+[57] cost: 1, gid: 57, owner: 4 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate0 truck1 distributor1'
+[57] pre: 3:2 12:4, eff: 6:0 12:1
+[58] cost: 1, gid: 58, owner: 2 (c), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck0 distributor1'
+[58] pre: 2:2 13:4, eff: 6:0 13:0
+[59] cost: 1, gid: 59, owner: 4 (14), private: 0, recv_agent: 1f, name: `load hoist2 crate1 truck1 distributor1'
+[59] pre: 3:2 13:4, eff: 6:0 13:1
+[60] cost: 1, gid: 60, owner: 0 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck0 depot0'
+[60] pre: 2:0 4:0 12:0, eff: 4:1 12:2
+[61] cost: 1, gid: 61, owner: 4 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate0 truck1 depot0'
+[61] pre: 3:0 4:0 12:1, eff: 4:1 12:2
+[62] cost: 1, gid: 62, owner: 0 (9), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck0 depot0'
+[62] pre: 2:0 4:0 13:0, eff: 4:1 13:2
+[63] cost: 1, gid: 63, owner: 4 (11), private: 0, recv_agent: 19, name: `unload hoist0 crate1 truck1 depot0'
+[63] pre: 3:0 4:0 13:1, eff: 4:1 13:2
+[64] cost: 1, gid: 64, owner: 1 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck0 distributor0'
+[64] pre: 2:1 5:0 12:0, eff: 5:1 12:3
+[65] cost: 1, gid: 65, owner: 4 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate0 truck1 distributor0'
+[65] pre: 3:1 5:0 12:1, eff: 5:1 12:3
+[66] cost: 1, gid: 66, owner: 1 (a), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck0 distributor0'
+[66] pre: 2:1 5:0 13:0, eff: 5:1 13:3
+[67] cost: 1, gid: 67, owner: 4 (12), private: 0, recv_agent: 1a, name: `unload hoist1 crate1 truck1 distributor0'
+[67] pre: 3:1 5:0 13:1, eff: 5:1 13:3
+[68] cost: 1, gid: 68, owner: 2 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck0 distributor1'
+[68] pre: 2:2 6:0 12:0, eff: 6:1 12:4
+[69] cost: 1, gid: 69, owner: 4 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate0 truck1 distributor1'
+[69] pre: 3:2 6:0 12:1, eff: 6:1 12:4
+[70] cost: 1, gid: 70, owner: 2 (c), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck0 distributor1'
+[70] pre: 2:2 6:0 13:0, eff: 6:1 13:4
+[71] cost: 1, gid: 71, owner: 4 (14), private: 0, recv_agent: 1c, name: `unload hoist2 crate1 truck1 distributor1'
+[71] pre: 3:2 6:0 13:1, eff: 6:1 13:4
+PrivateVal:
+++++ truck1 END ++++
+---- ../data/ma-benchmarks/depot/pfile1.proto END ----

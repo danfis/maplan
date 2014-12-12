@@ -118,9 +118,10 @@ TEST(testLoadFromProtoCondEff)
     planProblemDel(p);
 }
 
-static void pAgent(const plan_problem_t *p)
+static void pAgent(int agent_id, const plan_problem_t *p)
 {
     printf("++++ %s ++++\n", p->agent_name);
+    printf("Agent ID: %d\n", agent_id);
     pVar(p->var, p->var_size);
     pInitState(p->state_pool, p->initial_state);
     pGoal(p->goal);
@@ -132,18 +133,17 @@ static void pAgent(const plan_problem_t *p)
     printf("++++ %s END ++++\n", p->agent_name);
 }
 
-TEST(testLoadAgentFromProto)
+static void testAgentProto(const char *proto)
 {
     plan_problem_agents_t *agents;
     int i;
 
-    agents = planProblemAgentsFromProto("../data/ma-benchmarks/rovers/p03.proto",
-                                        PLAN_PROBLEM_USE_CG);
+    agents = planProblemAgentsFromProto(proto, PLAN_PROBLEM_USE_CG);
     assertNotEquals(agents, NULL);
     if (agents == NULL)
         return;
 
-    printf("---- testLoadAgentFromProto ----\n");
+    printf("---- %s ----\n", proto);
     pVar(agents->glob.var, agents->glob.var_size);
     pInitState(agents->glob.state_pool, agents->glob.initial_state);
     pGoal(agents->glob.goal);
@@ -151,8 +151,14 @@ TEST(testLoadAgentFromProto)
     printf("Succ Gen: %d\n", (int)(agents->glob.succ_gen != NULL));
 
     for (i = 0; i < agents->agent_size; ++i)
-        pAgent(agents->agent + i);
+        pAgent(i, agents->agent + i);
 
-    printf("---- testLoadAgentFromProto END ----\n");
+    printf("---- %s END ----\n", proto);
     planProblemAgentsDel(agents);
+}
+
+TEST(testLoadAgentFromProto)
+{
+    testAgentProto("../data/ma-benchmarks/rovers/p03.proto");
+    testAgentProto("../data/ma-benchmarks/depot/pfile1.proto");
 }

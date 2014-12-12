@@ -304,8 +304,6 @@ TEST(testHeurRelaxLMCut)
             "states/rovers-p03.txt", lmCutNew, 0);
     runTest("LM-CUT", "../data/ma-benchmarks/rovers/p15.proto",
             "states/rovers-p15.txt", lmCutNew, 0);
-    /*
     runTest("LM-CUT", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", lmCutNew);
-    */
+            "states/citycar-p3-2-2-0-1.txt", lmCutNew, 0);
 }

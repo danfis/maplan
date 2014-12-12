@@ -63,6 +63,7 @@ void planOpCopy(plan_op_t *dst, const plan_op_t *src)
 
     dst->global_id  = src->global_id;
     dst->owner      = src->owner;
+    dst->ownerarr   = src->ownerarr;
     dst->is_private = src->is_private;
     dst->recv_agent = src->recv_agent;
 }
@@ -201,6 +202,37 @@ void planOpAddRecvAgent(plan_op_t *op, int agent_id)
     op->recv_agent |= recv;
 }
 
+void planOpDelRecvAgent(plan_op_t *op, int agent_id)
+{
+    uint64_t recv = 1 << agent_id;
+    op->recv_agent &= ~recv;
+}
+
+void planOpAddOwner(plan_op_t *op, int agent_id)
+{
+    uint64_t ow = 1 << agent_id;
+    op->ownerarr |= ow;
+}
+
+int planOpIsOwner(const plan_op_t *op, int agent_id)
+{
+    uint64_t ow = 1 << agent_id;
+    return (op->ownerarr & ow);
+}
+
+void planOpSetFirstOwner(plan_op_t *op)
+{
+    uint64_t ow = op->ownerarr;
+    int i;
+
+    for (i = 0; i < 64; ++i){
+        if (ow & 0x1){
+            op->owner = i;
+            break;
+        }
+        ow >>= 1;
+    }
+}
 
 static void planOpCondEffFree(plan_op_cond_eff_t *ceff)
 {

@@ -51,10 +51,11 @@ static void pOp(const plan_op_t *op, int op_size)
 
     printf("Ops[%d]:\n", op_size);
     for (i = 0; i < op_size; ++i){
-        printf("[%d] cost: %d, gid: %d, owner: %d,"
+        printf("[%d] cost: %d, gid: %d, owner: %d (%lx),"
                " private: %d, recv_agent: %lx, name: `%s'\n",
                i, (int)op[i].cost, op[i].global_id,
-               op[i].owner, op[i].is_private,
+               op[i].owner, (unsigned long)op[i].ownerarr,
+               op[i].is_private,
                (unsigned long)op[i].recv_agent,
                op[i].name);
         printf("[%d] pre:", i);

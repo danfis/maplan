@@ -33,6 +33,7 @@ struct _plan_op_t {
 
     int global_id;       /*!< Globally unique ID of the operator */
     int owner;           /*!< ID of the owner agent */
+    uint64_t ownerarr;   /*!< Bit array of owners of the operator */
     int is_private;      /*!< True if the operator is private for the owner agent */
     uint64_t recv_agent; /*!< Bit array -- 1 for agent that should receive
                               effects of this operator */
@@ -117,6 +118,25 @@ plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id);
  */
 void planOpAddRecvAgent(plan_op_t *op, int agent_id);
 
+/**
+ * Removes specified agent from recv_agent bitarray.
+ */
+void planOpDelRecvAgent(plan_op_t *op, int agent_id);
+
+/**
+ * Adds the agent to the owner list
+ */
+void planOpAddOwner(plan_op_t *op, int agent_id);
+
+/**
+ * Returns true if the agent is an owner of the operator.
+ */
+int planOpIsOwner(const plan_op_t *op, int agent_id);
+
+/**
+ * Copies first set owner from .ownerarr to .owner.
+ */
+void planOpSetFirstOwner(plan_op_t *op);
 
 /**** INLINES ****/
 _bor_inline void planOpSetPre(plan_op_t *op, plan_var_id_t var, plan_val_t val)

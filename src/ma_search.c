@@ -389,6 +389,9 @@ static void publicStateSend(plan_ma_search_t *ma,
     publicStateSet(msg, ma->search->state_pool, node);
 
     for (i = 0; i < ma->comm->node_size; ++i){
+        if (i == ma->comm->node_id)
+            continue;
+
         if ((recv_agent & 0x1UL) == 0x1UL)
             planMACommSendToNode(ma->comm, i, msg);
         recv_agent >>= 1;

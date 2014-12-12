@@ -34,6 +34,9 @@ struct _plan_heur_relax_t {
 
     int *plan_fact;
     int *plan_op;
+    int *goal_fact; /*!< Array with flags set to 1 on facts that are the
+                         goal facts. This array is used in planHeurRelax2()
+                         function. */
 };
 typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
@@ -54,6 +57,15 @@ void planHeurRelaxFree(plan_heur_relax_t *relax);
  * Runs relaxation from the specified state until goal is reached.
  */
 void planHeurRelax(plan_heur_relax_t *relax, const plan_state_t *state);
+
+/**
+ * Runs relaxation heuristic to a specified goal instead of the one
+ * specified during creation of the object.
+ * The function returns heuristic value for the specified goal.
+ */
+plan_cost_t planHeurRelax2(plan_heur_relax_t *relax,
+                           const plan_state_t *state,
+                           const plan_part_state_t *goal);
 
 /**
  * Incrementally update h^max values considering changed costs of the

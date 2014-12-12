@@ -1,5 +1,113 @@
-#include "plan/heur.h"
+#include <boruvka/alloc.h>
+#include <boruvka/rbtree_int.h>
 
+#include "plan/heur.h"
+#include "heur_relax.h"
+
+struct _plan_heur_ma_ff_t {
+    plan_heur_t heur;
+    plan_heur_relax_t relax;
+
+    plan_factarr_t state;      /*!< State for which the heuristic is computed */
+    plan_oparr_t relaxed_plan; /*!< Relaxed plan computed on all operators.
+                                    It means that the operators are
+                                    identified by its global ID */
+
+    bor_rbtree_int_t *peer_op;          /*!< Set of operators that are
+                                             requested from other peers */
+    bor_rbtree_int_node_t *pre_peer_op; /*!< Pre-allocated node to
+                                             remote_op set */
+    int peer_op_size;                   /*!< Number of peer ops in .peer_op */
+};
+typedef struct _plan_heur_ma_ff_t plan_heur_ma_ff_t;
+
+#define HEUR(parent) bor_container_of(parent, plan_heur_ma_ff_t, heur)
+
+
+static void heurDel(plan_heur_t *_heur);
+static int planHeurRelaxFFMA(plan_heur_t *heur,
+                             plan_ma_comm_t *comm,
+                             const plan_state_t *state,
+                             plan_heur_res_t *res);
+static int planHeurRelaxFFMAUpdate(plan_heur_t *heur,
+                                   plan_ma_comm_t *comm,
+                                   const plan_ma_msg_t *msg,
+                                   plan_heur_res_t *res);
+static void planHeurRelaxFFMARequest(plan_heur_t *heur,
+                                     plan_ma_comm_t *comm,
+                                     const plan_ma_msg_t *msg);
+
+plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
+{
+    plan_heur_ma_ff_t *heur;
+
+    heur = BOR_ALLOC(plan_heur_ma_ff_t);
+    _planHeurInit(&heur->heur, heurDel, NULL);
+    _planHeurMAInit(&heur->heur, planHeurRelaxFFMA,
+                    planHeurRelaxFFMAUpdate, planHeurRelaxFFMARequest);
+
+    planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_ADD,
+                      prob->var, prob->var_size,
+                      prob->goal,
+                      prob->proj_op, prob->proj_op_size);
+
+    heur->state.fact = BOR_ALLOC_ARR(int, prob->var_size);
+    heur->state.size = prob->var_size;
+
+    heur->relaxed_plan.op = NULL;
+    heur->relaxed_plan.size = 0;
+
+    heur->peer_op = borRBTreeIntNew();
+    heur->pre_peer_op = BOR_ALLOC(bor_rbtree_int_node_t);
+    heur->peer_op_size = 0;
+
+    return &heur->heur;
+}
+
+static void heurDel(plan_heur_t *_heur)
+{
+    plan_heur_ma_ff_t *heur = HEUR(_heur);
+    bor_rbtree_int_node_t *n;
+
+    _planHeurFree(&heur->heur);
+    planHeurRelaxFree(&heur->relax);
+
+    BOR_FREE(heur->state.fact);
+    if (heur->relaxed_plan.op)
+        BOR_FREE(heur->relaxed_plan.op);
+
+    while ((n = borRBTreeIntExtractMin(heur->peer_op)) != NULL){
+        BOR_FREE(n);
+    }
+    borRBTreeIntDel(heur->peer_op);
+    BOR_FREE(heur->pre_peer_op);
+    BOR_FREE(heur);
+}
+
+static int planHeurRelaxFFMA(plan_heur_t *heur,
+                             plan_ma_comm_t *comm,
+                             const plan_state_t *state,
+                             plan_heur_res_t *res)
+{
+    return -1;
+}
+
+static int planHeurRelaxFFMAUpdate(plan_heur_t *heur,
+                                   plan_ma_comm_t *comm,
+                                   const plan_ma_msg_t *msg,
+                                   plan_heur_res_t *res)
+{
+    return -1;
+}
+
+static void planHeurRelaxFFMARequest(plan_heur_t *heur,
+                                     plan_ma_comm_t *comm,
+                                     const plan_ma_msg_t *msg)
+{
+}
+
+
+#if 0
 #define HEUR_RELAX_FF
 #define HEUR_FACT_OP_SIMPLIFY
 #define HEUR_FACT_OP_NO_OPTIMIZE_FACT_PRE
@@ -421,3 +529,4 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
 
     planMAMsgDel(response);
 }
+#endif

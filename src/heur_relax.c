@@ -406,3 +406,25 @@ void planHeurRelaxMarkPlan(plan_heur_relax_t *relax)
     if (relax->fact[relax->cref.goal_id].value != PLAN_COST_MAX)
         markPlan(relax, relax->cref.goal_id);
 }
+
+void planHeurRelaxMarkPlan2(plan_heur_relax_t *relax,
+                            const plan_part_state_t *goal)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+    int fact_id;
+
+    if (relax->plan_fact == NULL)
+        relax->plan_fact = BOR_ALLOC_ARR(int, relax->cref.fact_size);
+    if (relax->plan_op == NULL)
+        relax->plan_op = BOR_ALLOC_ARR(int, relax->cref.op_size);
+
+    bzero(relax->plan_fact, sizeof(int) * relax->cref.fact_size);
+    bzero(relax->plan_op, sizeof(int) * relax->cref.op_size);
+
+    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
+        fact_id = planFactId(&relax->cref.fact_id, var, val);
+        markPlan(relax, fact_id);
+    }
+}

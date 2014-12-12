@@ -80,6 +80,12 @@ void planHeurRelaxIncMax(plan_heur_relax_t *relax,
  */
 void planHeurRelaxMarkPlan(plan_heur_relax_t *relax);
 
+/**
+ * Same as planHeurRelaxMarkPlan() but for the specified goal.
+ */
+void planHeurRelaxMarkPlan2(plan_heur_relax_t *relax,
+                            const plan_part_state_t *goal);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -23,6 +23,8 @@ struct _plan_ma_search_t {
     plan_cost_t goal_cost;
     int blocked;
     int terminate;
+
+    plan_heur_t *heur;
 };
 
 /** Reference data for the received public states */
@@ -38,6 +40,9 @@ static void searchExpandedNode(plan_search_t *search,
                                plan_state_space_node_t *node, void *ud);
 static void searchReachedGoal(plan_search_t *search,
                               plan_state_space_node_t *node, void *ud);
+static void searchMAHeur(plan_search_t *search, plan_heur_t *heur,
+                         const plan_state_t *state, plan_heur_res_t *res,
+                         void *userdata);
 static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg);
 static void publicStateSend(plan_ma_search_t *ma,
                             plan_state_space_node_t *node);
@@ -163,6 +168,10 @@ plan_ma_search_t *planMASearchNew(plan_ma_search_params_t *params)
     ma_search->blocked = 0;
     ma_search->terminate = 0;
 
+    ma_search->heur = NULL;
+    if (ma_search->search->heur->ma)
+        ma_search->heur = ma_search->search->heur;
+
     return ma_search;
 }
 
@@ -180,6 +189,7 @@ int planMASearchRun(plan_ma_search_t *ma, plan_path_t *path)
     planSearchSetPostStep(ma->search, searchPostStep, ma);
     planSearchSetExpandedNode(ma->search, searchExpandedNode, ma);
     planSearchSetReachedGoal(ma->search, searchReachedGoal, ma);
+    planSearchSetMAHeur(ma->search, searchMAHeur, ma);
 
     planPathInit(&dummy_path);
     planSearchRun(ma->search, &dummy_path);
@@ -274,6 +284,36 @@ static void searchReachedGoal(plan_search_t *search,
     }
 }
 
+
+static void searchMAHeur(plan_search_t *search, plan_heur_t *heur,
+                         const plan_state_t *state, plan_heur_res_t *res,
+                         void *userdata)
+{
+    plan_ma_search_t *ma = (plan_ma_search_t *)userdata;
+    plan_ma_msg_t *msg;
+    int ret;
+
+    if (ma->heur != heur){
+        fprintf(stderr, "[%d] MASearch Error: Heur objects differ, something is"
+                        " probably wrong!!\n", ma->comm->node_id);
+        res->heur = PLAN_HEUR_DEAD_END;
+        return;
+    }
+
+    ret = planHeurMA(heur, ma->comm, state, res);
+    while (ret == -1
+            && !ma->terminate
+            && (msg = planMACommRecvBlock(ma->comm, 0)) != NULL){
+        if (planMAMsgType(msg) == PLAN_MA_MSG_HEUR
+                && planMAMsgHeurType(msg) == PLAN_MA_MSG_HEUR_UPDATE){
+            ret = planHeurMAUpdate(ma->heur, ma->comm, msg, res);
+        }else{
+            processMsg(ma, msg);
+        }
+        planMAMsgDel(msg);
+    }
+}
+
 static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg)
 {
     int type, snapshot_type;
@@ -326,6 +366,16 @@ static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg)
         }else if (res == -1){
             ma->res = PLAN_SEARCH_ABORT;
             terminate(ma);
+        }
+
+    }else if (type == PLAN_MA_MSG_HEUR){
+        if (planMAMsgHeurType(msg) == PLAN_MA_MSG_HEUR_REQUEST && ma->heur){
+            planHeurMARequest(ma->heur, ma->comm, msg);
+        }else{
+            fprintf(stderr, "[%d] MASearch Error: Unexpected heur message"
+                            " (%d) from %d.\n",
+                    ma->comm->node_id, planMAMsgHeurType(msg),
+                    planMAMsgAgent(msg));
         }
     }
 

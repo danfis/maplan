@@ -182,9 +182,9 @@ static plan_heur_t *heurCreate(const char *name,
     /*
     }else if (strcmp(name, "ma-max") == 0){
         heur = planHeurMARelaxMaxNew(prob);
+    */
     }else if (strcmp(name, "ma-ff") == 0){
         heur = planHeurMARelaxFFNew(prob);
-    */
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
                                 prob->goal, op, op_size, succ_gen);

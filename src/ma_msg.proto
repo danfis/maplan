@@ -130,6 +130,7 @@ message PlanMAMsgOp {
     optional int32 op_id = 1;
     optional string name = 2;
     optional int32 cost = 3;
+    optional int32 owner = 4;
 }
 
 
@@ -147,4 +148,6 @@ message PlanMAMsg {
     optional int64 snapshot_token = 10;
     optional int32 snapshot_type = 11;
     optional int32 snapshot_ack = 12;
+    repeated int32 state_full = 13;
+    optional int32 goal_op_id = 14;
 }

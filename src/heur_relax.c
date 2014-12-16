@@ -40,6 +40,7 @@ void planHeurRelaxInit(plan_heur_relax_t *relax, int type,
 
     relax->plan_fact = NULL;
     relax->plan_op = NULL;
+    relax->goal_fact = NULL;
 }
 
 void planHeurRelaxFree(plan_heur_relax_t *relax)
@@ -52,6 +53,8 @@ void planHeurRelaxFree(plan_heur_relax_t *relax)
         BOR_FREE(relax->plan_fact);
     if (relax->plan_op)
         BOR_FREE(relax->plan_op);
+    if (relax->goal_fact)
+        BOR_FREE(relax->goal_fact);
     planFactOpCrossRefFree(&relax->cref);
 }
 
@@ -145,43 +148,140 @@ static void relaxOpMax(plan_heur_relax_t *relax,
     }
 }
 
+static void exploreAdd(plan_heur_relax_t *relax, const plan_state_t *state)
+{
+    int goal_id = relax->cref.goal_id;
+
+#define PLAN_HEUR_RELAX_EXPLORE_CHECK_GOAL  \
+    if (fact_id == goal_id) break
+#define PLAN_HEUR_RELAX_EXPLORE_OP_ADD \
+    relaxOpAdd(relax, &queue, op_id, fact_id, value)
+#include "_heur_relax_explore.h"
+}
+
+static void exploreMax(plan_heur_relax_t *relax, const plan_state_t *state)
+{
+    int goal_id = relax->cref.goal_id;
+
+#define PLAN_HEUR_RELAX_EXPLORE_CHECK_GOAL  \
+    if (fact_id == goal_id) break
+#define PLAN_HEUR_RELAX_EXPLORE_OP_ADD \
+    relaxOpMax(relax, &queue, op_id, fact_id, value)
+#include "_heur_relax_explore.h"
+}
+
 void planHeurRelax(plan_heur_relax_t *relax, const plan_state_t *state)
 {
-    plan_prio_queue_t queue;
-    int i, size, *op, op_id;
-    int fact_id, goal_id;
-    int type = relax->type;
-    plan_cost_t value;
-    plan_heur_relax_fact_t *fact;
+    if (relax->type == PLAN_HEUR_RELAX_TYPE_ADD){
+        exploreAdd(relax, state);
+    }else{ // PLAN_HEUR_RELAX_TYPE_MAX
+        exploreMax(relax, state);
+    }
+}
 
-    relaxInit(relax);
-    planPrioQueueInit(&queue);
 
-    goal_id = relax->cref.goal_id;
+static void setGoalFact(int *goal_fact, int fact_size,
+                        const plan_fact_id_t *fid,
+                        const plan_part_state_t *goal)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+    int fact_id;
 
-    relaxAddInitState(relax, &queue, state);
-    while (!planPrioQueueEmpty(&queue)){
-        fact_id = planPrioQueuePop(&queue, &value);
-        fact = relax->fact + fact_id;
-        if (fact->value != value)
-            continue;
+    bzero(goal_fact, sizeof(int) * fact_size);
 
-        if (fact_id == goal_id)
-            break;
+    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
+        fact_id = planFactId(fid, var, val);
+        goal_fact[fact_id] = 1;
+    }
+}
 
-        size = relax->cref.fact_pre[fact_id].size;
-        op   = relax->cref.fact_pre[fact_id].op;
-        for (i = 0; i < size; ++i){
-            op_id = op[i];
-            if (type == PLAN_HEUR_RELAX_TYPE_ADD){
-                relaxOpAdd(relax, &queue, op_id, fact_id, value);
-            }else{ // PLAN_HEUR_RELAX_TYPE_MAX
-                relaxOpMax(relax, &queue, op_id, fact_id, value);
-            }
+static plan_cost_t exploreAdd2(plan_heur_relax_t *relax,
+                               const plan_state_t *state,
+                               const int *goal_fact,
+                               int goal_count)
+{
+    int gc = goal_count;
+    int i, len;
+    plan_cost_t h;
+
+#define PLAN_HEUR_RELAX_EXPLORE_CHECK_GOAL  \
+    if (relax->goal_fact[fact_id] && --gc == 0) \
+        break
+#define PLAN_HEUR_RELAX_EXPLORE_OP_ADD \
+    relaxOpAdd(relax, &queue, op_id, fact_id, value)
+#include "_heur_relax_explore.h"
+
+    if (gc != 0)
+        return PLAN_HEUR_DEAD_END;
+
+    h = 0;
+    len = relax->cref.fact_size;
+    for (i = 0; i < len; ++i){
+        if (goal_fact[i]){
+            h += relax->fact[i].value;
         }
     }
 
-    planPrioQueueFree(&queue);
+    return h;
+}
+
+static plan_cost_t exploreMax2(plan_heur_relax_t *relax,
+                               const plan_state_t *state,
+                               const int *goal_fact,
+                               int goal_count)
+{
+    int gc = goal_count;
+    int i, len;
+    plan_cost_t h;
+
+#define PLAN_HEUR_RELAX_EXPLORE_CHECK_GOAL  \
+    if (relax->goal_fact[fact_id] && --gc == 0) \
+        break
+#define PLAN_HEUR_RELAX_EXPLORE_OP_ADD \
+    relaxOpMax(relax, &queue, op_id, fact_id, value)
+#include "_heur_relax_explore.h"
+
+    if (gc != 0)
+        return PLAN_HEUR_DEAD_END;
+
+    h = 0;
+    len = relax->cref.fact_size;
+    for (i = 0; i < len; ++i){
+        if (goal_fact[i]){
+            h = BOR_MAX(h, relax->fact[i].value);
+        }
+    }
+
+    return h;
+}
+
+plan_cost_t planHeurRelax2(plan_heur_relax_t *relax,
+                           const plan_state_t *state,
+                           const plan_part_state_t *goal)
+{
+    plan_cost_t h = PLAN_HEUR_DEAD_END;
+    int goal_count;
+
+    if (!relax->goal_fact)
+        relax->goal_fact = BOR_ALLOC_ARR(int, relax->cref.fact_size);
+
+    // Mark goal facts
+    setGoalFact(relax->goal_fact, relax->cref.fact_size,
+                &relax->cref.fact_id, goal);
+
+    // Number of goal facts
+    goal_count = goal->vals_size;
+
+    // Explore relaxation problem
+    if (relax->type == PLAN_HEUR_RELAX_TYPE_ADD){
+        h = exploreAdd2(relax, state, relax->goal_fact, goal_count);
+    }else{ // PLAN_HEUR_RELAX_TYPE_MAX
+        h = exploreMax2(relax, state, relax->goal_fact, goal_count);
+    }
+
+    return h;
 }
 
 
@@ -275,6 +375,9 @@ static void markPlan(plan_heur_relax_t *relax, int fact_id)
     // mark fact in relaxed plan
     relax->plan_fact[fact_id] = 1;
 
+    if (fact->supp < 0)
+        return;
+
     size  = relax->cref.op_pre[fact->supp].size;
     facts = relax->cref.op_pre[fact->supp].fact;
     for (i = 0; i < size; ++i){
@@ -305,4 +408,26 @@ void planHeurRelaxMarkPlan(plan_heur_relax_t *relax)
 
     if (relax->fact[relax->cref.goal_id].value != PLAN_COST_MAX)
         markPlan(relax, relax->cref.goal_id);
+}
+
+void planHeurRelaxMarkPlan2(plan_heur_relax_t *relax,
+                            const plan_part_state_t *goal)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+    int fact_id;
+
+    if (relax->plan_fact == NULL)
+        relax->plan_fact = BOR_ALLOC_ARR(int, relax->cref.fact_size);
+    if (relax->plan_op == NULL)
+        relax->plan_op = BOR_ALLOC_ARR(int, relax->cref.op_size);
+
+    bzero(relax->plan_fact, sizeof(int) * relax->cref.fact_size);
+    bzero(relax->plan_op, sizeof(int) * relax->cref.op_size);
+
+    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
+        fact_id = planFactId(&relax->cref.fact_id, var, val);
+        markPlan(relax, fact_id);
+    }
 }

@@ -106,6 +106,13 @@ void planSearchSetReachedGoal(plan_search_t *search,
     search->reached_goal_data = userdata;
 }
 
+void planSearchSetMAHeur(plan_search_t *search,
+                         plan_search_ma_heur_fn cb, void *userdata)
+{
+    search->ma_heur_fn = cb;
+    search->ma_heur_data = userdata;
+}
+
 void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
@@ -134,6 +141,8 @@ void _planSearchInit(plan_search_t *search,
     search->expanded_node_data = NULL;
     search->reached_goal_fn = NULL;
     search->reached_goal_data = NULL;
+    search->ma_heur_fn = NULL;
+    search->ma_heur_data = NULL;
 
     search->state    = planStateNew(search->state_pool);
     search->state_id = PLAN_NO_STATE;
@@ -177,7 +186,18 @@ int _planSearchHeuristic(plan_search_t *search,
         res.pref_op_size = preferred_ops->op_found;
     }
 
-    planHeur(search->heur, search->state, &res);
+    if (search->heur->ma){
+        if (search->ma_heur_fn){
+            search->ma_heur_fn(search, search->heur, search->state, &res,
+                               search->ma_heur_data);
+        }else{
+            fprintf(stderr, "Search Error: ma_heur_fn callback is not set."
+                            " Multi agent heuristic cannot be computed!\n");
+            res.heur = PLAN_HEUR_DEAD_END;
+        }
+    }else{
+        planHeur(search->heur, search->state, &res);
+    }
     planSearchStatIncEvaluatedStates(&search->stat);
 
     if (preferred_ops){

@@ -332,24 +332,16 @@ static int planHeurRelaxFFMAUpdate(plan_heur_t *_heur,
 
     maDelPeerOp(heur, planMAMsgHeurFFOpId(msg));
 
-    // First insert all new operators
-    len = planMAMsgHeurFFOpSize(msg);
-    for (i = 0; i < len; ++i){
-        op_id = planMAMsgHeurFFOp(msg, i, &cost, &owner);
-        if (owner == from_agent)
-            maAddOpToRelaxedPlan(heur, op_id, cost);
-    }
-
-    // TODO: Join to one cycle
     // Then explore all other peer-operators
+    len = planMAMsgHeurFFOpSize(msg);
     for (i = 0; i < len; ++i){
         op_id = planMAMsgHeurFFOp(msg, i, &cost, &owner);
 
         if (owner == comm->node_id){
             maUpdateLocalOp(heur, comm, op_id);
 
-        }else if (owner != from_agent){
-            if (maAddPeerOp(heur, op_id) == 0){
+        }else{
+            if (owner != from_agent && maAddPeerOp(heur, op_id) == 0){
                 maSendHeurRequest(comm, owner, &heur->state, op_id);
             }
             maAddOpToRelaxedPlan(heur, op_id, cost);

@@ -375,6 +375,9 @@ static void markPlan(plan_heur_relax_t *relax, int fact_id)
     // mark fact in relaxed plan
     relax->plan_fact[fact_id] = 1;
 
+    if (fact->supp < 0)
+        return;
+
     size  = relax->cref.op_pre[fact->supp].size;
     facts = relax->cref.op_pre[fact->supp].fact;
     for (i = 0; i < size; ++i){

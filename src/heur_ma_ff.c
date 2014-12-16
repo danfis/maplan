@@ -385,7 +385,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
     const plan_op_t *op;
     int i, op_id, agent_id;
     int global_id, owner;
-    plan_cost_t h;
+    plan_cost_t h, cost;
 
     op_id = planMAMsgHeurFFOpId(msg);
     agent_id = planMAMsgAgent(msg);
@@ -421,9 +421,9 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
         op = heur->base_op + i;
         global_id = op->global_id;
         owner = op->owner;
+        cost = op->cost;
 
-        planMAMsgHeurFFAddOp(response, global_id,
-                             heur->relax.op[i].cost, owner);
+        planMAMsgHeurFFAddOp(response, global_id, cost, owner);
     }
     planMACommSendToNode(comm, agent_id, response);
 

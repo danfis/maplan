@@ -239,6 +239,85 @@ int planMAMsgSnapshotAck(const plan_ma_msg_t *msg)
     return proto->snapshot_ack();
 }
 
+
+int planMAMsgHeurType(const plan_ma_msg_t *msg)
+{
+    int type = planMAMsgType(msg);
+    int subtype = planMAMsgSubType(msg);
+
+    if (type != PLAN_MA_MSG_HEUR)
+        return PLAN_MA_MSG_HEUR_NONE;
+
+    if (subtype == PLAN_MA_MSG_HEUR_FF_REQUEST)
+        return PLAN_MA_MSG_HEUR_REQUEST;
+
+    if (subtype == PLAN_MA_MSG_HEUR_FF_RESPONSE)
+        return PLAN_MA_MSG_HEUR_UPDATE;
+
+    return PLAN_MA_MSG_HEUR_NONE;
+}
+
+
+void planMAMsgHeurFFSetRequest(plan_ma_msg_t *msg,
+                               const int *init_state, int init_state_size,
+                               int goal_op_id)
+{
+    PlanMAMsg *proto = PROTO(msg);
+
+    for (int i = 0; i < init_state_size; ++i)
+        proto->add_state_full(init_state[i]);
+    proto->set_goal_op_id(goal_op_id);
+}
+
+void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_goal_op_id(goal_op_id);
+}
+
+void planMAMsgHeurFFAddOp(plan_ma_msg_t *msg, int op_id,
+                          plan_cost_t cost, int owner)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    PlanMAMsgOp *op = proto->add_op();
+    op->set_op_id(op_id);
+    op->set_cost(cost);
+    op->set_owner(owner);
+}
+
+void planMAMsgHeurFFState(const plan_ma_msg_t *msg, plan_state_t *state)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    int len = proto->state_full_size();
+    for (int i = 0; i < len; ++i)
+        planStateSet(state, i, proto->state_full(i));
+}
+
+int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->goal_op_id();
+}
+
+int planMAMsgHeurFFOpSize(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->op_size();
+}
+
+int planMAMsgHeurFFOp(const plan_ma_msg_t *msg, int i,
+                      plan_cost_t *cost, int *owner)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    const PlanMAMsgOp &op = proto->op(i);
+
+    if (cost)
+        *cost = op.cost();
+    if (owner)
+        *owner = op.owner();
+    return op.op_id();
+}
+
 #if 0
 static void setPublicState(PlanMAMsgPublicState *public_state, int agent_id,
                            const void *state, size_t state_size,

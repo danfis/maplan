@@ -220,6 +220,23 @@ void planSearchSetReachedGoal(plan_search_t *search,
                               plan_search_reached_goal_fn cb,
                               void *userdata);
 
+
+/**
+ * Callback for planSearchSetMAHeur()
+ */
+typedef void (*plan_search_ma_heur_fn)(plan_search_t *search,
+                                       plan_heur_t *heur,
+                                       const plan_state_t *state,
+                                       plan_heur_res_t *res,
+                                       void *userdata);
+
+/**
+ * Sets callback that is called whenever a multi-agent heuristic should be
+ * computed.
+ */
+void planSearchSetMAHeur(plan_search_t *search,
+                         plan_search_ma_heur_fn cb, void *userdata);
+
 /**
  * Internals
  * ----------
@@ -292,6 +309,8 @@ struct _plan_search_t {
     void *expanded_node_data;
     plan_search_reached_goal_fn reached_goal_fn;
     void *reached_goal_data;
+    plan_search_ma_heur_fn ma_heur_fn;
+    void *ma_heur_data;
 
     plan_state_t *state;             /*!< Preallocated state */
     plan_state_id_t state_id;        /*!< ID of .state -- used for caching*/

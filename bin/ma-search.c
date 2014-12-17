@@ -3,7 +3,6 @@
 #include <plan/heur.h>
 #include <plan/search.h>
 #include <plan/ma_search.h>
-#include <plan/ma.h>
 #include <opts.h>
 #include <boruvka/tasks.h>
 

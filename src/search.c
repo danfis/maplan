@@ -163,12 +163,12 @@ void _planSearchFree(plan_search_t *search)
         planStateSpaceDel(search->state_space);
 }
 
-void _planSearchFindApplicableOps(plan_search_t *search,
-                                  plan_state_id_t state_id)
+int _planSearchFindApplicableOps(plan_search_t *search,
+                                 plan_state_id_t state_id)
 {
     _planSearchLoadState(search, state_id);
-    planSearchApplicableOpsFind(&search->app_ops, search->state, state_id,
-                                search->succ_gen);
+    return planSearchApplicableOpsFind(&search->app_ops, search->state,
+                                       state_id, search->succ_gen);
 }
 
 int _planSearchHeuristic(plan_search_t *search,
@@ -222,22 +222,6 @@ int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node)
     }
     return found;
 }
-
-void _planSearchAddLazySuccessors(plan_search_t *search,
-                                  plan_state_id_t state_id,
-                                  plan_op_t **op, int op_size,
-                                  plan_cost_t cost,
-                                  plan_list_lazy_t *list)
-{
-    int i;
-
-    for (i = 0; i < op_size; ++i){
-        planListLazyPush(list, cost, state_id, op[i]);
-        planSearchStatIncGeneratedStates(&search->stat);
-    }
-}
-
-
 
 
 static plan_state_id_t extractPath(plan_state_space_t *state_space,

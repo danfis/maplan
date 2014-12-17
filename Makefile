@@ -45,6 +45,7 @@ OBJS += list_lazy_splaytree
 OBJS += list
 OBJS += list_tiebreaking
 OBJS += search
+OBJS += search_lazy_base
 OBJS += search_ehc
 OBJS += search_lazy
 OBJS += search_astar

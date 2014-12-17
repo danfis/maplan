@@ -33,11 +33,13 @@ void planSearchApplicableOpsFree(plan_search_applicable_ops_t *app_ops);
 
 /**
  * Fills structure with applicable operators.
+ * Returns 0 if the result was already cached and no search was performed,
+ * and 1 if a new search was performed.
  */
-void planSearchApplicableOpsFind(plan_search_applicable_ops_t *app_ops,
-                                 const plan_state_t *state,
-                                 plan_state_id_t state_id,
-                                 const plan_succ_gen_t *succ_gen);
+int planSearchApplicableOpsFind(plan_search_applicable_ops_t *app_ops,
+                                const plan_state_t *state,
+                                plan_state_id_t state_id,
+                                const plan_succ_gen_t *succ_gen);
 
 #ifdef __cplusplus
 }

@@ -17,13 +17,13 @@ void planSearchApplicableOpsFree(plan_search_applicable_ops_t *app_ops)
     BOR_FREE(app_ops->op);
 }
 
-void planSearchApplicableOpsFind(plan_search_applicable_ops_t *app,
-                                 const plan_state_t *state,
-                                 plan_state_id_t state_id,
-                                 const plan_succ_gen_t *succ_gen)
+int planSearchApplicableOpsFind(plan_search_applicable_ops_t *app,
+                                const plan_state_t *state,
+                                plan_state_id_t state_id,
+                                const plan_succ_gen_t *succ_gen)
 {
     if (state_id == app->state)
-        return;
+        return 0;
 
     // get operators to get successors
     app->op_found = planSuccGenFind(succ_gen, state, app->op, app->op_size);
@@ -31,4 +31,5 @@ void planSearchApplicableOpsFind(plan_search_applicable_ops_t *app,
 
     // remember the corresponding state
     app->state = state_id;
+    return 1;
 }

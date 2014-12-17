@@ -16,7 +16,7 @@ struct _plan_search_lazy_t {
 };
 typedef struct _plan_search_lazy_t plan_search_lazy_t;
 
-#define SEARCH_FROM_PARENT(parent) \
+#define LAZY(parent) \
     bor_container_of((parent), plan_search_lazy_t, search)
 
 static void addSuccessors(plan_search_lazy_t *lazy,
@@ -26,8 +26,8 @@ static void addSuccessors(plan_search_lazy_t *lazy,
 static void planSearchLazyDel(plan_search_t *_lazy);
 static int planSearchLazyInit(plan_search_t *_lazy);
 static int planSearchLazyStep(plan_search_t *_lazy);
-static int planSearchLazyInjectState(plan_search_t *, plan_state_id_t state_id,
-                                     plan_cost_t cost, plan_cost_t heuristic);
+static void planSearchLazyInsertNode(plan_search_t *search,
+                                     plan_state_space_node_t *node);
 
 void planSearchLazyParamsInit(plan_search_lazy_params_t *p)
 {
@@ -44,7 +44,7 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
                     planSearchLazyDel,
                     planSearchLazyInit,
                     planSearchLazyStep,
-                    planSearchLazyInjectState,
+                    planSearchLazyInsertNode,
                     NULL);
 
     lazy->use_preferred_ops = params->use_preferred_ops;
@@ -53,94 +53,142 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
 
     lazy->pref_ops = NULL;
     if (lazy->use_preferred_ops)
-        lazy->pref_ops = &lazy->search.applicable_ops;
+        lazy->pref_ops = &lazy->search.app_ops;
 
     return &lazy->search;
 }
 
 static void planSearchLazyDel(plan_search_t *_lazy)
 {
-    plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
+    plan_search_lazy_t *lazy = LAZY(_lazy);
     _planSearchFree(&lazy->search);
     if (lazy->list_del)
         planListLazyDel(lazy->list);
     BOR_FREE(lazy);
 }
 
-static int planSearchLazyInit(plan_search_t *_lazy)
+static int planSearchLazyInit(plan_search_t *search)
 {
-    plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
-    planListLazyPush(lazy->list, 0,
-                     lazy->search.params.prob->initial_state, NULL);
+    plan_search_lazy_t *lazy = LAZY(search);
+    plan_state_space_node_t *node;
+    int res;
+
+    node = planStateSpaceNode(search->state_space, search->initial_state);
+    planStateSpaceOpen(search->state_space, node);
+    planStateSpaceClose(search->state_space, node);
+    node->parent_state_id = PLAN_NO_STATE;
+    node->op = NULL;
+    node->cost = 0;
+
+    res = _planSearchHeuristic(search, node->state_id, &node->heuristic, NULL);
+    if (res != PLAN_SEARCH_CONT)
+        return res;
+
+    planListLazyPush(lazy->list, node->heuristic, node->state_id, NULL);
     return PLAN_SEARCH_CONT;
 }
 
-static int planSearchLazyStep(plan_search_t *_lazy)
+static plan_state_space_node_t *expandNode(plan_search_lazy_t *lazy,
+                                           plan_state_id_t parent_state_id,
+                                           plan_op_t *parent_op,
+                                           int *r)
 {
-    plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
-    plan_state_id_t parent_state_id, cur_state_id;
-    plan_op_t *parent_op;
+    plan_state_id_t cur_state_id;
+    plan_state_space_node_t *cur_node, *parent_node;
     plan_cost_t cur_heur;
+    int res;
+
+    // Create a new state and check whether the state was already visited
+    cur_state_id = planOpApply(parent_op, parent_state_id);
+    cur_node = planStateSpaceNode(lazy->search.state_space, cur_state_id);
+    if (!planStateSpaceNodeIsNew(cur_node)){
+        *r = PLAN_SEARCH_CONT;
+        return NULL;
+    }
+
+    // find applicable operators in the current state
+    _planSearchFindApplicableOps(&lazy->search, cur_state_id);
+
+    // compute heuristic value for the current node
+    res = _planSearchHeuristic(&lazy->search, cur_state_id,
+                               &cur_heur, lazy->pref_ops);
+    if (res != PLAN_SEARCH_CONT){
+        *r = res;
+        return NULL;
+    }
+
+    // get parent node for path cost computation
+    parent_node = planStateSpaceNode(lazy->search.state_space, parent_state_id);
+
+    // Update current node's data
+    planStateSpaceOpen(lazy->search.state_space, cur_node);
+    planStateSpaceClose(lazy->search.state_space, cur_node);
+    cur_node->parent_state_id = parent_state_id;
+    cur_node->op = parent_op;
+    cur_node->cost = parent_node->cost + parent_op->cost;
+    cur_node->heuristic = cur_heur;
+    planSearchStatIncExpandedStates(&lazy->search.stat);
+
+    return cur_node;
+}
+
+static int planSearchLazyStep(plan_search_t *search)
+{
+    plan_search_lazy_t *lazy = LAZY(search);
+    plan_state_id_t parent_state_id;
+    plan_op_t *parent_op;
     plan_state_space_node_t *cur_node;
     int res;
 
     // get next node from the list
-    if (planListLazyPop(lazy->list, &parent_state_id, &parent_op) != 0){
-        // reached dead-end
+    if (planListLazyPop(lazy->list, &parent_state_id, &parent_op) != 0)
         return PLAN_SEARCH_NOT_FOUND;
-    }
 
-    planSearchStatIncExpandedStates(&lazy->search.stat);
+    if (parent_op){
+        cur_node = expandNode(lazy, parent_state_id, parent_op, &res);
+        if (cur_node == NULL)
+            return res;
 
-    if (parent_op == NULL){
-        // use parent state as current state
-        cur_state_id = parent_state_id;
-        parent_state_id = PLAN_NO_STATE;
     }else{
-        // create a new state
-        cur_state_id = planOpApply(parent_op, parent_state_id);
+        cur_node = planStateSpaceNode(search->state_space, parent_state_id);
     }
-
-    // check whether the state was already visited
-    if (!planStateSpaceNodeIsNew2(lazy->search.state_space, cur_state_id))
-        return PLAN_SEARCH_CONT;
-
-    // find applicable operators
-    _planSearchFindApplicableOps(&lazy->search, cur_state_id);
-
-    // compute heuristic value for the current node
-    res = _planSearchHeuristic(&lazy->search, cur_state_id, &cur_heur,
-                               lazy->pref_ops);
-    if (res != PLAN_SEARCH_CONT)
-        return res;
-
-    // open and close the node so we can trace the path from goal to the
-    // initial state
-    cur_node = _planSearchNodeOpenClose(&lazy->search, cur_state_id,
-                                        parent_state_id, parent_op,
-                                        0, cur_heur);
 
     // check if the current state is the goal
     if (_planSearchCheckGoal(&lazy->search, cur_node))
         return PLAN_SEARCH_FOUND;
+    _planSearchExpandedNode(search, cur_node);
 
-    // Useful only in MA node
-    _planSearchMASendState(&lazy->search, cur_node);
-
-    if (cur_heur != PLAN_HEUR_DEAD_END){
-        addSuccessors(lazy, cur_state_id, cur_heur);
+    if (cur_node->heuristic != PLAN_HEUR_DEAD_END){
+        if (!parent_op){
+            _planSearchFindApplicableOps(search, cur_node->state_id);
+            if (lazy->pref_ops){
+                plan_cost_t h;
+                _planSearchHeuristic(&lazy->search, cur_node->state_id,
+                                     &h, lazy->pref_ops);
+            }
+        }
+        addSuccessors(lazy, cur_node->state_id, cur_node->heuristic);
     }
 
     return PLAN_SEARCH_CONT;
 }
 
-static int planSearchLazyInjectState(plan_search_t *_lazy, plan_state_id_t state_id,
-                                     plan_cost_t cost, plan_cost_t heuristic)
+static void planSearchLazyInsertNode(plan_search_t *search,
+                                     plan_state_space_node_t *node)
 {
-    plan_search_lazy_t *lazy = SEARCH_FROM_PARENT(_lazy);
-    return _planSearchLazyInjectState(&lazy->search, lazy->list,
-                                      state_id, cost, heuristic);
+    plan_search_lazy_t *lazy = LAZY(search);
+
+    if (planStateSpaceNodeIsNew(node)){
+        planStateSpaceOpen(search->state_space, node);
+        planStateSpaceClose(search->state_space, node);
+    }else{
+        planStateSpaceReopen(search->state_space, node);
+        planStateSpaceClose(search->state_space, node);
+    }
+
+    planListLazyPush(lazy->list, node->heuristic, node->state_id, NULL);
 }
+
 
 static void addSuccessors(plan_search_lazy_t *lazy,
                           plan_state_id_t state_id,
@@ -148,13 +196,13 @@ static void addSuccessors(plan_search_lazy_t *lazy,
 {
     if (lazy->use_preferred_ops == PLAN_SEARCH_PREFERRED_ONLY){
         _planSearchAddLazySuccessors(&lazy->search, state_id,
-                                     lazy->search.applicable_ops.op,
-                                     lazy->search.applicable_ops.op_preferred,
+                                     lazy->search.app_ops.op,
+                                     lazy->search.app_ops.op_preferred,
                                      heur_val, lazy->list);
     }else{
         _planSearchAddLazySuccessors(&lazy->search, state_id,
-                                     lazy->search.applicable_ops.op,
-                                     lazy->search.applicable_ops.op_found,
+                                     lazy->search.app_ops.op,
+                                     lazy->search.app_ops.op_found,
                                      heur_val, lazy->list);
     }
 }

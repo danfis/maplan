@@ -108,12 +108,12 @@ static int progress(const plan_search_stat_t *stat, void *data)
     }
 
     fprintf(stderr, "[%.3f s, %ld kb] %ld steps, %ld evaluated,"
-                    " %ld expanded, %ld generated, not-found: %d,"
+                    " %ld expanded, %ld generated,"
                     " found: %d\n",
             stat->elapsed_time, stat->peak_memory,
             stat->steps, stat->evaluated_states, stat->expanded_states,
             stat->generated_states,
-            stat->not_found, stat->found);
+            stat->found);
 
     if (max_time > 0 && stat->elapsed_time > max_time){
         fprintf(stderr, "Abort: Exceeded max-time.\n");
@@ -167,8 +167,10 @@ static plan_heur_t *heurCreate(const char *name,
     }else if (strcmp(name, "ff") == 0){
         heur = planHeurRelaxFFNew(prob->var, prob->var_size,
                                   prob->goal, op, op_size, succ_gen);
+        /*
     }else if (strcmp(name, "ma-max") == 0){
         heur = planHeurMARelaxMaxNew(prob);
+        */
     }else if (strcmp(name, "ma-ff") == 0){
         heur = planHeurMARelaxFFNew(prob);
     }else if (strcmp(name, "lm-cut") == 0){
@@ -219,7 +221,7 @@ static plan_search_t *searchCreate(const char *search_name,
                                               op, op_size, succ_gen);
         astar_params.search.heur_del = 1;
         // TODO: Make this an option:
-        astar_params.search.ma_ack_solution = 1;
+        //astar_params.search.ma_ack_solution = 1;
         astar_params.pathmax = use_pathmax;
         params = &astar_params.search;
 
@@ -229,9 +231,9 @@ static plan_search_t *searchCreate(const char *search_name,
         return NULL;
     }
 
-    params->progress_fn = progress;
-    params->progress_freq = progress_freq;
-    params->progress_data = progress_data;
+    params->progress.fn = progress;
+    params->progress.freq = progress_freq;
+    params->progress.data = progress_data;
     params->prob = prob;
 
     if (strcmp(def_search, "ehc") == 0){
@@ -372,7 +374,7 @@ static int runMA(plan_problem_agents_t *ma_prob)
     }
 
     planPathInit(&path);
-    res = planMARun(ma_prob->agent_size, search, &path);
+    //res = planMARun(ma_prob->agent_size, search, &path);
     printResults(res, &path);
 
     for (i = 0; i < ma_prob->agent_size; ++i){

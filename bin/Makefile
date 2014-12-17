@@ -18,8 +18,8 @@ ifeq '$(BIN_STATIC)' 'yes'
   LDFLAGS += -static
 endif
 
-#TARGETS = search
-TARGETS = ma-search
+TARGETS = search
+TARGETS += ma-search
 
 all: $(TARGETS)
 

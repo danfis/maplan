@@ -193,7 +193,8 @@ static int planSearchEHCStep(plan_search_t *search)
                                      &h, ehc->pref_ops);
             }
         }
-        addSuccessors(ehc, cur_node->state_id);
+        _planSearchLazyAddSuccessors(search, cur_node->state_id, 0,
+                                     ehc->list, ehc->use_preferred_ops);
     }
 
     return PLAN_SEARCH_CONT;
@@ -212,21 +213,4 @@ static void planSearchEHCInsertNode(plan_search_t *search,
         planStateSpaceClose(search->state_space, node);
     }
     planListLazyPush(ehc->list, 0, node->state_id, NULL);
-}
-
-static void addSuccessors(plan_search_ehc_t *ehc, plan_state_id_t state_id)
-{
-    if (ehc->use_preferred_ops == PLAN_SEARCH_PREFERRED_ONLY){
-        // Use only preferred operators
-        _planSearchAddLazySuccessors(&ehc->search, state_id,
-                                     ehc->search.app_ops.op,
-                                     ehc->search.app_ops.op_preferred,
-                                     0, ehc->list);
-    }else{
-        // Use all operators the preferred were already sorted as first
-        _planSearchAddLazySuccessors(&ehc->search, state_id,
-                                     ehc->search.app_ops.op,
-                                     ehc->search.app_ops.op_found,
-                                     0, ehc->list);
-    }
 }

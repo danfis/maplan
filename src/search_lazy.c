@@ -167,7 +167,9 @@ static int planSearchLazyStep(plan_search_t *search)
                                      &h, lazy->pref_ops);
             }
         }
-        addSuccessors(lazy, cur_node->state_id, cur_node->heuristic);
+        _planSearchLazyAddSuccessors(search, cur_node->state_id,
+                                     cur_node->heuristic,
+                                     lazy->list, lazy->use_preferred_ops);
     }
 
     return PLAN_SEARCH_CONT;
@@ -187,23 +189,5 @@ static void planSearchLazyInsertNode(plan_search_t *search,
     }
 
     planListLazyPush(lazy->list, node->heuristic, node->state_id, NULL);
-}
-
-
-static void addSuccessors(plan_search_lazy_t *lazy,
-                          plan_state_id_t state_id,
-                          plan_cost_t heur_val)
-{
-    if (lazy->use_preferred_ops == PLAN_SEARCH_PREFERRED_ONLY){
-        _planSearchAddLazySuccessors(&lazy->search, state_id,
-                                     lazy->search.app_ops.op,
-                                     lazy->search.app_ops.op_preferred,
-                                     heur_val, lazy->list);
-    }else{
-        _planSearchAddLazySuccessors(&lazy->search, state_id,
-                                     lazy->search.app_ops.op,
-                                     lazy->search.app_ops.op_found,
-                                     heur_val, lazy->list);
-    }
 }
 

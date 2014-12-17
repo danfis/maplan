@@ -341,9 +341,11 @@ void _planSearchFree(plan_search_t *search);
 /**
  * Finds applicable operators in the specified state and store the results
  * in searchc->applicable_ops.
+ * Returns 0 if the result was already cached and no search was performed,
+ * and 1 if a new search was performed.
  */
-void _planSearchFindApplicableOps(plan_search_t *search,
-                                  plan_state_id_t state_id);
+int _planSearchFindApplicableOps(plan_search_t *search,
+                                 plan_state_id_t state_id);
 
 /**
  * Returns PLAN_SEARCH_CONT if the heuristic value was computed.
@@ -371,14 +373,15 @@ _bor_inline void _planSearchExpandedNode(plan_search_t *search,
                                          plan_state_space_node_t *node);
 
 /**
- * Adds successors of the specified state to the lazy list.
+ * Adds successors of the specified state to the list in lazy fashion.
+ * Applicable operators must be already loaded in search->app_ops and
+ * argument preferred must be one of PLAN_SEARCH_PREFERRED_* constants.
  */
-void _planSearchAddLazySuccessors(plan_search_t *search,
+void _planSearchLazyAddSuccessors(plan_search_t *search,
                                   plan_state_id_t state_id,
-                                  plan_op_t **op, int op_size,
                                   plan_cost_t cost,
-                                  plan_list_lazy_t *list);
-
+                                  plan_list_lazy_t *list,
+                                  int preferred);
 
 /**** INLINES: ****/
 _bor_inline void _planSearchExpandedNode(plan_search_t *search,

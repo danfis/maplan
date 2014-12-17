@@ -66,17 +66,9 @@ void planProblemFree(plan_problem_t *plan)
 
 void planProblemAgentsDel(plan_problem_agents_t *agents)
 {
-    int i, opid;
-    plan_problem_t *agent;
+    int i;
 
     planProblemFree(&agents->glob);
-
-    for (i = 0; i < agents->agent_size; ++i){
-        agent = agents->agent + i;
-
-        for (opid = 0; opid < agent->op_size; ++opid)
-            planOpExtraMAOpFree(agent->op + opid);
-    }
 
     for (i = 0; i < agents->agent_size; ++i)
         planProblemFree(agents->agent + i);
@@ -103,9 +95,9 @@ static void dotGraphOpLabel(const plan_problem_agents_t *agents,
     for (agent_id = 0; agent_id < agents->agent_size; ++agent_id){
         prob = agents->agent + agent_id;
         for (proj_op_id = 0; proj_op_id < prob->proj_op_size; ++proj_op_id){
-            glob_op_id = planOpExtraMAProjOpGlobalId(prob->proj_op + proj_op_id);
+            glob_op_id = prob->proj_op[proj_op_id].global_id;
             if (glob_op_id == op_id){
-                owner = planOpExtraMAProjOpOwner(prob->proj_op + proj_op_id);
+                owner = prob->proj_op[proj_op_id].global_id;
                 ++num_projs;
                 break;
             }

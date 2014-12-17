@@ -9,12 +9,13 @@
 //#include "search_lazy.h"
 #include "search_astar.h"
 #include "heur.h"
-//#include "heur_ma.h"
+#include "heur_ma.h"
 #include "list_lazy.h"
 #include "list.h"
 #include "ma_comm_queue.h"
 #include "causalgraph.h"
 #include "ma_search.h"
+#include "heur_admissible.h"
 
 TEST(protobufTearDown)
 {
@@ -31,12 +32,13 @@ TEST_SUITES {
     //TEST_SUITE_ADD(TSSearchLazy),
     TEST_SUITE_ADD(TSSearchAStar),
     TEST_SUITE_ADD(TSHeur),
-    //TEST_SUITE_ADD(TSHeurMA),
+    TEST_SUITE_ADD(TSHeurMA),
     TEST_SUITE_ADD(TSListLazy),
     TEST_SUITE_ADD(TSList),
     TEST_SUITE_ADD(TSMACommQueue),
     TEST_SUITE_ADD(TSCausalGraph),
     TEST_SUITE_ADD(TSMASearch),
+    TEST_SUITE_ADD(TSHeurAdmissible),
     TEST_SUITES_CLOSURE
 };
 

@@ -40,6 +40,19 @@ extern "C" {
 #define PLAN_MA_MSG_DEAD_END_VERIFICATION 0x1
 
 
+/**
+ * Heur sub-types
+ */
+#define PLAN_MA_MSG_HEUR_FF_REQUEST 0x0
+#define PLAN_MA_MSG_HEUR_FF_RESPONSE 0x1
+
+/**
+ * Returns values for planMAMsgHeurType().
+ */
+#define PLAN_MA_MSG_HEUR_NONE    0
+#define PLAN_MA_MSG_HEUR_UPDATE  1
+#define PLAN_MA_MSG_HEUR_REQUEST 2
+
 struct _plan_ma_msg_t {
     int type;
 };
@@ -93,6 +106,9 @@ void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
 plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 
+
+/*** TERMINATE: ***/
+
 /**
  * Set terminate-agent-id to TERMINATE message.
  */
@@ -102,6 +118,10 @@ void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id);
  * Returns ID of agent that started termination.
  */
 int planMAMsgTerminateAgent(const plan_ma_msg_t *msg);
+
+
+
+/*** PUBLIC STATE: ***/
 
 /**
  * Sets public-state message data.
@@ -133,6 +153,9 @@ int planMAMsgPublicStateCost(const plan_ma_msg_t *msg);
 int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg);
 
 
+
+/*** TRACE PATH: ***/
+
 /**
  * Sets next state-id to trace-path message.
  */
@@ -159,6 +182,10 @@ void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
  * Returns ID of the initiator.
  */
 int planMAMsgTracePathInitAgent(const plan_ma_msg_t *msg);
+
+
+
+/*** SNAPSHOT: ***/
 
 /**
  * Sets snapshot type, see above for list of types.
@@ -196,6 +223,55 @@ void planMAMsgSnapshotSetAck(plan_ma_msg_t *msg, int ack);
  * Returns ack flag.
  */
 int planMAMsgSnapshotAck(const plan_ma_msg_t *msg);
+
+
+
+/*** HEUR: ***/
+
+/**
+ * Returns whether the heur message is for planHeurMAUpdate() or for
+ * planHeurMARequest().
+ */
+int planMAMsgHeurType(const plan_ma_msg_t *msg);
+
+/**
+ * Sets request for FF heuristic.
+ */
+void planMAMsgHeurFFSetRequest(plan_ma_msg_t *msg,
+                               const int *init_state, int init_state_size,
+                               int goal_op_id);
+
+/**
+ * Sets response for FF heuristic.
+ */
+void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id);
+
+/**
+ * Adds operator to message related to FF heuristic.
+ */
+void planMAMsgHeurFFAddOp(plan_ma_msg_t *msg, int op_id,
+                          plan_cost_t cost, int owner);
+
+/**
+ * Writes to state argument state stored in the message.
+ */
+void planMAMsgHeurFFState(const plan_ma_msg_t *msg, plan_state_t *state);
+
+/**
+ * Returns goal op ID stored in the message.
+ */
+int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
+
+/**
+ * Returns number of operators stored in message.
+ */
+int planMAMsgHeurFFOpSize(const plan_ma_msg_t *msg);
+
+/**
+ * Returns i'th operator's ID and its cost and owner.
+ */
+int planMAMsgHeurFFOp(const plan_ma_msg_t *msg, int i,
+                      plan_cost_t *cost, int *owner);
 
 /**** INLINES: ****/
 _bor_inline int planMAMsgType(const plan_ma_msg_t *msg)

@@ -1,26 +1,26 @@
-#include "plan/heur.h"
+#include <boruvka/alloc.h>
+#include <boruvka/rbtree_int.h>
 
-#define HEUR_RELAX_FF
-#define HEUR_FACT_OP_SIMPLIFY
-#define HEUR_FACT_OP_NO_OPTIMIZE_FACT_PRE
-#include "_heur_relax.c"
+#include "plan/heur.h"
+#include "heur_relax.h"
 
 struct _plan_heur_ma_ff_t {
     plan_heur_t heur;
     plan_heur_relax_t relax;
 
-    plan_heur_factarr_t state;      /*!< State for which the heuristic is
-                                         computed */
-    plan_heur_oparr_t relaxed_plan; /*!< Relaxed plan computed on all
-                                         operators.  It means that the
-                                         operators are identified by its
-                                         global ID */
+    plan_factarr_t state;      /*!< State for which the heuristic is computed */
+    plan_oparr_t relaxed_plan; /*!< Relaxed plan computed on all operators.
+                                    It means that the operators are
+                                    identified by its global ID */
 
     bor_rbtree_int_t *peer_op;          /*!< Set of operators that are
                                              requested from other peers */
     bor_rbtree_int_node_t *pre_peer_op; /*!< Pre-allocated node to
                                              remote_op set */
     int peer_op_size;                   /*!< Number of peer ops in .peer_op */
+
+    const plan_op_t *base_op;
+    int base_op_size;
 };
 typedef struct _plan_heur_ma_ff_t plan_heur_ma_ff_t;
 
@@ -36,10 +36,8 @@ static int maAddPeerOp(plan_heur_ma_ff_t *ma, int id);
 /** Removes peer-operator from the registry */
 static void maDelPeerOp(plan_heur_ma_ff_t *ma, int id);
 /** Sends HEUR_REQUEST message to the peer */
-static void maSendHeurRequest(plan_ma_comm_t *comm,
-                              int peer_id,
-                              const plan_heur_factarr_t *state,
-                              int op_id);
+static void maSendHeurRequest(plan_ma_comm_t *comm, int peer_id,
+                              const plan_factarr_t *state, int op_id);
 /** Computes heuristic value from the relaxed plan */
 static void maHeur(plan_heur_ma_ff_t *heur,
                    plan_heur_res_t *res);
@@ -57,6 +55,8 @@ static void maUpdateLocalOp(plan_heur_ma_ff_t *heur,
                             plan_ma_comm_t *comm,
                             int op_id);
 
+
+static void heurDel(plan_heur_t *_heur);
 static int planHeurRelaxFFMA(plan_heur_t *heur,
                              plan_ma_comm_t *comm,
                              const plan_state_t *state,
@@ -69,8 +69,6 @@ static void planHeurRelaxFFMARequest(plan_heur_t *heur,
                                      plan_ma_comm_t *comm,
                                      const plan_ma_msg_t *msg);
 
-static void heurDel(plan_heur_t *_heur);
-
 plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
 {
     plan_heur_ma_ff_t *heur;
@@ -80,11 +78,10 @@ plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
     _planHeurMAInit(&heur->heur, planHeurRelaxFFMA,
                     planHeurRelaxFFMAUpdate, planHeurRelaxFFMARequest);
 
-    planHeurRelaxInit(&heur->relax,
+    planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_ADD,
                       prob->var, prob->var_size,
                       prob->goal,
-                      prob->proj_op, prob->proj_op_size,
-                      NULL);
+                      prob->proj_op, prob->proj_op_size);
 
     heur->state.fact = BOR_ALLOC_ARR(int, prob->var_size);
     heur->state.size = prob->var_size;
@@ -95,6 +92,9 @@ plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
     heur->peer_op = borRBTreeIntNew();
     heur->pre_peer_op = BOR_ALLOC(bor_rbtree_int_node_t);
     heur->peer_op_size = 0;
+
+    heur->base_op = prob->proj_op;
+    heur->base_op_size = prob->proj_op_size;
 
     return &heur->heur;
 }
@@ -174,16 +174,14 @@ static void maDelPeerOp(plan_heur_ma_ff_t *ma, int id)
     }
 }
 
-static void maSendHeurRequest(plan_ma_comm_t *comm,
-                              int peer_id,
-                              const plan_heur_factarr_t *state,
-                              int op_id)
+static void maSendHeurRequest(plan_ma_comm_t *comm, int peer_id,
+                              const plan_factarr_t *state, int op_id)
 {
     plan_ma_msg_t *msg;
 
-    msg = planMAMsgNew();
-    planMAMsgSetHeurFFRequest(msg, comm->node_id,
-                              state->fact, state->size, op_id);
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_FF_REQUEST,
+                       comm->node_id);
+    planMAMsgHeurFFSetRequest(msg, state->fact, state->size, op_id);
     planMACommSendToNode(comm, peer_id, msg);
     planMAMsgDel(msg);
 }
@@ -208,9 +206,10 @@ static const plan_op_t *maOpFromId(plan_heur_ma_ff_t *heur, int op_id)
     int i;
     const plan_op_t *op = NULL;
 
-    for (i = 0; i < heur->relax.data.actual_op_size; ++i){
-        op = heur->relax.base_op + i;
-        if (planOpExtraMAProjOpGlobalId(op) == op_id)
+    // TODO: Create new object plan_op_id_tr_t
+    for (i = 0; i < heur->base_op_size; ++i){
+        op = heur->base_op + i;
+        if (op->global_id == op_id)
             return op;
     }
 
@@ -222,28 +221,40 @@ static void maExploreLocal(plan_heur_ma_ff_t *heur,
                            const plan_part_state_t *goal,
                            plan_heur_res_t *res)
 {
-    PLAN_STATE_STACK(state, heur->relax.data.fact_id.var_size);
+    PLAN_STATE_STACK(state, heur->relax.cref.fact_id.var_size);
     const plan_op_t *op;
     int i, global_id, owner;
 
     // Initialize initial state
-    for (i = 0; i < heur->relax.data.fact_id.var_size; ++i){
-        state.val[i] = heur->state.fact[i];
+    for (i = 0; i < heur->relax.cref.fact_id.var_size; ++i){
+        planStateSet(&state, i, heur->state.fact[i]);
     }
 
     // Compute heuristic from the initial state to the specified goal
-    planHeurRelax2(&heur->relax, &state, goal, res);
+    if (!goal){
+        planHeurRelax(&heur->relax, &state);
+        res->heur = heur->relax.fact[heur->relax.cref.goal_id].value;
+    }else{
+        res->heur = planHeurRelax2(&heur->relax, &state, goal);
+    }
     if (res->heur == PLAN_HEUR_DEAD_END)
         return;
 
-    for (i = 0; i < heur->relax.data.actual_op_size; ++i){
-        if (!heur->relax.relaxed_plan[i])
+    // Mark relaxed plan
+    if (!goal){
+        planHeurRelaxMarkPlan(&heur->relax);
+    }else{
+        planHeurRelaxMarkPlan2(&heur->relax, goal);
+    }
+
+    for (i = 0; i < heur->relax.cref.op_size; ++i){
+        if (!heur->relax.plan_op[i])
             continue;
 
         // Get the corresponding operator
-        op = heur->relax.base_op + i;
-        global_id = planOpExtraMAProjOpGlobalId(op);
-        owner = planOpExtraMAProjOpOwner(op);
+        op = heur->base_op + i;
+        global_id = op->global_id;
+        owner = op->owner;
 
         if (owner != comm->node_id){
             // The operator is owned by remote peer.
@@ -315,27 +326,22 @@ static int planHeurRelaxFFMAUpdate(plan_heur_t *_heur,
                                    plan_heur_res_t *res)
 {
     plan_heur_ma_ff_t *heur = HEUR(_heur);
-    int i, len, op_id, cost, owner;
+    int i, len, op_id, cost, owner, from_agent;
 
-    maDelPeerOp(heur, planMAMsgHeurFFResponseOpId(msg));
+    from_agent = planMAMsgAgent(msg);
 
-    // First insert all new operators
-    len = planMAMsgHeurFFResponseOpSize(msg);
-    for (i = 0; i < len; ++i){
-        op_id = planMAMsgHeurFFResponseOp(msg, i, &cost);
-        maAddOpToRelaxedPlan(heur, op_id, cost);
-    }
+    maDelPeerOp(heur, planMAMsgHeurFFOpId(msg));
 
     // Then explore all other peer-operators
-    len = planMAMsgHeurFFResponsePeerOpSize(msg);
+    len = planMAMsgHeurFFOpSize(msg);
     for (i = 0; i < len; ++i){
-        op_id = planMAMsgHeurFFResponsePeerOp(msg, i, &cost, &owner);
+        op_id = planMAMsgHeurFFOp(msg, i, &cost, &owner);
 
         if (owner == comm->node_id){
             maUpdateLocalOp(heur, comm, op_id);
 
         }else{
-            if (maAddPeerOp(heur, op_id) == 0){
+            if (owner != from_agent && maAddPeerOp(heur, op_id) == 0){
                 maSendHeurRequest(comm, owner, &heur->state, op_id);
             }
             maAddOpToRelaxedPlan(heur, op_id, cost);
@@ -354,8 +360,9 @@ static void maSendEmptyResponse(plan_ma_comm_t *comm,
 {
     plan_ma_msg_t *resp;
 
-    resp = planMAMsgNew();
-    planMAMsgSetHeurFFResponse(resp, op_id);
+    resp = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_FF_RESPONSE,
+                        comm->node_id);
+    planMAMsgHeurFFSetResponse(resp, op_id);
     planMACommSendToNode(comm, peer_id, resp);
     planMAMsgDel(resp);
 }
@@ -365,20 +372,18 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
                                      const plan_ma_msg_t *msg)
 {
     plan_heur_ma_ff_t *heur = HEUR(_heur);
-    PLAN_STATE_STACK(state, heur->relax.data.fact_id.var_size);
-    plan_heur_res_t res;
+    PLAN_STATE_STACK(state, heur->relax.cref.fact_id.var_size);
     plan_ma_msg_t *response;
     const plan_op_t *op;
     int i, op_id, agent_id;
     int global_id, owner;
+    plan_cost_t h, cost;
 
-    op_id = planMAMsgHeurFFRequestOpId(msg);
-    agent_id = planMAMsgHeurFFRequestAgentId(msg);
+    op_id = planMAMsgHeurFFOpId(msg);
+    agent_id = planMAMsgAgent(msg);
 
     // Initialize initial state
-    for (i = 0; i < heur->relax.data.fact_id.var_size; ++i){
-        state.val[i] = planMAMsgHeurFFRequestState(msg, i);
-    }
+    planMAMsgHeurFFState(msg, &state);
 
     // Find target operator
     op = maOpFromId(heur, op_id);
@@ -389,33 +394,28 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
 
     // Compute heuristic from the initial state to the precondition of the
     // requested operator.
-    planHeurResInit(&res);
-    planHeurRelax2(&heur->relax, &state, op->pre, &res);
-    if (res.heur == PLAN_HEUR_DEAD_END){
+    h = planHeurRelax2(&heur->relax, &state, op->pre);
+    if (h == PLAN_HEUR_DEAD_END){
         maSendEmptyResponse(comm, agent_id, op_id);
         return;
     }
+    planHeurRelaxMarkPlan2(&heur->relax, op->pre);
 
     // Now .relaxed_plan is filled, so write to the response and send it
     // back.
-    response = planMAMsgNew();
-    planMAMsgSetHeurFFResponse(response, op_id);
-    for (i = 0; i < heur->relax.data.actual_op_size; ++i){
-        if (!heur->relax.relaxed_plan[i])
+    response = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_FF_RESPONSE,
+                            comm->node_id);
+    planMAMsgHeurFFSetResponse(response, op_id);
+    for (i = 0; i < heur->relax.cref.op_size; ++i){
+        if (!heur->relax.plan_op[i])
             continue;
 
-        op = heur->relax.base_op + i;
-        global_id = planOpExtraMAProjOpGlobalId(op);
-        owner = planOpExtraMAProjOpOwner(op);
+        op = heur->base_op + i;
+        global_id = op->global_id;
+        owner = op->owner;
+        cost = op->cost;
 
-        if (owner == comm->node_id){
-            // Operator belongs to this agent
-            planMAMsgHeurFFResponseAddOp(response, global_id,
-                                         heur->relax.data.op[i].cost);
-        }else{
-            // Operator belongs to other agent
-            planMAMsgHeurFFResponseAddPeerOp(response, global_id, op->cost, owner);
-        }
+        planMAMsgHeurFFAddOp(response, global_id, cost, owner);
     }
     planMACommSendToNode(comm, agent_id, response);
 

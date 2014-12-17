@@ -241,6 +241,20 @@ void _planSearchLazyAddSuccessors(plan_search_t *search,
     }
 }
 
+void _planSearchLazyInsertNode(plan_search_t *search,
+                               plan_state_space_node_t *node,
+                               plan_cost_t cost,
+                               plan_list_lazy_t *list)
+{
+    if (planStateSpaceNodeIsNew(node)){
+        planStateSpaceOpen(search->state_space, node);
+        planStateSpaceClose(search->state_space, node);
+    }else{
+        planStateSpaceReopen(search->state_space, node);
+        planStateSpaceClose(search->state_space, node);
+    }
+    planListLazyPush(list, cost, node->state_id, NULL);
+}
 
 
 static plan_state_id_t extractPath(plan_state_space_t *state_space,

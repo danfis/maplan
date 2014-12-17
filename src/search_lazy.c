@@ -179,15 +179,6 @@ static void planSearchLazyInsertNode(plan_search_t *search,
                                      plan_state_space_node_t *node)
 {
     plan_search_lazy_t *lazy = LAZY(search);
-
-    if (planStateSpaceNodeIsNew(node)){
-        planStateSpaceOpen(search->state_space, node);
-        planStateSpaceClose(search->state_space, node);
-    }else{
-        planStateSpaceReopen(search->state_space, node);
-        planStateSpaceClose(search->state_space, node);
-    }
-
-    planListLazyPush(lazy->list, node->heuristic, node->state_id, NULL);
+    _planSearchLazyInsertNode(search, node, 0, lazy->list);
 }
 

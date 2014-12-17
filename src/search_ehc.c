@@ -204,13 +204,5 @@ static void planSearchEHCInsertNode(plan_search_t *search,
                                     plan_state_space_node_t *node)
 {
     plan_search_ehc_t *ehc = EHC(search);
-
-    if (planStateSpaceNodeIsNew(node)){
-        planStateSpaceOpen(search->state_space, node);
-        planStateSpaceClose(search->state_space, node);
-    }else{
-        planStateSpaceReopen(search->state_space, node);
-        planStateSpaceClose(search->state_space, node);
-    }
-    planListLazyPush(ehc->list, 0, node->state_id, NULL);
+    _planSearchLazyInsertNode(search, node, 0, ehc->list);
 }

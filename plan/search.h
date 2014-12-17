@@ -383,6 +383,14 @@ void _planSearchLazyAddSuccessors(plan_search_t *search,
                                   plan_list_lazy_t *list,
                                   int preferred);
 
+/**
+ * Inserts a new node to the lazy-list.
+ */
+void _planSearchLazyInsertNode(plan_search_t *search,
+                               plan_state_space_node_t *node,
+                               plan_cost_t cost,
+                               plan_list_lazy_t *list);
+
 /**** INLINES: ****/
 _bor_inline void _planSearchExpandedNode(plan_search_t *search,
                                          plan_state_space_node_t *node)

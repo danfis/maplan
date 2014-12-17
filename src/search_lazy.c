@@ -70,22 +70,7 @@ static void planSearchLazyDel(plan_search_t *_lazy)
 static int planSearchLazyInit(plan_search_t *search)
 {
     plan_search_lazy_t *lazy = LAZY(search);
-    plan_state_space_node_t *node;
-    int res;
-
-    node = planStateSpaceNode(search->state_space, search->initial_state);
-    planStateSpaceOpen(search->state_space, node);
-    planStateSpaceClose(search->state_space, node);
-    node->parent_state_id = PLAN_NO_STATE;
-    node->op = NULL;
-    node->cost = 0;
-
-    res = _planSearchHeuristic(search, node->state_id, &node->heuristic, NULL);
-    if (res != PLAN_SEARCH_CONT)
-        return res;
-
-    planListLazyPush(lazy->list, node->heuristic, node->state_id, NULL);
-    return PLAN_SEARCH_CONT;
+    return _planSearchLazyInitStep(search, lazy->list, 1);
 }
 
 static int planSearchLazyStep(plan_search_t *search)

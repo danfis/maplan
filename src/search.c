@@ -302,6 +302,32 @@ plan_state_space_node_t *_planSearchLazyExpandNode(plan_search_t *search,
     return cur_node;
 }
 
+int _planSearchLazyInitStep(plan_search_t *search, plan_list_lazy_t *list,
+                            int heur_as_cost)
+{
+    plan_state_id_t init_state;
+    plan_state_space_node_t *node;
+    plan_cost_t cost;
+    int res;
+
+    init_state = search->initial_state;
+    node = planStateSpaceNode(search->state_space, init_state);
+    planStateSpaceOpen(search->state_space, node);
+    planStateSpaceClose(search->state_space, node);
+    node->parent_state_id = PLAN_NO_STATE;
+    node->op = NULL;
+    node->cost = 0;
+
+    res = _planSearchHeuristic(search, init_state, &node->heuristic, NULL);
+    if (res != PLAN_SEARCH_CONT)
+        return res;
+
+    cost = 0;
+    if (heur_as_cost)
+        cost = node->heuristic;
+    planListLazyPush(list, cost, init_state, NULL);
+    return PLAN_SEARCH_CONT;
+}
 
 static plan_state_id_t extractPath(plan_state_space_t *state_space,
                                    plan_state_id_t goal_state,

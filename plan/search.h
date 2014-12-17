@@ -397,6 +397,9 @@ plan_state_space_node_t *_planSearchLazyExpandNode(plan_search_t *search,
                                                    int preferred_ops,
                                                    int *ret);
 
+int _planSearchLazyInitStep(plan_search_t *search, plan_list_lazy_t *list,
+                            int heur_as_cost);
+
 
 /**** INLINES: ****/
 _bor_inline void _planSearchExpandedNode(plan_search_t *search,

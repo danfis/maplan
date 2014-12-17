@@ -83,69 +83,8 @@ static void planSearchEHCDel(plan_search_t *_ehc)
 static int planSearchEHCInit(plan_search_t *search)
 {
     plan_search_ehc_t *ehc = EHC(search);
-    plan_state_id_t init_state;
-    plan_state_space_node_t *node;
-    int res;
-
     ehc->best_heur = PLAN_COST_MAX;
-
-    init_state = ehc->search.initial_state;
-    node = planStateSpaceNode(search->state_space, init_state);
-    planStateSpaceOpen(search->state_space, node);
-    planStateSpaceClose(search->state_space, node);
-    node->parent_state_id = PLAN_NO_STATE;
-    node->op = NULL;
-    node->cost = 0;
-
-    res = _planSearchHeuristic(&ehc->search, init_state, &node->heuristic, NULL);
-    if (res != PLAN_SEARCH_CONT)
-        return res;
-
-    planListLazyPush(ehc->list, 0, init_state, NULL);
-    return PLAN_SEARCH_CONT;
-}
-
-static plan_state_space_node_t *expandNode(plan_search_ehc_t *ehc,
-                                           plan_state_id_t parent_state_id,
-                                           plan_op_t *parent_op,
-                                           int *r)
-{
-    plan_state_id_t cur_state_id;
-    plan_state_space_node_t *cur_node, *parent_node;
-    plan_cost_t cur_heur;
-    int res;
-
-    // Create a new state and check whether the state was already visited
-    cur_state_id = planOpApply(parent_op, parent_state_id);
-    cur_node = planStateSpaceNode(ehc->search.state_space, cur_state_id);
-    if (!planStateSpaceNodeIsNew(cur_node)){
-        *r = PLAN_SEARCH_CONT;
-        return NULL;
-    }
-
-    // find applicable operators in the current state
-    _planSearchFindApplicableOps(&ehc->search, cur_state_id);
-
-    // compute heuristic value for the current node
-    res = _planSearchHeuristic(&ehc->search, cur_state_id,
-                               &cur_heur, ehc->pref_ops);
-    if (res != PLAN_SEARCH_CONT){
-        *r = res;
-        return NULL;
-    }
-
-    // get parent node for path cost computation
-    parent_node = planStateSpaceNode(ehc->search.state_space, parent_state_id);
-
-    // Update current node's data
-    planStateSpaceOpen(ehc->search.state_space, cur_node);
-    planStateSpaceClose(ehc->search.state_space, cur_node);
-    cur_node->parent_state_id = parent_state_id;
-    cur_node->op = parent_op;
-    cur_node->cost = parent_node->cost + parent_op->cost;
-    cur_node->heuristic = cur_heur;
-
-    return cur_node;
+    return _planSearchLazyInitStep(search, ehc->list, 0);
 }
 
 static int planSearchEHCStep(plan_search_t *search)

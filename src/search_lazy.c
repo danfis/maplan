@@ -88,50 +88,6 @@ static int planSearchLazyInit(plan_search_t *search)
     return PLAN_SEARCH_CONT;
 }
 
-static plan_state_space_node_t *expandNode(plan_search_lazy_t *lazy,
-                                           plan_state_id_t parent_state_id,
-                                           plan_op_t *parent_op,
-                                           int *r)
-{
-    plan_state_id_t cur_state_id;
-    plan_state_space_node_t *cur_node, *parent_node;
-    plan_cost_t cur_heur;
-    int res;
-
-    // Create a new state and check whether the state was already visited
-    cur_state_id = planOpApply(parent_op, parent_state_id);
-    cur_node = planStateSpaceNode(lazy->search.state_space, cur_state_id);
-    if (!planStateSpaceNodeIsNew(cur_node)){
-        *r = PLAN_SEARCH_CONT;
-        return NULL;
-    }
-
-    // find applicable operators in the current state
-    _planSearchFindApplicableOps(&lazy->search, cur_state_id);
-
-    // compute heuristic value for the current node
-    res = _planSearchHeuristic(&lazy->search, cur_state_id,
-                               &cur_heur, lazy->pref_ops);
-    if (res != PLAN_SEARCH_CONT){
-        *r = res;
-        return NULL;
-    }
-
-    // get parent node for path cost computation
-    parent_node = planStateSpaceNode(lazy->search.state_space, parent_state_id);
-
-    // Update current node's data
-    planStateSpaceOpen(lazy->search.state_space, cur_node);
-    planStateSpaceClose(lazy->search.state_space, cur_node);
-    cur_node->parent_state_id = parent_state_id;
-    cur_node->op = parent_op;
-    cur_node->cost = parent_node->cost + parent_op->cost;
-    cur_node->heuristic = cur_heur;
-    planSearchStatIncExpandedStates(&lazy->search.stat);
-
-    return cur_node;
-}
-
 static int planSearchLazyStep(plan_search_t *search)
 {
     plan_search_lazy_t *lazy = LAZY(search);
@@ -145,7 +101,9 @@ static int planSearchLazyStep(plan_search_t *search)
         return PLAN_SEARCH_NOT_FOUND;
 
     if (parent_op){
-        cur_node = expandNode(lazy, parent_state_id, parent_op, &res);
+        cur_node = _planSearchLazyExpandNode(&lazy->search, parent_state_id,
+                                             parent_op, lazy->use_preferred_ops,
+                                             &res);
         if (cur_node == NULL)
             return res;
 

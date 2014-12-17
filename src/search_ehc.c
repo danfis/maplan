@@ -163,7 +163,9 @@ static int planSearchEHCStep(plan_search_t *search)
     planSearchStatIncExpandedStates(&search->stat);
 
     if (parent_op){
-        cur_node = expandNode(ehc, parent_state_id, parent_op, &res);
+        cur_node = _planSearchLazyExpandNode(&ehc->search, parent_state_id,
+                                             parent_op, ehc->use_preferred_ops,
+                                             &res);
         if (cur_node == NULL)
             return res;
 

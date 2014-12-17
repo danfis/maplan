@@ -391,6 +391,13 @@ void _planSearchLazyInsertNode(plan_search_t *search,
                                plan_cost_t cost,
                                plan_list_lazy_t *list);
 
+plan_state_space_node_t *_planSearchLazyExpandNode(plan_search_t *search,
+                                                   plan_state_id_t parent_state_id,
+                                                   plan_op_t *parent_op,
+                                                   int preferred_ops,
+                                                   int *ret);
+
+
 /**** INLINES: ****/
 _bor_inline void _planSearchExpandedNode(plan_search_t *search,
                                          plan_state_space_node_t *node)

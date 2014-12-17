@@ -3,7 +3,7 @@
 #include "plan/ma_msg.h"
 #include "ma_msg.pb.h"
 
-#define PROTO(msg) ((PlanMAMsg *)(((char *)(msg)) + sizeof(plan_ma_msg_t)))
+#define PROTO(msg) ((PlanMAMsg *)(msg))
 
 static int snapshot_token_counter = 0;
 
@@ -20,17 +20,12 @@ void planShutdownProtobuf(void)
 
 plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
 {
-    plan_ma_msg_t *msg;
-    size_t size;
+    int proto_type;
     PlanMAMsg *protobuf;
 
-    size = sizeof(plan_ma_msg_t) + sizeof(PlanMAMsg);
-    msg = (plan_ma_msg_t *)borRealloc(NULL, size);
-    msg->type = (subtype << 4) | type;
-
-    protobuf = PROTO(msg);
-    new (protobuf) PlanMAMsg;
-    protobuf->set_type(msg->type);
+    protobuf = new PlanMAMsg;
+    proto_type = (subtype << 4) | type;
+    protobuf->set_type(proto_type);
     protobuf->set_agent_id(agent_id);
 
     if (type == PLAN_MA_MSG_TRACE_PATH){
@@ -44,14 +39,13 @@ plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
         protobuf->set_snapshot_token(token);
     }
 
-    return msg;
+    return (plan_ma_msg_t *)protobuf;
 }
 
 void planMAMsgDel(plan_ma_msg_t *msg)
 {
     PlanMAMsg *proto = PROTO(msg);
-    proto->~PlanMAMsg();
-    BOR_FREE(msg);
+    delete proto;
 }
 
 plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg_in)
@@ -65,6 +59,18 @@ plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg_in)
     proto = PROTO(msg);
     *proto = *proto_in;
     return msg;
+}
+
+int planMAMsgType(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->type() & 0xf;
+}
+
+int planMAMsgSubType(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->type() >> 4;
 }
 
 int planMAMsgAgent(const plan_ma_msg_t *msg)
@@ -86,11 +92,9 @@ void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size)
 
 plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
 {
-    plan_ma_msg_t *msg = planMAMsgNew(0, 0, 0);
-    PlanMAMsg *proto = PROTO(msg);
+    PlanMAMsg *proto = new PlanMAMsg;
     proto->ParseFromArray(buf, size);
-    msg->type = proto->type();
-    return msg;
+    return (plan_ma_msg_t *)proto;
 }
 
 

@@ -54,7 +54,7 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_REQUEST 2
 
 struct _plan_ma_msg_t {
-    int type;
+    char _; /*!< This is just placeholder */
 };
 typedef struct _plan_ma_msg_t plan_ma_msg_t;
 
@@ -83,12 +83,12 @@ plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg);
 /**
  * Returns type (PLAN_MA_MSG_TYPE_*).
  */
-_bor_inline int planMAMsgType(const plan_ma_msg_t *msg);
+int planMAMsgType(const plan_ma_msg_t *msg);
 
 /**
- * Returns a sub-type (PLAN_MA_MSG_SUBTYPE_*).
+ * Returns a sub-type.
  */
-_bor_inline int planMAMsgSubType(const plan_ma_msg_t *msg);
+int planMAMsgSubType(const plan_ma_msg_t *msg);
 
 /**
  * Returns the originating agent.
@@ -272,17 +272,6 @@ int planMAMsgHeurFFOpSize(const plan_ma_msg_t *msg);
  */
 int planMAMsgHeurFFOp(const plan_ma_msg_t *msg, int i,
                       plan_cost_t *cost, int *owner);
-
-/**** INLINES: ****/
-_bor_inline int planMAMsgType(const plan_ma_msg_t *msg)
-{
-    return msg->type & 0xf;
-}
-
-_bor_inline int planMAMsgSubType(const plan_ma_msg_t *msg)
-{
-    return msg->type >> 4;
-}
 
 #if 0
 typedef void plan_ma_msg_t;

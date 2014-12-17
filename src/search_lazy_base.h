@@ -7,6 +7,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#define PLAN_SEARCH_LAZY_BASE_COST_ZERO 0
+#define PLAN_SEARCH_LAZY_BASE_COST_HEUR 1
+
 /**
  * Base structure for "lazy" search algorithms.
  */
@@ -17,6 +20,7 @@ struct _plan_search_lazy_base_t {
     int list_del;           /*!< True if .list should be deleted */
     int use_preferred_ops;  /*!< True if preferred operators from heuristic
                                  should be used. */
+    int cost_type;
 };
 typedef struct _plan_search_lazy_base_t plan_search_lazy_base_t;
 
@@ -26,7 +30,8 @@ typedef struct _plan_search_lazy_base_t plan_search_lazy_base_t;
  */
 void planSearchLazyBaseInit(plan_search_lazy_base_t *lb,
                             plan_list_lazy_t *list, int list_del,
-                            int use_preferred_ops);
+                            int use_preferred_ops,
+                            int cost_type);
 
 /**
  * Frees resources.
@@ -36,32 +41,26 @@ void planSearchLazyBaseFree(plan_search_lazy_base_t *lb);
 /**
  * Initializes initial state.
  */
-int planSearchLazyBaseInitStep(plan_search_lazy_base_t *lb, int heur_as_cost);
+int planSearchLazyBaseInitStep(plan_search_t *search);
 
 /**
- * Creates a new node from parent and operator.
+ * Expands next node from the lazy list.
  */
-plan_state_space_node_t *planSearchLazyBaseExpandNode(
-            plan_search_lazy_base_t *lb,
-            plan_state_id_t parent_state_id,
-            plan_op_t *parent_op,
-            int *ret);
+int planSearchLazyBaseNext(plan_search_lazy_base_t *lb,
+                           plan_state_space_node_t **node);
 
 /**
- * Inserts a new node into open-list with specified cost.
+ * Expands the given node into lazy list.
  */
-void planSearchLazyBaseInsertNode(plan_search_lazy_base_t *lb,
-                                  plan_state_space_node_t *node,
-                                  plan_cost_t cost);
+void planSearchLazyBaseExpand(plan_search_lazy_base_t *lb,
+                              plan_state_space_node_t *node);
 
 /**
- * Adds successors of the specified state to the list in lazy fashion.
- * Applicable operators must be already loaded in .search->app_ops and
- * argument preferred must be one of PLAN_SEARCH_PREFERRED_* constants.
+ * Insert-node callback for plan_search_t structure.
  */
-void planSearchLazyBaseAddSuccessors(plan_search_lazy_base_t *lb,
-                                     plan_state_id_t state_id,
-                                     plan_cost_t cost);
+void planSearchLazyBaseInsertNode(plan_search_t *search,
+                                  plan_state_space_node_t *node);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

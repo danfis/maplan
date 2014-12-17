@@ -20,9 +20,6 @@ static void planSearchEHCDel(plan_search_t *_ehc);
 static int planSearchEHCInit(plan_search_t *);
 /** Performes one step in the algorithm. */
 static int planSearchEHCStep(plan_search_t *);
-/** Inserts node into open-list */
-static void planSearchEHCInsertNode(plan_search_t *search,
-                                    plan_state_space_node_t *node);
 
 
 void planSearchEHCParamsInit(plan_search_ehc_params_t *p)
@@ -41,12 +38,13 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
                     planSearchEHCDel,
                     planSearchEHCInit,
                     planSearchEHCStep,
-                    planSearchEHCInsertNode,
+                    planSearchLazyBaseInsertNode,
                     NULL);
     planSearchLazyBaseInit(&ehc->lazy, planListLazyFifoNew(), 1,
-                           params->use_preferred_ops);
+                           params->use_preferred_ops,
+                           PLAN_SEARCH_LAZY_BASE_COST_ZERO);
 
-    ehc->best_heur         = PLAN_COST_MAX;
+    ehc->best_heur = PLAN_COST_MAX;
 
     return &ehc->lazy.search;
 }
@@ -64,34 +62,18 @@ static int planSearchEHCInit(plan_search_t *search)
 {
     plan_search_ehc_t *ehc = EHC(search);
     ehc->best_heur = PLAN_COST_MAX;
-    return planSearchLazyBaseInitStep(&ehc->lazy, 0);
+    return planSearchLazyBaseInitStep(search);
 }
 
 static int planSearchEHCStep(plan_search_t *search)
 {
     plan_search_ehc_t *ehc = EHC(search);
-    plan_state_id_t parent_state_id;
     plan_state_space_node_t *cur_node;
-    plan_op_t *parent_op;
     int res;
 
-    // get the next node in list
-    if (planListLazyPop(ehc->lazy.list, &parent_state_id, &parent_op) != 0)
-        return PLAN_SEARCH_NOT_FOUND;
-
-    if (parent_op){
-        cur_node = planSearchLazyBaseExpandNode(&ehc->lazy, parent_state_id,
-                                                parent_op, &res);
-        if (cur_node == NULL)
-            return res;
-
-    }else{
-        cur_node = planStateSpaceNode(search->state_space, parent_state_id);
-    }
-
-    if (_planSearchCheckGoal(search, cur_node))
-        return PLAN_SEARCH_FOUND;
-    _planSearchExpandedNode(search, cur_node);
+    res = planSearchLazyBaseNext(&ehc->lazy, &cur_node);
+    if (res != PLAN_SEARCH_CONT || cur_node == NULL)
+        return res;
 
     if (cur_node->heuristic != PLAN_HEUR_DEAD_END){
         // If the heuristic for the current state is the best so far, restart
@@ -100,29 +82,8 @@ static int planSearchEHCStep(plan_search_t *search)
             planListLazyClear(ehc->lazy.list);
             ehc->best_heur = cur_node->heuristic;
         }
-
-        if (!parent_op){
-            // If the current node wasn't generate we need to find
-            // applicable operators and optionally the preferred operators.
-            // TODO
-            _planSearchFindApplicableOps(&ehc->lazy.search, cur_node->state_id);
-            /*
-            if (ehc->pref_ops){
-                plan_cost_t h;
-                _planSearchHeuristic(&ehc->search, cur_node->state_id,
-                                     &h, ehc->pref_ops);
-            }
-            */
-        }
-        planSearchLazyBaseAddSuccessors(&ehc->lazy, cur_node->state_id, 0);
+        planSearchLazyBaseExpand(&ehc->lazy, cur_node);
     }
 
     return PLAN_SEARCH_CONT;
-}
-
-static void planSearchEHCInsertNode(plan_search_t *search,
-                                    plan_state_space_node_t *node)
-{
-    plan_search_ehc_t *ehc = EHC(search);
-    planSearchLazyBaseInsertNode(&ehc->lazy, node, 0);
 }

@@ -1,12 +1,25 @@
 #include "search_lazy_base.h"
 
+/**
+ * Creates a new node from parent and operator.
+ */
+static plan_state_space_node_t *createNode(plan_search_lazy_base_t *lb,
+                                           plan_state_id_t parent_state_id,
+                                           plan_op_t *parent_op,
+                                           int *ret);
+
+#define LAZYBASE(parent) \
+    bor_container_of((parent), plan_search_lazy_base_t, search)
+
 void planSearchLazyBaseInit(plan_search_lazy_base_t *lb,
                             plan_list_lazy_t *list, int list_del,
-                            int use_preferred_ops)
+                            int use_preferred_ops,
+                            int cost_type)
 {
     lb->list = list;
     lb->list_del = list_del;
     lb->use_preferred_ops = use_preferred_ops;
+    lb->cost_type = cost_type;
 }
 
 void planSearchLazyBaseFree(plan_search_lazy_base_t *lb)
@@ -15,9 +28,9 @@ void planSearchLazyBaseFree(plan_search_lazy_base_t *lb)
         planListLazyDel(lb->list);
 }
 
-int planSearchLazyBaseInitStep(plan_search_lazy_base_t *lb, int heur_as_cost)
+int planSearchLazyBaseInitStep(plan_search_t *search)
 {
-    plan_search_t *search = &lb->search;
+    plan_search_lazy_base_t *lb = LAZYBASE(search);
     plan_state_id_t init_state;
     plan_state_space_node_t *node;
     plan_cost_t cost;
@@ -36,17 +49,98 @@ int planSearchLazyBaseInitStep(plan_search_lazy_base_t *lb, int heur_as_cost)
         return res;
 
     cost = 0;
-    if (heur_as_cost)
+    if (lb->cost_type == PLAN_SEARCH_LAZY_BASE_COST_HEUR)
         cost = node->heuristic;
     planListLazyPush(lb->list, cost, init_state, NULL);
     return PLAN_SEARCH_CONT;
 }
 
-plan_state_space_node_t *planSearchLazyBaseExpandNode(
-            plan_search_lazy_base_t *lb,
-            plan_state_id_t parent_state_id,
-            plan_op_t *parent_op,
-            int *ret)
+int planSearchLazyBaseNext(plan_search_lazy_base_t *lb,
+                           plan_state_space_node_t **node)
+{
+    plan_state_id_t parent_state_id;
+    plan_op_t *parent_op;
+    plan_state_space_node_t *cur_node;
+    plan_cost_t h;
+    plan_search_applicable_ops_t *pref_ops;
+    int ret;
+
+    *node = NULL;
+
+    if (planListLazyPop(lb->list, &parent_state_id, &parent_op) != 0){
+        return PLAN_SEARCH_NOT_FOUND;
+    }
+
+    if (parent_op){
+        cur_node = createNode(lb, parent_state_id, parent_op, &ret);
+        if (cur_node == NULL)
+            return ret;
+    }else{
+        cur_node = planStateSpaceNode(lb->search.state_space, parent_state_id);
+    }
+
+    if (_planSearchCheckGoal(&lb->search, cur_node)){
+        return PLAN_SEARCH_FOUND;
+    }
+    _planSearchExpandedNode(&lb->search, cur_node);
+
+    if (!parent_op){
+        // If the current node wasn't generated we need to find
+        // applicable operators and optionally the preferred operators.
+        _planSearchFindApplicableOps(&lb->search, cur_node->state_id);
+        if (lb->use_preferred_ops){
+           pref_ops = &lb->search.app_ops;
+           _planSearchHeuristic(&lb->search, cur_node->state_id, &h, pref_ops);
+        }
+    }
+
+    *node = cur_node;
+    return PLAN_SEARCH_CONT;
+}
+
+void planSearchLazyBaseExpand(plan_search_lazy_base_t *lb,
+                              plan_state_space_node_t *node)
+{
+    plan_search_t *search = &lb->search;
+    plan_cost_t cost = 0;
+    int i, op_size;
+
+    op_size = search->app_ops.op_found;
+    if (lb->use_preferred_ops == PLAN_SEARCH_PREFERRED_ONLY)
+        op_size = search->app_ops.op_preferred;
+
+    if (lb->cost_type == PLAN_SEARCH_LAZY_BASE_COST_HEUR)
+        cost = node->heuristic;
+
+    for (i = 0; i < op_size; ++i){
+        planListLazyPush(lb->list, cost, node->state_id, search->app_ops.op[i]);
+        planSearchStatIncGeneratedStates(&search->stat);
+    }
+}
+
+void planSearchLazyBaseInsertNode(plan_search_t *search,
+                                  plan_state_space_node_t *node)
+{
+    plan_search_lazy_base_t *lb = LAZYBASE(search);
+    plan_cost_t cost = 0;
+
+    if (planStateSpaceNodeIsNew(node)){
+        planStateSpaceOpen(search->state_space, node);
+        planStateSpaceClose(search->state_space, node);
+    }else{
+        planStateSpaceReopen(search->state_space, node);
+        planStateSpaceClose(search->state_space, node);
+    }
+
+    if (lb->cost_type == PLAN_SEARCH_LAZY_BASE_COST_HEUR)
+        cost = node->heuristic;
+    planListLazyPush(lb->list, cost, node->state_id, NULL);
+}
+
+static plan_state_space_node_t *createNode(plan_search_lazy_base_t *lb,
+                                           plan_state_id_t parent_state_id,
+                                           plan_op_t *parent_op,
+                                           int *ret)
 {
     plan_search_t *search = &lb->search;
     plan_state_id_t cur_state_id;
@@ -90,35 +184,3 @@ plan_state_space_node_t *planSearchLazyBaseExpandNode(
     return cur_node;
 }
 
-void planSearchLazyBaseInsertNode(plan_search_lazy_base_t *lb,
-                                  plan_state_space_node_t *node,
-                                  plan_cost_t cost)
-{
-    plan_search_t *search = &lb->search;
-
-    if (planStateSpaceNodeIsNew(node)){
-        planStateSpaceOpen(search->state_space, node);
-        planStateSpaceClose(search->state_space, node);
-    }else{
-        planStateSpaceReopen(search->state_space, node);
-        planStateSpaceClose(search->state_space, node);
-    }
-    planListLazyPush(lb->list, cost, node->state_id, NULL);
-}
-
-void planSearchLazyBaseAddSuccessors(plan_search_lazy_base_t *lb,
-                                     plan_state_id_t state_id,
-                                     plan_cost_t cost)
-{
-    plan_search_t *search = &lb->search;
-    int i, op_size;
-
-    op_size = search->app_ops.op_found;
-    if (lb->use_preferred_ops == PLAN_SEARCH_PREFERRED_ONLY)
-        op_size = search->app_ops.op_preferred;
-
-    for (i = 0; i < op_size; ++i){
-        planListLazyPush(lb->list, cost, state_id, search->app_ops.op[i]);
-        planSearchStatIncGeneratedStates(&search->stat);
-    }
-}

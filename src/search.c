@@ -37,6 +37,7 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
         if (res == PLAN_SEARCH_CONT
                 && search->progress.fn
                 && steps >= search->progress.freq){
+            search->stat.steps += steps;
             planSearchStatUpdate(&search->stat);
             res = search->progress.fn(&search->stat, search->progress.data);
             steps = 0;

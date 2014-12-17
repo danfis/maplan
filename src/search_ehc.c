@@ -40,9 +40,10 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
                     planSearchEHCStep,
                     planSearchLazyBaseInsertNode,
                     NULL);
+
+    // Note that lazy-fifo list ignores cost during insertion
     planSearchLazyBaseInit(&ehc->lazy, planListLazyFifoNew(), 1,
-                           params->use_preferred_ops,
-                           PLAN_SEARCH_LAZY_BASE_COST_ZERO);
+                           params->use_preferred_ops);
 
     ehc->best_heur = PLAN_COST_MAX;
 

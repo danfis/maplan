@@ -13,13 +13,11 @@ static plan_state_space_node_t *createNode(plan_search_lazy_base_t *lb,
 
 void planSearchLazyBaseInit(plan_search_lazy_base_t *lb,
                             plan_list_lazy_t *list, int list_del,
-                            int use_preferred_ops,
-                            int cost_type)
+                            int use_preferred_ops)
 {
     lb->list = list;
     lb->list_del = list_del;
     lb->use_preferred_ops = use_preferred_ops;
-    lb->cost_type = cost_type;
 }
 
 void planSearchLazyBaseFree(plan_search_lazy_base_t *lb)
@@ -33,7 +31,6 @@ int planSearchLazyBaseInitStep(plan_search_t *search)
     plan_search_lazy_base_t *lb = LAZYBASE(search);
     plan_state_id_t init_state;
     plan_state_space_node_t *node;
-    plan_cost_t cost;
     int res;
 
     init_state = search->initial_state;
@@ -48,10 +45,7 @@ int planSearchLazyBaseInitStep(plan_search_t *search)
     if (res != PLAN_SEARCH_CONT)
         return res;
 
-    cost = 0;
-    if (lb->cost_type == PLAN_SEARCH_LAZY_BASE_COST_HEUR)
-        cost = node->heuristic;
-    planListLazyPush(lb->list, cost, init_state, NULL);
+    planListLazyPush(lb->list, node->heuristic, init_state, NULL);
     return PLAN_SEARCH_CONT;
 }
 
@@ -102,18 +96,15 @@ void planSearchLazyBaseExpand(plan_search_lazy_base_t *lb,
                               plan_state_space_node_t *node)
 {
     plan_search_t *search = &lb->search;
-    plan_cost_t cost = 0;
     int i, op_size;
 
     op_size = search->app_ops.op_found;
     if (lb->use_preferred_ops == PLAN_SEARCH_PREFERRED_ONLY)
         op_size = search->app_ops.op_preferred;
 
-    if (lb->cost_type == PLAN_SEARCH_LAZY_BASE_COST_HEUR)
-        cost = node->heuristic;
-
     for (i = 0; i < op_size; ++i){
-        planListLazyPush(lb->list, cost, node->state_id, search->app_ops.op[i]);
+        planListLazyPush(lb->list, node->heuristic, node->state_id,
+                         search->app_ops.op[i]);
         planSearchStatIncGeneratedStates(&search->stat);
     }
 }
@@ -122,7 +113,6 @@ void planSearchLazyBaseInsertNode(plan_search_t *search,
                                   plan_state_space_node_t *node)
 {
     plan_search_lazy_base_t *lb = LAZYBASE(search);
-    plan_cost_t cost = 0;
 
     if (planStateSpaceNodeIsNew(node)){
         planStateSpaceOpen(search->state_space, node);
@@ -132,9 +122,7 @@ void planSearchLazyBaseInsertNode(plan_search_t *search,
         planStateSpaceClose(search->state_space, node);
     }
 
-    if (lb->cost_type == PLAN_SEARCH_LAZY_BASE_COST_HEUR)
-        cost = node->heuristic;
-    planListLazyPush(lb->list, cost, node->state_id, NULL);
+    planListLazyPush(lb->list, node->heuristic, node->state_id, NULL);
 }
 
 static plan_state_space_node_t *createNode(plan_search_lazy_base_t *lb,

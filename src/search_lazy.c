@@ -29,8 +29,7 @@ plan_search_t *planSearchLazyNew(const plan_search_lazy_params_t *params)
                     planSearchLazyBaseInsertNode,
                     NULL);
     planSearchLazyBaseInit(lazy, params->list, params->list_del,
-                           params->use_preferred_ops,
-                           PLAN_SEARCH_LAZY_BASE_COST_HEUR);
+                           params->use_preferred_ops);
 
     return &lazy->search;
 }

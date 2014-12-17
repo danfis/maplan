@@ -7,9 +7,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define PLAN_SEARCH_LAZY_BASE_COST_ZERO 0
-#define PLAN_SEARCH_LAZY_BASE_COST_HEUR 1
-
 /**
  * Base structure for "lazy" search algorithms.
  */
@@ -20,7 +17,6 @@ struct _plan_search_lazy_base_t {
     int list_del;           /*!< True if .list should be deleted */
     int use_preferred_ops;  /*!< True if preferred operators from heuristic
                                  should be used. */
-    int cost_type;
 };
 typedef struct _plan_search_lazy_base_t plan_search_lazy_base_t;
 
@@ -30,8 +26,7 @@ typedef struct _plan_search_lazy_base_t plan_search_lazy_base_t;
  */
 void planSearchLazyBaseInit(plan_search_lazy_base_t *lb,
                             plan_list_lazy_t *list, int list_del,
-                            int use_preferred_ops,
-                            int cost_type);
+                            int use_preferred_ops);
 
 /**
  * Frees resources.

@@ -366,40 +366,6 @@ int _planSearchHeuristic(plan_search_t *search,
  */
 int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node);
 
-/**
- * Calls expanded_node_fn if set.
- */
-_bor_inline void _planSearchExpandedNode(plan_search_t *search,
-                                         plan_state_space_node_t *node);
-
-/**
- * Adds successors of the specified state to the list in lazy fashion.
- * Applicable operators must be already loaded in search->app_ops and
- * argument preferred must be one of PLAN_SEARCH_PREFERRED_* constants.
- */
-void _planSearchLazyAddSuccessors(plan_search_t *search,
-                                  plan_state_id_t state_id,
-                                  plan_cost_t cost,
-                                  plan_list_lazy_t *list,
-                                  int preferred);
-
-/**
- * Inserts a new node to the lazy-list.
- */
-void _planSearchLazyInsertNode(plan_search_t *search,
-                               plan_state_space_node_t *node,
-                               plan_cost_t cost,
-                               plan_list_lazy_t *list);
-
-plan_state_space_node_t *_planSearchLazyExpandNode(plan_search_t *search,
-                                                   plan_state_id_t parent_state_id,
-                                                   plan_op_t *parent_op,
-                                                   int preferred_ops,
-                                                   int *ret);
-
-int _planSearchLazyInitStep(plan_search_t *search, plan_list_lazy_t *list,
-                            int heur_as_cost);
-
 
 /**** INLINES: ****/
 _bor_inline void _planSearchExpandedNode(plan_search_t *search,

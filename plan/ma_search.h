@@ -16,7 +16,9 @@ typedef struct _plan_ma_search_t plan_ma_search_t;
  */
 struct _plan_ma_search_params_t {
     plan_search_t *search; /*!< Main search algorithm */
-    plan_ma_comm_t *comm; /*!< Communication channel between agents */
+    plan_ma_comm_t *comm;  /*!< Communication channel between agents */
+    int verify_solution;   /*!< Set to true if a solution should be
+                                verified by all agents. Default: 0 */
 };
 typedef struct _plan_ma_search_params_t plan_ma_search_params_t;
 

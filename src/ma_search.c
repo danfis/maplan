@@ -152,8 +152,7 @@ plan_ma_search_t *planMASearchNew(plan_ma_search_params_t *params)
     ma_search = BOR_ALLOC(plan_ma_search_t);
     ma_search->search = params->search;
     ma_search->comm = params->comm;
-    ma_search->solution_verify = 1; // TODO: Parametrize this
-    ma_search->solution_verify = 0;
+    ma_search->solution_verify = params->verify_solution;
 
     msg_init.agent_id = -1;
     msg_init.state_id = PLAN_NO_STATE;

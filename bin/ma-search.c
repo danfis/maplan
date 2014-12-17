@@ -205,11 +205,10 @@ static plan_search_t *searchCreate(const char *search_name,
 {
     plan_search_t *search = NULL;
     plan_search_params_t *params;
-    //plan_search_ehc_params_t ehc_params;
+    plan_search_ehc_params_t ehc_params;
     //plan_search_lazy_params_t lazy_params;
     plan_search_astar_params_t astar_params;
 
-    /*
     if (strcmp(search_name, "ehc") == 0){
         planSearchEHCParamsInit(&ehc_params);
         ehc_params.search.heur = heurCreate(heur_name, prob,
@@ -218,6 +217,7 @@ static plan_search_t *searchCreate(const char *search_name,
         ehc_params.use_preferred_ops = use_preferred_ops;
         params = &ehc_params.search;
 
+    /*
     }else if (strcmp(search_name, "lazy") == 0){
         planSearchLazyParamsInit(&lazy_params);
         lazy_params.search.heur = heurCreate(heur_name, prob,
@@ -228,7 +228,8 @@ static plan_search_t *searchCreate(const char *search_name,
         lazy_params.list_del = 1;
         params = &lazy_params.search;
 
-    }else */if (strcmp(search_name, "astar") == 0){
+        */
+    }else if (strcmp(search_name, "astar") == 0){
         planSearchAStarParamsInit(&astar_params);
         astar_params.search.heur = heurCreate(heur_name, prob,
                                               op, op_size, succ_gen);
@@ -249,12 +250,13 @@ static plan_search_t *searchCreate(const char *search_name,
     params->progress.data = progress_data;
     params->prob = prob;
 
-    /*
     if (strcmp(def_search, "ehc") == 0){
         search = planSearchEHCNew(&ehc_params);
+    /*
     }else if (strcmp(def_search, "lazy") == 0){
         search = planSearchLazyNew(&lazy_params);
-    }else*/ if (strcmp(def_search, "astar") == 0){
+    */
+    }else if (strcmp(def_search, "astar") == 0){
         search = planSearchAStarNew(&astar_params);
     }
 

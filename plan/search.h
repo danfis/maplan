@@ -370,6 +370,15 @@ int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node);
 _bor_inline void _planSearchExpandedNode(plan_search_t *search,
                                          plan_state_space_node_t *node);
 
+/**
+ * Adds successors of the specified state to the lazy list.
+ */
+void _planSearchAddLazySuccessors(plan_search_t *search,
+                                  plan_state_id_t state_id,
+                                  plan_op_t **op, int op_size,
+                                  plan_cost_t cost,
+                                  plan_list_lazy_t *list);
+
 
 /**** INLINES: ****/
 _bor_inline void _planSearchExpandedNode(plan_search_t *search,

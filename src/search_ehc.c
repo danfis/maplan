@@ -15,7 +15,7 @@ struct _plan_search_ehc_t {
 };
 typedef struct _plan_search_ehc_t plan_search_ehc_t;
 
-#define SEARCH_FROM_PARENT(parent) \
+#define EHC(parent) \
     bor_container_of((parent), plan_search_ehc_t, search)
 
 /** Adds successors to the open list, the operators should already be
@@ -33,9 +33,9 @@ static void planSearchEHCDel(plan_search_t *_ehc);
 static int planSearchEHCInit(plan_search_t *);
 /** Performes one step in the algorithm. */
 static int planSearchEHCStep(plan_search_t *);
-/** Injects a new state into open-list */
-static int planSearchEHCInjectState(plan_search_t *, plan_state_id_t state_id,
-                                    plan_cost_t cost, plan_cost_t heuristic);
+/** Inserts node into open-list */
+static void planSearchEHCInsertNode(plan_search_t *search,
+                                    plan_state_space_node_t *node);
 
 
 void planSearchEHCParamsInit(plan_search_ehc_params_t *p)
@@ -54,7 +54,7 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
                     planSearchEHCDel,
                     planSearchEHCInit,
                     planSearchEHCStep,
-                    planSearchEHCInjectState,
+                    planSearchEHCInsertNode,
                     NULL);
 
     ehc->list              = planListLazyFifoNew();
@@ -64,7 +64,7 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
     // Set up pointer to applicable operators for later
     ehc->pref_ops = NULL;
     if (ehc->use_preferred_ops){
-        ehc->pref_ops = &ehc->search.applicable_ops;
+        ehc->pref_ops = &ehc->search.app_ops;
     }
 
     return &ehc->search;
@@ -72,7 +72,7 @@ plan_search_t *planSearchEHCNew(const plan_search_ehc_params_t *params)
 
 static void planSearchEHCDel(plan_search_t *_ehc)
 {
-    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
+    plan_search_ehc_t *ehc = EHC(_ehc);
 
     _planSearchFree(&ehc->search);
     if (ehc->list)
@@ -80,46 +80,138 @@ static void planSearchEHCDel(plan_search_t *_ehc)
     BOR_FREE(ehc);
 }
 
-static int planSearchEHCInit(plan_search_t *_ehc)
+static int planSearchEHCInit(plan_search_t *search)
 {
-    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
+    plan_search_ehc_t *ehc = EHC(search);
     plan_state_id_t init_state;
-
-    init_state = ehc->search.params.prob->initial_state;
+    plan_state_space_node_t *node;
+    int res;
 
     ehc->best_heur = PLAN_COST_MAX;
-    return processState(ehc, init_state, 0, NULL);
+
+    init_state = ehc->search.initial_state;
+    node = planStateSpaceNode(search->state_space, init_state);
+    planStateSpaceOpen(search->state_space, node);
+    planStateSpaceClose(search->state_space, node);
+    node->parent_state_id = PLAN_NO_STATE;
+    node->op = NULL;
+    node->cost = 0;
+
+    res = _planSearchHeuristic(&ehc->search, init_state, &node->heuristic, NULL);
+    if (res != PLAN_SEARCH_CONT)
+        return res;
+
+    planListLazyPush(ehc->list, 0, init_state, NULL);
+    return PLAN_SEARCH_CONT;
 }
 
-static int planSearchEHCStep(plan_search_t *_ehc)
+static plan_state_space_node_t *expandNode(plan_search_ehc_t *ehc,
+                                           plan_state_id_t parent_state_id,
+                                           plan_op_t *parent_op,
+                                           int *r)
 {
-    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
-    plan_state_id_t parent_state_id, cur_state_id;
-    plan_op_t *parent_op;
-
-    // get the next node in list
-    if (planListLazyPop(ehc->list, &parent_state_id, &parent_op) != 0){
-        // we reached dead end
-        _planSearchReachedDeadEnd(&ehc->search);
-        return PLAN_SEARCH_NOT_FOUND;
-    }
-
-    planSearchStatIncExpandedStates(&ehc->search.stat);
+    plan_state_id_t cur_state_id;
+    plan_state_space_node_t *cur_node, *parent_node;
+    plan_cost_t cur_heur;
+    int res;
 
     // Create a new state and check whether the state was already visited
-    if (_planSearchNewState(&ehc->search, parent_op, parent_state_id,
-                            &cur_state_id, NULL) != 0)
-        return PLAN_SEARCH_CONT;
+    cur_state_id = planOpApply(parent_op, parent_state_id);
+    cur_node = planStateSpaceNode(ehc->search.state_space, cur_state_id);
+    if (!planStateSpaceNodeIsNew(cur_node)){
+        *r = PLAN_SEARCH_CONT;
+        return NULL;
+    }
 
-    return processState(ehc, cur_state_id, parent_state_id, parent_op);
+    // find applicable operators in the current state
+    _planSearchFindApplicableOps(&ehc->search, cur_state_id);
+
+    // compute heuristic value for the current node
+    res = _planSearchHeuristic(&ehc->search, cur_state_id,
+                               &cur_heur, ehc->pref_ops);
+    if (res != PLAN_SEARCH_CONT){
+        *r = res;
+        return NULL;
+    }
+
+    // get parent node for path cost computation
+    parent_node = planStateSpaceNode(ehc->search.state_space, parent_state_id);
+
+    // Update current node's data
+    planStateSpaceOpen(ehc->search.state_space, cur_node);
+    planStateSpaceClose(ehc->search.state_space, cur_node);
+    cur_node->parent_state_id = parent_state_id;
+    cur_node->op = parent_op;
+    cur_node->cost = parent_node->cost + parent_op->cost;
+    cur_node->heuristic = cur_heur;
+
+    return cur_node;
 }
 
-static int planSearchEHCInjectState(plan_search_t *_ehc, plan_state_id_t state_id,
-                                    plan_cost_t cost, plan_cost_t heuristic)
+static int planSearchEHCStep(plan_search_t *search)
 {
-    plan_search_ehc_t *ehc = SEARCH_FROM_PARENT(_ehc);
-    return _planSearchLazyInjectState(&ehc->search, ehc->list,
-                                      state_id, cost, heuristic);
+    plan_search_ehc_t *ehc = EHC(search);
+    plan_state_id_t parent_state_id;
+    plan_state_space_node_t *cur_node;
+    plan_op_t *parent_op;
+    int res;
+
+    // get the next node in list
+    if (planListLazyPop(ehc->list, &parent_state_id, &parent_op) != 0)
+        return PLAN_SEARCH_NOT_FOUND;
+
+    planSearchStatIncExpandedStates(&search->stat);
+
+    if (parent_op){
+        cur_node = expandNode(ehc, parent_state_id, parent_op, &res);
+        if (cur_node == NULL)
+            return res;
+
+    }else{
+        cur_node = planStateSpaceNode(search->state_space, parent_state_id);
+    }
+
+    if (_planSearchCheckGoal(search, cur_node))
+        return PLAN_SEARCH_FOUND;
+    _planSearchExpandedNode(search, cur_node);
+
+    if (cur_node->heuristic != PLAN_HEUR_DEAD_END){
+        // If the heuristic for the current state is the best so far, restart
+        // EHC algorithm with an empty list.
+        if (cur_node->heuristic < ehc->best_heur){
+            planListLazyClear(ehc->list);
+            ehc->best_heur = cur_node->heuristic;
+        }
+
+        if (!parent_op){
+            // If the current node wasn't generate we need to find
+            // applicable operators and optionally the preferred operators.
+            _planSearchFindApplicableOps(&ehc->search, cur_node->state_id);
+            if (ehc->pref_ops){
+                plan_cost_t h;
+                _planSearchHeuristic(&ehc->search, cur_node->state_id,
+                                     &h, ehc->pref_ops);
+            }
+        }
+        addSuccessors(ehc, cur_node->state_id);
+    }
+
+    return PLAN_SEARCH_CONT;
+}
+
+static void planSearchEHCInsertNode(plan_search_t *search,
+                                    plan_state_space_node_t *node)
+{
+    plan_search_ehc_t *ehc = EHC(search);
+
+    if (planStateSpaceNodeIsNew(node)){
+        planStateSpaceOpen(search->state_space, node);
+        planStateSpaceClose(search->state_space, node);
+    }else{
+        planStateSpaceReopen(search->state_space, node);
+        planStateSpaceClose(search->state_space, node);
+    }
+    planListLazyPush(ehc->list, 0, node->state_id, NULL);
 }
 
 static void addSuccessors(plan_search_ehc_t *ehc, plan_state_id_t state_id)
@@ -127,58 +219,14 @@ static void addSuccessors(plan_search_ehc_t *ehc, plan_state_id_t state_id)
     if (ehc->use_preferred_ops == PLAN_SEARCH_PREFERRED_ONLY){
         // Use only preferred operators
         _planSearchAddLazySuccessors(&ehc->search, state_id,
-                                     ehc->search.applicable_ops.op,
-                                     ehc->search.applicable_ops.op_preferred,
+                                     ehc->search.app_ops.op,
+                                     ehc->search.app_ops.op_preferred,
                                      0, ehc->list);
     }else{
         // Use all operators the preferred were already sorted as first
         _planSearchAddLazySuccessors(&ehc->search, state_id,
-                                     ehc->search.applicable_ops.op,
-                                     ehc->search.applicable_ops.op_found,
+                                     ehc->search.app_ops.op,
+                                     ehc->search.app_ops.op_found,
                                      0, ehc->list);
     }
-}
-
-static int processState(plan_search_ehc_t *ehc,
-                        plan_state_id_t cur_state_id,
-                        plan_state_id_t parent_state_id,
-                        plan_op_t *parent_op)
-{
-    plan_state_space_node_t *cur_node;
-    plan_cost_t cur_heur;
-    int res;
-
-    // find applicable operators in the current state
-    _planSearchFindApplicableOps(&ehc->search, cur_state_id);
-
-    // compute heuristic value for the current node
-    res = _planSearchHeuristic(&ehc->search, cur_state_id, &cur_heur, ehc->pref_ops);
-    if (res != PLAN_SEARCH_CONT)
-        return res;
-
-    // open and close the node so we can trace the path from goal to the
-    // initial state
-    cur_node = _planSearchNodeOpenClose(&ehc->search,
-                                        cur_state_id, parent_state_id,
-                                        parent_op, 0, cur_heur);
-
-    // check if the current state is the goal
-    if (_planSearchCheckGoal(&ehc->search, cur_node))
-        return PLAN_SEARCH_FOUND;
-
-    // Useful only in MA node
-    _planSearchMASendState(&ehc->search, cur_node);
-
-    if (cur_heur != PLAN_HEUR_DEAD_END){
-        // If the heuristic for the current state is the best so far, restart
-        // EHC algorithm with an empty list.
-        if (cur_heur < ehc->best_heur){
-            planListLazyClear(ehc->list);
-            ehc->best_heur = cur_heur;
-        }
-
-        addSuccessors(ehc, cur_state_id);
-    }
-
-    return PLAN_SEARCH_CONT;
 }

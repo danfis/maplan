@@ -36,12 +36,6 @@ typedef struct _var_order_t var_order_t;
 static plan_succ_gen_tree_t *treeNew(plan_op_t **ops, int len,
                                      const plan_var_id_t *var);
 
-/** Creates a new tree from the FD definition */
-static plan_succ_gen_tree_t *treeFromFD(FILE *fin,
-                                        const plan_var_t *vars,
-                                        plan_op_t *ops,
-                                        int *num_ops);
-
 /** Recursively deletes a tree */
 static void treeDel(plan_succ_gen_tree_t *tree);
 
@@ -106,17 +100,6 @@ plan_succ_gen_t *planSuccGenNew(const plan_op_t *op, int opsize,
 
     if (sorted_ops)
         BOR_FREE(sorted_ops);
-    return sg;
-}
-
-plan_succ_gen_t *planSuccGenFromFD(FILE *fin,
-                                   const plan_var_t *vars,
-                                   plan_op_t *op)
-{
-    plan_succ_gen_t *sg;
-    sg = BOR_ALLOC(plan_succ_gen_t);
-    sg->num_operators = 0;
-    sg->root = treeFromFD(fin, vars, op, &sg->num_operators);
     return sg;
 }
 
@@ -298,94 +281,6 @@ static plan_succ_gen_tree_t *treeNew(plan_op_t **ops, int len,
     // Then build subtree for each value
     while (start < len){
         start += treeBuildVal(tree, ops + start, len - start, var);
-    }
-
-    return tree;
-}
-
-static void treeFromFDOps(plan_succ_gen_tree_t *tree, FILE *fin,
-                          plan_op_t *ops, int *num_ops_out)
-{
-    int i, num_ops, op_idx;
-
-    if (fscanf(fin, "%d", &num_ops) != 1){
-        fprintf(stderr, "Error: Invalid successor generator definition.\n");
-        return;
-    }
-
-    if (num_ops == 0)
-        return;
-
-    *num_ops_out += num_ops;
-    tree->ops_size = num_ops;
-    tree->ops = BOR_ALLOC_ARR(plan_op_t *, tree->ops_size);
-    for (i = 0; i < num_ops; ++i){
-        if (fscanf(fin, "%d", &op_idx) != 1){
-            fprintf(stderr, "Error: Invalid successor generator definition.\n");
-            return;
-        }
-        tree->ops[i] = ops + op_idx;
-    }
-}
-
-static plan_succ_gen_tree_t *treeFromFD(FILE *fin,
-                                        const plan_var_t *vars,
-                                        plan_op_t *ops,
-                                        int *num_ops_out)
-{
-    plan_succ_gen_tree_t *tree;
-    char type[128];
-    int i, var;
-
-    if (fscanf(fin, "%s", type) != 1){
-        fprintf(stderr, "Error: Could not determine type\n");
-        return NULL;
-    }
-
-    tree = BOR_ALLOC(plan_succ_gen_tree_t);
-    tree->var = PLAN_VAR_ID_UNDEFINED;
-    tree->ops = NULL;
-    tree->ops_size = 0;
-    tree->val = NULL;
-    tree->val_size = 0;
-    tree->def = NULL;
-
-    if (strcmp(type, "switch") == 0){
-        if (fscanf(fin, "%d", &var) != 1){
-            fprintf(stderr, "Error: Invalid successor generator definition.\n");
-            return NULL;
-        }
-        tree->var = var;
-
-        if (fscanf(fin, "%s", type) != 1){
-            fprintf(stderr, "Error: Invalid successor generator definition.\n");
-            return NULL;
-        }
-        if (strcmp(type, "check") != 0){
-            fprintf(stderr, "Error: Invalid successor generator definition."
-                            " Expecting 'check'\n");
-            return NULL;
-        }
-        treeFromFDOps(tree, fin, ops, num_ops_out);
-
-        tree->val_size = vars[var].range;
-        tree->val = BOR_CALLOC_ARR(plan_succ_gen_tree_t *, tree->val_size);
-        for (i = 0; i < vars[var].range; ++i){
-            tree->val[i] = treeFromFD(fin, vars, ops, num_ops_out);
-        }
-
-        tree->def = treeFromFD(fin, vars, ops, num_ops_out);
-
-    }else if (strcmp(type, "check") == 0){
-        treeFromFDOps(tree, fin, ops, num_ops_out);
-        if (tree->ops_size == 0){
-            BOR_FREE(tree);
-            return NULL;
-        }
-
-    }else{
-        fprintf(stderr, "Error: Unknown type: `%s'\n", type);
-        return NULL;
     }
 
     return tree;

@@ -8,9 +8,10 @@ TEST(testSearchAStar)
     plan_path_t path;
     plan_problem_t *p;
 
-    printf("../data/ma-benchmarks/driverlog/pfile3.sas");
+    printf("../data/ma-benchmarks/driverlog/pfile3.proto\n");
     planSearchAStarParamsInit(&params);
-    p = planProblemFromFD("../data/ma-benchmarks/driverlog/pfile3.sas");
+    p = planProblemFromProto("../data/ma-benchmarks/driverlog/pfile3.proto",
+                             PLAN_PROBLEM_USE_CG);
     params.search.prob = p;
     params.search.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
                                           p->op, p->op_size, p->succ_gen);
@@ -26,9 +27,10 @@ TEST(testSearchAStar)
     planSearchDel(search);
     planProblemDel(p);
 
-    printf("../data/ma-benchmarks/depot/pfile2.sas");
+    printf("../data/ma-benchmarks/depot/pfile2.proto\n");
     planSearchAStarParamsInit(&params);
-    p = planProblemFromFD("../data/ma-benchmarks/depot/pfile2.sas");
+    p = planProblemFromProto("../data/ma-benchmarks/depot/pfile2.proto",
+                             PLAN_PROBLEM_USE_CG);
     params.search.prob = p;
     params.search.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
                                           p->op, p->op_size, p->succ_gen);

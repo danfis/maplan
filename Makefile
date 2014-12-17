@@ -28,7 +28,6 @@ LDFLAGS += $(ZMQ_LDFLAGS)
 TARGETS  = libplan.a
 
 OBJS  = problem
-OBJS += problem-fd
 OBJS += var
 OBJS += state
 OBJS += op

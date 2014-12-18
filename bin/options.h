@@ -3,6 +3,7 @@
 
 struct _options_t {
     int help;
+    int ma;
     char *proto;
     char *output;
     int max_time;
@@ -24,5 +25,6 @@ typedef struct _options_t options_t;
 int options(options_t *o, int argc, char *argv[]);
 void optionsFree(options_t *o);
 int optionsSearchOpt(const options_t *o, const char *optname);
+int optionsHeurOpt(const options_t *o, const char *optname);
 
 #endif /* OPTIONS_H */

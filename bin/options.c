@@ -52,6 +52,8 @@ static int readOpts(options_t *o, int argc, char *argv[])
 
     optsAddDesc("help", 'h', OPTS_NONE, &o->help, NULL,
                 "Print this help.");
+    optsAddDesc("ma", 0x0, OPTS_NONE, &o->ma, NULL,
+                "Switch to multi-agent mode.");
     optsAddDesc("problem", 'p', OPTS_STR, &o->proto, NULL,
                 "Path to a problem definition in .proto format.");
     optsAddDesc("search", 's', OPTS_STR, &o->search, NULL,
@@ -220,6 +222,7 @@ static void printOpts(const options_t *o)
 {
     int i;
 
+    printf("Multi-agent: %d\n", o->ma);
     printf("Proto: %s\n", o->proto);
     printf("Output: %s\n", o->output);
     printf("Max time: %d s\n", o->max_time);
@@ -294,6 +297,16 @@ int optionsSearchOpt(const options_t *o, const char *optname)
     int i;
     for (i = 0; i < o->search_opts_len; ++i){
         if (strcmp(o->search_opts[i], optname) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+int optionsHeurOpt(const options_t *o, const char *optname)
+{
+    int i;
+    for (i = 0; i < o->heur_opts_len; ++i){
+        if (strcmp(o->heur_opts[i], optname) == 0)
             return 1;
     }
     return 0;

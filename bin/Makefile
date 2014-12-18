@@ -18,17 +18,26 @@ ifeq '$(BIN_STATIC)' 'yes'
   LDFLAGS += -static
 endif
 
-#TARGETS = search
-TARGETS = ma-search
+OBJS  = search.o
+OBJS += options.o
+
+TARGETS = search
+#TARGETS = ma-search
 
 all: $(TARGETS)
 
-search: search.c ../libplan.a
-	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+search: ../libplan.a $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 ma-search: ma-search.c ../libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
+%.o: %.c %.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 clean:
 	rm -f $(TARGETS)
+	rm -f *.o
 
 .PHONY: all

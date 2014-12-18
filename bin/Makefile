@@ -1,5 +1,5 @@
--include ../Makefile.include
 -include ../Makefile.local
+-include ../Makefile.include
 
 CFLAGS += -I../
 CFLAGS += -I../../boruvka
@@ -22,7 +22,6 @@ OBJS  = search.o
 OBJS += options.o
 
 TARGETS = search
-#TARGETS = ma-search
 
 all: $(TARGETS)
 

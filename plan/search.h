@@ -57,11 +57,6 @@ struct _plan_search_params_t {
 typedef struct _plan_search_params_t plan_search_params_t;
 
 
-struct _plan_search_ma_params_t {
-    plan_ma_comm_t *comm;
-};
-typedef struct _plan_search_ma_params_t plan_search_ma_params_t;
-
 /**
  * Enforced Hill Climbing Search Algorithm
  * ----------------------------------------

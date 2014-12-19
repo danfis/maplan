@@ -1,0 +1,3 @@
+[submodule "third-party/opts"]
+	path = third-party/opts
+	url = https://github.com/danfis/opts

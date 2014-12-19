@@ -1,3 +1,6 @@
+#BASEPATH_ := $(dir $(realpath $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))))
+BASEPATH_ := $(dir $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
+
 CC ?= gcc
 CXX ?= g++
 M4 ?= m4
@@ -46,6 +49,15 @@ PROTOBUF_CFLAGS ?= $(shell pkg-config --cflags protobuf)
 PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs protobuf)
 NANOMSG_CFLAGS ?= $(shell pkg-config --cflags libnanomsg)
 NANOMSG_LDFLAGS ?= $(shell pkg-config --libs libnanomsg)
+
+OPTS_CFLAGS ?=
+OPTS_LDFLGS ?=
+
+USE_LOCAL_OPTS := $(shell if test -f $(BASEPATH_)/third-party/opts/libopts.a; then echo "yes"; else echo "no"; fi;)
+ifeq '$(USE_LOCAL_OPTS)' 'yes'
+  OPTS_CFLAGS := -I$(BASEPATH_)/third-party/opts
+  OPTS_LDFLAGS := -L$(BASEPATH_)/third-party/opts -lopts
+endif
 
 
 CHECK_DEPENDENCY ?= yes

@@ -169,6 +169,8 @@ help:
 	@echo "    CXXFLAGS          = $(CXXFLAGS)"
 	@echo "    LDFLAGS           = $(LDFLAGS)"
 	@echo "    CONFIG_FLAGS      = $(CONFIG_FLAGS)"
+	@echo "    OPTS_CFLAGS       = $(OPTS_CFLAGS)"
+	@echo "    OPTS_LDFLAGS      = $(OPTS_LDFLAGS)"
 	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
 	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"

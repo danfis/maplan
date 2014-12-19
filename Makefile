@@ -164,6 +164,7 @@ third-party: submodule
 					&& make \
 					&& make install; \
 		fi;
+	$(MAKE) -C third-party/VAL
 
 third-party-clean:
 	$(MAKE) -C third-party/translate clean
@@ -173,6 +174,7 @@ third-party-clean:
 	rm -rf third-party/nanomsg/build
 	$(MAKE) -C third-party/protobuf clean
 	rm -rf third-party/protobuf/build
+	$(MAKE) -C third-party/VAL clean
 
 help:
 	@echo "Targets:"

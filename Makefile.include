@@ -82,7 +82,7 @@ ifeq '$(USE_LOCAL_PROTOBUF)' 'yes'
   PROTOBUF_LDFLAGS ?= $(shell PKG_CONFIG_PATH=$(PROTOBUF_LIBPATH_)/pkgconfig pkg-config --libs protobuf)
 #  PROTOBUF_CFLAGS := -I$(PROTOBUF_PATH_)/build/include
 #  PROTOBUF_LDFLAGS := -L$(PROTOBUF_PATH_)/build/lib -lprotobuf
-  PROTOC := ../$(PROTOBUF_PATH_)/build/bin/protoc
+  PROTOC := $(realpath $(PROTOBUF_PATH_))/build/bin/protoc
 else
   PROTOBUF_CFLAGS ?= $(shell pkg-config --cflags protobuf)
   PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs protobuf)

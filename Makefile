@@ -16,14 +16,13 @@
 -include Makefile.local
 -include Makefile.include
 
-CFLAGS += -I. -I../boruvka/
+CFLAGS += -I.
+CFLAGS += $(BORUVKA_CFLAGS)
 CFLAGS += $(NANOMSG_CFLAGS)
-CXXFLAGS += -I. -I../boruvka/
+CXXFLAGS += -I.
+CXXFLAGS += $(BORUVKA_CFLAGS)
 CXXFLAGS += $(PROTOBUF_CFLAGS)
 CXXFLAGS += -Wno-long-long
-LDFLAGS += -L. -lplan -L../boruvka -lboruvka -lm -lrt
-LDFLAGS += $(PROTOBUF_LDFLAGS)
-LDFLAGS += $(NANOMSG_LDFLAGS)
 
 TARGETS  = libplan.a
 
@@ -172,6 +171,9 @@ help:
 	@echo "    USE_LOCAL_OPTS    = $(USE_LOCAL_OPTS)"
 	@echo "    OPTS_CFLAGS       = $(OPTS_CFLAGS)"
 	@echo "    OPTS_LDFLAGS      = $(OPTS_LDFLAGS)"
+	@echo "    USE_LOCAL_BORUVKA = $(USE_LOCAL_BORUVKA)"
+	@echo "    BORUVKA_CFLAGS    = $(BORUVKA_CFLAGS)"
+	@echo "    BORUVKA_LDFLAGS   = $(BORUVKA_LDFLAGS)"
 	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
 	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"

@@ -52,11 +52,18 @@ NANOMSG_LDFLAGS ?= $(shell pkg-config --libs libnanomsg)
 
 OPTS_CFLAGS ?=
 OPTS_LDFLGS ?=
-
 USE_LOCAL_OPTS ?= $(shell if test -f $(BASEPATH_)/third-party/opts/libopts.a; then echo "yes"; else echo "no"; fi;)
 ifeq '$(USE_LOCAL_OPTS)' 'yes'
   OPTS_CFLAGS := -I$(BASEPATH_)/third-party/opts
   OPTS_LDFLAGS := -L$(BASEPATH_)/third-party/opts -lopts
+endif
+
+BORUVKA_CFLAGS ?=
+BORUVKA_LDFLGS ?=
+USE_LOCAL_BORUVKA ?= $(shell if test -f $(BASEPATH_)/third-party/boruvka/libboruvka.a; then echo "yes"; else echo "no"; fi;)
+ifeq '$(USE_LOCAL_BORUVKA)' 'yes'
+  BORUVKA_CFLAGS := -I$(BASEPATH_)/third-party/boruvka
+  BORUVKA_LDFLAGS := -L$(BASEPATH_)/third-party/boruvka -lboruvka
 endif
 
 

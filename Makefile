@@ -138,6 +138,16 @@ doc:
 analyze: clean
 	$(SCAN_BUILD) $(MAKE)
 
+third-party:
+	$(MAKE) -C third-party/translate
+	$(MAKE) -C third-party/boruvka
+	$(MAKE) -C third-party/opts
+
+third-party-clean:
+	$(MAKE) -C third-party/translate clean
+	$(MAKE) -C third-party/boruvka clean
+	$(MAKE) -C third-party/opts clean
+
 help:
 	@echo "Targets:"
 	@echo "    all            - Build library"
@@ -146,7 +156,9 @@ help:
 	@echo "    check-valgrind - Build & Run automated tests in valgrind(1)"
 	@echo "    check-segfault - Build & Run automated tests in valgrind(1) set up to detect only segfaults"
 	@echo "    clean          - Remove all generated files"
-	@echo "    analyze        - Performs static analysis using Clang Static Analyzer"
+	@echo "    analyze        - Perform static analysis using Clang Static Analyzer"
+	@echo "    third-party    - Build all third-party projects."
+	@echo "    third-party-clean - Clean all third-party projects."
 	@echo ""
 	@echo "Options:"
 	@echo "    CC         - Path to C compiler          (=$(CC))"
@@ -179,4 +191,4 @@ help:
 	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"
 	@echo "    NANOMSG_LDFLAGS   = $(NANOMSG_LDFLAGS)"
 
-.PHONY: all clean check check-valgrind help doc install analyze examples
+.PHONY: all clean check check-valgrind help doc install analyze examples third-party

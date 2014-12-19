@@ -12,7 +12,6 @@
 #include "heur_ma.h"
 #include "list_lazy.h"
 #include "list.h"
-#include "ma_comm_queue.h"
 #include "ma_comm_nanomsg.h"
 #include "causalgraph.h"
 #include "ma_search.h"
@@ -36,7 +35,6 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSHeurMA),
     TEST_SUITE_ADD(TSListLazy),
     TEST_SUITE_ADD(TSList),
-    TEST_SUITE_ADD(TSMACommQueue),
     TEST_SUITE_ADD(TSMACommNanomsg),
     TEST_SUITE_ADD(TSCausalGraph),
     TEST_SUITE_ADD(TSMASearch),

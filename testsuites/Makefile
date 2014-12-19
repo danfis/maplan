@@ -34,7 +34,6 @@ OBJS += heur.o
 OBJS += heur_ma.o
 OBJS += list_lazy.o
 OBJS += list.o
-OBJS += ma_comm_queue.o
 OBJS += ma_comm_nanomsg.o
 OBJS += causalgraph.o
 OBJS += state_pool.o

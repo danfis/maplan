@@ -71,15 +71,13 @@ static void testHeurMAProb(const plan_problem_agents_t *p,
     int agent_size = p->agent_size;
     plan_heur_t *ma_heur[agent_size];
     plan_state_t *seq_state;
-    plan_ma_comm_queue_pool_t *comm_pool;
     plan_ma_comm_t *comm[agent_size];
     int i;
     unsigned int line;
 
-    comm_pool = planMACommQueuePoolNew(agent_size);
     for (i = 0; i < agent_size; ++i){
         ma_heur[i] = heur_new(p->agent + i);
-        comm[i] = planMACommQueue(comm_pool, i);
+        comm[i] = planMACommInprocNew(i, agent_size);
     }
 
     seq_state = planStateNew(p->glob.state_pool);
@@ -96,8 +94,8 @@ static void testHeurMAProb(const plan_problem_agents_t *p,
     planStateDel(seq_state);
     for (i = 0; i < agent_size; ++i){
         planHeurDel(ma_heur[i]);
+        planMACommDel(comm[i]);
     }
-    planMACommQueuePoolDel(comm_pool);
 }
 
 static void runTestHeurMA(const char *name, const char *proto,

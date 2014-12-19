@@ -142,6 +142,13 @@ third-party:
 	$(MAKE) -C third-party/translate
 	$(MAKE) -C third-party/boruvka
 	$(MAKE) -C third-party/opts
+	cd third-party/nanomsg \
+		&& if test ! -f .libs/libnanomsg.a; then \
+				./autogen.sh \
+					&& ./configure --enable-static --disable-shared --prefix=`pwd`/build \
+					&& make \
+					&& make install; \
+		fi;
 
 third-party-clean:
 	$(MAKE) -C third-party/translate clean
@@ -188,6 +195,7 @@ help:
 	@echo "    BORUVKA_LDFLAGS   = $(BORUVKA_LDFLAGS)"
 	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
+	@echo "    USE_LOCAL_NANOMSG = $(USE_LOCAL_NANOMSG)"
 	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"
 	@echo "    NANOMSG_LDFLAGS   = $(NANOMSG_LDFLAGS)"
 

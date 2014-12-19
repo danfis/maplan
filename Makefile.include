@@ -47,8 +47,6 @@ LDFLAGS += $(SYSTEM_LDFLAGS)
 
 PROTOBUF_CFLAGS ?= $(shell pkg-config --cflags protobuf)
 PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs protobuf)
-NANOMSG_CFLAGS ?= $(shell pkg-config --cflags libnanomsg)
-NANOMSG_LDFLAGS ?= $(shell pkg-config --libs libnanomsg)
 
 OPTS_CFLAGS ?=
 OPTS_LDFLGS ?=
@@ -66,12 +64,24 @@ ifeq '$(USE_LOCAL_BORUVKA)' 'yes'
   BORUVKA_LDFLAGS := -L$(BASEPATH_)/third-party/boruvka -lboruvka
 endif
 
+NANOMSG_PATH_ := $(BASEPATH_)/third-party/nanomsg
+NANOMSG_LIBPATH_ := $(NANOMSG_PATH_)/build/lib
+USE_LOCAL_NANOMSG ?= $(shell if test -f $(NANOMSG_LIBPATH_)/libnanomsg.a; then echo "yes"; else echo "no"; fi;)
+ifeq '$(USE_LOCAL_NANOMSG)' 'yes'
+  NANOMSG_CFLAGS ?= $(shell PKG_CONFIG_PATH=$(NANOMSG_LIBPATH_)/pkgconfig pkg-config --cflags libnanomsg)
+  NANOMSG_LDFLAGS ?= $(shell PKG_CONFIG_PATH=$(NANOMSG_LIBPATH_)/pkgconfig pkg-config --libs libnanomsg)
+#  NANOMSG_CFLAGS := -I$(NANOMSG_PATH_)/build/include
+#  NANOMSG_LDFLAGS := -L$(NANOMSG_PATH_)/build/lib -lnanomsg -lanl -lrt
+else
+  NANOMSG_CFLAGS ?= $(shell pkg-config --cflags libnanomsg)
+  NANOMSG_LDFLAGS ?= $(shell pkg-config --libs libnanomsg)
+endif
+
 
 CHECK_DEPENDENCY ?= yes
 ifeq '$(CHECK_DEPENDENCY)' 'yes'
   HAVE_LIBPROTOBUF := $(shell if pkg-config --exists protobuf; then echo "yes"; else echo "no"; fi;)
   HAVE_PROTOBUFC := $(shell if $(PROTOC) --version >/dev/null; then echo "yes"; else echo "no"; fi;)
-  HAVE_LIBNANOMSG := $(shell if pkg-config --exists libnanomsg; then echo "yes"; else echo "no"; fi;)
 
   ifneq '$(HAVE_LIBPROTOBUF)' 'yes'
     $(error libprotobuf was not found!)
@@ -79,10 +89,6 @@ ifeq '$(CHECK_DEPENDENCY)' 'yes'
 
   ifneq '$(HAVE_PROTOBUFC)' 'yes'
     $(error Executable protoc is not set properly!)
-  endif
-
-  ifneq '$(HAVE_LIBNANOMSG)' 'yes'
-    $(error libnanomsg was not found!)
   endif
 endif
 

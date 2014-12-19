@@ -41,39 +41,6 @@ plan_ma_comm_t *planMACommQueue(plan_ma_comm_queue_pool_t *pool,
                                 int node_id);
 
 
-
-#ifdef PLAN_ZMQ
-struct _plan_ma_comm_net_conf_t {
-    int node_id;   /*!< Id of the current node */
-    char **addr;   /*!< TCP address of all nodes in cluster */
-    int node_size; /*!< Number of nodes in cluster */
-};
-typedef struct _plan_ma_comm_net_conf_t plan_ma_comm_net_conf_t;
-
-
-/**
- * Initialize config structure.
- */
-void planMACommNetConfInit(plan_ma_comm_net_conf_t *cfg);
-
-/**
- * Frees resources allocate with connection with conf structure.
- */
-void planMACommNetConfFree(plan_ma_comm_net_conf_t *cfg);
-
-/**
- * Adds address of one node and returns its ID.
- */
-int planMACommNetConfAddNode(plan_ma_comm_net_conf_t *cfg,
-                             const char *addr);
-
-
-/**
- * Creates a communication channel based on network connection (TCP).
- */
-plan_ma_comm_t *planMACommNetNew(const plan_ma_comm_net_conf_t *cfg);
-#endif /* PLAN_ZMQ */
-
 #ifdef PLAN_NANOMSG
 /**
  * Creates an intra-process communication channel between specified agent

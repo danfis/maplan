@@ -53,7 +53,7 @@ NANOMSG_LDFLAGS ?= $(shell pkg-config --libs libnanomsg)
 OPTS_CFLAGS ?=
 OPTS_LDFLGS ?=
 
-USE_LOCAL_OPTS := $(shell if test -f $(BASEPATH_)/third-party/opts/libopts.a; then echo "yes"; else echo "no"; fi;)
+USE_LOCAL_OPTS ?= $(shell if test -f $(BASEPATH_)/third-party/opts/libopts.a; then echo "yes"; else echo "no"; fi;)
 ifeq '$(USE_LOCAL_OPTS)' 'yes'
   OPTS_CFLAGS := -I$(BASEPATH_)/third-party/opts
   OPTS_LDFLAGS := -L$(BASEPATH_)/third-party/opts -lopts

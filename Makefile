@@ -68,6 +68,9 @@ OBJS += ma_comm_queue
 ifeq '$(USE_ZMQ)' 'yes'
   OBJS += ma_comm_net
 endif
+ifeq '$(USE_NANOMSG)' 'yes'
+  OBJS += ma_comm_nanomsg
+endif
 OBJS += ma_search
 OBJS += ma_snapshot
 

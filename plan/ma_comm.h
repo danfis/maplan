@@ -74,6 +74,16 @@ int planMACommNetConfAddNode(plan_ma_comm_net_conf_t *cfg,
 plan_ma_comm_t *planMACommNetNew(const plan_ma_comm_net_conf_t *cfg);
 #endif /* PLAN_ZMQ */
 
+#ifdef PLAN_NANOMSG
+/**
+ * Creates a communication channel between specified agent and all other
+ * agents. The channel is local to the process, i.e., the agents must run
+ * in separate threads.
+ */
+plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size);
+
+#endif /* PLAN_NANOMSG */
+
 
 /**
  * Destroys a communication channel.

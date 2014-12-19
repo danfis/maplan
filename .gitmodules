@@ -7,3 +7,7 @@
 [submodule "third-party/nanomsg"]
 	path = third-party/nanomsg
 	url = https://github.com/nanomsg/nanomsg
+[submodule "third-party/protobuf"]
+	path = third-party/protobuf
+	url = https://github.com/google/protobuf
+    ignore = dirty

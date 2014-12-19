@@ -45,9 +45,6 @@ CXXFLAGS += -Wall -pedantic
 LDFLAGS += -pthread
 LDFLAGS += $(SYSTEM_LDFLAGS)
 
-PROTOBUF_CFLAGS ?= $(shell pkg-config --cflags protobuf)
-PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs protobuf)
-
 OPTS_CFLAGS ?=
 OPTS_LDFLGS ?=
 USE_LOCAL_OPTS ?= $(shell if test -f $(BASEPATH_)/third-party/opts/libopts.a; then echo "yes"; else echo "no"; fi;)
@@ -77,19 +74,18 @@ else
   NANOMSG_LDFLAGS ?= $(shell pkg-config --libs libnanomsg)
 endif
 
-
-CHECK_DEPENDENCY ?= yes
-ifeq '$(CHECK_DEPENDENCY)' 'yes'
-  HAVE_LIBPROTOBUF := $(shell if pkg-config --exists protobuf; then echo "yes"; else echo "no"; fi;)
-  HAVE_PROTOBUFC := $(shell if $(PROTOC) --version >/dev/null; then echo "yes"; else echo "no"; fi;)
-
-  ifneq '$(HAVE_LIBPROTOBUF)' 'yes'
-    $(error libprotobuf was not found!)
-  endif
-
-  ifneq '$(HAVE_PROTOBUFC)' 'yes'
-    $(error Executable protoc is not set properly!)
-  endif
+PROTOBUF_PATH_ := $(BASEPATH_)/third-party/protobuf
+PROTOBUF_LIBPATH_ := $(PROTOBUF_PATH_)/build/lib
+USE_LOCAL_PROTOBUF ?= $(shell if test -f $(PROTOBUF_LIBPATH_)/libprotobuf.a; then echo "yes"; else echo "no"; fi;)
+ifeq '$(USE_LOCAL_PROTOBUF)' 'yes'
+  PROTOBUF_CFLAGS ?= $(shell PKG_CONFIG_PATH=$(PROTOBUF_LIBPATH_)/pkgconfig pkg-config --cflags protobuf)
+  PROTOBUF_LDFLAGS ?= $(shell PKG_CONFIG_PATH=$(PROTOBUF_LIBPATH_)/pkgconfig pkg-config --libs protobuf)
+#  PROTOBUF_CFLAGS := -I$(PROTOBUF_PATH_)/build/include
+#  PROTOBUF_LDFLAGS := -L$(PROTOBUF_PATH_)/build/lib -lprotobuf
+  PROTOC := ../$(PROTOBUF_PATH_)/build/bin/protoc
+else
+  PROTOBUF_CFLAGS ?= $(shell pkg-config --cflags protobuf)
+  PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs protobuf)
 endif
 
 .DEFAULT_GOAL := all

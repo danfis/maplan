@@ -101,9 +101,13 @@ src/%.pb.h src/%.pb.cc: src/%.proto
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 .objs/ma_msg.cxx.o: src/ma_msg.cc plan/ma_msg.h src/ma_msg.pb.h plan/config.h
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
+.objs/ma_msg.pb.cxx.o: src/ma_msg.pb.cc src/ma_msg.pb.h
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
 .objs/problem.cxx.o: src/problem.cc plan/problem.h src/problemdef.pb.h plan/config.h
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
+.objs/problemdef.pb.cxx.o: src/problemdef.pb.cc src/problemdef.pb.h
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
 .objs/%.cxx.o: src/%.cc plan/%.h plan/config.h
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 .objs/%.cxx.o: src/%.cc plan/config.h
@@ -143,7 +147,14 @@ third-party:
 	$(MAKE) -C third-party/boruvka
 	$(MAKE) -C third-party/opts
 	cd third-party/nanomsg \
-		&& if test ! -f .libs/libnanomsg.a; then \
+		&& if test ! -f build/lib/libnanomsg.a; then \
+				./autogen.sh \
+					&& ./configure --enable-static --disable-shared --prefix=`pwd`/build \
+					&& make \
+					&& make install; \
+		fi;
+	cd third-party/protobuf \
+		&& if test ! -f build/lib/libprotobuf.a; then \
 				./autogen.sh \
 					&& ./configure --enable-static --disable-shared --prefix=`pwd`/build \
 					&& make \
@@ -154,6 +165,10 @@ third-party-clean:
 	$(MAKE) -C third-party/translate clean
 	$(MAKE) -C third-party/boruvka clean
 	$(MAKE) -C third-party/opts clean
+	$(MAKE) -C third-party/nanomsg clean
+	rm -rf third-party/nanomsg/build
+	$(MAKE) -C third-party/protobuf clean
+	rm -rf third-party/protobuf/build
 
 help:
 	@echo "Targets:"
@@ -193,6 +208,7 @@ help:
 	@echo "    USE_LOCAL_BORUVKA = $(USE_LOCAL_BORUVKA)"
 	@echo "    BORUVKA_CFLAGS    = $(BORUVKA_CFLAGS)"
 	@echo "    BORUVKA_LDFLAGS   = $(BORUVKA_LDFLAGS)"
+	@echo "    USE_LOCAL_PROTOBUF = $(USE_LOCAL_PROTOBUF)"
 	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
 	@echo "    USE_LOCAL_NANOMSG = $(USE_LOCAL_NANOMSG)"

@@ -92,6 +92,16 @@ plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size);
  */
 plan_ma_comm_t *planMACommIPCNew(int agent_id, int agent_size,
                                  const char *prefix);
+
+/**
+ * Creates an inter-process communication channel between specified agent
+ * and all other agents. The channel is based on TCP protocol, i.e., agents
+ * can run on any cluster of machines connected with network.
+ * A list of addresses of each agent must be provided (thus addr must have
+ * at least agent_size items).
+ */
+plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
+                                 const char **addr);
 #endif /* PLAN_NANOMSG */
 
 

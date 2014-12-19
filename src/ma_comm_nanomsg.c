@@ -77,7 +77,7 @@ static plan_ma_comm_t *inprocIPCNew(int agent_id, int agent_size,
                                     const char *protocol,
                                     const char *prefix)
 {
-    int urlbuf_size = 128 * agent_size;
+    int urlbuf_size = 256 * agent_size;
     char urlbuf[urlbuf_size];
     char *urls[agent_size];
     int i, size;
@@ -102,6 +102,28 @@ plan_ma_comm_t *planMACommIPCNew(int agent_id, int agent_size,
                                  const char *prefix)
 {
     return inprocIPCNew(agent_id, agent_size, "ipc", prefix);
+}
+
+plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
+                                 const char **addr)
+{
+    plan_ma_comm_t *comm;
+    char *urls[agent_size];
+    int i;
+
+    for (i = 0; i < agent_size; ++i){
+        urls[i] = BOR_ALLOC_ARR(char, strlen(addr[i]) + 6 + 1);
+        strcpy(urls[i], "tcp://");
+        strcpy(urls[i] + 6, addr[i]);
+    }
+
+    comm = nanomsgNew(agent_id, agent_size, urls);
+
+    for (i = 0; i < agent_size; ++i){
+        BOR_FREE(urls[i]);
+    }
+
+    return comm;
 }
 
 static void planMACommNanomsgDel(plan_ma_comm_t *c)

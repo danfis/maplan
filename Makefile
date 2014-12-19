@@ -63,10 +63,7 @@ OBJS += heur_relax_ff
 OBJS += heur_lm_cut
 OBJS += heur_ma_ff
 #OBJS += heur_ma_max
-OBJS += ma_comm_queue
-ifeq '$(USE_NANOMSG)' 'yes'
-  OBJS += ma_comm_nanomsg
-endif
+OBJS += ma_comm_nanomsg
 OBJS += ma_search
 OBJS += ma_snapshot
 

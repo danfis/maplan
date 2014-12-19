@@ -42,29 +42,29 @@ CXXFLAGS += -Wall -pedantic
 LDFLAGS += -pthread
 LDFLAGS += $(SYSTEM_LDFLAGS)
 
-
-USE_NANOMSG ?= auto
-ifeq '$(USE_NANOMSG)' 'auto'
-  USE_NANOMSG = $(shell if pkg-config --exists libnanomsg; then echo "yes"; else echo "no"; fi;)
-endif
-ifeq '$(USE_NANOMSG)' 'yes'
-  NANOMSG_CFLAGS ?= $(shell pkg-config --cflags libnanomsg)
-  NANOMSG_LDFLAGS ?= $(shell pkg-config --libs libnanomsg)
-  CONFIG_FLAGS += -DUSE_NANOMSG
-endif
-
 PROTOBUF_CFLAGS ?= $(shell pkg-config --cflags protobuf)
 PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs protobuf)
+NANOMSG_CFLAGS ?= $(shell pkg-config --cflags libnanomsg)
+NANOMSG_LDFLAGS ?= $(shell pkg-config --libs libnanomsg)
 
-HAVE_LIBPROTOBUF := $(shell if pkg-config --exists protobuf; then echo "yes"; else echo "no"; fi;)
-HAVE_PROTOBUFC := $(shell if $(PROTOC) --version >/dev/null; then echo "yes"; else echo "no"; fi;)
 
-ifneq '$(HAVE_LIBPROTOBUF)' 'yes'
-  $(error libprotobuf was not found!)
-endif
+CHECK_DEPENDENCY ?= yes
+ifeq '$(CHECK_DEPENDENCY)' 'yes'
+  HAVE_LIBPROTOBUF := $(shell if pkg-config --exists protobuf; then echo "yes"; else echo "no"; fi;)
+  HAVE_PROTOBUFC := $(shell if $(PROTOC) --version >/dev/null; then echo "yes"; else echo "no"; fi;)
+  HAVE_LIBNANOMSG := $(shell if pkg-config --exists libnanomsg; then echo "yes"; else echo "no"; fi;)
 
-ifneq '$(HAVE_PROTOBUFC)' 'yes'
-  $(error Executable protoc is not set properly!)
+  ifneq '$(HAVE_LIBPROTOBUF)' 'yes'
+    $(error libprotobuf was not found!)
+  endif
+
+  ifneq '$(HAVE_PROTOBUFC)' 'yes'
+    $(error Executable protoc is not set properly!)
+  endif
+
+  ifneq '$(HAVE_LIBNANOMSG)' 'yes'
+    $(error libnanomsg was not found!)
+  endif
 endif
 
 .DEFAULT_GOAL := all

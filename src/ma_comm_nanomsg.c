@@ -21,10 +21,9 @@ static plan_ma_msg_t *planMACommNanomsgRecv(plan_ma_comm_t *comm);
 static plan_ma_msg_t *planMACommNanomsgRecvBlock(plan_ma_comm_t *comm,
                                                  int timeout_in_ms);
 
-plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size)
+static plan_ma_comm_t *nanomsgNew(int agent_id, int agent_size, char **urls)
 {
     plan_ma_comm_nanomsg_t *comm;
-    char url[128];
     int i;
 
     comm = BOR_ALLOC(plan_ma_comm_nanomsg_t);
@@ -37,10 +36,9 @@ plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size)
         return NULL;
     }
 
-    snprintf(url, sizeof(url), "inproc://%d", agent_id);
-    if (nn_bind(comm->recv_sock, url) < 0){
+    if (nn_bind(comm->recv_sock, urls[agent_id]) < 0){
         fprintf(stderr, "Error Nanomsg[%d]: Could not bind recv socket to"
-                " url: `%s'\n", agent_id, url);
+                " url: `%s'\n", agent_id, urls[agent_id]);
         return NULL;
     }
 
@@ -58,10 +56,9 @@ plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size)
             return NULL;
         }
 
-        snprintf(url, sizeof(url), "inproc://%d", i);
-        if (nn_connect(comm->send_sock[i], url) < 0){
+        if (nn_connect(comm->send_sock[i], urls[i]) < 0){
             fprintf(stderr, "Error Nanomsg[%d]: Could not connect to url:"
-                    " `%s'\n", agent_id, url);
+                    " `%s'\n", agent_id, urls[i]);
             BOR_FREE(comm->send_sock);
             BOR_FREE(comm);
             return NULL;
@@ -76,15 +73,49 @@ plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size)
     return &comm->comm;
 }
 
+static plan_ma_comm_t *inprocIPCNew(int agent_id, int agent_size,
+                                    const char *protocol,
+                                    const char *prefix)
+{
+    int urlbuf_size = 128 * agent_size;
+    char urlbuf[urlbuf_size];
+    char *urls[agent_size];
+    int i, size;
+
+    size = 0;
+    for (i = 0; i < agent_size; ++i){
+        urls[i] = urlbuf + size;
+        size += snprintf(urlbuf + size, urlbuf_size - size,
+                         "%s://%s%d", protocol, prefix, i);
+        size += 1;
+    }
+
+    return nanomsgNew(agent_id, agent_size, urls);
+}
+
+plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size)
+{
+    return inprocIPCNew(agent_id, agent_size, "inproc", "a");
+}
+
+plan_ma_comm_t *planMACommIPCNew(int agent_id, int agent_size,
+                                 const char *prefix)
+{
+    return inprocIPCNew(agent_id, agent_size, "ipc", prefix);
+}
+
 static void planMACommNanomsgDel(plan_ma_comm_t *c)
 {
     plan_ma_comm_nanomsg_t *comm = NANOMSG(c);
     int i;
 
+    nn_shutdown(comm->recv_sock, 0);
     nn_close(comm->recv_sock);
     for (i = 0; i < comm->comm.node_size; ++i){
-        if (comm->send_sock[i] > 0)
+        if (comm->send_sock[i] > 0){
+            nn_shutdown(comm->send_sock[i], 0);
             nn_close(comm->send_sock[i]);
+        }
     }
     BOR_FREE(comm->send_sock);
     BOR_FREE(comm);

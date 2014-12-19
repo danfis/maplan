@@ -60,4 +60,23 @@ TEST(testMACommNanomsgPingPong)
     planMACommDel(comm[1]);
 
     fprintf(stdout, "---- PingPong Inproc END ----\n");
+
+    fprintf(stdout, "---- PingPong IPC ----\n");
+    comm[0] = planMACommIPCNew(0, 2, "/tmp/test-ping-pong");
+    comm[1] = planMACommIPCNew(1, 2, "/tmp/test-ping-pong");
+
+    assertEquals(planMACommId(comm[0]), 0);
+    assertEquals(planMACommId(comm[1]), 1);
+    assertEquals(planMACommSize(comm[0]), 2);
+    assertEquals(planMACommSize(comm[1]), 2);
+
+    pthread_create(th + 0, NULL, thPingPong, comm[0]);
+    pthread_create(th + 1, NULL, thPingPong, comm[1]);
+    pthread_join(th[0], NULL);
+    pthread_join(th[1], NULL);
+
+    planMACommDel(comm[0]);
+    planMACommDel(comm[1]);
+
+    fprintf(stdout, "---- PingPong IPC END ----\n");
 }

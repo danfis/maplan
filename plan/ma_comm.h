@@ -76,12 +76,22 @@ plan_ma_comm_t *planMACommNetNew(const plan_ma_comm_net_conf_t *cfg);
 
 #ifdef PLAN_NANOMSG
 /**
- * Creates a communication channel between specified agent and all other
- * agents. The channel is local to the process, i.e., the agents must run
- * in separate threads.
+ * Creates an intra-process communication channel between specified agent
+ * and all other agents. The channel is local to the process, i.e., the
+ * agents must run in separate threads.
  */
 plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size);
 
+/**
+ * Creates an inter-process communication channel between specified agent
+ * and all other agents. The channel is base on IPC, i.e., agents must run
+ * on the same machine. Moreover an unique path prefix must be specified --
+ * this prefix is used both for distinguish between agent clusters on the
+ * same machine and as a path to a writable place on disk (for named
+ * sockets or pipelines).
+ */
+plan_ma_comm_t *planMACommIPCNew(int agent_id, int agent_size,
+                                 const char *prefix);
 #endif /* PLAN_NANOMSG */
 
 

@@ -17,13 +17,13 @@
 -include Makefile.include
 
 CFLAGS += -I. -I../boruvka/
-CFLAGS += $(ZMQ_CFLAGS)
+CFLAGS += $(NANOMSG_CFLAGS)
 CXXFLAGS += -I. -I../boruvka/
 CXXFLAGS += $(PROTOBUF_CFLAGS)
 CXXFLAGS += -Wno-long-long
 LDFLAGS += -L. -lplan -L../boruvka -lboruvka -lm -lrt
 LDFLAGS += $(PROTOBUF_LDFLAGS)
-LDFLAGS += $(ZMQ_LDFLAGS)
+LDFLAGS += $(NANOMSG_LDFLAGS)
 
 TARGETS  = libplan.a
 
@@ -63,11 +63,7 @@ OBJS += heur_relax_ff
 OBJS += heur_lm_cut
 OBJS += heur_ma_ff
 #OBJS += heur_ma_max
-OBJS += ma_comm
-OBJS += ma_comm_queue
-ifeq '$(USE_ZMQ)' 'yes'
-  OBJS += ma_comm_net
-endif
+OBJS += ma_comm_nanomsg
 OBJS += ma_search
 OBJS += ma_snapshot
 
@@ -164,7 +160,7 @@ help:
 	@echo "    DEBUG      'yes'/'no' - Turn on/off debugging   (=$(DEBUG))"
 	@echo "    PROFIL     'yes'/'no' - Compiles profiling info (=$(PROFIL))"
 	@echo ""
-	@echo "    USE_ZMQ  'yes'/'no'  - Use libzmq library (=$(USE_ZMQ))"
+	@echo "    USE_NANOMSG 'yes'/'no'  - Use libnanomsg library (=$(USE_NANOMSG))"
 	@echo ""
 	@echo "Variables:"
 	@echo "  Note that most of can be preset or changed by user"
@@ -175,7 +171,7 @@ help:
 	@echo "    CONFIG_FLAGS      = $(CONFIG_FLAGS)"
 	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
-	@echo "    ZMQ_CFLAGS        = $(ZMQ_CFLAGS)"
-	@echo "    ZMQ_LDFLAGS       = $(ZMQ_LDFLAGS)"
+	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"
+	@echo "    NANOMSG_LDFLAGS   = $(NANOMSG_LDFLAGS)"
 
 .PHONY: all clean check check-valgrind help doc install analyze examples

@@ -353,13 +353,11 @@ static void maThRun(int id, void *data, const bor_tasks_thinfo_t *_)
 
 static int multiAgent2(const options_t *o, plan_problem_agents_t *prob)
 {
-    plan_ma_comm_queue_pool_t *comm_pool;
     bor_tasks_t *tasks;
     ma_th_t th[prob->agent_size];
     plan_heur_t *heur;
     int i;
 
-    comm_pool = planMACommQueuePoolNew(prob->agent_size);
     tasks = borTasksNew(prob->agent_size);
 
     for (i = 0; i < prob->agent_size; ++i){
@@ -373,7 +371,8 @@ static int multiAgent2(const options_t *o, plan_problem_agents_t *prob)
         th[i].search = searchNew(o, prob->agent + i, heur,
                                  &th[i].progress_data);
         planPathInit(&th[i].path);
-        th[i].comm = planMACommQueue(comm_pool, i);
+        th[i].comm = planMACommInprocNew(i, prob->agent_size);
+        //th[i].comm = planMACommIPCNew(i, prob->agent_size, "/tmp/A");
         borTasksAdd(tasks, maThRun, i, th + i);
     }
 
@@ -403,8 +402,8 @@ static int multiAgent2(const options_t *o, plan_problem_agents_t *prob)
     for (i = 0; i < prob->agent_size; ++i){
         planPathFree(&th[i].path);
         planSearchDel(th[i].search);
+        planMACommDel(th[i].comm);
     }
-    planMACommQueuePoolDel(comm_pool);
 
     return 0;
 }

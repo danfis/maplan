@@ -8,10 +8,11 @@ endif
 
 CFLAGS += -I./ -I../
 CFLAGS += -I../../boruvka
-CFLAGS += $(JANSSON_CFLAGS)
+CFLAGS += $(PROTOBUF_CFLAGS)
+CFLAGS += $(NANOMSG_CFLAGS)
 LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -L../../boruvka -lboruvka -pthread
-LDFLAGS += $(JANSSON_LDFLAGS)
 LDFLAGS += $(PROTOBUF_LDFLAGS)
+LDFLAGS += $(NANOMSG_LDFLAGS)
 LDFLAGS += -lstdc++
 
 CHECK_REG=cu/check-regressions
@@ -31,7 +32,7 @@ OBJS += heur.o
 OBJS += heur_ma.o
 OBJS += list_lazy.o
 OBJS += list.o
-OBJS += ma_comm_queue.o
+OBJS += ma_comm_nanomsg.o
 OBJS += causalgraph.o
 OBJS += state_pool.o
 OBJS += ma_search.o

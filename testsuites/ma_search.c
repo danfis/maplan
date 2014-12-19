@@ -26,7 +26,6 @@ static void maLMCutTask(int id, void *data, const bor_tasks_thinfo_t *_)
 }
 
 static void runMALMCut(plan_problem_agents_t *p,
-                       plan_ma_comm_queue_pool_t *comm_pool,
                        int optimal_cost)
 {
     plan_search_astar_params_t params;
@@ -52,7 +51,7 @@ static void runMALMCut(plan_problem_agents_t *p,
         search = planSearchAStarNew(&params);
 
         th[i].search = search;
-        th[i].comm = planMACommQueue(comm_pool, i);
+        th[i].comm = planMACommInprocNew(i, p->agent_size);
         planPathInit(&th[i].path);
         borTasksAdd(tasks, maLMCutTask, i, th + i);
     }
@@ -68,6 +67,7 @@ static void runMALMCut(plan_problem_agents_t *p,
 
         planSearchDel(th[i].search);
         planPathFree(&th[i].path);
+        planMACommDel(th[i].comm);
     }
 
     assertTrue(found);
@@ -76,14 +76,9 @@ static void runMALMCut(plan_problem_agents_t *p,
 static void maSearch(const char *proto, int optimal_cost)
 {
     plan_problem_agents_t *p;
-    plan_ma_comm_queue_pool_t *comm_pool;
 
     p = planProblemAgentsFromProto(proto, PLAN_PROBLEM_USE_CG);
-    comm_pool = planMACommQueuePoolNew(p->agent_size);
-
-    runMALMCut(p, comm_pool, optimal_cost);
-
-    planMACommQueuePoolDel(comm_pool);
+    runMALMCut(p, optimal_cost);
     planProblemAgentsDel(p);
 }
 

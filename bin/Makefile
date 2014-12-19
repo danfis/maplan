@@ -2,13 +2,13 @@
 -include ../Makefile.include
 
 CFLAGS += -I../
-CFLAGS += -I../../boruvka
-CFLAGS += -I../../opts
+CFLAGS += $(BORUVKA_CFLAGS)
+CFLAGS += $(OPTS_CFLAGS)
 CFLAGS += $(PROTOBUF_CFLAGS)
 CFLAGS += $(NANOMSG_CFLAGS)
 LDFLAGS += -L../ -lplan
-LDFLAGS += -L../../boruvka -lboruvka
-LDFLAGS += -L../../opts -lopts
+LDFLAGS += $(BORUVKA_LDFLAGS)
+LDFLAGS += $(OPTS_LDFLAGS)
 LDFLAGS += $(PROTOBUF_LDFLAGS)
 LDFLAGS += $(NANOMSG_LDFLAGS)
 LDFLAGS += -pthread -lrt -lm

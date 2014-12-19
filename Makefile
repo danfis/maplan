@@ -16,14 +16,13 @@
 -include Makefile.local
 -include Makefile.include
 
-CFLAGS += -I. -I../boruvka/
+CFLAGS += -I.
+CFLAGS += $(BORUVKA_CFLAGS)
 CFLAGS += $(NANOMSG_CFLAGS)
-CXXFLAGS += -I. -I../boruvka/
+CXXFLAGS += -I.
+CXXFLAGS += $(BORUVKA_CFLAGS)
 CXXFLAGS += $(PROTOBUF_CFLAGS)
 CXXFLAGS += -Wno-long-long
-LDFLAGS += -L. -lplan -L../boruvka -lboruvka -lm -lrt
-LDFLAGS += $(PROTOBUF_LDFLAGS)
-LDFLAGS += $(NANOMSG_LDFLAGS)
 
 TARGETS  = libplan.a
 
@@ -102,9 +101,13 @@ src/%.pb.h src/%.pb.cc: src/%.proto
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 .objs/ma_msg.cxx.o: src/ma_msg.cc plan/ma_msg.h src/ma_msg.pb.h plan/config.h
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
+.objs/ma_msg.pb.cxx.o: src/ma_msg.pb.cc src/ma_msg.pb.h
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
 .objs/problem.cxx.o: src/problem.cc plan/problem.h src/problemdef.pb.h plan/config.h
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
+.objs/problemdef.pb.cxx.o: src/problemdef.pb.cc src/problemdef.pb.h
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
 .objs/%.cxx.o: src/%.cc plan/%.h plan/config.h
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 .objs/%.cxx.o: src/%.cc plan/config.h
@@ -139,6 +142,40 @@ doc:
 analyze: clean
 	$(SCAN_BUILD) $(MAKE)
 
+submodule:
+	git submodule init
+	git submodule update
+
+third-party: submodule
+	$(MAKE) -C third-party/translate
+	$(MAKE) -C third-party/boruvka
+	$(MAKE) -C third-party/opts
+	cd third-party/nanomsg \
+		&& if test ! -f build/lib/libnanomsg.a; then \
+				./autogen.sh \
+					&& ./configure --enable-static --disable-shared --prefix=`pwd`/build \
+					&& make \
+					&& make install; \
+		fi;
+	cd third-party/protobuf \
+		&& if test ! -f build/lib/libprotobuf.a; then \
+				./autogen.sh \
+					&& ./configure --enable-static --disable-shared --prefix=`pwd`/build \
+					&& make \
+					&& make install; \
+		fi;
+	$(MAKE) -C third-party/VAL
+
+third-party-clean:
+	$(MAKE) -C third-party/translate clean
+	$(MAKE) -C third-party/boruvka clean
+	$(MAKE) -C third-party/opts clean
+	$(MAKE) -C third-party/nanomsg clean
+	rm -rf third-party/nanomsg/build
+	$(MAKE) -C third-party/protobuf clean
+	rm -rf third-party/protobuf/build
+	$(MAKE) -C third-party/VAL clean
+
 help:
 	@echo "Targets:"
 	@echo "    all            - Build library"
@@ -147,7 +184,10 @@ help:
 	@echo "    check-valgrind - Build & Run automated tests in valgrind(1)"
 	@echo "    check-segfault - Build & Run automated tests in valgrind(1) set up to detect only segfaults"
 	@echo "    clean          - Remove all generated files"
-	@echo "    analyze        - Performs static analysis using Clang Static Analyzer"
+	@echo "    analyze        - Perform static analysis using Clang Static Analyzer"
+	@echo "    submodule      - Fetch all submodules using git."
+	@echo "    third-party    - Build all third-party projects."
+	@echo "    third-party-clean - Clean all third-party projects."
 	@echo ""
 	@echo "Options:"
 	@echo "    CC         - Path to C compiler          (=$(CC))"
@@ -169,9 +209,17 @@ help:
 	@echo "    CXXFLAGS          = $(CXXFLAGS)"
 	@echo "    LDFLAGS           = $(LDFLAGS)"
 	@echo "    CONFIG_FLAGS      = $(CONFIG_FLAGS)"
+	@echo "    USE_LOCAL_OPTS    = $(USE_LOCAL_OPTS)"
+	@echo "    OPTS_CFLAGS       = $(OPTS_CFLAGS)"
+	@echo "    OPTS_LDFLAGS      = $(OPTS_LDFLAGS)"
+	@echo "    USE_LOCAL_BORUVKA = $(USE_LOCAL_BORUVKA)"
+	@echo "    BORUVKA_CFLAGS    = $(BORUVKA_CFLAGS)"
+	@echo "    BORUVKA_LDFLAGS   = $(BORUVKA_LDFLAGS)"
+	@echo "    USE_LOCAL_PROTOBUF = $(USE_LOCAL_PROTOBUF)"
 	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
+	@echo "    USE_LOCAL_NANOMSG = $(USE_LOCAL_NANOMSG)"
 	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"
 	@echo "    NANOMSG_LDFLAGS   = $(NANOMSG_LDFLAGS)"
 
-.PHONY: all clean check check-valgrind help doc install analyze examples
+.PHONY: all clean check check-valgrind help doc install analyze examples submodule third-party

@@ -7,10 +7,11 @@ endif
 -include ../Makefile.local
 
 CFLAGS += -I./ -I../
-CFLAGS += -I../../boruvka
+CFLAGS += $(BORUVKA_CFLAGS)
 CFLAGS += $(PROTOBUF_CFLAGS)
 CFLAGS += $(NANOMSG_CFLAGS)
-LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -L../../boruvka -lboruvka -pthread
+LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -pthread
+LDFLAGS += $(BORUVKA_LDFLAGS)
 LDFLAGS += $(PROTOBUF_LDFLAGS)
 LDFLAGS += $(NANOMSG_LDFLAGS)
 LDFLAGS += -lstdc++

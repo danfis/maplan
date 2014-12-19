@@ -66,4 +66,15 @@ endif
 PROTOBUF_CFLAGS ?= $(shell pkg-config --cflags protobuf)
 PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs protobuf)
 
+HAVE_LIBPROTOBUF := $(shell if pkg-config --exists protobuf; then echo "yes"; else echo "no"; fi;)
+HAVE_PROTOBUFC := $(shell if $(PROTOC) --version >/dev/null; then echo "yes"; else echo "no"; fi;)
+
+ifneq '$(HAVE_LIBPROTOBUF)' 'yes'
+  $(error libprotobuf was not found!)
+endif
+
+ifneq '$(HAVE_PROTOBUFC)' 'yes'
+  $(error Executable protoc is not set properly!)
+endif
+
 .DEFAULT_GOAL := all

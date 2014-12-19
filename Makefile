@@ -177,5 +177,7 @@ help:
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
 	@echo "    ZMQ_CFLAGS        = $(ZMQ_CFLAGS)"
 	@echo "    ZMQ_LDFLAGS       = $(ZMQ_LDFLAGS)"
+	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"
+	@echo "    NANOMSG_LDFLAGS   = $(NANOMSG_LDFLAGS)"
 
 .PHONY: all clean check check-valgrind help doc install analyze examples

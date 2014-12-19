@@ -53,6 +53,16 @@ ifeq '$(USE_ZMQ)' 'yes'
   CONFIG_FLAGS += -DUSE_ZMQ
 endif
 
+USE_NANOMSG ?= auto
+ifeq '$(USE_NANOMSG)' 'auto'
+  USE_NANOMSG = $(shell if pkg-config --exists libnanomsg; then echo "yes"; else echo "no"; fi;)
+endif
+ifeq '$(USE_NANOMSG)' 'yes'
+  NANOMSG_CFLAGS ?= $(shell pkg-config --cflags libnanomsg)
+  NANOMSG_LDFLAGS ?= $(shell pkg-config --libs libnanomsg)
+  CONFIG_FLAGS += -DUSE_NANOMSG
+endif
+
 PROTOBUF_CFLAGS ?= $(shell pkg-config --cflags protobuf)
 PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs protobuf)
 

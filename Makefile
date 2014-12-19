@@ -142,7 +142,11 @@ doc:
 analyze: clean
 	$(SCAN_BUILD) $(MAKE)
 
-third-party:
+submodule:
+	git submodule init
+	git submodule update
+
+third-party: submodule
 	$(MAKE) -C third-party/translate
 	$(MAKE) -C third-party/boruvka
 	$(MAKE) -C third-party/opts
@@ -179,6 +183,7 @@ help:
 	@echo "    check-segfault - Build & Run automated tests in valgrind(1) set up to detect only segfaults"
 	@echo "    clean          - Remove all generated files"
 	@echo "    analyze        - Perform static analysis using Clang Static Analyzer"
+	@echo "    submodule      - Fetch all submodules using git."
 	@echo "    third-party    - Build all third-party projects."
 	@echo "    third-party-clean - Clean all third-party projects."
 	@echo ""
@@ -215,4 +220,4 @@ help:
 	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"
 	@echo "    NANOMSG_LDFLAGS   = $(NANOMSG_LDFLAGS)"
 
-.PHONY: all clean check check-valgrind help doc install analyze examples third-party
+.PHONY: all clean check check-valgrind help doc install analyze examples submodule third-party

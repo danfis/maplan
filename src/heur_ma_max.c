@@ -1,5 +1,67 @@
+#include <boruvka/alloc.h>
 #include "plan/heur.h"
+#include "heur_relax.h"
 
+struct _private_t {
+    plan_heur_relax_t relax;
+};
+typedef struct _private_t private_t;
+
+struct _plan_heur_ma_max_t {
+    plan_heur_t heur;
+    plan_heur_relax_t relax;
+};
+typedef struct _plan_heur_ma_max_t plan_heur_ma_max_t;
+
+#define HEUR(parent) \
+    bor_container_of(parent, plan_heur_ma_max_t, heur)
+
+static void heurDel(plan_heur_t *_heur);
+static int heurMAMax(plan_heur_t *heur, plan_ma_comm_t *comm,
+                     const plan_state_t *state, plan_heur_res_t *res);
+static int heurMAMaxUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
+                           const plan_ma_msg_t *msg, plan_heur_res_t *res);
+static void heurMAMaxRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
+                             const plan_ma_msg_t *msg);
+
+plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob)
+{
+
+    plan_heur_ma_max_t *heur;
+
+    heur = BOR_ALLOC(plan_heur_ma_max_t);
+    _planHeurInit(&heur->heur, heurDel, NULL);
+    _planHeurMAInit(&heur->heur, heurMAMax, heurMAMaxUpdate, heurMAMaxRequest);
+
+    return &heur->heur;
+}
+
+static void heurDel(plan_heur_t *_heur)
+{
+    plan_heur_ma_max_t *heur = HEUR(_heur);
+    _planHeurFree(&heur->heur);
+    planHeurRelaxFree(&heur->relax);
+    BOR_FREE(heur);
+}
+
+static int heurMAMax(plan_heur_t *heur, plan_ma_comm_t *comm,
+                     const plan_state_t *state, plan_heur_res_t *res)
+{
+    return 0;
+}
+
+static int heurMAMaxUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
+                           const plan_ma_msg_t *msg, plan_heur_res_t *res)
+{
+    return 0;
+}
+
+static void heurMAMaxRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
+                             const plan_ma_msg_t *msg)
+{
+}
+
+#if 0
 #define HEUR_RELAX_MAX
 #define HEUR_RELAX_MAX_FULL
 #define HEUR_RELAX_NO_OPTIMIZE_FACT_ENQUEUE
@@ -778,3 +840,4 @@ static void privateFree(private_t *private,
     planHeurOparrFree(private->fact_pre, fact_op->fact_size);
     planHeurOparrFree(private->fact_eff, fact_op->fact_size);
 }
+#endif

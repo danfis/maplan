@@ -3,11 +3,14 @@
 
 static void pVar(const plan_var_t *var, int var_size)
 {
-    int i;
+    int i, j;
 
     printf("Vars[%d]:\n", var_size);
     for (i = 0; i < var_size; ++i){
-        printf("[%d] name: `%s', range: %d\n", i, var[i].name, var[i].range);
+        printf("[%d] name: `%s', range: %d, is_private:", i, var[i].name, var[i].range);
+        for (j = 0; j < var[i].range; ++j)
+            printf(" %d", var[i].is_private[j]);
+        printf("\n");
     }
 }
 

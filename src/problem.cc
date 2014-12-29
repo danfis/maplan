@@ -57,7 +57,8 @@ static void createProjectedOps(const plan_op_t *ops, int ops_size,
 /** Creates agent's operators array in dst problem struct */
 static void createOps(const plan_op_t *ops, int op_size,
                       int agent_id, plan_problem_t *dst);
-/** Sets .private_vals array in problem struct */
+/** Sets .private_vals array in problem struct and .is_private member of
+ *  var[] structures. */
 static void setPrivateVals(plan_problem_t *agent, int agent_id,
                            const AgentVarVals &vals);
 
@@ -441,8 +442,7 @@ static void loadVar(plan_problem_t *p, const PlanProblem *proto,
             var = p->var + i;
         }
 
-        var->name = strdup(proto_var.name().c_str());
-        var->range = proto_var.range();
+        planVarInit(var, proto_var.name().c_str(), proto_var.range());
     }
 }
 
@@ -824,5 +824,6 @@ static void setPrivateVals(plan_problem_t *agent, int agent_id,
                                        agent->private_val_size);
     for (size_t i = 0; i < pv.size(); ++i){
         agent->private_val[i] = pv[i];
+        agent->var[pv[i].var].is_private[pv[i].val] = 1;
     }
 }

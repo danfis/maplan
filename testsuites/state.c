@@ -9,16 +9,10 @@ TEST(testStateBasic)
     plan_state_t *state;
     plan_state_id_t ins[4];
 
-    planVarInit(vars + 0);
-    planVarInit(vars + 1);
-    planVarInit(vars + 2);
-    planVarInit(vars + 3);
-
-    vars[0].range = 6;
-    vars[1].range = 2;
-    vars[2].range = 3;
-    vars[3].range = 7;
-
+    planVarInit(vars + 0, "a", 6);
+    planVarInit(vars + 1, "b", 2);
+    planVarInit(vars + 2, "c", 3);
+    planVarInit(vars + 3, "d", 7);
 
     pool = planStatePoolNew(vars, 4);
     state = planStateNew(pool);
@@ -122,15 +116,10 @@ TEST(testStatePreEff)
     plan_state_id_t newid;
     plan_part_state_t *parts[4];
 
-    planVarInit(vars + 0);
-    planVarInit(vars + 1);
-    planVarInit(vars + 2);
-    planVarInit(vars + 3);
-
-    vars[0].range = 3;
-    vars[1].range = 2;
-    vars[2].range = 2;
-    vars[3].range = 4;
+    planVarInit(vars + 0, "a", 3);
+    planVarInit(vars + 1, "b", 2);
+    planVarInit(vars + 2, "c", 2);
+    planVarInit(vars + 3, "d", 4);
 
     pool = planStatePoolNew(vars, 4);
 
@@ -332,15 +321,10 @@ TEST(testPartStateUnset)
     plan_part_state_t *ps;
     plan_state_t *state;
 
-    planVarInit(vars + 0);
-    planVarInit(vars + 1);
-    planVarInit(vars + 2);
-    planVarInit(vars + 3);
-
-    vars[0].range = 3;
-    vars[1].range = 2;
-    vars[2].range = 2;
-    vars[3].range = 4;
+    planVarInit(vars + 0, "a", 3);
+    planVarInit(vars + 1, "b", 2);
+    planVarInit(vars + 2, "c", 2);
+    planVarInit(vars + 3, "d", 4);
 
     pool = planStatePoolNew(vars, 4);
     ps = planPartStateNew(pool);

@@ -123,17 +123,26 @@ TEST(testLoadFromProtoCondEff)
 
 static void pAgent(int agent_id, const plan_problem_t *p)
 {
+    plan_op_t *private_op;
+    int private_op_size;
+    planProblemCreatePrivateProjOps(p->op, p->op_size, p->var, p->var_size,
+                                    &private_op, &private_op_size);
+
     printf("++++ %s ++++\n", p->agent_name);
     printf("Agent ID: %d\n", agent_id);
     pVar(p->var, p->var_size);
+    pPrivateVal(p->private_val, p->private_val_size);
     pInitState(p->state_pool, p->initial_state);
     pGoal(p->goal);
     pOp(p->op, p->op_size);
     printf("Succ Gen: %d\n", (int)(p->succ_gen != NULL));
     printf("Proj op:\n");
     pOp(p->proj_op, p->proj_op_size);
-    pPrivateVal(p->private_val, p->private_val_size);
+    printf("Private Proj op:\n");
+    pOp(private_op, private_op_size);
     printf("++++ %s END ++++\n", p->agent_name);
+
+    planProblemDestroyOps(private_op, private_op_size);
 }
 
 static void testAgentProto(const char *proto)

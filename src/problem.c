@@ -225,3 +225,43 @@ void planProblemAgentsDotGraph(const plan_problem_agents_t *agents,
 
     planFactIdFree(&fid);
 }
+
+void planProblemCreatePrivateProjOps(const plan_op_t *op, int op_size,
+                                     const plan_var_t *var, int var_size,
+                                     plan_op_t **op_out, int *op_out_size)
+{
+    plan_op_t *dop;
+    int i, dop_size;
+
+    dop = BOR_ALLOC_ARR(plan_op_t, op_size);
+    dop_size = 0;
+
+    for (i = 0; i < op_size; ++i){
+        planOpInit(dop + dop_size, op[i].state_pool);
+        planOpCopyPrivate(dop + dop_size, op + i, var);
+        if (dop[dop_size].pre->vals_size > 0
+                || dop[dop_size].eff->vals_size > 0
+                || dop[dop_size].cond_eff_size > 0){
+            ++dop_size;
+        }else{
+            planOpFree(dop + dop_size);
+        }
+    }
+
+    dop = BOR_REALLOC_ARR(dop, plan_op_t, dop_size);
+
+    *op_out = dop;
+    *op_out_size = dop_size;
+}
+
+void planProblemDestroyOps(plan_op_t *op, int op_size)
+{
+    int i;
+
+    if (op_size == 0)
+        return;
+
+    for (i = 0; i < op_size; ++i)
+        planOpFree(op + i);
+    BOR_FREE(op);
+}

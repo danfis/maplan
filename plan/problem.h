@@ -91,6 +91,21 @@ void planProblemAgentsDotGraph(const plan_problem_agents_t *agents,
 _bor_inline int planProblemCheckGoal(plan_problem_t *p,
                                      plan_state_id_t state_id);
 
+
+/**
+ * Creates an array of operators that are private projections of the given
+ * operators.
+ */
+void planProblemCreatePrivateProjOps(const plan_op_t *op, int op_size,
+                                     const plan_var_t *var, int var_size,
+                                     plan_op_t **op_out, int *op_out_size);
+
+/**
+ * Destroys an array of operators.
+ */
+void planProblemDestroyOps(plan_op_t *op, int op_size);
+
+
 /**** INLINES ****/
 _bor_inline int planProblemCheckGoal(plan_problem_t *p,
                                      plan_state_id_t state_id)

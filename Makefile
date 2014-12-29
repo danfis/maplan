@@ -30,6 +30,7 @@ OBJS  = problem
 OBJS += var
 OBJS += state
 OBJS += op
+OBJS += op_id_tr
 OBJS += dataarr
 OBJS += succgen
 OBJS += causalgraph

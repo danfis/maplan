@@ -121,6 +121,9 @@ static void testHeurMAProb(const plan_problem_agents_t *p,
         planHeurDel(ma_heur[i]);
         planMACommDel(comm[i]);
     }
+
+    if (seq_heur)
+        planHeurDel(seq_heur);
 }
 
 static void runTestHeurMA(const char *name, const char *proto,

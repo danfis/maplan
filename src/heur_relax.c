@@ -179,6 +179,30 @@ void planHeurRelax(plan_heur_relax_t *relax, const plan_state_t *state)
     }
 }
 
+static void exploreAddFull(plan_heur_relax_t *relax, const plan_state_t *state)
+{
+#define PLAN_HEUR_RELAX_EXPLORE_CHECK_GOAL
+#define PLAN_HEUR_RELAX_EXPLORE_OP_ADD \
+    relaxOpAdd(relax, &queue, op_id, fact_id, value)
+#include "_heur_relax_explore.h"
+}
+
+static void exploreMaxFull(plan_heur_relax_t *relax, const plan_state_t *state)
+{
+#define PLAN_HEUR_RELAX_EXPLORE_CHECK_GOAL
+#define PLAN_HEUR_RELAX_EXPLORE_OP_ADD \
+    relaxOpMax(relax, &queue, op_id, fact_id, value)
+#include "_heur_relax_explore.h"
+}
+
+void planHeurRelaxFull(plan_heur_relax_t *relax, const plan_state_t *state)
+{
+    if (relax->type == PLAN_HEUR_RELAX_TYPE_ADD){
+        exploreAddFull(relax, state);
+    }else{ // PLAN_HEUR_RELAX_TYPE_MAX
+        exploreMaxFull(relax, state);
+    }
+}
 
 static void setGoalFact(int *goal_fact, int fact_size,
                         const plan_fact_id_t *fid,

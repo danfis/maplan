@@ -68,6 +68,12 @@ plan_cost_t planHeurRelax2(plan_heur_relax_t *relax,
                            const plan_part_state_t *goal);
 
 /**
+ * Computes relaxation heuristic for all facts and operators reachable form
+ * the initial state.
+ */
+void planHeurRelaxFull(plan_heur_relax_t *relax, const plan_state_t *state);
+
+/**
  * Incrementally update h^max values considering changed costs of the
  * speficied operators.
  */

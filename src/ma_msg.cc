@@ -304,6 +304,12 @@ void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state)
         planStateSet(state, i, proto->state_full(i));
 }
 
+plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->state_full(var);
+}
+
 void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,
                     int owner, plan_cost_t value)
 {

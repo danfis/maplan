@@ -280,7 +280,7 @@ int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
 /**
  * Sets request for Max heuristic.
  */
-#define planMAMsgHeurMaxSetRequest planMAMsgSetFullState
+#define planMAMsgHeurMaxSetRequest planMAMsgSetStateFull
 
 /**
  * Adds operator to message related to Max heuristic.
@@ -292,6 +292,7 @@ int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
  * Loads state from the message.
  */
 #define planMAMsgHeurMaxState planMAMsgStateFull
+#define planMAMsgHeurMaxStateVal planMAMsgStateFullVal
 
 /**
  * Returns number of operators stored in message.
@@ -316,6 +317,11 @@ void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size);
  * Loads full state from the message
  */
 void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state);
+
+/**
+ * Returns value of a specified variable in full state.
+ */
+plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var);
 
 /**
  * Adds operator to the message.

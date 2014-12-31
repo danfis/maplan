@@ -124,6 +124,13 @@ static void setOpId(plan_fact_op_cross_ref_t *cr,
     cr->op_id[cr->goal_op_id] = -1;
 }
 
+static int sortIntCmp(const void *a, const void *b)
+{
+    int i1 = *(int *)a;
+    int i2 = *(int *)b;
+    return i1 - i2;
+}
+
 void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
                             const plan_var_t *var, int var_size,
                             const plan_part_state_t *goal,
@@ -194,4 +201,57 @@ void planFactOpCrossRefFree(plan_fact_op_cross_ref_t *cr)
     BOR_FREE(cr->op_id);
 
     planFactIdFree(&cr->fact_id);
+}
+
+int planFactOpCrossRefAddFakePre(plan_fact_op_cross_ref_t *cr,
+                                 plan_cost_t value)
+{
+    int fact_id;
+
+    fact_id = cr->fact_size++;
+    cr->fact_pre = BOR_REALLOC_ARR(cr->fact_pre, plan_oparr_t, cr->fact_size);
+    cr->fact_eff = BOR_REALLOC_ARR(cr->fact_eff, plan_oparr_t, cr->fact_size);
+
+    cr->fact_pre[fact_id].size = 0;
+    cr->fact_pre[fact_id].op = NULL;
+    cr->fact_eff[fact_id].size = 0;
+    cr->fact_eff[fact_id].op = NULL;
+
+    ++cr->fake_pre_size;
+    cr->fake_pre = BOR_REALLOC_ARR(cr->fake_pre, plan_fake_pre_t,
+                                   cr->fake_pre_size);
+    cr->fake_pre[cr->fake_pre_size - 1].fact_id = fact_id;
+    cr->fake_pre[cr->fake_pre_size - 1].value = value;
+
+    return fact_id;
+}
+
+void planFactOpCrossRefSetFakePreValue(plan_fact_op_cross_ref_t *cr,
+                                       int fact_id, plan_cost_t value)
+{
+    int i;
+
+    for (i = 0; i < cr->fake_pre_size; ++i){
+        if (cr->fake_pre[i].fact_id == fact_id)
+            cr->fake_pre[i].value = value;
+    }
+}
+
+void planFactOpCrossRefAddPre(plan_fact_op_cross_ref_t *cr,
+                              int op_id, int fact_id)
+{
+    plan_oparr_t *oparr;
+    plan_factarr_t *factarr;
+
+    oparr = cr->fact_pre + fact_id;
+    ++oparr->size;
+    oparr->op = BOR_REALLOC_ARR(oparr->op, int, oparr->size);
+    oparr->op[oparr->size - 1] = op_id;
+    qsort(oparr->op, oparr->size, sizeof(int), sortIntCmp);
+
+    factarr = cr->op_pre + op_id;
+    ++factarr->size;
+    factarr->fact = BOR_REALLOC_ARR(factarr->fact, int, factarr->size);
+    factarr->fact[factarr->size - 1] = fact_id;
+    qsort(factarr->fact, factarr->size, sizeof(int), sortIntCmp);
 }

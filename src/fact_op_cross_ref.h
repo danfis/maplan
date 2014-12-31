@@ -65,8 +65,25 @@ void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
  */
 void planFactOpCrossRefFree(plan_fact_op_cross_ref_t *cr);
 
-#define PLAN_OPARR_FOR_EACH(oparr, i, op_id) \
-    for ((i) = 0; (i) < (size) && ((op_id) = (oparr)->op[(i)], 1); ++(i))
+/**
+ * Adds a new fake precondition fact with a specified initial value.
+ * Returns ID of the fact.
+ */
+int planFactOpCrossRefAddFakePre(plan_fact_op_cross_ref_t *cr,
+                                 plan_cost_t value);
+
+/**
+ * Sets initial value of the specified fake precondition.
+ */
+void planFactOpCrossRefSetFakePreValue(plan_fact_op_cross_ref_t *cr,
+                                       int fact_id, plan_cost_t value);
+
+/**
+ * Adds specified fact as a precondition to the operator.
+ */
+void planFactOpCrossRefAddPre(plan_fact_op_cross_ref_t *cr,
+                              int op_id, int fact_id);
+
 
 #ifdef __cplusplus
 }

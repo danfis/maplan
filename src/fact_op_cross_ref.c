@@ -45,7 +45,7 @@ static void crossRefNoPre(plan_fact_op_cross_ref_t *cr, int op_id)
 {
     cr->op_pre[op_id].size = 1;
     cr->op_pre[op_id].fact = BOR_ALLOC_ARR(int, 1);
-    crossRefOpFact(op_id, 0, cr->no_pre_id, cr->op_pre, cr->fact_pre);
+    crossRefOpFact(op_id, 0, cr->fake_pre[0].fact_id, cr->op_pre, cr->fact_pre);
 }
 
 static void crossRefOp(plan_fact_op_cross_ref_t *cr,
@@ -133,10 +133,15 @@ void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
 
     planFactIdInit(&cr->fact_id, var, var_size);
 
+    // Allocate artificial precondition for operators without preconditions
+    cr->fake_pre_size = 1;
+    cr->fake_pre = BOR_ALLOC_ARR(plan_fake_pre_t, 1);
+
     // Determine number of facts and add artificial facts
     cr->fact_size = cr->fact_id.fact_size;
     cr->goal_id = cr->fact_size++;
-    cr->no_pre_id = cr->fact_size++;
+    cr->fake_pre[0].fact_id = cr->fact_size++;
+    cr->fake_pre[0].value = 0;
 
     // Compute final number of operators
     cr->op_size = op_size;
@@ -184,6 +189,8 @@ void planFactOpCrossRefFree(plan_fact_op_cross_ref_t *cr)
     }
     BOR_FREE(cr->fact_pre);
     BOR_FREE(cr->fact_eff);
+    if (cr->fake_pre)
+        BOR_FREE(cr->fake_pre);
     BOR_FREE(cr->op_id);
 
     planFactIdFree(&cr->fact_id);

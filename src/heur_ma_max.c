@@ -475,7 +475,7 @@ static void requestInit(private_t *private,
         private->relax.fact[fact_id].value = 0;
         planPrioQueuePush(queue, 0, fact_id);
     }
-    fact_id = private->relax.cref.no_pre_id;
+    fact_id = private->relax.cref.fake_pre[0].fact_id;
     private->relax.fact[fact_id].value = 0;
     planPrioQueuePush(queue, 0, fact_id);
 }

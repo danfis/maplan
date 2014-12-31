@@ -71,6 +71,7 @@ static void relaxAddInitState(plan_heur_relax_t *relax,
                               const plan_state_t *state)
 {
     int i, len, fact_id;
+    plan_cost_t value;
 
     len = planStateSize(state);
     for (i = 0; i < len; ++i){
@@ -79,9 +80,14 @@ static void relaxAddInitState(plan_heur_relax_t *relax,
         planPrioQueuePush(queue, 0, fact_id);
     }
 
-    fact_id = relax->cref.no_pre_id;
-    relax->fact[fact_id].value = 0;
-    planPrioQueuePush(queue, 0, fact_id);
+    len = relax->cref.fake_pre_size;
+    for (i = 0; i < len; ++i){
+        fact_id = relax->cref.fake_pre[i].fact_id;
+        value   = relax->cref.fake_pre[i].value;
+        relax->fact[fact_id].value = value;
+        planPrioQueuePush(queue, value, fact_id);
+    }
+
 }
 
 static void relaxAddEffects(plan_heur_relax_t *relax,

@@ -71,6 +71,7 @@ static void relaxAddInitState(plan_heur_relax_t *relax,
                               const plan_state_t *state)
 {
     int i, len, fact_id;
+    plan_cost_t value;
 
     len = planStateSize(state);
     for (i = 0; i < len; ++i){
@@ -79,9 +80,14 @@ static void relaxAddInitState(plan_heur_relax_t *relax,
         planPrioQueuePush(queue, 0, fact_id);
     }
 
-    fact_id = relax->cref.no_pre_id;
-    relax->fact[fact_id].value = 0;
-    planPrioQueuePush(queue, 0, fact_id);
+    len = relax->cref.fake_pre_size;
+    for (i = 0; i < len; ++i){
+        fact_id = relax->cref.fake_pre[i].fact_id;
+        value   = relax->cref.fake_pre[i].value;
+        relax->fact[fact_id].value = value;
+        planPrioQueuePush(queue, value, fact_id);
+    }
+
 }
 
 static void relaxAddEffects(plan_heur_relax_t *relax,
@@ -454,4 +460,39 @@ void planHeurRelaxMarkPlan2(plan_heur_relax_t *relax,
         fact_id = planFactId(&relax->cref.fact_id, var, val);
         markPlan(relax, fact_id);
     }
+}
+
+int planHeurRelaxAddFakePre(plan_heur_relax_t *relax, int op_id)
+{
+    int fact_id;
+
+    fact_id = planFactOpCrossRefAddFakePre(&relax->cref, 0);
+    planFactOpCrossRefAddPre(&relax->cref, op_id, fact_id);
+    relax->op_init[op_id].unsat += 1;
+
+    relax->fact = BOR_REALLOC_ARR(relax->fact, plan_heur_relax_fact_t,
+                                  relax->cref.fact_size);
+    relax->fact_init = BOR_REALLOC_ARR(relax->fact_init,
+                                       plan_heur_relax_fact_t,
+                                       relax->cref.fact_size);
+    relax->fact_init[fact_id].value = PLAN_COST_MAX;
+    relax->fact_init[fact_id].supp = -1;
+
+    if (relax->plan_fact){
+        BOR_FREE(relax->plan_fact);
+        relax->plan_fact = NULL;
+    }
+
+    if (relax->goal_fact){
+        BOR_FREE(relax->goal_fact);
+        relax->goal_fact = NULL;
+    }
+
+    return fact_id;
+}
+
+void planHeurRelaxSetFakePreValue(plan_heur_relax_t *relax,
+                                  int fact_id, plan_cost_t value)
+{
+    planFactOpCrossRefSetFakePreValue(&relax->cref, fact_id, value);
 }

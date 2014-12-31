@@ -8,6 +8,7 @@ struct _private_t {
     plan_heur_relax_t relax;
     plan_factarr_t fact;
     plan_op_id_tr_t op_id_tr;
+    int *fake_pre; /*!< Mapping between op_id and fake precodition ID */
 };
 typedef struct _private_t private_t;
 
@@ -104,6 +105,14 @@ static void privateInit(private_t *private, const plan_problem_t *prob)
     private->fact.fact = BOR_REALLOC_ARR(private->fact.fact, int,
                                          private->fact.size);
 
+    // Add fake precondition to public operators.
+    // The fake precondition will be used for received values.
+    private->fake_pre = BOR_CALLOC_ARR(int, op_size);
+    for (i = 0; i < op_size; ++i){
+        if (!op[i].is_private)
+            private->fake_pre[i] = planHeurRelaxAddFakePre(&private->relax, i);
+    }
+
     planOpIdTrInit(&private->op_id_tr, op, op_size);
     planProblemDestroyOps(op, op_size);
 }
@@ -113,6 +122,8 @@ static void privateFree(private_t *private)
     planHeurRelaxFree(&private->relax);
     if (private->fact.fact)
         BOR_FREE(private->fact.fact);
+    if (private->fake_pre)
+        BOR_FREE(private->fake_pre);
     planOpIdTrFree(&private->op_id_tr);
 }
 
@@ -433,73 +444,6 @@ static int heurMAMaxUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
 
 
 
-// TODO: Move all this to heur_relax.c
-static void requestInit(private_t *private,
-                        const plan_fact_id_t *fid,
-                        const plan_op_id_tr_t *op_id_tr,
-                        const plan_ma_msg_t *msg,
-                        plan_prio_queue_t *queue)
-{
-    int i, op_id, op_len, op_value, fact_id;
-
-    // First initialize operators' and facts' values
-    memcpy(private->relax.op, private->relax.op_init,
-           sizeof(plan_heur_relax_op_t) * private->relax.cref.op_size);
-    memcpy(private->relax.fact, private->relax.fact_init,
-           sizeof(plan_heur_relax_fact_t) * private->relax.cref.fact_size);
-
-    op_len = planMAMsgHeurMaxOpSize(msg);
-    for (i = 0; i < op_len; ++i){
-        op_id = planMAMsgHeurMaxOp(msg, i, &op_value);
-        op_id = planOpIdTrLoc(op_id_tr, op_id);
-        if (op_id < 0)
-            continue;
-        private->relax.op[op_id].value = op_value;
-
-        // We push artificial fact into queue with priority equaling to
-        // value of the operator. When we pop this value from queue we just
-        // decrease .unsat counter and check whether all other
-        // preconditions were met. This is the way how to prevent cycling
-        // between facts and operators because we pretend that these
-        // artificial facts are initial state so the rest of the algorithm
-        // so (more or less) same as in ordinary h^max heuristic.
-        private->relax.op[op_id].unsat += 1;
-        planPrioQueuePush(queue, op_value, private->relax.cref.fact_size + op_id);
-    }
-
-    // Set facts from initial state to 0 and add them to the queue
-    for (i = 0; i < fid->var_size; ++i){
-        fact_id = planFactId(fid, i, planMAMsgHeurMaxStateVal(msg, i));
-
-        // Initial facts initialize to zero and push them into queue
-        private->relax.fact[fact_id].value = 0;
-        planPrioQueuePush(queue, 0, fact_id);
-    }
-    fact_id = private->relax.cref.no_pre_id;
-    private->relax.fact[fact_id].value = 0;
-    planPrioQueuePush(queue, 0, fact_id);
-}
-
-static void requestEnqueueOpEff(private_t *private, int op_id,
-                                plan_prio_queue_t *queue)
-{
-    int fact_value, op_value;
-    int i, len, *fact_ids, fact_id;
-
-    op_value = private->relax.op[op_id].value;
-    len      = private->relax.cref.op_eff[op_id].size;
-    fact_ids = private->relax.cref.op_eff[op_id].fact;
-    for (i = 0; i < len; ++i){
-        fact_id = fact_ids[i];
-        fact_value = private->relax.fact[fact_id].value;
-
-        if (fact_value > op_value){
-            private->relax.fact[fact_id].value = op_value;
-            planPrioQueuePush(queue, op_value, fact_id);
-        }
-    }
-}
-
 static void requestSendResponse(private_t *private,
                                 plan_ma_comm_t *comm,
                                 const plan_op_id_tr_t *op_id_tr,
@@ -543,48 +487,14 @@ static void requestSendEmptyResponse(plan_ma_comm_t *comm,
     planMAMsgDel(msg);
 }
 
-static void requestMain(private_t *private, plan_prio_queue_t *queue,
-                        int fact_size)
-{
-    int i, fact_id, fact_value, op_id, op_len, *ops, op_value, op_value2;
-
-    while (!planPrioQueueEmpty(queue)){
-        fact_id = planPrioQueuePop(queue, &fact_value);
-
-        if (fact_id >= fact_size){
-            // The poped fact is an artificial fact that signals that the
-            // corresponding operator should be processed. This way we
-            // prevent cycling between facts and operators.
-            op_id = fact_id - fact_size;
-            --private->relax.op[op_id].unsat;
-            if (private->relax.op[op_id].unsat == 0)
-                requestEnqueueOpEff(private, op_id, queue);
-            continue;
-        }
-
-        if (fact_value != private->relax.fact[fact_id].value)
-            continue;
-
-        op_len = private->relax.cref.fact_pre[fact_id].size;
-        ops    = private->relax.cref.fact_pre[fact_id].op;
-        for (i = 0; i < op_len; ++i){
-            op_id = ops[i];
-            op_value = private->relax.op[op_id].value;
-            op_value2 = private->relax.op[op_id].cost + fact_value;
-            private->relax.op[op_id].value = BOR_MAX(op_value, op_value2);
-
-            --private->relax.op[op_id].unsat;
-            if (private->relax.op[op_id].unsat == 0)
-                requestEnqueueOpEff(private, op_id, queue);
-        }
-    }
-}
 static void heurMAMaxRequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
                              const plan_ma_msg_t *msg)
 {
     plan_heur_ma_max_t *heur = HEUR(_heur);
     private_t *private = &heur->private;
-    plan_prio_queue_t queue;
+    int i, op_id, op_len, fact_id;
+    plan_cost_t op_value;
+    PLAN_STATE_STACK(state, private->relax.cref.fact_id.var_size);
 
     if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
             || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_MAX_REQUEST){
@@ -599,18 +509,30 @@ static void heurMAMaxRequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
         return;
     }
 
-    // Initialize priority queue with all private facts
-    planPrioQueueInit(&queue);
+    // Set up values of fake preconditions according to the operator values
+    // received from the other agent.
+    op_len = planMAMsgHeurMaxOpSize(msg);
+    for (i = 0; i < op_len; ++i){
+        op_id = planMAMsgHeurMaxOp(msg, i, &op_value);
+        op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
+        if (op_id < 0)
+            continue;
 
-    // Initialize work arrays
-    requestInit(private, &private->relax.cref.fact_id, &private->op_id_tr,
-                msg, &queue);
+        // Substract cost of the operator from the value to get correct
+        // fact value
+        op_value -= private->relax.op_init[op_id].cost;
+        op_value = BOR_MAX(0, op_value);
 
-    // Run main h^max loop
-    requestMain(private, &queue, private->relax.cref.fact_size);
+        // Find out ID of the fake fact corresponding to the operator
+        fact_id = private->fake_pre[op_id];
+        // and set the initial value
+        planHeurRelaxSetFakePreValue(&private->relax, fact_id, op_value);
+    }
+
+    // Run full relaxation heuristic
+    planMAMsgHeurMaxState(msg, &state);
+    planHeurRelaxFull(&private->relax, &state);
 
     // Send operator's new values back as response
     requestSendResponse(private, comm, &private->op_id_tr, msg);
-
-    planPrioQueueFree(&queue);
 }

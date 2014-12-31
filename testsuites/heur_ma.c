@@ -44,7 +44,7 @@ static void testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
     int i;
 
     ++cnt;
-    //if (cnt != 137)
+    //if (cnt != 1)
     //    return;
 
     planHeurResInit(&res);
@@ -79,7 +79,7 @@ static void testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
         planHeur(seq_heur, state, &seq_res);
         assertEquals(res.heur, seq_res.heur);
         if (res.heur != seq_res.heur){
-            fprintf(stderr, "%d: %d %d\n", cnt, res.heur, seq_res.heur);
+            fprintf(stderr, "%d: ma: %d, seq: %d\n", cnt, res.heur, seq_res.heur);
         }
     }
 }

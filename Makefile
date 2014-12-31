@@ -87,6 +87,8 @@ plan/config.h: plan/config.h.m4
 src/%.pb.h src/%.pb.cc: src/%.proto
 	cd src && $(PROTOC) --cpp_out=. $(notdir $<)
 
+.objs/heur_relax.o: src/heur_relax.c src/heur_relax.h src/_heur_relax_explore.h plan/config.h
+	$(CC) $(CFLAGS) -c -o $@ $<
 .objs/%.o: src/%.c src/%.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 .objs/%.o: src/%.c plan/%.h plan/config.h

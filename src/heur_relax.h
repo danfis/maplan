@@ -92,6 +92,17 @@ void planHeurRelaxMarkPlan(plan_heur_relax_t *relax);
 void planHeurRelaxMarkPlan2(plan_heur_relax_t *relax,
                             const plan_part_state_t *goal);
 
+/**
+ * Adds fake precondition to the operator. Returns the fact's ID.
+ */
+int planHeurRelaxAddFakePre(plan_heur_relax_t *relax, int op_id);
+
+/**
+ * Sets specified fake fact's initial value.
+ */
+void planHeurRelaxSetFakePreValue(plan_heur_relax_t *relax,
+                                  int fact_id, plan_cost_t value);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

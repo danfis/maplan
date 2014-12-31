@@ -102,7 +102,7 @@ static void findCutAddInit(plan_heur_lm_cut_t *heur,
         heur->fact_in_queue[id] = 1;
         borLifoPush(queue, &id);
     }
-    id = heur->relax.cref.no_pre_id;
+    id = heur->relax.cref.fake_pre[0].fact_id;
     heur->fact_in_queue[id] = 1;
     borLifoPush(queue, &id);
 }

@@ -81,6 +81,15 @@ void planHeurRelaxIncMax(plan_heur_relax_t *relax,
                          const int *op, int op_size);
 
 /**
+ * Update h^max heuristic considering changes in cost/value in the
+ * specified operators. It is assumed that planHeurRelaxFull() was run
+ * previously.
+ * The second assumption is that h^max value of operators can only grow.
+ */
+void planHeurRelaxUpdateMaxFull(plan_heur_relax_t *relax,
+                                const int *op, int op_size);
+
+/**
  * Marks facts and operators in relaxed plan in .plan_fact[] and
  * .plan_op[] arrays.
  */

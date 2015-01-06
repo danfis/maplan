@@ -18,6 +18,7 @@ struct _plan_heur_ma_max_t {
     plan_op_id_tr_t op_id_tr;
 
     int agent_id;
+    plan_heur_relax_op_t *old_op;
     plan_oparr_t *agent_op;    /*!< Operators owned by a corresponding agent */
     int *agent_changed;        /*!< True/False for each agent signaling
                                     whether an operator changed */
@@ -79,6 +80,8 @@ static void initAgent(plan_heur_ma_max_t *heur, const plan_problem_t *prob)
     }
 
     heur->agent_changed = BOR_ALLOC_ARR(int, heur->agent_size);
+    heur->old_op = BOR_ALLOC_ARR(plan_heur_relax_op_t,
+                                 heur->relax.cref.op_size);
 }
 
 static void privateInit(private_t *private, const plan_problem_t *prob)
@@ -165,6 +168,7 @@ static void heurDel(plan_heur_t *_heur)
             BOR_FREE(heur->agent_op[i].op);
     }
     BOR_FREE(heur->agent_op);
+    BOR_FREE(heur->old_op);
 
     BOR_FREE(heur->init_state.fact);
     BOR_FREE(heur->is_init_fact);
@@ -241,116 +245,6 @@ static int heurMAMax(plan_heur_t *_heur, plan_ma_comm_t *comm,
     return -1;
 }
 
-static int updateFactValue(plan_heur_ma_max_t *heur, int fact_id)
-{
-    int i, original_value, value, reached_by_op;
-    int size, *ops, op_id, num;
-
-    // Skip facts from initial state
-    if (heur->is_init_fact[fact_id])
-        return 0;
-
-    size = heur->relax.cref.fact_eff[fact_id].size;
-    if (size == 0)
-        return 0;
-
-    // Remember original value before change
-    original_value = heur->relax.fact[fact_id].value;
-
-    // Determine correct value of fact and operator by which it is reached
-    ops = heur->relax.cref.fact_eff[fact_id].op;
-    value = INT_MAX;
-    reached_by_op = heur->relax.fact[fact_id].supp;
-    for (num = 0, i = 0; i < size; ++i){
-        op_id = ops[i];
-
-        // Consider only operators that are somehow reachable from initial
-        // state. Since we started from projected problem, the operators
-        // that have zero .unsat cannot be reachable even in non-projected
-        // problem.
-        if (heur->relax.op[op_id].unsat != 0)
-            continue;
-
-        ++num;
-        if (value > heur->relax.op[op_id].value){
-            value = heur->relax.op[op_id].value;
-            reached_by_op = op_id;
-        }
-    }
-
-    if (num == 0)
-        return 0;
-
-    // Record new value and supporting operator
-    heur->relax.fact[fact_id].value = value;
-    heur->relax.fact[fact_id].supp = reached_by_op;
-
-    if (value != original_value)
-        return -1;
-    return 0;
-}
-
-static void updateQueueWithEffects(plan_heur_ma_max_t *heur,
-                                   plan_prio_queue_t *queue,
-                                   int op_id)
-{
-    int i, fact_id, value, supp_op;
-    plan_factarr_t *eff;
-
-    eff = heur->relax.cref.op_eff + op_id;
-    for (i = 0; i < eff->size; ++i){
-        fact_id = eff->fact[i];
-        supp_op = heur->relax.fact[fact_id].supp;
-        if (supp_op != op_id)
-            continue;
-
-        if (updateFactValue(heur, fact_id) != 0){
-            value = heur->relax.fact[fact_id].value;
-            planPrioQueuePush(queue, value, fact_id);
-        }
-    }
-}
-
-static void updateHMaxFact(plan_heur_ma_max_t *heur,
-                           plan_prio_queue_t *queue,
-                           int fact_id, int fact_value)
-{
-    int i, *ops, ops_size, owner, op_id;
-    plan_heur_relax_op_t *op;
-
-    ops      = heur->relax.cref.fact_pre[fact_id].op;
-    ops_size = heur->relax.cref.fact_pre[fact_id].size;
-    for (i = 0; i < ops_size; ++i){
-        op = heur->relax.op + ops[i];
-        if (op->value < op->cost + fact_value){
-            op->value = op->cost + fact_value;
-            updateQueueWithEffects(heur, queue, ops[i]);
-
-            // Set flag the agent owner needs update due to this change
-            op_id = heur->relax.cref.op_id[ops[i]];
-            if (op_id >= 0){
-                owner = heur->op_owner[op_id];
-                if (owner != heur->agent_id)
-                    heur->agent_changed[owner] = 1;
-            }
-        }
-    }
-}
-
-static void updateHMax(plan_heur_ma_max_t *heur, plan_prio_queue_t *queue)
-{
-    int fact_id, fact_value;
-    plan_heur_relax_fact_t *fact;
-
-    while (!planPrioQueueEmpty(queue)){
-        fact_id = planPrioQueuePop(queue, &fact_value);
-        fact = heur->relax.fact + fact_id;
-        if (fact->value != fact_value)
-            continue;
-
-        updateHMaxFact(heur, queue, fact_id, fact_value);
-    }
-}
 
 static int needsUpdate(const plan_heur_ma_max_t *heur)
 {
@@ -360,8 +254,7 @@ static int needsUpdate(const plan_heur_ma_max_t *heur)
     return val;
 }
 
-static void updateOpValue(plan_heur_ma_max_t *heur, const plan_ma_msg_t *msg,
-                          plan_prio_queue_t *queue)
+static void updateHMax(plan_heur_ma_max_t *heur, const plan_ma_msg_t *msg)
 {
     int i, *update_op, update_op_size, op_id, value;
     int response_op_size, response_op_id, response_value;
@@ -387,11 +280,27 @@ static void updateOpValue(plan_heur_ma_max_t *heur, const plan_ma_msg_t *msg,
         }
     }
 
-    // All updated values are record now we can check the effects of the
-    // changed operators.
-    for (i = 0; i < update_op_size; ++i){
-        // Update queue with changed facts
-        updateQueueWithEffects(heur, queue, update_op[i]);
+    // Early exit if no operators were changed
+    if (update_op_size == 0)
+        return;
+
+    // Remember old values of operators
+    memcpy(heur->old_op, heur->relax.op,
+           sizeof(plan_heur_relax_op_t) * heur->relax.cref.op_size);
+
+    // Update h^max heuristic using changed operators
+    planHeurRelaxUpdateMaxFull(&heur->relax, update_op, update_op_size);
+
+    // Find out which agent has changed operator
+    for (i = 0; i < heur->relax.cref.op_size; ++i){
+        if (heur->old_op[i].value != heur->relax.op[i].value){
+            int op_id = heur->relax.cref.op_id[i];
+            if (op_id >= 0){
+                int owner = heur->op_owner[op_id];
+                if (owner != heur->agent_id)
+                    heur->agent_changed[owner] = 1;
+            }
+        }
     }
 }
 
@@ -400,7 +309,6 @@ static int heurMAMaxUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
 {
     plan_heur_ma_max_t *heur = HEUR(_heur);
     int other_agent_id;
-    plan_prio_queue_t queue;
 
     if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
             || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_MAX_RESPONSE){
@@ -419,15 +327,9 @@ static int heurMAMaxUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
 
     heur->agent_changed[other_agent_id] = 0;
 
-    planPrioQueueInit(&queue);
-
-    // Update values of the operators in response
-    updateOpValue(heur, msg, &queue);
-
-    // Update h^max values of facts and operators
-    updateHMax(heur, &queue);
-
-    planPrioQueueFree(&queue);
+    // Update h^max values of facts and operators considering changes in
+    // the operators
+    updateHMax(heur, msg);
 
     if (!needsUpdate(heur)){
         res->heur = heur->relax.fact[heur->relax.cref.goal_id].value;

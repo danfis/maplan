@@ -42,6 +42,7 @@ static optdef_t opt_heur[] = {
     { "max", opt_heur_all },
     { "ff", opt_heur_all },
     { "lm-cut", opt_heur_all },
+    { "ma-max", opt_empty },
     { "ma-ff", opt_empty },
 };
 static int opt_heur_size = sizeof(opt_heur) / sizeof(optdef_t);
@@ -129,7 +130,7 @@ static void usage(const char *progname)
     fprintf(stderr,
 "  HEUR OPTIONS:\n"
 "    The available heur algorithms are: goalcount, add, max, ff, lm-cut.\n"
-"    Additionally for the multi-agent mode: ma-ff\n"
+"    Additionally for the multi-agent mode: ma-max, ma-ff\n"
 "\n"
 "    Options allowed for all (non ma-) heuristics in multi-agent mode:\n"
 "           proj -- heur is computed on projected operators\n"

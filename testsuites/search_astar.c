@@ -14,7 +14,7 @@ TEST(testSearchAStar)
                              PLAN_PROBLEM_USE_CG);
     params.search.prob = p;
     params.search.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
-                                          p->op, p->op_size, p->succ_gen);
+                                          p->op, p->op_size);
     params.search.heur_del = 1;
     search = planSearchAStarNew(&params);
 
@@ -33,7 +33,7 @@ TEST(testSearchAStar)
                              PLAN_PROBLEM_USE_CG);
     params.search.prob = p;
     params.search.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
-                                          p->op, p->op_size, p->succ_gen);
+                                          p->op, p->op_size);
     params.search.heur_del = 1;
     params.pathmax = 1;
     search = planSearchAStarNew(&params);

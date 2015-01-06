@@ -153,8 +153,7 @@ static plan_list_lazy_t *listLazyCreate(const options_t *o)
 
 static plan_heur_t *_heurNew(const char *name,
                              const plan_problem_t *prob,
-                             const plan_op_t *op, int op_size,
-                             const plan_succ_gen_t *succ_gen)
+                             const plan_op_t *op, int op_size)
 {
     plan_heur_t *heur = NULL;
 
@@ -162,20 +161,18 @@ static plan_heur_t *_heurNew(const char *name,
         heur = planHeurGoalCountNew(prob->goal);
     }else if (strcmp(name, "add") == 0){
         heur = planHeurRelaxAddNew(prob->var, prob->var_size,
-                                   prob->goal, op, op_size, succ_gen);
+                                   prob->goal, op, op_size);
     }else if (strcmp(name, "max") == 0){
         heur = planHeurRelaxMaxNew(prob->var, prob->var_size,
-                                   prob->goal, op, op_size, succ_gen);
+                                   prob->goal, op, op_size);
     }else if (strcmp(name, "ff") == 0){
         heur = planHeurRelaxFFNew(prob->var, prob->var_size,
-                                  prob->goal, op, op_size, succ_gen);
+                                  prob->goal, op, op_size);
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
-                                prob->goal, op, op_size, succ_gen);
-    /*
+                                prob->goal, op, op_size);
     }else if (strcmp(name, "ma-max") == 0){
         heur = planHeurMARelaxMaxNew(prob);
-    */
     }else if (strcmp(name, "ma-ff") == 0){
         heur = planHeurMARelaxFFNew(prob);
     }else{
@@ -190,8 +187,7 @@ static plan_heur_t *heurNew(const options_t *o,
 {
     plan_heur_t *heur;
 
-    heur = _heurNew(o->heur, prob, prob->op, prob->op_size,
-                    prob->succ_gen);
+    heur = _heurNew(o->heur, prob, prob->op, prob->op_size);
     return heur;
 }
 
@@ -202,25 +198,21 @@ static plan_heur_t *heurNewMA(const options_t *o,
     plan_heur_t *heur;
     const plan_op_t *op;
     int op_size;
-    const plan_succ_gen_t *succ_gen;
 
     if (optionsHeurOpt(o, "loc")){
         op = prob->agent[agent_id].op;
         op_size = prob->agent[agent_id].op_size;
-        succ_gen = prob->agent[agent_id].succ_gen;
 
     }else if (optionsHeurOpt(o, "glob")){
         op = prob->glob.op;
         op_size = prob->glob.op_size;
-        succ_gen = prob->glob.succ_gen;
 
     }else{
         op = prob->agent[agent_id].proj_op;
         op_size = prob->agent[agent_id].proj_op_size;
-        succ_gen = NULL;
     }
 
-    heur = _heurNew(o->heur, prob->agent + agent_id, op, op_size, succ_gen);
+    heur = _heurNew(o->heur, prob->agent + agent_id, op, op_size);
     return heur;
 }
 

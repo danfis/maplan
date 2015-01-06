@@ -106,8 +106,7 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal);
  */
 plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size,
-                                 const plan_succ_gen_t *succ_gen);
+                                 const plan_op_t *op, int op_size);
 
 /**
  * Creates an MAX version of relaxation heuristics.
@@ -116,8 +115,7 @@ plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
  */
 plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size,
-                                 const plan_succ_gen_t *succ_gen);
+                                 const plan_op_t *op, int op_size);
 
 /**
  * Creates an FF version of relaxation heuristics.
@@ -126,8 +124,7 @@ plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
  */
 plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
                                 const plan_part_state_t *goal,
-                                const plan_op_t *op, int op_size,
-                                const plan_succ_gen_t *succ_gen);
+                                const plan_op_t *op, int op_size);
 
 /**
  * Creates an LM-Cut heuristics.
@@ -136,8 +133,7 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
  */
 plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
                               const plan_part_state_t *goal,
-                              const plan_op_t *op, int op_size,
-                              const plan_succ_gen_t *succ_gen);
+                              const plan_op_t *op, int op_size);
 
 /**
  * Creates an multi-agent version of max heuristic.

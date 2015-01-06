@@ -74,8 +74,7 @@ static plan_heur_t *heurNew(const plan_var_t *var, int var_size,
 
 plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size,
-                                 const plan_succ_gen_t *succ_gen)
+                                 const plan_op_t *op, int op_size)
 {
     return heurNew(var, var_size, goal, op, op_size,
                    PLAN_HEUR_RELAX_TYPE_ADD);
@@ -83,8 +82,7 @@ plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
 
 plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size,
-                                 const plan_succ_gen_t *succ_gen)
+                                 const plan_op_t *op, int op_size)
 {
     return heurNew(var, var_size, goal, op, op_size,
                    PLAN_HEUR_RELAX_TYPE_MAX);

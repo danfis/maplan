@@ -9,7 +9,7 @@ typedef plan_heur_t *(*heur_new_fn)(const plan_problem_t *prob);
 plan_heur_t *seqHeurMaxNew(const plan_problem_t *prob)
 {
     return planHeurRelaxMaxNew(prob->var, prob->var_size, prob->goal,
-                               prob->op, prob->op_size, prob->succ_gen);
+                               prob->op, prob->op_size);
 }
 
 static plan_ma_msg_t *nextMsg(plan_ma_comm_t **comm,

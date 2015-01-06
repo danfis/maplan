@@ -62,8 +62,7 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
 
 plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
                                 const plan_part_state_t *goal,
-                                const plan_op_t *op, int op_size,
-                                const plan_succ_gen_t *succ_gen)
+                                const plan_op_t *op, int op_size)
 {
     plan_heur_relax_ff_t *heur;
 

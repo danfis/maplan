@@ -16,25 +16,25 @@ static plan_heur_t *goalCountNew(plan_problem_t *p)
 static plan_heur_t *addNew(plan_problem_t *p)
 {
     return planHeurRelaxAddNew(p->var, p->var_size, p->goal,
-                               p->op, p->op_size, p->succ_gen);
+                               p->op, p->op_size);
 }
 
 static plan_heur_t *maxNew(plan_problem_t *p)
 {
     return planHeurRelaxMaxNew(p->var, p->var_size, p->goal,
-                               p->op, p->op_size, p->succ_gen);
+                               p->op, p->op_size);
 }
 
 static plan_heur_t *ffNew(plan_problem_t *p)
 {
     return planHeurRelaxFFNew(p->var, p->var_size, p->goal,
-                              p->op, p->op_size, p->succ_gen);
+                              p->op, p->op_size);
 }
 
 static plan_heur_t *lmCutNew(plan_problem_t *p)
 {
     return planHeurLMCutNew(p->var, p->var_size, p->goal,
-                            p->op, p->op_size, p->succ_gen);
+                            p->op, p->op_size);
 }
 
 typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);

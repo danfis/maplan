@@ -41,8 +41,7 @@ static void runMALMCut(plan_problem_agents_t *p,
     for (i = 0; i < p->agent_size; ++i){
         heur = planHeurLMCutNew(p->agent[i].var, p->agent[i].var_size,
                                 p->agent[i].goal,
-                                p->agent[i].proj_op, p->agent[i].proj_op_size,
-                                NULL);
+                                p->agent[i].proj_op, p->agent[i].proj_op_size);
 
         planSearchAStarParamsInit(&params);
         params.search.heur = heur;

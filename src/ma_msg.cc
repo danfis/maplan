@@ -252,10 +252,10 @@ int planMAMsgHeurType(const plan_ma_msg_t *msg)
     if (type != PLAN_MA_MSG_HEUR)
         return PLAN_MA_MSG_HEUR_NONE;
 
-    if (subtype == PLAN_MA_MSG_HEUR_FF_REQUEST)
+    if ((subtype & 0x0f) == subtype)
         return PLAN_MA_MSG_HEUR_REQUEST;
 
-    if (subtype == PLAN_MA_MSG_HEUR_FF_RESPONSE)
+    if ((subtype & 0xf0) == subtype)
         return PLAN_MA_MSG_HEUR_UPDATE;
 
     return PLAN_MA_MSG_HEUR_NONE;
@@ -267,9 +267,7 @@ void planMAMsgHeurFFSetRequest(plan_ma_msg_t *msg,
                                int goal_op_id)
 {
     PlanMAMsg *proto = PROTO(msg);
-
-    for (int i = 0; i < init_state_size; ++i)
-        proto->add_state_full(init_state[i]);
+    planMAMsgSetStateFull(msg, init_state, init_state_size);
     proto->set_goal_op_id(goal_op_id);
 }
 
@@ -279,17 +277,26 @@ void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id)
     proto->set_goal_op_id(goal_op_id);
 }
 
-void planMAMsgHeurFFAddOp(plan_ma_msg_t *msg, int op_id,
-                          plan_cost_t cost, int owner)
+int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg)
 {
-    PlanMAMsg *proto = PROTO(msg);
-    PlanMAMsgOp *op = proto->add_op();
-    op->set_op_id(op_id);
-    op->set_cost(cost);
-    op->set_owner(owner);
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->goal_op_id();
 }
 
-void planMAMsgHeurFFState(const plan_ma_msg_t *msg, plan_state_t *state)
+
+
+
+
+
+void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size)
+{
+    PlanMAMsg *proto = PROTO(msg);
+
+    for (int i = 0; i < size; ++i)
+        proto->add_state_full(state[i]);
+}
+
+void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state)
 {
     const PlanMAMsg *proto = PROTO(msg);
     int len = proto->state_full_size();
@@ -297,20 +304,35 @@ void planMAMsgHeurFFState(const plan_ma_msg_t *msg, plan_state_t *state)
         planStateSet(state, i, proto->state_full(i));
 }
 
-int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg)
+plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var)
 {
     const PlanMAMsg *proto = PROTO(msg);
-    return proto->goal_op_id();
+    return proto->state_full(var);
 }
 
-int planMAMsgHeurFFOpSize(const plan_ma_msg_t *msg)
+void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,
+                    int owner, plan_cost_t value)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    PlanMAMsgOp *op = proto->add_op();
+    op->set_op_id(op_id);
+
+    if (cost != PLAN_COST_INVALID)
+        op->set_cost(cost);
+    if (owner >= 0)
+        op->set_owner(owner);
+    if (value != PLAN_COST_INVALID)
+        op->set_value(value);
+}
+
+int planMAMsgOpSize(const plan_ma_msg_t *msg)
 {
     const PlanMAMsg *proto = PROTO(msg);
     return proto->op_size();
 }
 
-int planMAMsgHeurFFOp(const plan_ma_msg_t *msg, int i,
-                      plan_cost_t *cost, int *owner)
+int planMAMsgOp(const plan_ma_msg_t *msg, int i,
+                plan_cost_t *cost, int *owner, plan_cost_t *value)
 {
     const PlanMAMsg *proto = PROTO(msg);
     const PlanMAMsgOp &op = proto->op(i);
@@ -319,6 +341,8 @@ int planMAMsgHeurFFOp(const plan_ma_msg_t *msg, int i,
         *cost = op.cost();
     if (owner)
         *owner = op.owner();
+    if (value)
+        *value = op.value();
     return op.op_id();
 }
 

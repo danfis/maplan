@@ -68,11 +68,26 @@ plan_cost_t planHeurRelax2(plan_heur_relax_t *relax,
                            const plan_part_state_t *goal);
 
 /**
+ * Computes relaxation heuristic for all facts and operators reachable form
+ * the initial state.
+ */
+void planHeurRelaxFull(plan_heur_relax_t *relax, const plan_state_t *state);
+
+/**
  * Incrementally update h^max values considering changed costs of the
  * speficied operators.
  */
 void planHeurRelaxIncMax(plan_heur_relax_t *relax,
                          const int *op, int op_size);
+
+/**
+ * Update h^max heuristic considering changes in cost/value in the
+ * specified operators. It is assumed that planHeurRelaxFull() was run
+ * previously.
+ * The second assumption is that h^max value of operators can only grow.
+ */
+void planHeurRelaxUpdateMaxFull(plan_heur_relax_t *relax,
+                                const int *op, int op_size);
 
 /**
  * Marks facts and operators in relaxed plan in .plan_fact[] and
@@ -85,6 +100,17 @@ void planHeurRelaxMarkPlan(plan_heur_relax_t *relax);
  */
 void planHeurRelaxMarkPlan2(plan_heur_relax_t *relax,
                             const plan_part_state_t *goal);
+
+/**
+ * Adds fake precondition to the operator. Returns the fact's ID.
+ */
+int planHeurRelaxAddFakePre(plan_heur_relax_t *relax, int op_id);
+
+/**
+ * Sets specified fake fact's initial value.
+ */
+void planHeurRelaxSetFakePreValue(plan_heur_relax_t *relax,
+                                  int fact_id, plan_cost_t value);
 
 #ifdef __cplusplus
 }

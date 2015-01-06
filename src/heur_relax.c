@@ -71,6 +71,7 @@ static void relaxAddInitState(plan_heur_relax_t *relax,
                               const plan_state_t *state)
 {
     int i, len, fact_id;
+    plan_cost_t value;
 
     len = planStateSize(state);
     for (i = 0; i < len; ++i){
@@ -79,9 +80,14 @@ static void relaxAddInitState(plan_heur_relax_t *relax,
         planPrioQueuePush(queue, 0, fact_id);
     }
 
-    fact_id = relax->cref.no_pre_id;
-    relax->fact[fact_id].value = 0;
-    planPrioQueuePush(queue, 0, fact_id);
+    len = relax->cref.fake_pre_size;
+    for (i = 0; i < len; ++i){
+        fact_id = relax->cref.fake_pre[i].fact_id;
+        value   = relax->cref.fake_pre[i].value;
+        relax->fact[fact_id].value = value;
+        planPrioQueuePush(queue, value, fact_id);
+    }
+
 }
 
 static void relaxAddEffects(plan_heur_relax_t *relax,
@@ -179,6 +185,30 @@ void planHeurRelax(plan_heur_relax_t *relax, const plan_state_t *state)
     }
 }
 
+static void exploreAddFull(plan_heur_relax_t *relax, const plan_state_t *state)
+{
+#define PLAN_HEUR_RELAX_EXPLORE_CHECK_GOAL
+#define PLAN_HEUR_RELAX_EXPLORE_OP_ADD \
+    relaxOpAdd(relax, &queue, op_id, fact_id, value)
+#include "_heur_relax_explore.h"
+}
+
+static void exploreMaxFull(plan_heur_relax_t *relax, const plan_state_t *state)
+{
+#define PLAN_HEUR_RELAX_EXPLORE_CHECK_GOAL
+#define PLAN_HEUR_RELAX_EXPLORE_OP_ADD \
+    relaxOpMax(relax, &queue, op_id, fact_id, value)
+#include "_heur_relax_explore.h"
+}
+
+void planHeurRelaxFull(plan_heur_relax_t *relax, const plan_state_t *state)
+{
+    if (relax->type == PLAN_HEUR_RELAX_TYPE_ADD){
+        exploreAddFull(relax, state);
+    }else{ // PLAN_HEUR_RELAX_TYPE_MAX
+        exploreMaxFull(relax, state);
+    }
+}
 
 static void setGoalFact(int *goal_fact, int fact_size,
                         const plan_fact_id_t *fid,
@@ -367,6 +397,119 @@ void planHeurRelaxIncMax(plan_heur_relax_t *relax,
 }
 
 
+
+static int updateFactValue(plan_heur_relax_t *relax, int fact_id)
+{
+    int i, len, *ops, op_id;
+    int value, original_value, supp, num;
+
+    len = relax->cref.fact_eff[fact_id].size;
+    if (len == 0)
+        return 0;
+
+    // Remember the original value before change
+    original_value = relax->fact[fact_id].value;
+
+    // Determine correct value of fact and operator by which it is reached
+    ops = relax->cref.fact_eff[fact_id].op;
+    value = INT_MAX;
+    supp = relax->fact[fact_id].supp;
+    for (num = 0, i = 0; i < len; ++i){
+        op_id = ops[i];
+
+        // Consider only operators that are somehow reachable from initial
+        // state. Since we assume that full h^max was already run
+        // previously, the operators that have not zero .unsat cannot be
+        // reachable.
+        if (relax->op[op_id].unsat != 0)
+            continue;
+
+        ++num;
+        if (value > relax->op[op_id].value){
+            value = relax->op[op_id].value;
+            supp = op_id;
+        }
+    }
+
+    if (num == 0)
+        return 0;
+
+    // Record new value and supporting operator
+    relax->fact[fact_id].value = value;
+    relax->fact[fact_id].supp  = supp;
+
+    if (value != original_value)
+        return -1;
+    return 0;
+}
+
+static void updateMaxOp(plan_heur_relax_t *relax,
+                        plan_prio_queue_t *queue, int op_id)
+{
+    int i, len, *fact_ids, fact_id, value;
+
+    len      = relax->cref.op_eff[op_id].size;
+    fact_ids = relax->cref.op_eff[op_id].fact;
+    for (i = 0; i < len; ++i){
+        fact_id = fact_ids[i];
+
+        // If the operator isn't supporter of the fact, we can skip this
+        // fact because there is other operator that minimizes the fact's
+        // value
+        if (op_id != relax->fact[fact_id].supp)
+            continue;
+
+        // Update fact value and insert it into queue if it changed
+        if (updateFactValue(relax, fact_id) != 0){
+            value = relax->fact[fact_id].value;
+            planPrioQueuePush(queue, value, fact_id);
+        }
+    }
+}
+
+static void updateMaxFact(plan_heur_relax_t *relax,
+                          plan_prio_queue_t *queue,
+                          int fact_id, int fact_value)
+{
+    int i, *ops, ops_size;
+    plan_heur_relax_op_t *op;
+
+    ops      = relax->cref.fact_pre[fact_id].op;
+    ops_size = relax->cref.fact_pre[fact_id].size;
+    for (i = 0; i < ops_size; ++i){
+        op = relax->op + ops[i];
+        if (op->value < op->cost + fact_value){
+            op->value = op->cost + fact_value;
+            updateMaxOp(relax, queue, ops[i]);
+        }
+    }
+}
+
+void planHeurRelaxUpdateMaxFull(plan_heur_relax_t *relax,
+                                const int *op, int op_size)
+{
+    int i, fact_id, fact_value;
+    plan_prio_queue_t queue;
+
+    planPrioQueueInit(&queue);
+
+    for (i = 0; i < op_size; ++i)
+        updateMaxOp(relax, &queue, op[i]);
+
+
+    while (!planPrioQueueEmpty(&queue)){
+        fact_id = planPrioQueuePop(&queue, &fact_value);
+        if (relax->fact[fact_id].value != fact_value)
+            continue;
+
+        updateMaxFact(relax, &queue, fact_id, fact_value);
+    }
+
+    planPrioQueueFree(&queue);
+}
+
+
+
 static void markPlan(plan_heur_relax_t *relax, int fact_id)
 {
     plan_heur_relax_fact_t *fact = relax->fact + fact_id;
@@ -430,4 +573,39 @@ void planHeurRelaxMarkPlan2(plan_heur_relax_t *relax,
         fact_id = planFactId(&relax->cref.fact_id, var, val);
         markPlan(relax, fact_id);
     }
+}
+
+int planHeurRelaxAddFakePre(plan_heur_relax_t *relax, int op_id)
+{
+    int fact_id;
+
+    fact_id = planFactOpCrossRefAddFakePre(&relax->cref, 0);
+    planFactOpCrossRefAddPre(&relax->cref, op_id, fact_id);
+    relax->op_init[op_id].unsat += 1;
+
+    relax->fact = BOR_REALLOC_ARR(relax->fact, plan_heur_relax_fact_t,
+                                  relax->cref.fact_size);
+    relax->fact_init = BOR_REALLOC_ARR(relax->fact_init,
+                                       plan_heur_relax_fact_t,
+                                       relax->cref.fact_size);
+    relax->fact_init[fact_id].value = PLAN_COST_MAX;
+    relax->fact_init[fact_id].supp = -1;
+
+    if (relax->plan_fact){
+        BOR_FREE(relax->plan_fact);
+        relax->plan_fact = NULL;
+    }
+
+    if (relax->goal_fact){
+        BOR_FREE(relax->goal_fact);
+        relax->goal_fact = NULL;
+    }
+
+    return fact_id;
+}
+
+void planHeurRelaxSetFakePreValue(plan_heur_relax_t *relax,
+                                  int fact_id, plan_cost_t value)
+{
+    planFactOpCrossRefSetFakePreValue(&relax->cref, fact_id, value);
 }

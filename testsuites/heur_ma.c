@@ -6,6 +6,12 @@
 
 typedef plan_heur_t *(*heur_new_fn)(const plan_problem_t *prob);
 
+plan_heur_t *seqHeurMaxNew(const plan_problem_t *prob)
+{
+    return planHeurRelaxMaxNew(prob->var, prob->var_size, prob->goal,
+                               prob->op, prob->op_size, prob->succ_gen);
+}
+
 static plan_ma_msg_t *nextMsg(plan_ma_comm_t **comm,
                               int agent_size, int *agent_id)
 {
@@ -25,15 +31,21 @@ static plan_ma_msg_t *nextMsg(plan_ma_comm_t **comm,
     return NULL;
 }
 
+static int cnt = 0;
 static void testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
                        int agent_size, int agent_id,
-                       const plan_state_t *state)
+                       const plan_state_t *state,
+                       plan_heur_t *seq_heur)
 {
-    plan_heur_res_t res;
+    plan_heur_res_t res, seq_res;
     plan_ma_msg_t *msg;
     int msg_agent_id;
     int status;
     int i;
+
+    ++cnt;
+    //if (cnt != 1)
+    //    return;
 
     planHeurResInit(&res);
     status = planHeurMA(heur[agent_id], comm[agent_id], state, &res);
@@ -61,15 +73,26 @@ static void testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
         printf(" %d", planStateGet(state, i));
     }
     printf("\n");
+
+    if (seq_heur){
+        planHeurResInit(&seq_res);
+        planHeur(seq_heur, state, &seq_res);
+        assertEquals(res.heur, seq_res.heur);
+        if (res.heur != seq_res.heur){
+            fprintf(stderr, "%d: ma: %d, seq: %d\n", cnt, res.heur, seq_res.heur);
+        }
+    }
 }
 
 static void testHeurMAProb(const plan_problem_agents_t *p,
                            state_pool_t *state_pool,
                            heur_new_fn heur_new,
-                           unsigned int limit)
+                           unsigned int limit,
+                           heur_new_fn seq_heur_new)
 {
     int agent_size = p->agent_size;
     plan_heur_t *ma_heur[agent_size];
+    plan_heur_t *seq_heur = NULL;
     plan_state_t *seq_state;
     plan_ma_comm_t *comm[agent_size];
     int i;
@@ -79,6 +102,8 @@ static void testHeurMAProb(const plan_problem_agents_t *p,
         ma_heur[i] = heur_new(p->agent + i);
         comm[i] = planMACommInprocNew(i, agent_size);
     }
+    if (seq_heur_new)
+        seq_heur = seq_heur_new(&p->glob);
 
     seq_state = planStateNew(p->glob.state_pool);
 
@@ -87,7 +112,7 @@ static void testHeurMAProb(const plan_problem_agents_t *p,
         for (line = 0;
                 statePoolNext(state_pool, seq_state) == 0 && line < limit;
                 ++line){
-            testMAHeur(ma_heur, comm, agent_size, i, seq_state);
+            testMAHeur(ma_heur, comm, agent_size, i, seq_state, seq_heur);
         }
     }
 
@@ -96,11 +121,14 @@ static void testHeurMAProb(const plan_problem_agents_t *p,
         planHeurDel(ma_heur[i]);
         planMACommDel(comm[i]);
     }
+
+    if (seq_heur)
+        planHeurDel(seq_heur);
 }
 
 static void runTestHeurMA(const char *name, const char *proto,
                           const char *states, heur_new_fn heur_new,
-                          unsigned int limit)
+                          unsigned int limit, heur_new_fn seq_heur_new)
 {
     plan_problem_agents_t *p;
     state_pool_t state_pool;
@@ -113,7 +141,7 @@ static void runTestHeurMA(const char *name, const char *proto,
 
     statePoolInit(&state_pool, states);
 
-    testHeurMAProb(p, &state_pool, heur_new, limit);
+    testHeurMAProb(p, &state_pool, heur_new, limit, seq_heur_new);
 
     statePoolFree(&state_pool);
     planProblemAgentsDel(p);
@@ -124,45 +152,32 @@ static void runTestHeurMA(const char *name, const char *proto,
 TEST(testHeurMAFF)
 {
     runTestHeurMA("ma-ff", "../data/simple/pfile.proto",
-                  "states/simple.txt", planHeurMARelaxFFNew, -1);
+                  "states/simple.txt", planHeurMARelaxFFNew, -1, NULL);
     runTestHeurMA("ma-ff", "../data/ma-benchmarks/depot/pfile1.proto",
-                  "states/depot-pfile1.txt", planHeurMARelaxFFNew, -1);
+                  "states/depot-pfile1.txt", planHeurMARelaxFFNew, -1, NULL);
     runTestHeurMA("ma-ff", "../data/ma-benchmarks/depot/pfile5.proto",
-                  "states/depot-pfile5.txt", planHeurMARelaxFFNew, 200);
+                  "states/depot-pfile5.txt", planHeurMARelaxFFNew, 200, NULL);
     runTestHeurMA("ma-ff", "../data/ma-benchmarks/rovers/p03.proto",
-                  "states/rovers-p03.txt", planHeurMARelaxFFNew, -1);
+                  "states/rovers-p03.txt", planHeurMARelaxFFNew, -1, NULL);
     runTestHeurMA("ma-ff", "../data/ma-benchmarks/rovers/p15.proto",
-                  "states/rovers-p15.txt", planHeurMARelaxFFNew, -1);
+                  "states/rovers-p15.txt", planHeurMARelaxFFNew, -1, NULL);
 }
 
-/*
-
-TEST(testHeurMAMaxSimple)
+TEST(testHeurMAMax)
 {
-    runTestHeurMAMax("../data/simple/pfile.proto",
-                     "states/simple.txt");
+    runTestHeurMA("ma-max", "../data/simple/pfile.proto",
+                  "states/simple.txt", planHeurMARelaxMaxNew, -1,
+                  seqHeurMaxNew);
+    runTestHeurMA("ma-max", "../data/ma-benchmarks/depot/pfile1.proto",
+                  "states/depot-pfile1.txt", planHeurMARelaxMaxNew, -1,
+                  seqHeurMaxNew);
+    runTestHeurMA("ma-max", "../data/ma-benchmarks/depot/pfile5.proto",
+                  "states/depot-pfile5.txt", planHeurMARelaxMaxNew, 200,
+                  seqHeurMaxNew);
+    runTestHeurMA("ma-max", "../data/ma-benchmarks/rovers/p03.proto",
+                  "states/rovers-p03.txt", planHeurMARelaxMaxNew, -1,
+                  seqHeurMaxNew);
+    runTestHeurMA("ma-max", "../data/ma-benchmarks/rovers/p15.proto",
+                  "states/rovers-p15.txt", planHeurMARelaxMaxNew, -1,
+                  seqHeurMaxNew);
 }
-
-TEST(testHeurMAMaxDepotPfile1)
-{
-    runTestHeurMAMax("../data/ma-benchmarks/depot/pfile1.proto",
-                     "states/depot-pfile1.txt");
-}
-
-TEST(testHeurMAMaxDepotPfile2)
-{
-    runTestHeurMAMax("../data/ma-benchmarks/depot/pfile5.proto",
-                     "states/depot-pfile5.txt");
-}
-
-TEST(testHeurMAMaxRoversP03)
-{
-    runTestHeurMAMax("../data/ma-benchmarks/rovers/p03.proto",
-                     "states/rovers-p03.txt");
-}
-
-TEST(testHeurMAMaxRoversP15){
-    runTestHeurMAMax("../data/ma-benchmarks/rovers/p15.proto",
-                     "states/rovers-p15.txt");
-}
-*/

@@ -3,11 +3,14 @@
 
 static void pVar(const plan_var_t *var, int var_size)
 {
-    int i;
+    int i, j;
 
     printf("Vars[%d]:\n", var_size);
     for (i = 0; i < var_size; ++i){
-        printf("[%d] name: `%s', range: %d\n", i, var[i].name, var[i].range);
+        printf("[%d] name: `%s', range: %d, is_private:", i, var[i].name, var[i].range);
+        for (j = 0; j < var[i].range; ++j)
+            printf(" %d", var[i].is_private[j]);
+        printf("\n");
     }
 }
 
@@ -120,17 +123,26 @@ TEST(testLoadFromProtoCondEff)
 
 static void pAgent(int agent_id, const plan_problem_t *p)
 {
+    plan_op_t *private_op;
+    int private_op_size;
+    planProblemCreatePrivateProjOps(p->op, p->op_size, p->var, p->var_size,
+                                    &private_op, &private_op_size);
+
     printf("++++ %s ++++\n", p->agent_name);
     printf("Agent ID: %d\n", agent_id);
     pVar(p->var, p->var_size);
+    pPrivateVal(p->private_val, p->private_val_size);
     pInitState(p->state_pool, p->initial_state);
     pGoal(p->goal);
     pOp(p->op, p->op_size);
     printf("Succ Gen: %d\n", (int)(p->succ_gen != NULL));
     printf("Proj op:\n");
     pOp(p->proj_op, p->proj_op_size);
-    pPrivateVal(p->private_val, p->private_val_size);
+    printf("Private Proj op:\n");
+    pOp(private_op, private_op_size);
     printf("++++ %s END ++++\n", p->agent_name);
+
+    planProblemDestroyOps(private_op, private_op_size);
 }
 
 static void testAgentProto(const char *proto)

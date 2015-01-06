@@ -3,6 +3,7 @@
 
 #include "plan/heur.h"
 #include "heur_relax.h"
+#include "op_id_tr.h"
 
 struct _plan_heur_ma_ff_t {
     plan_heur_t heur;
@@ -21,6 +22,7 @@ struct _plan_heur_ma_ff_t {
 
     const plan_op_t *base_op;
     int base_op_size;
+    plan_op_id_tr_t op_id_tr;
 };
 typedef struct _plan_heur_ma_ff_t plan_heur_ma_ff_t;
 
@@ -96,6 +98,7 @@ plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
     heur->base_op = prob->proj_op;
     heur->base_op_size = prob->proj_op_size;
 
+    planOpIdTrInit(&heur->op_id_tr, prob->proj_op, prob->proj_op_size);
     return &heur->heur;
 }
 
@@ -116,6 +119,7 @@ static void heurDel(plan_heur_t *_heur)
     }
     borRBTreeIntDel(heur->peer_op);
     BOR_FREE(heur->pre_peer_op);
+    planOpIdTrFree(&heur->op_id_tr);
     BOR_FREE(heur);
 }
 
@@ -203,16 +207,11 @@ static void maHeur(plan_heur_ma_ff_t *heur,
 
 static const plan_op_t *maOpFromId(plan_heur_ma_ff_t *heur, int op_id)
 {
-    int i;
-    const plan_op_t *op = NULL;
+    int id;
 
-    // TODO: Create new object plan_op_id_tr_t
-    for (i = 0; i < heur->base_op_size; ++i){
-        op = heur->base_op + i;
-        if (op->global_id == op_id)
-            return op;
-    }
-
+    id = planOpIdTrLoc(&heur->op_id_tr, op_id);
+    if (id >= 0)
+        return heur->base_op + id;
     return NULL;
 }
 

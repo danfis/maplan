@@ -43,8 +43,10 @@ extern "C" {
 /**
  * Heur sub-types
  */
-#define PLAN_MA_MSG_HEUR_FF_REQUEST 0x0
-#define PLAN_MA_MSG_HEUR_FF_RESPONSE 0x1
+#define PLAN_MA_MSG_HEUR_FF_REQUEST   0x01
+#define PLAN_MA_MSG_HEUR_FF_RESPONSE  0x10
+#define PLAN_MA_MSG_HEUR_MAX_REQUEST  0x02
+#define PLAN_MA_MSG_HEUR_MAX_RESPONSE 0x20
 
 /**
  * Returns values for planMAMsgHeurType().
@@ -249,13 +251,13 @@ void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id);
 /**
  * Adds operator to message related to FF heuristic.
  */
-void planMAMsgHeurFFAddOp(plan_ma_msg_t *msg, int op_id,
-                          plan_cost_t cost, int owner);
+#define planMAMsgHeurFFAddOp(msg, op_id, cost, owner) \
+    planMAMsgAddOp((msg), (op_id), (cost), (owner), PLAN_COST_INVALID)
 
 /**
  * Writes to state argument state stored in the message.
  */
-void planMAMsgHeurFFState(const plan_ma_msg_t *msg, plan_state_t *state);
+#define planMAMsgHeurFFState planMAMsgStateFull
 
 /**
  * Returns goal op ID stored in the message.
@@ -265,13 +267,79 @@ int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
 /**
  * Returns number of operators stored in message.
  */
-int planMAMsgHeurFFOpSize(const plan_ma_msg_t *msg);
+#define planMAMsgHeurFFOpSize planMAMsgOpSize
 
 /**
  * Returns i'th operator's ID and its cost and owner.
  */
-int planMAMsgHeurFFOp(const plan_ma_msg_t *msg, int i,
-                      plan_cost_t *cost, int *owner);
+#define planMAMsgHeurFFOp(msg, i, cost, owner) \
+    planMAMsgOp((msg), (i), (cost), (owner), NULL)
+
+
+
+/**
+ * Sets request for Max heuristic.
+ */
+#define planMAMsgHeurMaxSetRequest planMAMsgSetStateFull
+
+/**
+ * Adds operator to message related to Max heuristic.
+ */
+#define planMAMsgHeurMaxAddOp(msg, op_id, value) \
+    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, value)
+
+/**
+ * Loads state from the message.
+ */
+#define planMAMsgHeurMaxState planMAMsgStateFull
+#define planMAMsgHeurMaxStateVal planMAMsgStateFullVal
+
+/**
+ * Returns number of operators stored in message.
+ */
+#define planMAMsgHeurMaxOpSize planMAMsgOpSize
+
+/**
+ * Returns i'th operator's ID and its value
+ */
+#define planMAMsgHeurMaxOp(msg, i, value) \
+    planMAMsgOp((msg), (i), NULL, NULL, (value))
+
+
+
+
+/**
+ * Sets full state member of the message.\
+ */
+void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size);
+
+/**
+ * Loads full state from the message
+ */
+void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state);
+
+/**
+ * Returns value of a specified variable in full state.
+ */
+plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var);
+
+/**
+ * Adds operator to the message.
+ */
+void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,
+                    int owner, plan_cost_t value);
+
+/**
+ * Returns number of operators stored in message.
+ */
+int planMAMsgOpSize(const plan_ma_msg_t *msg);
+
+/**
+ * Returns i'th operator's ID and its corresponding values if argument set
+ * to non-NULL.
+ */
+int planMAMsgOp(const plan_ma_msg_t *msg, int i,
+                plan_cost_t *cost, int *owner, plan_cost_t *value);
 
 #if 0
 typedef void plan_ma_msg_t;

@@ -72,6 +72,11 @@ typedef uint32_t plan_packer_word_t;
 #define PLAN_COST_ZERO 0
 
 /**
+ * Unproperly set cost.
+ */
+#define PLAN_COST_INVALID INT_MIN
+
+/**
  * Constant saying that no state was assigned.
  */
 #define PLAN_NO_STATE ((plan_state_id_t)-1)

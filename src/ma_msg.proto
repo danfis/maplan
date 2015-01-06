@@ -131,6 +131,7 @@ message PlanMAMsgOp {
     optional string name = 2;
     optional int32 cost = 3;
     optional int32 owner = 4;
+    optional int32 value = 5;
 }
 
 

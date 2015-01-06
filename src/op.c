@@ -68,6 +68,35 @@ void planOpCopy(plan_op_t *dst, const plan_op_t *src)
     dst->recv_agent = src->recv_agent;
 }
 
+static void unsetNonPrivate(plan_part_state_t *dst,
+                            const plan_part_state_t *src,
+                            const plan_var_t *var)
+{
+    int i;
+    plan_var_id_t varid;
+    plan_val_t val;
+
+    PLAN_PART_STATE_FOR_EACH(src, i, varid, val){
+        if (!var[varid].is_private[val])
+            planPartStateUnset(dst, varid);
+    }
+}
+
+void planOpCopyPrivate(plan_op_t *dst, const plan_op_t *src,
+                       const plan_var_t *var)
+{
+    int i;
+
+    planOpCopy(dst, src);
+    unsetNonPrivate(dst->pre, src->pre, var);
+    unsetNonPrivate(dst->eff, src->eff, var);
+
+    for (i = 0; i < dst->cond_eff_size; ++i){
+        unsetNonPrivate(dst->cond_eff[i].pre, src->cond_eff[i].pre, var);
+        unsetNonPrivate(dst->cond_eff[i].eff, src->cond_eff[i].eff, var);
+    }
+}
+
 static void planOpCondEffInit(plan_op_cond_eff_t *ceff,
                               plan_state_pool_t *state_pool)
 {

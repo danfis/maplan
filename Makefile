@@ -30,6 +30,7 @@ OBJS  = problem
 OBJS += var
 OBJS += state
 OBJS += op
+OBJS += op_id_tr
 OBJS += dataarr
 OBJS += succgen
 OBJS += causalgraph
@@ -61,7 +62,7 @@ OBJS += heur_relax_add_max
 OBJS += heur_relax_ff
 OBJS += heur_lm_cut
 OBJS += heur_ma_ff
-#OBJS += heur_ma_max
+OBJS += heur_ma_max
 OBJS += ma_comm_nanomsg
 OBJS += ma_search
 OBJS += ma_snapshot
@@ -86,12 +87,7 @@ plan/config.h: plan/config.h.m4
 src/%.pb.h src/%.pb.cc: src/%.proto
 	cd src && $(PROTOC) --cpp_out=. $(notdir $<)
 
-.objs/heur_relax_%.o: src/heur_relax_%.c src/_heur_fact_op.c src/_heur_relax.c \
-		src/_heur_relax_impl.c plan/heur.h plan/config.h
-	$(CC) $(CFLAGS) -c -o $@ $<
-.objs/heur_ma_ff.o: src/heur_ma_ff.c src/_heur_fact_op.c src/_heur_relax.c plan/heur.h plan/config.h
-	$(CC) $(CFLAGS) -c -o $@ $<
-.objs/heur_ma_max.o: src/heur_ma_max.c src/_heur_fact_op.c src/_heur_relax.c plan/heur.h plan/config.h
+.objs/heur_relax.o: src/heur_relax.c src/heur_relax.h src/_heur_relax_explore.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 .objs/%.o: src/%.c src/%.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<

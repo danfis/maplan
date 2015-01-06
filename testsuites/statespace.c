@@ -9,15 +9,10 @@ TEST(testStateSpace)
     plan_state_t *state;
     plan_state_space_node_t *nodeins[3];
 
-    planVarInit(vars + 0);
-    planVarInit(vars + 1);
-    planVarInit(vars + 2);
-    planVarInit(vars + 3);
-
-    vars[0].range = 2;
-    vars[1].range = 3;
-    vars[2].range = 4;
-    vars[3].range = 5;
+    planVarInit(vars + 0, "a", 2);
+    planVarInit(vars + 1, "b", 3);
+    planVarInit(vars + 2, "c", 4);
+    planVarInit(vars + 3, "d", 5);
 
     pool = planStatePoolNew(vars, 4);
     sspace = planStateSpaceNew(pool);

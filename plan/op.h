@@ -54,9 +54,14 @@ void planOpFree(plan_op_t *op);
 /**
  * Copies operator src to the dst. The operator dst must be already
  * initialized with state-pool object.
- * The .extra data are not copied at all!
  */
 void planOpCopy(plan_op_t *dst, const plan_op_t *src);
+
+/**
+ * Copies only private values from src to dst.
+ */
+void planOpCopyPrivate(plan_op_t *dst, const plan_op_t *src,
+                       const plan_var_t *var);
 
 /**
  * Sets operator's name.

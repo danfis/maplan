@@ -20,6 +20,12 @@ struct _plan_factarr_t {
 };
 typedef struct _plan_factarr_t plan_factarr_t;
 
+struct _plan_fake_pre_t {
+    int fact_id;
+    plan_cost_t value;
+};
+typedef struct _plan_fake_pre_t plan_fake_pre_t;
+
 struct _plan_fact_op_cross_ref_t {
     plan_fact_id_t fact_id; /*!< Translation from var-val pair to fact ID */
 
@@ -38,8 +44,8 @@ struct _plan_fact_op_cross_ref_t {
     int goal_id;            /*!< Fact ID of the artificial goal */
     int goal_op_id;         /*!< ID of artificial operator that has
                                  .goal_id as an effect */
-    int no_pre_id;          /*!< Artificial precondition fact for all
-                                 operators without preconditions */
+    plan_fake_pre_t *fake_pre; /*!< Artificial precondition facts */
+    int fake_pre_size;      /*!< Number of precondition facts */
     int *op_id;             /*!< Returns original operator ID. This is here
                                  mainly because of the conditional effects */
 };
@@ -59,8 +65,25 @@ void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
  */
 void planFactOpCrossRefFree(plan_fact_op_cross_ref_t *cr);
 
-#define PLAN_OPARR_FOR_EACH(oparr, i, op_id) \
-    for ((i) = 0; (i) < (size) && ((op_id) = (oparr)->op[(i)], 1); ++(i))
+/**
+ * Adds a new fake precondition fact with a specified initial value.
+ * Returns ID of the fact.
+ */
+int planFactOpCrossRefAddFakePre(plan_fact_op_cross_ref_t *cr,
+                                 plan_cost_t value);
+
+/**
+ * Sets initial value of the specified fake precondition.
+ */
+void planFactOpCrossRefSetFakePreValue(plan_fact_op_cross_ref_t *cr,
+                                       int fact_id, plan_cost_t value);
+
+/**
+ * Adds specified fact as a precondition to the operator.
+ */
+void planFactOpCrossRefAddPre(plan_fact_op_cross_ref_t *cr,
+                              int op_id, int fact_id);
+
 
 #ifdef __cplusplus
 }

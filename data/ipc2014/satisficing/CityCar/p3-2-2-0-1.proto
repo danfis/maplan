@@ -1,0 +1,10168 @@
+Q
+var0Atom arrived(car0, junction0-0)&NegatedAtom arrived(car0, junction0-0)Q
+var1Atom arrived(car0, junction0-1)&NegatedAtom arrived(car0, junction0-1)Q
+var2Atom arrived(car0, junction0-2)&NegatedAtom arrived(car0, junction0-2)Q
+var3Atom arrived(car0, junction1-0)&NegatedAtom arrived(car0, junction1-0)Q
+var4Atom arrived(car0, junction1-1)&NegatedAtom arrived(car0, junction1-1)Q
+var5Atom arrived(car0, junction1-2)&NegatedAtom arrived(car0, junction1-2)Q
+var6Atom arrived(car0, junction2-0)&NegatedAtom arrived(car0, junction2-0)Q
+var7Atom arrived(car0, junction2-1)&NegatedAtom arrived(car0, junction2-1)Q
+var8Atom arrived(car0, junction2-2)&NegatedAtom arrived(car0, junction2-2)Q
+var9Atom arrived(car1, junction0-0)&NegatedAtom arrived(car1, junction0-0)R
+var10Atom arrived(car1, junction0-1)&NegatedAtom arrived(car1, junction0-1)R
+var11Atom arrived(car1, junction0-2)&NegatedAtom arrived(car1, junction0-2)R
+var12Atom arrived(car1, junction1-0)&NegatedAtom arrived(car1, junction1-0)R
+var13Atom arrived(car1, junction1-1)&NegatedAtom arrived(car1, junction1-1)R
+var14Atom arrived(car1, junction1-2)&NegatedAtom arrived(car1, junction1-2)R
+var15Atom arrived(car1, junction2-0)&NegatedAtom arrived(car1, junction2-0)R
+var16Atom arrived(car1, junction2-1)&NegatedAtom arrived(car1, junction2-1)R
+var17Atom arrived(car1, junction2-2)&NegatedAtom arrived(car1, junction2-2)X
+var18"Atom at_car_jun(car0, junction0-0))NegatedAtom at_car_jun(car0, junction0-0)X
+var19"Atom at_car_jun(car0, junction0-1))NegatedAtom at_car_jun(car0, junction0-1)X
+var20"Atom at_car_jun(car0, junction0-2))NegatedAtom at_car_jun(car0, junction0-2)X
+var21"Atom at_car_jun(car0, junction1-0))NegatedAtom at_car_jun(car0, junction1-0)X
+var22"Atom at_car_jun(car0, junction1-1))NegatedAtom at_car_jun(car0, junction1-1)X
+var23"Atom at_car_jun(car0, junction1-2))NegatedAtom at_car_jun(car0, junction1-2)X
+var24"Atom at_car_jun(car0, junction2-0))NegatedAtom at_car_jun(car0, junction2-0)X
+var25"Atom at_car_jun(car0, junction2-1))NegatedAtom at_car_jun(car0, junction2-1)X
+var26"Atom at_car_jun(car0, junction2-2))NegatedAtom at_car_jun(car0, junction2-2)X
+var27"Atom at_car_jun(car1, junction0-0))NegatedAtom at_car_jun(car1, junction0-0)X
+var28"Atom at_car_jun(car1, junction0-1))NegatedAtom at_car_jun(car1, junction0-1)X
+var29"Atom at_car_jun(car1, junction0-2))NegatedAtom at_car_jun(car1, junction0-2)X
+var30"Atom at_car_jun(car1, junction1-0))NegatedAtom at_car_jun(car1, junction1-0)X
+var31"Atom at_car_jun(car1, junction1-1))NegatedAtom at_car_jun(car1, junction1-1)X
+var32"Atom at_car_jun(car1, junction1-2))NegatedAtom at_car_jun(car1, junction1-2)X
+var33"Atom at_car_jun(car1, junction2-0))NegatedAtom at_car_jun(car1, junction2-0)X
+var34"Atom at_car_jun(car1, junction2-1))NegatedAtom at_car_jun(car1, junction2-1)X
+var35"Atom at_car_jun(car1, junction2-2))NegatedAtom at_car_jun(car1, junction2-2)N
+var36Atom at_car_road(car0, road0)$NegatedAtom at_car_road(car0, road0)N
+var37Atom at_car_road(car0, road1)$NegatedAtom at_car_road(car0, road1)N
+var38Atom at_car_road(car0, road2)$NegatedAtom at_car_road(car0, road2)N
+var39Atom at_car_road(car0, road3)$NegatedAtom at_car_road(car0, road3)N
+var40Atom at_car_road(car0, road4)$NegatedAtom at_car_road(car0, road4)N
+var41Atom at_car_road(car1, road0)$NegatedAtom at_car_road(car1, road0)N
+var42Atom at_car_road(car1, road1)$NegatedAtom at_car_road(car1, road1)N
+var43Atom at_car_road(car1, road2)$NegatedAtom at_car_road(car1, road2)N
+var44Atom at_car_road(car1, road3)$NegatedAtom at_car_road(car1, road3)N
+var45Atom at_car_road(car1, road4)$NegatedAtom at_car_road(car1, road4)B
+var46Atom clear(junction0-0)NegatedAtom clear(junction0-0)B
+var47Atom clear(junction0-1)NegatedAtom clear(junction0-1)B
+var48Atom clear(junction0-2)NegatedAtom clear(junction0-2)B
+var49Atom clear(junction1-0)NegatedAtom clear(junction1-0)B
+var50Atom clear(junction1-1)NegatedAtom clear(junction1-1)B
+var51Atom clear(junction1-2)NegatedAtom clear(junction1-2)B
+var52Atom clear(junction2-0)NegatedAtom clear(junction2-0)B
+var53Atom clear(junction2-1)NegatedAtom clear(junction2-1)B
+var54Atom clear(junction2-2)NegatedAtom clear(junction2-2)<
+var55Atom in_place(road0)NegatedAtom in_place(road0)<
+var56Atom in_place(road1)NegatedAtom in_place(road1)<
+var57Atom in_place(road2)NegatedAtom in_place(road2)<
+var58Atom in_place(road3)NegatedAtom in_place(road3)<
+var59Atom in_place(road4)NegatedAtom in_place(road4)x
+var602Atom road_connect(road0, junction0-0, junction0-1)9NegatedAtom road_connect(road0, junction0-0, junction0-1)x
+var612Atom road_connect(road0, junction0-0, junction1-0)9NegatedAtom road_connect(road0, junction0-0, junction1-0)x
+var622Atom road_connect(road0, junction0-0, junction1-1)9NegatedAtom road_connect(road0, junction0-0, junction1-1)x
+var632Atom road_connect(road0, junction0-1, junction0-0)9NegatedAtom road_connect(road0, junction0-1, junction0-0)x
+var642Atom road_connect(road0, junction0-1, junction0-2)9NegatedAtom road_connect(road0, junction0-1, junction0-2)x
+var652Atom road_connect(road0, junction0-1, junction1-0)9NegatedAtom road_connect(road0, junction0-1, junction1-0)x
+var662Atom road_connect(road0, junction0-1, junction1-1)9NegatedAtom road_connect(road0, junction0-1, junction1-1)x
+var672Atom road_connect(road0, junction0-1, junction1-2)9NegatedAtom road_connect(road0, junction0-1, junction1-2)x
+var682Atom road_connect(road0, junction0-2, junction0-1)9NegatedAtom road_connect(road0, junction0-2, junction0-1)x
+var692Atom road_connect(road0, junction0-2, junction1-1)9NegatedAtom road_connect(road0, junction0-2, junction1-1)x
+var702Atom road_connect(road0, junction0-2, junction1-2)9NegatedAtom road_connect(road0, junction0-2, junction1-2)x
+var712Atom road_connect(road0, junction1-0, junction0-0)9NegatedAtom road_connect(road0, junction1-0, junction0-0)x
+var722Atom road_connect(road0, junction1-0, junction0-1)9NegatedAtom road_connect(road0, junction1-0, junction0-1)x
+var732Atom road_connect(road0, junction1-0, junction1-1)9NegatedAtom road_connect(road0, junction1-0, junction1-1)x
+var742Atom road_connect(road0, junction1-0, junction2-0)9NegatedAtom road_connect(road0, junction1-0, junction2-0)x
+var752Atom road_connect(road0, junction1-0, junction2-1)9NegatedAtom road_connect(road0, junction1-0, junction2-1)x
+var762Atom road_connect(road0, junction1-1, junction0-0)9NegatedAtom road_connect(road0, junction1-1, junction0-0)x
+var772Atom road_connect(road0, junction1-1, junction0-1)9NegatedAtom road_connect(road0, junction1-1, junction0-1)x
+var782Atom road_connect(road0, junction1-1, junction0-2)9NegatedAtom road_connect(road0, junction1-1, junction0-2)x
+var792Atom road_connect(road0, junction1-1, junction1-0)9NegatedAtom road_connect(road0, junction1-1, junction1-0)x
+var802Atom road_connect(road0, junction1-1, junction1-2)9NegatedAtom road_connect(road0, junction1-1, junction1-2)x
+var812Atom road_connect(road0, junction1-1, junction2-0)9NegatedAtom road_connect(road0, junction1-1, junction2-0)x
+var822Atom road_connect(road0, junction1-1, junction2-1)9NegatedAtom road_connect(road0, junction1-1, junction2-1)x
+var832Atom road_connect(road0, junction1-1, junction2-2)9NegatedAtom road_connect(road0, junction1-1, junction2-2)x
+var842Atom road_connect(road0, junction1-2, junction0-1)9NegatedAtom road_connect(road0, junction1-2, junction0-1)x
+var852Atom road_connect(road0, junction1-2, junction0-2)9NegatedAtom road_connect(road0, junction1-2, junction0-2)x
+var862Atom road_connect(road0, junction1-2, junction1-1)9NegatedAtom road_connect(road0, junction1-2, junction1-1)x
+var872Atom road_connect(road0, junction1-2, junction2-1)9NegatedAtom road_connect(road0, junction1-2, junction2-1)x
+var882Atom road_connect(road0, junction1-2, junction2-2)9NegatedAtom road_connect(road0, junction1-2, junction2-2)x
+var892Atom road_connect(road0, junction2-0, junction1-0)9NegatedAtom road_connect(road0, junction2-0, junction1-0)x
+var902Atom road_connect(road0, junction2-0, junction1-1)9NegatedAtom road_connect(road0, junction2-0, junction1-1)x
+var912Atom road_connect(road0, junction2-0, junction2-1)9NegatedAtom road_connect(road0, junction2-0, junction2-1)x
+var922Atom road_connect(road0, junction2-1, junction1-0)9NegatedAtom road_connect(road0, junction2-1, junction1-0)x
+var932Atom road_connect(road0, junction2-1, junction1-1)9NegatedAtom road_connect(road0, junction2-1, junction1-1)x
+var942Atom road_connect(road0, junction2-1, junction1-2)9NegatedAtom road_connect(road0, junction2-1, junction1-2)x
+var952Atom road_connect(road0, junction2-1, junction2-0)9NegatedAtom road_connect(road0, junction2-1, junction2-0)x
+var962Atom road_connect(road0, junction2-1, junction2-2)9NegatedAtom road_connect(road0, junction2-1, junction2-2)x
+var972Atom road_connect(road0, junction2-2, junction1-1)9NegatedAtom road_connect(road0, junction2-2, junction1-1)x
+var982Atom road_connect(road0, junction2-2, junction1-2)9NegatedAtom road_connect(road0, junction2-2, junction1-2)x
+var992Atom road_connect(road0, junction2-2, junction2-1)9NegatedAtom road_connect(road0, junction2-2, junction2-1)y
+var1002Atom road_connect(road1, junction0-0, junction0-1)9NegatedAtom road_connect(road1, junction0-0, junction0-1)y
+var1012Atom road_connect(road1, junction0-0, junction1-0)9NegatedAtom road_connect(road1, junction0-0, junction1-0)y
+var1022Atom road_connect(road1, junction0-0, junction1-1)9NegatedAtom road_connect(road1, junction0-0, junction1-1)y
+var1032Atom road_connect(road1, junction0-1, junction0-0)9NegatedAtom road_connect(road1, junction0-1, junction0-0)y
+var1042Atom road_connect(road1, junction0-1, junction0-2)9NegatedAtom road_connect(road1, junction0-1, junction0-2)y
+var1052Atom road_connect(road1, junction0-1, junction1-0)9NegatedAtom road_connect(road1, junction0-1, junction1-0)y
+var1062Atom road_connect(road1, junction0-1, junction1-1)9NegatedAtom road_connect(road1, junction0-1, junction1-1)y
+var1072Atom road_connect(road1, junction0-1, junction1-2)9NegatedAtom road_connect(road1, junction0-1, junction1-2)y
+var1082Atom road_connect(road1, junction0-2, junction0-1)9NegatedAtom road_connect(road1, junction0-2, junction0-1)y
+var1092Atom road_connect(road1, junction0-2, junction1-1)9NegatedAtom road_connect(road1, junction0-2, junction1-1)y
+var1102Atom road_connect(road1, junction0-2, junction1-2)9NegatedAtom road_connect(road1, junction0-2, junction1-2)y
+var1112Atom road_connect(road1, junction1-0, junction0-0)9NegatedAtom road_connect(road1, junction1-0, junction0-0)y
+var1122Atom road_connect(road1, junction1-0, junction0-1)9NegatedAtom road_connect(road1, junction1-0, junction0-1)y
+var1132Atom road_connect(road1, junction1-0, junction1-1)9NegatedAtom road_connect(road1, junction1-0, junction1-1)y
+var1142Atom road_connect(road1, junction1-0, junction2-0)9NegatedAtom road_connect(road1, junction1-0, junction2-0)y
+var1152Atom road_connect(road1, junction1-0, junction2-1)9NegatedAtom road_connect(road1, junction1-0, junction2-1)y
+var1162Atom road_connect(road1, junction1-1, junction0-0)9NegatedAtom road_connect(road1, junction1-1, junction0-0)y
+var1172Atom road_connect(road1, junction1-1, junction0-1)9NegatedAtom road_connect(road1, junction1-1, junction0-1)y
+var1182Atom road_connect(road1, junction1-1, junction0-2)9NegatedAtom road_connect(road1, junction1-1, junction0-2)y
+var1192Atom road_connect(road1, junction1-1, junction1-0)9NegatedAtom road_connect(road1, junction1-1, junction1-0)y
+var1202Atom road_connect(road1, junction1-1, junction1-2)9NegatedAtom road_connect(road1, junction1-1, junction1-2)y
+var1212Atom road_connect(road1, junction1-1, junction2-0)9NegatedAtom road_connect(road1, junction1-1, junction2-0)y
+var1222Atom road_connect(road1, junction1-1, junction2-1)9NegatedAtom road_connect(road1, junction1-1, junction2-1)y
+var1232Atom road_connect(road1, junction1-1, junction2-2)9NegatedAtom road_connect(road1, junction1-1, junction2-2)y
+var1242Atom road_connect(road1, junction1-2, junction0-1)9NegatedAtom road_connect(road1, junction1-2, junction0-1)y
+var1252Atom road_connect(road1, junction1-2, junction0-2)9NegatedAtom road_connect(road1, junction1-2, junction0-2)y
+var1262Atom road_connect(road1, junction1-2, junction1-1)9NegatedAtom road_connect(road1, junction1-2, junction1-1)y
+var1272Atom road_connect(road1, junction1-2, junction2-1)9NegatedAtom road_connect(road1, junction1-2, junction2-1)y
+var1282Atom road_connect(road1, junction1-2, junction2-2)9NegatedAtom road_connect(road1, junction1-2, junction2-2)y
+var1292Atom road_connect(road1, junction2-0, junction1-0)9NegatedAtom road_connect(road1, junction2-0, junction1-0)y
+var1302Atom road_connect(road1, junction2-0, junction1-1)9NegatedAtom road_connect(road1, junction2-0, junction1-1)y
+var1312Atom road_connect(road1, junction2-0, junction2-1)9NegatedAtom road_connect(road1, junction2-0, junction2-1)y
+var1322Atom road_connect(road1, junction2-1, junction1-0)9NegatedAtom road_connect(road1, junction2-1, junction1-0)y
+var1332Atom road_connect(road1, junction2-1, junction1-1)9NegatedAtom road_connect(road1, junction2-1, junction1-1)y
+var1342Atom road_connect(road1, junction2-1, junction1-2)9NegatedAtom road_connect(road1, junction2-1, junction1-2)y
+var1352Atom road_connect(road1, junction2-1, junction2-0)9NegatedAtom road_connect(road1, junction2-1, junction2-0)y
+var1362Atom road_connect(road1, junction2-1, junction2-2)9NegatedAtom road_connect(road1, junction2-1, junction2-2)y
+var1372Atom road_connect(road1, junction2-2, junction1-1)9NegatedAtom road_connect(road1, junction2-2, junction1-1)y
+var1382Atom road_connect(road1, junction2-2, junction1-2)9NegatedAtom road_connect(road1, junction2-2, junction1-2)y
+var1392Atom road_connect(road1, junction2-2, junction2-1)9NegatedAtom road_connect(road1, junction2-2, junction2-1)y
+var1402Atom road_connect(road2, junction0-0, junction0-1)9NegatedAtom road_connect(road2, junction0-0, junction0-1)y
+var1412Atom road_connect(road2, junction0-0, junction1-0)9NegatedAtom road_connect(road2, junction0-0, junction1-0)y
+var1422Atom road_connect(road2, junction0-0, junction1-1)9NegatedAtom road_connect(road2, junction0-0, junction1-1)y
+var1432Atom road_connect(road2, junction0-1, junction0-0)9NegatedAtom road_connect(road2, junction0-1, junction0-0)y
+var1442Atom road_connect(road2, junction0-1, junction0-2)9NegatedAtom road_connect(road2, junction0-1, junction0-2)y
+var1452Atom road_connect(road2, junction0-1, junction1-0)9NegatedAtom road_connect(road2, junction0-1, junction1-0)y
+var1462Atom road_connect(road2, junction0-1, junction1-1)9NegatedAtom road_connect(road2, junction0-1, junction1-1)y
+var1472Atom road_connect(road2, junction0-1, junction1-2)9NegatedAtom road_connect(road2, junction0-1, junction1-2)y
+var1482Atom road_connect(road2, junction0-2, junction0-1)9NegatedAtom road_connect(road2, junction0-2, junction0-1)y
+var1492Atom road_connect(road2, junction0-2, junction1-1)9NegatedAtom road_connect(road2, junction0-2, junction1-1)y
+var1502Atom road_connect(road2, junction0-2, junction1-2)9NegatedAtom road_connect(road2, junction0-2, junction1-2)y
+var1512Atom road_connect(road2, junction1-0, junction0-0)9NegatedAtom road_connect(road2, junction1-0, junction0-0)y
+var1522Atom road_connect(road2, junction1-0, junction0-1)9NegatedAtom road_connect(road2, junction1-0, junction0-1)y
+var1532Atom road_connect(road2, junction1-0, junction1-1)9NegatedAtom road_connect(road2, junction1-0, junction1-1)y
+var1542Atom road_connect(road2, junction1-0, junction2-0)9NegatedAtom road_connect(road2, junction1-0, junction2-0)y
+var1552Atom road_connect(road2, junction1-0, junction2-1)9NegatedAtom road_connect(road2, junction1-0, junction2-1)y
+var1562Atom road_connect(road2, junction1-1, junction0-0)9NegatedAtom road_connect(road2, junction1-1, junction0-0)y
+var1572Atom road_connect(road2, junction1-1, junction0-1)9NegatedAtom road_connect(road2, junction1-1, junction0-1)y
+var1582Atom road_connect(road2, junction1-1, junction0-2)9NegatedAtom road_connect(road2, junction1-1, junction0-2)y
+var1592Atom road_connect(road2, junction1-1, junction1-0)9NegatedAtom road_connect(road2, junction1-1, junction1-0)y
+var1602Atom road_connect(road2, junction1-1, junction1-2)9NegatedAtom road_connect(road2, junction1-1, junction1-2)y
+var1612Atom road_connect(road2, junction1-1, junction2-0)9NegatedAtom road_connect(road2, junction1-1, junction2-0)y
+var1622Atom road_connect(road2, junction1-1, junction2-1)9NegatedAtom road_connect(road2, junction1-1, junction2-1)y
+var1632Atom road_connect(road2, junction1-1, junction2-2)9NegatedAtom road_connect(road2, junction1-1, junction2-2)y
+var1642Atom road_connect(road2, junction1-2, junction0-1)9NegatedAtom road_connect(road2, junction1-2, junction0-1)y
+var1652Atom road_connect(road2, junction1-2, junction0-2)9NegatedAtom road_connect(road2, junction1-2, junction0-2)y
+var1662Atom road_connect(road2, junction1-2, junction1-1)9NegatedAtom road_connect(road2, junction1-2, junction1-1)y
+var1672Atom road_connect(road2, junction1-2, junction2-1)9NegatedAtom road_connect(road2, junction1-2, junction2-1)y
+var1682Atom road_connect(road2, junction1-2, junction2-2)9NegatedAtom road_connect(road2, junction1-2, junction2-2)y
+var1692Atom road_connect(road2, junction2-0, junction1-0)9NegatedAtom road_connect(road2, junction2-0, junction1-0)y
+var1702Atom road_connect(road2, junction2-0, junction1-1)9NegatedAtom road_connect(road2, junction2-0, junction1-1)y
+var1712Atom road_connect(road2, junction2-0, junction2-1)9NegatedAtom road_connect(road2, junction2-0, junction2-1)y
+var1722Atom road_connect(road2, junction2-1, junction1-0)9NegatedAtom road_connect(road2, junction2-1, junction1-0)y
+var1732Atom road_connect(road2, junction2-1, junction1-1)9NegatedAtom road_connect(road2, junction2-1, junction1-1)y
+var1742Atom road_connect(road2, junction2-1, junction1-2)9NegatedAtom road_connect(road2, junction2-1, junction1-2)y
+var1752Atom road_connect(road2, junction2-1, junction2-0)9NegatedAtom road_connect(road2, junction2-1, junction2-0)y
+var1762Atom road_connect(road2, junction2-1, junction2-2)9NegatedAtom road_connect(road2, junction2-1, junction2-2)y
+var1772Atom road_connect(road2, junction2-2, junction1-1)9NegatedAtom road_connect(road2, junction2-2, junction1-1)y
+var1782Atom road_connect(road2, junction2-2, junction1-2)9NegatedAtom road_connect(road2, junction2-2, junction1-2)y
+var1792Atom road_connect(road2, junction2-2, junction2-1)9NegatedAtom road_connect(road2, junction2-2, junction2-1)y
+var1802Atom road_connect(road3, junction0-0, junction0-1)9NegatedAtom road_connect(road3, junction0-0, junction0-1)y
+var1812Atom road_connect(road3, junction0-0, junction1-0)9NegatedAtom road_connect(road3, junction0-0, junction1-0)y
+var1822Atom road_connect(road3, junction0-0, junction1-1)9NegatedAtom road_connect(road3, junction0-0, junction1-1)y
+var1832Atom road_connect(road3, junction0-1, junction0-0)9NegatedAtom road_connect(road3, junction0-1, junction0-0)y
+var1842Atom road_connect(road3, junction0-1, junction0-2)9NegatedAtom road_connect(road3, junction0-1, junction0-2)y
+var1852Atom road_connect(road3, junction0-1, junction1-0)9NegatedAtom road_connect(road3, junction0-1, junction1-0)y
+var1862Atom road_connect(road3, junction0-1, junction1-1)9NegatedAtom road_connect(road3, junction0-1, junction1-1)y
+var1872Atom road_connect(road3, junction0-1, junction1-2)9NegatedAtom road_connect(road3, junction0-1, junction1-2)y
+var1882Atom road_connect(road3, junction0-2, junction0-1)9NegatedAtom road_connect(road3, junction0-2, junction0-1)y
+var1892Atom road_connect(road3, junction0-2, junction1-1)9NegatedAtom road_connect(road3, junction0-2, junction1-1)y
+var1902Atom road_connect(road3, junction0-2, junction1-2)9NegatedAtom road_connect(road3, junction0-2, junction1-2)y
+var1912Atom road_connect(road3, junction1-0, junction0-0)9NegatedAtom road_connect(road3, junction1-0, junction0-0)y
+var1922Atom road_connect(road3, junction1-0, junction0-1)9NegatedAtom road_connect(road3, junction1-0, junction0-1)y
+var1932Atom road_connect(road3, junction1-0, junction1-1)9NegatedAtom road_connect(road3, junction1-0, junction1-1)y
+var1942Atom road_connect(road3, junction1-0, junction2-0)9NegatedAtom road_connect(road3, junction1-0, junction2-0)y
+var1952Atom road_connect(road3, junction1-0, junction2-1)9NegatedAtom road_connect(road3, junction1-0, junction2-1)y
+var1962Atom road_connect(road3, junction1-1, junction0-0)9NegatedAtom road_connect(road3, junction1-1, junction0-0)y
+var1972Atom road_connect(road3, junction1-1, junction0-1)9NegatedAtom road_connect(road3, junction1-1, junction0-1)y
+var1982Atom road_connect(road3, junction1-1, junction0-2)9NegatedAtom road_connect(road3, junction1-1, junction0-2)y
+var1992Atom road_connect(road3, junction1-1, junction1-0)9NegatedAtom road_connect(road3, junction1-1, junction1-0)y
+var2002Atom road_connect(road3, junction1-1, junction1-2)9NegatedAtom road_connect(road3, junction1-1, junction1-2)y
+var2012Atom road_connect(road3, junction1-1, junction2-0)9NegatedAtom road_connect(road3, junction1-1, junction2-0)y
+var2022Atom road_connect(road3, junction1-1, junction2-1)9NegatedAtom road_connect(road3, junction1-1, junction2-1)y
+var2032Atom road_connect(road3, junction1-1, junction2-2)9NegatedAtom road_connect(road3, junction1-1, junction2-2)y
+var2042Atom road_connect(road3, junction1-2, junction0-1)9NegatedAtom road_connect(road3, junction1-2, junction0-1)y
+var2052Atom road_connect(road3, junction1-2, junction0-2)9NegatedAtom road_connect(road3, junction1-2, junction0-2)y
+var2062Atom road_connect(road3, junction1-2, junction1-1)9NegatedAtom road_connect(road3, junction1-2, junction1-1)y
+var2072Atom road_connect(road3, junction1-2, junction2-1)9NegatedAtom road_connect(road3, junction1-2, junction2-1)y
+var2082Atom road_connect(road3, junction1-2, junction2-2)9NegatedAtom road_connect(road3, junction1-2, junction2-2)y
+var2092Atom road_connect(road3, junction2-0, junction1-0)9NegatedAtom road_connect(road3, junction2-0, junction1-0)y
+var2102Atom road_connect(road3, junction2-0, junction1-1)9NegatedAtom road_connect(road3, junction2-0, junction1-1)y
+var2112Atom road_connect(road3, junction2-0, junction2-1)9NegatedAtom road_connect(road3, junction2-0, junction2-1)y
+var2122Atom road_connect(road3, junction2-1, junction1-0)9NegatedAtom road_connect(road3, junction2-1, junction1-0)y
+var2132Atom road_connect(road3, junction2-1, junction1-1)9NegatedAtom road_connect(road3, junction2-1, junction1-1)y
+var2142Atom road_connect(road3, junction2-1, junction1-2)9NegatedAtom road_connect(road3, junction2-1, junction1-2)y
+var2152Atom road_connect(road3, junction2-1, junction2-0)9NegatedAtom road_connect(road3, junction2-1, junction2-0)y
+var2162Atom road_connect(road3, junction2-1, junction2-2)9NegatedAtom road_connect(road3, junction2-1, junction2-2)y
+var2172Atom road_connect(road3, junction2-2, junction1-1)9NegatedAtom road_connect(road3, junction2-2, junction1-1)y
+var2182Atom road_connect(road3, junction2-2, junction1-2)9NegatedAtom road_connect(road3, junction2-2, junction1-2)y
+var2192Atom road_connect(road3, junction2-2, junction2-1)9NegatedAtom road_connect(road3, junction2-2, junction2-1)y
+var2202Atom road_connect(road4, junction0-0, junction0-1)9NegatedAtom road_connect(road4, junction0-0, junction0-1)y
+var2212Atom road_connect(road4, junction0-0, junction1-0)9NegatedAtom road_connect(road4, junction0-0, junction1-0)y
+var2222Atom road_connect(road4, junction0-0, junction1-1)9NegatedAtom road_connect(road4, junction0-0, junction1-1)y
+var2232Atom road_connect(road4, junction0-1, junction0-0)9NegatedAtom road_connect(road4, junction0-1, junction0-0)y
+var2242Atom road_connect(road4, junction0-1, junction0-2)9NegatedAtom road_connect(road4, junction0-1, junction0-2)y
+var2252Atom road_connect(road4, junction0-1, junction1-0)9NegatedAtom road_connect(road4, junction0-1, junction1-0)y
+var2262Atom road_connect(road4, junction0-1, junction1-1)9NegatedAtom road_connect(road4, junction0-1, junction1-1)y
+var2272Atom road_connect(road4, junction0-1, junction1-2)9NegatedAtom road_connect(road4, junction0-1, junction1-2)y
+var2282Atom road_connect(road4, junction0-2, junction0-1)9NegatedAtom road_connect(road4, junction0-2, junction0-1)y
+var2292Atom road_connect(road4, junction0-2, junction1-1)9NegatedAtom road_connect(road4, junction0-2, junction1-1)y
+var2302Atom road_connect(road4, junction0-2, junction1-2)9NegatedAtom road_connect(road4, junction0-2, junction1-2)y
+var2312Atom road_connect(road4, junction1-0, junction0-0)9NegatedAtom road_connect(road4, junction1-0, junction0-0)y
+var2322Atom road_connect(road4, junction1-0, junction0-1)9NegatedAtom road_connect(road4, junction1-0, junction0-1)y
+var2332Atom road_connect(road4, junction1-0, junction1-1)9NegatedAtom road_connect(road4, junction1-0, junction1-1)y
+var2342Atom road_connect(road4, junction1-0, junction2-0)9NegatedAtom road_connect(road4, junction1-0, junction2-0)y
+var2352Atom road_connect(road4, junction1-0, junction2-1)9NegatedAtom road_connect(road4, junction1-0, junction2-1)y
+var2362Atom road_connect(road4, junction1-1, junction0-0)9NegatedAtom road_connect(road4, junction1-1, junction0-0)y
+var2372Atom road_connect(road4, junction1-1, junction0-1)9NegatedAtom road_connect(road4, junction1-1, junction0-1)y
+var2382Atom road_connect(road4, junction1-1, junction0-2)9NegatedAtom road_connect(road4, junction1-1, junction0-2)y
+var2392Atom road_connect(road4, junction1-1, junction1-0)9NegatedAtom road_connect(road4, junction1-1, junction1-0)y
+var2402Atom road_connect(road4, junction1-1, junction1-2)9NegatedAtom road_connect(road4, junction1-1, junction1-2)y
+var2412Atom road_connect(road4, junction1-1, junction2-0)9NegatedAtom road_connect(road4, junction1-1, junction2-0)y
+var2422Atom road_connect(road4, junction1-1, junction2-1)9NegatedAtom road_connect(road4, junction1-1, junction2-1)y
+var2432Atom road_connect(road4, junction1-1, junction2-2)9NegatedAtom road_connect(road4, junction1-1, junction2-2)y
+var2442Atom road_connect(road4, junction1-2, junction0-1)9NegatedAtom road_connect(road4, junction1-2, junction0-1)y
+var2452Atom road_connect(road4, junction1-2, junction0-2)9NegatedAtom road_connect(road4, junction1-2, junction0-2)y
+var2462Atom road_connect(road4, junction1-2, junction1-1)9NegatedAtom road_connect(road4, junction1-2, junction1-1)y
+var2472Atom road_connect(road4, junction1-2, junction2-1)9NegatedAtom road_connect(road4, junction1-2, junction2-1)y
+var2482Atom road_connect(road4, junction1-2, junction2-2)9NegatedAtom road_connect(road4, junction1-2, junction2-2)y
+var2492Atom road_connect(road4, junction2-0, junction1-0)9NegatedAtom road_connect(road4, junction2-0, junction1-0)y
+var2502Atom road_connect(road4, junction2-0, junction1-1)9NegatedAtom road_connect(road4, junction2-0, junction1-1)y
+var2512Atom road_connect(road4, junction2-0, junction2-1)9NegatedAtom road_connect(road4, junction2-0, junction2-1)y
+var2522Atom road_connect(road4, junction2-1, junction1-0)9NegatedAtom road_connect(road4, junction2-1, junction1-0)y
+var2532Atom road_connect(road4, junction2-1, junction1-1)9NegatedAtom road_connect(road4, junction2-1, junction1-1)y
+var2542Atom road_connect(road4, junction2-1, junction1-2)9NegatedAtom road_connect(road4, junction2-1, junction1-2)y
+var2552Atom road_connect(road4, junction2-1, junction2-0)9NegatedAtom road_connect(road4, junction2-1, junction2-0)y
+var2562Atom road_connect(road4, junction2-1, junction2-2)9NegatedAtom road_connect(road4, junction2-1, junction2-2)y
+var2572Atom road_connect(road4, junction2-2, junction1-1)9NegatedAtom road_connect(road4, junction2-2, junction1-1)y
+var2582Atom road_connect(road4, junction2-2, junction1-2)9NegatedAtom road_connect(road4, junction2-2, junction1-2)y
+var2592Atom road_connect(road4, junction2-2, junction2-1)9NegatedAtom road_connect(road4, junction2-2, junction2-1)M
+var260Atom starting(car0, garage0)#NegatedAtom starting(car0, garage0)M
+var261Atom starting(car1, garage1)#NegatedAtom starting(car1, garage1)"å           *
+ 
+ 2S
+3build_diagonal_oneway junction0-0 junction1-1 road0
+2 
+7"
+7 
+> 2S
+3build_diagonal_oneway junction0-0 junction1-1 road1
+2 
+8"
+8 
+f 2T
+3build_diagonal_oneway junction0-0 junction1-1 road2
+2 
+9"
+9 
+é 2T
+3build_diagonal_oneway junction0-0 junction1-1 road3
+2 
+:"
+: 
+∂ 2T
+3build_diagonal_oneway junction0-0 junction1-1 road4
+2 
+;"
+; 
+ﬁ 2S
+3build_diagonal_oneway junction0-1 junction1-0 road0
+1 
+7"
+7 
+A 2S
+3build_diagonal_oneway junction0-1 junction1-0 road1
+1 
+8"
+8 
+i 2T
+3build_diagonal_oneway junction0-1 junction1-0 road2
+1 
+9"
+9 
+ë 2T
+3build_diagonal_oneway junction0-1 junction1-0 road3
+1 
+:"
+: 
+π 2T
+3build_diagonal_oneway junction0-1 junction1-0 road4
+1 
+;"
+; 
+· 2S
+3build_diagonal_oneway junction0-1 junction1-2 road0
+3 
+7"
+7 
+C 2S
+3build_diagonal_oneway junction0-1 junction1-2 road1
+3 
+8"
+8 
+k 2T
+3build_diagonal_oneway junction0-1 junction1-2 road2
+3 
+9"
+9 
+ì 2T
+3build_diagonal_oneway junction0-1 junction1-2 road3
+3 
+:"
+: 
+ª 2T
+3build_diagonal_oneway junction0-1 junction1-2 road4
+3 
+;"
+; 
+„ 2S
+3build_diagonal_oneway junction0-2 junction1-1 road0
+2 
+7"
+7 
+E 2S
+3build_diagonal_oneway junction0-2 junction1-1 road1
+2 
+8"
+8 
+m 2T
+3build_diagonal_oneway junction0-2 junction1-1 road2
+2 
+9"
+9 
+ï 2T
+3build_diagonal_oneway junction0-2 junction1-1 road3
+2 
+:"
+: 
+Ω 2T
+3build_diagonal_oneway junction0-2 junction1-1 road4
+2 
+;"
+; 
+Â 2S
+3build_diagonal_oneway junction1-0 junction0-1 road0
+/ 
+7"
+7 
+H 2S
+3build_diagonal_oneway junction1-0 junction0-1 road1
+/ 
+8"
+8 
+p 2T
+3build_diagonal_oneway junction1-0 junction0-1 road2
+/ 
+9"
+9 
+ò 2T
+3build_diagonal_oneway junction1-0 junction0-1 road3
+/ 
+:"
+: 
+¿ 2T
+3build_diagonal_oneway junction1-0 junction0-1 road4
+/ 
+;"
+; 
+Ë 2S
+3build_diagonal_oneway junction1-0 junction2-1 road0
+5 
+7"
+7 
+K 2S
+3build_diagonal_oneway junction1-0 junction2-1 road1
+5 
+8"
+8 
+s 2T
+3build_diagonal_oneway junction1-0 junction2-1 road2
+5 
+9"
+9 
+õ 2T
+3build_diagonal_oneway junction1-0 junction2-1 road3
+5 
+:"
+: 
+√ 2T
+3build_diagonal_oneway junction1-0 junction2-1 road4
+5 
+;"
+; 
+Î 2S
+3build_diagonal_oneway junction1-1 junction0-0 road0
+. 
+7"
+7 
+L 2S
+3build_diagonal_oneway junction1-1 junction0-0 road1
+. 
+8"
+8 
+t 2T
+3build_diagonal_oneway junction1-1 junction0-0 road2
+. 
+9"
+9 
+ú 2T
+3build_diagonal_oneway junction1-1 junction0-0 road3
+. 
+:"
+: 
+ƒ 2T
+3build_diagonal_oneway junction1-1 junction0-0 road4
+. 
+;"
+; 
+Ï 2S
+3build_diagonal_oneway junction1-1 junction0-2 road0
+0 
+7"
+7 
+N 2S
+3build_diagonal_oneway junction1-1 junction0-2 road1
+0 
+8"
+8 
+v 2T
+3build_diagonal_oneway junction1-1 junction0-2 road2
+0 
+9"
+9 
+û 2T
+3build_diagonal_oneway junction1-1 junction0-2 road3
+0 
+:"
+: 
+∆ 2T
+3build_diagonal_oneway junction1-1 junction0-2 road4
+0 
+;"
+; 
+Ó 2S
+3build_diagonal_oneway junction1-1 junction2-0 road0
+4 
+7"
+7 
+Q 2S
+3build_diagonal_oneway junction1-1 junction2-0 road1
+4 
+8"
+8 
+y 2T
+3build_diagonal_oneway junction1-1 junction2-0 road2
+4 
+9"
+9 
+° 2T
+3build_diagonal_oneway junction1-1 junction2-0 road3
+4 
+:"
+: 
+… 2T
+3build_diagonal_oneway junction1-1 junction2-0 road4
+4 
+;"
+; 
+Ò 2S
+3build_diagonal_oneway junction1-1 junction2-2 road0
+6 
+7"
+7 
+S 2S
+3build_diagonal_oneway junction1-1 junction2-2 road1
+6 
+8"
+8 
+{ 2T
+3build_diagonal_oneway junction1-1 junction2-2 road2
+6 
+9"
+9 
+£ 2T
+3build_diagonal_oneway junction1-1 junction2-2 road3
+6 
+:"
+: 
+À 2T
+3build_diagonal_oneway junction1-1 junction2-2 road4
+6 
+;"
+; 
+Û 2S
+3build_diagonal_oneway junction1-2 junction0-1 road0
+/ 
+7"
+7 
+T 2S
+3build_diagonal_oneway junction1-2 junction0-1 road1
+/ 
+8"
+8 
+| 2T
+3build_diagonal_oneway junction1-2 junction0-1 road2
+/ 
+9"
+9 
+§ 2T
+3build_diagonal_oneway junction1-2 junction0-1 road3
+/ 
+:"
+: 
+Ã 2T
+3build_diagonal_oneway junction1-2 junction0-1 road4
+/ 
+;"
+; 
+Ù 2S
+3build_diagonal_oneway junction1-2 junction2-1 road0
+5 
+7"
+7 
+W 2S
+3build_diagonal_oneway junction1-2 junction2-1 road1
+5 
+8"
+8 
+ 2T
+3build_diagonal_oneway junction1-2 junction2-1 road2
+5 
+9"
+9 
+ß 2T
+3build_diagonal_oneway junction1-2 junction2-1 road3
+5 
+:"
+: 
+œ 2T
+3build_diagonal_oneway junction1-2 junction2-1 road4
+5 
+;"
+; 
+˜ 2S
+3build_diagonal_oneway junction2-0 junction1-1 road0
+2 
+7"
+7 
+Z 2T
+3build_diagonal_oneway junction2-0 junction1-1 road1
+2 
+8"
+8 
+Ç 2T
+3build_diagonal_oneway junction2-0 junction1-1 road2
+2 
+9"
+9 
+™ 2T
+3build_diagonal_oneway junction2-0 junction1-1 road3
+2 
+:"
+: 
+“ 2T
+3build_diagonal_oneway junction2-0 junction1-1 road4
+2 
+;"
+; 
+˙ 2S
+3build_diagonal_oneway junction2-1 junction1-0 road0
+1 
+7"
+7 
+\ 2T
+3build_diagonal_oneway junction2-1 junction1-0 road1
+1 
+8"
+8 
+Ñ 2T
+3build_diagonal_oneway junction2-1 junction1-0 road2
+1 
+9"
+9 
+¨ 2T
+3build_diagonal_oneway junction2-1 junction1-0 road3
+1 
+:"
+: 
+‘ 2T
+3build_diagonal_oneway junction2-1 junction1-0 road4
+1 
+;"
+; 
+¸ 2S
+3build_diagonal_oneway junction2-1 junction1-2 road0
+3 
+7"
+7 
+^ 2T
+3build_diagonal_oneway junction2-1 junction1-2 road1
+3 
+8"
+8 
+Ü 2T
+3build_diagonal_oneway junction2-1 junction1-2 road2
+3 
+9"
+9 
+Æ 2T
+3build_diagonal_oneway junction2-1 junction1-2 road3
+3 
+:"
+: 
+÷ 2T
+3build_diagonal_oneway junction2-1 junction1-2 road4
+3 
+;"
+; 
+˛ 2S
+3build_diagonal_oneway junction2-2 junction1-1 road0
+2 
+7"
+7 
+a 2T
+3build_diagonal_oneway junction2-2 junction1-1 road1
+2 
+8"
+8 
+â 2T
+3build_diagonal_oneway junction2-2 junction1-1 road2
+2 
+9"
+9 
+± 2T
+3build_diagonal_oneway junction2-2 junction1-1 road3
+2 
+:"
+: 
+Ÿ 2T
+3build_diagonal_oneway junction2-2 junction1-1 road4
+2 
+;"
+; 
+Å 2S
+3build_straight_oneway junction0-0 junction0-1 road0
+/ 
+7"
+7 
+< 2S
+3build_straight_oneway junction0-0 junction0-1 road1
+/ 
+8"
+8 
+d 2T
+3build_straight_oneway junction0-0 junction0-1 road2
+/ 
+9"
+9 
+å 2T
+3build_straight_oneway junction0-0 junction0-1 road3
+/ 
+:"
+: 
+¥ 2T
+3build_straight_oneway junction0-0 junction0-1 road4
+/ 
+;"
+; 
+‹ 2S
+3build_straight_oneway junction0-0 junction1-0 road0
+1 
+7"
+7 
+= 2S
+3build_straight_oneway junction0-0 junction1-0 road1
+1 
+8"
+8 
+e 2T
+3build_straight_oneway junction0-0 junction1-0 road2
+1 
+9"
+9 
+ç 2T
+3build_straight_oneway junction0-0 junction1-0 road3
+1 
+:"
+: 
+µ 2T
+3build_straight_oneway junction0-0 junction1-0 road4
+1 
+;"
+; 
+› 2S
+3build_straight_oneway junction0-1 junction0-0 road0
+. 
+7"
+7 
+? 2S
+3build_straight_oneway junction0-1 junction0-0 road1
+. 
+8"
+8 
+g 2T
+3build_straight_oneway junction0-1 junction0-0 road2
+. 
+9"
+9 
+è 2T
+3build_straight_oneway junction0-1 junction0-0 road3
+. 
+:"
+: 
+∑ 2T
+3build_straight_oneway junction0-1 junction0-0 road4
+. 
+;"
+; 
+ﬂ 2S
+3build_straight_oneway junction0-1 junction0-2 road0
+0 
+7"
+7 
+@ 2S
+3build_straight_oneway junction0-1 junction0-2 road1
+0 
+8"
+8 
+h 2T
+3build_straight_oneway junction0-1 junction0-2 road2
+0 
+9"
+9 
+ê 2T
+3build_straight_oneway junction0-1 junction0-2 road3
+0 
+:"
+: 
+∏ 2T
+3build_straight_oneway junction0-1 junction0-2 road4
+0 
+;"
+; 
+‡ 2S
+3build_straight_oneway junction0-1 junction1-1 road0
+2 
+7"
+7 
+B 2S
+3build_straight_oneway junction0-1 junction1-1 road1
+2 
+8"
+8 
+j 2T
+3build_straight_oneway junction0-1 junction1-1 road2
+2 
+9"
+9 
+í 2T
+3build_straight_oneway junction0-1 junction1-1 road3
+2 
+:"
+: 
+∫ 2T
+3build_straight_oneway junction0-1 junction1-1 road4
+2 
+;"
+; 
+‚ 2S
+3build_straight_oneway junction0-2 junction0-1 road0
+/ 
+7"
+7 
+D 2S
+3build_straight_oneway junction0-2 junction0-1 road1
+/ 
+8"
+8 
+l 2T
+3build_straight_oneway junction0-2 junction0-1 road2
+/ 
+9"
+9 
+î 2T
+3build_straight_oneway junction0-2 junction0-1 road3
+/ 
+:"
+: 
+º 2T
+3build_straight_oneway junction0-2 junction0-1 road4
+/ 
+;"
+; 
+‰ 2S
+3build_straight_oneway junction0-2 junction1-2 road0
+3 
+7"
+7 
+F 2S
+3build_straight_oneway junction0-2 junction1-2 road1
+3 
+8"
+8 
+n 2T
+3build_straight_oneway junction0-2 junction1-2 road2
+3 
+9"
+9 
+ñ 2T
+3build_straight_oneway junction0-2 junction1-2 road3
+3 
+:"
+: 
+æ 2T
+3build_straight_oneway junction0-2 junction1-2 road4
+3 
+;"
+; 
+Ê 2S
+3build_straight_oneway junction1-0 junction0-0 road0
+. 
+7"
+7 
+G 2S
+3build_straight_oneway junction1-0 junction0-0 road1
+. 
+8"
+8 
+o 2T
+3build_straight_oneway junction1-0 junction0-0 road2
+. 
+9"
+9 
+ó 2T
+3build_straight_oneway junction1-0 junction0-0 road3
+. 
+:"
+: 
+ø 2T
+3build_straight_oneway junction1-0 junction0-0 road4
+. 
+;"
+; 
+Á 2S
+3build_straight_oneway junction1-0 junction1-1 road0
+2 
+7"
+7 
+I 2S
+3build_straight_oneway junction1-0 junction1-1 road1
+2 
+8"
+8 
+q 2T
+3build_straight_oneway junction1-0 junction1-1 road2
+2 
+9"
+9 
+ô 2T
+3build_straight_oneway junction1-0 junction1-1 road3
+2 
+:"
+: 
+¡ 2T
+3build_straight_oneway junction1-0 junction1-1 road4
+2 
+;"
+; 
+È 2S
+3build_straight_oneway junction1-0 junction2-0 road0
+4 
+7"
+7 
+J 2S
+3build_straight_oneway junction1-0 junction2-0 road1
+4 
+8"
+8 
+r 2T
+3build_straight_oneway junction1-0 junction2-0 road2
+4 
+9"
+9 
+ö 2T
+3build_straight_oneway junction1-0 junction2-0 road3
+4 
+:"
+: 
+¬ 2T
+3build_straight_oneway junction1-0 junction2-0 road4
+4 
+;"
+; 
+Í 2S
+3build_straight_oneway junction1-1 junction0-1 road0
+/ 
+7"
+7 
+M 2S
+3build_straight_oneway junction1-1 junction0-1 road1
+/ 
+8"
+8 
+u 2T
+3build_straight_oneway junction1-1 junction0-1 road2
+/ 
+9"
+9 
+ù 2T
+3build_straight_oneway junction1-1 junction0-1 road3
+/ 
+:"
+: 
+≈ 2T
+3build_straight_oneway junction1-1 junction0-1 road4
+/ 
+;"
+; 
+Ì 2S
+3build_straight_oneway junction1-1 junction1-0 road0
+1 
+7"
+7 
+O 2S
+3build_straight_oneway junction1-1 junction1-0 road1
+1 
+8"
+8 
+w 2T
+3build_straight_oneway junction1-1 junction1-0 road2
+1 
+9"
+9 
+ü 2T
+3build_straight_oneway junction1-1 junction1-0 road3
+1 
+:"
+: 
+« 2T
+3build_straight_oneway junction1-1 junction1-0 road4
+1 
+;"
+; 
+Ô 2S
+3build_straight_oneway junction1-1 junction1-2 road0
+3 
+7"
+7 
+P 2S
+3build_straight_oneway junction1-1 junction1-2 road1
+3 
+8"
+8 
+x 2T
+3build_straight_oneway junction1-1 junction1-2 road2
+3 
+9"
+9 
+† 2T
+3build_straight_oneway junction1-1 junction1-2 road3
+3 
+:"
+: 
+» 2T
+3build_straight_oneway junction1-1 junction1-2 road4
+3 
+;"
+; 
+ 2S
+3build_straight_oneway junction1-1 junction2-1 road0
+5 
+7"
+7 
+R 2S
+3build_straight_oneway junction1-1 junction2-1 road1
+5 
+8"
+8 
+z 2T
+3build_straight_oneway junction1-1 junction2-1 road2
+5 
+9"
+9 
+¢ 2T
+3build_straight_oneway junction1-1 junction2-1 road3
+5 
+:"
+: 
+  2T
+3build_straight_oneway junction1-1 junction2-1 road4
+5 
+;"
+; 
+Ú 2S
+3build_straight_oneway junction1-2 junction0-2 road0
+0 
+7"
+7 
+U 2S
+3build_straight_oneway junction1-2 junction0-2 road1
+0 
+8"
+8 
+} 2T
+3build_straight_oneway junction1-2 junction0-2 road2
+0 
+9"
+9 
+• 2T
+3build_straight_oneway junction1-2 junction0-2 road3
+0 
+:"
+: 
+Õ 2T
+3build_straight_oneway junction1-2 junction0-2 road4
+0 
+;"
+; 
+ı 2S
+3build_straight_oneway junction1-2 junction1-1 road0
+2 
+7"
+7 
+V 2S
+3build_straight_oneway junction1-2 junction1-1 road1
+2 
+8"
+8 
+~ 2T
+3build_straight_oneway junction1-2 junction1-1 road2
+2 
+9"
+9 
+¶ 2T
+3build_straight_oneway junction1-2 junction1-1 road3
+2 
+:"
+: 
+Œ 2T
+3build_straight_oneway junction1-2 junction1-1 road4
+2 
+;"
+; 
+ˆ 2S
+3build_straight_oneway junction1-2 junction2-2 road0
+6 
+7"
+7 
+X 2T
+3build_straight_oneway junction1-2 junction2-2 road1
+6 
+8"
+8 
+Ä 2T
+3build_straight_oneway junction1-2 junction2-2 road2
+6 
+9"
+9 
+® 2T
+3build_straight_oneway junction1-2 junction2-2 road3
+6 
+:"
+: 
+– 2T
+3build_straight_oneway junction1-2 junction2-2 road4
+6 
+;"
+; 
+¯ 2S
+3build_straight_oneway junction2-0 junction1-0 road0
+1 
+7"
+7 
+Y 2T
+3build_straight_oneway junction2-0 junction1-0 road1
+1 
+8"
+8 
+Å 2T
+3build_straight_oneway junction2-0 junction1-0 road2
+1 
+9"
+9 
+© 2T
+3build_straight_oneway junction2-0 junction1-0 road3
+1 
+:"
+: 
+— 2T
+3build_straight_oneway junction2-0 junction1-0 road4
+1 
+;"
+; 
+˘ 2S
+3build_straight_oneway junction2-0 junction2-1 road0
+5 
+7"
+7 
+[ 2T
+3build_straight_oneway junction2-0 junction2-1 road1
+5 
+8"
+8 
+É 2T
+3build_straight_oneway junction2-0 junction2-1 road2
+5 
+9"
+9 
+´ 2T
+3build_straight_oneway junction2-0 junction2-1 road3
+5 
+:"
+: 
+” 2T
+3build_straight_oneway junction2-0 junction2-1 road4
+5 
+;"
+; 
+˚ 2S
+3build_straight_oneway junction2-1 junction1-1 road0
+2 
+7"
+7 
+] 2T
+3build_straight_oneway junction2-1 junction1-1 road1
+2 
+8"
+8 
+Ö 2T
+3build_straight_oneway junction2-1 junction1-1 road2
+2 
+9"
+9 
+≠ 2T
+3build_straight_oneway junction2-1 junction1-1 road3
+2 
+:"
+: 
+’ 2T
+3build_straight_oneway junction2-1 junction1-1 road4
+2 
+;"
+; 
+˝ 2S
+3build_straight_oneway junction2-1 junction2-0 road0
+4 
+7"
+7 
+_ 2T
+3build_straight_oneway junction2-1 junction2-0 road1
+4 
+8"
+8 
+á 2T
+3build_straight_oneway junction2-1 junction2-0 road2
+4 
+9"
+9 
+Ø 2T
+3build_straight_oneway junction2-1 junction2-0 road3
+4 
+:"
+: 
+◊ 2T
+3build_straight_oneway junction2-1 junction2-0 road4
+4 
+;"
+; 
+ˇ 2S
+3build_straight_oneway junction2-1 junction2-2 road0
+6 
+7"
+7 
+` 2T
+3build_straight_oneway junction2-1 junction2-2 road1
+6 
+8"
+8 
+à 2T
+3build_straight_oneway junction2-1 junction2-2 road2
+6 
+9"
+9 
+∞ 2T
+3build_straight_oneway junction2-1 junction2-2 road3
+6 
+:"
+: 
+ÿ 2T
+3build_straight_oneway junction2-1 junction2-2 road4
+6 
+;"
+; 
+Ä 2S
+3build_straight_oneway junction2-2 junction1-2 road0
+3 
+7"
+7 
+b 2T
+3build_straight_oneway junction2-2 junction1-2 road1
+3 
+8"
+8 
+ä 2T
+3build_straight_oneway junction2-2 junction1-2 road2
+3 
+9"
+9 
+≤ 2T
+3build_straight_oneway junction2-2 junction1-2 road3
+3 
+:"
+: 
+⁄ 2T
+3build_straight_oneway junction2-2 junction1-2 road4
+3 
+;"
+; 
+Ç 2S
+3build_straight_oneway junction2-2 junction2-1 road0
+5 
+7"
+7 
+c 2T
+3build_straight_oneway junction2-2 junction2-1 road1
+5 
+8"
+8 
+ã 2T
+3build_straight_oneway junction2-2 junction2-1 road2
+5 
+9"
+9 
+≥ 2T
+3build_straight_oneway junction2-2 junction2-1 road3
+5 
+:"
+: 
+€ 2T
+3build_straight_oneway junction2-2 junction2-1 road4
+5 
+;"
+; 
+É 2<
+car_arrived junction0-0 car0 
+ "
+  
+
+. 2<
+car_arrived junction0-0 car1 
+ "
+	 
+
+. 2<
+car_arrived junction0-1 car0 
+ "
+ 
+
+/ 2<
+car_arrived junction0-1 car1 
+ "
+
+ 
+
+/ 2<
+car_arrived junction0-2 car0 
+ "
+ 
+
+0 2<
+car_arrived junction0-2 car1 
+ "
+ 
+
+0 2<
+car_arrived junction1-0 car0 
+ "
+ 
+
+1 2<
+car_arrived junction1-0 car1 
+ "
+ 
+
+1 2<
+car_arrived junction1-1 car0 
+ "
+ 
+
+2 2<
+car_arrived junction1-1 car1 
+ "
+ 
+
+2 2<
+car_arrived junction1-2 car0 
+ "
+ 
+
+3 2<
+car_arrived junction1-2 car1 
+  "
+ 
+ 
+3 2<
+car_arrived junction2-0 car0 
+ "
+ 
+
+4 2<
+car_arrived junction2-0 car1 
+! "
+ 
+!
+4 2<
+car_arrived junction2-1 car0 
+ "
+ 
+
+5 2<
+car_arrived junction2-1 car1 
+" "
+ 
+"
+5 2<
+car_arrived junction2-2 car0 
+ "
+ 
+
+6 2<
+car_arrived junction2-2 car1 
+# "
+ 
+#
+6 2J
+"car_start junction0-0 car0 garage0 
+. 
+Ñ "
+ 
+.
+Ñ2J
+"car_start junction0-0 car1 garage1 
+. 
+Ö "
+ 
+.
+Ö2z
+*destroy_road junction0-0 junction0-1 road0
+
+7 
+< "
+$
+)
+7
+<*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-0 junction0-1 road1
+
+8 
+d "
+%
+*
+8
+d*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-0 junction0-1 road2
+
+9 
+å "
+&
++
+9
+å*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-0 junction0-1 road3
+
+: 
+¥ "
+'
+,
+:
+¥*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-0 junction0-1 road4
+
+; 
+‹ "
+(
+-
+;
+‹*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction0-0 junction1-0 road0
+
+7 
+= "
+$
+)
+7
+=*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-0 junction1-0 road1
+
+8 
+e "
+%
+*
+8
+e*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-0 junction1-0 road2
+
+9 
+ç "
+&
++
+9
+ç*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-0 junction1-0 road3
+
+: 
+µ "
+'
+,
+:
+µ*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-0 junction1-0 road4
+
+; 
+› "
+(
+-
+;
+›*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction0-0 junction1-1 road0
+
+7 
+> "
+$
+)
+7
+>*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-0 junction1-1 road1
+
+8 
+f "
+%
+*
+8
+f*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-0 junction1-1 road2
+
+9 
+é "
+&
++
+9
+é*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-0 junction1-1 road3
+
+: 
+∂ "
+'
+,
+:
+∂*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-0 junction1-1 road4
+
+; 
+ﬁ "
+(
+-
+;
+ﬁ*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction0-1 junction0-0 road0
+
+7 
+? "
+$
+)
+7
+?*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-1 junction0-0 road1
+
+8 
+g "
+%
+*
+8
+g*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-1 junction0-0 road2
+
+9 
+è "
+&
++
+9
+è*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-1 junction0-0 road3
+
+: 
+∑ "
+'
+,
+:
+∑*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-1 junction0-0 road4
+
+; 
+ﬂ "
+(
+-
+;
+ﬂ*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction0-1 junction0-2 road0
+
+7 
+@ "
+$
+)
+7
+@*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-1 junction0-2 road1
+
+8 
+h "
+%
+*
+8
+h*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-1 junction0-2 road2
+
+9 
+ê "
+&
++
+9
+ê*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-1 junction0-2 road3
+
+: 
+∏ "
+'
+,
+:
+∏*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-1 junction0-2 road4
+
+; 
+‡ "
+(
+-
+;
+‡*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction0-1 junction1-0 road0
+
+7 
+A "
+$
+)
+7
+A*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-1 junction1-0 road1
+
+8 
+i "
+%
+*
+8
+i*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-1 junction1-0 road2
+
+9 
+ë "
+&
++
+9
+ë*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-1 junction1-0 road3
+
+: 
+π "
+'
+,
+:
+π*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-1 junction1-0 road4
+
+; 
+· "
+(
+-
+;
+·*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction0-1 junction1-1 road0
+
+7 
+B "
+$
+)
+7
+B*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-1 junction1-1 road1
+
+8 
+j "
+%
+*
+8
+j*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-1 junction1-1 road2
+
+9 
+í "
+&
++
+9
+í*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-1 junction1-1 road3
+
+: 
+∫ "
+'
+,
+:
+∫*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-1 junction1-1 road4
+
+; 
+‚ "
+(
+-
+;
+‚*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction0-1 junction1-2 road0
+
+7 
+C "
+$
+)
+7
+C*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-1 junction1-2 road1
+
+8 
+k "
+%
+*
+8
+k*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-1 junction1-2 road2
+
+9 
+ì "
+&
++
+9
+ì*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-1 junction1-2 road3
+
+: 
+ª "
+'
+,
+:
+ª*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-1 junction1-2 road4
+
+; 
+„ "
+(
+-
+;
+„*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction0-2 junction0-1 road0
+
+7 
+D "
+$
+)
+7
+D*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-2 junction0-1 road1
+
+8 
+l "
+%
+*
+8
+l*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-2 junction0-1 road2
+
+9 
+î "
+&
++
+9
+î*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-2 junction0-1 road3
+
+: 
+º "
+'
+,
+:
+º*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-2 junction0-1 road4
+
+; 
+‰ "
+(
+-
+;
+‰*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction0-2 junction1-1 road0
+
+7 
+E "
+$
+)
+7
+E*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-2 junction1-1 road1
+
+8 
+m "
+%
+*
+8
+m*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-2 junction1-1 road2
+
+9 
+ï "
+&
++
+9
+ï*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-2 junction1-1 road3
+
+: 
+Ω "
+'
+,
+:
+Ω*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-2 junction1-1 road4
+
+; 
+Â "
+(
+-
+;
+Â*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction0-2 junction1-2 road0
+
+7 
+F "
+$
+)
+7
+F*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction0-2 junction1-2 road1
+
+8 
+n "
+%
+*
+8
+n*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction0-2 junction1-2 road2
+
+9 
+ñ "
+&
++
+9
+ñ*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction0-2 junction1-2 road3
+
+: 
+æ "
+'
+,
+:
+æ*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction0-2 junction1-2 road4
+
+; 
+Ê "
+(
+-
+;
+Ê*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-0 junction0-0 road0
+
+7 
+G "
+$
+)
+7
+G*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-0 junction0-0 road1
+
+8 
+o "
+%
+*
+8
+o*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-0 junction0-0 road2
+
+9 
+ó "
+&
++
+9
+ó*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-0 junction0-0 road3
+
+: 
+ø "
+'
+,
+:
+ø*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-0 junction0-0 road4
+
+; 
+Á "
+(
+-
+;
+Á*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-0 junction0-1 road0
+
+7 
+H "
+$
+)
+7
+H*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-0 junction0-1 road1
+
+8 
+p "
+%
+*
+8
+p*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-0 junction0-1 road2
+
+9 
+ò "
+&
++
+9
+ò*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-0 junction0-1 road3
+
+: 
+¿ "
+'
+,
+:
+¿*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-0 junction0-1 road4
+
+; 
+Ë "
+(
+-
+;
+Ë*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-0 junction1-1 road0
+
+7 
+I "
+$
+)
+7
+I*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-0 junction1-1 road1
+
+8 
+q "
+%
+*
+8
+q*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-0 junction1-1 road2
+
+9 
+ô "
+&
++
+9
+ô*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-0 junction1-1 road3
+
+: 
+¡ "
+'
+,
+:
+¡*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-0 junction1-1 road4
+
+; 
+È "
+(
+-
+;
+È*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-0 junction2-0 road0
+
+7 
+J "
+$
+)
+7
+J*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-0 junction2-0 road1
+
+8 
+r "
+%
+*
+8
+r*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-0 junction2-0 road2
+
+9 
+ö "
+&
++
+9
+ö*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-0 junction2-0 road3
+
+: 
+¬ "
+'
+,
+:
+¬*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-0 junction2-0 road4
+
+; 
+Í "
+(
+-
+;
+Í*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-0 junction2-1 road0
+
+7 
+K "
+$
+)
+7
+K*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-0 junction2-1 road1
+
+8 
+s "
+%
+*
+8
+s*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-0 junction2-1 road2
+
+9 
+õ "
+&
++
+9
+õ*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-0 junction2-1 road3
+
+: 
+√ "
+'
+,
+:
+√*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-0 junction2-1 road4
+
+; 
+Î "
+(
+-
+;
+Î*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-1 junction0-0 road0
+
+7 
+L "
+$
+)
+7
+L*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-1 junction0-0 road1
+
+8 
+t "
+%
+*
+8
+t*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-1 junction0-0 road2
+
+9 
+ú "
+&
++
+9
+ú*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-1 junction0-0 road3
+
+: 
+ƒ "
+'
+,
+:
+ƒ*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-1 junction0-0 road4
+
+; 
+Ï "
+(
+-
+;
+Ï*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-1 junction0-1 road0
+
+7 
+M "
+$
+)
+7
+M*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-1 junction0-1 road1
+
+8 
+u "
+%
+*
+8
+u*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-1 junction0-1 road2
+
+9 
+ù "
+&
++
+9
+ù*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-1 junction0-1 road3
+
+: 
+≈ "
+'
+,
+:
+≈*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-1 junction0-1 road4
+
+; 
+Ì "
+(
+-
+;
+Ì*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-1 junction0-2 road0
+
+7 
+N "
+$
+)
+7
+N*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-1 junction0-2 road1
+
+8 
+v "
+%
+*
+8
+v*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-1 junction0-2 road2
+
+9 
+û "
+&
++
+9
+û*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-1 junction0-2 road3
+
+: 
+∆ "
+'
+,
+:
+∆*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-1 junction0-2 road4
+
+; 
+Ó "
+(
+-
+;
+Ó*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-1 junction1-0 road0
+
+7 
+O "
+$
+)
+7
+O*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-1 junction1-0 road1
+
+8 
+w "
+%
+*
+8
+w*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-1 junction1-0 road2
+
+9 
+ü "
+&
++
+9
+ü*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-1 junction1-0 road3
+
+: 
+« "
+'
+,
+:
+«*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-1 junction1-0 road4
+
+; 
+Ô "
+(
+-
+;
+Ô*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-1 junction1-2 road0
+
+7 
+P "
+$
+)
+7
+P*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-1 junction1-2 road1
+
+8 
+x "
+%
+*
+8
+x*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-1 junction1-2 road2
+
+9 
+† "
+&
++
+9
+†*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-1 junction1-2 road3
+
+: 
+» "
+'
+,
+:
+»*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-1 junction1-2 road4
+
+; 
+ "
+(
+-
+;
+*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-1 junction2-0 road0
+
+7 
+Q "
+$
+)
+7
+Q*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-1 junction2-0 road1
+
+8 
+y "
+%
+*
+8
+y*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-1 junction2-0 road2
+
+9 
+° "
+&
++
+9
+°*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-1 junction2-0 road3
+
+: 
+… "
+'
+,
+:
+…*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-1 junction2-0 road4
+
+; 
+Ò "
+(
+-
+;
+Ò*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-1 junction2-1 road0
+
+7 
+R "
+$
+)
+7
+R*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-1 junction2-1 road1
+
+8 
+z "
+%
+*
+8
+z*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-1 junction2-1 road2
+
+9 
+¢ "
+&
++
+9
+¢*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-1 junction2-1 road3
+
+: 
+  "
+'
+,
+:
+ *
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-1 junction2-1 road4
+
+; 
+Ú "
+(
+-
+;
+Ú*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-1 junction2-2 road0
+
+7 
+S "
+$
+)
+7
+S*
+
+$ 
+ *
+
+) 
+ 2z
+*destroy_road junction1-1 junction2-2 road1
+
+8 
+{ "
+%
+*
+8
+{*
+
+% 
+ *
+
+* 
+ 2|
+*destroy_road junction1-1 junction2-2 road2
+
+9 
+£ "
+&
++
+9
+£*
+
+& 
+ *
+
++ 
+ 2|
+*destroy_road junction1-1 junction2-2 road3
+
+: 
+À "
+'
+,
+:
+À*
+
+' 
+ *
+
+, 
+ 2|
+*destroy_road junction1-1 junction2-2 road4
+
+; 
+Û "
+(
+-
+;
+Û*
+
+( 
+ *
+
+- 
+ 2z
+*destroy_road junction1-2 junction0-1 road0
+
+7 
+T "
+$
+)
+7
+T*
+
+$ 
+ *
+
+) 
+  2z
+*destroy_road junction1-2 junction0-1 road1
+
+8 
+| "
+%
+*
+8
+|*
+
+% 
+ *
+
+* 
+  2|
+*destroy_road junction1-2 junction0-1 road2
+
+9 
+§ "
+&
++
+9
+§*
+
+& 
+ *
+
++ 
+  2|
+*destroy_road junction1-2 junction0-1 road3
+
+: 
+Ã "
+'
+,
+:
+Ã*
+
+' 
+ *
+
+, 
+  2|
+*destroy_road junction1-2 junction0-1 road4
+
+; 
+Ù "
+(
+-
+;
+Ù*
+
+( 
+ *
+
+- 
+  2z
+*destroy_road junction1-2 junction0-2 road0
+
+7 
+U "
+$
+)
+7
+U*
+
+$ 
+ *
+
+) 
+  2z
+*destroy_road junction1-2 junction0-2 road1
+
+8 
+} "
+%
+*
+8
+}*
+
+% 
+ *
+
+* 
+  2|
+*destroy_road junction1-2 junction0-2 road2
+
+9 
+• "
+&
++
+9
+•*
+
+& 
+ *
+
++ 
+  2|
+*destroy_road junction1-2 junction0-2 road3
+
+: 
+Õ "
+'
+,
+:
+Õ*
+
+' 
+ *
+
+, 
+  2|
+*destroy_road junction1-2 junction0-2 road4
+
+; 
+ı "
+(
+-
+;
+ı*
+
+( 
+ *
+
+- 
+  2z
+*destroy_road junction1-2 junction1-1 road0
+
+7 
+V "
+$
+)
+7
+V*
+
+$ 
+ *
+
+) 
+  2z
+*destroy_road junction1-2 junction1-1 road1
+
+8 
+~ "
+%
+*
+8
+~*
+
+% 
+ *
+
+* 
+  2|
+*destroy_road junction1-2 junction1-1 road2
+
+9 
+¶ "
+&
++
+9
+¶*
+
+& 
+ *
+
++ 
+  2|
+*destroy_road junction1-2 junction1-1 road3
+
+: 
+Œ "
+'
+,
+:
+Œ*
+
+' 
+ *
+
+, 
+  2|
+*destroy_road junction1-2 junction1-1 road4
+
+; 
+ˆ "
+(
+-
+;
+ˆ*
+
+( 
+ *
+
+- 
+  2z
+*destroy_road junction1-2 junction2-1 road0
+
+7 
+W "
+$
+)
+7
+W*
+
+$ 
+ *
+
+) 
+  2z
+*destroy_road junction1-2 junction2-1 road1
+
+8 
+ "
+%
+*
+8
+*
+
+% 
+ *
+
+* 
+  2|
+*destroy_road junction1-2 junction2-1 road2
+
+9 
+ß "
+&
++
+9
+ß*
+
+& 
+ *
+
++ 
+  2|
+*destroy_road junction1-2 junction2-1 road3
+
+: 
+œ "
+'
+,
+:
+œ*
+
+' 
+ *
+
+, 
+  2|
+*destroy_road junction1-2 junction2-1 road4
+
+; 
+˜ "
+(
+-
+;
+˜*
+
+( 
+ *
+
+- 
+  2z
+*destroy_road junction1-2 junction2-2 road0
+
+7 
+X "
+$
+)
+7
+X*
+
+$ 
+ *
+
+) 
+  2|
+*destroy_road junction1-2 junction2-2 road1
+
+8 
+Ä "
+%
+*
+8
+Ä*
+
+% 
+ *
+
+* 
+  2|
+*destroy_road junction1-2 junction2-2 road2
+
+9 
+® "
+&
++
+9
+®*
+
+& 
+ *
+
++ 
+  2|
+*destroy_road junction1-2 junction2-2 road3
+
+: 
+– "
+'
+,
+:
+–*
+
+' 
+ *
+
+, 
+  2|
+*destroy_road junction1-2 junction2-2 road4
+
+; 
+¯ "
+(
+-
+;
+¯*
+
+( 
+ *
+
+- 
+  2z
+*destroy_road junction2-0 junction1-0 road0
+
+7 
+Y "
+$
+)
+7
+Y*
+
+$ 
+ *
+
+) 
+! 2|
+*destroy_road junction2-0 junction1-0 road1
+
+8 
+Å "
+%
+*
+8
+Å*
+
+% 
+ *
+
+* 
+! 2|
+*destroy_road junction2-0 junction1-0 road2
+
+9 
+© "
+&
++
+9
+©*
+
+& 
+ *
+
++ 
+! 2|
+*destroy_road junction2-0 junction1-0 road3
+
+: 
+— "
+'
+,
+:
+—*
+
+' 
+ *
+
+, 
+! 2|
+*destroy_road junction2-0 junction1-0 road4
+
+; 
+˘ "
+(
+-
+;
+˘*
+
+( 
+ *
+
+- 
+! 2z
+*destroy_road junction2-0 junction1-1 road0
+
+7 
+Z "
+$
+)
+7
+Z*
+
+$ 
+ *
+
+) 
+! 2|
+*destroy_road junction2-0 junction1-1 road1
+
+8 
+Ç "
+%
+*
+8
+Ç*
+
+% 
+ *
+
+* 
+! 2|
+*destroy_road junction2-0 junction1-1 road2
+
+9 
+™ "
+&
++
+9
+™*
+
+& 
+ *
+
++ 
+! 2|
+*destroy_road junction2-0 junction1-1 road3
+
+: 
+“ "
+'
+,
+:
+“*
+
+' 
+ *
+
+, 
+! 2|
+*destroy_road junction2-0 junction1-1 road4
+
+; 
+˙ "
+(
+-
+;
+˙*
+
+( 
+ *
+
+- 
+! 2z
+*destroy_road junction2-0 junction2-1 road0
+
+7 
+[ "
+$
+)
+7
+[*
+
+$ 
+ *
+
+) 
+! 2|
+*destroy_road junction2-0 junction2-1 road1
+
+8 
+É "
+%
+*
+8
+É*
+
+% 
+ *
+
+* 
+! 2|
+*destroy_road junction2-0 junction2-1 road2
+
+9 
+´ "
+&
++
+9
+´*
+
+& 
+ *
+
++ 
+! 2|
+*destroy_road junction2-0 junction2-1 road3
+
+: 
+” "
+'
+,
+:
+”*
+
+' 
+ *
+
+, 
+! 2|
+*destroy_road junction2-0 junction2-1 road4
+
+; 
+˚ "
+(
+-
+;
+˚*
+
+( 
+ *
+
+- 
+! 2z
+*destroy_road junction2-1 junction1-0 road0
+
+7 
+\ "
+$
+)
+7
+\*
+
+$ 
+ *
+
+) 
+" 2|
+*destroy_road junction2-1 junction1-0 road1
+
+8 
+Ñ "
+%
+*
+8
+Ñ*
+
+% 
+ *
+
+* 
+" 2|
+*destroy_road junction2-1 junction1-0 road2
+
+9 
+¨ "
+&
++
+9
+¨*
+
+& 
+ *
+
++ 
+" 2|
+*destroy_road junction2-1 junction1-0 road3
+
+: 
+‘ "
+'
+,
+:
+‘*
+
+' 
+ *
+
+, 
+" 2|
+*destroy_road junction2-1 junction1-0 road4
+
+; 
+¸ "
+(
+-
+;
+¸*
+
+( 
+ *
+
+- 
+" 2z
+*destroy_road junction2-1 junction1-1 road0
+
+7 
+] "
+$
+)
+7
+]*
+
+$ 
+ *
+
+) 
+" 2|
+*destroy_road junction2-1 junction1-1 road1
+
+8 
+Ö "
+%
+*
+8
+Ö*
+
+% 
+ *
+
+* 
+" 2|
+*destroy_road junction2-1 junction1-1 road2
+
+9 
+≠ "
+&
++
+9
+≠*
+
+& 
+ *
+
++ 
+" 2|
+*destroy_road junction2-1 junction1-1 road3
+
+: 
+’ "
+'
+,
+:
+’*
+
+' 
+ *
+
+, 
+" 2|
+*destroy_road junction2-1 junction1-1 road4
+
+; 
+˝ "
+(
+-
+;
+˝*
+
+( 
+ *
+
+- 
+" 2z
+*destroy_road junction2-1 junction1-2 road0
+
+7 
+^ "
+$
+)
+7
+^*
+
+$ 
+ *
+
+) 
+" 2|
+*destroy_road junction2-1 junction1-2 road1
+
+8 
+Ü "
+%
+*
+8
+Ü*
+
+% 
+ *
+
+* 
+" 2|
+*destroy_road junction2-1 junction1-2 road2
+
+9 
+Æ "
+&
++
+9
+Æ*
+
+& 
+ *
+
++ 
+" 2|
+*destroy_road junction2-1 junction1-2 road3
+
+: 
+÷ "
+'
+,
+:
+÷*
+
+' 
+ *
+
+, 
+" 2|
+*destroy_road junction2-1 junction1-2 road4
+
+; 
+˛ "
+(
+-
+;
+˛*
+
+( 
+ *
+
+- 
+" 2z
+*destroy_road junction2-1 junction2-0 road0
+
+7 
+_ "
+$
+)
+7
+_*
+
+$ 
+ *
+
+) 
+" 2|
+*destroy_road junction2-1 junction2-0 road1
+
+8 
+á "
+%
+*
+8
+á*
+
+% 
+ *
+
+* 
+" 2|
+*destroy_road junction2-1 junction2-0 road2
+
+9 
+Ø "
+&
++
+9
+Ø*
+
+& 
+ *
+
++ 
+" 2|
+*destroy_road junction2-1 junction2-0 road3
+
+: 
+◊ "
+'
+,
+:
+◊*
+
+' 
+ *
+
+, 
+" 2|
+*destroy_road junction2-1 junction2-0 road4
+
+; 
+ˇ "
+(
+-
+;
+ˇ*
+
+( 
+ *
+
+- 
+" 2z
+*destroy_road junction2-1 junction2-2 road0
+
+7 
+` "
+$
+)
+7
+`*
+
+$ 
+ *
+
+) 
+" 2|
+*destroy_road junction2-1 junction2-2 road1
+
+8 
+à "
+%
+*
+8
+à*
+
+% 
+ *
+
+* 
+" 2|
+*destroy_road junction2-1 junction2-2 road2
+
+9 
+∞ "
+&
++
+9
+∞*
+
+& 
+ *
+
++ 
+" 2|
+*destroy_road junction2-1 junction2-2 road3
+
+: 
+ÿ "
+'
+,
+:
+ÿ*
+
+' 
+ *
+
+, 
+" 2|
+*destroy_road junction2-1 junction2-2 road4
+
+; 
+Ä "
+(
+-
+;
+Ä*
+
+( 
+ *
+
+- 
+" 2z
+*destroy_road junction2-2 junction1-1 road0
+
+7 
+a "
+$
+)
+7
+a*
+
+$ 
+ *
+
+) 
+# 2|
+*destroy_road junction2-2 junction1-1 road1
+
+8 
+â "
+%
+*
+8
+â*
+
+% 
+ *
+
+* 
+# 2|
+*destroy_road junction2-2 junction1-1 road2
+
+9 
+± "
+&
++
+9
+±*
+
+& 
+ *
+
++ 
+# 2|
+*destroy_road junction2-2 junction1-1 road3
+
+: 
+Ÿ "
+'
+,
+:
+Ÿ*
+
+' 
+ *
+
+, 
+# 2|
+*destroy_road junction2-2 junction1-1 road4
+
+; 
+Å "
+(
+-
+;
+Å*
+
+( 
+ *
+
+- 
+# 2z
+*destroy_road junction2-2 junction1-2 road0
+
+7 
+b "
+$
+)
+7
+b*
+
+$ 
+ *
+
+) 
+# 2|
+*destroy_road junction2-2 junction1-2 road1
+
+8 
+ä "
+%
+*
+8
+ä*
+
+% 
+ *
+
+* 
+# 2|
+*destroy_road junction2-2 junction1-2 road2
+
+9 
+≤ "
+&
++
+9
+≤*
+
+& 
+ *
+
++ 
+# 2|
+*destroy_road junction2-2 junction1-2 road3
+
+: 
+⁄ "
+'
+,
+:
+⁄*
+
+' 
+ *
+
+, 
+# 2|
+*destroy_road junction2-2 junction1-2 road4
+
+; 
+Ç "
+(
+-
+;
+Ç*
+
+( 
+ *
+
+- 
+# 2z
+*destroy_road junction2-2 junction2-1 road0
+
+7 
+c "
+$
+)
+7
+c*
+
+$ 
+ *
+
+) 
+# 2|
+*destroy_road junction2-2 junction2-1 road1
+
+8 
+ã "
+%
+*
+8
+ã*
+
+% 
+ *
+
+* 
+# 2|
+*destroy_road junction2-2 junction2-1 road2
+
+9 
+≥ "
+&
++
+9
+≥*
+
+& 
+ *
+
++ 
+# 2|
+*destroy_road junction2-2 junction2-1 road3
+
+: 
+€ "
+'
+,
+:
+€*
+
+' 
+ *
+
+, 
+# 2|
+*destroy_road junction2-2 junction2-1 road4
+
+; 
+É "
+(
+-
+;
+É*
+
+( 
+ *
+
+- 
+# 2_
+3move_car_in_road junction0-0 junction0-1 car0 road0
+7 
+< 
+ "
+
+$ 
+. 2_
+3move_car_in_road junction0-0 junction0-1 car0 road1
+8 
+d 
+ "
+
+% 
+. 2`
+3move_car_in_road junction0-0 junction0-1 car0 road2
+9 
+å 
+ "
+
+& 
+. 2`
+3move_car_in_road junction0-0 junction0-1 car0 road3
+: 
+¥ 
+ "
+
+' 
+. 2`
+3move_car_in_road junction0-0 junction0-1 car0 road4
+; 
+‹ 
+ "
+
+( 
+. 2_
+3move_car_in_road junction0-0 junction0-1 car1 road0
+7 
+< 
+ "
+
+) 
+. 2_
+3move_car_in_road junction0-0 junction0-1 car1 road1
+8 
+d 
+ "
+
+* 
+. 2`
+3move_car_in_road junction0-0 junction0-1 car1 road2
+9 
+å 
+ "
+
++ 
+. 2`
+3move_car_in_road junction0-0 junction0-1 car1 road3
+: 
+¥ 
+ "
+
+, 
+. 2`
+3move_car_in_road junction0-0 junction0-1 car1 road4
+; 
+‹ 
+ "
+
+- 
+. 2_
+3move_car_in_road junction0-0 junction1-0 car0 road0
+7 
+= 
+ "
+
+$ 
+. 2_
+3move_car_in_road junction0-0 junction1-0 car0 road1
+8 
+e 
+ "
+
+% 
+. 2`
+3move_car_in_road junction0-0 junction1-0 car0 road2
+9 
+ç 
+ "
+
+& 
+. 2`
+3move_car_in_road junction0-0 junction1-0 car0 road3
+: 
+µ 
+ "
+
+' 
+. 2`
+3move_car_in_road junction0-0 junction1-0 car0 road4
+; 
+› 
+ "
+
+( 
+. 2_
+3move_car_in_road junction0-0 junction1-0 car1 road0
+7 
+= 
+ "
+
+) 
+. 2_
+3move_car_in_road junction0-0 junction1-0 car1 road1
+8 
+e 
+ "
+
+* 
+. 2`
+3move_car_in_road junction0-0 junction1-0 car1 road2
+9 
+ç 
+ "
+
++ 
+. 2`
+3move_car_in_road junction0-0 junction1-0 car1 road3
+: 
+µ 
+ "
+
+, 
+. 2`
+3move_car_in_road junction0-0 junction1-0 car1 road4
+; 
+› 
+ "
+
+- 
+. 2_
+3move_car_in_road junction0-0 junction1-1 car0 road0
+7 
+> 
+ "
+
+$ 
+. 2_
+3move_car_in_road junction0-0 junction1-1 car0 road1
+8 
+f 
+ "
+
+% 
+. 2`
+3move_car_in_road junction0-0 junction1-1 car0 road2
+9 
+é 
+ "
+
+& 
+. 2`
+3move_car_in_road junction0-0 junction1-1 car0 road3
+: 
+∂ 
+ "
+
+' 
+. 2`
+3move_car_in_road junction0-0 junction1-1 car0 road4
+; 
+ﬁ 
+ "
+
+( 
+. 2_
+3move_car_in_road junction0-0 junction1-1 car1 road0
+7 
+> 
+ "
+
+) 
+. 2_
+3move_car_in_road junction0-0 junction1-1 car1 road1
+8 
+f 
+ "
+
+* 
+. 2`
+3move_car_in_road junction0-0 junction1-1 car1 road2
+9 
+é 
+ "
+
++ 
+. 2`
+3move_car_in_road junction0-0 junction1-1 car1 road3
+: 
+∂ 
+ "
+
+, 
+. 2`
+3move_car_in_road junction0-0 junction1-1 car1 road4
+; 
+ﬁ 
+ "
+
+- 
+. 2_
+3move_car_in_road junction0-1 junction0-0 car0 road0
+7 
+? 
+ "
+
+$ 
+/ 2_
+3move_car_in_road junction0-1 junction0-0 car0 road1
+8 
+g 
+ "
+
+% 
+/ 2`
+3move_car_in_road junction0-1 junction0-0 car0 road2
+9 
+è 
+ "
+
+& 
+/ 2`
+3move_car_in_road junction0-1 junction0-0 car0 road3
+: 
+∑ 
+ "
+
+' 
+/ 2`
+3move_car_in_road junction0-1 junction0-0 car0 road4
+; 
+ﬂ 
+ "
+
+( 
+/ 2_
+3move_car_in_road junction0-1 junction0-0 car1 road0
+7 
+? 
+ "
+
+) 
+/ 2_
+3move_car_in_road junction0-1 junction0-0 car1 road1
+8 
+g 
+ "
+
+* 
+/ 2`
+3move_car_in_road junction0-1 junction0-0 car1 road2
+9 
+è 
+ "
+
++ 
+/ 2`
+3move_car_in_road junction0-1 junction0-0 car1 road3
+: 
+∑ 
+ "
+
+, 
+/ 2`
+3move_car_in_road junction0-1 junction0-0 car1 road4
+; 
+ﬂ 
+ "
+
+- 
+/ 2_
+3move_car_in_road junction0-1 junction0-2 car0 road0
+7 
+@ 
+ "
+
+$ 
+/ 2_
+3move_car_in_road junction0-1 junction0-2 car0 road1
+8 
+h 
+ "
+
+% 
+/ 2`
+3move_car_in_road junction0-1 junction0-2 car0 road2
+9 
+ê 
+ "
+
+& 
+/ 2`
+3move_car_in_road junction0-1 junction0-2 car0 road3
+: 
+∏ 
+ "
+
+' 
+/ 2`
+3move_car_in_road junction0-1 junction0-2 car0 road4
+; 
+‡ 
+ "
+
+( 
+/ 2_
+3move_car_in_road junction0-1 junction0-2 car1 road0
+7 
+@ 
+ "
+
+) 
+/ 2_
+3move_car_in_road junction0-1 junction0-2 car1 road1
+8 
+h 
+ "
+
+* 
+/ 2`
+3move_car_in_road junction0-1 junction0-2 car1 road2
+9 
+ê 
+ "
+
++ 
+/ 2`
+3move_car_in_road junction0-1 junction0-2 car1 road3
+: 
+∏ 
+ "
+
+, 
+/ 2`
+3move_car_in_road junction0-1 junction0-2 car1 road4
+; 
+‡ 
+ "
+
+- 
+/ 2_
+3move_car_in_road junction0-1 junction1-0 car0 road0
+7 
+A 
+ "
+
+$ 
+/ 2_
+3move_car_in_road junction0-1 junction1-0 car0 road1
+8 
+i 
+ "
+
+% 
+/ 2`
+3move_car_in_road junction0-1 junction1-0 car0 road2
+9 
+ë 
+ "
+
+& 
+/ 2`
+3move_car_in_road junction0-1 junction1-0 car0 road3
+: 
+π 
+ "
+
+' 
+/ 2`
+3move_car_in_road junction0-1 junction1-0 car0 road4
+; 
+· 
+ "
+
+( 
+/ 2_
+3move_car_in_road junction0-1 junction1-0 car1 road0
+7 
+A 
+ "
+
+) 
+/ 2_
+3move_car_in_road junction0-1 junction1-0 car1 road1
+8 
+i 
+ "
+
+* 
+/ 2`
+3move_car_in_road junction0-1 junction1-0 car1 road2
+9 
+ë 
+ "
+
++ 
+/ 2`
+3move_car_in_road junction0-1 junction1-0 car1 road3
+: 
+π 
+ "
+
+, 
+/ 2`
+3move_car_in_road junction0-1 junction1-0 car1 road4
+; 
+· 
+ "
+
+- 
+/ 2_
+3move_car_in_road junction0-1 junction1-1 car0 road0
+7 
+B 
+ "
+
+$ 
+/ 2_
+3move_car_in_road junction0-1 junction1-1 car0 road1
+8 
+j 
+ "
+
+% 
+/ 2`
+3move_car_in_road junction0-1 junction1-1 car0 road2
+9 
+í 
+ "
+
+& 
+/ 2`
+3move_car_in_road junction0-1 junction1-1 car0 road3
+: 
+∫ 
+ "
+
+' 
+/ 2`
+3move_car_in_road junction0-1 junction1-1 car0 road4
+; 
+‚ 
+ "
+
+( 
+/ 2_
+3move_car_in_road junction0-1 junction1-1 car1 road0
+7 
+B 
+ "
+
+) 
+/ 2_
+3move_car_in_road junction0-1 junction1-1 car1 road1
+8 
+j 
+ "
+
+* 
+/ 2`
+3move_car_in_road junction0-1 junction1-1 car1 road2
+9 
+í 
+ "
+
++ 
+/ 2`
+3move_car_in_road junction0-1 junction1-1 car1 road3
+: 
+∫ 
+ "
+
+, 
+/ 2`
+3move_car_in_road junction0-1 junction1-1 car1 road4
+; 
+‚ 
+ "
+
+- 
+/ 2_
+3move_car_in_road junction0-1 junction1-2 car0 road0
+7 
+C 
+ "
+
+$ 
+/ 2_
+3move_car_in_road junction0-1 junction1-2 car0 road1
+8 
+k 
+ "
+
+% 
+/ 2`
+3move_car_in_road junction0-1 junction1-2 car0 road2
+9 
+ì 
+ "
+
+& 
+/ 2`
+3move_car_in_road junction0-1 junction1-2 car0 road3
+: 
+ª 
+ "
+
+' 
+/ 2`
+3move_car_in_road junction0-1 junction1-2 car0 road4
+; 
+„ 
+ "
+
+( 
+/ 2_
+3move_car_in_road junction0-1 junction1-2 car1 road0
+7 
+C 
+ "
+
+) 
+/ 2_
+3move_car_in_road junction0-1 junction1-2 car1 road1
+8 
+k 
+ "
+
+* 
+/ 2`
+3move_car_in_road junction0-1 junction1-2 car1 road2
+9 
+ì 
+ "
+
++ 
+/ 2`
+3move_car_in_road junction0-1 junction1-2 car1 road3
+: 
+ª 
+ "
+
+, 
+/ 2`
+3move_car_in_road junction0-1 junction1-2 car1 road4
+; 
+„ 
+ "
+
+- 
+/ 2_
+3move_car_in_road junction0-2 junction0-1 car0 road0
+7 
+D 
+ "
+
+$ 
+0 2_
+3move_car_in_road junction0-2 junction0-1 car0 road1
+8 
+l 
+ "
+
+% 
+0 2`
+3move_car_in_road junction0-2 junction0-1 car0 road2
+9 
+î 
+ "
+
+& 
+0 2`
+3move_car_in_road junction0-2 junction0-1 car0 road3
+: 
+º 
+ "
+
+' 
+0 2`
+3move_car_in_road junction0-2 junction0-1 car0 road4
+; 
+‰ 
+ "
+
+( 
+0 2_
+3move_car_in_road junction0-2 junction0-1 car1 road0
+7 
+D 
+ "
+
+) 
+0 2_
+3move_car_in_road junction0-2 junction0-1 car1 road1
+8 
+l 
+ "
+
+* 
+0 2`
+3move_car_in_road junction0-2 junction0-1 car1 road2
+9 
+î 
+ "
+
++ 
+0 2`
+3move_car_in_road junction0-2 junction0-1 car1 road3
+: 
+º 
+ "
+
+, 
+0 2`
+3move_car_in_road junction0-2 junction0-1 car1 road4
+; 
+‰ 
+ "
+
+- 
+0 2_
+3move_car_in_road junction0-2 junction1-1 car0 road0
+7 
+E 
+ "
+
+$ 
+0 2_
+3move_car_in_road junction0-2 junction1-1 car0 road1
+8 
+m 
+ "
+
+% 
+0 2`
+3move_car_in_road junction0-2 junction1-1 car0 road2
+9 
+ï 
+ "
+
+& 
+0 2`
+3move_car_in_road junction0-2 junction1-1 car0 road3
+: 
+Ω 
+ "
+
+' 
+0 2`
+3move_car_in_road junction0-2 junction1-1 car0 road4
+; 
+Â 
+ "
+
+( 
+0 2_
+3move_car_in_road junction0-2 junction1-1 car1 road0
+7 
+E 
+ "
+
+) 
+0 2_
+3move_car_in_road junction0-2 junction1-1 car1 road1
+8 
+m 
+ "
+
+* 
+0 2`
+3move_car_in_road junction0-2 junction1-1 car1 road2
+9 
+ï 
+ "
+
++ 
+0 2`
+3move_car_in_road junction0-2 junction1-1 car1 road3
+: 
+Ω 
+ "
+
+, 
+0 2`
+3move_car_in_road junction0-2 junction1-1 car1 road4
+; 
+Â 
+ "
+
+- 
+0 2_
+3move_car_in_road junction0-2 junction1-2 car0 road0
+7 
+F 
+ "
+
+$ 
+0 2_
+3move_car_in_road junction0-2 junction1-2 car0 road1
+8 
+n 
+ "
+
+% 
+0 2`
+3move_car_in_road junction0-2 junction1-2 car0 road2
+9 
+ñ 
+ "
+
+& 
+0 2`
+3move_car_in_road junction0-2 junction1-2 car0 road3
+: 
+æ 
+ "
+
+' 
+0 2`
+3move_car_in_road junction0-2 junction1-2 car0 road4
+; 
+Ê 
+ "
+
+( 
+0 2_
+3move_car_in_road junction0-2 junction1-2 car1 road0
+7 
+F 
+ "
+
+) 
+0 2_
+3move_car_in_road junction0-2 junction1-2 car1 road1
+8 
+n 
+ "
+
+* 
+0 2`
+3move_car_in_road junction0-2 junction1-2 car1 road2
+9 
+ñ 
+ "
+
++ 
+0 2`
+3move_car_in_road junction0-2 junction1-2 car1 road3
+: 
+æ 
+ "
+
+, 
+0 2`
+3move_car_in_road junction0-2 junction1-2 car1 road4
+; 
+Ê 
+ "
+
+- 
+0 2_
+3move_car_in_road junction1-0 junction0-0 car0 road0
+7 
+G 
+ "
+
+$ 
+1 2_
+3move_car_in_road junction1-0 junction0-0 car0 road1
+8 
+o 
+ "
+
+% 
+1 2`
+3move_car_in_road junction1-0 junction0-0 car0 road2
+9 
+ó 
+ "
+
+& 
+1 2`
+3move_car_in_road junction1-0 junction0-0 car0 road3
+: 
+ø 
+ "
+
+' 
+1 2`
+3move_car_in_road junction1-0 junction0-0 car0 road4
+; 
+Á 
+ "
+
+( 
+1 2_
+3move_car_in_road junction1-0 junction0-0 car1 road0
+7 
+G 
+ "
+
+) 
+1 2_
+3move_car_in_road junction1-0 junction0-0 car1 road1
+8 
+o 
+ "
+
+* 
+1 2`
+3move_car_in_road junction1-0 junction0-0 car1 road2
+9 
+ó 
+ "
+
++ 
+1 2`
+3move_car_in_road junction1-0 junction0-0 car1 road3
+: 
+ø 
+ "
+
+, 
+1 2`
+3move_car_in_road junction1-0 junction0-0 car1 road4
+; 
+Á 
+ "
+
+- 
+1 2_
+3move_car_in_road junction1-0 junction0-1 car0 road0
+7 
+H 
+ "
+
+$ 
+1 2_
+3move_car_in_road junction1-0 junction0-1 car0 road1
+8 
+p 
+ "
+
+% 
+1 2`
+3move_car_in_road junction1-0 junction0-1 car0 road2
+9 
+ò 
+ "
+
+& 
+1 2`
+3move_car_in_road junction1-0 junction0-1 car0 road3
+: 
+¿ 
+ "
+
+' 
+1 2`
+3move_car_in_road junction1-0 junction0-1 car0 road4
+; 
+Ë 
+ "
+
+( 
+1 2_
+3move_car_in_road junction1-0 junction0-1 car1 road0
+7 
+H 
+ "
+
+) 
+1 2_
+3move_car_in_road junction1-0 junction0-1 car1 road1
+8 
+p 
+ "
+
+* 
+1 2`
+3move_car_in_road junction1-0 junction0-1 car1 road2
+9 
+ò 
+ "
+
++ 
+1 2`
+3move_car_in_road junction1-0 junction0-1 car1 road3
+: 
+¿ 
+ "
+
+, 
+1 2`
+3move_car_in_road junction1-0 junction0-1 car1 road4
+; 
+Ë 
+ "
+
+- 
+1 2_
+3move_car_in_road junction1-0 junction1-1 car0 road0
+7 
+I 
+ "
+
+$ 
+1 2_
+3move_car_in_road junction1-0 junction1-1 car0 road1
+8 
+q 
+ "
+
+% 
+1 2`
+3move_car_in_road junction1-0 junction1-1 car0 road2
+9 
+ô 
+ "
+
+& 
+1 2`
+3move_car_in_road junction1-0 junction1-1 car0 road3
+: 
+¡ 
+ "
+
+' 
+1 2`
+3move_car_in_road junction1-0 junction1-1 car0 road4
+; 
+È 
+ "
+
+( 
+1 2_
+3move_car_in_road junction1-0 junction1-1 car1 road0
+7 
+I 
+ "
+
+) 
+1 2_
+3move_car_in_road junction1-0 junction1-1 car1 road1
+8 
+q 
+ "
+
+* 
+1 2`
+3move_car_in_road junction1-0 junction1-1 car1 road2
+9 
+ô 
+ "
+
++ 
+1 2`
+3move_car_in_road junction1-0 junction1-1 car1 road3
+: 
+¡ 
+ "
+
+, 
+1 2`
+3move_car_in_road junction1-0 junction1-1 car1 road4
+; 
+È 
+ "
+
+- 
+1 2_
+3move_car_in_road junction1-0 junction2-0 car0 road0
+7 
+J 
+ "
+
+$ 
+1 2_
+3move_car_in_road junction1-0 junction2-0 car0 road1
+8 
+r 
+ "
+
+% 
+1 2`
+3move_car_in_road junction1-0 junction2-0 car0 road2
+9 
+ö 
+ "
+
+& 
+1 2`
+3move_car_in_road junction1-0 junction2-0 car0 road3
+: 
+¬ 
+ "
+
+' 
+1 2`
+3move_car_in_road junction1-0 junction2-0 car0 road4
+; 
+Í 
+ "
+
+( 
+1 2_
+3move_car_in_road junction1-0 junction2-0 car1 road0
+7 
+J 
+ "
+
+) 
+1 2_
+3move_car_in_road junction1-0 junction2-0 car1 road1
+8 
+r 
+ "
+
+* 
+1 2`
+3move_car_in_road junction1-0 junction2-0 car1 road2
+9 
+ö 
+ "
+
++ 
+1 2`
+3move_car_in_road junction1-0 junction2-0 car1 road3
+: 
+¬ 
+ "
+
+, 
+1 2`
+3move_car_in_road junction1-0 junction2-0 car1 road4
+; 
+Í 
+ "
+
+- 
+1 2_
+3move_car_in_road junction1-0 junction2-1 car0 road0
+7 
+K 
+ "
+
+$ 
+1 2_
+3move_car_in_road junction1-0 junction2-1 car0 road1
+8 
+s 
+ "
+
+% 
+1 2`
+3move_car_in_road junction1-0 junction2-1 car0 road2
+9 
+õ 
+ "
+
+& 
+1 2`
+3move_car_in_road junction1-0 junction2-1 car0 road3
+: 
+√ 
+ "
+
+' 
+1 2`
+3move_car_in_road junction1-0 junction2-1 car0 road4
+; 
+Î 
+ "
+
+( 
+1 2_
+3move_car_in_road junction1-0 junction2-1 car1 road0
+7 
+K 
+ "
+
+) 
+1 2_
+3move_car_in_road junction1-0 junction2-1 car1 road1
+8 
+s 
+ "
+
+* 
+1 2`
+3move_car_in_road junction1-0 junction2-1 car1 road2
+9 
+õ 
+ "
+
++ 
+1 2`
+3move_car_in_road junction1-0 junction2-1 car1 road3
+: 
+√ 
+ "
+
+, 
+1 2`
+3move_car_in_road junction1-0 junction2-1 car1 road4
+; 
+Î 
+ "
+
+- 
+1 2_
+3move_car_in_road junction1-1 junction0-0 car0 road0
+7 
+L 
+ "
+
+$ 
+2 2_
+3move_car_in_road junction1-1 junction0-0 car0 road1
+8 
+t 
+ "
+
+% 
+2 2`
+3move_car_in_road junction1-1 junction0-0 car0 road2
+9 
+ú 
+ "
+
+& 
+2 2`
+3move_car_in_road junction1-1 junction0-0 car0 road3
+: 
+ƒ 
+ "
+
+' 
+2 2`
+3move_car_in_road junction1-1 junction0-0 car0 road4
+; 
+Ï 
+ "
+
+( 
+2 2_
+3move_car_in_road junction1-1 junction0-0 car1 road0
+7 
+L 
+ "
+
+) 
+2 2_
+3move_car_in_road junction1-1 junction0-0 car1 road1
+8 
+t 
+ "
+
+* 
+2 2`
+3move_car_in_road junction1-1 junction0-0 car1 road2
+9 
+ú 
+ "
+
++ 
+2 2`
+3move_car_in_road junction1-1 junction0-0 car1 road3
+: 
+ƒ 
+ "
+
+, 
+2 2`
+3move_car_in_road junction1-1 junction0-0 car1 road4
+; 
+Ï 
+ "
+
+- 
+2 2_
+3move_car_in_road junction1-1 junction0-1 car0 road0
+7 
+M 
+ "
+
+$ 
+2 2_
+3move_car_in_road junction1-1 junction0-1 car0 road1
+8 
+u 
+ "
+
+% 
+2 2`
+3move_car_in_road junction1-1 junction0-1 car0 road2
+9 
+ù 
+ "
+
+& 
+2 2`
+3move_car_in_road junction1-1 junction0-1 car0 road3
+: 
+≈ 
+ "
+
+' 
+2 2`
+3move_car_in_road junction1-1 junction0-1 car0 road4
+; 
+Ì 
+ "
+
+( 
+2 2_
+3move_car_in_road junction1-1 junction0-1 car1 road0
+7 
+M 
+ "
+
+) 
+2 2_
+3move_car_in_road junction1-1 junction0-1 car1 road1
+8 
+u 
+ "
+
+* 
+2 2`
+3move_car_in_road junction1-1 junction0-1 car1 road2
+9 
+ù 
+ "
+
++ 
+2 2`
+3move_car_in_road junction1-1 junction0-1 car1 road3
+: 
+≈ 
+ "
+
+, 
+2 2`
+3move_car_in_road junction1-1 junction0-1 car1 road4
+; 
+Ì 
+ "
+
+- 
+2 2_
+3move_car_in_road junction1-1 junction0-2 car0 road0
+7 
+N 
+ "
+
+$ 
+2 2_
+3move_car_in_road junction1-1 junction0-2 car0 road1
+8 
+v 
+ "
+
+% 
+2 2`
+3move_car_in_road junction1-1 junction0-2 car0 road2
+9 
+û 
+ "
+
+& 
+2 2`
+3move_car_in_road junction1-1 junction0-2 car0 road3
+: 
+∆ 
+ "
+
+' 
+2 2`
+3move_car_in_road junction1-1 junction0-2 car0 road4
+; 
+Ó 
+ "
+
+( 
+2 2_
+3move_car_in_road junction1-1 junction0-2 car1 road0
+7 
+N 
+ "
+
+) 
+2 2_
+3move_car_in_road junction1-1 junction0-2 car1 road1
+8 
+v 
+ "
+
+* 
+2 2`
+3move_car_in_road junction1-1 junction0-2 car1 road2
+9 
+û 
+ "
+
++ 
+2 2`
+3move_car_in_road junction1-1 junction0-2 car1 road3
+: 
+∆ 
+ "
+
+, 
+2 2`
+3move_car_in_road junction1-1 junction0-2 car1 road4
+; 
+Ó 
+ "
+
+- 
+2 2_
+3move_car_in_road junction1-1 junction1-0 car0 road0
+7 
+O 
+ "
+
+$ 
+2 2_
+3move_car_in_road junction1-1 junction1-0 car0 road1
+8 
+w 
+ "
+
+% 
+2 2`
+3move_car_in_road junction1-1 junction1-0 car0 road2
+9 
+ü 
+ "
+
+& 
+2 2`
+3move_car_in_road junction1-1 junction1-0 car0 road3
+: 
+« 
+ "
+
+' 
+2 2`
+3move_car_in_road junction1-1 junction1-0 car0 road4
+; 
+Ô 
+ "
+
+( 
+2 2_
+3move_car_in_road junction1-1 junction1-0 car1 road0
+7 
+O 
+ "
+
+) 
+2 2_
+3move_car_in_road junction1-1 junction1-0 car1 road1
+8 
+w 
+ "
+
+* 
+2 2`
+3move_car_in_road junction1-1 junction1-0 car1 road2
+9 
+ü 
+ "
+
++ 
+2 2`
+3move_car_in_road junction1-1 junction1-0 car1 road3
+: 
+« 
+ "
+
+, 
+2 2`
+3move_car_in_road junction1-1 junction1-0 car1 road4
+; 
+Ô 
+ "
+
+- 
+2 2_
+3move_car_in_road junction1-1 junction1-2 car0 road0
+7 
+P 
+ "
+
+$ 
+2 2_
+3move_car_in_road junction1-1 junction1-2 car0 road1
+8 
+x 
+ "
+
+% 
+2 2`
+3move_car_in_road junction1-1 junction1-2 car0 road2
+9 
+† 
+ "
+
+& 
+2 2`
+3move_car_in_road junction1-1 junction1-2 car0 road3
+: 
+» 
+ "
+
+' 
+2 2`
+3move_car_in_road junction1-1 junction1-2 car0 road4
+; 
+ 
+ "
+
+( 
+2 2_
+3move_car_in_road junction1-1 junction1-2 car1 road0
+7 
+P 
+ "
+
+) 
+2 2_
+3move_car_in_road junction1-1 junction1-2 car1 road1
+8 
+x 
+ "
+
+* 
+2 2`
+3move_car_in_road junction1-1 junction1-2 car1 road2
+9 
+† 
+ "
+
++ 
+2 2`
+3move_car_in_road junction1-1 junction1-2 car1 road3
+: 
+» 
+ "
+
+, 
+2 2`
+3move_car_in_road junction1-1 junction1-2 car1 road4
+; 
+ 
+ "
+
+- 
+2 2_
+3move_car_in_road junction1-1 junction2-0 car0 road0
+7 
+Q 
+ "
+
+$ 
+2 2_
+3move_car_in_road junction1-1 junction2-0 car0 road1
+8 
+y 
+ "
+
+% 
+2 2`
+3move_car_in_road junction1-1 junction2-0 car0 road2
+9 
+° 
+ "
+
+& 
+2 2`
+3move_car_in_road junction1-1 junction2-0 car0 road3
+: 
+… 
+ "
+
+' 
+2 2`
+3move_car_in_road junction1-1 junction2-0 car0 road4
+; 
+Ò 
+ "
+
+( 
+2 2_
+3move_car_in_road junction1-1 junction2-0 car1 road0
+7 
+Q 
+ "
+
+) 
+2 2_
+3move_car_in_road junction1-1 junction2-0 car1 road1
+8 
+y 
+ "
+
+* 
+2 2`
+3move_car_in_road junction1-1 junction2-0 car1 road2
+9 
+° 
+ "
+
++ 
+2 2`
+3move_car_in_road junction1-1 junction2-0 car1 road3
+: 
+… 
+ "
+
+, 
+2 2`
+3move_car_in_road junction1-1 junction2-0 car1 road4
+; 
+Ò 
+ "
+
+- 
+2 2_
+3move_car_in_road junction1-1 junction2-1 car0 road0
+7 
+R 
+ "
+
+$ 
+2 2_
+3move_car_in_road junction1-1 junction2-1 car0 road1
+8 
+z 
+ "
+
+% 
+2 2`
+3move_car_in_road junction1-1 junction2-1 car0 road2
+9 
+¢ 
+ "
+
+& 
+2 2`
+3move_car_in_road junction1-1 junction2-1 car0 road3
+: 
+  
+ "
+
+' 
+2 2`
+3move_car_in_road junction1-1 junction2-1 car0 road4
+; 
+Ú 
+ "
+
+( 
+2 2_
+3move_car_in_road junction1-1 junction2-1 car1 road0
+7 
+R 
+ "
+
+) 
+2 2_
+3move_car_in_road junction1-1 junction2-1 car1 road1
+8 
+z 
+ "
+
+* 
+2 2`
+3move_car_in_road junction1-1 junction2-1 car1 road2
+9 
+¢ 
+ "
+
++ 
+2 2`
+3move_car_in_road junction1-1 junction2-1 car1 road3
+: 
+  
+ "
+
+, 
+2 2`
+3move_car_in_road junction1-1 junction2-1 car1 road4
+; 
+Ú 
+ "
+
+- 
+2 2_
+3move_car_in_road junction1-1 junction2-2 car0 road0
+7 
+S 
+ "
+
+$ 
+2 2_
+3move_car_in_road junction1-1 junction2-2 car0 road1
+8 
+{ 
+ "
+
+% 
+2 2`
+3move_car_in_road junction1-1 junction2-2 car0 road2
+9 
+£ 
+ "
+
+& 
+2 2`
+3move_car_in_road junction1-1 junction2-2 car0 road3
+: 
+À 
+ "
+
+' 
+2 2`
+3move_car_in_road junction1-1 junction2-2 car0 road4
+; 
+Û 
+ "
+
+( 
+2 2_
+3move_car_in_road junction1-1 junction2-2 car1 road0
+7 
+S 
+ "
+
+) 
+2 2_
+3move_car_in_road junction1-1 junction2-2 car1 road1
+8 
+{ 
+ "
+
+* 
+2 2`
+3move_car_in_road junction1-1 junction2-2 car1 road2
+9 
+£ 
+ "
+
++ 
+2 2`
+3move_car_in_road junction1-1 junction2-2 car1 road3
+: 
+À 
+ "
+
+, 
+2 2`
+3move_car_in_road junction1-1 junction2-2 car1 road4
+; 
+Û 
+ "
+
+- 
+2 2_
+3move_car_in_road junction1-2 junction0-1 car0 road0
+7 
+T 
+ "
+
+$ 
+3 2_
+3move_car_in_road junction1-2 junction0-1 car0 road1
+8 
+| 
+ "
+
+% 
+3 2`
+3move_car_in_road junction1-2 junction0-1 car0 road2
+9 
+§ 
+ "
+
+& 
+3 2`
+3move_car_in_road junction1-2 junction0-1 car0 road3
+: 
+Ã 
+ "
+
+' 
+3 2`
+3move_car_in_road junction1-2 junction0-1 car0 road4
+; 
+Ù 
+ "
+
+( 
+3 2_
+3move_car_in_road junction1-2 junction0-1 car1 road0
+7 
+T 
+  "
+ 
+) 
+3 2_
+3move_car_in_road junction1-2 junction0-1 car1 road1
+8 
+| 
+  "
+ 
+* 
+3 2`
+3move_car_in_road junction1-2 junction0-1 car1 road2
+9 
+§ 
+  "
+ 
++ 
+3 2`
+3move_car_in_road junction1-2 junction0-1 car1 road3
+: 
+Ã 
+  "
+ 
+, 
+3 2`
+3move_car_in_road junction1-2 junction0-1 car1 road4
+; 
+Ù 
+  "
+ 
+- 
+3 2_
+3move_car_in_road junction1-2 junction0-2 car0 road0
+7 
+U 
+ "
+
+$ 
+3 2_
+3move_car_in_road junction1-2 junction0-2 car0 road1
+8 
+} 
+ "
+
+% 
+3 2`
+3move_car_in_road junction1-2 junction0-2 car0 road2
+9 
+• 
+ "
+
+& 
+3 2`
+3move_car_in_road junction1-2 junction0-2 car0 road3
+: 
+Õ 
+ "
+
+' 
+3 2`
+3move_car_in_road junction1-2 junction0-2 car0 road4
+; 
+ı 
+ "
+
+( 
+3 2_
+3move_car_in_road junction1-2 junction0-2 car1 road0
+7 
+U 
+  "
+ 
+) 
+3 2_
+3move_car_in_road junction1-2 junction0-2 car1 road1
+8 
+} 
+  "
+ 
+* 
+3 2`
+3move_car_in_road junction1-2 junction0-2 car1 road2
+9 
+• 
+  "
+ 
++ 
+3 2`
+3move_car_in_road junction1-2 junction0-2 car1 road3
+: 
+Õ 
+  "
+ 
+, 
+3 2`
+3move_car_in_road junction1-2 junction0-2 car1 road4
+; 
+ı 
+  "
+ 
+- 
+3 2_
+3move_car_in_road junction1-2 junction1-1 car0 road0
+7 
+V 
+ "
+
+$ 
+3 2_
+3move_car_in_road junction1-2 junction1-1 car0 road1
+8 
+~ 
+ "
+
+% 
+3 2`
+3move_car_in_road junction1-2 junction1-1 car0 road2
+9 
+¶ 
+ "
+
+& 
+3 2`
+3move_car_in_road junction1-2 junction1-1 car0 road3
+: 
+Œ 
+ "
+
+' 
+3 2`
+3move_car_in_road junction1-2 junction1-1 car0 road4
+; 
+ˆ 
+ "
+
+( 
+3 2_
+3move_car_in_road junction1-2 junction1-1 car1 road0
+7 
+V 
+  "
+ 
+) 
+3 2_
+3move_car_in_road junction1-2 junction1-1 car1 road1
+8 
+~ 
+  "
+ 
+* 
+3 2`
+3move_car_in_road junction1-2 junction1-1 car1 road2
+9 
+¶ 
+  "
+ 
++ 
+3 2`
+3move_car_in_road junction1-2 junction1-1 car1 road3
+: 
+Œ 
+  "
+ 
+, 
+3 2`
+3move_car_in_road junction1-2 junction1-1 car1 road4
+; 
+ˆ 
+  "
+ 
+- 
+3 2_
+3move_car_in_road junction1-2 junction2-1 car0 road0
+7 
+W 
+ "
+
+$ 
+3 2_
+3move_car_in_road junction1-2 junction2-1 car0 road1
+8 
+ 
+ "
+
+% 
+3 2`
+3move_car_in_road junction1-2 junction2-1 car0 road2
+9 
+ß 
+ "
+
+& 
+3 2`
+3move_car_in_road junction1-2 junction2-1 car0 road3
+: 
+œ 
+ "
+
+' 
+3 2`
+3move_car_in_road junction1-2 junction2-1 car0 road4
+; 
+˜ 
+ "
+
+( 
+3 2_
+3move_car_in_road junction1-2 junction2-1 car1 road0
+7 
+W 
+  "
+ 
+) 
+3 2_
+3move_car_in_road junction1-2 junction2-1 car1 road1
+8 
+ 
+  "
+ 
+* 
+3 2`
+3move_car_in_road junction1-2 junction2-1 car1 road2
+9 
+ß 
+  "
+ 
++ 
+3 2`
+3move_car_in_road junction1-2 junction2-1 car1 road3
+: 
+œ 
+  "
+ 
+, 
+3 2`
+3move_car_in_road junction1-2 junction2-1 car1 road4
+; 
+˜ 
+  "
+ 
+- 
+3 2_
+3move_car_in_road junction1-2 junction2-2 car0 road0
+7 
+X 
+ "
+
+$ 
+3 2`
+3move_car_in_road junction1-2 junction2-2 car0 road1
+8 
+Ä 
+ "
+
+% 
+3 2`
+3move_car_in_road junction1-2 junction2-2 car0 road2
+9 
+® 
+ "
+
+& 
+3 2`
+3move_car_in_road junction1-2 junction2-2 car0 road3
+: 
+– 
+ "
+
+' 
+3 2`
+3move_car_in_road junction1-2 junction2-2 car0 road4
+; 
+¯ 
+ "
+
+( 
+3 2_
+3move_car_in_road junction1-2 junction2-2 car1 road0
+7 
+X 
+  "
+ 
+) 
+3 2`
+3move_car_in_road junction1-2 junction2-2 car1 road1
+8 
+Ä 
+  "
+ 
+* 
+3 2`
+3move_car_in_road junction1-2 junction2-2 car1 road2
+9 
+® 
+  "
+ 
++ 
+3 2`
+3move_car_in_road junction1-2 junction2-2 car1 road3
+: 
+– 
+  "
+ 
+, 
+3 2`
+3move_car_in_road junction1-2 junction2-2 car1 road4
+; 
+¯ 
+  "
+ 
+- 
+3 2_
+3move_car_in_road junction2-0 junction1-0 car0 road0
+7 
+Y 
+ "
+
+$ 
+4 2`
+3move_car_in_road junction2-0 junction1-0 car0 road1
+8 
+Å 
+ "
+
+% 
+4 2`
+3move_car_in_road junction2-0 junction1-0 car0 road2
+9 
+© 
+ "
+
+& 
+4 2`
+3move_car_in_road junction2-0 junction1-0 car0 road3
+: 
+— 
+ "
+
+' 
+4 2`
+3move_car_in_road junction2-0 junction1-0 car0 road4
+; 
+˘ 
+ "
+
+( 
+4 2_
+3move_car_in_road junction2-0 junction1-0 car1 road0
+7 
+Y 
+! "
+!
+) 
+4 2`
+3move_car_in_road junction2-0 junction1-0 car1 road1
+8 
+Å 
+! "
+!
+* 
+4 2`
+3move_car_in_road junction2-0 junction1-0 car1 road2
+9 
+© 
+! "
+!
++ 
+4 2`
+3move_car_in_road junction2-0 junction1-0 car1 road3
+: 
+— 
+! "
+!
+, 
+4 2`
+3move_car_in_road junction2-0 junction1-0 car1 road4
+; 
+˘ 
+! "
+!
+- 
+4 2_
+3move_car_in_road junction2-0 junction1-1 car0 road0
+7 
+Z 
+ "
+
+$ 
+4 2`
+3move_car_in_road junction2-0 junction1-1 car0 road1
+8 
+Ç 
+ "
+
+% 
+4 2`
+3move_car_in_road junction2-0 junction1-1 car0 road2
+9 
+™ 
+ "
+
+& 
+4 2`
+3move_car_in_road junction2-0 junction1-1 car0 road3
+: 
+“ 
+ "
+
+' 
+4 2`
+3move_car_in_road junction2-0 junction1-1 car0 road4
+; 
+˙ 
+ "
+
+( 
+4 2_
+3move_car_in_road junction2-0 junction1-1 car1 road0
+7 
+Z 
+! "
+!
+) 
+4 2`
+3move_car_in_road junction2-0 junction1-1 car1 road1
+8 
+Ç 
+! "
+!
+* 
+4 2`
+3move_car_in_road junction2-0 junction1-1 car1 road2
+9 
+™ 
+! "
+!
++ 
+4 2`
+3move_car_in_road junction2-0 junction1-1 car1 road3
+: 
+“ 
+! "
+!
+, 
+4 2`
+3move_car_in_road junction2-0 junction1-1 car1 road4
+; 
+˙ 
+! "
+!
+- 
+4 2_
+3move_car_in_road junction2-0 junction2-1 car0 road0
+7 
+[ 
+ "
+
+$ 
+4 2`
+3move_car_in_road junction2-0 junction2-1 car0 road1
+8 
+É 
+ "
+
+% 
+4 2`
+3move_car_in_road junction2-0 junction2-1 car0 road2
+9 
+´ 
+ "
+
+& 
+4 2`
+3move_car_in_road junction2-0 junction2-1 car0 road3
+: 
+” 
+ "
+
+' 
+4 2`
+3move_car_in_road junction2-0 junction2-1 car0 road4
+; 
+˚ 
+ "
+
+( 
+4 2_
+3move_car_in_road junction2-0 junction2-1 car1 road0
+7 
+[ 
+! "
+!
+) 
+4 2`
+3move_car_in_road junction2-0 junction2-1 car1 road1
+8 
+É 
+! "
+!
+* 
+4 2`
+3move_car_in_road junction2-0 junction2-1 car1 road2
+9 
+´ 
+! "
+!
++ 
+4 2`
+3move_car_in_road junction2-0 junction2-1 car1 road3
+: 
+” 
+! "
+!
+, 
+4 2`
+3move_car_in_road junction2-0 junction2-1 car1 road4
+; 
+˚ 
+! "
+!
+- 
+4 2_
+3move_car_in_road junction2-1 junction1-0 car0 road0
+7 
+\ 
+ "
+
+$ 
+5 2`
+3move_car_in_road junction2-1 junction1-0 car0 road1
+8 
+Ñ 
+ "
+
+% 
+5 2`
+3move_car_in_road junction2-1 junction1-0 car0 road2
+9 
+¨ 
+ "
+
+& 
+5 2`
+3move_car_in_road junction2-1 junction1-0 car0 road3
+: 
+‘ 
+ "
+
+' 
+5 2`
+3move_car_in_road junction2-1 junction1-0 car0 road4
+; 
+¸ 
+ "
+
+( 
+5 2_
+3move_car_in_road junction2-1 junction1-0 car1 road0
+7 
+\ 
+" "
+"
+) 
+5 2`
+3move_car_in_road junction2-1 junction1-0 car1 road1
+8 
+Ñ 
+" "
+"
+* 
+5 2`
+3move_car_in_road junction2-1 junction1-0 car1 road2
+9 
+¨ 
+" "
+"
++ 
+5 2`
+3move_car_in_road junction2-1 junction1-0 car1 road3
+: 
+‘ 
+" "
+"
+, 
+5 2`
+3move_car_in_road junction2-1 junction1-0 car1 road4
+; 
+¸ 
+" "
+"
+- 
+5 2_
+3move_car_in_road junction2-1 junction1-1 car0 road0
+7 
+] 
+ "
+
+$ 
+5 2`
+3move_car_in_road junction2-1 junction1-1 car0 road1
+8 
+Ö 
+ "
+
+% 
+5 2`
+3move_car_in_road junction2-1 junction1-1 car0 road2
+9 
+≠ 
+ "
+
+& 
+5 2`
+3move_car_in_road junction2-1 junction1-1 car0 road3
+: 
+’ 
+ "
+
+' 
+5 2`
+3move_car_in_road junction2-1 junction1-1 car0 road4
+; 
+˝ 
+ "
+
+( 
+5 2_
+3move_car_in_road junction2-1 junction1-1 car1 road0
+7 
+] 
+" "
+"
+) 
+5 2`
+3move_car_in_road junction2-1 junction1-1 car1 road1
+8 
+Ö 
+" "
+"
+* 
+5 2`
+3move_car_in_road junction2-1 junction1-1 car1 road2
+9 
+≠ 
+" "
+"
++ 
+5 2`
+3move_car_in_road junction2-1 junction1-1 car1 road3
+: 
+’ 
+" "
+"
+, 
+5 2`
+3move_car_in_road junction2-1 junction1-1 car1 road4
+; 
+˝ 
+" "
+"
+- 
+5 2_
+3move_car_in_road junction2-1 junction1-2 car0 road0
+7 
+^ 
+ "
+
+$ 
+5 2`
+3move_car_in_road junction2-1 junction1-2 car0 road1
+8 
+Ü 
+ "
+
+% 
+5 2`
+3move_car_in_road junction2-1 junction1-2 car0 road2
+9 
+Æ 
+ "
+
+& 
+5 2`
+3move_car_in_road junction2-1 junction1-2 car0 road3
+: 
+÷ 
+ "
+
+' 
+5 2`
+3move_car_in_road junction2-1 junction1-2 car0 road4
+; 
+˛ 
+ "
+
+( 
+5 2_
+3move_car_in_road junction2-1 junction1-2 car1 road0
+7 
+^ 
+" "
+"
+) 
+5 2`
+3move_car_in_road junction2-1 junction1-2 car1 road1
+8 
+Ü 
+" "
+"
+* 
+5 2`
+3move_car_in_road junction2-1 junction1-2 car1 road2
+9 
+Æ 
+" "
+"
++ 
+5 2`
+3move_car_in_road junction2-1 junction1-2 car1 road3
+: 
+÷ 
+" "
+"
+, 
+5 2`
+3move_car_in_road junction2-1 junction1-2 car1 road4
+; 
+˛ 
+" "
+"
+- 
+5 2_
+3move_car_in_road junction2-1 junction2-0 car0 road0
+7 
+_ 
+ "
+
+$ 
+5 2`
+3move_car_in_road junction2-1 junction2-0 car0 road1
+8 
+á 
+ "
+
+% 
+5 2`
+3move_car_in_road junction2-1 junction2-0 car0 road2
+9 
+Ø 
+ "
+
+& 
+5 2`
+3move_car_in_road junction2-1 junction2-0 car0 road3
+: 
+◊ 
+ "
+
+' 
+5 2`
+3move_car_in_road junction2-1 junction2-0 car0 road4
+; 
+ˇ 
+ "
+
+( 
+5 2_
+3move_car_in_road junction2-1 junction2-0 car1 road0
+7 
+_ 
+" "
+"
+) 
+5 2`
+3move_car_in_road junction2-1 junction2-0 car1 road1
+8 
+á 
+" "
+"
+* 
+5 2`
+3move_car_in_road junction2-1 junction2-0 car1 road2
+9 
+Ø 
+" "
+"
++ 
+5 2`
+3move_car_in_road junction2-1 junction2-0 car1 road3
+: 
+◊ 
+" "
+"
+, 
+5 2`
+3move_car_in_road junction2-1 junction2-0 car1 road4
+; 
+ˇ 
+" "
+"
+- 
+5 2_
+3move_car_in_road junction2-1 junction2-2 car0 road0
+7 
+` 
+ "
+
+$ 
+5 2`
+3move_car_in_road junction2-1 junction2-2 car0 road1
+8 
+à 
+ "
+
+% 
+5 2`
+3move_car_in_road junction2-1 junction2-2 car0 road2
+9 
+∞ 
+ "
+
+& 
+5 2`
+3move_car_in_road junction2-1 junction2-2 car0 road3
+: 
+ÿ 
+ "
+
+' 
+5 2`
+3move_car_in_road junction2-1 junction2-2 car0 road4
+; 
+Ä 
+ "
+
+( 
+5 2_
+3move_car_in_road junction2-1 junction2-2 car1 road0
+7 
+` 
+" "
+"
+) 
+5 2`
+3move_car_in_road junction2-1 junction2-2 car1 road1
+8 
+à 
+" "
+"
+* 
+5 2`
+3move_car_in_road junction2-1 junction2-2 car1 road2
+9 
+∞ 
+" "
+"
++ 
+5 2`
+3move_car_in_road junction2-1 junction2-2 car1 road3
+: 
+ÿ 
+" "
+"
+, 
+5 2`
+3move_car_in_road junction2-1 junction2-2 car1 road4
+; 
+Ä 
+" "
+"
+- 
+5 2_
+3move_car_in_road junction2-2 junction1-1 car0 road0
+7 
+a 
+ "
+
+$ 
+6 2`
+3move_car_in_road junction2-2 junction1-1 car0 road1
+8 
+â 
+ "
+
+% 
+6 2`
+3move_car_in_road junction2-2 junction1-1 car0 road2
+9 
+± 
+ "
+
+& 
+6 2`
+3move_car_in_road junction2-2 junction1-1 car0 road3
+: 
+Ÿ 
+ "
+
+' 
+6 2`
+3move_car_in_road junction2-2 junction1-1 car0 road4
+; 
+Å 
+ "
+
+( 
+6 2_
+3move_car_in_road junction2-2 junction1-1 car1 road0
+7 
+a 
+# "
+#
+) 
+6 2`
+3move_car_in_road junction2-2 junction1-1 car1 road1
+8 
+â 
+# "
+#
+* 
+6 2`
+3move_car_in_road junction2-2 junction1-1 car1 road2
+9 
+± 
+# "
+#
++ 
+6 2`
+3move_car_in_road junction2-2 junction1-1 car1 road3
+: 
+Ÿ 
+# "
+#
+, 
+6 2`
+3move_car_in_road junction2-2 junction1-1 car1 road4
+; 
+Å 
+# "
+#
+- 
+6 2_
+3move_car_in_road junction2-2 junction1-2 car0 road0
+7 
+b 
+ "
+
+$ 
+6 2`
+3move_car_in_road junction2-2 junction1-2 car0 road1
+8 
+ä 
+ "
+
+% 
+6 2`
+3move_car_in_road junction2-2 junction1-2 car0 road2
+9 
+≤ 
+ "
+
+& 
+6 2`
+3move_car_in_road junction2-2 junction1-2 car0 road3
+: 
+⁄ 
+ "
+
+' 
+6 2`
+3move_car_in_road junction2-2 junction1-2 car0 road4
+; 
+Ç 
+ "
+
+( 
+6 2_
+3move_car_in_road junction2-2 junction1-2 car1 road0
+7 
+b 
+# "
+#
+) 
+6 2`
+3move_car_in_road junction2-2 junction1-2 car1 road1
+8 
+ä 
+# "
+#
+* 
+6 2`
+3move_car_in_road junction2-2 junction1-2 car1 road2
+9 
+≤ 
+# "
+#
++ 
+6 2`
+3move_car_in_road junction2-2 junction1-2 car1 road3
+: 
+⁄ 
+# "
+#
+, 
+6 2`
+3move_car_in_road junction2-2 junction1-2 car1 road4
+; 
+Ç 
+# "
+#
+- 
+6 2_
+3move_car_in_road junction2-2 junction2-1 car0 road0
+7 
+c 
+ "
+
+$ 
+6 2`
+3move_car_in_road junction2-2 junction2-1 car0 road1
+8 
+ã 
+ "
+
+% 
+6 2`
+3move_car_in_road junction2-2 junction2-1 car0 road2
+9 
+≥ 
+ "
+
+& 
+6 2`
+3move_car_in_road junction2-2 junction2-1 car0 road3
+: 
+€ 
+ "
+
+' 
+6 2`
+3move_car_in_road junction2-2 junction2-1 car0 road4
+; 
+É 
+ "
+
+( 
+6 2_
+3move_car_in_road junction2-2 junction2-1 car1 road0
+7 
+c 
+# "
+#
+) 
+6 2`
+3move_car_in_road junction2-2 junction2-1 car1 road1
+8 
+ã 
+# "
+#
+* 
+6 2`
+3move_car_in_road junction2-2 junction2-1 car1 road2
+9 
+≥ 
+# "
+#
++ 
+6 2`
+3move_car_in_road junction2-2 junction2-1 car1 road3
+: 
+€ 
+# "
+#
+, 
+6 2`
+3move_car_in_road junction2-2 junction2-1 car1 road4
+; 
+É 
+# "
+#
+- 
+6 2f
+4move_car_out_road junction0-0 junction0-1 car0 road0
+7 
+< 
+$ 
+/ "
+ 
+$
+/2f
+4move_car_out_road junction0-0 junction0-1 car0 road1
+8 
+d 
+% 
+/ "
+ 
+%
+/2g
+4move_car_out_road junction0-0 junction0-1 car0 road2
+9 
+å 
+& 
+/ "
+ 
+&
+/2g
+4move_car_out_road junction0-0 junction0-1 car0 road3
+: 
+¥ 
+' 
+/ "
+ 
+'
+/2g
+4move_car_out_road junction0-0 junction0-1 car0 road4
+; 
+‹ 
+( 
+/ "
+ 
+(
+/2f
+4move_car_out_road junction0-0 junction0-1 car1 road0
+7 
+< 
+) 
+/ "
+ 
+)
+/2f
+4move_car_out_road junction0-0 junction0-1 car1 road1
+8 
+d 
+* 
+/ "
+ 
+*
+/2g
+4move_car_out_road junction0-0 junction0-1 car1 road2
+9 
+å 
++ 
+/ "
+ 
++
+/2g
+4move_car_out_road junction0-0 junction0-1 car1 road3
+: 
+¥ 
+, 
+/ "
+ 
+,
+/2g
+4move_car_out_road junction0-0 junction0-1 car1 road4
+; 
+‹ 
+- 
+/ "
+ 
+-
+/2f
+4move_car_out_road junction0-0 junction1-0 car0 road0
+7 
+= 
+$ 
+1 "
+ 
+$
+12f
+4move_car_out_road junction0-0 junction1-0 car0 road1
+8 
+e 
+% 
+1 "
+ 
+%
+12g
+4move_car_out_road junction0-0 junction1-0 car0 road2
+9 
+ç 
+& 
+1 "
+ 
+&
+12g
+4move_car_out_road junction0-0 junction1-0 car0 road3
+: 
+µ 
+' 
+1 "
+ 
+'
+12g
+4move_car_out_road junction0-0 junction1-0 car0 road4
+; 
+› 
+( 
+1 "
+ 
+(
+12f
+4move_car_out_road junction0-0 junction1-0 car1 road0
+7 
+= 
+) 
+1 "
+ 
+)
+12f
+4move_car_out_road junction0-0 junction1-0 car1 road1
+8 
+e 
+* 
+1 "
+ 
+*
+12g
+4move_car_out_road junction0-0 junction1-0 car1 road2
+9 
+ç 
++ 
+1 "
+ 
++
+12g
+4move_car_out_road junction0-0 junction1-0 car1 road3
+: 
+µ 
+, 
+1 "
+ 
+,
+12g
+4move_car_out_road junction0-0 junction1-0 car1 road4
+; 
+› 
+- 
+1 "
+ 
+-
+12f
+4move_car_out_road junction0-0 junction1-1 car0 road0
+7 
+> 
+$ 
+2 "
+ 
+$
+22f
+4move_car_out_road junction0-0 junction1-1 car0 road1
+8 
+f 
+% 
+2 "
+ 
+%
+22g
+4move_car_out_road junction0-0 junction1-1 car0 road2
+9 
+é 
+& 
+2 "
+ 
+&
+22g
+4move_car_out_road junction0-0 junction1-1 car0 road3
+: 
+∂ 
+' 
+2 "
+ 
+'
+22g
+4move_car_out_road junction0-0 junction1-1 car0 road4
+; 
+ﬁ 
+( 
+2 "
+ 
+(
+22f
+4move_car_out_road junction0-0 junction1-1 car1 road0
+7 
+> 
+) 
+2 "
+ 
+)
+22f
+4move_car_out_road junction0-0 junction1-1 car1 road1
+8 
+f 
+* 
+2 "
+ 
+*
+22g
+4move_car_out_road junction0-0 junction1-1 car1 road2
+9 
+é 
++ 
+2 "
+ 
++
+22g
+4move_car_out_road junction0-0 junction1-1 car1 road3
+: 
+∂ 
+, 
+2 "
+ 
+,
+22g
+4move_car_out_road junction0-0 junction1-1 car1 road4
+; 
+ﬁ 
+- 
+2 "
+ 
+-
+22f
+4move_car_out_road junction0-1 junction0-0 car0 road0
+7 
+? 
+$ 
+. "
+ 
+$
+.2f
+4move_car_out_road junction0-1 junction0-0 car0 road1
+8 
+g 
+% 
+. "
+ 
+%
+.2g
+4move_car_out_road junction0-1 junction0-0 car0 road2
+9 
+è 
+& 
+. "
+ 
+&
+.2g
+4move_car_out_road junction0-1 junction0-0 car0 road3
+: 
+∑ 
+' 
+. "
+ 
+'
+.2g
+4move_car_out_road junction0-1 junction0-0 car0 road4
+; 
+ﬂ 
+( 
+. "
+ 
+(
+.2f
+4move_car_out_road junction0-1 junction0-0 car1 road0
+7 
+? 
+) 
+. "
+ 
+)
+.2f
+4move_car_out_road junction0-1 junction0-0 car1 road1
+8 
+g 
+* 
+. "
+ 
+*
+.2g
+4move_car_out_road junction0-1 junction0-0 car1 road2
+9 
+è 
++ 
+. "
+ 
++
+.2g
+4move_car_out_road junction0-1 junction0-0 car1 road3
+: 
+∑ 
+, 
+. "
+ 
+,
+.2g
+4move_car_out_road junction0-1 junction0-0 car1 road4
+; 
+ﬂ 
+- 
+. "
+ 
+-
+.2f
+4move_car_out_road junction0-1 junction0-2 car0 road0
+7 
+@ 
+$ 
+0 "
+ 
+$
+02f
+4move_car_out_road junction0-1 junction0-2 car0 road1
+8 
+h 
+% 
+0 "
+ 
+%
+02g
+4move_car_out_road junction0-1 junction0-2 car0 road2
+9 
+ê 
+& 
+0 "
+ 
+&
+02g
+4move_car_out_road junction0-1 junction0-2 car0 road3
+: 
+∏ 
+' 
+0 "
+ 
+'
+02g
+4move_car_out_road junction0-1 junction0-2 car0 road4
+; 
+‡ 
+( 
+0 "
+ 
+(
+02f
+4move_car_out_road junction0-1 junction0-2 car1 road0
+7 
+@ 
+) 
+0 "
+ 
+)
+02f
+4move_car_out_road junction0-1 junction0-2 car1 road1
+8 
+h 
+* 
+0 "
+ 
+*
+02g
+4move_car_out_road junction0-1 junction0-2 car1 road2
+9 
+ê 
++ 
+0 "
+ 
++
+02g
+4move_car_out_road junction0-1 junction0-2 car1 road3
+: 
+∏ 
+, 
+0 "
+ 
+,
+02g
+4move_car_out_road junction0-1 junction0-2 car1 road4
+; 
+‡ 
+- 
+0 "
+ 
+-
+02f
+4move_car_out_road junction0-1 junction1-0 car0 road0
+7 
+A 
+$ 
+1 "
+ 
+$
+12f
+4move_car_out_road junction0-1 junction1-0 car0 road1
+8 
+i 
+% 
+1 "
+ 
+%
+12g
+4move_car_out_road junction0-1 junction1-0 car0 road2
+9 
+ë 
+& 
+1 "
+ 
+&
+12g
+4move_car_out_road junction0-1 junction1-0 car0 road3
+: 
+π 
+' 
+1 "
+ 
+'
+12g
+4move_car_out_road junction0-1 junction1-0 car0 road4
+; 
+· 
+( 
+1 "
+ 
+(
+12f
+4move_car_out_road junction0-1 junction1-0 car1 road0
+7 
+A 
+) 
+1 "
+ 
+)
+12f
+4move_car_out_road junction0-1 junction1-0 car1 road1
+8 
+i 
+* 
+1 "
+ 
+*
+12g
+4move_car_out_road junction0-1 junction1-0 car1 road2
+9 
+ë 
++ 
+1 "
+ 
++
+12g
+4move_car_out_road junction0-1 junction1-0 car1 road3
+: 
+π 
+, 
+1 "
+ 
+,
+12g
+4move_car_out_road junction0-1 junction1-0 car1 road4
+; 
+· 
+- 
+1 "
+ 
+-
+12f
+4move_car_out_road junction0-1 junction1-1 car0 road0
+7 
+B 
+$ 
+2 "
+ 
+$
+22f
+4move_car_out_road junction0-1 junction1-1 car0 road1
+8 
+j 
+% 
+2 "
+ 
+%
+22g
+4move_car_out_road junction0-1 junction1-1 car0 road2
+9 
+í 
+& 
+2 "
+ 
+&
+22g
+4move_car_out_road junction0-1 junction1-1 car0 road3
+: 
+∫ 
+' 
+2 "
+ 
+'
+22g
+4move_car_out_road junction0-1 junction1-1 car0 road4
+; 
+‚ 
+( 
+2 "
+ 
+(
+22f
+4move_car_out_road junction0-1 junction1-1 car1 road0
+7 
+B 
+) 
+2 "
+ 
+)
+22f
+4move_car_out_road junction0-1 junction1-1 car1 road1
+8 
+j 
+* 
+2 "
+ 
+*
+22g
+4move_car_out_road junction0-1 junction1-1 car1 road2
+9 
+í 
++ 
+2 "
+ 
++
+22g
+4move_car_out_road junction0-1 junction1-1 car1 road3
+: 
+∫ 
+, 
+2 "
+ 
+,
+22g
+4move_car_out_road junction0-1 junction1-1 car1 road4
+; 
+‚ 
+- 
+2 "
+ 
+-
+22f
+4move_car_out_road junction0-1 junction1-2 car0 road0
+7 
+C 
+$ 
+3 "
+ 
+$
+32f
+4move_car_out_road junction0-1 junction1-2 car0 road1
+8 
+k 
+% 
+3 "
+ 
+%
+32g
+4move_car_out_road junction0-1 junction1-2 car0 road2
+9 
+ì 
+& 
+3 "
+ 
+&
+32g
+4move_car_out_road junction0-1 junction1-2 car0 road3
+: 
+ª 
+' 
+3 "
+ 
+'
+32g
+4move_car_out_road junction0-1 junction1-2 car0 road4
+; 
+„ 
+( 
+3 "
+ 
+(
+32f
+4move_car_out_road junction0-1 junction1-2 car1 road0
+7 
+C 
+) 
+3 "
+  
+)
+32f
+4move_car_out_road junction0-1 junction1-2 car1 road1
+8 
+k 
+* 
+3 "
+  
+*
+32g
+4move_car_out_road junction0-1 junction1-2 car1 road2
+9 
+ì 
++ 
+3 "
+  
++
+32g
+4move_car_out_road junction0-1 junction1-2 car1 road3
+: 
+ª 
+, 
+3 "
+  
+,
+32g
+4move_car_out_road junction0-1 junction1-2 car1 road4
+; 
+„ 
+- 
+3 "
+  
+-
+32f
+4move_car_out_road junction0-2 junction0-1 car0 road0
+7 
+D 
+$ 
+/ "
+ 
+$
+/2f
+4move_car_out_road junction0-2 junction0-1 car0 road1
+8 
+l 
+% 
+/ "
+ 
+%
+/2g
+4move_car_out_road junction0-2 junction0-1 car0 road2
+9 
+î 
+& 
+/ "
+ 
+&
+/2g
+4move_car_out_road junction0-2 junction0-1 car0 road3
+: 
+º 
+' 
+/ "
+ 
+'
+/2g
+4move_car_out_road junction0-2 junction0-1 car0 road4
+; 
+‰ 
+( 
+/ "
+ 
+(
+/2f
+4move_car_out_road junction0-2 junction0-1 car1 road0
+7 
+D 
+) 
+/ "
+ 
+)
+/2f
+4move_car_out_road junction0-2 junction0-1 car1 road1
+8 
+l 
+* 
+/ "
+ 
+*
+/2g
+4move_car_out_road junction0-2 junction0-1 car1 road2
+9 
+î 
++ 
+/ "
+ 
++
+/2g
+4move_car_out_road junction0-2 junction0-1 car1 road3
+: 
+º 
+, 
+/ "
+ 
+,
+/2g
+4move_car_out_road junction0-2 junction0-1 car1 road4
+; 
+‰ 
+- 
+/ "
+ 
+-
+/2f
+4move_car_out_road junction0-2 junction1-1 car0 road0
+7 
+E 
+$ 
+2 "
+ 
+$
+22f
+4move_car_out_road junction0-2 junction1-1 car0 road1
+8 
+m 
+% 
+2 "
+ 
+%
+22g
+4move_car_out_road junction0-2 junction1-1 car0 road2
+9 
+ï 
+& 
+2 "
+ 
+&
+22g
+4move_car_out_road junction0-2 junction1-1 car0 road3
+: 
+Ω 
+' 
+2 "
+ 
+'
+22g
+4move_car_out_road junction0-2 junction1-1 car0 road4
+; 
+Â 
+( 
+2 "
+ 
+(
+22f
+4move_car_out_road junction0-2 junction1-1 car1 road0
+7 
+E 
+) 
+2 "
+ 
+)
+22f
+4move_car_out_road junction0-2 junction1-1 car1 road1
+8 
+m 
+* 
+2 "
+ 
+*
+22g
+4move_car_out_road junction0-2 junction1-1 car1 road2
+9 
+ï 
++ 
+2 "
+ 
++
+22g
+4move_car_out_road junction0-2 junction1-1 car1 road3
+: 
+Ω 
+, 
+2 "
+ 
+,
+22g
+4move_car_out_road junction0-2 junction1-1 car1 road4
+; 
+Â 
+- 
+2 "
+ 
+-
+22f
+4move_car_out_road junction0-2 junction1-2 car0 road0
+7 
+F 
+$ 
+3 "
+ 
+$
+32f
+4move_car_out_road junction0-2 junction1-2 car0 road1
+8 
+n 
+% 
+3 "
+ 
+%
+32g
+4move_car_out_road junction0-2 junction1-2 car0 road2
+9 
+ñ 
+& 
+3 "
+ 
+&
+32g
+4move_car_out_road junction0-2 junction1-2 car0 road3
+: 
+æ 
+' 
+3 "
+ 
+'
+32g
+4move_car_out_road junction0-2 junction1-2 car0 road4
+; 
+Ê 
+( 
+3 "
+ 
+(
+32f
+4move_car_out_road junction0-2 junction1-2 car1 road0
+7 
+F 
+) 
+3 "
+  
+)
+32f
+4move_car_out_road junction0-2 junction1-2 car1 road1
+8 
+n 
+* 
+3 "
+  
+*
+32g
+4move_car_out_road junction0-2 junction1-2 car1 road2
+9 
+ñ 
++ 
+3 "
+  
++
+32g
+4move_car_out_road junction0-2 junction1-2 car1 road3
+: 
+æ 
+, 
+3 "
+  
+,
+32g
+4move_car_out_road junction0-2 junction1-2 car1 road4
+; 
+Ê 
+- 
+3 "
+  
+-
+32f
+4move_car_out_road junction1-0 junction0-0 car0 road0
+7 
+G 
+$ 
+. "
+ 
+$
+.2f
+4move_car_out_road junction1-0 junction0-0 car0 road1
+8 
+o 
+% 
+. "
+ 
+%
+.2g
+4move_car_out_road junction1-0 junction0-0 car0 road2
+9 
+ó 
+& 
+. "
+ 
+&
+.2g
+4move_car_out_road junction1-0 junction0-0 car0 road3
+: 
+ø 
+' 
+. "
+ 
+'
+.2g
+4move_car_out_road junction1-0 junction0-0 car0 road4
+; 
+Á 
+( 
+. "
+ 
+(
+.2f
+4move_car_out_road junction1-0 junction0-0 car1 road0
+7 
+G 
+) 
+. "
+ 
+)
+.2f
+4move_car_out_road junction1-0 junction0-0 car1 road1
+8 
+o 
+* 
+. "
+ 
+*
+.2g
+4move_car_out_road junction1-0 junction0-0 car1 road2
+9 
+ó 
++ 
+. "
+ 
++
+.2g
+4move_car_out_road junction1-0 junction0-0 car1 road3
+: 
+ø 
+, 
+. "
+ 
+,
+.2g
+4move_car_out_road junction1-0 junction0-0 car1 road4
+; 
+Á 
+- 
+. "
+ 
+-
+.2f
+4move_car_out_road junction1-0 junction0-1 car0 road0
+7 
+H 
+$ 
+/ "
+ 
+$
+/2f
+4move_car_out_road junction1-0 junction0-1 car0 road1
+8 
+p 
+% 
+/ "
+ 
+%
+/2g
+4move_car_out_road junction1-0 junction0-1 car0 road2
+9 
+ò 
+& 
+/ "
+ 
+&
+/2g
+4move_car_out_road junction1-0 junction0-1 car0 road3
+: 
+¿ 
+' 
+/ "
+ 
+'
+/2g
+4move_car_out_road junction1-0 junction0-1 car0 road4
+; 
+Ë 
+( 
+/ "
+ 
+(
+/2f
+4move_car_out_road junction1-0 junction0-1 car1 road0
+7 
+H 
+) 
+/ "
+ 
+)
+/2f
+4move_car_out_road junction1-0 junction0-1 car1 road1
+8 
+p 
+* 
+/ "
+ 
+*
+/2g
+4move_car_out_road junction1-0 junction0-1 car1 road2
+9 
+ò 
++ 
+/ "
+ 
++
+/2g
+4move_car_out_road junction1-0 junction0-1 car1 road3
+: 
+¿ 
+, 
+/ "
+ 
+,
+/2g
+4move_car_out_road junction1-0 junction0-1 car1 road4
+; 
+Ë 
+- 
+/ "
+ 
+-
+/2f
+4move_car_out_road junction1-0 junction1-1 car0 road0
+7 
+I 
+$ 
+2 "
+ 
+$
+22f
+4move_car_out_road junction1-0 junction1-1 car0 road1
+8 
+q 
+% 
+2 "
+ 
+%
+22g
+4move_car_out_road junction1-0 junction1-1 car0 road2
+9 
+ô 
+& 
+2 "
+ 
+&
+22g
+4move_car_out_road junction1-0 junction1-1 car0 road3
+: 
+¡ 
+' 
+2 "
+ 
+'
+22g
+4move_car_out_road junction1-0 junction1-1 car0 road4
+; 
+È 
+( 
+2 "
+ 
+(
+22f
+4move_car_out_road junction1-0 junction1-1 car1 road0
+7 
+I 
+) 
+2 "
+ 
+)
+22f
+4move_car_out_road junction1-0 junction1-1 car1 road1
+8 
+q 
+* 
+2 "
+ 
+*
+22g
+4move_car_out_road junction1-0 junction1-1 car1 road2
+9 
+ô 
++ 
+2 "
+ 
++
+22g
+4move_car_out_road junction1-0 junction1-1 car1 road3
+: 
+¡ 
+, 
+2 "
+ 
+,
+22g
+4move_car_out_road junction1-0 junction1-1 car1 road4
+; 
+È 
+- 
+2 "
+ 
+-
+22f
+4move_car_out_road junction1-0 junction2-0 car0 road0
+7 
+J 
+$ 
+4 "
+ 
+$
+42f
+4move_car_out_road junction1-0 junction2-0 car0 road1
+8 
+r 
+% 
+4 "
+ 
+%
+42g
+4move_car_out_road junction1-0 junction2-0 car0 road2
+9 
+ö 
+& 
+4 "
+ 
+&
+42g
+4move_car_out_road junction1-0 junction2-0 car0 road3
+: 
+¬ 
+' 
+4 "
+ 
+'
+42g
+4move_car_out_road junction1-0 junction2-0 car0 road4
+; 
+Í 
+( 
+4 "
+ 
+(
+42f
+4move_car_out_road junction1-0 junction2-0 car1 road0
+7 
+J 
+) 
+4 "
+! 
+)
+42f
+4move_car_out_road junction1-0 junction2-0 car1 road1
+8 
+r 
+* 
+4 "
+! 
+*
+42g
+4move_car_out_road junction1-0 junction2-0 car1 road2
+9 
+ö 
++ 
+4 "
+! 
++
+42g
+4move_car_out_road junction1-0 junction2-0 car1 road3
+: 
+¬ 
+, 
+4 "
+! 
+,
+42g
+4move_car_out_road junction1-0 junction2-0 car1 road4
+; 
+Í 
+- 
+4 "
+! 
+-
+42f
+4move_car_out_road junction1-0 junction2-1 car0 road0
+7 
+K 
+$ 
+5 "
+ 
+$
+52f
+4move_car_out_road junction1-0 junction2-1 car0 road1
+8 
+s 
+% 
+5 "
+ 
+%
+52g
+4move_car_out_road junction1-0 junction2-1 car0 road2
+9 
+õ 
+& 
+5 "
+ 
+&
+52g
+4move_car_out_road junction1-0 junction2-1 car0 road3
+: 
+√ 
+' 
+5 "
+ 
+'
+52g
+4move_car_out_road junction1-0 junction2-1 car0 road4
+; 
+Î 
+( 
+5 "
+ 
+(
+52f
+4move_car_out_road junction1-0 junction2-1 car1 road0
+7 
+K 
+) 
+5 "
+" 
+)
+52f
+4move_car_out_road junction1-0 junction2-1 car1 road1
+8 
+s 
+* 
+5 "
+" 
+*
+52g
+4move_car_out_road junction1-0 junction2-1 car1 road2
+9 
+õ 
++ 
+5 "
+" 
++
+52g
+4move_car_out_road junction1-0 junction2-1 car1 road3
+: 
+√ 
+, 
+5 "
+" 
+,
+52g
+4move_car_out_road junction1-0 junction2-1 car1 road4
+; 
+Î 
+- 
+5 "
+" 
+-
+52f
+4move_car_out_road junction1-1 junction0-0 car0 road0
+7 
+L 
+$ 
+. "
+ 
+$
+.2f
+4move_car_out_road junction1-1 junction0-0 car0 road1
+8 
+t 
+% 
+. "
+ 
+%
+.2g
+4move_car_out_road junction1-1 junction0-0 car0 road2
+9 
+ú 
+& 
+. "
+ 
+&
+.2g
+4move_car_out_road junction1-1 junction0-0 car0 road3
+: 
+ƒ 
+' 
+. "
+ 
+'
+.2g
+4move_car_out_road junction1-1 junction0-0 car0 road4
+; 
+Ï 
+( 
+. "
+ 
+(
+.2f
+4move_car_out_road junction1-1 junction0-0 car1 road0
+7 
+L 
+) 
+. "
+ 
+)
+.2f
+4move_car_out_road junction1-1 junction0-0 car1 road1
+8 
+t 
+* 
+. "
+ 
+*
+.2g
+4move_car_out_road junction1-1 junction0-0 car1 road2
+9 
+ú 
++ 
+. "
+ 
++
+.2g
+4move_car_out_road junction1-1 junction0-0 car1 road3
+: 
+ƒ 
+, 
+. "
+ 
+,
+.2g
+4move_car_out_road junction1-1 junction0-0 car1 road4
+; 
+Ï 
+- 
+. "
+ 
+-
+.2f
+4move_car_out_road junction1-1 junction0-1 car0 road0
+7 
+M 
+$ 
+/ "
+ 
+$
+/2f
+4move_car_out_road junction1-1 junction0-1 car0 road1
+8 
+u 
+% 
+/ "
+ 
+%
+/2g
+4move_car_out_road junction1-1 junction0-1 car0 road2
+9 
+ù 
+& 
+/ "
+ 
+&
+/2g
+4move_car_out_road junction1-1 junction0-1 car0 road3
+: 
+≈ 
+' 
+/ "
+ 
+'
+/2g
+4move_car_out_road junction1-1 junction0-1 car0 road4
+; 
+Ì 
+( 
+/ "
+ 
+(
+/2f
+4move_car_out_road junction1-1 junction0-1 car1 road0
+7 
+M 
+) 
+/ "
+ 
+)
+/2f
+4move_car_out_road junction1-1 junction0-1 car1 road1
+8 
+u 
+* 
+/ "
+ 
+*
+/2g
+4move_car_out_road junction1-1 junction0-1 car1 road2
+9 
+ù 
++ 
+/ "
+ 
++
+/2g
+4move_car_out_road junction1-1 junction0-1 car1 road3
+: 
+≈ 
+, 
+/ "
+ 
+,
+/2g
+4move_car_out_road junction1-1 junction0-1 car1 road4
+; 
+Ì 
+- 
+/ "
+ 
+-
+/2f
+4move_car_out_road junction1-1 junction0-2 car0 road0
+7 
+N 
+$ 
+0 "
+ 
+$
+02f
+4move_car_out_road junction1-1 junction0-2 car0 road1
+8 
+v 
+% 
+0 "
+ 
+%
+02g
+4move_car_out_road junction1-1 junction0-2 car0 road2
+9 
+û 
+& 
+0 "
+ 
+&
+02g
+4move_car_out_road junction1-1 junction0-2 car0 road3
+: 
+∆ 
+' 
+0 "
+ 
+'
+02g
+4move_car_out_road junction1-1 junction0-2 car0 road4
+; 
+Ó 
+( 
+0 "
+ 
+(
+02f
+4move_car_out_road junction1-1 junction0-2 car1 road0
+7 
+N 
+) 
+0 "
+ 
+)
+02f
+4move_car_out_road junction1-1 junction0-2 car1 road1
+8 
+v 
+* 
+0 "
+ 
+*
+02g
+4move_car_out_road junction1-1 junction0-2 car1 road2
+9 
+û 
++ 
+0 "
+ 
++
+02g
+4move_car_out_road junction1-1 junction0-2 car1 road3
+: 
+∆ 
+, 
+0 "
+ 
+,
+02g
+4move_car_out_road junction1-1 junction0-2 car1 road4
+; 
+Ó 
+- 
+0 "
+ 
+-
+02f
+4move_car_out_road junction1-1 junction1-0 car0 road0
+7 
+O 
+$ 
+1 "
+ 
+$
+12f
+4move_car_out_road junction1-1 junction1-0 car0 road1
+8 
+w 
+% 
+1 "
+ 
+%
+12g
+4move_car_out_road junction1-1 junction1-0 car0 road2
+9 
+ü 
+& 
+1 "
+ 
+&
+12g
+4move_car_out_road junction1-1 junction1-0 car0 road3
+: 
+« 
+' 
+1 "
+ 
+'
+12g
+4move_car_out_road junction1-1 junction1-0 car0 road4
+; 
+Ô 
+( 
+1 "
+ 
+(
+12f
+4move_car_out_road junction1-1 junction1-0 car1 road0
+7 
+O 
+) 
+1 "
+ 
+)
+12f
+4move_car_out_road junction1-1 junction1-0 car1 road1
+8 
+w 
+* 
+1 "
+ 
+*
+12g
+4move_car_out_road junction1-1 junction1-0 car1 road2
+9 
+ü 
++ 
+1 "
+ 
++
+12g
+4move_car_out_road junction1-1 junction1-0 car1 road3
+: 
+« 
+, 
+1 "
+ 
+,
+12g
+4move_car_out_road junction1-1 junction1-0 car1 road4
+; 
+Ô 
+- 
+1 "
+ 
+-
+12f
+4move_car_out_road junction1-1 junction1-2 car0 road0
+7 
+P 
+$ 
+3 "
+ 
+$
+32f
+4move_car_out_road junction1-1 junction1-2 car0 road1
+8 
+x 
+% 
+3 "
+ 
+%
+32g
+4move_car_out_road junction1-1 junction1-2 car0 road2
+9 
+† 
+& 
+3 "
+ 
+&
+32g
+4move_car_out_road junction1-1 junction1-2 car0 road3
+: 
+» 
+' 
+3 "
+ 
+'
+32g
+4move_car_out_road junction1-1 junction1-2 car0 road4
+; 
+ 
+( 
+3 "
+ 
+(
+32f
+4move_car_out_road junction1-1 junction1-2 car1 road0
+7 
+P 
+) 
+3 "
+  
+)
+32f
+4move_car_out_road junction1-1 junction1-2 car1 road1
+8 
+x 
+* 
+3 "
+  
+*
+32g
+4move_car_out_road junction1-1 junction1-2 car1 road2
+9 
+† 
++ 
+3 "
+  
++
+32g
+4move_car_out_road junction1-1 junction1-2 car1 road3
+: 
+» 
+, 
+3 "
+  
+,
+32g
+4move_car_out_road junction1-1 junction1-2 car1 road4
+; 
+ 
+- 
+3 "
+  
+-
+32f
+4move_car_out_road junction1-1 junction2-0 car0 road0
+7 
+Q 
+$ 
+4 "
+ 
+$
+42f
+4move_car_out_road junction1-1 junction2-0 car0 road1
+8 
+y 
+% 
+4 "
+ 
+%
+42g
+4move_car_out_road junction1-1 junction2-0 car0 road2
+9 
+° 
+& 
+4 "
+ 
+&
+42g
+4move_car_out_road junction1-1 junction2-0 car0 road3
+: 
+… 
+' 
+4 "
+ 
+'
+42g
+4move_car_out_road junction1-1 junction2-0 car0 road4
+; 
+Ò 
+( 
+4 "
+ 
+(
+42f
+4move_car_out_road junction1-1 junction2-0 car1 road0
+7 
+Q 
+) 
+4 "
+! 
+)
+42f
+4move_car_out_road junction1-1 junction2-0 car1 road1
+8 
+y 
+* 
+4 "
+! 
+*
+42g
+4move_car_out_road junction1-1 junction2-0 car1 road2
+9 
+° 
++ 
+4 "
+! 
++
+42g
+4move_car_out_road junction1-1 junction2-0 car1 road3
+: 
+… 
+, 
+4 "
+! 
+,
+42g
+4move_car_out_road junction1-1 junction2-0 car1 road4
+; 
+Ò 
+- 
+4 "
+! 
+-
+42f
+4move_car_out_road junction1-1 junction2-1 car0 road0
+7 
+R 
+$ 
+5 "
+ 
+$
+52f
+4move_car_out_road junction1-1 junction2-1 car0 road1
+8 
+z 
+% 
+5 "
+ 
+%
+52g
+4move_car_out_road junction1-1 junction2-1 car0 road2
+9 
+¢ 
+& 
+5 "
+ 
+&
+52g
+4move_car_out_road junction1-1 junction2-1 car0 road3
+: 
+  
+' 
+5 "
+ 
+'
+52g
+4move_car_out_road junction1-1 junction2-1 car0 road4
+; 
+Ú 
+( 
+5 "
+ 
+(
+52f
+4move_car_out_road junction1-1 junction2-1 car1 road0
+7 
+R 
+) 
+5 "
+" 
+)
+52f
+4move_car_out_road junction1-1 junction2-1 car1 road1
+8 
+z 
+* 
+5 "
+" 
+*
+52g
+4move_car_out_road junction1-1 junction2-1 car1 road2
+9 
+¢ 
++ 
+5 "
+" 
++
+52g
+4move_car_out_road junction1-1 junction2-1 car1 road3
+: 
+  
+, 
+5 "
+" 
+,
+52g
+4move_car_out_road junction1-1 junction2-1 car1 road4
+; 
+Ú 
+- 
+5 "
+" 
+-
+52f
+4move_car_out_road junction1-1 junction2-2 car0 road0
+7 
+S 
+$ 
+6 "
+ 
+$
+62f
+4move_car_out_road junction1-1 junction2-2 car0 road1
+8 
+{ 
+% 
+6 "
+ 
+%
+62g
+4move_car_out_road junction1-1 junction2-2 car0 road2
+9 
+£ 
+& 
+6 "
+ 
+&
+62g
+4move_car_out_road junction1-1 junction2-2 car0 road3
+: 
+À 
+' 
+6 "
+ 
+'
+62g
+4move_car_out_road junction1-1 junction2-2 car0 road4
+; 
+Û 
+( 
+6 "
+ 
+(
+62f
+4move_car_out_road junction1-1 junction2-2 car1 road0
+7 
+S 
+) 
+6 "
+# 
+)
+62f
+4move_car_out_road junction1-1 junction2-2 car1 road1
+8 
+{ 
+* 
+6 "
+# 
+*
+62g
+4move_car_out_road junction1-1 junction2-2 car1 road2
+9 
+£ 
++ 
+6 "
+# 
++
+62g
+4move_car_out_road junction1-1 junction2-2 car1 road3
+: 
+À 
+, 
+6 "
+# 
+,
+62g
+4move_car_out_road junction1-1 junction2-2 car1 road4
+; 
+Û 
+- 
+6 "
+# 
+-
+62f
+4move_car_out_road junction1-2 junction0-1 car0 road0
+7 
+T 
+$ 
+/ "
+ 
+$
+/2f
+4move_car_out_road junction1-2 junction0-1 car0 road1
+8 
+| 
+% 
+/ "
+ 
+%
+/2g
+4move_car_out_road junction1-2 junction0-1 car0 road2
+9 
+§ 
+& 
+/ "
+ 
+&
+/2g
+4move_car_out_road junction1-2 junction0-1 car0 road3
+: 
+Ã 
+' 
+/ "
+ 
+'
+/2g
+4move_car_out_road junction1-2 junction0-1 car0 road4
+; 
+Ù 
+( 
+/ "
+ 
+(
+/2f
+4move_car_out_road junction1-2 junction0-1 car1 road0
+7 
+T 
+) 
+/ "
+ 
+)
+/2f
+4move_car_out_road junction1-2 junction0-1 car1 road1
+8 
+| 
+* 
+/ "
+ 
+*
+/2g
+4move_car_out_road junction1-2 junction0-1 car1 road2
+9 
+§ 
++ 
+/ "
+ 
++
+/2g
+4move_car_out_road junction1-2 junction0-1 car1 road3
+: 
+Ã 
+, 
+/ "
+ 
+,
+/2g
+4move_car_out_road junction1-2 junction0-1 car1 road4
+; 
+Ù 
+- 
+/ "
+ 
+-
+/2f
+4move_car_out_road junction1-2 junction0-2 car0 road0
+7 
+U 
+$ 
+0 "
+ 
+$
+02f
+4move_car_out_road junction1-2 junction0-2 car0 road1
+8 
+} 
+% 
+0 "
+ 
+%
+02g
+4move_car_out_road junction1-2 junction0-2 car0 road2
+9 
+• 
+& 
+0 "
+ 
+&
+02g
+4move_car_out_road junction1-2 junction0-2 car0 road3
+: 
+Õ 
+' 
+0 "
+ 
+'
+02g
+4move_car_out_road junction1-2 junction0-2 car0 road4
+; 
+ı 
+( 
+0 "
+ 
+(
+02f
+4move_car_out_road junction1-2 junction0-2 car1 road0
+7 
+U 
+) 
+0 "
+ 
+)
+02f
+4move_car_out_road junction1-2 junction0-2 car1 road1
+8 
+} 
+* 
+0 "
+ 
+*
+02g
+4move_car_out_road junction1-2 junction0-2 car1 road2
+9 
+• 
++ 
+0 "
+ 
++
+02g
+4move_car_out_road junction1-2 junction0-2 car1 road3
+: 
+Õ 
+, 
+0 "
+ 
+,
+02g
+4move_car_out_road junction1-2 junction0-2 car1 road4
+; 
+ı 
+- 
+0 "
+ 
+-
+02f
+4move_car_out_road junction1-2 junction1-1 car0 road0
+7 
+V 
+$ 
+2 "
+ 
+$
+22f
+4move_car_out_road junction1-2 junction1-1 car0 road1
+8 
+~ 
+% 
+2 "
+ 
+%
+22g
+4move_car_out_road junction1-2 junction1-1 car0 road2
+9 
+¶ 
+& 
+2 "
+ 
+&
+22g
+4move_car_out_road junction1-2 junction1-1 car0 road3
+: 
+Œ 
+' 
+2 "
+ 
+'
+22g
+4move_car_out_road junction1-2 junction1-1 car0 road4
+; 
+ˆ 
+( 
+2 "
+ 
+(
+22f
+4move_car_out_road junction1-2 junction1-1 car1 road0
+7 
+V 
+) 
+2 "
+ 
+)
+22f
+4move_car_out_road junction1-2 junction1-1 car1 road1
+8 
+~ 
+* 
+2 "
+ 
+*
+22g
+4move_car_out_road junction1-2 junction1-1 car1 road2
+9 
+¶ 
++ 
+2 "
+ 
++
+22g
+4move_car_out_road junction1-2 junction1-1 car1 road3
+: 
+Œ 
+, 
+2 "
+ 
+,
+22g
+4move_car_out_road junction1-2 junction1-1 car1 road4
+; 
+ˆ 
+- 
+2 "
+ 
+-
+22f
+4move_car_out_road junction1-2 junction2-1 car0 road0
+7 
+W 
+$ 
+5 "
+ 
+$
+52f
+4move_car_out_road junction1-2 junction2-1 car0 road1
+8 
+ 
+% 
+5 "
+ 
+%
+52g
+4move_car_out_road junction1-2 junction2-1 car0 road2
+9 
+ß 
+& 
+5 "
+ 
+&
+52g
+4move_car_out_road junction1-2 junction2-1 car0 road3
+: 
+œ 
+' 
+5 "
+ 
+'
+52g
+4move_car_out_road junction1-2 junction2-1 car0 road4
+; 
+˜ 
+( 
+5 "
+ 
+(
+52f
+4move_car_out_road junction1-2 junction2-1 car1 road0
+7 
+W 
+) 
+5 "
+" 
+)
+52f
+4move_car_out_road junction1-2 junction2-1 car1 road1
+8 
+ 
+* 
+5 "
+" 
+*
+52g
+4move_car_out_road junction1-2 junction2-1 car1 road2
+9 
+ß 
++ 
+5 "
+" 
++
+52g
+4move_car_out_road junction1-2 junction2-1 car1 road3
+: 
+œ 
+, 
+5 "
+" 
+,
+52g
+4move_car_out_road junction1-2 junction2-1 car1 road4
+; 
+˜ 
+- 
+5 "
+" 
+-
+52f
+4move_car_out_road junction1-2 junction2-2 car0 road0
+7 
+X 
+$ 
+6 "
+ 
+$
+62g
+4move_car_out_road junction1-2 junction2-2 car0 road1
+8 
+Ä 
+% 
+6 "
+ 
+%
+62g
+4move_car_out_road junction1-2 junction2-2 car0 road2
+9 
+® 
+& 
+6 "
+ 
+&
+62g
+4move_car_out_road junction1-2 junction2-2 car0 road3
+: 
+– 
+' 
+6 "
+ 
+'
+62g
+4move_car_out_road junction1-2 junction2-2 car0 road4
+; 
+¯ 
+( 
+6 "
+ 
+(
+62f
+4move_car_out_road junction1-2 junction2-2 car1 road0
+7 
+X 
+) 
+6 "
+# 
+)
+62g
+4move_car_out_road junction1-2 junction2-2 car1 road1
+8 
+Ä 
+* 
+6 "
+# 
+*
+62g
+4move_car_out_road junction1-2 junction2-2 car1 road2
+9 
+® 
++ 
+6 "
+# 
++
+62g
+4move_car_out_road junction1-2 junction2-2 car1 road3
+: 
+– 
+, 
+6 "
+# 
+,
+62g
+4move_car_out_road junction1-2 junction2-2 car1 road4
+; 
+¯ 
+- 
+6 "
+# 
+-
+62f
+4move_car_out_road junction2-0 junction1-0 car0 road0
+7 
+Y 
+$ 
+1 "
+ 
+$
+12g
+4move_car_out_road junction2-0 junction1-0 car0 road1
+8 
+Å 
+% 
+1 "
+ 
+%
+12g
+4move_car_out_road junction2-0 junction1-0 car0 road2
+9 
+© 
+& 
+1 "
+ 
+&
+12g
+4move_car_out_road junction2-0 junction1-0 car0 road3
+: 
+— 
+' 
+1 "
+ 
+'
+12g
+4move_car_out_road junction2-0 junction1-0 car0 road4
+; 
+˘ 
+( 
+1 "
+ 
+(
+12f
+4move_car_out_road junction2-0 junction1-0 car1 road0
+7 
+Y 
+) 
+1 "
+ 
+)
+12g
+4move_car_out_road junction2-0 junction1-0 car1 road1
+8 
+Å 
+* 
+1 "
+ 
+*
+12g
+4move_car_out_road junction2-0 junction1-0 car1 road2
+9 
+© 
++ 
+1 "
+ 
++
+12g
+4move_car_out_road junction2-0 junction1-0 car1 road3
+: 
+— 
+, 
+1 "
+ 
+,
+12g
+4move_car_out_road junction2-0 junction1-0 car1 road4
+; 
+˘ 
+- 
+1 "
+ 
+-
+12f
+4move_car_out_road junction2-0 junction1-1 car0 road0
+7 
+Z 
+$ 
+2 "
+ 
+$
+22g
+4move_car_out_road junction2-0 junction1-1 car0 road1
+8 
+Ç 
+% 
+2 "
+ 
+%
+22g
+4move_car_out_road junction2-0 junction1-1 car0 road2
+9 
+™ 
+& 
+2 "
+ 
+&
+22g
+4move_car_out_road junction2-0 junction1-1 car0 road3
+: 
+“ 
+' 
+2 "
+ 
+'
+22g
+4move_car_out_road junction2-0 junction1-1 car0 road4
+; 
+˙ 
+( 
+2 "
+ 
+(
+22f
+4move_car_out_road junction2-0 junction1-1 car1 road0
+7 
+Z 
+) 
+2 "
+ 
+)
+22g
+4move_car_out_road junction2-0 junction1-1 car1 road1
+8 
+Ç 
+* 
+2 "
+ 
+*
+22g
+4move_car_out_road junction2-0 junction1-1 car1 road2
+9 
+™ 
++ 
+2 "
+ 
++
+22g
+4move_car_out_road junction2-0 junction1-1 car1 road3
+: 
+“ 
+, 
+2 "
+ 
+,
+22g
+4move_car_out_road junction2-0 junction1-1 car1 road4
+; 
+˙ 
+- 
+2 "
+ 
+-
+22f
+4move_car_out_road junction2-0 junction2-1 car0 road0
+7 
+[ 
+$ 
+5 "
+ 
+$
+52g
+4move_car_out_road junction2-0 junction2-1 car0 road1
+8 
+É 
+% 
+5 "
+ 
+%
+52g
+4move_car_out_road junction2-0 junction2-1 car0 road2
+9 
+´ 
+& 
+5 "
+ 
+&
+52g
+4move_car_out_road junction2-0 junction2-1 car0 road3
+: 
+” 
+' 
+5 "
+ 
+'
+52g
+4move_car_out_road junction2-0 junction2-1 car0 road4
+; 
+˚ 
+( 
+5 "
+ 
+(
+52f
+4move_car_out_road junction2-0 junction2-1 car1 road0
+7 
+[ 
+) 
+5 "
+" 
+)
+52g
+4move_car_out_road junction2-0 junction2-1 car1 road1
+8 
+É 
+* 
+5 "
+" 
+*
+52g
+4move_car_out_road junction2-0 junction2-1 car1 road2
+9 
+´ 
++ 
+5 "
+" 
++
+52g
+4move_car_out_road junction2-0 junction2-1 car1 road3
+: 
+” 
+, 
+5 "
+" 
+,
+52g
+4move_car_out_road junction2-0 junction2-1 car1 road4
+; 
+˚ 
+- 
+5 "
+" 
+-
+52f
+4move_car_out_road junction2-1 junction1-0 car0 road0
+7 
+\ 
+$ 
+1 "
+ 
+$
+12g
+4move_car_out_road junction2-1 junction1-0 car0 road1
+8 
+Ñ 
+% 
+1 "
+ 
+%
+12g
+4move_car_out_road junction2-1 junction1-0 car0 road2
+9 
+¨ 
+& 
+1 "
+ 
+&
+12g
+4move_car_out_road junction2-1 junction1-0 car0 road3
+: 
+‘ 
+' 
+1 "
+ 
+'
+12g
+4move_car_out_road junction2-1 junction1-0 car0 road4
+; 
+¸ 
+( 
+1 "
+ 
+(
+12f
+4move_car_out_road junction2-1 junction1-0 car1 road0
+7 
+\ 
+) 
+1 "
+ 
+)
+12g
+4move_car_out_road junction2-1 junction1-0 car1 road1
+8 
+Ñ 
+* 
+1 "
+ 
+*
+12g
+4move_car_out_road junction2-1 junction1-0 car1 road2
+9 
+¨ 
++ 
+1 "
+ 
++
+12g
+4move_car_out_road junction2-1 junction1-0 car1 road3
+: 
+‘ 
+, 
+1 "
+ 
+,
+12g
+4move_car_out_road junction2-1 junction1-0 car1 road4
+; 
+¸ 
+- 
+1 "
+ 
+-
+12f
+4move_car_out_road junction2-1 junction1-1 car0 road0
+7 
+] 
+$ 
+2 "
+ 
+$
+22g
+4move_car_out_road junction2-1 junction1-1 car0 road1
+8 
+Ö 
+% 
+2 "
+ 
+%
+22g
+4move_car_out_road junction2-1 junction1-1 car0 road2
+9 
+≠ 
+& 
+2 "
+ 
+&
+22g
+4move_car_out_road junction2-1 junction1-1 car0 road3
+: 
+’ 
+' 
+2 "
+ 
+'
+22g
+4move_car_out_road junction2-1 junction1-1 car0 road4
+; 
+˝ 
+( 
+2 "
+ 
+(
+22f
+4move_car_out_road junction2-1 junction1-1 car1 road0
+7 
+] 
+) 
+2 "
+ 
+)
+22g
+4move_car_out_road junction2-1 junction1-1 car1 road1
+8 
+Ö 
+* 
+2 "
+ 
+*
+22g
+4move_car_out_road junction2-1 junction1-1 car1 road2
+9 
+≠ 
++ 
+2 "
+ 
++
+22g
+4move_car_out_road junction2-1 junction1-1 car1 road3
+: 
+’ 
+, 
+2 "
+ 
+,
+22g
+4move_car_out_road junction2-1 junction1-1 car1 road4
+; 
+˝ 
+- 
+2 "
+ 
+-
+22f
+4move_car_out_road junction2-1 junction1-2 car0 road0
+7 
+^ 
+$ 
+3 "
+ 
+$
+32g
+4move_car_out_road junction2-1 junction1-2 car0 road1
+8 
+Ü 
+% 
+3 "
+ 
+%
+32g
+4move_car_out_road junction2-1 junction1-2 car0 road2
+9 
+Æ 
+& 
+3 "
+ 
+&
+32g
+4move_car_out_road junction2-1 junction1-2 car0 road3
+: 
+÷ 
+' 
+3 "
+ 
+'
+32g
+4move_car_out_road junction2-1 junction1-2 car0 road4
+; 
+˛ 
+( 
+3 "
+ 
+(
+32f
+4move_car_out_road junction2-1 junction1-2 car1 road0
+7 
+^ 
+) 
+3 "
+  
+)
+32g
+4move_car_out_road junction2-1 junction1-2 car1 road1
+8 
+Ü 
+* 
+3 "
+  
+*
+32g
+4move_car_out_road junction2-1 junction1-2 car1 road2
+9 
+Æ 
++ 
+3 "
+  
++
+32g
+4move_car_out_road junction2-1 junction1-2 car1 road3
+: 
+÷ 
+, 
+3 "
+  
+,
+32g
+4move_car_out_road junction2-1 junction1-2 car1 road4
+; 
+˛ 
+- 
+3 "
+  
+-
+32f
+4move_car_out_road junction2-1 junction2-0 car0 road0
+7 
+_ 
+$ 
+4 "
+ 
+$
+42g
+4move_car_out_road junction2-1 junction2-0 car0 road1
+8 
+á 
+% 
+4 "
+ 
+%
+42g
+4move_car_out_road junction2-1 junction2-0 car0 road2
+9 
+Ø 
+& 
+4 "
+ 
+&
+42g
+4move_car_out_road junction2-1 junction2-0 car0 road3
+: 
+◊ 
+' 
+4 "
+ 
+'
+42g
+4move_car_out_road junction2-1 junction2-0 car0 road4
+; 
+ˇ 
+( 
+4 "
+ 
+(
+42f
+4move_car_out_road junction2-1 junction2-0 car1 road0
+7 
+_ 
+) 
+4 "
+! 
+)
+42g
+4move_car_out_road junction2-1 junction2-0 car1 road1
+8 
+á 
+* 
+4 "
+! 
+*
+42g
+4move_car_out_road junction2-1 junction2-0 car1 road2
+9 
+Ø 
++ 
+4 "
+! 
++
+42g
+4move_car_out_road junction2-1 junction2-0 car1 road3
+: 
+◊ 
+, 
+4 "
+! 
+,
+42g
+4move_car_out_road junction2-1 junction2-0 car1 road4
+; 
+ˇ 
+- 
+4 "
+! 
+-
+42f
+4move_car_out_road junction2-1 junction2-2 car0 road0
+7 
+` 
+$ 
+6 "
+ 
+$
+62g
+4move_car_out_road junction2-1 junction2-2 car0 road1
+8 
+à 
+% 
+6 "
+ 
+%
+62g
+4move_car_out_road junction2-1 junction2-2 car0 road2
+9 
+∞ 
+& 
+6 "
+ 
+&
+62g
+4move_car_out_road junction2-1 junction2-2 car0 road3
+: 
+ÿ 
+' 
+6 "
+ 
+'
+62g
+4move_car_out_road junction2-1 junction2-2 car0 road4
+; 
+Ä 
+( 
+6 "
+ 
+(
+62f
+4move_car_out_road junction2-1 junction2-2 car1 road0
+7 
+` 
+) 
+6 "
+# 
+)
+62g
+4move_car_out_road junction2-1 junction2-2 car1 road1
+8 
+à 
+* 
+6 "
+# 
+*
+62g
+4move_car_out_road junction2-1 junction2-2 car1 road2
+9 
+∞ 
++ 
+6 "
+# 
++
+62g
+4move_car_out_road junction2-1 junction2-2 car1 road3
+: 
+ÿ 
+, 
+6 "
+# 
+,
+62g
+4move_car_out_road junction2-1 junction2-2 car1 road4
+; 
+Ä 
+- 
+6 "
+# 
+-
+62f
+4move_car_out_road junction2-2 junction1-1 car0 road0
+7 
+a 
+$ 
+2 "
+ 
+$
+22g
+4move_car_out_road junction2-2 junction1-1 car0 road1
+8 
+â 
+% 
+2 "
+ 
+%
+22g
+4move_car_out_road junction2-2 junction1-1 car0 road2
+9 
+± 
+& 
+2 "
+ 
+&
+22g
+4move_car_out_road junction2-2 junction1-1 car0 road3
+: 
+Ÿ 
+' 
+2 "
+ 
+'
+22g
+4move_car_out_road junction2-2 junction1-1 car0 road4
+; 
+Å 
+( 
+2 "
+ 
+(
+22f
+4move_car_out_road junction2-2 junction1-1 car1 road0
+7 
+a 
+) 
+2 "
+ 
+)
+22g
+4move_car_out_road junction2-2 junction1-1 car1 road1
+8 
+â 
+* 
+2 "
+ 
+*
+22g
+4move_car_out_road junction2-2 junction1-1 car1 road2
+9 
+± 
++ 
+2 "
+ 
++
+22g
+4move_car_out_road junction2-2 junction1-1 car1 road3
+: 
+Ÿ 
+, 
+2 "
+ 
+,
+22g
+4move_car_out_road junction2-2 junction1-1 car1 road4
+; 
+Å 
+- 
+2 "
+ 
+-
+22f
+4move_car_out_road junction2-2 junction1-2 car0 road0
+7 
+b 
+$ 
+3 "
+ 
+$
+32g
+4move_car_out_road junction2-2 junction1-2 car0 road1
+8 
+ä 
+% 
+3 "
+ 
+%
+32g
+4move_car_out_road junction2-2 junction1-2 car0 road2
+9 
+≤ 
+& 
+3 "
+ 
+&
+32g
+4move_car_out_road junction2-2 junction1-2 car0 road3
+: 
+⁄ 
+' 
+3 "
+ 
+'
+32g
+4move_car_out_road junction2-2 junction1-2 car0 road4
+; 
+Ç 
+( 
+3 "
+ 
+(
+32f
+4move_car_out_road junction2-2 junction1-2 car1 road0
+7 
+b 
+) 
+3 "
+  
+)
+32g
+4move_car_out_road junction2-2 junction1-2 car1 road1
+8 
+ä 
+* 
+3 "
+  
+*
+32g
+4move_car_out_road junction2-2 junction1-2 car1 road2
+9 
+≤ 
++ 
+3 "
+  
++
+32g
+4move_car_out_road junction2-2 junction1-2 car1 road3
+: 
+⁄ 
+, 
+3 "
+  
+,
+32g
+4move_car_out_road junction2-2 junction1-2 car1 road4
+; 
+Ç 
+- 
+3 "
+  
+-
+32f
+4move_car_out_road junction2-2 junction2-1 car0 road0
+7 
+c 
+$ 
+5 "
+ 
+$
+52g
+4move_car_out_road junction2-2 junction2-1 car0 road1
+8 
+ã 
+% 
+5 "
+ 
+%
+52g
+4move_car_out_road junction2-2 junction2-1 car0 road2
+9 
+≥ 
+& 
+5 "
+ 
+&
+52g
+4move_car_out_road junction2-2 junction2-1 car0 road3
+: 
+€ 
+' 
+5 "
+ 
+'
+52g
+4move_car_out_road junction2-2 junction2-1 car0 road4
+; 
+É 
+( 
+5 "
+ 
+(
+52f
+4move_car_out_road junction2-2 junction2-1 car1 road0
+7 
+c 
+) 
+5 "
+" 
+)
+52g
+4move_car_out_road junction2-2 junction2-1 car1 road1
+8 
+ã 
+* 
+5 "
+" 
+*
+52g
+4move_car_out_road junction2-2 junction2-1 car1 road2
+9 
+≥ 
++ 
+5 "
+" 
++
+52g
+4move_car_out_road junction2-2 junction2-1 car1 road3
+: 
+€ 
+, 
+5 "
+" 
+,
+52g
+4move_car_out_road junction2-2 junction2-1 car1 road4
+; 
+É 
+- 
+5 "
+" 
+-
+5

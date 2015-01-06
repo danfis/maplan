@@ -72,6 +72,11 @@ typedef uint32_t plan_packer_word_t;
 #define PLAN_COST_ZERO 0
 
 /**
+ * Unproperly set cost.
+ */
+#define PLAN_COST_INVALID INT_MIN
+
+/**
  * Constant saying that no state was assigned.
  */
 #define PLAN_NO_STATE ((plan_state_id_t)-1)
@@ -91,6 +96,46 @@ typedef uint32_t plan_packer_word_t;
  * Word with all bits set (i.e., 0xffff...)
  */
 #define PLAN_PACKER_WORD_SET_ALL_BITS ((plan_packer_word_t)-1)
+
+
+
+/**
+ * Status that search can (and should) continue. Mostly for internal use.
+ */
+#define PLAN_SEARCH_CONT       0
+
+/**
+ * Status signaling that a solution was found.
+ */
+#define PLAN_SEARCH_FOUND      1
+
+/**
+ * No solution was found.
+ */
+#define PLAN_SEARCH_NOT_FOUND -1
+
+/**
+ * The search process was terminate prematurely, e.g., from progress
+ * callback.
+ */
+#define PLAN_SEARCH_ABORT     -2
+
+
+/**
+ * Preferred operators are not used.
+ */
+#define PLAN_SEARCH_PREFERRED_NONE 0
+
+/**
+ * Preferred operators are preferenced over the other ones. This depends on
+ * a particular search algorithm.
+ */
+#define PLAN_SEARCH_PREFERRED_PREF 1
+
+/**
+ * Only the preferred operators are used.
+ */
+#define PLAN_SEARCH_PREFERRED_ONLY 2
 
 #ifdef __cplusplus
 } /* extern "C" */

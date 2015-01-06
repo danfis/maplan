@@ -1,3 +1,4 @@
+/*
 message PlanMAMsgPublicState {
     required int32 agent_id = 1;
     required bytes state = 2;
@@ -122,4 +123,32 @@ message PlanMAMsg {
     optional PlanMAMsgTerminateRequest terminate_request = 9;
     optional PlanMAMsgHeurMaxRequest heur_max_request = 10;
     optional PlanMAMsgHeurMaxResponse heur_max_response = 11;
+}
+*/
+
+message PlanMAMsgOp {
+    optional int32 op_id = 1;
+    optional string name = 2;
+    optional int32 cost = 3;
+    optional int32 owner = 4;
+    optional int32 value = 5;
+}
+
+
+message PlanMAMsg {
+    required int32 type = 1;
+    required int32 agent_id = 2;
+
+    optional int32 terminate_agent_id = 3;
+    optional bytes state = 4;
+    optional int32 state_id = 5;
+    optional int32 cost = 6;
+    optional int32 heur = 7;
+    optional int32 initiator_agent_id = 8;
+    repeated PlanMAMsgOp op = 9;
+    optional int64 snapshot_token = 10;
+    optional int32 snapshot_type = 11;
+    optional int32 snapshot_ack = 12;
+    repeated int32 state_full = 13;
+    optional int32 goal_op_id = 14;
 }

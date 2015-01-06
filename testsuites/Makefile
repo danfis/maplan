@@ -7,11 +7,13 @@ endif
 -include ../Makefile.local
 
 CFLAGS += -I./ -I../
-CFLAGS += -I../../boruvka
-CFLAGS += $(JANSSON_CFLAGS)
-LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -L../../boruvka -lboruvka -pthread
-LDFLAGS += $(JANSSON_LDFLAGS)
+CFLAGS += $(BORUVKA_CFLAGS)
+CFLAGS += $(PROTOBUF_CFLAGS)
+CFLAGS += $(NANOMSG_CFLAGS)
+LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -pthread
+LDFLAGS += $(BORUVKA_LDFLAGS)
 LDFLAGS += $(PROTOBUF_LDFLAGS)
+LDFLAGS += $(NANOMSG_LDFLAGS)
 LDFLAGS += -lstdc++
 
 CHECK_REG=cu/check-regressions
@@ -24,16 +26,18 @@ OBJS += state.o
 OBJS += dataarr.o
 OBJS += succgen.o
 OBJS += statespace.o
-OBJS += search_ehc.o
-OBJS += search_lazy.o
+#OBJS += search_ehc.o
+#OBJS += search_lazy.o
 OBJS += search_astar.o
 OBJS += heur.o
 OBJS += heur_ma.o
 OBJS += list_lazy.o
 OBJS += list.o
-OBJS += t_ma_comm_queue.o
+OBJS += ma_comm_nanomsg.o
 OBJS += causalgraph.o
 OBJS += state_pool.o
+OBJS += ma_search.o
+OBJS += heur_admissible.o
 
 all: $(TARGETS)
 

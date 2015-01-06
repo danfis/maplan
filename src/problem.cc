@@ -9,6 +9,9 @@
 #include "plan/causalgraph.h"
 #include "problemdef.pb.h"
 
+/** Forward declaration */
+class AgentVarVals;
+
 /** Parses protobuffer from the given file. Returns NULL on failure. */
 static PlanProblem *parseProto(const char *fn);
 /** Loads problem from protobuffer */
@@ -29,6 +32,36 @@ static void pruneUnimportantVars(plan_problem_t *oldp,
                                  const PlanProblem *proto,
                                  const int *important_var,
                                  plan_var_id_t *var_order);
+
+/** Initializes agent's problem struct from global problem struct */
+static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src);
+/** Sets owner of the operators according to the agent names */
+static void setOpOwner(plan_op_t *ops, int op_size,
+                       const plan_problem_agents_t *agents);
+/** Sets up .recv_agent bitarray of operators */
+static void setOpRecvAgent(plan_op_t *ops, int op_size,
+                           int agent_size, const AgentVarVals &vals);
+/** Sets private flag to operators */
+static void setOpPrivate(plan_op_t *ops, int op_size,
+                         const AgentVarVals &vals);
+/** Projects partial state to agent's facts */
+static void projectPartState(plan_part_state_t *ps,
+                             int agent_id,
+                             const AgentVarVals &vals);
+/** Project operator to agent's facts */
+static bool projectOp(plan_op_t *op, int agent_id, const AgentVarVals &vals);
+/** Creates projected operators in problem struct */
+static void createProjectedOps(const plan_op_t *ops, int ops_size,
+                               int agent_id, plan_problem_t *agent,
+                               const AgentVarVals &vals);
+/** Creates agent's operators array in dst problem struct */
+static void createOps(const plan_op_t *ops, int op_size,
+                      int agent_id, plan_problem_t *dst);
+/** Sets .private_vals array in problem struct and .is_private member of
+ *  var[] structures. */
+static void setPrivateVals(plan_problem_t *agent, int agent_id,
+                           const AgentVarVals &vals);
+
 
 plan_problem_t *planProblemFromProto(const char *fn, int flags)
 {
@@ -128,96 +161,6 @@ static int loadProblem(plan_problem_t *p,
 }
 
 
-static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
-{
-    int i;
-    plan_state_t *state;
-
-    planProblemInit(dst);
-
-    dst->var_size = src->var_size;
-    dst->var = BOR_ALLOC_ARR(plan_var_t, src->var_size);
-    for (i = 0; i < src->var_size; ++i){
-        planVarCopy(dst->var + i, src->var + i);
-    }
-
-    if (!src->state_pool)
-        return;
-
-    dst->state_pool = planStatePoolNew(dst->var, dst->var_size);
-
-    state = planStateNew(src->state_pool);
-    planStatePoolGetState(src->state_pool, src->initial_state, state);
-    dst->initial_state = planStatePoolInsert(dst->state_pool, state);
-    planStateDel(state);
-
-    dst->goal = planPartStateNew(dst->state_pool);
-    planPartStateCopy(dst->goal, src->goal);
-
-    dst->op_size = 0;
-    dst->op = NULL;
-    dst->succ_gen = NULL;
-}
-
-static void agentAddOperator(plan_problem_t *dst,
-                             plan_state_pool_t *state_pool,
-                             int id, const plan_op_t *op)
-{
-    planOpInit(dst->op + dst->op_size, state_pool);
-    planOpCopy(dst->op + dst->op_size, op);
-    ++dst->op_size;
-}
-
-static void agentSplitOperators(plan_problem_agents_t *agents,
-                                int *op_owner)
-{
-    const plan_problem_t *prob = &agents->glob;
-    int agent_size = agents->agent_size;
-    plan_problem_t *ap = agents->agent;
-    int i, j, inserted;
-    const plan_op_t *glob_op;
-    std::vector<std::string> name_token;
-
-    // Create name token for each agent
-    name_token.resize(agents->agent_size);
-    for (i = 0; i < agent_size; ++i){
-        name_token[i] = " ";
-        name_token[i] += ap[i].agent_name;
-    }
-
-    // Prepare agents' structures
-    for (i = 0; i < agents->agent_size; ++i){
-        ap[i].op = BOR_ALLOC_ARR(plan_op_t, prob->op_size);
-        ap[i].op_size = 0;
-    }
-
-    for (i = 0; i < prob->op_size; ++i){
-        glob_op = prob->op + i;
-
-        inserted = 0;
-        for (j = 0; j < agents->agent_size; ++j){
-            if (strstr(glob_op->name, name_token[j].c_str()) != NULL){
-                agentAddOperator(ap + j, ap[j].state_pool, i, glob_op);
-                op_owner[i] = j;
-                inserted = 1;
-            }
-        }
-
-        if (!inserted){
-            // if the operator wasn't inserted anywhere, insert it to all
-            // agents
-            for (j = 0; j < agents->agent_size; ++j){
-                agentAddOperator(ap + j, ap[j].state_pool, i, glob_op);
-            }
-            op_owner[i] = 0;
-        }
-    }
-
-    // Given back unneeded memory
-    for (i = 0; i < agents->agent_size; ++i){
-        ap[i].op = BOR_REALLOC_ARR(ap[i].op, plan_op_t, ap[i].op_size);
-    }
-}
 
 static bool sortCmpPrivateVals(const plan_problem_private_val_t &v1,
                                const plan_problem_private_val_t &v2)
@@ -247,11 +190,13 @@ struct AgentVarVal {
 };
 
 class AgentVarVals {
+    int agent_size;
     std::vector<std::vector<AgentVarVal> > val;
     std::vector<std::vector<plan_problem_private_val_t> > private_vals;
 
   public:
     AgentVarVals(const plan_problem_t *prob, int agent_size)
+        : agent_size(agent_size)
     {
         val.resize(prob->var_size);
         for (int i = 0; i < prob->var_size; ++i){
@@ -273,12 +218,34 @@ class AgentVarVals {
         val[var][value].use[agent_id] = true;
     }
 
+    void setPreUse(const plan_part_state_t *ps, int agent_id)
+    {
+        plan_var_id_t var;
+        plan_val_t val;
+        int i;
+
+        PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+            setPreUse(var, val, agent_id);
+        }
+    }
+
     /**
      * Set variable's value as used by the agent in an effect.
      */
     void setEffUse(int var, int value, int agent_id)
     {
         val[var][value].use[agent_id] = true;
+    }
+
+    void setEffUse(const plan_part_state_t *ps, int agent_id)
+    {
+        plan_var_id_t var;
+        plan_val_t val;
+        int i;
+
+        PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+            setEffUse(var, val, agent_id);
+        }
     }
 
     /**
@@ -315,6 +282,35 @@ class AgentVarVals {
         }
     }
 
+    void setUse(const plan_op_t *ops, int op_size,
+                const plan_part_state_t *goal)
+    {
+        int i, agent_id;
+        const plan_op_t *op;
+        uint64_t ownerarr;
+
+        // Set goals as public for all agents
+        for (i = 0; i < agent_size; ++i)
+            setPreUse(goal, i);
+
+        // Process operators from all agents and all its operators
+        for (i = 0; i < op_size; ++i){
+            op = ops + i;
+
+            ownerarr = op->ownerarr;
+            for (agent_id = 0; agent_id < agent_size; ++agent_id){
+                if (ownerarr & 0x1){
+                    setPreUse(op->pre, agent_id);
+                    setEffUse(op->eff, agent_id);
+                }
+
+                ownerarr >>= 1;
+            }
+        }
+
+        determinePublicVals();
+    }
+
     /**
      * Returns true if the value is used by the specified agent.
      */
@@ -340,191 +336,26 @@ class AgentVarVals {
         return val[var][value].pub;
     }
 
+    bool isPublic(const plan_part_state_t *ps) const
+    {
+        plan_var_id_t var;
+        plan_val_t val;
+        int i;
+
+        PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+            if (isPublic(var, val))
+                return true;
+        }
+
+        return false;
+    }
+
     const std::vector<plan_problem_private_val_t> &privateVals(int agent_id) const
     {
         return private_vals[agent_id];
     }
 };
 
-static void agentSetVarValUsePrePartState(AgentVarVals &vals,
-                                          const plan_part_state_t *ps,
-                                          int agent_id)
-{
-    plan_var_id_t var;
-    plan_val_t val;
-    int i;
-
-    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
-        vals.setPreUse(var, val, agent_id);
-    }
-}
-
-static void agentSetVarValUseEffPartState(AgentVarVals &vals,
-                                          const plan_part_state_t *ps,
-                                          int agent_id)
-{
-    plan_var_id_t var;
-    plan_val_t val;
-    int i;
-
-    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
-        vals.setEffUse(var, val, agent_id);
-    }
-}
-
-static void agentSetVarValUse(AgentVarVals &vals,
-                              const plan_problem_agents_t *agents)
-{
-    int i, opi;
-    const plan_problem_t *ap;
-
-    // Set goals as public for all agents
-    for (i = 0; i < agents->agent_size; ++i)
-        agentSetVarValUsePrePartState(vals, agents->glob.goal, i);
-
-    // Process operators from all agents and all its operators
-    for (i = 0; i < agents->agent_size; ++i){
-        ap = agents->agent + i;
-        for (opi = 0; opi < ap->op_size; ++opi){
-            agentSetVarValUsePrePartState(vals, ap->op[opi].pre, i);
-            agentSetVarValUseEffPartState(vals, ap->op[opi].eff, i);
-        }
-    }
-
-    vals.determinePublicVals();
-}
-
-static void agentSetSendPeers(plan_problem_t *prob,
-                              int agent_id,
-                              int agent_size,
-                              const AgentVarVals &vals)
-{
-    plan_op_t *op;
-    plan_var_id_t var;
-    plan_val_t val;
-    int i;
-
-    for (int opi = 0; opi < prob->op_size; ++opi){
-        op = prob->op + opi;
-        for (int peer = 0; peer < agent_size; ++peer){
-            if (peer == agent_id)
-                continue;
-
-            PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
-                if (vals.usedAsPre(var, val, peer)){
-                    planOpExtraMAOpAddRecvAgent(op, peer);
-                    break;
-                }
-            }
-        }
-    }
-}
-
-static bool agentIsPartStatePublic(const plan_part_state_t *ps,
-                                   const AgentVarVals &vals)
-{
-    plan_var_id_t var;
-    plan_val_t val;
-    int i;
-
-    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
-        if (vals.isPublic(var, val))
-            return true;
-    }
-
-    return false;
-}
-
-static void agentSetPrivateOps(plan_op_t *ops, int op_size,
-                               const AgentVarVals &vals)
-{
-    plan_op_t *op;
-
-    for (int opi = 0; opi < op_size; ++opi){
-        op = ops + opi;
-        if (!agentIsPartStatePublic(op->eff, vals)
-                && !agentIsPartStatePublic(op->pre, vals)){
-            planOpExtraMAOpSetPrivate(op);
-        }
-    }
-}
-
-static void agentProjectPartState(plan_part_state_t *ps,
-                                  int agent_id,
-                                  const AgentVarVals &vals)
-{
-    plan_var_id_t var;
-    plan_val_t val;
-    int i;
-    std::vector<int> unset;
-
-    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
-        if (!vals.isPublic(var, val) && !vals.used(var, val, agent_id))
-            unset.push_back(var);
-    }
-
-    for (size_t i = 0; i < unset.size(); ++i)
-        planPartStateUnset(ps, unset[i]);
-}
-
-static bool agentProjectOp(plan_op_t *op, int agent_id,
-                           const AgentVarVals &vals)
-{
-    agentProjectPartState(op->pre, agent_id, vals);
-    agentProjectPartState(op->eff, agent_id, vals);
-
-    if (op->eff->vals_size > 0 || op->pre->vals_size > 0)
-        return true;
-    return false;
-}
-
-static void agentCreateProjectedOps(plan_problem_t *agent,
-                                    int agent_id,
-                                    const plan_op_t *ops,
-                                    int ops_size,
-                                    const AgentVarVals &vals,
-                                    const int *op_owner)
-{
-    plan_op_t *proj_op;
-
-    // Allocate enough memory
-    agent->proj_op = BOR_ALLOC_ARR(plan_op_t, ops_size);
-    agent->proj_op_size = 0;
-
-    for (int opi = 0; opi < ops_size; ++opi){
-        proj_op = agent->proj_op + agent->proj_op_size;
-
-        planOpInit(proj_op, agent->state_pool);
-        planOpCopy(proj_op, ops + opi);
-
-        if (agentProjectOp(proj_op, agent_id, vals)){
-            planOpExtraMAProjOpSetOwner(proj_op, op_owner[opi]);
-            planOpExtraMAProjOpSetGlobalId(proj_op, opi);
-            ++agent->proj_op_size;
-        }else{
-            planOpFree(proj_op);
-        }
-    }
-
-    // Given back unused memory
-    agent->proj_op = BOR_REALLOC_ARR(agent->proj_op,
-                                     plan_op_t,
-                                     agent->proj_op_size);
-}
-
-static void agentPrivateVals(plan_problem_t *agent, int agent_id,
-                             const AgentVarVals &vals)
-{
-    const std::vector<plan_problem_private_val_t> &pv
-                = vals.privateVals(agent_id);
-
-    agent->private_val_size = pv.size();
-    agent->private_val = BOR_ALLOC_ARR(plan_problem_private_val_t,
-                                       agent->private_val_size);
-    for (size_t i = 0; i < pv.size(); ++i){
-        agent->private_val[i] = pv[i];
-    }
-}
 
 static void loadAgents(plan_problem_agents_t *p,
                        const PlanProblem *proto,
@@ -532,10 +363,15 @@ static void loadAgents(plan_problem_agents_t *p,
 {
     int i;
     plan_problem_t *agent;
-    int *op_owner;
 
     p->agent_size = proto->agent_name_size();
     if (p->agent_size == 0){
+        fprintf(stderr, "Problem Error: No agents defined!\n");
+        p->agent = NULL;
+        return;
+
+    }else if (p->agent_size > 64){
+        fprintf(stderr, "Problem Error: More than 64 agents defined!\n");
         p->agent = NULL;
         return;
     }
@@ -549,31 +385,34 @@ static void loadAgents(plan_problem_agents_t *p,
         agent->agent_name = strdup(proto->agent_name(i).c_str());
     }
 
-    // Split operators between agents
-    op_owner = BOR_CALLOC_ARR(int, p->glob.op_size);
-    agentSplitOperators(p, op_owner);
+    // Set owners of the operators
+    setOpOwner(p->glob.op, p->glob.op_size, p);
 
     // Determine which variable values are used by which agents' operators
-    agentSetVarValUse(var_vals, p);
+    var_vals.setUse(p->glob.op, p->glob.op_size, p->glob.goal);
+
+    // Set up receiving agents of the operators
+    setOpRecvAgent(p->glob.op, p->glob.op_size, p->agent_size, var_vals);
+
+    // Mark private operators
+    setOpPrivate(p->glob.op, p->glob.op_size, var_vals);
+
 
     for (i = 0; i < p->agent_size; ++i){
-        // Set up receiving peers of the operators
-        agentSetSendPeers(p->agent + i, i, p->agent_size, var_vals);
-        // Distinct private and public operators
-        agentSetPrivateOps(p->agent[i].op, p->agent[i].op_size,
-                           var_vals);
+        // Create operators that belong to the specified agent
+        createOps(p->glob.op, p->glob.op_size, i, p->agent + i);
 
-        agentCreateProjectedOps(p->agent + i, i,
-                                p->glob.op, p->glob.op_size, var_vals,
-                                op_owner);
+        // Create projected operators
+        createProjectedOps(p->glob.op, p->glob.op_size,
+                           i, p->agent + i, var_vals);
 
+        // Create successor generator from operators that are owned by the
+        // agent
         p->agent[i].succ_gen = planSuccGenNew(p->agent[i].op,
                                               p->agent[i].op_size, NULL);
 
-        agentPrivateVals(p->agent + i, i, var_vals);
+        setPrivateVals(p->agent + i, i, var_vals);
     }
-
-    BOR_FREE(op_owner);
 }
 
 static void loadVar(plan_problem_t *p, const PlanProblem *proto,
@@ -603,8 +442,7 @@ static void loadVar(plan_problem_t *p, const PlanProblem *proto,
             var = p->var + i;
         }
 
-        var->name = strdup(proto_var.name().c_str());
-        var->range = proto_var.range();
+        planVarInit(var, proto_var.name().c_str(), proto_var.range());
     }
 }
 
@@ -658,6 +496,7 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
         planOpInit(op, p->state_pool);
         op->name = strdup(proto_op.name().c_str());
         op->cost = proto_op.cost();
+        op->global_id = ins;
 
         const PlanProblemPartState &proto_pre = proto_op.pre();
         for (int j = 0; j < proto_pre.val_size(); ++j){
@@ -781,4 +620,210 @@ static void pruneUnimportantVars(plan_problem_t *p,
 
     planProblemFree(p);
     loadProtoProblem(p, proto, var_map, var_size);
+}
+
+static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
+{
+    int i;
+    plan_state_t *state;
+
+    planProblemInit(dst);
+
+    dst->var_size = src->var_size;
+    dst->var = BOR_ALLOC_ARR(plan_var_t, src->var_size);
+    for (i = 0; i < src->var_size; ++i){
+        planVarCopy(dst->var + i, src->var + i);
+    }
+
+    if (!src->state_pool)
+        return;
+
+    dst->state_pool = planStatePoolNew(dst->var, dst->var_size);
+
+    state = planStateNew(src->state_pool);
+    planStatePoolGetState(src->state_pool, src->initial_state, state);
+    dst->initial_state = planStatePoolInsert(dst->state_pool, state);
+    planStateDel(state);
+
+    dst->goal = planPartStateNew(dst->state_pool);
+    planPartStateCopy(dst->goal, src->goal);
+
+    dst->op_size = 0;
+    dst->op = NULL;
+    dst->succ_gen = NULL;
+    dst->agent_name = NULL;
+    dst->proj_op = NULL;
+    dst->proj_op_size = 0;
+    dst->private_val = NULL;
+    dst->private_val_size = 0;
+}
+
+static void setOpOwner(plan_op_t *ops, int op_size,
+                       const plan_problem_agents_t *agents)
+{
+    int i, j;
+    plan_op_t *op;
+    std::vector<std::string> name_token;
+
+    // Create name token for each agent
+    name_token.resize(agents->agent_size);
+    for (i = 0; i < agents->agent_size; ++i){
+        name_token[i] = " ";
+        name_token[i] += agents->agent[i].agent_name;
+    }
+
+    for (i = 0; i < op_size; ++i){
+        op = ops + i;
+
+        for (j = 0; j < agents->agent_size; ++j){
+            if (strstr(op->name, name_token[j].c_str()) != NULL){
+                planOpAddOwner(op, j);
+            }
+        }
+
+        if (op->ownerarr == 0){
+            // if the operator wasn't inserted anywhere, insert it to all
+            // agents
+            for (j = 0; j < agents->agent_size; ++j){
+                planOpAddOwner(op, j);
+            }
+        }
+    }
+}
+
+static void setOpRecvAgent(plan_op_t *ops, int op_size,
+                           int agent_size, const AgentVarVals &vals)
+{
+    plan_op_t *op;
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+
+    for (int opi = 0; opi < op_size; ++opi){
+        op = ops + opi;
+
+        for (int peer = 0; peer < agent_size; ++peer){
+            PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
+                if (vals.isPublic(var, val) && vals.usedAsPre(var, val, peer)){
+                    planOpAddRecvAgent(op, peer);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+static void setOpPrivate(plan_op_t *ops, int op_size,
+                         const AgentVarVals &vals)
+{
+    plan_op_t *op;
+
+    for (int opi = 0; opi < op_size; ++opi){
+        op = ops + opi;
+        if (!vals.isPublic(op->eff) && !vals.isPublic(op->pre)){
+            op->is_private = 1;
+        }
+    }
+}
+
+static void projectPartState(plan_part_state_t *ps,
+                             int agent_id,
+                             const AgentVarVals &vals)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+    std::vector<int> unset;
+
+    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+        if (!vals.isPublic(var, val) && !vals.used(var, val, agent_id))
+            unset.push_back(var);
+    }
+
+    for (size_t i = 0; i < unset.size(); ++i)
+        planPartStateUnset(ps, unset[i]);
+}
+
+static bool projectOp(plan_op_t *op, int agent_id, const AgentVarVals &vals)
+{
+    projectPartState(op->pre, agent_id, vals);
+    projectPartState(op->eff, agent_id, vals);
+
+    if (op->eff->vals_size > 0 || op->pre->vals_size > 0)
+        return true;
+    return false;
+}
+
+static void createProjectedOps(const plan_op_t *ops, int ops_size,
+                               int agent_id, plan_problem_t *agent,
+                               const AgentVarVals &vals)
+{
+    plan_op_t *proj_op;
+
+    // Allocate enough memory
+    agent->proj_op = BOR_ALLOC_ARR(plan_op_t, ops_size);
+    agent->proj_op_size = 0;
+
+    for (int opi = 0; opi < ops_size; ++opi){
+        if (ops[opi].ownerarr == 0)
+            continue;
+
+        proj_op = agent->proj_op + agent->proj_op_size;
+
+        planOpInit(proj_op, agent->state_pool);
+        planOpCopy(proj_op, ops + opi);
+
+        if (projectOp(proj_op, agent_id, vals)){
+            if (planOpIsOwner(proj_op, agent_id)){
+                proj_op->owner = agent_id;
+            }else{
+                planOpSetFirstOwner(proj_op);
+            }
+            ++agent->proj_op_size;
+        }else{
+            planOpFree(proj_op);
+        }
+    }
+
+    // Given back unused memory
+    agent->proj_op = BOR_REALLOC_ARR(agent->proj_op, plan_op_t,
+                                     agent->proj_op_size);
+}
+
+static void createOps(const plan_op_t *ops, int op_size,
+                      int agent_id, plan_problem_t *dst)
+{
+    int i;
+    const plan_op_t *op;
+
+    dst->op = BOR_ALLOC_ARR(plan_op_t, op_size);
+    dst->op_size = 0;
+
+    for (i = 0; i < op_size; ++i){
+        op = ops + i;
+        if (planOpIsOwner(op, agent_id)){
+            planOpInit(dst->op + dst->op_size, dst->state_pool);
+            planOpCopy(dst->op + dst->op_size, op);
+            dst->op[dst->op_size].owner = agent_id;
+            planOpDelRecvAgent(dst->op + dst->op_size, agent_id);
+            ++dst->op_size;
+        }
+    }
+
+    dst->op = BOR_REALLOC_ARR(dst->op, plan_op_t, dst->op_size);
+}
+
+static void setPrivateVals(plan_problem_t *agent, int agent_id,
+                           const AgentVarVals &vals)
+{
+    const std::vector<plan_problem_private_val_t> &pv
+                = vals.privateVals(agent_id);
+
+    agent->private_val_size = pv.size();
+    agent->private_val = BOR_ALLOC_ARR(plan_problem_private_val_t,
+                                       agent->private_val_size);
+    for (size_t i = 0; i < pv.size(); ++i){
+        agent->private_val[i] = pv[i];
+        agent->var[pv[i].var].is_private[pv[i].val] = 1;
+    }
 }

@@ -16,26 +16,28 @@
 -include Makefile.local
 -include Makefile.include
 
-CFLAGS += -I. -I../boruvka/
-CFLAGS += $(ZMQ_CFLAGS)
-CXXFLAGS += -I. -I../boruvka/
+CFLAGS += -I.
+CFLAGS += $(BORUVKA_CFLAGS)
+CFLAGS += $(NANOMSG_CFLAGS)
+CXXFLAGS += -I.
+CXXFLAGS += $(BORUVKA_CFLAGS)
 CXXFLAGS += $(PROTOBUF_CFLAGS)
 CXXFLAGS += -Wno-long-long
-LDFLAGS += -L. -lplan -L../boruvka -lboruvka -lm -lrt
-LDFLAGS += $(PROTOBUF_LDFLAGS)
-LDFLAGS += $(ZMQ_LDFLAGS)
 
 TARGETS  = libplan.a
 
 OBJS  = problem
-OBJS += problem-fd
 OBJS += var
 OBJS += state
 OBJS += op
+OBJS += op_id_tr
 OBJS += dataarr
 OBJS += succgen
+OBJS += causalgraph
 OBJS += path
 OBJS += statespace
+OBJS += prioqueue
+OBJS += fact_id
 OBJS += list_lazy
 OBJS += list_lazy_fifo
 OBJS += list_lazy_heap
@@ -45,27 +47,25 @@ OBJS += list_lazy_splaytree
 OBJS += list
 OBJS += list_tiebreaking
 OBJS += search
+OBJS += search_applicable_ops
+OBJS += search_stat
+OBJS += search_lazy_base
 OBJS += search_ehc
 OBJS += search_lazy
 OBJS += search_astar
 OBJS += heur
+OBJS += fact_op_cross_ref
+OBJS += pref_op_selector
+OBJS += heur_relax
 OBJS += heur_goalcount
-OBJS += heur_relax_add
-OBJS += heur_relax_max
+OBJS += heur_relax_add_max
 OBJS += heur_relax_ff
+OBJS += heur_lm_cut
 OBJS += heur_ma_ff
 OBJS += heur_ma_max
-OBJS += heur_lm_cut
-OBJS += prioqueue
-OBJS += ma_comm
-OBJS += ma_comm_queue
-ifeq '$(USE_ZMQ)' 'yes'
-  OBJS += ma_comm_net
-endif
-OBJS += ma
-OBJS += causalgraph
-OBJS += _problem
-OBJS += fact_id
+OBJS += ma_comm_nanomsg
+OBJS += ma_search
+OBJS += ma_snapshot
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg
@@ -87,12 +87,9 @@ plan/config.h: plan/config.h.m4
 src/%.pb.h src/%.pb.cc: src/%.proto
 	cd src && $(PROTOC) --cpp_out=. $(notdir $<)
 
-.objs/heur_relax_%.o: src/heur_relax_%.c src/_heur_fact_op.c src/_heur_relax.c \
-		src/_heur_relax_impl.c plan/heur.h plan/config.h
+.objs/heur_relax.o: src/heur_relax.c src/heur_relax.h src/_heur_relax_explore.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
-.objs/heur_ma_ff.o: src/heur_ma_ff.c src/_heur_fact_op.c src/_heur_relax.c plan/heur.h plan/config.h
-	$(CC) $(CFLAGS) -c -o $@ $<
-.objs/heur_ma_max.o: src/heur_ma_max.c src/_heur_fact_op.c src/_heur_relax.c plan/heur.h plan/config.h
+.objs/%.o: src/%.c src/%.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 .objs/%.o: src/%.c plan/%.h plan/config.h
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -100,9 +97,13 @@ src/%.pb.h src/%.pb.cc: src/%.proto
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 .objs/ma_msg.cxx.o: src/ma_msg.cc plan/ma_msg.h src/ma_msg.pb.h plan/config.h
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
+.objs/ma_msg.pb.cxx.o: src/ma_msg.pb.cc src/ma_msg.pb.h
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
 .objs/problem.cxx.o: src/problem.cc plan/problem.h src/problemdef.pb.h plan/config.h
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
+.objs/problemdef.pb.cxx.o: src/problemdef.pb.cc src/problemdef.pb.h
+	$(CXX) $(CXXFLAGS) -Wno-pedantic -c -o $@ $<
 .objs/%.cxx.o: src/%.cc plan/%.h plan/config.h
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 .objs/%.cxx.o: src/%.cc plan/config.h
@@ -137,6 +138,40 @@ doc:
 analyze: clean
 	$(SCAN_BUILD) $(MAKE)
 
+submodule:
+	git submodule init
+	git submodule update
+
+third-party: submodule
+	$(MAKE) -C third-party/translate
+	$(MAKE) -C third-party/boruvka
+	$(MAKE) -C third-party/opts
+	cd third-party/nanomsg \
+		&& if test ! -f build/lib/libnanomsg.a; then \
+				./autogen.sh \
+					&& ./configure --enable-static --disable-shared --prefix=`pwd`/build \
+					&& make \
+					&& make install; \
+		fi;
+	cd third-party/protobuf \
+		&& if test ! -f build/lib/libprotobuf.a; then \
+				./autogen.sh \
+					&& ./configure --enable-static --disable-shared --prefix=`pwd`/build \
+					&& make \
+					&& make install; \
+		fi;
+	$(MAKE) -C third-party/VAL
+
+third-party-clean:
+	$(MAKE) -C third-party/translate clean
+	$(MAKE) -C third-party/boruvka clean
+	$(MAKE) -C third-party/opts clean
+	$(MAKE) -C third-party/nanomsg clean
+	rm -rf third-party/nanomsg/build
+	$(MAKE) -C third-party/protobuf clean
+	rm -rf third-party/protobuf/build
+	$(MAKE) -C third-party/VAL clean
+
 help:
 	@echo "Targets:"
 	@echo "    all            - Build library"
@@ -145,7 +180,10 @@ help:
 	@echo "    check-valgrind - Build & Run automated tests in valgrind(1)"
 	@echo "    check-segfault - Build & Run automated tests in valgrind(1) set up to detect only segfaults"
 	@echo "    clean          - Remove all generated files"
-	@echo "    analyze        - Performs static analysis using Clang Static Analyzer"
+	@echo "    analyze        - Perform static analysis using Clang Static Analyzer"
+	@echo "    submodule      - Fetch all submodules using git."
+	@echo "    third-party    - Build all third-party projects."
+	@echo "    third-party-clean - Clean all third-party projects."
 	@echo ""
 	@echo "Options:"
 	@echo "    CC         - Path to C compiler          (=$(CC))"
@@ -158,7 +196,7 @@ help:
 	@echo "    DEBUG      'yes'/'no' - Turn on/off debugging   (=$(DEBUG))"
 	@echo "    PROFIL     'yes'/'no' - Compiles profiling info (=$(PROFIL))"
 	@echo ""
-	@echo "    USE_ZMQ  'yes'/'no'  - Use libzmq library (=$(USE_ZMQ))"
+	@echo "    USE_NANOMSG 'yes'/'no'  - Use libnanomsg library (=$(USE_NANOMSG))"
 	@echo ""
 	@echo "Variables:"
 	@echo "  Note that most of can be preset or changed by user"
@@ -167,9 +205,17 @@ help:
 	@echo "    CXXFLAGS          = $(CXXFLAGS)"
 	@echo "    LDFLAGS           = $(LDFLAGS)"
 	@echo "    CONFIG_FLAGS      = $(CONFIG_FLAGS)"
+	@echo "    USE_LOCAL_OPTS    = $(USE_LOCAL_OPTS)"
+	@echo "    OPTS_CFLAGS       = $(OPTS_CFLAGS)"
+	@echo "    OPTS_LDFLAGS      = $(OPTS_LDFLAGS)"
+	@echo "    USE_LOCAL_BORUVKA = $(USE_LOCAL_BORUVKA)"
+	@echo "    BORUVKA_CFLAGS    = $(BORUVKA_CFLAGS)"
+	@echo "    BORUVKA_LDFLAGS   = $(BORUVKA_LDFLAGS)"
+	@echo "    USE_LOCAL_PROTOBUF = $(USE_LOCAL_PROTOBUF)"
 	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
-	@echo "    ZMQ_CFLAGS        = $(ZMQ_CFLAGS)"
-	@echo "    ZMQ_LDFLAGS       = $(ZMQ_LDFLAGS)"
+	@echo "    USE_LOCAL_NANOMSG = $(USE_LOCAL_NANOMSG)"
+	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"
+	@echo "    NANOMSG_LDFLAGS   = $(NANOMSG_LDFLAGS)"
 
-.PHONY: all clean check check-valgrind help doc install analyze examples
+.PHONY: all clean check check-valgrind help doc install analyze examples submodule third-party

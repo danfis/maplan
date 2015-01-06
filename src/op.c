@@ -20,6 +20,8 @@ void planOpInit(plan_op_t *op, plan_state_pool_t *state_pool)
     op->pre = planPartStateNew(state_pool);
     op->eff = planPartStateNew(state_pool);
     op->cost = PLAN_COST_ZERO;
+
+    op->owner = -1;
 }
 
 void planOpFree(plan_op_t *op)
@@ -58,6 +60,41 @@ void planOpCopy(plan_op_t *dst, const plan_op_t *src)
 
     dst->cost = src->cost;
     dst->name = strdup(src->name);
+
+    dst->global_id  = src->global_id;
+    dst->owner      = src->owner;
+    dst->ownerarr   = src->ownerarr;
+    dst->is_private = src->is_private;
+    dst->recv_agent = src->recv_agent;
+}
+
+static void unsetNonPrivate(plan_part_state_t *dst,
+                            const plan_part_state_t *src,
+                            const plan_var_t *var)
+{
+    int i;
+    plan_var_id_t varid;
+    plan_val_t val;
+
+    PLAN_PART_STATE_FOR_EACH(src, i, varid, val){
+        if (!var[varid].is_private[val])
+            planPartStateUnset(dst, varid);
+    }
+}
+
+void planOpCopyPrivate(plan_op_t *dst, const plan_op_t *src,
+                       const plan_var_t *var)
+{
+    int i;
+
+    planOpCopy(dst, src);
+    unsetNonPrivate(dst->pre, src->pre, var);
+    unsetNonPrivate(dst->eff, src->eff, var);
+
+    for (i = 0; i < dst->cond_eff_size; ++i){
+        unsetNonPrivate(dst->cond_eff[i].pre, src->cond_eff[i].pre, var);
+        unsetNonPrivate(dst->cond_eff[i].eff, src->cond_eff[i].eff, var);
+    }
 }
 
 static void planOpCondEffInit(plan_op_cond_eff_t *ceff,
@@ -188,18 +225,42 @@ plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id)
     }
 }
 
-void planOpExtraMAOpAddRecvAgent(plan_op_t *op, int agent_id)
+void planOpAddRecvAgent(plan_op_t *op, int agent_id)
 {
-    ++op->extra.ma_op.recv_agent_size;
-    op->extra.ma_op.recv_agent = BOR_REALLOC_ARR(op->extra.ma_op.recv_agent, int,
-                                                 op->extra.ma_op.recv_agent_size);
-    op->extra.ma_op.recv_agent[op->extra.ma_op.recv_agent_size - 1] = agent_id;
+    uint64_t recv = 1 << agent_id;
+    op->recv_agent |= recv;
 }
 
-void planOpExtraMAOpFree(plan_op_t *op)
+void planOpDelRecvAgent(plan_op_t *op, int agent_id)
 {
-    if (op->extra.ma_op.recv_agent)
-        BOR_FREE(op->extra.ma_op.recv_agent);
+    uint64_t recv = 1 << agent_id;
+    op->recv_agent &= ~recv;
+}
+
+void planOpAddOwner(plan_op_t *op, int agent_id)
+{
+    uint64_t ow = 1 << agent_id;
+    op->ownerarr |= ow;
+}
+
+int planOpIsOwner(const plan_op_t *op, int agent_id)
+{
+    uint64_t ow = 1 << agent_id;
+    return (op->ownerarr & ow);
+}
+
+void planOpSetFirstOwner(plan_op_t *op)
+{
+    uint64_t ow = op->ownerarr;
+    int i;
+
+    for (i = 0; i < 64; ++i){
+        if (ow & 0x1){
+            op->owner = i;
+            break;
+        }
+        ow >>= 1;
+    }
 }
 
 static void planOpCondEffFree(plan_op_cond_eff_t *ceff)

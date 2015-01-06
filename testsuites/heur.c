@@ -1,343 +1,48 @@
+#include <time.h>
+#include <stdlib.h>
 #include <cu/cu.h>
+#include <boruvka/alloc.h>
 #include "plan/problem.h"
 #include "plan/heur.h"
 #include "state_pool.h"
-
-#define RELAX_TEST_STATE_SIZE 9
-struct _relax_test_t {
-    plan_val_t state[RELAX_TEST_STATE_SIZE];
-    plan_cost_t heur;
-    int pref_size;
-    const char **pref_op;
-};
-typedef struct _relax_test_t relax_test_t;
-
-static const char *relax_op_unstack_b_c[] = { "unstack b c", NULL };
-static const char *relax_op_putdown_b[] = { "put-down b", NULL };
-static const char *relax_op_3[] = 
-    { "pick-up a", "unstack c d", "unstack d b", NULL };
-static relax_test_t relax_test_add[] = {
-    { { 2, 0, 1, 1, 1, 0, 3, 1, 4 }, 10, 1, relax_op_unstack_b_c },
-    { { 0, 1, 1, 0, 1, 1, 3, 1, 4 }, 13, 1, relax_op_putdown_b },
-    { { 4, 0, 1, 0, 1, 0, 3, 1, 4 }, 7, -1, NULL },
-    { { 4, 0, 0, 1, 1, 1, 3, 0, 4 }, 10, -1, NULL },
-    { { 4, 1, 0, 0, 1, 0, 3, 2, 4 }, 8, -1, NULL },
-    { { 3, 1, 1, 1, 0, 0, 4, 3, 2 }, PLAN_HEUR_DEAD_END, 0, NULL },
-    { { 0, 0, 0, 0, 0, 0, 4, 3, 2 }, 6, 3, relax_op_3 }
-};
-static int relax_test_add_size = sizeof(relax_test_add) / sizeof(relax_test_t);
-
-static relax_test_t relax_test_max[] = {
-    { { 2, 0, 1, 1, 1, 0, 3, 1, 4 }, 5, 1, relax_op_unstack_b_c },
-    { { 0, 1, 1, 0, 1, 1, 3, 1, 4 }, 5, 1, relax_op_putdown_b },
-    { { 4, 0, 1, 0, 1, 0, 3, 1, 4 }, 4, -1, NULL },
-    { { 4, 0, 0, 1, 1, 1, 3, 0, 4 }, 4, -1, NULL },
-    { { 4, 1, 0, 0, 1, 0, 3, 2, 4 }, 3, -1, NULL },
-    { { 3, 1, 1, 1, 0, 0, 4, 3, 2 }, PLAN_HEUR_DEAD_END, 0, NULL },
-    { { 0, 0, 0, 0, 0, 0, 4, 3, 2 }, 2, 3, relax_op_3 }
-};
-static int relax_test_max_size = sizeof(relax_test_max) / sizeof(relax_test_t);
-
-static relax_test_t relax_test_ff[] = {
-    { { 2, 0, 1, 1, 1, 0, 3, 1, 4 }, 6, 1, relax_op_unstack_b_c },
-    { { 0, 1, 1, 0, 1, 1, 3, 1, 4 }, 6, 1, relax_op_putdown_b },
-    { { 4, 0, 1, 0, 1, 0, 3, 1, 4 }, 5, -1, NULL },
-    { { 4, 0, 0, 1, 1, 1, 3, 0, 4 }, 6, -1, NULL },
-    { { 4, 1, 0, 0, 1, 0, 3, 2, 4 }, 6, -1, NULL },
-    { { 3, 1, 1, 1, 0, 0, 4, 3, 2 }, PLAN_HEUR_DEAD_END, 0, NULL },
-    { { 0, 0, 0, 0, 0, 0, 4, 3, 2 }, 6, 3, relax_op_3 }
-};
-static int relax_test_ff_size = sizeof(relax_test_ff) / sizeof(relax_test_t);
+#include "../src/heur_relax.h"
 
 
-typedef plan_heur_t *(*heur_new_fn)(const plan_var_t *var, int var_size,
-                                    const plan_part_state_t *goal,
-                                    const plan_op_t *op, int op_size,
-                                    const plan_succ_gen_t *succ_gen);
-
-static void testRelax(const char *fn, heur_new_fn new_fn,
-                      relax_test_t *relax_test, int relax_test_size)
+static plan_heur_t *goalCountNew(plan_problem_t *p)
 {
-    plan_problem_t *p;
-    plan_heur_t *heur;
-    plan_state_t *state;
-    plan_op_t **op;
-    plan_heur_res_t res;
-    int op_size, i, j;
-    const char **op_name;
-
-    p = planProblemFromFD(fn);
-    heur = new_fn(p->var, p->var_size, p->goal,
-                  p->op, p->op_size, p->succ_gen);
-    state = planStateNew(p->state_pool);
-
-    op = alloca(sizeof(plan_op_t *) * p->op_size);
-    for (i = 0; i < relax_test_size; ++i){
-        for (j = 0; j < RELAX_TEST_STATE_SIZE; ++j){
-            planStateSet(state, j, relax_test[i].state[j]);
-        }
-
-        planHeurResInit(&res);
-        if (relax_test[i].pref_size >= 0){
-            op_size = planSuccGenFind(p->succ_gen, state, op, p->op_size);
-            res.pref_op = op;
-            res.pref_op_size = op_size;
-        }
-        planHeur(heur, state, &res);
-
-        assertEquals(res.heur, relax_test[i].heur);
-        if (res.heur != relax_test[i].heur){
-            fprintf(stderr, "Err: %d\n", i);
-        }
-
-        if (relax_test[i].pref_size >= 0){
-            assertEquals(res.pref_size, relax_test[i].pref_size);
-
-            if (relax_test[i].pref_op != NULL){
-                op_name = relax_test[i].pref_op;
-                for (j = 0; *op_name != NULL; ++op_name, ++j){
-                    assertEquals(strcmp(res.pref_op[j]->name, *op_name), 0);
-                }
-            }
-        }else{
-            assertEquals(res.pref_size, 0);
-        }
-    }
-
-    planStateDel(state);
-    planHeurDel(heur);
-    planProblemDel(p);
+    return planHeurGoalCountNew(p->goal);
 }
 
-#if 0
-struct _heur2_test_t {
-    plan_val_t state[38];
-};
-typedef struct _heur2_test_t heur2_test_t;
-
-heur2_test_t heur2_test[] = {
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 0, 2, 1, 1, 1, 2, 1, 1, 1, 1, 0
-        , 1, 1, 1, 0, 0, 0, 0, 0, 16, 14, 5, 6, 8, 7, 15, 11, 12, 10 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 2, 1, 1, 1, 0, 1
-        , 1, 1, 1, 0, 0, 1, 0, 0, 16, 14, 5, 6, 2, 7, 15, 11, 12, 10 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 3, 2, 1, 1, 1, 0, 1
-        , 1, 1, 0, 1, 0, 1, 1, 0, 16, 14, 5, 6, 2, 7, 15, 11, 3, 10 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 2, 7, 15, 11, 12, 4 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 0, 2, 1, 1, 1, 3, 1, 1, 1, 1, 0
-        , 0, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 8, 7, 15, 11, 12, 4 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 3, 3, 1, 1, 1, 0, 1
-        , 0, 1, 0, 1, 1, 1, 1, 1, 16, 14, 5, 6, 2, 7, 15, 11, 3, 4 } },
-    { { 1, 1, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 2, 7, 15, 11, 12, 4 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 2, 7, 15, 11, 12, 4 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 0, 7, 15, 11, 12, 4 } },
-    { { 0, 0, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 2, 7, 15, 11, 12, 4 } },
-    { { 2, 0, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 2, 7, 15, 11, 12, 4 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 0, 2, 1, 1, 1, 3, 1, 1, 1, 1, 0
-        , 0, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 8, 7, 15, 11, 12, 4 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 2, 1, 1, 1, 0, 1
-        , 1, 1, 1, 0, 0, 1, 0, 0, 16, 14, 5, 6, 2, 7, 15, 11, 12, 10 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 3, 3, 1, 1, 1, 0, 1
-        , 0, 1, 0, 1, 1, 1, 1, 1, 16, 14, 5, 6, 2, 7, 15, 11, 3, 4 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 6, 2, 7, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 0, 2, 1, 1, 1, 3, 1, 1, 1, 1, 0
-        , 0, 1, 1, 0, 1, 0, 0, 0, 16, 14, 5, 6, 8, 7, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 2, 4, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 3, 3, 1, 1, 1, 0, 1
-        , 0, 1, 0, 1, 1, 1, 1, 0, 16, 14, 5, 6, 2, 7, 15, 11, 3, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 6, 2, 7, 15, 11, 12, 0 } },
-    { { 1, 1, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 6, 2, 7, 15, 11, 12, 0 } },
-    { { 0, 2, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 6, 2, 7, 15, 11, 12, 0 } },
-    { { 2, 2, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 6, 2, 7, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 0, 3, 1, 1, 1, 3, 1, 1, 0, 1, 0
-        , 1, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 8, 4, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 3, 3, 1, 1, 0, 0, 1
-        , 1, 1, 0, 1, 1, 1, 1, 1, 16, 14, 5, 6, 2, 4, 15, 11, 3, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 2, 4, 15, 11, 12, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 0, 3, 1, 1, 1, 3, 1, 1, 0, 1, 0
-        , 1, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 8, 4, 15, 11, 12, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 3, 3, 1, 1, 0, 0, 1
-        , 1, 1, 0, 1, 1, 1, 1, 1, 16, 14, 5, 6, 2, 4, 15, 11, 3, 0 } },
-    { { 1, 1, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 2, 4, 15, 11, 12, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 0, 4, 15, 11, 12, 0 } },
-    { { 0, 0, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 2, 4, 15, 11, 12, 0 } },
-    { { 2, 0, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 2, 4, 15, 11, 12, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 2, 1, 1, 1, 3, 1, 1, 1, 0, 1
-        , 0, 1, 1, 0, 1, 0, 0, 0, 16, 14, 5, 6, 0, 7, 15, 11, 12, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 0, 4, 15, 11, 12, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 3, 3, 1, 1, 0, 0, 1
-        , 1, 1, 0, 1, 1, 0, 1, 1, 16, 14, 5, 6, 0, 4, 15, 11, 3, 0 } },
-    { { 1, 1, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 0, 4, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 0, 4, 15, 11, 12, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 6, 0, 4, 15, 11, 12, 2 } },
-    { { 0, 0, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 0, 4, 15, 11, 12, 0 } },
-    { { 2, 0, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 0, 4, 15, 11, 12, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 3, 3, 2, 1, 1, 1, 3, 1, 0, 1, 1, 1
-        , 0, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 2, 0, 7, 15, 11, 12, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 3, 3, 1, 0, 0, 1, 1
-        , 1, 1, 0, 1, 1, 1, 1, 1, 16, 14, 5, 2, 0, 4, 15, 11, 3, 0 } },
-    { { 1, 1, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 0, 4, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 0, 4, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 3, 3, 2, 1, 1, 1, 3, 1, 0, 1, 1, 1
-        , 0, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 2, 0, 7, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 3, 3, 1, 0, 0, 1, 1
-        , 1, 1, 0, 1, 1, 1, 1, 1, 16, 14, 5, 2, 0, 4, 15, 11, 3, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 2, 0, 0, 15, 11, 12, 0 } },
-    { { 0, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 0, 4, 15, 11, 12, 0 } },
-    { { 2, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 0, 4, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 0, 0, 0, 16, 14, 5, 6, 0, 0, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 3, 3, 3, 3, 1, 1, 1, 3, 0, 0, 1, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 4, 2, 0, 0, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 3, 3, 1, 0, 0, 1, 1
-        , 1, 1, 0, 1, 1, 1, 1, 0, 16, 14, 5, 2, 0, 0, 15, 11, 3, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 2, 0, 0, 15, 11, 12, 0 } },
-    { { 1, 1, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 2, 0, 0, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 4, 0, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 4, 0, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 3, 2, 3, 1, 1, 1, 3, 1, 0, 1, 1, 0
-        , 1, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 2, 7, 0, 15, 11, 12, 0 } },
-    { { 1, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 3, 3, 1, 0, 0, 1, 1
-        , 1, 1, 0, 1, 1, 1, 1, 1, 16, 14, 5, 2, 4, 0, 15, 11, 3, 0 } },
-    { { 1, 0, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 4, 0, 15, 11, 12, 0 } },
-    { { 1, 1, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 4, 0, 15, 11, 12, 0 } },
-    { { 0, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 4, 0, 15, 11, 12, 0 } },
-    { { 2, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 4, 0, 15, 11, 12, 0 } },
-    { { 2, 2, 1, 1, 1, 2, 0, 2, 0, 3, 3, 1, 1, 1, 3, 1, 1, 0, 0, 1
-        , 1, 1, 1, 0, 1, 0, 0, 1, 16, 14, 5, 6, 4, 0, 15, 11, 12, 0 } },
-    { { 2, 2, 1, 1, 1, 2, 0, 2, 3, 2, 3, 1, 1, 1, 3, 1, 0, 1, 1, 0
-        , 1, 1, 1, 0, 1, 1, 0, 0, 16, 14, 5, 2, 7, 0, 15, 11, 12, 0 } },
-    { { 2, 2, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 3, 3, 1, 0, 0, 1, 1
-        , 1, 1, 0, 1, 1, 1, 1, 1, 16, 14, 5, 2, 4, 0, 15, 11, 3, 0 } },
-    { { 2, 0, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 4, 0, 15, 11, 12, 0 } },
-    { { 2, 1, 1, 1, 1, 2, 0, 2, 3, 3, 3, 1, 1, 1, 3, 1, 0, 0, 1, 1
-        , 1, 1, 1, 0, 1, 1, 0, 1, 16, 14, 5, 2, 4, 0, 15, 11, 12, 0 } }
-};
-int heur2_test_len = sizeof(heur2_test) / sizeof(heur2_test_t);
-
-static void testHeur2(heur_new_fn new_fn)
+static plan_heur_t *addNew(plan_problem_t *p)
 {
-    plan_problem_t *p;
-    plan_heur_t *heur;
-    plan_state_t *state;
-    plan_heur_res_t res;
-    int i, j, op_size;
-    plan_cost_t *hval;
-    plan_cost_t *hval2;
-
-    p = planProblemFromFD("../data/ma-benchmarks/depot/pfile5.sas");
-    state = planStateNew(p->state_pool);
-
-    op_size = BOR_MIN(p->op_size, 200);
-    hval  = alloca(sizeof(plan_cost_t) * op_size);
-    hval2 = alloca(sizeof(plan_cost_t) * op_size);
-
-    for (i = 0; i < heur2_test_len; ++i){
-        for (j = 0; j < 38; ++j)
-            planStateSet(state, j, heur2_test[i].state[j]);
-
-        heur = new_fn(p->var, p->var_size, p->goal,
-                      p->op, p->op_size, p->succ_gen);
-        for (j = 0; j < op_size; ++j){
-            planHeurResInit(&res);
-            planHeur2(heur, state, p->op[j].pre, &res);
-            hval2[j] = res.heur;
-        }
-        planHeurDel(heur);
-
-        for (j = 0; j < op_size; ++j){
-            heur = new_fn(p->var, p->var_size, p->op[j].pre,
-                          p->op, p->op_size, p->succ_gen);
-            planHeurResInit(&res);
-            planHeur(heur, state, &res);
-            hval[j] = res.heur;
-            planHeurDel(heur);
-        }
-
-        for (j = 0; j < op_size; ++j){
-            assertEquals(hval[j], hval2[j]);
-        }
-
-        break;
-    }
-
-    planStateDel(state);
-    planProblemDel(p);
-}
-#endif
-
-static plan_heur_t *goalCountNew(const plan_var_t *var, int var_size,
-                                 const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size,
-                                 const plan_succ_gen_t *succ_gen)
-{
-    return planHeurGoalCountNew(goal);
+    return planHeurRelaxAddNew(p->var, p->var_size, p->goal,
+                               p->op, p->op_size);
 }
 
-
-TEST(testHeurGoalCount)
+static plan_heur_t *maxNew(plan_problem_t *p)
 {
-    //testHeur2(goalCountNew);
+    return planHeurRelaxMaxNew(p->var, p->var_size, p->goal,
+                               p->op, p->op_size);
 }
 
-TEST(testHeurRelaxAdd)
+static plan_heur_t *ffNew(plan_problem_t *p)
 {
-    testRelax("load-from-file.in1.sas", planHeurRelaxAddNew,
-              relax_test_add, relax_test_add_size);
-    //testHeur2(planHeurRelaxAddNew);
+    return planHeurRelaxFFNew(p->var, p->var_size, p->goal,
+                              p->op, p->op_size);
 }
 
-TEST(testHeurRelaxMax)
+static plan_heur_t *lmCutNew(plan_problem_t *p)
 {
-    testRelax("load-from-file.in1.sas", planHeurRelaxMaxNew,
-              relax_test_max, relax_test_max_size);
-    //testHeur2(planHeurRelaxMaxNew);
+    return planHeurLMCutNew(p->var, p->var_size, p->goal,
+                            p->op, p->op_size);
 }
 
-TEST(testHeurRelaxFF)
-{
-    testRelax("load-from-file.in1.sas", planHeurRelaxFFNew,
-              relax_test_ff, relax_test_ff_size);
-    //testHeur2(planHeurRelaxFFNew);
-}
+typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);
 
-static void runTestHeurRelaxLMCut(const char *proto, const char *states)
+static void runTest(const char *name,
+                    const char *proto, const char *states,
+                    new_heur_fn new_heur,
+                    int pref)
 {
     plan_problem_t *p;
     state_pool_t state_pool;
@@ -345,24 +50,42 @@ static void runTestHeurRelaxLMCut(const char *proto, const char *states)
     plan_heur_t *heur;
     plan_heur_res_t res;
     int i, si;
+    plan_op_t **pref_ops;
 
-    printf("-----\nLM-CUT\n%s\n", proto);
+    printf("-----\n%s\n%s\n", name, proto);
     p = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
     state = planStateNew(p->state_pool);
     statePoolInit(&state_pool, states);
 
-    heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
-                            p->op, p->op_size, p->succ_gen);
+    pref_ops = BOR_ALLOC_ARR(plan_op_t *, p->op_size);
+    for (i = 0; i < p->op_size; ++i)
+        pref_ops[i] = p->op + i;
+
+    heur = new_heur(p);
 
     for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
         planHeurResInit(&res);
+        if (pref){
+            res.pref_op = pref_ops;
+            res.pref_op_size = p->op_size;
+        }
+
         planHeur(heur, state, &res);
         printf("[%d] %d ::", si, res.heur);
         for (i = 0; i < planStateSize(state); ++i){
             printf(" %d", planStateGet(state, i));
         }
         printf("\n");
+
+        if (pref){
+            printf("Pref ops[%d]:\n", res.pref_size);
+            for (i = 0; i < res.pref_size; ++i){
+                printf("%s\n", res.pref_op[i]->name);
+            }
+        }
     }
+
+    BOR_FREE(pref_ops);
 
     planHeurDel(heur);
     statePoolFree(&state_pool);
@@ -371,14 +94,216 @@ static void runTestHeurRelaxLMCut(const char *proto, const char *states)
     printf("-----\n");
 }
 
+static void heurRelaxIdentity(const char *proto, const char *states,
+                              int type)
+{
+    plan_problem_t *p;
+    state_pool_t state_pool;
+    plan_state_t *state;
+    plan_heur_relax_t relax;
+    int si;
+    plan_cost_t h, h2;
+
+    p = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
+    state = planStateNew(p->state_pool);
+    statePoolInit(&state_pool, states);
+
+    planHeurRelaxInit(&relax, type, p->var, p->var_size, p->goal,
+                      p->op, p->op_size);
+
+    for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
+        planHeurRelax(&relax, state);
+        h = relax.fact[relax.cref.goal_id].value;
+
+        h2 = planHeurRelax2(&relax, state, p->goal);
+        assertEquals(h, h2);
+    }
+
+    planHeurRelaxFree(&relax);
+    statePoolFree(&state_pool);
+    planStateDel(state);
+    planProblemDel(p);
+}
+
+static plan_part_state_t *relaxStateToPartState(const plan_state_t *s,
+                                                plan_state_pool_t *state_pool)
+{
+    plan_part_state_t *ps;
+    int i, len;
+    plan_val_t val;
+
+    ps = planPartStateNew(state_pool);
+    len = planStateSize(s);
+    for (i = 0; i < len; ++i){
+        if (rand() < RAND_MAX / 2){
+            val = planStateGet(s, i);
+            planPartStateSet(ps, i, val);
+        }
+    }
+
+    if (ps->vals_size == 0){
+        val = planStateGet(s, 0);
+        planPartStateSet(ps, 0, val);
+    }
+
+    return ps;
+}
+
+static void heurRelaxIdentity2(const char *proto, const char *states,
+                               int type)
+{
+    plan_problem_t *p;
+    state_pool_t state_pool;
+    plan_state_t *state, *init_state;
+    plan_part_state_t *goal;
+    plan_heur_relax_t relax, relax2;
+    int si;
+    plan_cost_t h, h2;
+
+    p = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
+    state = planStateNew(p->state_pool);
+    init_state = planStateNew(p->state_pool);
+    statePoolInit(&state_pool, states);
+
+    statePoolNext(&state_pool, init_state);
+
+    planHeurRelaxInit(&relax2, type, p->var, p->var_size, p->goal,
+                      p->op, p->op_size);
+
+    for (si = 0; statePoolNext(&state_pool, state) == 0 && si < 2000; ++si){
+        goal = relaxStateToPartState(state, p->state_pool);
+
+        planHeurRelaxInit(&relax, type, p->var, p->var_size, goal,
+                          p->op, p->op_size);
+        planHeurRelax(&relax, init_state);
+        h = relax.fact[relax.cref.goal_id].value;
+        planHeurRelaxFree(&relax);
+
+        h2 = planHeurRelax2(&relax2, init_state, goal);
+        assertEquals(h, h2);
+
+        planPartStateDel(goal);
+    }
+
+    planHeurRelaxFree(&relax2);
+    statePoolFree(&state_pool);
+    planStateDel(state);
+    planStateDel(init_state);
+    planProblemDel(p);
+}
+
+TEST(testHeurRelax)
+{
+    heurRelaxIdentity("../data/ma-benchmarks/depot/pfile1.proto",
+                      "states/depot-pfile1.txt", PLAN_HEUR_RELAX_TYPE_ADD);
+    heurRelaxIdentity("../data/ma-benchmarks/depot/pfile1.proto",
+                      "states/depot-pfile1.txt", PLAN_HEUR_RELAX_TYPE_MAX);
+    heurRelaxIdentity("../data/ma-benchmarks/depot/pfile5.proto",
+                      "states/depot-pfile5.txt", PLAN_HEUR_RELAX_TYPE_ADD);
+    heurRelaxIdentity("../data/ma-benchmarks/depot/pfile5.proto",
+                      "states/depot-pfile5.txt", PLAN_HEUR_RELAX_TYPE_MAX);
+    heurRelaxIdentity("../data/ma-benchmarks/rovers/p03.proto",
+                      "states/rovers-p03.txt", PLAN_HEUR_RELAX_TYPE_ADD);
+    heurRelaxIdentity("../data/ma-benchmarks/rovers/p03.proto",
+                      "states/rovers-p03.txt", PLAN_HEUR_RELAX_TYPE_MAX);
+    heurRelaxIdentity("../data/ma-benchmarks/rovers/p15.proto",
+                      "states/rovers-p15.txt", PLAN_HEUR_RELAX_TYPE_ADD);
+    heurRelaxIdentity("../data/ma-benchmarks/rovers/p15.proto",
+                      "states/rovers-p15.txt", PLAN_HEUR_RELAX_TYPE_MAX);
+    heurRelaxIdentity("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+                      "states/citycar-p3-2-2-0-1.txt", PLAN_HEUR_RELAX_TYPE_ADD);
+    heurRelaxIdentity("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+                      "states/citycar-p3-2-2-0-1.txt", PLAN_HEUR_RELAX_TYPE_MAX);
+
+    srand(time(NULL));
+    heurRelaxIdentity2("../data/ma-benchmarks/depot/pfile1.proto",
+                       "states/depot-pfile1.txt", PLAN_HEUR_RELAX_TYPE_ADD);
+    heurRelaxIdentity2("../data/ma-benchmarks/depot/pfile1.proto",
+                       "states/depot-pfile1.txt", PLAN_HEUR_RELAX_TYPE_MAX);
+    heurRelaxIdentity2("../data/ma-benchmarks/depot/pfile5.proto",
+                       "states/depot-pfile5.txt", PLAN_HEUR_RELAX_TYPE_ADD);
+    heurRelaxIdentity2("../data/ma-benchmarks/depot/pfile5.proto",
+                       "states/depot-pfile5.txt", PLAN_HEUR_RELAX_TYPE_MAX);
+    heurRelaxIdentity2("../data/ma-benchmarks/rovers/p03.proto",
+                       "states/rovers-p03.txt", PLAN_HEUR_RELAX_TYPE_ADD);
+    heurRelaxIdentity2("../data/ma-benchmarks/rovers/p03.proto",
+                       "states/rovers-p03.txt", PLAN_HEUR_RELAX_TYPE_MAX);
+    heurRelaxIdentity2("../data/ma-benchmarks/rovers/p15.proto",
+                       "states/rovers-p15.txt", PLAN_HEUR_RELAX_TYPE_ADD);
+    heurRelaxIdentity2("../data/ma-benchmarks/rovers/p15.proto",
+                       "states/rovers-p15.txt", PLAN_HEUR_RELAX_TYPE_MAX);
+    heurRelaxIdentity2("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+                       "states/citycar-p3-2-2-0-1.txt", PLAN_HEUR_RELAX_TYPE_ADD);
+    heurRelaxIdentity2("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+                       "states/citycar-p3-2-2-0-1.txt", PLAN_HEUR_RELAX_TYPE_MAX);
+}
+
+TEST(testHeurGoalCount)
+{
+    runTest("goal-count", "../data/ma-benchmarks/depot/pfile1.proto",
+            "states/depot-pfile1.txt", goalCountNew, 0);
+    runTest("goal-count", "../data/ma-benchmarks/depot/pfile5.proto",
+            "states/depot-pfile5.txt", goalCountNew, 1);
+    runTest("goal-count", "../data/ma-benchmarks/rovers/p03.proto",
+            "states/rovers-p03.txt", goalCountNew, 0);
+    runTest("goal-count", "../data/ma-benchmarks/rovers/p15.proto",
+            "states/rovers-p15.txt", goalCountNew, 0);
+    runTest("goal-count", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", goalCountNew, 0);
+}
+
+TEST(testHeurRelaxAdd)
+{
+    runTest("add", "../data/ma-benchmarks/depot/pfile1.proto",
+            "states/depot-pfile1.txt", addNew, 1);
+    runTest("add", "../data/ma-benchmarks/depot/pfile5.proto",
+            "states/depot-pfile5.txt", addNew, 0);
+    runTest("add", "../data/ma-benchmarks/rovers/p03.proto",
+            "states/rovers-p03.txt", addNew, 0);
+    runTest("add", "../data/ma-benchmarks/rovers/p15.proto",
+            "states/rovers-p15.txt", addNew, 0);
+    runTest("add", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", addNew, 0);
+}
+
+TEST(testHeurRelaxMax)
+{
+    runTest("max", "../data/ma-benchmarks/depot/pfile1.proto",
+            "states/depot-pfile1.txt", maxNew, 0);
+    runTest("max", "../data/ma-benchmarks/depot/pfile5.proto",
+            "states/depot-pfile5.txt", maxNew, 0);
+    runTest("max", "../data/ma-benchmarks/rovers/p03.proto",
+            "states/rovers-p03.txt", maxNew, 1);
+    runTest("max", "../data/ma-benchmarks/rovers/p15.proto",
+            "states/rovers-p15.txt", maxNew, 0);
+    runTest("max", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", maxNew, 0);
+}
+
+TEST(testHeurRelaxFF)
+{
+    runTest("ff", "../data/ma-benchmarks/depot/pfile1.proto",
+            "states/depot-pfile1.txt", ffNew, 1);
+    runTest("ff", "../data/ma-benchmarks/depot/pfile5.proto",
+            "states/depot-pfile5.txt", ffNew, 0);
+    runTest("ff", "../data/ma-benchmarks/rovers/p03.proto",
+            "states/rovers-p03.txt", ffNew, 0);
+    runTest("ff", "../data/ma-benchmarks/rovers/p15.proto",
+            "states/rovers-p15.txt", ffNew, 0);
+    runTest("ff", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", ffNew, 0);
+}
+
 TEST(testHeurRelaxLMCut)
 {
-    runTestHeurRelaxLMCut("../data/ma-benchmarks/depot/pfile1.proto",
-                          "states/depot-pfile1.txt");
-    runTestHeurRelaxLMCut("../data/ma-benchmarks/depot/pfile5.proto",
-                          "states/depot-pfile5.txt");
-    runTestHeurRelaxLMCut("../data/ma-benchmarks/rovers/p03.proto",
-                          "states/rovers-p03.txt");
-    runTestHeurRelaxLMCut("../data/ma-benchmarks/rovers/p15.proto",
-                          "states/rovers-p15.txt");
+    runTest("LM-CUT", "../data/ma-benchmarks/depot/pfile1.proto",
+            "states/depot-pfile1.txt", lmCutNew, 0);
+    runTest("LM-CUT", "../data/ma-benchmarks/depot/pfile5.proto",
+            "states/depot-pfile5.txt", lmCutNew, 1);
+    runTest("LM-CUT", "../data/ma-benchmarks/rovers/p03.proto",
+            "states/rovers-p03.txt", lmCutNew, 0);
+    runTest("LM-CUT", "../data/ma-benchmarks/rovers/p15.proto",
+            "states/rovers-p15.txt", lmCutNew, 0);
+    runTest("LM-CUT", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", lmCutNew, 0);
 }

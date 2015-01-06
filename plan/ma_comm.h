@@ -1,96 +1,54 @@
 #ifndef __PLAN_MA_COMM_H__
 #define __PLAN_MA_COMM_H__
 
-#include <pthread.h>
-#include <semaphore.h>
-#include <boruvka/fifo.h>
-
-#include <plan/config.h>
 #include <plan/ma_msg.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-
-/** Forward declaration */
+struct _plan_ma_comm_t {
+    int node_id;
+    int node_size;
+    int recv_sock;
+    int *send_sock;
+};
 typedef struct _plan_ma_comm_t plan_ma_comm_t;
-typedef struct _plan_ma_comm_queue_pool_t plan_ma_comm_queue_pool_t;
-typedef struct _plan_ma_comm_queue_t plan_ma_comm_queue_t;
-
-
-struct _plan_ma_comm_queue_node_t {
-    bor_fifo_t fifo;      /*!< Queue with messages */
-    pthread_mutex_t lock; /*!< Mutex-lock for the queue */
-    sem_t full;           /*!< Full semaphore for the queue */
-    sem_t empty;          /*!< Empty semaphore for the queue */
-};
-typedef struct _plan_ma_comm_queue_node_t plan_ma_comm_queue_node_t;
-
-struct _plan_ma_comm_queue_pool_t {
-    plan_ma_comm_queue_node_t *node; /*!< Array of communaction nodes */
-    int node_size;                   /*!< Number of nodes */
-    plan_ma_comm_queue_t *queue;
-};
 
 
 /**
- * Creates a pool of communication queues for specified number of nodes.
+ * Creates an intra-process communication channel between specified agent
+ * and all other agents. The channel is local to the process, i.e., the
+ * agents must run in separate threads.
  */
-plan_ma_comm_queue_pool_t *planMACommQueuePoolNew(int num_nodes);
+plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size);
 
 /**
- * Destroys a queue pool.
+ * Creates an inter-process communication channel between specified agent
+ * and all other agents. The channel is base on IPC, i.e., agents must run
+ * on the same machine. Moreover an unique path prefix must be specified --
+ * this prefix is used both for distinguish between agent clusters on the
+ * same machine and as a path to a writable place on disk (for named
+ * sockets or pipelines).
  */
-void planMACommQueuePoolDel(plan_ma_comm_queue_pool_t *pool);
+plan_ma_comm_t *planMACommIPCNew(int agent_id, int agent_size,
+                                 const char *prefix);
 
 /**
- * Returns a queue corresponding to the specified node.
- * The returned queue is still owned by the pool and the call should NOT
- * call planMACommDel() on it!
+ * Creates an inter-process communication channel between specified agent
+ * and all other agents. The channel is based on TCP protocol, i.e., agents
+ * can run on any cluster of machines connected with network.
+ * A list of addresses of each agent must be provided (thus addr must have
+ * at least agent_size items).
  */
-plan_ma_comm_t *planMACommQueue(plan_ma_comm_queue_pool_t *pool,
-                                int node_id);
-
-
-
-#ifdef PLAN_ZMQ
-struct _plan_ma_comm_net_conf_t {
-    int node_id;   /*!< Id of the current node */
-    char **addr;   /*!< TCP address of all nodes in cluster */
-    int node_size; /*!< Number of nodes in cluster */
-};
-typedef struct _plan_ma_comm_net_conf_t plan_ma_comm_net_conf_t;
-
-
-/**
- * Initialize config structure.
- */
-void planMACommNetConfInit(plan_ma_comm_net_conf_t *cfg);
-
-/**
- * Frees resources allocate with connection with conf structure.
- */
-void planMACommNetConfFree(plan_ma_comm_net_conf_t *cfg);
-
-/**
- * Adds address of one node and returns its ID.
- */
-int planMACommNetConfAddNode(plan_ma_comm_net_conf_t *cfg,
-                             const char *addr);
-
-
-/**
- * Creates a communication channel based on network connection (TCP).
- */
-plan_ma_comm_t *planMACommNetNew(const plan_ma_comm_net_conf_t *cfg);
-#endif /* PLAN_ZMQ */
+plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
+                                 const char **addr);
 
 
 /**
  * Destroys a communication channel.
  */
-_bor_inline void planMACommDel(plan_ma_comm_t *comm);
+void planMACommDel(plan_ma_comm_t *comm);
 
 /**
  * Returns ID of the node.
@@ -113,9 +71,8 @@ _bor_inline int planMACommSendToAll(plan_ma_comm_t *comm,
  * Sends the message to the specified node.
  * Returns 0 on success.
  */
-_bor_inline int planMACommSendToNode(plan_ma_comm_t *comm,
-                                     int node_id,
-                                     const plan_ma_msg_t *msg);
+int planMACommSendToNode(plan_ma_comm_t *comm, int node_id,
+                         const plan_ma_msg_t *msg);
 
 /**
  * Sends the message to the next node in ring.
@@ -133,79 +90,13 @@ plan_ma_msg_t *planMACommRecv(plan_ma_comm_t *comm);
 /**
  * Receives a next message in blocking mode.
  * It is caller's responsibility to destroy the returned message.
+ * If timeout_in_ms is set to non-zero value, the function blocks only for
+ * the specified amount of time.
  */
-plan_ma_msg_t *planMACommRecvBlock(plan_ma_comm_t *comm);
-
-/**
- * Same as planMACommQueueRecvBlock() but unblocks after specified amount
- * of time if no message was received (and that case returns NULL).
- */
-plan_ma_msg_t *planMACommRecvBlockTimeout(plan_ma_comm_t *comm,
-                                          int timeout_in_ms);
-
-
-/**
- * Same as planMACommRecvBlock() but filters out all messages that have
- * different type. The filtered messages are not dropped but stored and
- * next call of *Recv*() functions will return these messages first.
- * For message types see PLAN_MA_MSG_TYPE_* in plan/ma_msg.h.
- */
-plan_ma_msg_t *planMACommRecvBlockType(plan_ma_comm_t *comm, int msg_type);
-
-
-/**
- * Destructor.
- */
-typedef void (*plan_ma_comm_del_fn)(plan_ma_comm_t *comm);
-
-/**
- * Sends the message to the specified node.
- * Returns 0 on success.
- */
-typedef int (*plan_ma_comm_send_to_node_fn)(plan_ma_comm_t *comm,
-                                            int node_id,
-                                            const plan_ma_msg_t *msg);
-
-
-/**
- * Receives a next message in non-blocking mode.
- * It is caller's responsibility to destroy the returned message.
- */
-typedef plan_ma_msg_t *(*plan_ma_comm_recv_fn)(plan_ma_comm_t *comm);
-
-/**
- * Receives a next message in blocking mode.
- * It is caller's responsibility to destroy the returned message.
- */
-typedef plan_ma_msg_t *(*plan_ma_comm_recv_block_fn)(plan_ma_comm_t *comm);
-
-/**
- * Same as planMACommNetRecvBlock() but unblocks after specified amount
- * of time if no message was received (and that case returns NULL).
- */
-typedef plan_ma_msg_t *(*plan_ma_comm_recv_block_timeout_fn)(
-            plan_ma_comm_t *commm, int timeout_in_ms);
-
-
-struct _plan_ma_comm_t {
-    int node_id;
-    int node_size;
-    plan_ma_comm_del_fn del_fn;
-    plan_ma_comm_send_to_node_fn send_to_node_fn;
-    plan_ma_comm_recv_fn recv_fn;
-    plan_ma_comm_recv_block_fn recv_block_fn;
-    plan_ma_comm_recv_block_timeout_fn recv_block_timeout_fn;
-
-    bor_fifo_t waitlist; /*!< Unprocessed waiting messages */
-};
+plan_ma_msg_t *planMACommRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms);
 
 
 /**** INLINES: ****/
-_bor_inline void planMACommDel(plan_ma_comm_t *comm)
-{
-    comm->del_fn(comm);
-}
-
 _bor_inline int planMACommId(const plan_ma_comm_t *comm)
 {
     return comm->node_id;
@@ -224,19 +115,10 @@ _bor_inline int planMACommSendToAll(plan_ma_comm_t *comm,
         if (i == comm->node_id)
             continue;
 
-        if (comm->send_to_node_fn(comm, i, msg) != 0)
+        if (planMACommSendToNode(comm, i, msg) != 0)
             return -1;
     }
     return 0;
-}
-
-_bor_inline int planMACommSendToNode(plan_ma_comm_t *comm,
-                                     int node_id,
-                                     const plan_ma_msg_t *msg)
-{
-    if (node_id == comm->node_id)
-        return -1;
-    return comm->send_to_node_fn(comm, node_id, msg);
 }
 
 _bor_inline int planMACommSendInRing(plan_ma_comm_t *comm,
@@ -244,21 +126,8 @@ _bor_inline int planMACommSendInRing(plan_ma_comm_t *comm,
 {
     int node_id;
     node_id = (comm->node_id + 1) % comm->node_size;
-    return comm->send_to_node_fn(comm, node_id, msg);
+    return planMACommSendToNode(comm, node_id, msg);
 }
-
-
-/**** INTERNALS: ****/
-void _planMACommInit(plan_ma_comm_t *comm,
-                     int node_id,
-                     int node_size,
-                     plan_ma_comm_del_fn del_fn,
-                     plan_ma_comm_send_to_node_fn send_to_node_fn,
-                     plan_ma_comm_recv_fn recv_fn,
-                     plan_ma_comm_recv_block_fn recv_block_fn,
-                     plan_ma_comm_recv_block_timeout_fn recv_block_timeout_fn);
-
-void _planMACommFree(plan_ma_comm_t *comm);
 
 #ifdef __cplusplus
 } /* extern "C" */

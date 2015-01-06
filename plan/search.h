@@ -10,6 +10,8 @@
 #include <plan/list_lazy.h>
 #include <plan/path.h>
 #include <plan/ma_comm.h>
+#include <plan/search_stat.h>
+#include <plan/search_applicable_ops.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,65 +25,6 @@ typedef struct _plan_search_t plan_search_t;
  * ==================
  */
 
-/**
- * Status that search can (and should) continue. Mostly for internal use.
- */
-#define PLAN_SEARCH_CONT       0
-
-/**
- * Status signaling that a solution was found.
- */
-#define PLAN_SEARCH_FOUND      1
-
-/**
- * No solution was found.
- */
-#define PLAN_SEARCH_NOT_FOUND -1
-
-/**
- * The search process was aborted from outside, e.g., from progress
- * callback.
- */
-#define PLAN_SEARCH_ABORT     -2
-
-
-/**
- * Preferred operators are not used.
- */
-#define PLAN_SEARCH_PREFERRED_NONE 0
-
-/**
- * Preferred operators are preferenced over the other ones. This depends on
- * a particular search algorithm.
- */
-#define PLAN_SEARCH_PREFERRED_PREF 1
-
-/**
- * Only the preferred operators are used.
- */
-#define PLAN_SEARCH_PREFERRED_ONLY 2
-
-
-/**
- * Struct for statistics from search.
- */
-struct _plan_search_stat_t {
-    float elapsed_time;
-    long steps;
-    long evaluated_states;
-    long expanded_states;
-    long generated_states;
-    long peak_memory;
-    int found;
-    int not_found;
-};
-typedef struct _plan_search_stat_t plan_search_stat_t;
-
-/**
- * Initializes stat struct.
- */
-void planSearchStatInit(plan_search_stat_t *stat);
-
 
 /**
  * Callback for progress monitoring.
@@ -92,37 +35,27 @@ void planSearchStatInit(plan_search_stat_t *stat);
 typedef int (*plan_search_progress_fn)(const plan_search_stat_t *stat,
                                        void *userdata);
 
-
-/**
- * Callback called each time a node is closed.
- */
-typedef void (*plan_search_run_node_closed)(plan_state_space_node_t *node,
-                                            void *data);
+struct _plan_search_progress_t {
+    plan_search_progress_fn fn; /*!< Callback for monitoring */
+    long freq;  /*!< Frequence of calling .progress_fn as number of steps. */
+    void *data; /*!< User-provided data */
+};
+typedef struct _plan_search_progress_t plan_search_progress_t;
 
 /**
  * Common parameters for all search algorithms.
  */
 struct _plan_search_params_t {
+    plan_search_progress_t progress; /*!< Progress callback */
+
     plan_heur_t *heur; /*!< Heuristic function that ought to be used */
     int heur_del;      /*!< True if .heur should be deleted in
                             planSearchDel() */
 
-    plan_search_progress_fn progress_fn; /*!< Callback for monitoring */
-    long progress_freq;                  /*!< Frequence of calling
-                                              .progress_fn as number of steps. */
-    void *progress_data;
-
     plan_problem_t *prob; /*!< Problem definition */
-    int ma_ack_solution; /*!< Set to true if you want ack'ed solutions in
-                              multi-agent mode. */
 };
 typedef struct _plan_search_params_t plan_search_params_t;
 
-
-struct _plan_search_ma_params_t {
-    plan_ma_comm_t *comm;
-};
-typedef struct _plan_search_ma_params_t plan_search_ma_params_t;
 
 /**
  * Enforced Hill Climbing Search Algorithm
@@ -215,11 +148,89 @@ void planSearchDel(plan_search_t *search);
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
 /**
- * Runs search in multi-agent mode.
+ * Extracts path between initial state and the specified goal state.
+ * Returns initial state ID where path was extracted from the goal state.
  */
-int planSearchMARun(plan_search_t *search,
-                    plan_search_ma_params_t *ma_params,
-                    plan_path_t *path);
+plan_state_id_t planSearchExtractPath(const plan_search_t *search,
+                                      plan_state_id_t goal_state,
+                                      plan_path_t *path);
+
+/**
+ * Returns computed heuristic for the specified state.
+ */
+plan_cost_t planSearchStateHeur(const plan_search_t *search,
+                                plan_state_id_t state_id);
+
+/**
+ * Returns cost of the node on top of the open-list.
+ */
+_bor_inline plan_cost_t planSearchTopNodeCost(const plan_search_t *search);
+
+/**
+ * (Re-)Inserts node to the open-list
+ */
+void planSearchInsertNode(plan_search_t *search,
+                          plan_state_space_node_t *node);
+
+/**
+ * Callback that is called after each step.
+ */
+typedef int (*plan_search_poststep_fn)(plan_search_t *search, int res,
+                                       void *userdata);
+
+/**
+ * Sets post-step callback, i.e., function that is called after each step
+ * is performed.
+ */
+void planSearchSetPostStep(plan_search_t *search,
+                           plan_search_poststep_fn fn, void *userdata);
+
+/**
+ * Callback function that is called on each expanded state.
+ */
+typedef void (*plan_search_expanded_node_fn)(plan_search_t *search,
+                                             plan_state_space_node_t *node,
+                                             void *userdata);
+
+/**
+ * Callback that is called for each expanded node (must be implemented in
+ * particular search algorithm).
+ */
+void planSearchSetExpandedNode(plan_search_t *search,
+                               plan_search_expanded_node_fn cb, void *ud);
+
+
+/**
+ * Callback for planSearchSetReachedGoal()
+ */
+typedef void (*plan_search_reached_goal_fn)(plan_search_t *search,
+                                            plan_state_space_node_t *node,
+                                            void *userdata);
+
+/**
+ * Sets callback that is called whenever the state satisficing goals is
+ * reached.
+ */
+void planSearchSetReachedGoal(plan_search_t *search,
+                              plan_search_reached_goal_fn cb,
+                              void *userdata);
+
+
+/**
+ * Callback for planSearchSetMAHeur()
+ */
+typedef void (*plan_search_ma_heur_fn)(plan_search_t *search,
+                                       plan_heur_t *heur,
+                                       const plan_state_t *state,
+                                       plan_heur_res_t *res,
+                                       void *userdata);
+
+/**
+ * Sets callback that is called whenever a multi-agent heuristic should be
+ * computed.
+ */
+void planSearchSetMAHeur(plan_search_t *search,
+                         plan_search_ma_heur_fn cb, void *userdata);
 
 /**
  * Internals
@@ -233,36 +244,6 @@ int planSearchMARun(plan_search_t *search,
  */
 void planSearchParamsInit(plan_search_params_t *params);
 
-/**
- * Updates .peak_memory value of stat structure.
- */
-void planSearchStatUpdatePeakMemory(plan_search_stat_t *stat);
-
-/**
- * Increments number of evaluated states by one.
- */
-_bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat);
-
-/**
- * Increments number of expanded states by one.
- */
-_bor_inline void planSearchStatIncExpandedStates(plan_search_stat_t *stat);
-
-/**
- * Increments number of generated states by one.
- */
-_bor_inline void planSearchStatIncGeneratedStates(plan_search_stat_t *stat);
-
-/**
- * Set "found" flag which means that solution was found.
- */
-_bor_inline void planSearchStatSetFoundSolution(plan_search_stat_t *stat);
-
-/**
- * Sets "not_found" flag meaning no solution was found.
- */
-_bor_inline void planSearchStatSetNotFound(plan_search_stat_t *stat);
-
 
 /**
  * Algorithm's method that frees all resources.
@@ -272,7 +253,7 @@ typedef void (*plan_search_del_fn)(plan_search_t *);
 /**
  * Initialize algorithm -- first step of algorithm.
  */
-typedef int (*plan_search_init_fn)(plan_search_t *);
+typedef int (*plan_search_init_step_fn)(plan_search_t *);
 
 /**
  * Perform one step of algorithm.
@@ -280,62 +261,24 @@ typedef int (*plan_search_init_fn)(plan_search_t *);
 typedef int (*plan_search_step_fn)(plan_search_t *);
 
 /**
- * Inject the given state into open-list and performs another needed
- * operations with the state.
- * Returns 0 on success.
+ * (Re-)Inserts node into open list.
+ * This function should not re-compute heuristic or do any other operation
+ * other than (re-)inserting into open-list.
  */
-typedef int (*plan_search_inject_state_fn)(plan_search_t *search,
-                                           plan_state_id_t state_id,
-                                           plan_cost_t cost,
-                                           plan_cost_t heuristic);
+typedef void (*plan_search_insert_node_fn)(plan_search_t *,
+                                           plan_state_space_node_t *node);
 
 /**
- * Returns the lowest cost which is currently available among all open
- * nodes.
+ * Returns cost of the node on top of the open-list.
  */
-typedef plan_cost_t (*plan_search_lowest_cost_fn)(plan_search_t *search);
+typedef plan_cost_t (*plan_search_top_node_cost_fn)(const plan_search_t *s);
 
-struct _plan_search_applicable_ops_t {
-    plan_op_t **op;        /*!< Array of applicable operators. This array
-                                must be big enough to hold all operators. */
-    int op_size;           /*!< Size of .op[] */
-    int op_found;          /*!< Number of found applicable operators */
-    int op_preferred;      /*!< Number of preferred operators (that are
-                                stored at the beggining of .op[] array */
-    plan_state_id_t state; /*!< State in which these operators are
-                                applicable */
+struct _plan_search_block_t {
+    pthread_mutex_t lock;
+    pthread_cond_t cond;
+    int terminate;
 };
-typedef struct _plan_search_applicable_ops_t plan_search_applicable_ops_t;
-
-struct _plan_search_ma_solution_verify_t {
-    bor_fifo_t waitlist; /*!< Solution messages waiting for verification */
-    int in_progress;     /*!< True if we are in the middle of erification
-                              of a solution */
-    plan_cost_t cost;    /*!< Cost of the solution */
-    int state_id;        /*!< State ID of the currently verified solution */
-    int token;           /*!< Token associated with the solution */
-    int *mark;           /*!< Array of bool flags signaling the from the
-                              SOLUTION_MARK message was received from the
-                              corresponding agent. */
-    int mark_size;
-    int mark_remaining;  /*!< Number of peers for which SOLUTION_MARK was
-                              not received yet */
-    int ack_remaining;   /*!< Number of acks remaining */
-
-    int invalid;         /*!< True if the verification failed */
-    int reinsert;        /*!< True if the solution should be re-inserted */
-};
-typedef struct _plan_search_ma_solution_verify_t
-    plan_search_ma_solution_verify_t;
-
-struct _plan_search_ma_solution_ack_t {
-    plan_ma_msg_t *solution_msg;
-    plan_cost_t cost_lower_bound;
-    int token;
-    int *mark;
-    int mark_remaining;
-};
-typedef struct _plan_search_ma_solution_ack_t plan_search_ma_solution_ack_t;
+typedef struct _plan_search_block_t plan_search_block_t;
 
 /**
  * Common base struct for all search algorithms.
@@ -343,39 +286,33 @@ typedef struct _plan_search_ma_solution_ack_t plan_search_ma_solution_ack_t;
 struct _plan_search_t {
     plan_heur_t *heur;      /*!< Heuristic function */
     int heur_del;           /*!< True if .heur should be deleted */
-
-    plan_search_del_fn del_fn;
-    plan_search_init_fn init_fn;
-    plan_search_step_fn step_fn;
-    plan_search_inject_state_fn inject_state_fn;
-    plan_search_lowest_cost_fn lowest_cost_fn;
-
-    plan_search_params_t params;
-    plan_search_stat_t stat;
-
+    plan_state_id_t initial_state;
     plan_state_pool_t *state_pool;   /*!< State pool from params.prob */
     plan_state_space_t *state_space;
+    const plan_succ_gen_t *succ_gen;
+    const plan_part_state_t *goal;
+    plan_search_progress_t progress;
+
+    plan_search_del_fn del_fn;
+    plan_search_init_step_fn init_step_fn;
+    plan_search_step_fn step_fn;
+    plan_search_insert_node_fn insert_node_fn;
+    plan_search_top_node_cost_fn top_node_cost_fn;
+    plan_search_poststep_fn poststep_fn;
+    void *poststep_data;
+    plan_search_expanded_node_fn expanded_node_fn;
+    void *expanded_node_data;
+    plan_search_reached_goal_fn reached_goal_fn;
+    void *reached_goal_data;
+    plan_search_ma_heur_fn ma_heur_fn;
+    void *ma_heur_data;
+
     plan_state_t *state;             /*!< Preallocated state */
-    plan_state_id_t goal_state;      /*!< The found state satisfying the goal */
-    plan_cost_t best_goal_cost;
+    plan_state_id_t state_id;        /*!< ID of .state -- used for caching*/
+    plan_search_stat_t stat;
+    plan_search_applicable_ops_t app_ops;
 
-    plan_search_applicable_ops_t applicable_ops;
-
-    int ma;                  /*!< True if running in multi-agent mode */
-    plan_ma_comm_t *ma_comm; /*!< Communication queue for MA search */
-    int ma_comm_node_id;     /*!< ID of this node */
-    int ma_comm_node_size;   /*!< Number of nodes in cluster */
-    int ma_pub_state_reg;    /*!< ID of the registry that associates
-                                  received public state with state-id. */
-    int ma_terminated;       /*!< True if already terminated */
-    plan_path_t *ma_path;    /*!< Output path for multi-agent mode */
-    int ma_ack_solution;     /*!< True if solution should be ack'ed */
-
-    /** Struct for verification of solutions */
-    plan_search_ma_solution_verify_t ma_solution_verify;
-    /** Solutions waiting for ACK */
-    plan_search_ma_solution_ack_t *ma_solution_ack;
-    int ma_solution_ack_size;
+    plan_state_id_t goal_state; /*!< The found state satisfying the goal */
 };
 
 
@@ -386,10 +323,10 @@ struct _plan_search_t {
 void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
-                     plan_search_init_fn init_fn,
+                     plan_search_init_step_fn init_step_fn,
                      plan_search_step_fn step_fn,
-                     plan_search_inject_state_fn inject_state_fn,
-                     plan_search_lowest_cost_fn lowest_cost_fn);
+                     plan_search_insert_node_fn insert_node_fn,
+                     plan_search_top_node_cost_fn top_node_cost_fn);
 
 /**
  * Frees allocated resources.
@@ -399,9 +336,11 @@ void _planSearchFree(plan_search_t *search);
 /**
  * Finds applicable operators in the specified state and store the results
  * in searchc->applicable_ops.
+ * Returns 0 if the result was already cached and no search was performed,
+ * and 1 if a new search was performed.
  */
-void _planSearchFindApplicableOps(plan_search_t *search,
-                                  plan_state_id_t state_id);
+int _planSearchFindApplicableOps(plan_search_t *search,
+                                 plan_state_id_t state_id);
 
 /**
  * Returns PLAN_SEARCH_CONT if the heuristic value was computed.
@@ -416,92 +355,27 @@ int _planSearchHeuristic(plan_search_t *search,
                          plan_search_applicable_ops_t *preferred_ops);
 
 /**
- * Adds state's successors to the lazy list with the specified cost.
- */
-void _planSearchAddLazySuccessors(plan_search_t *search,
-                                  plan_state_id_t state_id,
-                                  plan_op_t **op, int op_size,
-                                  plan_cost_t cost,
-                                  plan_list_lazy_t *list);
-
-/**
- * Generalization for lazy search algorithms.
- * Injects given state into open-list if the node wasn't discovered yet.
- */
-int _planSearchLazyInjectState(plan_search_t *search,
-                               plan_list_lazy_t *list,
-                               plan_state_id_t state_id,
-                               plan_cost_t cost, plan_cost_t heur_val);
-
-/**
- * Let the common structure know that a dead end was reached.
- */
-void _planSearchReachedDeadEnd(plan_search_t *search);
-
-/**
- * Creates a new state by application of the operator on the parent_state.
- * Returns 0 if the corresponding node is in NEW state, -1 otherwise.
- * The resulting state and node is returned via output arguments.\
- */
-int _planSearchNewState(plan_search_t *search,
-                        plan_op_t *operator,
-                        plan_state_id_t parent_state,
-                        plan_state_id_t *new_state_id,
-                        plan_state_space_node_t **new_node);
-
-/**
- * Open and close the state in one step.
- */
-plan_state_space_node_t *_planSearchNodeOpenClose(plan_search_t *search,
-                                                  plan_state_id_t state,
-                                                  plan_state_id_t parent_state,
-                                                  plan_op_t *parent_op,
-                                                  plan_cost_t cost,
-                                                  plan_cost_t heur);
-
-/**
- * Checks whether the node is public and if so, sends it to other agents.
- */
-void _planSearchMASendState(plan_search_t *search,
-                            plan_state_space_node_t *node);
-
-/**
- * Updates part of statistics.
- */
-void _planUpdateStat(plan_search_stat_t *stat,
-                     long steps, bor_timer_t *timer);
-
-/**
  * Returns true if the given state is the goal state.
  * Also the goal state is recorded in stats and the goal state is
  * remembered.
  */
 int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node);
 
-/**** INLINES ****/
-_bor_inline void planSearchStatIncEvaluatedStates(plan_search_stat_t *stat)
+
+/**** INLINES: ****/
+_bor_inline void _planSearchExpandedNode(plan_search_t *search,
+                                         plan_state_space_node_t *node)
 {
-    ++stat->evaluated_states;
+    if (search->expanded_node_fn){
+        search->expanded_node_fn(search, node, search->expanded_node_data);
+    }
 }
 
-_bor_inline void planSearchStatIncExpandedStates(plan_search_stat_t *stat)
+_bor_inline plan_cost_t planSearchTopNodeCost(const plan_search_t *search)
 {
-    ++stat->expanded_states;
-}
-
-_bor_inline void planSearchStatIncGeneratedStates(plan_search_stat_t *stat)
-{
-    ++stat->generated_states;
-}
-
-_bor_inline void planSearchStatSetFoundSolution(plan_search_stat_t *stat)
-{
-    stat->found = 1;
-}
-
-_bor_inline void planSearchStatSetNotFound(plan_search_stat_t *stat)
-{
-    stat->not_found = 1;
+    if (search->top_node_cost_fn)
+        return search->top_node_cost_fn(search);
+    return PLAN_COST_MAX;
 }
 
 #ifdef __cplusplus

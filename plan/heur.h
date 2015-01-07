@@ -146,6 +146,11 @@ plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *agent_def);
 plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *agent_def);
 
 /**
+ * Multi-agent lm-cut heuristic.
+ */
+plan_heur_t *planHeurMALMCutNew(const plan_problem_t *agent_def);
+
+/**
  * Deletes heuristics object.
  */
 void planHeurDel(plan_heur_t *heur);

@@ -63,6 +63,7 @@ OBJS += heur_relax_ff
 OBJS += heur_lm_cut
 OBJS += heur_ma_ff
 OBJS += heur_ma_max
+OBJS += heur_ma_lm_cut
 OBJS += ma_comm_nanomsg
 OBJS += ma_search
 OBJS += ma_snapshot

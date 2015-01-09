@@ -131,6 +131,8 @@ static void privateFree(private_t *private)
 {
     planHeurRelaxFree(&private->relax);
     planOpIdTrFree(&private->op_id_tr);
+    if (private->public_op.op)
+        BOR_FREE(private->public_op.op);
     if (private->updated_ops)
         BOR_FREE(private->updated_ops);
     if (private->opcmp)

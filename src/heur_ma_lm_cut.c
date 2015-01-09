@@ -9,6 +9,9 @@ struct _private_t {
     plan_heur_relax_t relax;
     plan_op_id_tr_t op_id_tr;
     plan_oparr_t public_op; /*!< List of public operators */
+    int *updated_ops;       /*!< Array for operators that were updated */
+    plan_heur_relax_op_t *opcmp; /*!< Array for comparing operators before
+                                      and after change */
 };
 typedef struct _private_t private_t;
 
@@ -27,7 +30,9 @@ struct _plan_heur_ma_lm_cut_t {
     plan_factarr_t init_state; /*!< Stored actual state for which the
                                     heuristic is computed */
     plan_oparr_t *op_by_owner; /*!< List of operators divided by an owner */
-    plan_heur_relax_op_t *old_op;
+    plan_heur_relax_op_t *opcmp; /*!< Array for comparison of operators
+                                      before and after a change */
+    int *updated_ops;          /*!< Array for operators that were updated */
 
     const plan_problem_t *prob;
     private_t *private;
@@ -45,6 +50,51 @@ static int heurMAUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg, plan_heur_res_t *res);
 static void heurMARequest(plan_heur_t *heur, plan_ma_comm_t *comm,
                           const plan_ma_msg_t *msg);
+
+/** Updates op[] array with values from of operators from message if case
+ *  the value is higher than the one in op[] array.
+ *  If op_all is non-NULL values of all operators from message are written
+ *  to this array.
+ *  Arguments updated_ops and updated_ops_size are output values where are
+ *  stored IDs of operators that were written to op[]. */
+static void updateOpValueFromMsg(const plan_ma_msg_t *msg,
+                                 const plan_op_id_tr_t *op_id_tr,
+                                 plan_heur_relax_op_t *op,
+                                 plan_heur_relax_op_t *op_all,
+                                 int *updated_ops, int *updated_ops_size)
+{
+    int i, op_size, op_id;
+    plan_cost_t op_value, value;
+
+    *updated_ops_size = 0;
+
+    op_size = planMAMsgOpSize(msg);
+    for (i = 0; i < op_size; ++i){
+        // Read operator data from message
+        op_id = planMAMsgOp(msg, i, NULL, NULL, &op_value);
+
+        // Translate operator ID from global ID to local ID and ignore
+        // those which are unknown
+        op_id = planOpIdTrLoc(op_id_tr, op_id);
+        if (op_id < 0)
+            continue;
+
+        // Write operator's value if it is requested
+        if (op_all)
+            op_all[op_id].value = op_value;
+
+        // Determine current value of operator
+        value = op[op_id].value;
+
+        // Record updated value of operator and write operator's ID to
+        // output array
+        if (value < op_value){
+            op[op_id].value = op_value;
+            updated_ops[*updated_ops_size] = op_id;
+            ++(*updated_ops_size);
+        }
+    }
+}
 
 static void privateInit(private_t *private, const plan_problem_t *prob)
 {
@@ -71,12 +121,20 @@ static void privateInit(private_t *private, const plan_problem_t *prob)
 
     planOpIdTrInit(&private->op_id_tr, op, op_size);
     planProblemDestroyOps(op, op_size);
+
+    private->updated_ops = BOR_ALLOC_ARR(int, private->relax.cref.op_size);
+    private->opcmp = BOR_ALLOC_ARR(plan_heur_relax_op_t,
+                                   private->relax.cref.op_size);
 }
 
 static void privateFree(private_t *private)
 {
     planHeurRelaxFree(&private->relax);
     planOpIdTrFree(&private->op_id_tr);
+    if (private->updated_ops)
+        BOR_FREE(private->updated_ops);
+    if (private->opcmp)
+        BOR_FREE(private->opcmp);
 }
 
 static int agentSize(const plan_op_t *op, int op_size)
@@ -152,11 +210,12 @@ plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
     heur->agent_changed = BOR_CALLOC_ARR(int, heur->agent_size);
     initAgentOp(heur, prob->proj_op, prob->proj_op_size);
     initOpByOwner(heur, prob);
-    heur->old_op = BOR_ALLOC_ARR(plan_heur_relax_op_t,
-                                 heur->relax.cref.op_size);
+    heur->opcmp = BOR_ALLOC_ARR(plan_heur_relax_op_t,
+                                heur->relax.cref.op_size);
 
     heur->init_state.size = prob->var_size;
     heur->init_state.fact = BOR_ALLOC_ARR(int, heur->init_state.size);
+    heur->updated_ops = BOR_ALLOC_ARR(int, heur->relax.cref.op_size);
 
     heur->prob = prob;
     heur->private = NULL;
@@ -176,7 +235,8 @@ static void heurDel(plan_heur_t *_heur)
             BOR_FREE(heur->agent_op[i].op);
     }
     BOR_FREE(heur->agent_op);
-    BOR_FREE(heur->old_op);
+    if (heur->opcmp)
+        BOR_FREE(heur->opcmp);
 
     BOR_FREE(heur->init_state.fact);
     for (i = 0; i < heur->agent_size; ++i){
@@ -184,6 +244,9 @@ static void heurDel(plan_heur_t *_heur)
             BOR_FREE(heur->op_by_owner[i].op);
     }
     BOR_FREE(heur->op_by_owner);
+
+    if (heur->updated_ops)
+        BOR_FREE(heur->updated_ops);
 
     for (i = 0; i < heur->private_size; ++i)
         privateFree(heur->private + i);
@@ -288,7 +351,7 @@ static void updateRelax(plan_heur_ma_lm_cut_t *heur,
 
     // Remember old values of operators
     size = sizeof(plan_heur_relax_op_t) * heur->relax.cref.op_size;
-    memcpy(heur->old_op, heur->relax.op, size);
+    memcpy(heur->opcmp, heur->relax.op, size);
 
     // Update h^max heuristic using changed operators
     planHeurRelaxUpdateMaxFull(&heur->relax, update_op, update_op_size);
@@ -301,7 +364,7 @@ static void updateRelax(plan_heur_ma_lm_cut_t *heur,
         oparr = heur->op_by_owner + i;
         for (j = 0; j < oparr->size; ++j){
             op_id = oparr->op[j];
-            if (heur->old_op[op_id].value != heur->relax.op[op_id].value){
+            if (heur->opcmp[op_id].value != heur->relax.op[op_id].value){
                 heur->agent_changed[i] = 1;
                 break;
             }
@@ -311,36 +374,18 @@ static void updateRelax(plan_heur_ma_lm_cut_t *heur,
 
 static void updateHMax(plan_heur_ma_lm_cut_t *heur, const plan_ma_msg_t *msg)
 {
-    int i, *update_op, update_op_size, op_id, value;
-    int response_op_size, response_op_id, response_value;
+    int updated_ops_size;
 
-    response_op_size = planMAMsgHeurLMCutMaxOpSize(msg);
-    update_op = alloca(sizeof(int) * response_op_size);
-    update_op_size = 0;
-    for (i = 0; i < response_op_size; ++i){
-        // Read data for operator
-        response_op_id = planMAMsgHeurLMCutMaxOp(msg, i, &response_value);
-
-        // Translate operator ID from response to local ID
-        op_id = planOpIdTrLoc(&heur->op_id_tr, response_op_id);
-
-        // Determine current value of operator
-        value = heur->relax.op[op_id].value;
-
-        // Record updated value of operator and remember operator for
-        // later.
-        if (value != response_value){
-            heur->relax.op[op_id].value = response_value;
-            update_op[update_op_size++] = op_id;
-        }
-    }
+    // Update operators' values from message
+    updateOpValueFromMsg(msg, &heur->op_id_tr, heur->relax.op, NULL,
+                         heur->updated_ops, &updated_ops_size);
 
     // Early exit if no operators were changed
-    if (update_op_size == 0)
+    if (updated_ops_size == 0)
         return;
 
     // Update .relax structure
-    updateRelax(heur, update_op, update_op_size);
+    updateRelax(heur, heur->updated_ops, updated_ops_size);
 }
 
 static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
@@ -387,36 +432,6 @@ static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
 
 
 
-static void requestSendResponse(private_t *private,
-                                plan_ma_comm_t *comm,
-                                const plan_op_id_tr_t *op_id_tr,
-                                const plan_ma_msg_t *req_msg)
-{
-    plan_ma_msg_t *msg;
-    int target_agent, i, len, op_id, old_value, new_value, loc_op_id;
-
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_MAX_RESPONSE,
-                       planMACommId(comm));
-
-    len = planMAMsgHeurMaxOpSize(req_msg);
-    for (i = 0; i < len; ++i){
-        op_id = planMAMsgHeurMaxOp(req_msg, i, &old_value);
-
-        loc_op_id = planOpIdTrLoc(op_id_tr, op_id);
-        if (loc_op_id < 0)
-            continue;
-
-        new_value = private->relax.op[loc_op_id].value;
-        if (new_value != old_value){
-            planMAMsgHeurMaxAddOp(msg, op_id, new_value);
-        }
-    }
-
-    target_agent = planMAMsgAgent(req_msg);
-    planMACommSendToNode(comm, target_agent, msg);
-    planMAMsgDel(msg);
-}
-
 static void requestMaxSendEmptyResponse(plan_ma_comm_t *comm,
                                         const plan_ma_msg_t *req)
 {
@@ -458,11 +473,35 @@ static void privateInitRequest(private_t *private, plan_ma_comm_t *comm,
     planHeurRelaxFull(&private->relax, &state);
 }
 
+static void privateMaxSendResponse(private_t *private, plan_ma_comm_t *comm,
+                                   int agent_id)
+{
+    int i, op_id;
+    plan_cost_t value;
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                       PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE,
+                       planMACommId(comm));
+
+    // Check all public operators and send all that were changed
+    for (i = 0; i < private->public_op.size; ++i){
+        op_id = private->public_op.op[i];
+        if (private->opcmp[op_id].value == private->relax.op[op_id].value)
+            continue;
+
+        value = private->relax.op[op_id].value;
+        op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
+        planMAMsgHeurLMCutMaxAddOp(msg, op_id, value);
+    }
+    planMACommSendToNode(comm, agent_id, msg);
+    planMAMsgDel(msg);
+}
+
 static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
                               const plan_ma_msg_t *msg)
 {
-    int i, *update_op, update_op_size, op_id, value;
-    int response_op_size, response_op_id, response_value;
+    int updated_ops_size;
 
     // Early exit if we have no private operators
     if (private->relax.cref.op_size == 0){
@@ -470,61 +509,26 @@ static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
         return;
     }
 
-    plan_heur_relax_op_t *old_op;
-    old_op = BOR_ALLOC_ARR(plan_heur_relax_op_t,
-                           private->relax.cref.op_size);
-    memcpy(old_op, private->relax.op, sizeof(plan_heur_relax_op_t) *
-            private->relax.cref.op_size);
+    // Copy current state of operators to compare array.
+    // This has to be done before relax->op values are changed according to
+    // the received message because we need to compare on the state of
+    // operators that is assumed by the initiator agent.
+    memcpy(private->opcmp, private->relax.op,
+           sizeof(plan_heur_relax_op_t) * private->relax.cref.op_size);
 
-    response_op_size = planMAMsgHeurLMCutMaxOpSize(msg);
-    update_op = alloca(sizeof(int) * response_op_size);
-    update_op_size = 0;
-    for (i = 0; i < response_op_size; ++i){
-        // Read data for operator
-        response_op_id = planMAMsgHeurLMCutMaxOp(msg, i, &response_value);
+    // Update operators' values from received message
+    updateOpValueFromMsg(msg, &private->op_id_tr,
+                         private->relax.op, private->opcmp,
+                         private->updated_ops, &updated_ops_size);
 
-        // Translate operator ID from response to local ID
-        op_id = planOpIdTrLoc(&private->op_id_tr, response_op_id);
-        if (op_id < 0)
-            continue;
-
-        old_op[op_id].value = response_value;
-
-        // Determine current value of operator
-        value = private->relax.op[op_id].value;
-
-        // Record updated value of operator and remember operator for
-        // later.
-        if (value < response_value){
-            private->relax.op[op_id].value = response_value;
-            update_op[update_op_size++] = op_id;
-        }
+    // Update .relax structure if anything was changed
+    if (updated_ops_size > 0){
+        planHeurRelaxUpdateMaxFull(&private->relax, private->updated_ops,
+                                   updated_ops_size);
     }
 
-    // Early exit if no operators were changed
-    if (update_op_size > 0){
-        // Update .relax structure
-        planHeurRelaxUpdateMaxFull(&private->relax, update_op, update_op_size);
-    }
-
-
-    plan_ma_msg_t *msgout;
-    msgout = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                          PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE,
-                          planMACommId(comm));
-    for (i = 0; i < private->public_op.size; ++i){
-        op_id = private->public_op.op[i];
-        if (old_op[op_id].value == private->relax.op[op_id].value)
-            continue;
-
-        value = private->relax.op[op_id].value;
-        op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
-        planMAMsgHeurLMCutMaxAddOp(msgout, op_id, value);
-    }
-    planMACommSendToNode(comm, planMAMsgAgent(msg), msgout);
-    planMAMsgDel(msgout);
-
-    BOR_FREE(old_op);
+    // Send response to the main agent
+    privateMaxSendResponse(private, comm, planMAMsgAgent(msg));
 }
 
 static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,

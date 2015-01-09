@@ -181,3 +181,22 @@ TEST(testHeurMAMax)
                   "states/rovers-p15.txt", planHeurMARelaxMaxNew, -1,
                   seqHeurMaxNew);
 }
+
+TEST(testHeurMALMCut)
+{
+    runTestHeurMA("ma-lm-cut", "../data/simple/pfile.proto",
+                  "states/simple.txt", planHeurMALMCutNew, -1,
+                  seqHeurMaxNew);
+    runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/depot/pfile1.proto",
+                  "states/depot-pfile1.txt", planHeurMALMCutNew, -1,
+                  seqHeurMaxNew);
+    runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/depot/pfile5.proto",
+                  "states/depot-pfile5.txt", planHeurMALMCutNew, 200,
+                  seqHeurMaxNew);
+    runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/rovers/p03.proto",
+                  "states/rovers-p03.txt", planHeurMALMCutNew, -1,
+                  seqHeurMaxNew);
+    runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/rovers/p15.proto",
+                  "states/rovers-p15.txt", planHeurMALMCutNew, -1,
+                  seqHeurMaxNew);
+}

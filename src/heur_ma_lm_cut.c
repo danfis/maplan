@@ -8,8 +8,6 @@
 struct _private_t {
     plan_heur_relax_t relax;
     plan_op_id_tr_t op_id_tr;
-    int *fake_pre; /*!< Mapping between op_id and fake precodition ID */
-    int fake_pre_size;
     plan_oparr_t public_op; /*!< List of public operators */
 };
 typedef struct _private_t private_t;
@@ -60,22 +58,14 @@ static void privateInit(private_t *private, const plan_problem_t *prob)
     planHeurRelaxInit(&private->relax, PLAN_HEUR_RELAX_TYPE_MAX,
                       prob->var, prob->var_size, prob->goal, op, op_size);
 
+    // Get IDs of all public operators
     private->public_op.op = BOR_ALLOC_ARR(int, op_size);
     private->public_op.size = 0;
-
-    // Add fake precondition to public operators.
-    // The fake precondition will be used for received values.
-    private->fake_pre = BOR_ALLOC_ARR(int, op_size);
     for (i = 0; i < op_size; ++i){
         if (!op[i].is_private){
-            private->fake_pre[i] = planHeurRelaxAddFakePre(&private->relax, i);
             private->public_op.op[private->public_op.size++] = i;
-        }else{
-            private->fake_pre[i] = -1;
         }
     }
-    private->fake_pre_size = op_size;
-
     private->public_op.op = BOR_REALLOC_ARR(private->public_op.op, int,
                                             private->public_op.size);
 
@@ -86,8 +76,6 @@ static void privateInit(private_t *private, const plan_problem_t *prob)
 static void privateFree(private_t *private)
 {
     planHeurRelaxFree(&private->relax);
-    if (private->fake_pre)
-        BOR_FREE(private->fake_pre);
     planOpIdTrFree(&private->op_id_tr);
 }
 
@@ -459,19 +447,11 @@ static void allocPrivate(plan_heur_ma_lm_cut_t *heur, int agent_id)
 static void privateInitRequest(private_t *private, plan_ma_comm_t *comm,
                                const plan_ma_msg_t *msg)
 {
-    int i, fact_id;
     PLAN_STATE_STACK(state, private->relax.cref.fact_id.var_size);
 
     // Early exit if we have no private operators
     if (private->relax.cref.op_size == 0)
         return;
-
-    // Initialize fake-preconditions to zero
-    for (i = 0; i < private->fake_pre_size; ++i){
-        fact_id = private->fake_pre[i];
-        if (fact_id != -1)
-            planHeurRelaxSetFakePreValue(&private->relax, fact_id, 0);
-    }
 
     // Run full relaxation heuristic
     planMAMsgHeurMaxState(msg, &state);

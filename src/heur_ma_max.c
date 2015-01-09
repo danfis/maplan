@@ -6,7 +6,6 @@
 
 struct _private_t {
     plan_heur_relax_t relax;
-    plan_factarr_t fact;
     plan_op_id_tr_t op_id_tr;
     int *fake_pre; /*!< Mapping between op_id and fake precodition ID */
 };
@@ -56,18 +55,6 @@ static void privateInit(private_t *private, const plan_problem_t *prob)
     planHeurRelaxInit(&private->relax, PLAN_HEUR_RELAX_TYPE_MAX,
                       prob->var, prob->var_size, prob->goal, op, op_size);
 
-    private->fact.fact = BOR_ALLOC_ARR(int, private->relax.cref.fact_size);
-    private->fact.size = 0;
-    for (i = 0; i < private->relax.cref.fact_size; ++i){
-        if (private->relax.cref.fact_eff[i].size > 0
-                || private->relax.cref.fact_pre[i].size > 0){
-            private->fact.fact[private->fact.size++] = i;
-        }
-    }
-
-    private->fact.fact = BOR_REALLOC_ARR(private->fact.fact, int,
-                                         private->fact.size);
-
     // Add fake precondition to public operators.
     // The fake precondition will be used for received values.
     private->fake_pre = BOR_CALLOC_ARR(int, op_size);
@@ -83,8 +70,6 @@ static void privateInit(private_t *private, const plan_problem_t *prob)
 static void privateFree(private_t *private)
 {
     planHeurRelaxFree(&private->relax);
-    if (private->fact.fact)
-        BOR_FREE(private->fact.fact);
     if (private->fake_pre)
         BOR_FREE(private->fake_pre);
     planOpIdTrFree(&private->op_id_tr);

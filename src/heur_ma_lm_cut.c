@@ -9,6 +9,8 @@ struct _private_t {
     plan_heur_relax_t relax;
     plan_op_id_tr_t op_id_tr;
     int *fake_pre; /*!< Mapping between op_id and fake precodition ID */
+    int fake_pre_size;
+    plan_oparr_t public_op; /*!< List of public operators */
 };
 typedef struct _private_t private_t;
 
@@ -58,13 +60,24 @@ static void privateInit(private_t *private, const plan_problem_t *prob)
     planHeurRelaxInit(&private->relax, PLAN_HEUR_RELAX_TYPE_MAX,
                       prob->var, prob->var_size, prob->goal, op, op_size);
 
+    private->public_op.op = BOR_ALLOC_ARR(int, op_size);
+    private->public_op.size = 0;
+
     // Add fake precondition to public operators.
     // The fake precondition will be used for received values.
-    private->fake_pre = BOR_CALLOC_ARR(int, op_size);
+    private->fake_pre = BOR_ALLOC_ARR(int, op_size);
     for (i = 0; i < op_size; ++i){
-        if (!op[i].is_private)
+        if (!op[i].is_private){
             private->fake_pre[i] = planHeurRelaxAddFakePre(&private->relax, i);
+            private->public_op.op[private->public_op.size++] = i;
+        }else{
+            private->fake_pre[i] = -1;
+        }
     }
+    private->fake_pre_size = op_size;
+
+    private->public_op.op = BOR_REALLOC_ARR(private->public_op.op, int,
+                                            private->public_op.size);
 
     planOpIdTrInit(&private->op_id_tr, op, op_size);
     planProblemDestroyOps(op, op_size);
@@ -204,23 +217,35 @@ static void setInitState(plan_heur_ma_lm_cut_t *heur, const plan_state_t *state)
     }
 }
 
-static void sendRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
-                        int agent_id)
+static void sendInitRequest(plan_heur_ma_lm_cut_t *heur,
+                            plan_ma_comm_t *comm, int agent_id)
+{
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                       PLAN_MA_MSG_HEUR_LM_CUT_INIT_REQUEST,
+                       planMACommId(comm));
+    planMAMsgHeurLMCutSetInitRequest(msg, heur->init_state.fact,
+                                     heur->init_state.size);
+    planMACommSendToNode(comm, agent_id, msg);
+    planMAMsgDel(msg);
+}
+
+static void sendMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                           int agent_id)
 {
     plan_ma_msg_t *msg;
     plan_oparr_t *oparr;
     int i, op_id, value;
 
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_MAX_REQUEST,
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST,
                        planMACommId(comm));
-    planMAMsgHeurMaxSetRequest(msg, heur->init_state.fact,
-                               heur->init_state.size);
 
     oparr = heur->agent_op + agent_id;
     for (i = 0; i < oparr->size; ++i){
         op_id = planOpIdTrGlob(&heur->op_id_tr, oparr->op[i]);
         value = heur->relax.op[oparr->op[i]].value;
-        planMAMsgHeurMaxAddOp(msg, op_id, value);
+        planMAMsgHeurLMCutMaxAddOp(msg, op_id, value);
     }
     planMACommSendToNode(comm, agent_id, msg);
     planMAMsgDel(msg);
@@ -238,9 +263,12 @@ static int heurMA(plan_heur_t *_heur, plan_ma_comm_t *comm,
     // Every agent must be requested at least once, so make sure of that.
     heur->agent_id = planMACommId(comm);
     for (i = 0; i < heur->agent_size; ++i){
-        heur->agent_changed[i] = 1;
-        if (i == heur->agent_id)
+        if (i == heur->agent_id){
             heur->agent_changed[i] = 0;
+        }else{
+            heur->agent_changed[i] = 1;
+            sendInitRequest(heur, comm, i);
+        }
     }
     heur->cur_agent_id = (planMACommId(comm) + 1) % heur->agent_size;
 
@@ -249,7 +277,7 @@ static int heurMA(plan_heur_t *_heur, plan_ma_comm_t *comm,
     planHeurRelaxFull(&heur->relax, state);
 
     // Send request to next agent
-    sendRequest(heur, comm, heur->cur_agent_id);
+    sendMaxRequest(heur, comm, heur->cur_agent_id);
 
     return -1;
 }
@@ -298,12 +326,12 @@ static void updateHMax(plan_heur_ma_lm_cut_t *heur, const plan_ma_msg_t *msg)
     int i, *update_op, update_op_size, op_id, value;
     int response_op_size, response_op_id, response_value;
 
-    response_op_size = planMAMsgHeurMaxOpSize(msg);
+    response_op_size = planMAMsgHeurLMCutMaxOpSize(msg);
     update_op = alloca(sizeof(int) * response_op_size);
     update_op_size = 0;
     for (i = 0; i < response_op_size; ++i){
         // Read data for operator
-        response_op_id = planMAMsgHeurMaxOp(msg, i, &response_value);
+        response_op_id = planMAMsgHeurLMCutMaxOp(msg, i, &response_value);
 
         // Translate operator ID from response to local ID
         op_id = planOpIdTrLoc(&heur->op_id_tr, response_op_id);
@@ -334,7 +362,7 @@ static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
     int other_agent_id;
 
     if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
-            || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_MAX_RESPONSE){
+            || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE){
         fprintf(stderr, "Error[%d]: Heur response isn't for h^max"
                         " heuristic.\n", comm->node_id);
         return -1;
@@ -364,7 +392,7 @@ static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
     do {
         heur->cur_agent_id = (heur->cur_agent_id + 1) % heur->agent_size;
     } while (!heur->agent_changed[heur->cur_agent_id]);
-    sendRequest(heur, comm, heur->cur_agent_id);
+    sendMaxRequest(heur, comm, heur->cur_agent_id);
 
     return -1;
 }
@@ -401,13 +429,13 @@ static void requestSendResponse(private_t *private,
     planMAMsgDel(msg);
 }
 
-static void requestSendEmptyResponse(plan_ma_comm_t *comm,
-                                     const plan_ma_msg_t *req)
+static void requestMaxSendEmptyResponse(plan_ma_comm_t *comm,
+                                        const plan_ma_msg_t *req)
 {
     plan_ma_msg_t *msg;
     int target_agent;
 
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_MAX_RESPONSE,
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE,
                        planMACommId(comm));
     target_agent = planMAMsgAgent(req);
     planMACommSendToNode(comm, target_agent, msg);
@@ -428,56 +456,122 @@ static void allocPrivate(plan_heur_ma_lm_cut_t *heur, int agent_id)
     heur->private_size = agent_id + 1;
 }
 
-static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
-                          const plan_ma_msg_t *msg)
+static void privateInitRequest(private_t *private, plan_ma_comm_t *comm,
+                               const plan_ma_msg_t *msg)
 {
-    plan_heur_ma_lm_cut_t *heur = HEUR(_heur);
-    private_t *private;
-    int i, op_id, op_len, fact_id;
-    plan_cost_t op_value;
-
-    // Allocate private structure if needed
-    allocPrivate(heur, planMAMsgAgent(msg));
-    private = heur->private + planMAMsgAgent(msg);
+    int i, fact_id;
     PLAN_STATE_STACK(state, private->relax.cref.fact_id.var_size);
 
-    if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
-            || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_MAX_REQUEST){
-        fprintf(stderr, "Error[%d]: Heur request isn't for h^max"
-                        " heuristic.\n", comm->node_id);
-        return;
-    }
-
     // Early exit if we have no private operators
-    if (private->relax.cref.op_size == 0){
-        requestSendEmptyResponse(comm, msg);
+    if (private->relax.cref.op_size == 0)
         return;
-    }
 
-    // Set up values of fake preconditions according to the operator values
-    // received from the other agent.
-    op_len = planMAMsgHeurMaxOpSize(msg);
-    for (i = 0; i < op_len; ++i){
-        op_id = planMAMsgHeurMaxOp(msg, i, &op_value);
-        op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
-        if (op_id < 0)
-            continue;
-
-        // Substract cost of the operator from the value to get correct
-        // fact value
-        op_value -= private->relax.op_init[op_id].cost;
-        op_value = BOR_MAX(0, op_value);
-
-        // Find out ID of the fake fact corresponding to the operator
-        fact_id = private->fake_pre[op_id];
-        // and set the initial value
-        planHeurRelaxSetFakePreValue(&private->relax, fact_id, op_value);
+    // Initialize fake-preconditions to zero
+    for (i = 0; i < private->fake_pre_size; ++i){
+        fact_id = private->fake_pre[i];
+        if (fact_id != -1)
+            planHeurRelaxSetFakePreValue(&private->relax, fact_id, 0);
     }
 
     // Run full relaxation heuristic
     planMAMsgHeurMaxState(msg, &state);
     planHeurRelaxFull(&private->relax, &state);
+}
 
-    // Send operator's new values back as response
-    requestSendResponse(private, comm, &private->op_id_tr, msg);
+static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
+                              const plan_ma_msg_t *msg)
+{
+    int i, *update_op, update_op_size, op_id, value;
+    int response_op_size, response_op_id, response_value;
+
+    // Early exit if we have no private operators
+    if (private->relax.cref.op_size == 0){
+        requestMaxSendEmptyResponse(comm, msg);
+        return;
+    }
+
+    plan_heur_relax_op_t *old_op;
+    old_op = BOR_ALLOC_ARR(plan_heur_relax_op_t,
+                           private->relax.cref.op_size);
+    memcpy(old_op, private->relax.op, sizeof(plan_heur_relax_op_t) *
+            private->relax.cref.op_size);
+
+    response_op_size = planMAMsgHeurLMCutMaxOpSize(msg);
+    update_op = alloca(sizeof(int) * response_op_size);
+    update_op_size = 0;
+    for (i = 0; i < response_op_size; ++i){
+        // Read data for operator
+        response_op_id = planMAMsgHeurLMCutMaxOp(msg, i, &response_value);
+
+        // Translate operator ID from response to local ID
+        op_id = planOpIdTrLoc(&private->op_id_tr, response_op_id);
+        if (op_id < 0)
+            continue;
+
+        old_op[op_id].value = response_value;
+
+        // Determine current value of operator
+        value = private->relax.op[op_id].value;
+
+        // Record updated value of operator and remember operator for
+        // later.
+        if (value < response_value){
+            private->relax.op[op_id].value = response_value;
+            update_op[update_op_size++] = op_id;
+        }
+    }
+
+    // Early exit if no operators were changed
+    if (update_op_size > 0){
+        // Update .relax structure
+        planHeurRelaxUpdateMaxFull(&private->relax, update_op, update_op_size);
+    }
+
+
+    plan_ma_msg_t *msgout;
+    msgout = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                          PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE,
+                          planMACommId(comm));
+    for (i = 0; i < private->public_op.size; ++i){
+        op_id = private->public_op.op[i];
+        if (old_op[op_id].value == private->relax.op[op_id].value)
+            continue;
+
+        value = private->relax.op[op_id].value;
+        op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
+        planMAMsgHeurLMCutMaxAddOp(msgout, op_id, value);
+    }
+    planMACommSendToNode(comm, planMAMsgAgent(msg), msgout);
+    planMAMsgDel(msgout);
+
+    BOR_FREE(old_op);
+}
+
+static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
+                          const plan_ma_msg_t *msg)
+{
+    plan_heur_ma_lm_cut_t *heur = HEUR(_heur);
+    private_t *private;
+    int type, subtype;
+
+    // Allocate private structure if needed
+    allocPrivate(heur, planMAMsgAgent(msg));
+    private = heur->private + planMAMsgAgent(msg);
+
+    type = planMAMsgType(msg);
+    subtype = planMAMsgSubType(msg);
+
+    if (type == PLAN_MA_MSG_HEUR){
+        if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_INIT_REQUEST){
+            privateInitRequest(private, comm, msg);
+            return;
+
+        }else if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST){
+            privateMaxRequest(private, comm, msg);
+            return;
+        }
+    }
+
+    fprintf(stderr, "Error[%d]: The request isn't for lm-cut heuristic.\n",
+            comm->node_id);
 }

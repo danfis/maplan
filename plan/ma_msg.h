@@ -47,6 +47,9 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_FF_RESPONSE  0x10
 #define PLAN_MA_MSG_HEUR_MAX_REQUEST  0x02
 #define PLAN_MA_MSG_HEUR_MAX_RESPONSE 0x20
+#define PLAN_MA_MSG_HEUR_LM_CUT_INIT_REQUEST 0x03
+#define PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST 0x04
+#define PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE 0x30
 
 /**
  * Returns values for planMAMsgHeurType().
@@ -307,9 +310,32 @@ int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
 
 
 
+/**
+ * Sets init-request for max phase of lm-cut heuristic.
+ */
+#define planMAMsgHeurLMCutSetInitRequest planMAMsgSetStateFull
 
 /**
- * Sets full state member of the message.\
+ * Adds operator to the max request/repsonse.
+ */
+#define planMAMsgHeurLMCutMaxAddOp(msg, op_id, value) \
+    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, value)
+
+/**
+ * Returns number of operators stored in message.
+ */
+#define planMAMsgHeurLMCutMaxOpSize planMAMsgOpSize
+
+/**
+ * Returns i'th operator's ID and its value
+ */
+#define planMAMsgHeurLMCutMaxOp(msg, i, value) \
+    planMAMsgOp((msg), (i), NULL, NULL, (value))
+
+
+
+/**
+ * Sets full state member of the message.
  */
 void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size);
 

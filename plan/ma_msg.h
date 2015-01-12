@@ -50,6 +50,9 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_LM_CUT_INIT_REQUEST 0x03
 #define PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST 0x04
 #define PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE 0x30
+#define PLAN_MA_MSG_HEUR_LM_CUT_SUPP_REQUEST 0x05
+// TODO: Remove SUPP_RESPONSE -- we don't need it
+#define PLAN_MA_MSG_HEUR_LM_CUT_SUPP_RESPONSE 0x50
 
 /**
  * Returns values for planMAMsgHeurType().
@@ -331,6 +334,25 @@ int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
  */
 #define planMAMsgHeurLMCutMaxOp(msg, i, value) \
     planMAMsgOp((msg), (i), NULL, NULL, (value))
+
+
+
+/**
+ * Adds operator to the HEUR_LM_CUT_SUPP_* message.
+ */
+#define planMAMsgHeurLMCutSuppAddOp(msg, op_id) \
+    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, PLAN_COST_INVALID)
+
+/**
+ * Returns number of operators stored in the message.
+ */
+#define planMAMsgHeurLMCutSuppOpSize planMAMsgOpSize
+
+/**
+ * Returns ID of the i'th operator.
+ */
+#define planMAMsgHeurLMCutSuppOp(msg, i) \
+    planMAMsgOp((msg), (i), NULL, NULL, NULL)
 
 
 

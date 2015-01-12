@@ -49,6 +49,9 @@ typedef struct _plan_heur_ma_lm_cut_t plan_heur_ma_lm_cut_t;
 #define HEUR(parent) \
     bor_container_of(parent, plan_heur_ma_lm_cut_t, heur)
 
+static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
+                       const plan_op_id_tr_t *op_id_tr, const char *name);
+
 static void heurDel(plan_heur_t *_heur);
 static int heurMA(plan_heur_t *heur, plan_ma_comm_t *comm,
                   const plan_state_t *state, plan_heur_res_t *res);
@@ -247,9 +250,12 @@ static void setInitState(plan_heur_ma_lm_cut_t *heur, const plan_state_t *state)
 {
     int i;
 
+    //fprintf(stderr, "Init state:");
     for (i = 0; i < heur->init_state.size; ++i){
         heur->init_state.fact[i] = state->val[i];
+        //fprintf(stderr, " %d", planFactId(&heur->relax.cref.fact_id, i, state->val[i]));
     }
+    //fprintf(stderr, "\n");
 }
 
 static void sendInitRequest(plan_heur_ma_lm_cut_t *heur,
@@ -377,11 +383,76 @@ static void updateHMax(plan_heur_ma_lm_cut_t *heur, const plan_ma_msg_t *msg)
     updateRelax(heur, heur->updated_ops, updated_ops_size);
 }
 
+static void sendSuppRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg[heur->agent_size];
+    int agent_id, i, op_id;
+
+    // Create one message per remote agent
+    for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
+        if (agent_id == heur->agent_id){
+            msg[agent_id] = NULL;
+            continue;
+        }
+
+        msg[agent_id] = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                                     PLAN_MA_MSG_HEUR_LM_CUT_SUPP_REQUEST,
+                                     planMACommId(comm));
+    }
+
+    // Fill message for each agent with the agent's operators that have
+    // supporter facts know to this (main) agent.
+    for (i = 0; i < heur->op_size; ++i){
+        agent_id = heur->op[i].owner;
+        if (agent_id != heur->agent_id && heur->relax.op[i].supp >= 0){
+            op_id = planOpIdTrGlob(&heur->op_id_tr, i);
+            if (op_id >= 0)
+                planMAMsgHeurLMCutSuppAddOp(msg[agent_id], op_id);
+        }
+    }
+
+    // Send message to all remote agents
+    for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
+        if (msg[agent_id]){
+            // TODO: Remove this -- we don't need to wait for response
+            heur->agent_changed[agent_id] = 1;
+
+            planMACommSendToNode(comm, agent_id, msg[agent_id]);
+            planMAMsgDel(msg[agent_id]);
+        }
+    }
+}
+
 static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg, plan_heur_res_t *res)
 {
     plan_heur_ma_lm_cut_t *heur = HEUR(_heur);
     int other_agent_id;
+
+    if (planMAMsgType(msg) == PLAN_MA_MSG_HEUR
+            && planMAMsgSubType(msg) == PLAN_MA_MSG_HEUR_LM_CUT_SUPP_RESPONSE){
+        // TODO: Remvoe this
+        /*
+        int op_size = planMAMsgOpSize(msg);
+        int i;
+        for (i = 0; i < op_size; ++i){
+            int glob_op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
+            int op_id = planOpIdTrLoc(&heur->op_id_tr, glob_op_id);
+            if (op_id >= 0
+                    && heur->relax.op[op_id].supp >= 0
+                    && heur->relax.op[op_id].supp < heur->relax.cref.fact_id.fact_size){
+                fprintf(stderr, "[%d] [%d] Conflict: %d(%d) [%d]\n",
+                        comm->node_id, planMAMsgAgent(msg),
+                        op_id, glob_op_id, heur->op[op_id].owner);
+            }
+        }
+        */
+
+        heur->agent_changed[planMAMsgAgent(msg)] = 0;
+        if (!needsUpdate(heur))
+            return 0;
+        return -1;
+    }
 
     if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
             || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE){
@@ -405,7 +476,12 @@ static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
     // Check if we are done
     if (!needsUpdate(heur)){
         res->heur = heur->relax.fact[heur->relax.cref.goal_id].value;
-        return 0;
+
+        //debugRelax(&heur->relax, heur->agent_id, &heur->op_id_tr, "Main");
+
+        // TODO
+        sendSuppRequest(heur, comm);
+        return -1;
     }
 
     // Determine next agent to which send request
@@ -516,6 +592,74 @@ static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
 
     // Send response to the main agent
     privateMaxSendResponse(private, comm, planMAMsgAgent(msg));
+
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private");
+}
+
+static void privateSuppRequest(private_t *private, plan_ma_comm_t *comm,
+                               const plan_ma_msg_t *msg)
+{
+    plan_ma_msg_t *msgout;
+    int i, size, op_id;
+
+    // Mark all received operators as without supporter fact because the
+    // supporter fact is hold by the main agent.
+    size = planMAMsgHeurLMCutSuppOpSize(msg);
+    for (i = 0; i < size; ++i){
+        op_id = planMAMsgHeurLMCutSuppOp(msg, i);
+        op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
+        if (op_id >= 0)
+            private->relax.op[op_id].supp = -1;
+    }
+
+#if 0 /* DEBUG */
+    // Check that all operators have support either in this agent or in the
+    // main agent
+    int j;
+    for (j = 0; j < private->op_id_tr.loc_to_glob_size; ++j){
+        int supp = private->relax.op[j].supp;
+        int found = 0;
+
+        for (i = 0; i < size; ++i){
+            op_id = planMAMsgHeurLMCutSuppOp(msg, i);
+            op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
+            if (op_id == j){
+                found = 1;
+                if (supp != -1){
+                    fprintf(stderr, "[%d] Error: Supporter for %d(%d) on"
+                                    " both agents.\n",
+                            comm->node_id, op_id,
+                            planMAMsgHeurLMCutSuppOp(msg, i));
+                    break;
+                }
+            }
+        }
+
+        if (!found && supp == -1 && private->relax.op[j].unsat == 0){
+            fprintf(stderr, "[%d] Error: Supporter for %d(%d) is -1 on both"
+                            " agents.\n",
+                    comm->node_id, j, planOpIdTrGlob(&private->op_id_tr, j));
+        }
+    }
+#endif
+
+
+    // TODO: Remove this -- it only serves for debug
+    msgout = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                       PLAN_MA_MSG_HEUR_LM_CUT_SUPP_RESPONSE,
+                       planMACommId(comm));
+    /*
+    for (i = 0; i < private->relax.cref.op_size; ++i){
+        if (private->relax.op[i].supp >= 0){
+            int op_id = planOpIdTrGlob(&private->op_id_tr, i);
+            if (op_id >= 0)
+                planMAMsgAddOp(msgout, op_id, private->relax.op[i].cost, -1,
+                        private->relax.op[i].value);
+        }
+    }
+    */
+    planMACommSendToNode(comm, planMAMsgAgent(msg), msgout);
+    planMAMsgDel(msgout);
 }
 
 static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
@@ -540,9 +684,54 @@ static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
         }else if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST){
             privateMaxRequest(private, comm, msg);
             return;
+
+        }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_SUPP_REQUEST){
+            privateSuppRequest(private, comm, msg);
+            return;
         }
     }
 
     fprintf(stderr, "Error[%d]: The request isn't for lm-cut heuristic.\n",
             comm->node_id);
 }
+
+
+
+static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
+                       const plan_op_id_tr_t *op_id_tr, const char *name)
+{
+    int i, j;
+
+    fprintf(stderr, "[%d] %s\n", agent_id, name);
+    for (i = 0; i < relax->cref.op_size; ++i){
+        fprintf(stderr, "[%d] Op[%d] value: %d, supp: %d",
+                agent_id,
+                planOpIdTrGlob(op_id_tr, relax->cref.op_id[i]),
+                relax->op[i].value,
+                relax->op[i].supp);
+
+        fprintf(stderr, " Pre[");
+        for (j = 0; j < relax->cref.op_pre[i].size; ++j){
+            fprintf(stderr, " %d:%d",
+                    relax->cref.op_pre[i].fact[j],
+                    relax->fact[relax->cref.op_pre[i].fact[j]].value);
+        }
+        fprintf(stderr, "]\n");
+    }
+
+    for (i = 0; i < relax->cref.fact_size; ++i){
+        fprintf(stderr, "[%d] Fact[%d] value: %d, supp: %d",
+                agent_id, i,
+                relax->fact[i].value,
+                relax->fact[i].supp);
+
+        fprintf(stderr, " Eff[");
+        for (j = 0; j < relax->cref.fact_eff[i].size; ++j){
+            fprintf(stderr, " %d:%d",
+                    relax->cref.fact_eff[i].op[j],
+                    relax->op[relax->cref.fact_eff[i].op[j]].value);
+        }
+        fprintf(stderr, "]\n");
+    }
+}
+

@@ -480,6 +480,7 @@ static void updateMaxFact(plan_heur_relax_t *relax,
         op = relax->op + ops[i];
         if (op->value < op->cost + fact_value){
             op->value = op->cost + fact_value;
+            op->supp = fact_id;
             updateMaxOp(relax, queue, ops[i]);
         }
     }
@@ -493,8 +494,10 @@ void planHeurRelaxUpdateMaxFull(plan_heur_relax_t *relax,
 
     planPrioQueueInit(&queue);
 
-    for (i = 0; i < op_size; ++i)
+    for (i = 0; i < op_size; ++i){
+        relax->op[op[i]].supp = -1;
         updateMaxOp(relax, &queue, op[i]);
+    }
 
 
     while (!planPrioQueueEmpty(&queue)){

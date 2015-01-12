@@ -169,9 +169,26 @@ static void initOp(plan_heur_ma_lm_cut_t *heur,
     }
 }
 
+static int checkConditionalEffects(const plan_op_t *op, int op_size)
+{
+    int i;
+
+    for (i = 0; i < op_size; ++i){
+        if (op[i].cond_eff_size > 0)
+            return 1;
+    }
+    return 0;
+}
+
 plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
 {
     plan_heur_ma_lm_cut_t *heur;
+
+    if (checkConditionalEffects(prob->proj_op, prob->proj_op_size)){
+        fprintf(stderr, "Error: ma-lm-cut heuristic cannot be run on"
+                        " operators with conditional effects.\n");
+        return NULL;
+    }
 
     heur = BOR_ALLOC(plan_heur_ma_lm_cut_t);
     _planHeurInit(&heur->heur, heurDel, NULL);

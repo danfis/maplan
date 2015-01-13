@@ -20,9 +20,10 @@ typedef struct _plan_heur_ma_lm_cut_t plan_heur_ma_lm_cut_t;
 typedef int (*state_step_fn)(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                              const plan_ma_msg_t *msg);
 
-#define GOAL_ZONE 1
-#define START_ZONE 2
-#define OP_DONE 3
+/** Cut op/fact states: */
+#define CUT_GOAL_ZONE 1
+#define CUT_START_ZONE 2
+#define CUT_OP_DONE 3
 
 struct _cut_op_t {
     int state;
@@ -603,8 +604,8 @@ static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm
     }
 
     for (i = 0; i < heur->op_size; ++i){
-        if (heur->cut.op[i].state == START_ZONE){
-            heur->cut.op[i].state = OP_DONE;
+        if (heur->cut.op[i].state == CUT_START_ZONE){
+            heur->cut.op[i].state = CUT_OP_DONE;
 
             agent_id = heur->op[i].owner;
             if (agent_id == heur->agent_id)
@@ -907,7 +908,7 @@ static void sendFindCutResponse(private_t *private, plan_ma_comm_t *comm,
                        PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE,
                        planMACommId(comm));
     for (i = 0; i < private->relax.cref.op_size; ++i){
-        if (private->cut.op[i].state == START_ZONE){
+        if (private->cut.op[i].state == CUT_START_ZONE){
             op_id = private->relax.cref.op_id[i];
             if (op_id < 0)
                 continue;
@@ -1025,7 +1026,7 @@ static void cutMarkGoalZone(cut_t *cut, const plan_heur_relax_t *relax,
     plan_heur_relax_op_t *op;
 
     borLifoInit(&lifo, sizeof(int));
-    cut->fact[goal_id].state = GOAL_ZONE;
+    cut->fact[goal_id].state = CUT_GOAL_ZONE;
     borLifoPush(&lifo, &goal_id);
     while (!borLifoEmpty(&lifo)){
         fact_id = *(int *)borLifoBack(&lifo);
@@ -1037,9 +1038,9 @@ static void cutMarkGoalZone(cut_t *cut, const plan_heur_relax_t *relax,
             op_id = ops[i];
             op = relax->op + op_id;
             if (cut->op[op_id].state == 0 && op->cost == 0){
-                cut->op[op_id].state = GOAL_ZONE;
+                cut->op[op_id].state = CUT_GOAL_ZONE;
                 if (op->supp >= 0 && cut->fact[op->supp].state == 0){
-                    cut->fact[op->supp].state = GOAL_ZONE;
+                    cut->fact[op->supp].state = CUT_GOAL_ZONE;
                     borLifoPush(&lifo, &op->supp);
                 }
             }
@@ -1058,12 +1059,12 @@ static void cutFindAddEff(cut_t *cut, const plan_heur_relax_t *relax,
     facts = relax->cref.op_eff[op_id].fact;
     for (i = 0; i < len; ++i){
         fact_id = facts[i];
-        if (cut->fact[fact_id].state == GOAL_ZONE){
+        if (cut->fact[fact_id].state == CUT_GOAL_ZONE){
             cut->op[op_id].in_cut = 1;
             cut->min_cut = BOR_MIN(cut->min_cut, relax->op[op_id].cost);
 
         }else if (cut->fact[fact_id].state == 0){
-            cut->fact[fact_id].state = START_ZONE;
+            cut->fact[fact_id].state = CUT_START_ZONE;
             borLifoPush(lifo, &fact_id);
         }
     }
@@ -1086,7 +1087,7 @@ static void cutFindLoop(cut_t *cut, const plan_heur_relax_t *relax,
             op_id = ops[i];
             op = relax->op + op_id;
             if (cut->op[op_id].state == 0 && op->supp == fact_id){
-                cut->op[op_id].state = START_ZONE;
+                cut->op[op_id].state = CUT_START_ZONE;
                 cutFindAddEff(cut, relax, op_id, lifo);
             }
         }
@@ -1101,7 +1102,7 @@ static void cutFind(cut_t *cut, const plan_heur_relax_t *relax, int start_fact)
         return;
 
     borLifoInit(&lifo, sizeof(int));
-    cut->fact[start_fact].state = START_ZONE;
+    cut->fact[start_fact].state = CUT_START_ZONE;
     borLifoPush(&lifo, &start_fact);
     cutFindLoop(cut, relax, &lifo);
     borLifoFree(&lifo);
@@ -1117,7 +1118,7 @@ static void cutFindOp(cut_t *cut, const plan_heur_relax_t *relax, int op_id)
     borLifoInit(&lifo, sizeof(int));
     // Don't send back operator that was already received, so mark it
     // as done.
-    cut->op[op_id].state = OP_DONE;
+    cut->op[op_id].state = CUT_OP_DONE;
     cutFindAddEff(cut, relax, op_id, &lifo);
     cutFindLoop(cut, relax, &lifo);
     borLifoFree(&lifo);

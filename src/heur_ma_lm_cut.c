@@ -5,6 +5,21 @@
 #include "heur_relax.h"
 #include "op_id_tr.h"
 
+#define STATE_INIT             0
+#define STATE_GOAL_ZONE        1
+#define STATE_GOAL_ZONE_UPDATE 2
+#define STATE_FIND_CUT         3
+#define STATE_FIND_CUT_UPDATE  4
+#define STATE_CUT              5
+#define STATE_HMAX             6
+#define STATE_HMAX_UPDATE      7
+#define STATE_FINISH           8
+#define STATE_SIZE             9
+
+typedef struct _plan_heur_ma_lm_cut_t plan_heur_ma_lm_cut_t;
+typedef int (*state_step_fn)(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                             const plan_ma_msg_t *msg);
+
 struct _private_t {
     plan_heur_relax_t relax;
     plan_op_id_tr_t op_id_tr;
@@ -26,13 +41,16 @@ struct _plan_heur_ma_lm_cut_t {
     plan_heur_relax_t relax;
     plan_op_id_tr_t op_id_tr;
 
+    int state;
+    state_step_fn *state_step; /*!< Array of functions assigned to each state */
+    plan_cost_t heur_value;    /*!< Value of the heuristic */
     int agent_id;
     int agent_size;            /*!< Number of agents in cluster */
     int *agent_changed;        /*!< True/False for each agent signaling
                                     whether an operator changed */
     int cur_agent_id;          /*!< ID of the agent from which a response
                                     is expected. */
-    plan_factarr_t init_state; /*!< Stored actual state for which the
+    plan_state_t *init_state;  /*!< Stored actual state for which the
                                     heuristic is computed */
     ma_lm_cut_op_t *op;        /*!< Local info about operators */
     int op_size;               /*!< Number of projected operators */
@@ -44,7 +62,6 @@ struct _plan_heur_ma_lm_cut_t {
     private_t *private;
     int private_size;
 };
-typedef struct _plan_heur_ma_lm_cut_t plan_heur_ma_lm_cut_t;
 
 #define HEUR(parent) \
     bor_container_of(parent, plan_heur_ma_lm_cut_t, heur)
@@ -59,6 +76,18 @@ static int heurMAUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg, plan_heur_res_t *res);
 static void heurMARequest(plan_heur_t *heur, plan_ma_comm_t *comm,
                           const plan_ma_msg_t *msg);
+
+static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                    const plan_ma_msg_t *msg, plan_heur_res_t *res);
+static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                    const plan_ma_msg_t *msg);
+static int stepGoalZone(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                        const plan_ma_msg_t *msg);
+static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                          const plan_ma_msg_t *msg);
+static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                      const plan_ma_msg_t *msg);
+
 
 /** Updates op[] array with values from of operators from message if case
  *  the value is higher than the one in op[] array.
@@ -201,14 +230,25 @@ plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
                       prob->proj_op, prob->proj_op_size);
     planOpIdTrInit(&heur->op_id_tr, prob->proj_op, prob->proj_op_size);
 
+    heur->state = STATE_INIT;
+    heur->state_step = BOR_CALLOC_ARR(state_step_fn, STATE_SIZE);
+    heur->state_step[STATE_INIT] = stepInit;
+    heur->state_step[STATE_GOAL_ZONE] = stepGoalZone;
+    //heur->state_step[STATE_GOAL_ZONE_UPDATE] = stepGoalZoneUpdate;
+    //heur->state_step[STATE_FIND_CUT] = stepFindCut;
+    //heur->state_step[STATE_FIND_CUT_UPDATE] = stepFindCutUpdate;
+    //heur->state_step[STATE_CUT] = stepCut;
+    //heur->state_step[STATE_HMAX] = stepHMax;
+    heur->state_step[STATE_HMAX_UPDATE] = stepHMaxUpdate;
+    heur->state_step[STATE_FINISH] = stepFinish;
+
     heur->agent_size = agentSize(prob->proj_op, prob->proj_op_size);
     heur->agent_changed = BOR_CALLOC_ARR(int, heur->agent_size);
     initOp(heur, prob->proj_op, prob->proj_op_size);
     heur->opcmp = BOR_ALLOC_ARR(plan_heur_relax_op_t,
                                 heur->relax.cref.op_size);
 
-    heur->init_state.size = prob->var_size;
-    heur->init_state.fact = BOR_ALLOC_ARR(int, heur->init_state.size);
+    heur->init_state = planStateNew(prob->state_pool);
     heur->updated_ops = BOR_ALLOC_ARR(int, heur->relax.cref.op_size);
 
     heur->prob = prob;
@@ -227,10 +267,12 @@ static void heurDel(plan_heur_t *_heur)
         BOR_FREE(heur->agent_changed);
     if (heur->opcmp)
         BOR_FREE(heur->opcmp);
-    if (heur->init_state.fact)
-        BOR_FREE(heur->init_state.fact);
+    if (heur->init_state)
+        planStateDel(heur->init_state);
     if (heur->op)
         BOR_FREE(heur->op);
+    if (heur->state_step)
+        BOR_FREE(heur->state_step);
 
     if (heur->updated_ops)
         BOR_FREE(heur->updated_ops);
@@ -246,17 +288,35 @@ static void heurDel(plan_heur_t *_heur)
     BOR_FREE(heur);
 }
 
-static void setInitState(plan_heur_ma_lm_cut_t *heur, const plan_state_t *state)
+static int heurMA(plan_heur_t *_heur, plan_ma_comm_t *comm,
+                  const plan_state_t *state, plan_heur_res_t *res)
 {
-    int i;
+    plan_heur_ma_lm_cut_t *heur = HEUR(_heur);
 
-    //fprintf(stderr, "Init state:");
-    for (i = 0; i < heur->init_state.size; ++i){
-        heur->init_state.fact[i] = state->val[i];
-        //fprintf(stderr, " %d", planFactId(&heur->relax.cref.fact_id, i, state->val[i]));
-    }
-    //fprintf(stderr, "\n");
+    heur->heur_value = PLAN_HEUR_DEAD_END;
+
+    // Store state for which we are evaluating heuristics
+    planStateCopy(heur->init_state, state);
+
+    // Remember ID of this agent
+    heur->agent_id = planMACommId(comm);
+
+    // Set up first state
+    heur->state = STATE_INIT;
+
+    return mainLoop(heur, comm, NULL, res);
 }
+
+static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
+                        const plan_ma_msg_t *msg, plan_heur_res_t *res)
+{
+    plan_heur_ma_lm_cut_t *heur = HEUR(_heur);
+    return mainLoop(heur, comm, msg, res);
+}
+
+
+
+
 
 static void sendInitRequest(plan_heur_ma_lm_cut_t *heur,
                             plan_ma_comm_t *comm, int agent_id)
@@ -266,8 +326,7 @@ static void sendInitRequest(plan_heur_ma_lm_cut_t *heur,
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_INIT_REQUEST,
                        planMACommId(comm));
-    planMAMsgHeurLMCutSetInitRequest(msg, heur->init_state.fact,
-                                     heur->init_state.size);
+    planMAMsgHeurLMCutSetInitRequest(msg, heur->init_state);
     planMACommSendToNode(comm, agent_id, msg);
     planMAMsgDel(msg);
 }
@@ -298,49 +357,22 @@ static void sendMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     planMAMsgDel(msg);
 }
 
-static int heurMA(plan_heur_t *_heur, plan_ma_comm_t *comm,
-                  const plan_state_t *state, plan_heur_res_t *res)
+
+
+
+static int nextAgentId(const plan_heur_ma_lm_cut_t *heur)
 {
-    plan_heur_ma_lm_cut_t *heur = HEUR(_heur);
+    int from = (heur->cur_agent_id + 1) % heur->agent_size;
+    int to = heur->cur_agent_id;
     int i;
 
-    // Store state for which we are evaluating heuristics
-    setInitState(heur, state);
-
-    // Every agent must be requested at least once, so make sure of that.
-    heur->agent_id = planMACommId(comm);
-    for (i = 0; i < heur->agent_size; ++i){
-        if (i == heur->agent_id){
-            heur->agent_changed[i] = 0;
-        }else{
-            heur->agent_changed[i] = 1;
-            sendInitRequest(heur, comm, i);
-        }
+    for (i = from; i != to; i = (i + 1) % heur->agent_size){
+        if (heur->agent_changed[i])
+            return i;
     }
-    heur->cur_agent_id = (planMACommId(comm) + 1) % heur->agent_size;
-
-    // Set all operators as changed
-    for (i = 0; i < heur->op_size; ++i)
-        heur->op[i].changed = 1;
-
-    // h^max heuristics for all facts and operators reachable from the
-    // state
-    planHeurRelaxFull(&heur->relax, state);
-
-    // Send request to next agent
-    sendMaxRequest(heur, comm, heur->cur_agent_id);
-
+    if (heur->agent_changed[to])
+        return to;
     return -1;
-}
-
-
-
-static int needsUpdate(const plan_heur_ma_lm_cut_t *heur)
-{
-    int i, val = 0;
-    for (i = 0; i < heur->agent_size; ++i)
-        val += heur->agent_changed[i];
-    return val;
 }
 
 static void updateRelax(plan_heur_ma_lm_cut_t *heur,
@@ -421,12 +453,63 @@ static void sendSuppRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
             planMAMsgDel(msg[agent_id]);
         }
     }
+    heur->cur_agent_id = (heur->agent_id + 1) % heur->agent_size;
 }
 
-static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
-                        const plan_ma_msg_t *msg, plan_heur_res_t *res)
+
+static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                    const plan_ma_msg_t *msg, plan_heur_res_t *res)
 {
-    plan_heur_ma_lm_cut_t *heur = HEUR(_heur);
+    while (heur->state_step[heur->state](heur, comm, msg) == 0);
+
+    if (heur->state == STATE_FINISH){
+        res->heur = heur->heur_value;
+        return 0;
+    }
+
+    return -1;
+}
+
+static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                    const plan_ma_msg_t *msg)
+{
+    int i;
+
+    // Every agent must be requested at least once, so make sure of that.
+    for (i = 0; i < heur->agent_size; ++i){
+        if (i == heur->agent_id){
+            heur->agent_changed[i] = 0;
+        }else{
+            heur->agent_changed[i] = 1;
+            sendInitRequest(heur, comm, i);
+        }
+    }
+    heur->cur_agent_id = (planMACommId(comm) + 1) % heur->agent_size;
+
+    // Set all operators as changed
+    for (i = 0; i < heur->op_size; ++i)
+        heur->op[i].changed = 1;
+
+    // h^max heuristics for all facts and operators reachable from the
+    // state
+    planHeurRelaxFull(&heur->relax, heur->init_state);
+
+    // Send request to next agent
+    sendMaxRequest(heur, comm, heur->cur_agent_id);
+
+    heur->state = STATE_HMAX_UPDATE;
+    return -1;
+}
+
+static int stepGoalZone(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                        const plan_ma_msg_t *msg)
+{
+    return -1;
+}
+
+static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                          const plan_ma_msg_t *msg)
+{
     int other_agent_id;
 
     if (planMAMsgType(msg) == PLAN_MA_MSG_HEUR
@@ -449,9 +532,12 @@ static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
         */
 
         heur->agent_changed[planMAMsgAgent(msg)] = 0;
-        if (!needsUpdate(heur))
-            return 0;
-        return -1;
+        heur->cur_agent_id = nextAgentId(heur);
+        if (heur->cur_agent_id >= 0)
+            return -1;
+        // TODO
+        heur->state = STATE_FINISH;
+        return 0;
     }
 
     if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
@@ -474,24 +560,24 @@ static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
     updateHMax(heur, msg);
 
     // Check if we are done
-    if (!needsUpdate(heur)){
-        res->heur = heur->relax.fact[heur->relax.cref.goal_id].value;
-
-        //debugRelax(&heur->relax, heur->agent_id, &heur->op_id_tr, "Main");
-
-        // TODO
+    heur->cur_agent_id = nextAgentId(heur);
+    if (heur->cur_agent_id >= 0){
+        sendMaxRequest(heur, comm, heur->cur_agent_id);
+    }else{
         sendSuppRequest(heur, comm);
-        return -1;
     }
-
-    // Determine next agent to which send request
-    do {
-        heur->cur_agent_id = (heur->cur_agent_id + 1) % heur->agent_size;
-    } while (!heur->agent_changed[heur->cur_agent_id]);
-    sendMaxRequest(heur, comm, heur->cur_agent_id);
 
     return -1;
 }
+
+static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                      const plan_ma_msg_t *msg)
+{
+    heur->heur_value = heur->relax.fact[heur->relax.cref.goal_id].value;
+    return -1;
+}
+
+
 
 
 

@@ -316,7 +316,7 @@ int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
 /**
  * Sets init-request for max phase of lm-cut heuristic.
  */
-#define planMAMsgHeurLMCutSetInitRequest planMAMsgSetStateFull
+#define planMAMsgHeurLMCutSetInitRequest planMAMsgSetStateFull2
 
 /**
  * Adds operator to the max request/repsonse.
@@ -360,6 +360,11 @@ int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
  * Sets full state member of the message.
  */
 void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size);
+
+/**
+ * Sets full state member of the message.
+ */
+void planMAMsgSetStateFull2(plan_ma_msg_t *msg, const plan_state_t *state);
 
 /**
  * Loads full state from the message

@@ -251,6 +251,11 @@ void planStateZeroize(plan_state_t *state);
  */
 void planStatePrint(const plan_state_t *state, FILE *fout);
 
+/**
+ * Copy state from src to dst.
+ */
+void planStateCopy(plan_state_t *dst, const plan_state_t *src);
+
 
 
 /**

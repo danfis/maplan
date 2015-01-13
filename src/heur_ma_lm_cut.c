@@ -661,6 +661,10 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     int i, size, op_id;
     int from_agent;
     
+    // Update minimal cost of cut from message
+    heur->cut.min_cut = BOR_MIN(heur->cut.min_cut, planMAMsgMinCutCost(msg));
+
+    // Proceed in exploring justification graph from the received operators
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
         op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
@@ -671,11 +675,15 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
         cutFindOp(&heur->cut, &heur->relax, op_id);
     }
 
+    // Mark agent as processed
     from_agent = planMAMsgAgent(msg);
     heur->agent_changed[from_agent] = 0;
 
     debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainFindCutUpdate");
 
+    // If messages from all agents were processed, try to send another
+    // bulk of messages if anything changed. If nothing changed,
+    // proceed to next phase.
     heur->cur_agent_id = heur->agent_id;
     if (nextAgentId(heur) < 0){
         if (sendFindCutRequests(heur, comm, 0) == 0){
@@ -919,6 +927,9 @@ static void sendFindCutResponse(private_t *private, plan_ma_comm_t *comm,
                            PLAN_COST_INVALID);
         }
     }
+
+    // Set minimal cost of cut so far
+    planMAMsgSetMinCutCost(msg, private->cut.min_cut);
 
     planMACommSendToNode(comm, agent_id, msg);
     planMAMsgDel(msg);

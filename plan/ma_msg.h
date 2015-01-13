@@ -423,6 +423,16 @@ int planMAMsgOp(const plan_ma_msg_t *msg, int i,
                 plan_cost_t *cost, int *owner, plan_cost_t *value);
 
 
+/**
+ * Sets min-cut-cost value.
+ */
+void planMAMsgSetMinCutCost(plan_ma_msg_t *msg, plan_cost_t cost);
+
+/**
+ * Returns min-cut-cost value.
+ */
+plan_cost_t planMAMsgMinCutCost(const plan_ma_msg_t *msg);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

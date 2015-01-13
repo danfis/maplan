@@ -360,3 +360,15 @@ int planMAMsgOp(const plan_ma_msg_t *msg, int i,
         *value = op.value();
     return op.op_id();
 }
+
+void planMAMsgSetMinCutCost(plan_ma_msg_t *msg, plan_cost_t cost)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_min_cut_cost(cost);
+}
+
+plan_cost_t planMAMsgMinCutCost(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->min_cut_cost();
+}

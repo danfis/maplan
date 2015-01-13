@@ -35,6 +35,28 @@ struct _cut_fact_t {
 };
 typedef struct _cut_fact_t cut_fact_t;
 
+struct _cut_t {
+    cut_op_t *op;
+    cut_fact_t *fact;
+    plan_cost_t min_cut;
+};
+typedef struct _cut_t cut_t;
+
+/** Initialize cut_t structure */
+static void cutInit(cut_t *cut, const plan_heur_relax_t *relax);
+/** Frees allocated resources */
+static void cutFree(cut_t *cut);
+/** Initializes cut_t structure to initial values */
+static void cutInitCycle(cut_t *cut, const plan_heur_relax_t *relax);
+/** Marks goal zone in cut_t structure */
+static void cutMarkGoalZone(cut_t *cut, const plan_heur_relax_t *relax,
+                            int goal_id);
+/** Performs find-cut procedure from the specified fact */
+static void cutFind(cut_t *cut, const plan_heur_relax_t *relax, int start_fact);
+/** Performs find-cut procedure from the specified operator */
+static void cutFindOp(cut_t *cut, const plan_heur_relax_t *relax, int op_id);
+
+
 struct _private_t {
     plan_heur_relax_t relax;
     plan_op_id_tr_t op_id_tr;
@@ -43,8 +65,7 @@ struct _private_t {
     plan_heur_relax_op_t *opcmp; /*!< Array for comparing operators before
                                       and after change */
 
-    cut_op_t *cut_op;
-    cut_fact_t *cut_fact;
+    cut_t cut;
 };
 typedef struct _private_t private_t;
 
@@ -75,8 +96,7 @@ struct _plan_heur_ma_lm_cut_t {
     plan_heur_relax_op_t *opcmp; /*!< Array for comparison of operators
                                       before and after a change */
     int *updated_ops;          /*!< Array for operators that were updated */
-    cut_op_t *cut_op;          /*!< Op info regarding cut finding */
-    cut_fact_t *cut_fact;      /*!< Fact info regarding cut finding */
+    cut_t cut;                 /*!< Structure for finding cut */
 
     const plan_problem_t *prob;
     private_t *private;
@@ -88,10 +108,9 @@ struct _plan_heur_ma_lm_cut_t {
 
 static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
                        const plan_op_id_tr_t *op_id_tr, const char *name);
-static void debugCut(const plan_heur_relax_t *relax, int agent_id,
-                     const plan_op_id_tr_t *op_id_tr,
-                     const char *name, const cut_op_t *cut_op,
-                     const cut_fact_t *cut_fact);
+static void debugCut(const cut_t *cut, const plan_heur_relax_t *relax,
+                     int agent_id, const plan_op_id_tr_t *op_id_tr,
+                     const char *name);
 
 static void heurDel(plan_heur_t *_heur);
 static int heurMA(plan_heur_t *heur, plan_ma_comm_t *comm,
@@ -198,8 +217,7 @@ static void privateInit(private_t *private, const plan_problem_t *prob)
     private->opcmp = BOR_ALLOC_ARR(plan_heur_relax_op_t,
                                    private->relax.cref.op_size);
 
-    private->cut_op = BOR_ALLOC_ARR(cut_op_t, private->relax.cref.op_size);
-    private->cut_fact = BOR_ALLOC_ARR(cut_fact_t, private->relax.cref.fact_size);
+    cutInit(&private->cut, &private->relax);
 }
 
 static void privateFree(private_t *private)
@@ -212,10 +230,7 @@ static void privateFree(private_t *private)
         BOR_FREE(private->updated_ops);
     if (private->opcmp)
         BOR_FREE(private->opcmp);
-    if (private->cut_op)
-        BOR_FREE(private->cut_op);
-    if (private->cut_fact)
-        BOR_FREE(private->cut_fact);
+    cutFree(&private->cut);
 }
 
 static int agentSize(const plan_op_t *op, int op_size)
@@ -292,8 +307,7 @@ plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
     heur->init_state = planStateNew(prob->state_pool);
     heur->updated_ops = BOR_ALLOC_ARR(int, heur->relax.cref.op_size);
 
-    heur->cut_op = BOR_ALLOC_ARR(cut_op_t, heur->relax.cref.op_size);
-    heur->cut_fact = BOR_ALLOC_ARR(cut_fact_t, heur->relax.cref.fact_size);
+    cutInit(&heur->cut, &heur->relax);
 
     heur->prob = prob;
     heur->private = NULL;
@@ -315,15 +329,13 @@ static void heurDel(plan_heur_t *_heur)
         planStateDel(heur->init_state);
     if (heur->op)
         BOR_FREE(heur->op);
-    if (heur->cut_op)
-        BOR_FREE(heur->cut_op);
-    if (heur->cut_fact)
-        BOR_FREE(heur->cut_fact);
     if (heur->state_step)
         BOR_FREE(heur->state_step);
 
     if (heur->updated_ops)
         BOR_FREE(heur->updated_ops);
+
+    cutFree(&heur->cut);
 
     for (i = 0; i < heur->private_size; ++i)
         privateFree(heur->private + i);
@@ -545,52 +557,16 @@ static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     return -1;
 }
 
-static void markGoalZone(const plan_heur_relax_t *relax, int goal_id,
-                         cut_op_t *cut_op, cut_fact_t *cut_fact)
-{
-    bor_lifo_t lifo;
-    int fact_id;
-    int i, len, *ops, op_id;
-    plan_heur_relax_op_t *op;
-
-    borLifoInit(&lifo, sizeof(int));
-    cut_fact[goal_id].state = GOAL_ZONE;
-    borLifoPush(&lifo, &goal_id);
-    while (!borLifoEmpty(&lifo)){
-        fact_id = *(int *)borLifoBack(&lifo);
-        borLifoPop(&lifo);
-
-        len = relax->cref.fact_eff[fact_id].size;
-        ops = relax->cref.fact_eff[fact_id].op;
-        for (i = 0; i < len; ++i){
-            op_id = ops[i];
-            op = relax->op + op_id;
-            if (cut_op[op_id].state == 0 && op->cost == 0){
-                cut_op[op_id].state = GOAL_ZONE;
-                if (op->supp >= 0 && cut_fact[op->supp].state == 0){
-                    cut_fact[op->supp].state = GOAL_ZONE;
-                    borLifoPush(&lifo, &op->supp);
-                }
-            }
-        }
-    }
-
-    borLifoFree(&lifo);
-}
-
 static int stepGoalZone(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg)
 {
-    bzero(heur->cut_op, sizeof(cut_op_t) * heur->relax.cref.op_size);
-    bzero(heur->cut_fact, sizeof(cut_fact_t) * heur->relax.cref.fact_size);
+    cutInitCycle(&heur->cut, &heur->relax);
 
-    markGoalZone(&heur->relax, heur->relax.cref.goal_id,
-                 heur->cut_op, heur->cut_fact);
+    cutMarkGoalZone(&heur->cut, &heur->relax, heur->relax.cref.goal_id);
 
     // TODO: Send requests
 
-    debugCut(&heur->relax, comm->node_id, &heur->op_id_tr, "Main",
-             heur->cut_op, heur->cut_fact);
+    debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "Main");
 
     heur->state = STATE_FIND_CUT;
     //heur->state = STATE_FINISH;
@@ -602,79 +578,6 @@ static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 {
     // TODO
     return -1;
-}
-
-static void findCutAddEff(const plan_heur_relax_t *relax,
-                          cut_op_t *cut_op, cut_fact_t *cut_fact,
-                          int op_id, bor_lifo_t *lifo)
-{
-    int i, len, *facts, fact_id;
-
-    len = relax->cref.op_eff[op_id].size;
-    facts = relax->cref.op_eff[op_id].fact;
-    for (i = 0; i < len; ++i){
-        fact_id = facts[i];
-        if (cut_fact[fact_id].state == GOAL_ZONE){
-            cut_op[op_id].in_cut = 1;
-        }else if (cut_fact[fact_id].state == 0){
-            cut_fact[fact_id].state = START_ZONE;
-            borLifoPush(lifo, &fact_id);
-        }
-    }
-}
-
-static void findCutLoop(const plan_heur_relax_t *relax, bor_lifo_t *lifo,
-                        cut_op_t *cut_op, cut_fact_t *cut_fact)
-{
-    int fact_id;
-    int i, len, *ops, op_id;
-    plan_heur_relax_op_t *op;
-
-    while (!borLifoEmpty(lifo)){
-        fact_id = *(int *)borLifoBack(lifo);
-        borLifoPop(lifo);
-
-        len = relax->cref.fact_pre[fact_id].size;
-        ops = relax->cref.fact_pre[fact_id].op;
-        for (i = 0; i < len; ++i){
-            op_id = ops[i];
-            op = relax->op + op_id;
-            if (cut_op[op_id].state == 0 && op->supp == fact_id){
-                cut_op[op_id].state = START_ZONE;
-                findCutAddEff(relax, cut_op, cut_fact, op_id, lifo);
-            }
-        }
-    }
-}
-
-static void findCut(const plan_heur_relax_t *relax, int start_fact,
-                    cut_op_t *cut_op, cut_fact_t *cut_fact)
-{
-    bor_lifo_t lifo;
-
-    if (cut_fact[start_fact].state != 0)
-        return;
-
-    borLifoInit(&lifo, sizeof(int));
-    cut_fact[start_fact].state = START_ZONE;
-    borLifoPush(&lifo, &start_fact);
-    findCutLoop(relax, &lifo, cut_op, cut_fact);
-    borLifoFree(&lifo);
-}
-
-static void findCutOp(const plan_heur_relax_t *relax, int op_id,
-                      cut_op_t *cut_op, cut_fact_t *cut_fact)
-{
-    bor_lifo_t lifo;
-
-    if (cut_op[op_id].state != 0)
-        return;
-
-    borLifoInit(&lifo, sizeof(int));
-    cut_op[op_id].state = START_ZONE;
-    findCutAddEff(relax, cut_op, cut_fact, op_id, &lifo);
-    findCutLoop(relax, &lifo, cut_op, cut_fact);
-    borLifoFree(&lifo);
 }
 
 static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
@@ -700,8 +603,8 @@ static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm
     }
 
     for (i = 0; i < heur->op_size; ++i){
-        if (heur->cut_op[i].state == START_ZONE){
-            heur->cut_op[i].state = OP_DONE;
+        if (heur->cut.op[i].state == START_ZONE){
+            heur->cut.op[i].state = OP_DONE;
 
             agent_id = heur->op[i].owner;
             if (agent_id == heur->agent_id)
@@ -735,15 +638,14 @@ static int stepFindCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     for (i = 0; i < heur->init_state->num_vars; ++i){
         fact_id = planFactId(&heur->relax.cref.fact_id, i,
                              planStateGet(heur->init_state, i));
-        findCut(&heur->relax, fact_id, heur->cut_op, heur->cut_fact);
+        cutFind(&heur->cut, &heur->relax, fact_id);
     }
     for (i = 0; i < heur->relax.cref.fake_pre_size; ++i){
-        findCut(&heur->relax, heur->relax.cref.fake_pre[i].fact_id,
-                heur->cut_op, heur->cut_fact);
+        cutFind(&heur->cut, &heur->relax,
+                heur->relax.cref.fake_pre[i].fact_id);
     }
 
-    debugCut(&heur->relax, comm->node_id, &heur->op_id_tr, "MainFindCut",
-             heur->cut_op, heur->cut_fact);
+    debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainFindCut");
     debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainRelax");
 
     // Send request
@@ -765,15 +667,13 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
         if (op_id < 0)
             continue;
 
-        findCutOp(&heur->relax, op_id, heur->cut_op, heur->cut_fact);
-        heur->cut_op[op_id].state = OP_DONE;
+        cutFindOp(&heur->cut, &heur->relax, op_id);
     }
 
     from_agent = planMAMsgAgent(msg);
     heur->agent_changed[from_agent] = 0;
 
-    debugCut(&heur->relax, comm->node_id, &heur->op_id_tr, "MainFindCutUpdate",
-             heur->cut_op, heur->cut_fact);
+    debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainFindCutUpdate");
 
     heur->cur_agent_id = heur->agent_id;
     if (nextAgentId(heur) < 0){
@@ -962,9 +862,8 @@ static void privateSuppRequest(private_t *private, plan_ma_comm_t *comm,
             private->relax.op[op_id].supp = -1;
     }
 
-    // Initialize cut_* structures for consequent find-cut procedure
-    bzero(private->cut_op, sizeof(cut_op_t) * private->relax.cref.op_size);
-    bzero(private->cut_fact, sizeof(cut_fact_t) * private->relax.cref.fact_size);
+    // Initialize cut_t structure it will be needed in next phases
+    cutInitCycle(&private->cut, &private->relax);
 
 #if 0 /* DEBUG */
     // Check that all operators have support either in this agent or in the
@@ -1008,7 +907,7 @@ static void sendFindCutResponse(private_t *private, plan_ma_comm_t *comm,
                        PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE,
                        planMACommId(comm));
     for (i = 0; i < private->relax.cref.op_size; ++i){
-        if (private->cut_op[i].state == START_ZONE){
+        if (private->cut.op[i].state == START_ZONE){
             op_id = private->relax.cref.op_id[i];
             if (op_id < 0)
                 continue;
@@ -1033,13 +932,11 @@ static void privateFindCutRequest(private_t *private, plan_ma_comm_t *comm,
         for (i = 0; i < private->relax.cref.fact_id.var_size; ++i){
             fact_id = planMAMsgStateFullVal(msg, i);
             fact_id = planFactId(&private->relax.cref.fact_id, i, fact_id);
-            findCut(&private->relax, fact_id, private->cut_op,
-                    private->cut_fact);
+            cutFind(&private->cut, &private->relax, fact_id);
         }
         for (i = 0; i < private->relax.cref.fake_pre_size; ++i){
             fact_id = private->relax.cref.fake_pre[i].fact_id;
-            findCut(&private->relax, fact_id, private->cut_op,
-                    private->cut_fact);
+            cutFind(&private->cut, &private->relax, fact_id);
         }
     }
 
@@ -1050,19 +947,11 @@ static void privateFindCutRequest(private_t *private, plan_ma_comm_t *comm,
         if (op_id < 0)
             continue;
 
-        findCutOp(&private->relax, op_id, private->cut_op,
-                  private->cut_fact);
-
-        // Don't send back operator that was already received, so mark it
-        // as done.
-        private->cut_op[op_id].state = OP_DONE;
+        cutFindOp(&private->cut, &private->relax, op_id);
     }
 
-    // TODO: Send response
-    debugRelax(&private->relax, comm->node_id, &private->op_id_tr,
-               "Private");
-    debugCut(&private->relax, comm->node_id, &private->op_id_tr, "Private",
-             private->cut_op, private->cut_fact);
+    debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private");
+    debugCut(&private->cut, &private->relax, comm->node_id, &private->op_id_tr, "Private");
 
     sendFindCutResponse(private, comm, planMAMsgAgent(msg));
 }
@@ -1105,7 +994,139 @@ static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
 }
 
 
+/*** CUT ***/
+static void cutInit(cut_t *cut, const plan_heur_relax_t *relax)
+{
+    cut->op = BOR_ALLOC_ARR(cut_op_t, relax->cref.op_size);
+    cut->fact = BOR_ALLOC_ARR(cut_fact_t, relax->cref.fact_size);
+}
 
+static void cutFree(cut_t *cut)
+{
+    if (cut->op)
+        BOR_FREE(cut->op);
+    if (cut->fact)
+        BOR_FREE(cut->fact);
+}
+
+static void cutInitCycle(cut_t *cut, const plan_heur_relax_t *relax)
+{
+    bzero(cut->op, sizeof(cut_op_t) * relax->cref.op_size);
+    bzero(cut->fact, sizeof(cut_fact_t) * relax->cref.fact_size);
+    cut->min_cut = PLAN_COST_MAX;
+}
+
+static void cutMarkGoalZone(cut_t *cut, const plan_heur_relax_t *relax,
+                            int goal_id)
+{
+    bor_lifo_t lifo;
+    int fact_id;
+    int i, len, *ops, op_id;
+    plan_heur_relax_op_t *op;
+
+    borLifoInit(&lifo, sizeof(int));
+    cut->fact[goal_id].state = GOAL_ZONE;
+    borLifoPush(&lifo, &goal_id);
+    while (!borLifoEmpty(&lifo)){
+        fact_id = *(int *)borLifoBack(&lifo);
+        borLifoPop(&lifo);
+
+        len = relax->cref.fact_eff[fact_id].size;
+        ops = relax->cref.fact_eff[fact_id].op;
+        for (i = 0; i < len; ++i){
+            op_id = ops[i];
+            op = relax->op + op_id;
+            if (cut->op[op_id].state == 0 && op->cost == 0){
+                cut->op[op_id].state = GOAL_ZONE;
+                if (op->supp >= 0 && cut->fact[op->supp].state == 0){
+                    cut->fact[op->supp].state = GOAL_ZONE;
+                    borLifoPush(&lifo, &op->supp);
+                }
+            }
+        }
+    }
+
+    borLifoFree(&lifo);
+}
+
+static void cutFindAddEff(cut_t *cut, const plan_heur_relax_t *relax,
+                          int op_id, bor_lifo_t *lifo)
+{
+    int i, len, *facts, fact_id;
+
+    len = relax->cref.op_eff[op_id].size;
+    facts = relax->cref.op_eff[op_id].fact;
+    for (i = 0; i < len; ++i){
+        fact_id = facts[i];
+        if (cut->fact[fact_id].state == GOAL_ZONE){
+            cut->op[op_id].in_cut = 1;
+            cut->min_cut = BOR_MIN(cut->min_cut, relax->op[op_id].cost);
+
+        }else if (cut->fact[fact_id].state == 0){
+            cut->fact[fact_id].state = START_ZONE;
+            borLifoPush(lifo, &fact_id);
+        }
+    }
+}
+
+static void cutFindLoop(cut_t *cut, const plan_heur_relax_t *relax,
+                        bor_lifo_t *lifo)
+{
+    int fact_id;
+    int i, len, *ops, op_id;
+    plan_heur_relax_op_t *op;
+
+    while (!borLifoEmpty(lifo)){
+        fact_id = *(int *)borLifoBack(lifo);
+        borLifoPop(lifo);
+
+        len = relax->cref.fact_pre[fact_id].size;
+        ops = relax->cref.fact_pre[fact_id].op;
+        for (i = 0; i < len; ++i){
+            op_id = ops[i];
+            op = relax->op + op_id;
+            if (cut->op[op_id].state == 0 && op->supp == fact_id){
+                cut->op[op_id].state = START_ZONE;
+                cutFindAddEff(cut, relax, op_id, lifo);
+            }
+        }
+    }
+}
+
+static void cutFind(cut_t *cut, const plan_heur_relax_t *relax, int start_fact)
+{
+    bor_lifo_t lifo;
+
+    if (cut->fact[start_fact].state != 0)
+        return;
+
+    borLifoInit(&lifo, sizeof(int));
+    cut->fact[start_fact].state = START_ZONE;
+    borLifoPush(&lifo, &start_fact);
+    cutFindLoop(cut, relax, &lifo);
+    borLifoFree(&lifo);
+}
+
+static void cutFindOp(cut_t *cut, const plan_heur_relax_t *relax, int op_id)
+{
+    bor_lifo_t lifo;
+
+    if (cut->op[op_id].state != 0)
+        return;
+
+    borLifoInit(&lifo, sizeof(int));
+    // Don't send back operator that was already received, so mark it
+    // as done.
+    cut->op[op_id].state = OP_DONE;
+    cutFindAddEff(cut, relax, op_id, &lifo);
+    cutFindLoop(cut, relax, &lifo);
+    borLifoFree(&lifo);
+}
+/*** CUT END ***/
+
+
+
+/*** DEBUG ***/
 static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
                        const plan_op_id_tr_t *op_id_tr, const char *name)
 {
@@ -1146,24 +1167,25 @@ static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
     fflush(stderr);
 }
 
-static void debugCut(const plan_heur_relax_t *relax, int agent_id,
-                     const plan_op_id_tr_t *op_id_tr,
-                     const char *name, const cut_op_t *cut_op,
-                     const cut_fact_t *cut_fact)
+static void debugCut(const cut_t *cut, const plan_heur_relax_t *relax,
+                     int agent_id, const plan_op_id_tr_t *op_id_tr,
+                     const char *name)
 {
     int i;
 
     fprintf(stderr, "[%d] %s\n", agent_id, name);
+    fprintf(stderr, "[%d] min_cut: %d\n", agent_id, (int)cut->min_cut);
     for (i = 0; i < relax->cref.op_size; ++i){
         fprintf(stderr, "[%d] Op[%d] state: %d, in_cut: %d\n",
                 agent_id, planOpIdTrGlob(op_id_tr, i),
-                cut_op[i].state,
-                cut_op[i].in_cut);
+                cut->op[i].state,
+                cut->op[i].in_cut);
     }
     for (i = 0; i < relax->cref.fact_size; ++i){
         fprintf(stderr, "[%d] Fact[%d] state: %d\n",
-                agent_id, i, cut_fact[i].state);
+                agent_id, i, cut->fact[i].state);
     }
     fprintf(stderr, "\n");
     fflush(stderr);
 }
+/*** DEBUG END ***/

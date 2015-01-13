@@ -305,6 +305,12 @@ void planMAMsgSetStateFull2(plan_ma_msg_t *msg, const plan_state_t *state)
         proto->add_state_full(planStateGet(state, i));
 }
 
+int planMAMsgHasStateFull(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->state_full_size() > 0;
+}
+
 void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state)
 {
     const PlanMAMsg *proto = PROTO(msg);

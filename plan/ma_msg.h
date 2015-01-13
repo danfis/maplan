@@ -51,8 +51,8 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST 0x04
 #define PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE 0x30
 #define PLAN_MA_MSG_HEUR_LM_CUT_SUPP_REQUEST 0x05
-// TODO: Remove SUPP_RESPONSE -- we don't need it
-#define PLAN_MA_MSG_HEUR_LM_CUT_SUPP_RESPONSE 0x50
+#define PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_REQUEST 0x06
+#define PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE 0x60
 
 /**
  * Returns values for planMAMsgHeurType().
@@ -355,6 +355,29 @@ int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
     planMAMsgOp((msg), (i), NULL, NULL, NULL)
 
 
+/**
+ * Set full state in the message.
+ */
+#define planMAMsgHeurLMCutFindCutSetState(msg, state) \
+    planMAMsgSetStateFull2((msg), (state))
+
+/**
+ * Adds operator to the *FIND_CUT* message.
+ */
+#define planMAMsgHeurLMCutFindCutAddOp(msg, op_id) \
+    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, PLAN_COST_INVALID)
+
+/**
+ * Returns number of operators stored in the message.
+ */
+#define planMAMsgHeurLMCutFindCutOpSize planMAMsgOpSize
+
+/**
+ * Returns ID of the i'th operator.
+ */
+#define planMAMsgHeurLMCutFindCutOp(msg, i) \
+    planMAMsgOp((msg), (i), NULL, NULL, NULL)
+
 
 /**
  * Sets full state member of the message.
@@ -365,6 +388,11 @@ void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size);
  * Sets full state member of the message.
  */
 void planMAMsgSetStateFull2(plan_ma_msg_t *msg, const plan_state_t *state);
+
+/**
+ * Returns true if the full state is set.
+ */
+int planMAMsgHasStateFull(const plan_ma_msg_t *msg);
 
 /**
  * Loads full state from the message

@@ -20,6 +20,21 @@ typedef struct _plan_heur_ma_lm_cut_t plan_heur_ma_lm_cut_t;
 typedef int (*state_step_fn)(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                              const plan_ma_msg_t *msg);
 
+#define GOAL_ZONE 1
+#define START_ZONE 2
+#define OP_DONE 3
+
+struct _cut_op_t {
+    int state;
+    int in_cut;
+};
+typedef struct _cut_op_t cut_op_t;
+
+struct _cut_fact_t {
+    int state;
+};
+typedef struct _cut_fact_t cut_fact_t;
+
 struct _private_t {
     plan_heur_relax_t relax;
     plan_op_id_tr_t op_id_tr;
@@ -57,6 +72,8 @@ struct _plan_heur_ma_lm_cut_t {
     plan_heur_relax_op_t *opcmp; /*!< Array for comparison of operators
                                       before and after a change */
     int *updated_ops;          /*!< Array for operators that were updated */
+    cut_op_t *cut_op;          /*!< Op info regarding cut finding */
+    cut_fact_t *cut_fact;      /*!< Fact info regarding cut finding */
 
     const plan_problem_t *prob;
     private_t *private;
@@ -68,6 +85,8 @@ struct _plan_heur_ma_lm_cut_t {
 
 static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
                        const plan_op_id_tr_t *op_id_tr, const char *name);
+static void debugCut(const plan_heur_ma_lm_cut_t *heur, int agent_id,
+                     const char *name);
 
 static void heurDel(plan_heur_t *_heur);
 static int heurMA(plan_heur_t *heur, plan_ma_comm_t *comm,
@@ -83,6 +102,16 @@ static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg);
 static int stepGoalZone(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg);
+static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                              const plan_ma_msg_t *msg);
+static int stepFindCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                       const plan_ma_msg_t *msg);
+static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                             const plan_ma_msg_t *msg);
+static int stepCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                   const plan_ma_msg_t *msg);
+static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                    const plan_ma_msg_t *msg);
 static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                           const plan_ma_msg_t *msg);
 static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
@@ -234,11 +263,11 @@ plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
     heur->state_step = BOR_CALLOC_ARR(state_step_fn, STATE_SIZE);
     heur->state_step[STATE_INIT] = stepInit;
     heur->state_step[STATE_GOAL_ZONE] = stepGoalZone;
-    //heur->state_step[STATE_GOAL_ZONE_UPDATE] = stepGoalZoneUpdate;
-    //heur->state_step[STATE_FIND_CUT] = stepFindCut;
-    //heur->state_step[STATE_FIND_CUT_UPDATE] = stepFindCutUpdate;
-    //heur->state_step[STATE_CUT] = stepCut;
-    //heur->state_step[STATE_HMAX] = stepHMax;
+    heur->state_step[STATE_GOAL_ZONE_UPDATE] = stepGoalZoneUpdate;
+    heur->state_step[STATE_FIND_CUT] = stepFindCut;
+    heur->state_step[STATE_FIND_CUT_UPDATE] = stepFindCutUpdate;
+    heur->state_step[STATE_CUT] = stepCut;
+    heur->state_step[STATE_HMAX] = stepHMax;
     heur->state_step[STATE_HMAX_UPDATE] = stepHMaxUpdate;
     heur->state_step[STATE_FINISH] = stepFinish;
 
@@ -250,6 +279,9 @@ plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
 
     heur->init_state = planStateNew(prob->state_pool);
     heur->updated_ops = BOR_ALLOC_ARR(int, heur->relax.cref.op_size);
+
+    heur->cut_op = BOR_ALLOC_ARR(cut_op_t, heur->relax.cref.op_size);
+    heur->cut_fact = BOR_ALLOC_ARR(cut_fact_t, heur->relax.cref.fact_size);
 
     heur->prob = prob;
     heur->private = NULL;
@@ -271,6 +303,10 @@ static void heurDel(plan_heur_t *_heur)
         planStateDel(heur->init_state);
     if (heur->op)
         BOR_FREE(heur->op);
+    if (heur->cut_op)
+        BOR_FREE(heur->cut_op);
+    if (heur->cut_fact)
+        BOR_FREE(heur->cut_fact);
     if (heur->state_step)
         BOR_FREE(heur->state_step);
 
@@ -446,14 +482,10 @@ static void sendSuppRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
     // Send message to all remote agents
     for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
         if (msg[agent_id]){
-            // TODO: Remove this -- we don't need to wait for response
-            heur->agent_changed[agent_id] = 1;
-
             planMACommSendToNode(comm, agent_id, msg[agent_id]);
             planMAMsgDel(msg[agent_id]);
         }
     }
-    heur->cur_agent_id = (heur->agent_id + 1) % heur->agent_size;
 }
 
 
@@ -501,8 +533,154 @@ static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     return -1;
 }
 
+static void markGoalZone(const plan_heur_relax_t *relax, int goal_id,
+                         cut_op_t *cut_op, cut_fact_t *cut_fact)
+{
+    bor_lifo_t lifo;
+    int fact_id;
+    int i, len, *ops, op_id;
+    plan_heur_relax_op_t *op;
+
+    borLifoInit(&lifo, sizeof(int));
+    cut_fact[goal_id].state = GOAL_ZONE;
+    borLifoPush(&lifo, &goal_id);
+    while (!borLifoEmpty(&lifo)){
+        fact_id = *(int *)borLifoBack(&lifo);
+        borLifoPop(&lifo);
+
+        len = relax->cref.fact_eff[fact_id].size;
+        ops = relax->cref.fact_eff[fact_id].op;
+        for (i = 0; i < len; ++i){
+            op_id = ops[i];
+            op = relax->op + op_id;
+            if (cut_op[op_id].state == 0 && op->cost == 0){
+                cut_op[op_id].state = GOAL_ZONE;
+                if (op->supp >= 0 && cut_fact[op->supp].state == 0){
+                    cut_fact[op->supp].state = GOAL_ZONE;
+                    borLifoPush(&lifo, &op->supp);
+                }
+            }
+        }
+    }
+
+    borLifoFree(&lifo);
+}
+
 static int stepGoalZone(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg)
+{
+    bzero(heur->cut_op, sizeof(cut_op_t) * heur->relax.cref.op_size);
+    bzero(heur->cut_fact, sizeof(cut_fact_t) * heur->relax.cref.fact_size);
+
+    markGoalZone(&heur->relax, heur->relax.cref.goal_id,
+                 heur->cut_op, heur->cut_fact);
+
+    // TODO: Send requests
+
+    debugCut(heur, comm->node_id, "Main");
+
+    heur->state = STATE_FIND_CUT;
+    //heur->state = STATE_FINISH;
+    return 0;
+}
+
+static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                              const plan_ma_msg_t *msg)
+{
+    // TODO
+    return -1;
+}
+
+static void findCutAddEff(const plan_heur_relax_t *relax,
+                          cut_op_t *cut_op, cut_fact_t *cut_fact,
+                          int op_id, bor_lifo_t *lifo)
+{
+    int i, len, *facts, fact_id;
+
+    len = relax->cref.op_eff[op_id].size;
+    facts = relax->cref.op_eff[op_id].fact;
+    for (i = 0; i < len; ++i){
+        fact_id = facts[i];
+        if (cut_fact[fact_id].state == GOAL_ZONE){
+            cut_op[op_id].in_cut = 1;
+        }else if (cut_fact[fact_id].state == 0){
+            cut_fact[fact_id].state = START_ZONE;
+            borLifoPush(lifo, &fact_id);
+        }
+    }
+}
+
+static void findCut(const plan_heur_relax_t *relax, int start_fact,
+                    cut_op_t *cut_op, cut_fact_t *cut_fact)
+{
+    bor_lifo_t lifo;
+    int fact_id;
+    int i, len, *ops, op_id;
+    plan_heur_relax_op_t *op;
+
+    if (cut_fact[start_fact].state != 0)
+        return;
+
+    borLifoInit(&lifo, sizeof(int));
+    cut_fact[start_fact].state = START_ZONE;
+    borLifoPush(&lifo, &start_fact);
+    while (!borLifoEmpty(&lifo)){
+        fact_id = *(int *)borLifoBack(&lifo);
+        borLifoPop(&lifo);
+
+        len = relax->cref.fact_pre[fact_id].size;
+        ops = relax->cref.fact_pre[fact_id].op;
+        for (i = 0; i < len; ++i){
+            op_id = ops[i];
+            op = relax->op + op_id;
+            if (cut_op[op_id].state == 0 && op->supp == fact_id){
+                cut_op[op_id].state = START_ZONE;
+                findCutAddEff(relax, cut_op, cut_fact, op_id, &lifo);
+            }
+        }
+    }
+
+    borLifoFree(&lifo);
+}
+
+static int stepFindCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                       const plan_ma_msg_t *msg)
+{
+    int i, fact_id;
+
+    // Find cut from all facts in initial state and all fake preconditions
+    for (i = 0; i < heur->init_state->num_vars; ++i){
+        fact_id = planFactId(&heur->relax.cref.fact_id, i,
+                             planStateGet(heur->init_state, i));
+        findCut(&heur->relax, fact_id, heur->cut_op, heur->cut_fact);
+    }
+    for (i = 0; i < heur->relax.cref.fake_pre_size; ++i){
+        findCut(&heur->relax, heur->relax.cref.fake_pre[i].fact_id,
+                heur->cut_op, heur->cut_fact);
+    }
+
+    debugCut(heur, comm->node_id, "MainFindCut");
+    debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainRelax");
+
+    heur->state = STATE_FIND_CUT_UPDATE;
+    return 0;
+}
+
+static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                             const plan_ma_msg_t *msg)
+{
+    heur->state = STATE_FINISH;
+    return 0;
+}
+
+static int stepCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                   const plan_ma_msg_t *msg)
+{
+    return -1;
+}
+
+static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                    const plan_ma_msg_t *msg)
 {
     return -1;
 }
@@ -511,34 +689,6 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                           const plan_ma_msg_t *msg)
 {
     int other_agent_id;
-
-    if (planMAMsgType(msg) == PLAN_MA_MSG_HEUR
-            && planMAMsgSubType(msg) == PLAN_MA_MSG_HEUR_LM_CUT_SUPP_RESPONSE){
-        // TODO: Remvoe this
-        /*
-        int op_size = planMAMsgOpSize(msg);
-        int i;
-        for (i = 0; i < op_size; ++i){
-            int glob_op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
-            int op_id = planOpIdTrLoc(&heur->op_id_tr, glob_op_id);
-            if (op_id >= 0
-                    && heur->relax.op[op_id].supp >= 0
-                    && heur->relax.op[op_id].supp < heur->relax.cref.fact_id.fact_size){
-                fprintf(stderr, "[%d] [%d] Conflict: %d(%d) [%d]\n",
-                        comm->node_id, planMAMsgAgent(msg),
-                        op_id, glob_op_id, heur->op[op_id].owner);
-            }
-        }
-        */
-
-        heur->agent_changed[planMAMsgAgent(msg)] = 0;
-        heur->cur_agent_id = nextAgentId(heur);
-        if (heur->cur_agent_id >= 0)
-            return -1;
-        // TODO
-        heur->state = STATE_FINISH;
-        return 0;
-    }
 
     if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
             || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE){
@@ -565,6 +715,8 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
         sendMaxRequest(heur, comm, heur->cur_agent_id);
     }else{
         sendSuppRequest(heur, comm);
+        heur->state = STATE_GOAL_ZONE;
+        return 0;
     }
 
     return -1;
@@ -685,7 +837,6 @@ static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
 static void privateSuppRequest(private_t *private, plan_ma_comm_t *comm,
                                const plan_ma_msg_t *msg)
 {
-    plan_ma_msg_t *msgout;
     int i, size, op_id;
 
     // Mark all received operators as without supporter fact because the
@@ -728,24 +879,6 @@ static void privateSuppRequest(private_t *private, plan_ma_comm_t *comm,
         }
     }
 #endif
-
-
-    // TODO: Remove this -- it only serves for debug
-    msgout = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                       PLAN_MA_MSG_HEUR_LM_CUT_SUPP_RESPONSE,
-                       planMACommId(comm));
-    /*
-    for (i = 0; i < private->relax.cref.op_size; ++i){
-        if (private->relax.op[i].supp >= 0){
-            int op_id = planOpIdTrGlob(&private->op_id_tr, i);
-            if (op_id >= 0)
-                planMAMsgAddOp(msgout, op_id, private->relax.op[i].cost, -1,
-                        private->relax.op[i].value);
-        }
-    }
-    */
-    planMACommSendToNode(comm, planMAMsgAgent(msg), msgout);
-    planMAMsgDel(msgout);
 }
 
 static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
@@ -821,3 +954,20 @@ static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
     }
 }
 
+static void debugCut(const plan_heur_ma_lm_cut_t *heur, int agent_id,
+                     const char *name)
+{
+    int i;
+
+    fprintf(stderr, "[%d] %s\n", agent_id, name);
+    for (i = 0; i < heur->relax.cref.op_size; ++i){
+        fprintf(stderr, "[%d] Op[%d] state: %d, in_cut: %d\n",
+                agent_id, i, heur->cut_op[i].state,
+                heur->cut_op[i].in_cut);
+    }
+    for (i = 0; i < heur->relax.cref.fact_size; ++i){
+        fprintf(stderr, "[%d] Fact[%d] state: %d\n",
+                agent_id, i, heur->cut_fact[i].state);
+    }
+    fprintf(stderr, "\n");
+}

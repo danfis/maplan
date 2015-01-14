@@ -910,17 +910,20 @@ static void sendFindCutResponse(private_t *private, plan_ma_comm_t *comm,
                                 int agent_id)
 {
     plan_ma_msg_t *msg;
-    int i, op_id;
+    int i, len, *ops, op_id;
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE,
                        planMACommId(comm));
-    for (i = 0; i < private->relax.cref.op_size; ++i){
-        if (private->cut.op[i].state == CUT_START_ZONE){
-            op_id = private->relax.cref.op_id[i];
+
+    len = private->public_op.size;
+    ops = private->public_op.op;
+    for (i = 0; i < len; ++i){
+        op_id = ops[i];
+        if (private->cut.op[op_id].state == CUT_START_ZONE){
+            op_id = private->relax.cref.op_id[op_id];
             if (op_id < 0)
                 continue;
-            // TODO: Consider only public operators
             op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
             // TODO: Better API in ma_msg module
             planMAMsgAddOp(msg, op_id, PLAN_COST_INVALID, -1,

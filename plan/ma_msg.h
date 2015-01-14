@@ -53,6 +53,7 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_LM_CUT_SUPP_REQUEST 0x05
 #define PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_REQUEST 0x06
 #define PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE 0x60
+#define PLAN_MA_MSG_HEUR_LM_CUT_CUT_REQUEST 0x07
 
 /**
  * Returns values for planMAMsgHeurType().

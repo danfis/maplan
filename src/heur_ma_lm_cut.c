@@ -354,7 +354,7 @@ static int heurMA(plan_heur_t *_heur, plan_ma_comm_t *comm,
 {
     plan_heur_ma_lm_cut_t *heur = HEUR(_heur);
 
-    heur->heur_value = PLAN_HEUR_DEAD_END;
+    heur->heur_value = 0;
 
     // Store state for which we are evaluating heuristics
     planStateCopy(heur->init_state, state);
@@ -687,7 +687,7 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     heur->cur_agent_id = heur->agent_id;
     if (nextAgentId(heur) < 0){
         if (sendFindCutRequests(heur, comm, 0) == 0){
-            heur->state = STATE_FINISH;
+            heur->state = STATE_CUT;
             return 0;
         }
     }
@@ -695,16 +695,62 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     return -1;
 }
 
+static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg[heur->agent_size];
+    ma_lm_cut_op_t *op;
+    int agent_id, i, op_id;
+
+    fprintf(stderr, "sendCutRequests\n");
+    fflush(stderr);
+    for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
+        msg[agent_id] = NULL;
+        if (agent_id == heur->agent_id)
+            continue;
+
+        msg[agent_id] = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                                     PLAN_MA_MSG_HEUR_LM_CUT_CUT_REQUEST,
+                                     planMACommId(comm));
+        planMAMsgSetMinCutCost(msg[agent_id], heur->cut.min_cut);
+    }
+
+    for (i = 0; i < heur->op_size; ++i){
+        op = heur->op + i;
+        if (op->owner == heur->agent_id)
+            continue;
+
+        if (heur->cut.op[i].in_cut){
+            op_id = planOpIdTrGlob(&heur->op_id_tr, i);
+            // TODO
+            planMAMsgAddOp(msg[op->owner], op_id, PLAN_COST_INVALID, -1,
+                           PLAN_COST_INVALID);
+        }
+    }
+
+    for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
+        if (agent_id == heur->agent_id)
+            continue;
+        planMACommSendToNode(comm, agent_id, msg[agent_id]);
+        planMAMsgDel(msg[agent_id]);
+    }
+}
+
 static int stepCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                    const plan_ma_msg_t *msg)
 {
-    return -1;
+    sendCutRequests(heur, comm);
+    heur->heur_value += heur->cut.min_cut;
+    heur->state = STATE_HMAX;
+    return 0;
 }
 
 static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg)
 {
-    return -1;
+    fprintf(stderr, "stepHMax\n");
+    fflush(stderr);
+    heur->state = STATE_FINISH;
+    return 0;
 }
 
 static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
@@ -971,6 +1017,27 @@ static void privateFindCutRequest(private_t *private, plan_ma_comm_t *comm,
     sendFindCutResponse(private, comm, planMAMsgAgent(msg));
 }
 
+static void privateCutRequest(private_t *private, plan_ma_comm_t *comm,
+                              const plan_ma_msg_t *msg)
+{
+    int i, size, op_id;
+
+    size = planMAMsgOpSize(msg);
+    for (i = 0; i < size; ++i){
+        op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
+        op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
+        if (op_id < 0)
+            continue;
+
+        private->cut.op[op_id].in_cut = 1;
+    }
+
+    private->cut.min_cut = planMAMsgMinCutCost(msg);
+
+    debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "PrivateCut");
+    debugCut(&private->cut, &private->relax, comm->node_id, &private->op_id_tr, "PrivateCut");
+}
+
 static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
                           const plan_ma_msg_t *msg)
 {
@@ -1000,6 +1067,10 @@ static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
 
         }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_REQUEST){
             privateFindCutRequest(private, comm, msg);
+            return;
+
+        }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_CUT_REQUEST){
+            privateCutRequest(private, comm, msg);
             return;
         }
     }

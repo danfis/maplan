@@ -565,6 +565,15 @@ static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     // h^max heuristics for all facts and operators reachable from the
     // state
     planHeurRelaxFull(&heur->relax, heur->init_state);
+    // TODO
+    for (i = 0; i < heur->relax.cref.op_size; ++i){
+        if (heur->relax.op[i].unsat > 0){
+            heur->relax.op[i].value = PLAN_COST_MAX / 2;
+            heur->relax.op[i].cost = 0;
+            heur->relax.op[i].supp = -1;
+        }
+    }
+    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMaxInit");
 
     // Send request to next agent
     sendMaxRequest(heur, comm, heur->cur_agent_id);
@@ -624,8 +633,8 @@ static int stepGoalZone(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     cutInitCycle(&heur->cut, &heur->relax);
 
     cutMarkGoalZone(&heur->cut, &heur->relax, heur->relax.cref.goal_id);
-    debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainGoalZone");
-    debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainGoalZone");
+    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainGoalZone");
+    //debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainGoalZone");
 
     // TODO: Send requests
     if (sendGoalZoneRequests(heur, comm) == 0){
@@ -650,6 +659,7 @@ static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
             continue;
         cutMarkGoalZoneOp(&heur->cut, &heur->relax, op_id);
     }
+    //debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainGoalZoneUpdate");
 
     heur->agent_changed[planMAMsgAgent(msg)] = 0;
     heur->cur_agent_id = heur->agent_id;
@@ -769,7 +779,7 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     from_agent = planMAMsgAgent(msg);
     heur->agent_changed[from_agent] = 0;
 
-    debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainFindCutUpdate");
+    //debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainFindCutUpdate");
 
     // If messages from all agents were processed, try to send another
     // bulk of messages if anything changed. If nothing changed,
@@ -830,6 +840,15 @@ static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
 static int stepCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                    const plan_ma_msg_t *msg)
 {
+    if (heur->cut.min_cut == PLAN_COST_MAX){
+        fprintf(stderr, "[%d] Error: Could not find cut!\n",
+                planMACommId(comm));
+        fflush(stderr);
+        heur->state = STATE_FINISH;
+        exit(-1);
+        return 0;
+    }
+
     sendCutRequests(heur, comm);
     heur->heur_value += heur->cut.min_cut;
     heur->state = STATE_CUT_UPDATE;
@@ -917,14 +936,14 @@ static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 
     fprintf(stderr, "stepHMax\n");
     fflush(stderr);
-    debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax'");
+    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax'");
     cutApply(&heur->cut, &heur->relax, heur->updated_ops, &updated_ops_size);
     hmaxResetNonSupportedOps(&heur->relax, &heur->cut,
                              heur->updated_ops, &updated_ops_size);
     //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainHMax");
     fprintf(stderr, "updated_ops_size: %d\n", updated_ops_size);
     planHeurRelaxIncMaxFull(&heur->relax, heur->updated_ops, updated_ops_size);
-    debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax");
+    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax");
 
     for (i = 0; i < heur->agent_size; ++i){
         if (i == heur->agent_id)
@@ -976,13 +995,14 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     // Update h^max values of facts and operators considering changes in
     // the operators
     updateHMax(heur, msg);
-    debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMaxUpdate");
+    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMaxUpdate");
 
     // Check if we are done
     heur->cur_agent_id = nextAgentId(heur);
     if (heur->cur_agent_id >= 0){
         sendMaxRequest(heur, comm, heur->cur_agent_id);
     }else{
+        // TODO: Check dead-end on goal fact and also >PLAN_COST_MAX/2
         fprintf(stderr, "[%d] HMAX: %d\n", comm->node_id,
                 heur->relax.fact[heur->relax.cref.goal_id].value);
         if (heur->relax.fact[heur->relax.cref.goal_id].value == 0){
@@ -1048,6 +1068,16 @@ static void privateInitRequest(private_t *private, plan_ma_comm_t *comm,
     // Run full relaxation heuristic
     planMAMsgHeurMaxState(msg, &state);
     planHeurRelaxFull(&private->relax, &state);
+    // TODO
+    int i;
+    for (i = 0; i < private->relax.cref.op_size; ++i){
+        if (private->relax.op[i].unsat > 0){
+            private->relax.op[i].value = PLAN_COST_MAX / 2;
+            private->relax.op[i].cost = 0;
+            private->relax.op[i].supp = -1;
+        }
+    }
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private Init");
 }
 
 static void privateMaxIncRequest(private_t *private, plan_ma_comm_t *comm,
@@ -1055,15 +1085,15 @@ static void privateMaxIncRequest(private_t *private, plan_ma_comm_t *comm,
 {
     int updated_ops_size;
 
-    debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc'");
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc'");
     cutApply(&private->cut, &private->relax,
              private->updated_ops, &updated_ops_size);
     hmaxResetNonSupportedOps(&private->relax, &private->cut,
                              private->updated_ops, &updated_ops_size);
-    debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc''");
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc''");
     planHeurRelaxIncMaxFull(&private->relax, private->updated_ops,
                             updated_ops_size);
-    debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc");
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc");
 }
 
 static void privateMaxSendResponse(private_t *private, plan_ma_comm_t *comm,
@@ -1081,6 +1111,8 @@ static void privateMaxSendResponse(private_t *private, plan_ma_comm_t *comm,
     for (i = 0; i < private->public_op.size; ++i){
         op_id = private->public_op.op[i];
         if (private->opcmp[op_id].value == private->relax.op[op_id].value)
+            continue;
+        if (private->relax.op[op_id].unsat > 0)
             continue;
 
         value = private->relax.op[op_id].value;
@@ -1102,6 +1134,7 @@ static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
         return;
     }
 
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private Max'");
     // Copy current state of operators to compare array.
     // This has to be done before relax->op values are changed according to
     // the received message because we need to compare on the state of
@@ -1123,7 +1156,7 @@ static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
     // Send response to the main agent
     privateMaxSendResponse(private, comm, planMAMsgAgent(msg));
 
-    debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private Max");
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private Max");
 }
 
 static void privateSuppRequest(private_t *private, plan_ma_comm_t *comm,
@@ -1220,8 +1253,8 @@ static void privateGoalZoneRequest(private_t *private, plan_ma_comm_t *comm,
         cutMarkGoalZoneOp(&private->cut, &private->relax, op_id);
     }
 
-    debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "PrivateGoalZone");
-    debugCut(&private->cut, &private->relax, comm->node_id, &private->op_id_tr, "PrivateGoalZone");
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "PrivateGoalZone");
+    //debugCut(&private->cut, &private->relax, comm->node_id, &private->op_id_tr, "PrivateGoalZone");
 
     sendGoalZoneResponse(private, comm, planMAMsgAgent(msg));
 }
@@ -1285,8 +1318,8 @@ static void privateFindCutRequest(private_t *private, plan_ma_comm_t *comm,
         cutFindOp(&private->cut, &private->relax, op_id);
     }
 
-    debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "PrivateFindCut");
-    debugCut(&private->cut, &private->relax, comm->node_id, &private->op_id_tr, "PrivateFindCut");
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "PrivateFindCut");
+    //debugCut(&private->cut, &private->relax, comm->node_id, &private->op_id_tr, "PrivateFindCut");
 
     sendFindCutResponse(private, comm, planMAMsgAgent(msg));
 }
@@ -1448,6 +1481,9 @@ static void cutMarkGoalZoneOp(cut_t *cut, const plan_heur_relax_t *relax,
         return;
 
     cut->op[op_id].state = CUT_OP_DONE;
+    if (relax->op[op_id].supp >= 0)
+        cutMarkGoalZone(cut, relax, relax->op[op_id].supp);
+    /*
 
     size = relax->cref.op_pre[op_id].size;
     facts = relax->cref.op_pre[op_id].fact;
@@ -1456,6 +1492,7 @@ static void cutMarkGoalZoneOp(cut_t *cut, const plan_heur_relax_t *relax,
         if (cut->fact[fact_id].state == 0)
             cutMarkGoalZone(cut, relax, fact_id);
     }
+    */
 }
 
 static void cutFindAddEff(cut_t *cut, const plan_heur_relax_t *relax,
@@ -1561,12 +1598,13 @@ static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
 
     fprintf(stderr, "[%d] %s\n", agent_id, name);
     for (i = 0; i < relax->cref.op_size; ++i){
-        fprintf(stderr, "[%d] Op[%d] value: %d, cost: %d, supp: %d",
+        fprintf(stderr, "[%d] Op[%d] value: %d, cost: %d, supp: %d, unsat: %d",
                 agent_id,
                 planOpIdTrGlob(op_id_tr, relax->cref.op_id[i]),
                 relax->op[i].value,
                 relax->op[i].cost,
-                relax->op[i].supp);
+                relax->op[i].supp,
+                relax->op[i].unsat);
 
         fprintf(stderr, " Pre[");
         for (j = 0; j < relax->cref.op_pre[i].size; ++j){

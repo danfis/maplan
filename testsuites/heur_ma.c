@@ -12,6 +12,12 @@ plan_heur_t *seqHeurMaxNew(const plan_problem_t *prob)
                                prob->op, prob->op_size);
 }
 
+plan_heur_t *seqHeurLMCutNew(const plan_problem_t *prob)
+{
+    return planHeurLMCutNew(prob->var, prob->var_size, prob->goal,
+                            prob->op, prob->op_size);
+}
+
 static plan_ma_msg_t *nextMsg(plan_ma_comm_t **comm,
                               int agent_size, int *agent_id)
 {
@@ -44,7 +50,7 @@ static void testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
     int i;
 
     ++cnt;
-    //if (cnt != 1)
+    //if (cnt != 1272)
     //    return;
 
     planHeurResInit(&res);
@@ -185,18 +191,13 @@ TEST(testHeurMAMax)
 TEST(testHeurMALMCut)
 {
     runTestHeurMA("ma-lm-cut", "../data/simple/pfile.proto",
-                  "states/simple.txt", planHeurMALMCutNew, -1,
-                  seqHeurMaxNew);
+                  "states/simple.txt", planHeurMALMCutNew, -1, NULL);
     runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/depot/pfile1.proto",
-                  "states/depot-pfile1.txt", planHeurMALMCutNew, -1,
-                  seqHeurMaxNew);
+                  "states/depot-pfile1.txt", planHeurMALMCutNew, -1, NULL);
     runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/depot/pfile5.proto",
-                  "states/depot-pfile5.txt", planHeurMALMCutNew, 200,
-                  seqHeurMaxNew);
+                  "states/depot-pfile5.txt", planHeurMALMCutNew, 200, NULL);
     runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/rovers/p03.proto",
-                  "states/rovers-p03.txt", planHeurMALMCutNew, -1,
-                  seqHeurMaxNew);
+                  "states/rovers-p03.txt", planHeurMALMCutNew, -1, NULL);
     runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/rovers/p15.proto",
-                  "states/rovers-p15.txt", planHeurMALMCutNew, -1,
-                  seqHeurMaxNew);
+                  "states/rovers-p15.txt", planHeurMALMCutNew, -1, NULL);
 }

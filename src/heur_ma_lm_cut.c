@@ -19,6 +19,7 @@
 #define STATE_FINISH           9
 #define STATE_SIZE             10
 
+// TODO: Move this closer to plan_heur_ma_lm_cut_t struct
 typedef struct _plan_heur_ma_lm_cut_t plan_heur_ma_lm_cut_t;
 typedef int (*state_step_fn)(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                              const plan_ma_msg_t *msg);
@@ -236,6 +237,7 @@ static void hmaxResetNonSupportedOps(plan_heur_relax_t *relax,
         if (op->supp != -1 || op->unsat > 0)
             continue;
 
+        // TODO: Comment, refactor?
         value = -1;
         supp = -1;
         len = relax->cref.op_pre[op_id].size;
@@ -278,6 +280,7 @@ static int nextAgentId(const plan_heur_ma_lm_cut_t *heur)
 
 
 
+// TODO: Comment, separate with other private_t functions
 static void privateInit(private_t *private, const plan_problem_t *prob)
 {
     plan_op_t *op;
@@ -565,6 +568,7 @@ static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     int i;
 
     // Every agent must be requested at least once, so make sure of that.
+    // TODO: Refactor?
     for (i = 0; i < heur->agent_size; ++i){
         if (i == heur->agent_id){
             heur->agent_changed[i] = 0;
@@ -596,6 +600,7 @@ static int sendGoalZoneRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *com
     int i, op_id, agent_id;
     int num_sent = 0;
 
+    // TODO: Refactor
     bzero(heur->agent_changed, sizeof(int) * heur->agent_size);
 
     for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
@@ -637,6 +642,7 @@ static int sendGoalZoneRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *com
 static int stepGoalZone(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg)
 {
+    // TODO: Comment
     cutInitCycle(&heur->cut, &heur->relax);
 
     cutMarkGoalZone(&heur->cut, &heur->relax, heur->relax.cref.goal_id);
@@ -655,6 +661,7 @@ static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 {
     int i, size, op_id;
 
+    // TODO: comment
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
         op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
@@ -684,8 +691,10 @@ static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm
     int i, op_id, agent_id;
     int num_sent = 0;
 
+    // TODO: Refactor
     bzero(heur->agent_changed, sizeof(int) * heur->agent_size);
 
+    // TODO: Refactor
     for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
         msg[agent_id] = NULL;
         if (agent_id != heur->agent_id){
@@ -713,6 +722,7 @@ static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm
         }
     }
 
+    // TODO: Refactor
     for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
         if (heur->agent_changed[agent_id]){
             planMACommSendToNode(comm, agent_id, msg[agent_id]);
@@ -731,13 +741,6 @@ static int stepFindCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 {
     int i, fact_id;
 
-
-    /*
-    if (a++ == 2){
-        heur->state = STATE_FINISH;
-        return 0;
-    }
-    */
     // Find cut from all facts in initial state and all fake preconditions
     for (i = 0; i < heur->init_state->num_vars; ++i){
         fact_id = planFactId(&heur->relax.cref.fact_id, i,
@@ -748,9 +751,6 @@ static int stepFindCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
         cutFind(&heur->cut, &heur->relax,
                 heur->relax.cref.fake_pre[i].fact_id, 1);
     }
-
-    //debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainFindCut");
-    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainRelax");
 
     // Send request
     sendFindCutRequests(heur, comm, 1);
@@ -782,8 +782,6 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     from_agent = planMAMsgAgent(msg);
     heur->agent_changed[from_agent] = 0;
 
-    //debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainFindCutUpdate");
-
     // If messages from all agents were processed, try to send another
     // bulk of messages if anything changed. If nothing changed,
     // proceed to next phase.
@@ -803,6 +801,7 @@ static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
     ma_lm_cut_op_t *op;
     int agent_id, i, op_id;
 
+    // TODO: Refactor
     bzero(heur->agent_changed, sizeof(int) * heur->agent_size);
     for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
         msg[agent_id] = NULL;
@@ -840,6 +839,7 @@ static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
 static int stepCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                    const plan_ma_msg_t *msg)
 {
+    // TODO:
     if (heur->cut.min_cut == PLAN_COST_MAX){
         fprintf(stderr, "[%d] Error: Could not find cut!\n",
                 planMACommId(comm));
@@ -859,6 +859,7 @@ static int stepCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                          const plan_ma_msg_t *msg)
 {
     int i, size, op_id;
+    // TODO: Comment
 
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
@@ -897,6 +898,7 @@ static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 {
     int i, updated_ops_size;
 
+    // TODO: Comment
     //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax'");
     cutApply(&heur->cut, &heur->relax, heur->updated_ops, &updated_ops_size);
     hmaxResetNonSupportedOps(&heur->relax, &heur->cut,
@@ -912,6 +914,7 @@ static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     }
 
     // Every agent must be requested at least once, so make sure of that.
+    // TODO: Refactor, see stepInit()
     for (i = 0; i < heur->agent_size; ++i){
         if (i == heur->agent_id){
             heur->agent_changed[i] = 0;
@@ -987,6 +990,7 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
         updateHMax(heur, heur->updated_ops, updated_ops_size);
     }
 
+    // TODO: More comments
     // Check if we are done
     heur->cur_agent_id = nextAgentId(heur);
     if (heur->cur_agent_id >= 0){
@@ -1009,6 +1013,8 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                       const plan_ma_msg_t *msg)
 {
+    // TODO: Why? Do we need this for something?
+    // Refactor with mainLoop()
     //heur->heur_value = heur->relax.fact[heur->relax.cref.goal_id].value;
     return -1;
 }
@@ -1017,6 +1023,7 @@ static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 
 
 
+// TODO: Rename
 static void requestMaxSendEmptyResponse(plan_ma_comm_t *comm,
                                         const plan_ma_msg_t *req)
 {
@@ -1031,6 +1038,7 @@ static void requestMaxSendEmptyResponse(plan_ma_comm_t *comm,
 }
 
 
+// TODO: Rename, comment
 static void allocPrivate(plan_heur_ma_lm_cut_t *heur, int agent_id)
 {
     int i;
@@ -1063,6 +1071,7 @@ static void privateMaxIncRequest(private_t *private, plan_ma_comm_t *comm,
 {
     int updated_ops_size;
 
+    // TODO: Comment
     //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc'");
     cutApply(&private->cut, &private->relax,
              private->updated_ops, &updated_ops_size);
@@ -1112,7 +1121,6 @@ static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
         return;
     }
 
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private Max'");
     // Copy current state of operators to compare array.
     // This has to be done before relax->op values are changed according to
     // the received message because we need to compare on the state of
@@ -1125,7 +1133,7 @@ static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
                              private->relax.op, private->opcmp,
                              private->updated_ops, &updated_ops_size);
 
-    // Update .relax structure if anything was changed
+    // Update .relax structure if something was changed
     if (updated_ops_size > 0){
         planHeurRelaxUpdateMaxFull(&private->relax, private->updated_ops,
                                    updated_ops_size);
@@ -1133,8 +1141,6 @@ static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
 
     // Send response to the main agent
     privateMaxSendResponse(private, comm, planMAMsgAgent(msg));
-
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private Max");
 }
 
 static void privateSuppRequest(private_t *private, plan_ma_comm_t *comm,
@@ -1155,6 +1161,7 @@ static void privateSuppRequest(private_t *private, plan_ma_comm_t *comm,
     // Initialize cut_t structure it will be needed in next phases
     cutInitCycle(&private->cut, &private->relax);
 
+    // TODO: 
 #if 0 /* DEBUG */
     // Check that all operators have support either in this agent or in the
     // main agent
@@ -1197,6 +1204,7 @@ static void sendGoalZoneResponse(private_t *private, plan_ma_comm_t *comm,
                        PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_RESPONSE,
                        planMACommId(comm));
 
+    // TODO: Comment
     len = private->public_op.size;
     ops = private->public_op.op;
     for (i = 0; i < len; ++i){
@@ -1221,6 +1229,7 @@ static void privateGoalZoneRequest(private_t *private, plan_ma_comm_t *comm,
 {
     int i, size, op_id;
 
+    // TODO: Comment
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
         op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
@@ -1231,9 +1240,6 @@ static void privateGoalZoneRequest(private_t *private, plan_ma_comm_t *comm,
         cutMarkGoalZoneOp(&private->cut, &private->relax, op_id);
     }
 
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "PrivateGoalZone");
-    //debugCut(&private->cut, &private->relax, comm->node_id, &private->op_id_tr, "PrivateGoalZone");
-
     sendGoalZoneResponse(private, comm, planMAMsgAgent(msg));
 }
 
@@ -1243,6 +1249,7 @@ static void sendFindCutResponse(private_t *private, plan_ma_comm_t *comm,
     plan_ma_msg_t *msg;
     int i, len, *ops, op_id;
 
+    // TODO: Comment
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE,
                        planMACommId(comm));
@@ -1274,6 +1281,7 @@ static void privateFindCutRequest(private_t *private, plan_ma_comm_t *comm,
 {
     int i, size, fact_id, op_id;
 
+    // TODO: Comment
     if (planMAMsgHasStateFull(msg)){
         for (i = 0; i < private->relax.cref.fact_id.var_size; ++i){
             fact_id = planMAMsgStateFullVal(msg, i);
@@ -1296,9 +1304,6 @@ static void privateFindCutRequest(private_t *private, plan_ma_comm_t *comm,
         cutFindOp(&private->cut, &private->relax, op_id);
     }
 
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "PrivateFindCut");
-    //debugCut(&private->cut, &private->relax, comm->node_id, &private->op_id_tr, "PrivateFindCut");
-
     sendFindCutResponse(private, comm, planMAMsgAgent(msg));
 }
 
@@ -1311,6 +1316,7 @@ static void sendCutResponse(private_t *private, plan_ma_comm_t *comm,
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_CUT_RESPONSE,
                        planMACommId(comm));
+    // TODO: Comment
     for (i = 0; i < private->public_op.size; ++i){
         op_id = private->public_op.op[i];
         if (private->cut.op[op_id].in_cut){
@@ -1328,6 +1334,7 @@ static void privateCutRequest(private_t *private, plan_ma_comm_t *comm,
 {
     int i, size, op_id;
 
+    // TODO: Comment
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
         op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
@@ -1341,8 +1348,6 @@ static void privateCutRequest(private_t *private, plan_ma_comm_t *comm,
     private->cut.min_cut = planMAMsgMinCutCost(msg);
 
     sendCutResponse(private, comm, planMAMsgAgent(msg));
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "PrivateCut");
-    //debugCut(&private->cut, &private->relax, comm->node_id, &private->op_id_tr, "PrivateCut");
 }
 
 static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
@@ -1554,6 +1559,7 @@ static void cutApply(cut_t *cut, plan_heur_relax_t *relax,
 
 
 
+// TODO: ifdef DEBUG or something
 /*** DEBUG ***/
 static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
                        const plan_op_id_tr_t *op_id_tr, const char *name)

@@ -492,16 +492,18 @@ static void sendMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 
 static int nextAgentId(const plan_heur_ma_lm_cut_t *heur)
 {
-    int from = (heur->cur_agent_id + 1) % heur->agent_size;
-    int to = heur->cur_agent_id;
-    int i;
+    int i, from, to, id;
 
-    for (i = from; i != to; i = (i + 1) % heur->agent_size){
-        if (heur->agent_changed[i])
-            return i;
+    from = 0;
+    if (heur->cur_agent_id >= 0)
+        from = heur->cur_agent_id + 1;
+    to = from + heur->agent_size;
+
+    for (i = from; i < to; ++i){
+        id = i % heur->agent_size;
+        if (heur->agent_changed[id])
+            return id;
     }
-    if (heur->agent_changed[to])
-        return to;
     return -1;
 }
 
@@ -667,7 +669,6 @@ static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     //debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainGoalZoneUpdate");
 
     heur->agent_changed[planMAMsgAgent(msg)] = 0;
-    heur->cur_agent_id = heur->agent_id;
     if (nextAgentId(heur) < 0){
         if (sendGoalZoneRequests(heur, comm) == 0){
             heur->state = STATE_FIND_CUT;
@@ -789,7 +790,6 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     // If messages from all agents were processed, try to send another
     // bulk of messages if anything changed. If nothing changed,
     // proceed to next phase.
-    heur->cur_agent_id = heur->agent_id;
     if (nextAgentId(heur) < 0){
         if (sendFindCutRequests(heur, comm, 0) == 0){
             heur->state = STATE_CUT;
@@ -874,7 +874,6 @@ static int stepCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     }
 
     heur->agent_changed[planMAMsgAgent(msg)] = 0;
-    heur->cur_agent_id = heur->agent_id;
     if (nextAgentId(heur) < 0){
         heur->state = STATE_HMAX;
         return 0;

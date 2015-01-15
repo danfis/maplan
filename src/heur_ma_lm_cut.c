@@ -256,6 +256,28 @@ static void hmaxResetNonSupportedOps(plan_heur_relax_t *relax,
     }
 }
 
+
+/** Returns next agent ID that is marked as changed or -1 if none of agents
+ *  is marked as changed. */
+static int nextAgentId(const plan_heur_ma_lm_cut_t *heur)
+{
+    int i, from, to, id;
+
+    from = 0;
+    if (heur->cur_agent_id >= 0)
+        from = heur->cur_agent_id + 1;
+    to = from + heur->agent_size;
+
+    for (i = from; i < to; ++i){
+        id = i % heur->agent_size;
+        if (heur->agent_changed[id])
+            return id;
+    }
+    return -1;
+}
+
+
+
 static void privateInit(private_t *private, const plan_problem_t *prob)
 {
     plan_op_t *op;
@@ -302,6 +324,7 @@ static void privateFree(private_t *private)
     cutFree(&private->cut);
 }
 
+/** Returns number of remote agents stored as owners in operators */
 static int agentSize(const plan_op_t *op, int op_size)
 {
     int agent_size = 0;
@@ -314,18 +337,7 @@ static int agentSize(const plan_op_t *op, int op_size)
     return agent_size;
 }
 
-static void initOp(plan_heur_ma_lm_cut_t *heur,
-                   const plan_op_t *op, int op_size)
-{
-    int i;
-
-    heur->op_size = op_size;
-    heur->op = BOR_CALLOC_ARR(ma_lm_cut_op_t, heur->op_size);
-    for (i = 0; i < op_size; ++i){
-        heur->op[i].owner = op[i].owner;
-    }
-}
-
+/** Returns true if any operator has a conditional effect */
 static int checkConditionalEffects(const plan_op_t *op, int op_size)
 {
     int i;
@@ -340,6 +352,7 @@ static int checkConditionalEffects(const plan_op_t *op, int op_size)
 plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
 {
     plan_heur_ma_lm_cut_t *heur;
+    int i;
 
     if (checkConditionalEffects(prob->proj_op, prob->proj_op_size)){
         fprintf(stderr, "Error: ma-lm-cut heuristic cannot be run on"
@@ -370,7 +383,12 @@ plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
 
     heur->agent_size = agentSize(prob->proj_op, prob->proj_op_size);
     heur->agent_changed = BOR_CALLOC_ARR(int, heur->agent_size);
-    initOp(heur, prob->proj_op, prob->proj_op_size);
+
+    heur->op_size = prob->proj_op_size;
+    heur->op = BOR_CALLOC_ARR(ma_lm_cut_op_t, heur->op_size);
+    for (i = 0; i < prob->proj_op_size; ++i)
+        heur->op[i].owner = prob->proj_op[i].owner;
+
     heur->opcmp = BOR_ALLOC_ARR(plan_heur_relax_op_t,
                                 heur->relax.cref.op_size);
 
@@ -489,23 +507,6 @@ static void sendMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 
 
 
-
-static int nextAgentId(const plan_heur_ma_lm_cut_t *heur)
-{
-    int i, from, to, id;
-
-    from = 0;
-    if (heur->cur_agent_id >= 0)
-        from = heur->cur_agent_id + 1;
-    to = from + heur->agent_size;
-
-    for (i = from; i < to; ++i){
-        id = i % heur->agent_size;
-        if (heur->agent_changed[id])
-            return id;
-    }
-    return -1;
-}
 
 static void sendSuppRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
 {
@@ -633,17 +634,13 @@ static int sendGoalZoneRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *com
     return num_sent;
 }
 
-static int a = 0;
 static int stepGoalZone(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg)
 {
     cutInitCycle(&heur->cut, &heur->relax);
 
     cutMarkGoalZone(&heur->cut, &heur->relax, heur->relax.cref.goal_id);
-    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainGoalZone");
-    //debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainGoalZone");
 
-    // TODO: Send requests
     if (sendGoalZoneRequests(heur, comm) == 0){
         heur->state = STATE_FIND_CUT;
         return 0;
@@ -1456,24 +1453,12 @@ static void cutMarkGoalZone(cut_t *cut, const plan_heur_relax_t *relax,
 static void cutMarkGoalZoneOp(cut_t *cut, const plan_heur_relax_t *relax,
                               int op_id)
 {
-    int i, size, *facts, fact_id;
-
     if (cut->op[op_id].state != 0)
         return;
 
     cut->op[op_id].state = CUT_OP_DONE;
     if (relax->op[op_id].supp >= 0)
         cutMarkGoalZone(cut, relax, relax->op[op_id].supp);
-    /*
-
-    size = relax->cref.op_pre[op_id].size;
-    facts = relax->cref.op_pre[op_id].fact;
-    for (i = 0; i < size; ++i){
-        fact_id = facts[i];
-        if (cut->fact[fact_id].state == 0)
-            cutMarkGoalZone(cut, relax, fact_id);
-    }
-    */
 }
 
 static void cutFindAddEff(cut_t *cut, const plan_heur_relax_t *relax,

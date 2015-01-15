@@ -346,8 +346,9 @@ static void incRelaxOpMax(plan_heur_relax_t *relax,
 
     // Consider this operator only if the enabling fact is the supporter
     // because we know that the supporting fact maximizes the operator's
-    // value
-    if (op->supp != fact_id)
+    // value.
+    // Also skip operators that are not reachable.
+    if (op->supp != fact_id || op->unsat > 0)
         return;
 
     // If the value does not correspond to the supporter's value, find out
@@ -370,6 +371,9 @@ void incMax(plan_heur_relax_t *relax,
     planPrioQueueInit(&queue);
 
     for (i = 0; i < changed_op_size; ++i){
+        // Skip unreachable operators
+        if (relax->op[changed_op[i]].unsat > 0)
+            continue;
         relaxAddEffects(relax, &queue, changed_op[i],
                         relax->op[changed_op[i]].value);
     }
@@ -464,10 +468,8 @@ static void updateMaxOp(plan_heur_relax_t *relax,
         // If the operator isn't supporter of the fact, we can skip this
         // fact because there is other operator that minimizes the fact's
         // value
-        // TODO: This could be considerable speed-up in case we really know
-        // that values can only grow!
-        //if (op_id != relax->fact[fact_id].supp)
-        //    continue;
+        if (op_id != relax->fact[fact_id].supp)
+            continue;
 
         // Update fact value and insert it into queue if it changed
         if (updateFactValue(relax, fact_id) != 0){
@@ -488,7 +490,7 @@ static void updateMaxFact(plan_heur_relax_t *relax,
     ops_size = relax->cref.fact_pre[fact_id].size;
     for (i = 0; i < ops_size; ++i){
         op = relax->op + ops[i];
-        if (op->value < op->cost + fact_value){
+        if (op->unsat == 0 && op->value < op->cost + fact_value){
             op->value = op->cost + fact_value;
             op->supp = fact_id;
             updateMaxOp(relax, queue, ops[i]);
@@ -505,6 +507,9 @@ void planHeurRelaxUpdateMaxFull(plan_heur_relax_t *relax,
     planPrioQueueInit(&queue);
 
     for (i = 0; i < op_size; ++i){
+        // Skip unreachable operators
+        if (relax->op[op[i]].unsat > 0)
+            continue;
         relax->op[op[i]].supp = -1;
         updateMaxOp(relax, &queue, op[i]);
     }

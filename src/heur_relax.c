@@ -358,18 +358,16 @@ static void incRelaxOpMax(plan_heur_relax_t *relax,
     }
 }
 
-void planHeurRelaxIncMax(plan_heur_relax_t *relax,
-                         const int *changed_op, int changed_op_size)
+void incMax(plan_heur_relax_t *relax,
+            const int *changed_op, int changed_op_size, int goal_id)
 {
     plan_prio_queue_t queue;
     int i, size, *op, op_id;
-    int fact_id, goal_id;
+    int fact_id;
     plan_cost_t value;
     plan_heur_relax_fact_t *fact;
 
     planPrioQueueInit(&queue);
-
-    goal_id = relax->cref.goal_id;
 
     for (i = 0; i < changed_op_size; ++i){
         relaxAddEffects(relax, &queue, changed_op[i],
@@ -396,6 +394,16 @@ void planHeurRelaxIncMax(plan_heur_relax_t *relax,
     planPrioQueueFree(&queue);
 }
 
+void planHeurRelaxIncMax(plan_heur_relax_t *relax, const int *op, int op_size)
+{
+    incMax(relax, op, op_size, relax->cref.goal_id);
+}
+
+void planHeurRelaxIncMaxFull(plan_heur_relax_t *relax,
+                             const int *op, int op_size)
+{
+    incMax(relax, op, op_size, -1);
+}
 
 
 static int updateFactValue(plan_heur_relax_t *relax, int fact_id)
@@ -456,8 +464,10 @@ static void updateMaxOp(plan_heur_relax_t *relax,
         // If the operator isn't supporter of the fact, we can skip this
         // fact because there is other operator that minimizes the fact's
         // value
-        if (op_id != relax->fact[fact_id].supp)
-            continue;
+        // TODO: This could be considerable speed-up in case we really know
+        // that values can only grow!
+        //if (op_id != relax->fact[fact_id].supp)
+        //    continue;
 
         // Update fact value and insert it into queue if it changed
         if (updateFactValue(relax, fact_id) != 0){

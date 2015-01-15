@@ -81,6 +81,12 @@ void planHeurRelaxIncMax(plan_heur_relax_t *relax,
                          const int *op, int op_size);
 
 /**
+ * Same as planHeurRelaxIncMax() but does not terminate at goal.
+ */
+void planHeurRelaxIncMaxFull(plan_heur_relax_t *relax,
+                             const int *op, int op_size);
+
+/**
  * Update h^max heuristic considering changes in cost/value in the
  * specified operators. It is assumed that planHeurRelaxFull() was run
  * previously.

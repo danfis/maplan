@@ -218,6 +218,44 @@ static void hmaxFull(plan_heur_relax_t *relax, const plan_state_t *state)
     }
 }
 
+/** Reset values of operators without supporter facts to the values that
+ *  correspond to their preconditions (thus are not changed via values from
+ *  other agents. Operators that are not in cut and was changed are added
+ *  to the updated_ops array. */
+static void hmaxResetNonSupportedOps(plan_heur_relax_t *relax,
+                                     const cut_t *cut,
+                                     int *updated_ops,
+                                     int *updated_ops_size)
+{
+    int op_id, i, len, *facts, fact_id, supp;
+    plan_heur_relax_op_t *op;
+    plan_cost_t value;
+
+    for (op_id = 0; op_id < relax->cref.op_size; ++op_id){
+        op = relax->op + op_id;
+        if (op->supp != -1 || op->unsat > 0)
+            continue;
+
+        value = -1;
+        supp = -1;
+        len = relax->cref.op_pre[op_id].size;
+        facts = relax->cref.op_pre[op_id].fact;
+        for (i = 0; i < len; ++i){
+            fact_id = facts[i];
+            if (relax->fact[fact_id].value > value){
+                value = relax->fact[fact_id].value;
+                supp = fact_id;
+            }
+        }
+
+        relax->op[op_id].value = value + relax->op[op_id].cost;
+        relax->op[op_id].supp = supp;
+        if (!cut->op[op_id].in_cut){
+            updated_ops[(*updated_ops_size)++] = op_id;
+        }
+    }
+}
+
 static void privateInit(private_t *private, const plan_problem_t *prob)
 {
     plan_op_t *op;
@@ -856,38 +894,6 @@ static void sendHMaxIncRequest(plan_heur_ma_lm_cut_t *heur,
                        planMACommId(comm));
     planMACommSendToNode(comm, agent_id, msg);
     planMAMsgDel(msg);
-}
-
-static void hmaxResetNonSupportedOps(plan_heur_relax_t *relax,
-                                     const cut_t *cut,
-                                     int *updated_ops,
-                                     int *updated_ops_size)
-{
-    int op_id, i, len, *facts, fact_id, supp;
-    plan_cost_t value;
-
-    for (op_id = 0; op_id < relax->cref.op_size; ++op_id){
-        if (relax->op[op_id].supp != -1)
-            continue;
-
-        value = -1;
-        supp = -1;
-        len = relax->cref.op_pre[op_id].size;
-        facts = relax->cref.op_pre[op_id].fact;
-        for (i = 0; i < len; ++i){
-            fact_id = facts[i];
-            if (relax->fact[fact_id].value > value){
-                value = relax->fact[fact_id].value;
-                supp = fact_id;
-            }
-        }
-
-        relax->op[op_id].value = value + relax->op[op_id].cost;
-        relax->op[op_id].supp = supp;
-        if (!cut->op[op_id].in_cut){
-            updated_ops[(*updated_ops_size)++] = op_id;
-        }
-    }
 }
 
 static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,

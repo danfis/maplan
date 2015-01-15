@@ -5,6 +5,8 @@
 #include "heur_relax.h"
 #include "op_id_tr.h"
 
+#define PLAN_COST_UNREACHABLE (PLAN_COST_MAX / 2)
+
 #define STATE_INIT             0
 #define STATE_GOAL_ZONE        1
 #define STATE_GOAL_ZONE_UPDATE 2
@@ -22,9 +24,9 @@ typedef int (*state_step_fn)(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                              const plan_ma_msg_t *msg);
 
 /** Cut op/fact states: */
-#define CUT_GOAL_ZONE 1
+#define CUT_GOAL_ZONE  1
 #define CUT_START_ZONE 2
-#define CUT_OP_DONE 3
+#define CUT_OP_DONE    3
 
 struct _cut_op_t {
     int state;
@@ -160,11 +162,11 @@ static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
  *  to this array.
  *  Arguments updated_ops and updated_ops_size are output values where are
  *  stored IDs of operators that were written to op[]. */
-static void updateOpValueFromMsg(const plan_ma_msg_t *msg,
-                                 const plan_op_id_tr_t *op_id_tr,
-                                 plan_heur_relax_op_t *op,
-                                 plan_heur_relax_op_t *op_all,
-                                 int *updated_ops, int *updated_ops_size)
+static void hmaxUpdateOpValueFromMsg(const plan_ma_msg_t *msg,
+                                     const plan_op_id_tr_t *op_id_tr,
+                                     plan_heur_relax_op_t *op,
+                                     plan_heur_relax_op_t *op_all,
+                                     int *updated_ops, int *updated_ops_size)
 {
     int i, op_size, op_id;
     plan_cost_t op_value, value;
@@ -188,9 +190,6 @@ static void updateOpValueFromMsg(const plan_ma_msg_t *msg,
 
         // Determine current value of operator
         value = op[op_id].value;
-        fprintf(stderr, "OP[%d, %d] %d %d, supp: %d\n",
-                op_id, planOpIdTrGlob(op_id_tr, op_id),
-                value, op_value, op[op_id].supp);
 
         // Record updated value of operator and write operator's ID to
         // output array
@@ -198,6 +197,23 @@ static void updateOpValueFromMsg(const plan_ma_msg_t *msg,
             op[op_id].value = op_value;
             updated_ops[*updated_ops_size] = op_id;
             ++(*updated_ops_size);
+        }
+    }
+}
+
+/** Runs full h^max heuristic. */
+static void hmaxFull(plan_heur_relax_t *relax, const plan_state_t *state)
+{
+    int i;
+
+    planHeurRelaxFull(relax, state);
+
+    // Modify unreachable operators so it can be propagated to other agents
+    for (i = 0; i < relax->cref.op_size; ++i){
+        if (relax->op[i].unsat > 0){
+            relax->op[i].value = PLAN_COST_UNREACHABLE;
+            relax->op[i].cost = 0;
+            relax->op[i].supp = -1;
         }
     }
 }
@@ -451,46 +467,6 @@ static int nextAgentId(const plan_heur_ma_lm_cut_t *heur)
     return -1;
 }
 
-static void updateRelax(plan_heur_ma_lm_cut_t *heur,
-                        const int *update_op, int update_op_size)
-{
-    int i, size;
-
-    // Remember old values of operators
-    size = sizeof(plan_heur_relax_op_t) * heur->relax.cref.op_size;
-    memcpy(heur->opcmp, heur->relax.op, size);
-
-    // Update h^max heuristic using changed operators
-    planHeurRelaxUpdateMaxFull(&heur->relax, update_op, update_op_size);
-
-    // Record changes in operators
-    for (i = 0; i < heur->op_size; ++i){
-        if (heur->op[i].owner != heur->agent_id
-                && !heur->op[i].changed
-                && heur->opcmp[i].value != heur->relax.op[i].value){
-            heur->op[i].changed = 1;
-            if (heur->op[i].owner >= 0)
-                heur->agent_changed[heur->op[i].owner] = 1;
-        }
-    }
-}
-
-static void updateHMax(plan_heur_ma_lm_cut_t *heur, const plan_ma_msg_t *msg)
-{
-    int updated_ops_size;
-
-    // Update operators' values from message
-    updateOpValueFromMsg(msg, &heur->op_id_tr, heur->relax.op, NULL,
-                         heur->updated_ops, &updated_ops_size);
-
-    // Early exit if no operators were changed
-    if (updated_ops_size == 0)
-        return;
-
-    // Update .relax structure
-    updateRelax(heur, heur->updated_ops, updated_ops_size);
-}
-
 static void sendSuppRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
 {
     plan_ma_msg_t *msg[heur->agent_size];
@@ -564,16 +540,7 @@ static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 
     // h^max heuristics for all facts and operators reachable from the
     // state
-    planHeurRelaxFull(&heur->relax, heur->init_state);
-    // TODO
-    for (i = 0; i < heur->relax.cref.op_size; ++i){
-        if (heur->relax.op[i].unsat > 0){
-            heur->relax.op[i].value = PLAN_COST_MAX / 2;
-            heur->relax.op[i].cost = 0;
-            heur->relax.op[i].supp = -1;
-        }
-    }
-    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMaxInit");
+    hmaxFull(&heur->relax, heur->init_state);
 
     // Send request to next agent
     sendMaxRequest(heur, comm, heur->cur_agent_id);
@@ -801,8 +768,6 @@ static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
     ma_lm_cut_op_t *op;
     int agent_id, i, op_id;
 
-    fprintf(stderr, "sendCutRequests\n");
-    fflush(stderr);
     bzero(heur->agent_changed, sizeof(int) * heur->agent_size);
     for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
         msg[agent_id] = NULL;
@@ -852,8 +817,6 @@ static int stepCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     sendCutRequests(heur, comm);
     heur->heur_value += heur->cut.min_cut;
     heur->state = STATE_CUT_UPDATE;
-    fprintf(stderr, "XXX\n");
-    fflush(stderr);
     return -1;
 }
 
@@ -862,8 +825,6 @@ static int stepCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 {
     int i, size, op_id;
 
-    fprintf(stderr, "Cut Update\n");
-    fflush(stderr);
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
         op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
@@ -934,14 +895,11 @@ static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 {
     int i, updated_ops_size;
 
-    fprintf(stderr, "stepHMax\n");
-    fflush(stderr);
     //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax'");
     cutApply(&heur->cut, &heur->relax, heur->updated_ops, &updated_ops_size);
     hmaxResetNonSupportedOps(&heur->relax, &heur->cut,
                              heur->updated_ops, &updated_ops_size);
     //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainHMax");
-    fprintf(stderr, "updated_ops_size: %d\n", updated_ops_size);
     planHeurRelaxIncMaxFull(&heur->relax, heur->updated_ops, updated_ops_size);
     //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax");
 
@@ -972,10 +930,35 @@ static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     return -1;
 }
 
+
+static void updateHMax(plan_heur_ma_lm_cut_t *heur,
+                       const int *update_op, int update_op_size)
+{
+    int i, size;
+
+    // Remember old values of operators
+    size = sizeof(plan_heur_relax_op_t) * heur->relax.cref.op_size;
+    memcpy(heur->opcmp, heur->relax.op, size);
+
+    // Update h^max heuristic using changed operators
+    planHeurRelaxUpdateMaxFull(&heur->relax, update_op, update_op_size);
+
+    // Record changes in operators
+    for (i = 0; i < heur->op_size; ++i){
+        if (heur->op[i].owner != heur->agent_id
+                && !heur->op[i].changed
+                && heur->opcmp[i].value != heur->relax.op[i].value){
+            heur->op[i].changed = 1;
+            if (heur->op[i].owner >= 0)
+                heur->agent_changed[heur->op[i].owner] = 1;
+        }
+    }
+}
+
 static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                           const plan_ma_msg_t *msg)
 {
-    int other_agent_id;
+    int other_agent_id, updated_ops_size;
 
     if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
             || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE){
@@ -992,10 +975,15 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
         return -1;
     }
 
+    // Update operators' values from message
+    hmaxUpdateOpValueFromMsg(msg, &heur->op_id_tr, heur->relax.op, NULL,
+                             heur->updated_ops, &updated_ops_size);
+
     // Update h^max values of facts and operators considering changes in
     // the operators
-    updateHMax(heur, msg);
-    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMaxUpdate");
+    if (updated_ops_size > 0){
+        updateHMax(heur, heur->updated_ops, updated_ops_size);
+    }
 
     // Check if we are done
     heur->cur_agent_id = nextAgentId(heur);
@@ -1003,8 +991,6 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
         sendMaxRequest(heur, comm, heur->cur_agent_id);
     }else{
         // TODO: Check dead-end on goal fact and also >PLAN_COST_MAX/2
-        fprintf(stderr, "[%d] HMAX: %d\n", comm->node_id,
-                heur->relax.fact[heur->relax.cref.goal_id].value);
         if (heur->relax.fact[heur->relax.cref.goal_id].value == 0){
             heur->state = STATE_FINISH;
             return 0;
@@ -1067,17 +1053,7 @@ static void privateInitRequest(private_t *private, plan_ma_comm_t *comm,
 
     // Run full relaxation heuristic
     planMAMsgHeurMaxState(msg, &state);
-    planHeurRelaxFull(&private->relax, &state);
-    // TODO
-    int i;
-    for (i = 0; i < private->relax.cref.op_size; ++i){
-        if (private->relax.op[i].unsat > 0){
-            private->relax.op[i].value = PLAN_COST_MAX / 2;
-            private->relax.op[i].cost = 0;
-            private->relax.op[i].supp = -1;
-        }
-    }
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private Init");
+    hmaxFull(&private->relax, &state);
 }
 
 static void privateMaxIncRequest(private_t *private, plan_ma_comm_t *comm,
@@ -1143,9 +1119,9 @@ static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
            sizeof(plan_heur_relax_op_t) * private->relax.cref.op_size);
 
     // Update operators' values from received message
-    updateOpValueFromMsg(msg, &private->op_id_tr,
-                         private->relax.op, private->opcmp,
-                         private->updated_ops, &updated_ops_size);
+    hmaxUpdateOpValueFromMsg(msg, &private->op_id_tr,
+                             private->relax.op, private->opcmp,
+                             private->updated_ops, &updated_ops_size);
 
     // Update .relax structure if anything was changed
     if (updated_ops_size > 0){
@@ -1525,7 +1501,6 @@ static void cutFindLoop(cut_t *cut, const plan_heur_relax_t *relax,
     while (!borLifoEmpty(lifo)){
         fact_id = *(int *)borLifoBack(lifo);
         borLifoPop(lifo);
-        fprintf(stderr, "cutFind: pop: %d\n", fact_id);
 
         len = relax->cref.fact_pre[fact_id].size;
         ops = relax->cref.fact_pre[fact_id].op;
@@ -1549,7 +1524,6 @@ static void cutFind(cut_t *cut, const plan_heur_relax_t *relax,
         return;
 
     borLifoInit(&lifo, sizeof(int));
-    fprintf(stderr, "cutFind: start_fact: %d\n", start_fact);
     cut->fact[start_fact].state = CUT_START_ZONE;
     borLifoPush(&lifo, &start_fact);
     cutFindLoop(cut, relax, &lifo);

@@ -16,8 +16,8 @@
 #define STATE_CUT_UPDATE       6
 #define STATE_HMAX             7
 #define STATE_HMAX_UPDATE      8
-#define STATE_FINISH           9
-#define STATE_SIZE             10
+#define STATE_SIZE             9
+#define STATE_FINISH           10
 
 /** Cut op/fact states: */
 #define CUT_GOAL_ZONE  1
@@ -201,8 +201,6 @@ static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg);
 static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                           const plan_ma_msg_t *msg);
-static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
-                      const plan_ma_msg_t *msg);
 
 /** Updates op[] array with values from of operators from message if case
  *  the value is higher than the one in op[] array.
@@ -258,7 +256,6 @@ plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
     heur->state_step[STATE_CUT_UPDATE] = stepCutUpdate;
     heur->state_step[STATE_HMAX] = stepHMax;
     heur->state_step[STATE_HMAX_UPDATE] = stepHMaxUpdate;
-    heur->state_step[STATE_FINISH] = stepFinish;
 
     heur->agent_size = agentSize(prob->proj_op, prob->proj_op_size);
     heur->agent_changed = BOR_CALLOC_ARR(int, heur->agent_size);
@@ -395,7 +392,8 @@ static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
 static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg, plan_heur_res_t *res)
 {
-    while (heur->state_step[heur->state](heur, comm, msg) == 0);
+    while (heur->state_step[heur->state](heur, comm, msg) == 0
+            && heur->state != STATE_FINISH);
 
     if (heur->state == STATE_FINISH){
         res->heur = heur->heur_value;
@@ -489,6 +487,7 @@ static void sendHMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST,
                        planMACommId(comm));
 
+    // TODO: comment
     for (i = 0; i < heur->op_size; ++i){
         op = heur->op[i];
         if (op.owner == agent_id && op.changed){
@@ -1246,16 +1245,6 @@ static void privateCut(private_t *private, plan_ma_comm_t *comm,
     sendCutResponse(private, comm, planMAMsgAgent(msg));
 }
 /**** CUT END ****/
-
-
-static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
-                      const plan_ma_msg_t *msg)
-{
-    // TODO: Why? Do we need this for something?
-    // Refactor with mainLoop()
-    //heur->heur_value = heur->relax.fact[heur->relax.cref.goal_id].value;
-    return -1;
-}
 
 
 

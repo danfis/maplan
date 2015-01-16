@@ -142,11 +142,13 @@ struct _plan_heur_ma_lm_cut_t {
 #define HEUR(parent) \
     bor_container_of(parent, plan_heur_ma_lm_cut_t, heur)
 
+#ifdef DEBUG
 static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
                        const plan_op_id_tr_t *op_id_tr, const char *name);
 static void debugCut(const cut_t *cut, const plan_heur_relax_t *relax,
                      int agent_id, const plan_op_id_tr_t *op_id_tr,
                      const char *name);
+#endif /* DEBUG */
 
 static void heurDel(plan_heur_t *_heur);
 static int heurMA(plan_heur_t *heur, plan_ma_comm_t *comm,
@@ -750,38 +752,6 @@ static void privateSupp(private_t *private, plan_ma_comm_t *comm,
 
     // Initialize cut_t structure it will be needed in next phases
     cutInitCycle(&private->cut, &private->relax);
-
-    // TODO: 
-#if 0 /* DEBUG */
-    // Check that all operators have support either in this agent or in the
-    // main agent
-    int j;
-    for (j = 0; j < private->op_id_tr.loc_to_glob_size; ++j){
-        int supp = private->relax.op[j].supp;
-        int found = 0;
-
-        for (i = 0; i < size; ++i){
-            op_id = planMAMsgHeurLMCutSuppOp(msg, i);
-            op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
-            if (op_id == j){
-                found = 1;
-                if (supp != -1){
-                    fprintf(stderr, "[%d] Error: Supporter for %d(%d) on"
-                                    " both agents.\n",
-                            comm->node_id, op_id,
-                            planMAMsgHeurLMCutSuppOp(msg, i));
-                    break;
-                }
-            }
-        }
-
-        if (!found && supp == -1 && private->relax.op[j].unsat == 0){
-            fprintf(stderr, "[%d] Error: Supporter for %d(%d) is -1 on both"
-                            " agents.\n",
-                    comm->node_id, j, planOpIdTrGlob(&private->op_id_tr, j));
-        }
-    }
-#endif
 }
 /**** HMAX UPDATE STEP END ****/
 
@@ -1653,18 +1623,21 @@ static int checkConditionalEffects(const plan_op_t *op, int op_size)
 /**** COMMON END ****/
 
 
-// TODO: ifdef DEBUG or something
 /*** DEBUG ***/
+#ifdef DEBUG
 static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
                        const plan_op_id_tr_t *op_id_tr, const char *name)
 {
-    int i, j;
+    int i, j, glob_id;
 
     fprintf(stderr, "[%d] %s\n", agent_id, name);
     for (i = 0; i < relax->cref.op_size; ++i){
+        glob_id = -1;
+        if (relax->cref.op_id[i] >= 0)
+            glob_id = planOpIdTrGlob(op_id_tr, relax->cref.op_id[i]);
+
         fprintf(stderr, "[%d] Op[%d] value: %d, cost: %d, supp: %d, unsat: %d",
-                agent_id,
-                planOpIdTrGlob(op_id_tr, relax->cref.op_id[i]),
+                agent_id, glob_id,
                 relax->op[i].value,
                 relax->op[i].cost,
                 relax->op[i].supp,
@@ -1726,4 +1699,5 @@ static void debugCut(const cut_t *cut, const plan_heur_relax_t *relax,
     fprintf(stderr, "\n");
     fflush(stderr);
 }
+#endif /* DEBUG */
 /*** DEBUG END ***/

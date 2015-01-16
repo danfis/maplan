@@ -168,6 +168,18 @@ static int agentSize(const plan_op_t *op, int op_size);
 /** Returns true if any operator has a conditional effect */
 static int checkConditionalEffects(const plan_op_t *op, int op_size);
 static void setAllAgentsAndOpsAsChanged(plan_heur_ma_lm_cut_t *heur);
+/** Set .agent_changed[] to 0 and set cur_agent_id to next agent after the
+ *  main one. */
+static void zeroizeAgentChanged(plan_heur_ma_lm_cut_t *heur);
+/** Fills msg[] with messages of specified subtype for each agent except
+ *  the main one. */
+static void createMsgsForAgents(plan_heur_ma_lm_cut_t *heur, int subtype,
+                                plan_ma_msg_t **msg);
+/** Sends messages to their corresponding receivers. If only_agent_changed
+ *  is set to 1, only those messages for which .agent_changed[] is true are
+ *  sent. All messages are also deleted. */
+static int sendMsgs(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                    plan_ma_msg_t **msg, int only_agent_changed);
 
 static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg, plan_heur_res_t *res);
@@ -547,18 +559,8 @@ static void sendSuppRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
     plan_ma_msg_t *msg[heur->agent_size];
     int agent_id, i, op_id;
 
-    // TODO: Refactor
     // Create one message per remote agent
-    for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
-        if (agent_id == heur->agent_id){
-            msg[agent_id] = NULL;
-            continue;
-        }
-
-        msg[agent_id] = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                                     PLAN_MA_MSG_HEUR_LM_CUT_SUPP_REQUEST,
-                                     planMACommId(comm));
-    }
+    createMsgsForAgents(heur, PLAN_MA_MSG_HEUR_LM_CUT_SUPP_REQUEST, msg);
 
     // Fill message for each agent with the agent's operators that have
     // supporter facts know to this (main) agent.
@@ -572,12 +574,7 @@ static void sendSuppRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
     }
 
     // Send message to all remote agents
-    for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
-        if (msg[agent_id]){
-            planMACommSendToNode(comm, agent_id, msg[agent_id]);
-            planMAMsgDel(msg[agent_id]);
-        }
-    }
+    sendMsgs(heur, comm, msg, 0);
 }
 
 static void updateHMax(plan_heur_ma_lm_cut_t *heur,
@@ -829,20 +826,12 @@ static int sendGoalZoneRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *com
 {
     plan_ma_msg_t *msg[heur->agent_size];
     int i, op_id, agent_id;
-    int num_sent = 0;
 
-    // TODO: Refactor
-    bzero(heur->agent_changed, sizeof(int) * heur->agent_size);
+    // Create msg for each agent
+    createMsgsForAgents(heur, PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_REQUEST, msg);
 
-    for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
-        msg[agent_id] = NULL;
-        if (agent_id != heur->agent_id){
-            msg[agent_id] = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                                         PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_REQUEST,
-                                         planMACommId(comm));
-        }
-    }
-
+    // TODO: Comment
+    zeroizeAgentChanged(heur);
     for (i = 0; i < heur->op_size; ++i){
         if (heur->cut.op[i].state == CUT_GOAL_ZONE){
             heur->cut.op[i].state = CUT_OP_DONE;
@@ -857,17 +846,8 @@ static int sendGoalZoneRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *com
         }
     }
 
-    for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
-        if (heur->agent_changed[agent_id]){
-            planMACommSendToNode(comm, agent_id, msg[agent_id]);
-            ++num_sent;
-        }
-
-        if (msg[agent_id])
-            planMAMsgDel(msg[agent_id]);
-    }
-
-    return num_sent;
+    // Send messages and return how many were sent
+    return sendMsgs(heur, comm, msg, 1);
 }
 
 static int stepGoalZone(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
@@ -978,25 +958,23 @@ static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm
 {
     plan_ma_msg_t *msg[heur->agent_size];
     int i, op_id, agent_id;
-    int num_sent = 0;
 
-    // TODO: Refactor
-    bzero(heur->agent_changed, sizeof(int) * heur->agent_size);
+    // Create one messge per agent
+    createMsgsForAgents(heur, PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_REQUEST, msg);
 
-    // TODO: Refactor
+    // Set state to each message and update agent_change[] flag
+    zeroizeAgentChanged(heur);
     for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
-        msg[agent_id] = NULL;
-        if (agent_id != heur->agent_id){
-            msg[agent_id] = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                                         PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_REQUEST,
-                                         planMACommId(comm));
-            if (add_state){
-                planMAMsgHeurLMCutFindCutSetState(msg[agent_id], heur->init_state);
-                heur->agent_changed[agent_id] = 1;
-            }
+        if (agent_id == heur->agent_id)
+            continue;
+
+        if (add_state){
+            planMAMsgHeurLMCutFindCutSetState(msg[agent_id], heur->init_state);
+            heur->agent_changed[agent_id] = 1;
         }
     }
 
+    // TODO: comment
     for (i = 0; i < heur->op_size; ++i){
         if (heur->cut.op[i].state == CUT_START_ZONE){
             heur->cut.op[i].state = CUT_OP_DONE;
@@ -1011,18 +989,8 @@ static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm
         }
     }
 
-    // TODO: Refactor
-    for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
-        if (heur->agent_changed[agent_id]){
-            planMACommSendToNode(comm, agent_id, msg[agent_id]);
-            ++num_sent;
-        }
-
-        if (msg[agent_id])
-            planMAMsgDel(msg[agent_id]);
-    }
-
-    return num_sent;
+    // Send messages to agents
+    return sendMsgs(heur, comm, msg, 1);
 }
 
 static int stepFindCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
@@ -1162,19 +1130,18 @@ static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
     ma_lm_cut_op_t *op;
     int agent_id, i, op_id;
 
-    // TODO: Refactor
-    bzero(heur->agent_changed, sizeof(int) * heur->agent_size);
+    // Create message for each agent and set minimal cut cost
+    createMsgsForAgents(heur, PLAN_MA_MSG_HEUR_LM_CUT_CUT_REQUEST, msg);
+    zeroizeAgentChanged(heur);
     for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
-        msg[agent_id] = NULL;
         if (agent_id == heur->agent_id)
             continue;
 
-        msg[agent_id] = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                                     PLAN_MA_MSG_HEUR_LM_CUT_CUT_REQUEST,
-                                     planMACommId(comm));
         planMAMsgSetMinCutCost(msg[agent_id], heur->cut.min_cut);
+        heur->agent_changed[agent_id] = 1;
     }
 
+    // TODO: Comment
     for (i = 0; i < heur->op_size; ++i){
         op = heur->op + i;
         if (op->owner == heur->agent_id)
@@ -1188,13 +1155,7 @@ static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
         }
     }
 
-    for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
-        if (agent_id == heur->agent_id)
-            continue;
-        heur->agent_changed[agent_id] = 1;
-        planMACommSendToNode(comm, agent_id, msg[agent_id]);
-        planMAMsgDel(msg[agent_id]);
-    }
+    sendMsgs(heur, comm, msg, 0);
 }
 
 static int stepCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
@@ -1620,6 +1581,44 @@ static void setAllAgentsAndOpsAsChanged(plan_heur_ma_lm_cut_t *heur)
     // Set all operators as changed
     for (i = 0; i < heur->op_size; ++i)
         heur->op[i].changed = 1;
+}
+
+static void zeroizeAgentChanged(plan_heur_ma_lm_cut_t *heur)
+{
+    bzero(heur->agent_changed, sizeof(int) * heur->agent_size);
+    heur->cur_agent_id = (heur->agent_id + 1) % heur->agent_size;
+}
+
+static void createMsgsForAgents(plan_heur_ma_lm_cut_t *heur, int subtype,
+                                plan_ma_msg_t **msg)
+{
+    int i;
+
+    for (i = 0; i < heur->agent_size; ++i){
+        if (i == heur->agent_id){
+            msg[i] = NULL;
+        }else{
+            msg[i] = planMAMsgNew(PLAN_MA_MSG_HEUR, subtype, heur->agent_id);
+        }
+    }
+}
+
+static int sendMsgs(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                    plan_ma_msg_t **msg, int only_agent_changed)
+{
+    int i, sent = 0;
+
+    for (i = 0; i < heur->agent_size; ++i){
+        if (msg[i]){
+            if (!only_agent_changed || heur->agent_changed[i]){
+                planMACommSendToNode(comm, i, msg[i]);
+                ++sent;
+            }
+            planMAMsgDel(msg[i]);
+        }
+    }
+
+    return sent;
 }
 
 /**** COMMON END ****/

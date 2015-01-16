@@ -1168,14 +1168,12 @@ static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
 static int stepCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                    const plan_ma_msg_t *msg)
 {
-    // TODO:
+    // Check if have found any cut.
+    // Finding no cut means that there is serious error in the
+    // implementation, so leave it here.
     if (heur->cut.min_cut == PLAN_COST_MAX){
-        fprintf(stderr, "[%d] Error: Could not find cut!\n",
-                planMACommId(comm));
-        fflush(stderr);
-        heur->state = STATE_FINISH;
+        fprintf(stderr, "[%d] Error: Could not find cut!\n", planMACommId(comm));
         exit(-1);
-        return 0;
     }
 
     sendCutRequests(heur, comm);

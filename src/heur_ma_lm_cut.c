@@ -148,6 +148,11 @@ static void debugRelax(const plan_heur_relax_t *relax, int agent_id,
 static void debugCut(const cut_t *cut, const plan_heur_relax_t *relax,
                      int agent_id, const plan_op_id_tr_t *op_id_tr,
                      const char *name);
+static void assertMsgType(const plan_heur_ma_lm_cut_t *heur,
+                          const plan_ma_msg_t *msg, int subtype,
+                          int check_agent_id);
+#else /* DEBUG */
+# define assertMsgType(heur, msg, subtype, check_agent_id)
 #endif /* DEBUG */
 
 static void heurDel(plan_heur_t *_heur);
@@ -609,22 +614,8 @@ static void updateHMax(plan_heur_ma_lm_cut_t *heur,
 static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                           const plan_ma_msg_t *msg)
 {
-    int other_agent_id, updated_ops_size;
-
-    if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
-            || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_LM_CUT_HMAX_RESPONSE){
-        fprintf(stderr, "Error[%d]: Heur response isn't for h^max"
-                        " heuristic.\n", comm->node_id);
-        return -1;
-    }
-
-    other_agent_id = planMAMsgAgent(msg);
-    if (other_agent_id != heur->cur_agent_id){
-        fprintf(stderr, "Error[%d]: Heur response from %d is expected, instead"
-                        " response from %d is received.\n",
-                        comm->node_id, heur->cur_agent_id, other_agent_id);
-        return -1;
-    }
+    int updated_ops_size;
+    assertMsgType(heur, msg, PLAN_MA_MSG_HEUR_LM_CUT_HMAX_RESPONSE, 1);
 
     // Update operators' values from message
     hmaxUpdateOpValueFromMsg(msg, &heur->op_id_tr, heur->relax.op, NULL,
@@ -872,6 +863,7 @@ static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                               const plan_ma_msg_t *msg)
 {
     int i, size, op_id;
+    assertMsgType(heur, msg, PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_RESPONSE, 0);
 
     // Explore goal-zone from all received operators
     size = planMAMsgOpSize(msg);
@@ -1022,6 +1014,7 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 {
     int i, size, op_id;
     int from_agent;
+    assertMsgType(heur, msg, PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE, 0);
     
     // Update minimal cost of cut from message
     heur->cut.min_cut = BOR_MIN(heur->cut.min_cut, planMAMsgMinCutCost(msg));
@@ -1180,6 +1173,7 @@ static int stepCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                          const plan_ma_msg_t *msg)
 {
     int i, size, op_id;
+    assertMsgType(heur, msg, PLAN_MA_MSG_HEUR_LM_CUT_CUT_RESPONSE, 0);
 
     // Add received operators to the cut
     size = planMAMsgOpSize(msg);
@@ -1720,6 +1714,27 @@ static void debugCut(const cut_t *cut, const plan_heur_relax_t *relax,
     }
     fprintf(stderr, "\n");
     fflush(stderr);
+}
+
+static void assertMsgType(const plan_heur_ma_lm_cut_t *heur,
+                          const plan_ma_msg_t *msg, int subtype,
+                          int check_agent_id)
+{
+    if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
+            || planMAMsgSubType(msg) != subtype){
+        fprintf(stderr, "Error[%d]: Received unexpected message (%x"
+                        " instead of %x).\n",
+                        heur->agent_id, planMAMsgSubType(msg), subtype);
+        exit(-1);
+    }
+
+    if (check_agent_id && planMAMsgAgent(msg) != heur->cur_agent_id){
+        fprintf(stderr, "Error[%d]: Heur response from %d is expected, instead"
+                        " response from %d is received.\n",
+                        heur->agent_id, heur->cur_agent_id,
+                        planMAMsgAgent(msg));
+        exit(-1);
+    }
 }
 #endif /* DEBUG */
 /*** DEBUG END ***/

@@ -19,11 +19,6 @@
 #define STATE_FINISH           9
 #define STATE_SIZE             10
 
-// TODO: Move this closer to plan_heur_ma_lm_cut_t struct
-typedef struct _plan_heur_ma_lm_cut_t plan_heur_ma_lm_cut_t;
-typedef int (*state_step_fn)(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
-                             const plan_ma_msg_t *msg);
-
 /** Cut op/fact states: */
 #define CUT_GOAL_ZONE  1
 #define CUT_START_ZONE 2
@@ -82,6 +77,34 @@ struct _private_t {
 };
 typedef struct _private_t private_t;
 
+/** Initialize private_t structure */
+static void privateInit(private_t *private, const plan_problem_t *prob);
+/** Free allocated resources */
+static void privateFree(private_t *private);
+
+/** Methods for processing specific REQUEST messages */
+static void privateInitStep(private_t *private, plan_ma_comm_t *comm,
+                            const plan_ma_msg_t *msg);
+static void privateHMaxInc(private_t *private, plan_ma_comm_t *comm,
+                           const plan_ma_msg_t *msg);
+static void privateHMax(private_t *private, plan_ma_comm_t *comm,
+                        const plan_ma_msg_t *msg);
+static void privateSupp(private_t *private, plan_ma_comm_t *comm,
+                        const plan_ma_msg_t *msg);
+static void privateGoalZone(private_t *private, plan_ma_comm_t *comm,
+                            const plan_ma_msg_t *msg);
+static void privateFindCut(private_t *private, plan_ma_comm_t *comm,
+                            const plan_ma_msg_t *msg);
+static void privateCut(private_t *private, plan_ma_comm_t *comm,
+                       const plan_ma_msg_t *msg);
+
+
+/** Forward declaration */
+typedef struct _plan_heur_ma_lm_cut_t plan_heur_ma_lm_cut_t;
+/** Method for procedure corresponding to the current state */
+typedef int (*state_step_fn)(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                             const plan_ma_msg_t *msg);
+
 struct _ma_lm_cut_op_t {
     int owner;
     int changed;
@@ -132,6 +155,16 @@ static int heurMAUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg, plan_heur_res_t *res);
 static void heurMARequest(plan_heur_t *heur, plan_ma_comm_t *comm,
                           const plan_ma_msg_t *msg);
+/** Allocates enough private_t structures to cover also the specified
+ *  agent_id */
+static void privateAlloc(plan_heur_ma_lm_cut_t *heur, int agent_id);
+/** Returns next agent ID that is marked as changed or -1 if none of agents
+ *  is marked as changed. */
+static int nextAgentId(const plan_heur_ma_lm_cut_t *heur);
+/** Returns number of remote agents stored as owners in operators */
+static int agentSize(const plan_op_t *op, int op_size);
+/** Returns true if any operator has a conditional effect */
+static int checkConditionalEffects(const plan_op_t *op, int op_size);
 
 static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg, plan_heur_res_t *res);
@@ -156,7 +189,6 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                       const plan_ma_msg_t *msg);
 
-
 /** Updates op[] array with values from of operators from message if case
  *  the value is higher than the one in op[] array.
  *  If op_all is non-NULL values of all operators from message are written
@@ -167,58 +199,9 @@ static void hmaxUpdateOpValueFromMsg(const plan_ma_msg_t *msg,
                                      const plan_op_id_tr_t *op_id_tr,
                                      plan_heur_relax_op_t *op,
                                      plan_heur_relax_op_t *op_all,
-                                     int *updated_ops, int *updated_ops_size)
-{
-    int i, op_size, op_id;
-    plan_cost_t op_value, value;
-
-    *updated_ops_size = 0;
-
-    op_size = planMAMsgOpSize(msg);
-    for (i = 0; i < op_size; ++i){
-        // Read operator data from message
-        op_id = planMAMsgOp(msg, i, NULL, NULL, &op_value);
-
-        // Translate operator ID from global ID to local ID and ignore
-        // those which are unknown
-        op_id = planOpIdTrLoc(op_id_tr, op_id);
-        if (op_id < 0)
-            continue;
-
-        // Write operator's value if it is requested
-        if (op_all)
-            op_all[op_id].value = op_value;
-
-        // Determine current value of operator
-        value = op[op_id].value;
-
-        // Record updated value of operator and write operator's ID to
-        // output array
-        if (value < op_value){
-            op[op_id].value = op_value;
-            updated_ops[*updated_ops_size] = op_id;
-            ++(*updated_ops_size);
-        }
-    }
-}
-
+                                     int *updated_ops, int *updated_ops_size);
 /** Runs full h^max heuristic. */
-static void hmaxFull(plan_heur_relax_t *relax, const plan_state_t *state)
-{
-    int i;
-
-    planHeurRelaxFull(relax, state);
-
-    // Modify unreachable operators so it can be propagated to other agents
-    for (i = 0; i < relax->cref.op_size; ++i){
-        if (relax->op[i].unsat > 0){
-            relax->op[i].value = PLAN_COST_UNREACHABLE;
-            relax->op[i].cost = 0;
-            relax->op[i].supp = -1;
-        }
-    }
-}
-
+static void hmaxFull(plan_heur_relax_t *relax, const plan_state_t *state);
 /** Reset values of operators without supporter facts to the values that
  *  correspond to their preconditions (thus are not changed via values from
  *  other agents. Operators that are not in cut and was changed are added
@@ -226,131 +209,9 @@ static void hmaxFull(plan_heur_relax_t *relax, const plan_state_t *state)
 static void hmaxResetNonSupportedOps(plan_heur_relax_t *relax,
                                      const cut_t *cut,
                                      int *updated_ops,
-                                     int *updated_ops_size)
-{
-    int op_id, i, len, *facts, fact_id, supp;
-    plan_heur_relax_op_t *op;
-    plan_cost_t value;
-
-    for (op_id = 0; op_id < relax->cref.op_size; ++op_id){
-        op = relax->op + op_id;
-        if (op->supp != -1 || op->unsat > 0)
-            continue;
-
-        // TODO: Comment, refactor?
-        value = -1;
-        supp = -1;
-        len = relax->cref.op_pre[op_id].size;
-        facts = relax->cref.op_pre[op_id].fact;
-        for (i = 0; i < len; ++i){
-            fact_id = facts[i];
-            if (relax->fact[fact_id].value > value){
-                value = relax->fact[fact_id].value;
-                supp = fact_id;
-            }
-        }
-
-        relax->op[op_id].value = value + relax->op[op_id].cost;
-        relax->op[op_id].supp = supp;
-        if (!cut->op[op_id].in_cut){
-            updated_ops[(*updated_ops_size)++] = op_id;
-        }
-    }
-}
+                                     int *updated_ops_size);
 
 
-/** Returns next agent ID that is marked as changed or -1 if none of agents
- *  is marked as changed. */
-static int nextAgentId(const plan_heur_ma_lm_cut_t *heur)
-{
-    int i, from, to, id;
-
-    from = 0;
-    if (heur->cur_agent_id >= 0)
-        from = heur->cur_agent_id + 1;
-    to = from + heur->agent_size;
-
-    for (i = from; i < to; ++i){
-        id = i % heur->agent_size;
-        if (heur->agent_changed[id])
-            return id;
-    }
-    return -1;
-}
-
-
-
-// TODO: Comment, separate with other private_t functions
-static void privateInit(private_t *private, const plan_problem_t *prob)
-{
-    plan_op_t *op;
-    int op_size;
-    int i;
-
-    planProblemCreatePrivateProjOps(prob->op, prob->op_size,
-                                    prob->var, prob->var_size,
-                                    &op, &op_size);
-    planHeurRelaxInit(&private->relax, PLAN_HEUR_RELAX_TYPE_MAX,
-                      prob->var, prob->var_size, prob->goal, op, op_size);
-
-    // Get IDs of all public operators
-    private->public_op.op = BOR_ALLOC_ARR(int, op_size);
-    private->public_op.size = 0;
-    for (i = 0; i < op_size; ++i){
-        if (!op[i].is_private){
-            private->public_op.op[private->public_op.size++] = i;
-        }
-    }
-    private->public_op.op = BOR_REALLOC_ARR(private->public_op.op, int,
-                                            private->public_op.size);
-
-    planOpIdTrInit(&private->op_id_tr, op, op_size);
-    planProblemDestroyOps(op, op_size);
-
-    private->updated_ops = BOR_ALLOC_ARR(int, private->relax.cref.op_size);
-    private->opcmp = BOR_ALLOC_ARR(plan_heur_relax_op_t,
-                                   private->relax.cref.op_size);
-
-    cutInit(&private->cut, &private->relax);
-}
-
-static void privateFree(private_t *private)
-{
-    planHeurRelaxFree(&private->relax);
-    planOpIdTrFree(&private->op_id_tr);
-    if (private->public_op.op)
-        BOR_FREE(private->public_op.op);
-    if (private->updated_ops)
-        BOR_FREE(private->updated_ops);
-    if (private->opcmp)
-        BOR_FREE(private->opcmp);
-    cutFree(&private->cut);
-}
-
-/** Returns number of remote agents stored as owners in operators */
-static int agentSize(const plan_op_t *op, int op_size)
-{
-    int agent_size = 0;
-    int i;
-
-    for (i = 0; i < op_size; ++i){
-        agent_size = BOR_MAX(agent_size, op[i].owner + 1);
-    }
-
-    return agent_size;
-}
-
-/** Returns true if any operator has a conditional effect */
-static int checkConditionalEffects(const plan_op_t *op, int op_size)
-{
-    int i;
-
-    for (i = 0; i < op_size; ++i){
-        if (op[i].cond_eff_size > 0)
-            return 1;
-    }
-    return 0;
-}
 
 plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
 {
@@ -465,9 +326,130 @@ static int heurMAUpdate(plan_heur_t *_heur, plan_ma_comm_t *comm,
     return mainLoop(heur, comm, msg, res);
 }
 
+static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
+                          const plan_ma_msg_t *msg)
+{
+    plan_heur_ma_lm_cut_t *heur = HEUR(_heur);
+    private_t *private;
+    int type, subtype;
+
+    // Allocate private structure if needed and choose private_t
+    // corresponding to the agent from which we received the message.
+    privateAlloc(heur, planMAMsgAgent(msg));
+    private = heur->private + planMAMsgAgent(msg);
+
+    type = planMAMsgType(msg);
+    subtype = planMAMsgSubType(msg);
+
+    if (type == PLAN_MA_MSG_HEUR){
+        if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_INIT_REQUEST){
+            privateInitStep(private, comm, msg);
+            return;
+
+        }else if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_MAX_INC_REQUEST){
+            privateHMaxInc(private, comm, msg);
+            return;
+
+        }else if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST){
+            privateHMax(private, comm, msg);
+            return;
+
+        }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_SUPP_REQUEST){
+            privateSupp(private, comm, msg);
+            return;
+
+        }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_REQUEST){
+            privateGoalZone(private, comm, msg);
+            return;
+
+        }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_REQUEST){
+            privateFindCut(private, comm, msg);
+            return;
+
+        }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_CUT_REQUEST){
+            privateCut(private, comm, msg);
+            return;
+        }
+    }
+
+    fprintf(stderr, "Error[%d]: The request isn't for lm-cut heuristic.\n",
+            comm->node_id);
+}
+
+
+static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                    const plan_ma_msg_t *msg, plan_heur_res_t *res)
+{
+    while (heur->state_step[heur->state](heur, comm, msg) == 0);
+
+    if (heur->state == STATE_FINISH){
+        res->heur = heur->heur_value;
+        return 0;
+    }
+
+    return -1;
+}
+
+
+/**** Private ****/
+static void privateInit(private_t *private, const plan_problem_t *prob)
+{
+    plan_op_t *op;
+    int op_size;
+    int i;
+
+    planProblemCreatePrivateProjOps(prob->op, prob->op_size,
+                                    prob->var, prob->var_size,
+                                    &op, &op_size);
+    planHeurRelaxInit(&private->relax, PLAN_HEUR_RELAX_TYPE_MAX,
+                      prob->var, prob->var_size, prob->goal, op, op_size);
+
+    // Get IDs of all public operators
+    private->public_op.op = BOR_ALLOC_ARR(int, op_size);
+    private->public_op.size = 0;
+    for (i = 0; i < op_size; ++i){
+        if (!op[i].is_private){
+            private->public_op.op[private->public_op.size++] = i;
+        }
+    }
+    private->public_op.op = BOR_REALLOC_ARR(private->public_op.op, int,
+                                            private->public_op.size);
+
+    planOpIdTrInit(&private->op_id_tr, op, op_size);
+    planProblemDestroyOps(op, op_size);
+
+    private->updated_ops = BOR_ALLOC_ARR(int, private->relax.cref.op_size);
+    private->opcmp = BOR_ALLOC_ARR(plan_heur_relax_op_t,
+                                   private->relax.cref.op_size);
+
+    cutInit(&private->cut, &private->relax);
+}
+
+static void privateFree(private_t *private)
+{
+    planHeurRelaxFree(&private->relax);
+    planOpIdTrFree(&private->op_id_tr);
+    if (private->public_op.op)
+        BOR_FREE(private->public_op.op);
+    if (private->updated_ops)
+        BOR_FREE(private->updated_ops);
+    if (private->opcmp)
+        BOR_FREE(private->opcmp);
+    cutFree(&private->cut);
+}
+/**** Private END ****/
 
 
 
+/**** INIT STEP ****/
+/**
+ * In the init step:
+ * 1. Main agent sends init request to all other agents,
+ * 2. Main agent computes full h^max heuristic on projected operators and
+ *    sends HMax request to first remote agent.
+ * 3. Remote agent receives init request and computes full h^max heuristic
+ *    on private projections of operators.
+ */
 
 static void sendInitRequest(plan_heur_ma_lm_cut_t *heur,
                             plan_ma_comm_t *comm, int agent_id)
@@ -482,8 +464,8 @@ static void sendInitRequest(plan_heur_ma_lm_cut_t *heur,
     planMAMsgDel(msg);
 }
 
-static void sendMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
-                           int agent_id)
+static void sendHMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                            int agent_id)
 {
     plan_ma_msg_t *msg;
     int i, op_id, value;
@@ -508,14 +490,68 @@ static void sendMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     planMAMsgDel(msg);
 }
 
+static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                    const plan_ma_msg_t *msg)
+{
+    int i;
+
+    // Every agent must be requested at least once, so make sure of that.
+    // TODO: Refactor?
+    for (i = 0; i < heur->agent_size; ++i){
+        if (i == heur->agent_id){
+            heur->agent_changed[i] = 0;
+        }else{
+            heur->agent_changed[i] = 1;
+            sendInitRequest(heur, comm, i);
+        }
+    }
+    heur->cur_agent_id = (planMACommId(comm) + 1) % heur->agent_size;
+
+    // Set all operators as changed
+    for (i = 0; i < heur->op_size; ++i)
+        heur->op[i].changed = 1;
+
+    // h^max heuristics for all facts and operators reachable from the
+    // state
+    hmaxFull(&heur->relax, heur->init_state);
+
+    // Send request to next agent
+    sendHMaxRequest(heur, comm, heur->cur_agent_id);
+
+    heur->state = STATE_HMAX_UPDATE;
+    return -1;
+}
+
+static void privateInitStep(private_t *private, plan_ma_comm_t *comm,
+                            const plan_ma_msg_t *msg)
+{
+    PLAN_STATE_STACK(state, private->relax.cref.fact_id.var_size);
+
+    // Early exit if we have no private operators
+    if (private->relax.cref.op_size == 0)
+        return;
+
+    // Run full relaxation heuristic
+    planMAMsgHeurMaxState(msg, &state);
+    hmaxFull(&private->relax, &state);
+}
+/**** INIT STEP END ****/
 
 
+/**** HMAX UPDATE STEP ****/
+/**
+ * In this step the h^max heuristic is computed on cluster of agents.
+ * When the computation is finished and all agents have same h^max values
+ * for all operators and facts, supporters of operators are chosen so that
+ * for each operator only one agent knows its supporter.
+ */
 
 static void sendSuppRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
 {
     plan_ma_msg_t *msg[heur->agent_size];
     int agent_id, i, op_id;
 
+    // TODO: Refactor
     // Create one message per remote agent
     for (agent_id = 0; agent_id < heur->agent_size; ++agent_id){
         if (agent_id == heur->agent_id){
@@ -548,33 +584,254 @@ static void sendSuppRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
     }
 }
 
-
-static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
-                    const plan_ma_msg_t *msg, plan_heur_res_t *res)
+static void updateHMax(plan_heur_ma_lm_cut_t *heur,
+                       const int *update_op, int update_op_size)
 {
-    while (heur->state_step[heur->state](heur, comm, msg) == 0);
+    int i, size;
 
-    if (heur->state == STATE_FINISH){
-        res->heur = heur->heur_value;
+    // Remember old values of operators
+    size = sizeof(plan_heur_relax_op_t) * heur->relax.cref.op_size;
+    memcpy(heur->opcmp, heur->relax.op, size);
+
+    // Update h^max heuristic using changed operators
+    planHeurRelaxUpdateMaxFull(&heur->relax, update_op, update_op_size);
+
+    // Record changes in operators
+    for (i = 0; i < heur->op_size; ++i){
+        if (heur->op[i].owner != heur->agent_id
+                && !heur->op[i].changed
+                && heur->opcmp[i].value != heur->relax.op[i].value){
+            heur->op[i].changed = 1;
+            if (heur->op[i].owner >= 0)
+                heur->agent_changed[heur->op[i].owner] = 1;
+        }
+    }
+}
+
+static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                          const plan_ma_msg_t *msg)
+{
+    int other_agent_id, updated_ops_size;
+
+    if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
+            || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE){
+        fprintf(stderr, "Error[%d]: Heur response isn't for h^max"
+                        " heuristic.\n", comm->node_id);
+        return -1;
+    }
+
+    other_agent_id = planMAMsgAgent(msg);
+    if (other_agent_id != heur->cur_agent_id){
+        fprintf(stderr, "Error[%d]: Heur response from %d is expected, instead"
+                        " response from %d is received.\n",
+                        comm->node_id, heur->cur_agent_id, other_agent_id);
+        return -1;
+    }
+
+    // Update operators' values from message
+    hmaxUpdateOpValueFromMsg(msg, &heur->op_id_tr, heur->relax.op, NULL,
+                             heur->updated_ops, &updated_ops_size);
+
+    // Update h^max values of facts and operators considering changes in
+    // the operators
+    if (updated_ops_size > 0){
+        updateHMax(heur, heur->updated_ops, updated_ops_size);
+    }
+
+    // TODO: More comments
+    // Check if we are done
+    heur->cur_agent_id = nextAgentId(heur);
+    if (heur->cur_agent_id >= 0){
+        sendHMaxRequest(heur, comm, heur->cur_agent_id);
+    }else{
+        // TODO: Check dead-end on goal fact and also >PLAN_COST_MAX/2
+        if (heur->relax.fact[heur->relax.cref.goal_id].value == 0){
+            heur->state = STATE_FINISH;
+            return 0;
+        }
+
+        sendSuppRequest(heur, comm);
+        heur->state = STATE_GOAL_ZONE;
         return 0;
     }
 
     return -1;
 }
 
-static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+// TODO: Rename
+static void requestMaxSendEmptyResponse(plan_ma_comm_t *comm,
+                                        const plan_ma_msg_t *req)
+{
+    plan_ma_msg_t *msg;
+    int target_agent;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE,
+                       planMACommId(comm));
+    target_agent = planMAMsgAgent(req);
+    planMACommSendToNode(comm, target_agent, msg);
+    planMAMsgDel(msg);
+}
+
+// TODO: Rename
+static void privateMaxSendResponse(private_t *private, plan_ma_comm_t *comm,
+                                   int agent_id)
+{
+    int i, op_id;
+    plan_cost_t value;
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                       PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE,
+                       planMACommId(comm));
+
+    // Check all public operators and send all that were changed
+    for (i = 0; i < private->public_op.size; ++i){
+        op_id = private->public_op.op[i];
+        if (private->opcmp[op_id].value == private->relax.op[op_id].value)
+            continue;
+        if (private->relax.op[op_id].unsat > 0)
+            continue;
+
+        value = private->relax.op[op_id].value;
+        op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
+        planMAMsgHeurLMCutMaxAddOp(msg, op_id, value);
+    }
+    planMACommSendToNode(comm, agent_id, msg);
+    planMAMsgDel(msg);
+}
+
+static void privateHMax(private_t *private, plan_ma_comm_t *comm,
+                        const plan_ma_msg_t *msg)
+{
+    int updated_ops_size;
+
+    // Early exit if we have no private operators
+    if (private->relax.cref.op_size == 0){
+        requestMaxSendEmptyResponse(comm, msg);
+        return;
+    }
+
+    // Copy current state of operators to compare array.
+    // This has to be done before relax->op values are changed according to
+    // the received message because we need to compare on the state of
+    // operators that is assumed by the initiator agent.
+    memcpy(private->opcmp, private->relax.op,
+           sizeof(plan_heur_relax_op_t) * private->relax.cref.op_size);
+
+    // Update operators' values from received message
+    hmaxUpdateOpValueFromMsg(msg, &private->op_id_tr,
+                             private->relax.op, private->opcmp,
+                             private->updated_ops, &updated_ops_size);
+
+    // Update .relax structure if something was changed
+    if (updated_ops_size > 0){
+        planHeurRelaxUpdateMaxFull(&private->relax, private->updated_ops,
+                                   updated_ops_size);
+    }
+
+    // Send response to the main agent
+    privateMaxSendResponse(private, comm, planMAMsgAgent(msg));
+}
+
+static void privateSupp(private_t *private, plan_ma_comm_t *comm,
+                        const plan_ma_msg_t *msg)
+{
+    int i, size, op_id;
+
+    // Mark all received operators as without supporter fact because the
+    // supporter fact is hold by the main agent.
+    size = planMAMsgHeurLMCutSuppOpSize(msg);
+    for (i = 0; i < size; ++i){
+        op_id = planMAMsgHeurLMCutSuppOp(msg, i);
+        op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
+        if (op_id >= 0)
+            private->relax.op[op_id].supp = -1;
+    }
+
+    // Initialize cut_t structure it will be needed in next phases
+    cutInitCycle(&private->cut, &private->relax);
+
+    // TODO: 
+#if 0 /* DEBUG */
+    // Check that all operators have support either in this agent or in the
+    // main agent
+    int j;
+    for (j = 0; j < private->op_id_tr.loc_to_glob_size; ++j){
+        int supp = private->relax.op[j].supp;
+        int found = 0;
+
+        for (i = 0; i < size; ++i){
+            op_id = planMAMsgHeurLMCutSuppOp(msg, i);
+            op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
+            if (op_id == j){
+                found = 1;
+                if (supp != -1){
+                    fprintf(stderr, "[%d] Error: Supporter for %d(%d) on"
+                                    " both agents.\n",
+                            comm->node_id, op_id,
+                            planMAMsgHeurLMCutSuppOp(msg, i));
+                    break;
+                }
+            }
+        }
+
+        if (!found && supp == -1 && private->relax.op[j].unsat == 0){
+            fprintf(stderr, "[%d] Error: Supporter for %d(%d) is -1 on both"
+                            " agents.\n",
+                    comm->node_id, j, planOpIdTrGlob(&private->op_id_tr, j));
+        }
+    }
+#endif
+}
+/**** HMAX UPDATE STEP END ****/
+
+
+/**** HMAX INC ****/
+/**
+ * In this step, cut is applied to the current state of relaxation
+ * heuristic, the heuristic is partially repaired and computation of h^max
+ * starts on whole agent cluster.
+ */
+
+static void sendHMaxIncRequest(plan_heur_ma_lm_cut_t *heur,
+                               plan_ma_comm_t *comm, int agent_id)
+{
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                       PLAN_MA_MSG_HEUR_LM_CUT_MAX_INC_REQUEST,
+                       planMACommId(comm));
+    planMACommSendToNode(comm, agent_id, msg);
+    planMAMsgDel(msg);
+}
+
+static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg)
 {
-    int i;
+    int i, updated_ops_size;
+
+    // TODO: Comment
+    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax'");
+    cutApply(&heur->cut, &heur->relax, heur->updated_ops, &updated_ops_size);
+    hmaxResetNonSupportedOps(&heur->relax, &heur->cut,
+                             heur->updated_ops, &updated_ops_size);
+    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainHMax");
+    planHeurRelaxIncMaxFull(&heur->relax, heur->updated_ops, updated_ops_size);
+    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax");
+
+    for (i = 0; i < heur->agent_size; ++i){
+        if (i == heur->agent_id)
+            continue;
+        sendHMaxIncRequest(heur, comm, i);
+    }
 
     // Every agent must be requested at least once, so make sure of that.
-    // TODO: Refactor?
+    // TODO: Refactor, see stepInit()
     for (i = 0; i < heur->agent_size; ++i){
         if (i == heur->agent_id){
             heur->agent_changed[i] = 0;
         }else{
             heur->agent_changed[i] = 1;
-            sendInitRequest(heur, comm, i);
         }
     }
     heur->cur_agent_id = (planMACommId(comm) + 1) % heur->agent_size;
@@ -583,16 +840,38 @@ static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     for (i = 0; i < heur->op_size; ++i)
         heur->op[i].changed = 1;
 
-    // h^max heuristics for all facts and operators reachable from the
-    // state
-    hmaxFull(&heur->relax, heur->init_state);
-
     // Send request to next agent
-    sendMaxRequest(heur, comm, heur->cur_agent_id);
+    sendHMaxRequest(heur, comm, heur->cur_agent_id);
 
     heur->state = STATE_HMAX_UPDATE;
     return -1;
 }
+
+static void privateHMaxInc(private_t *private, plan_ma_comm_t *comm,
+                           const plan_ma_msg_t *msg)
+{
+    int updated_ops_size;
+
+    // TODO: Comment
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc'");
+    cutApply(&private->cut, &private->relax,
+             private->updated_ops, &updated_ops_size);
+    hmaxResetNonSupportedOps(&private->relax, &private->cut,
+                             private->updated_ops, &updated_ops_size);
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc''");
+    planHeurRelaxIncMaxFull(&private->relax, private->updated_ops,
+                            updated_ops_size);
+    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc");
+}
+/**** HMAX INC END ****/
+
+
+/**** GOAL ZONE ****/
+/**
+ * In this step, the operators and facts connected with a goal by zero-cost
+ * operators are marked (thus they belong to goal-zone). This is done by
+ * distributed graph search.
+ */
 
 static int sendGoalZoneRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
 {
@@ -683,6 +962,64 @@ static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     heur->state = STATE_GOAL_ZONE_UPDATE;
     return -1;
 }
+
+static void sendGoalZoneResponse(private_t *private, plan_ma_comm_t *comm,
+                                 int agent_id)
+{
+    plan_ma_msg_t *msg;
+    int i, len, *ops, op_id;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                       PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_RESPONSE,
+                       planMACommId(comm));
+
+    // TODO: Comment
+    len = private->public_op.size;
+    ops = private->public_op.op;
+    for (i = 0; i < len; ++i){
+        op_id = ops[i];
+        if (private->cut.op[op_id].state == CUT_GOAL_ZONE){
+            op_id = private->relax.cref.op_id[op_id];
+            if (op_id < 0)
+                continue;
+            op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
+            // TODO: Better API in ma_msg module
+            planMAMsgAddOp(msg, op_id, PLAN_COST_INVALID, -1,
+                           PLAN_COST_INVALID);
+        }
+    }
+
+    planMACommSendToNode(comm, agent_id, msg);
+    planMAMsgDel(msg);
+}
+
+static void privateGoalZone(private_t *private, plan_ma_comm_t *comm,
+                            const plan_ma_msg_t *msg)
+{
+    int i, size, op_id;
+
+    // TODO: Comment
+    size = planMAMsgOpSize(msg);
+    for (i = 0; i < size; ++i){
+        op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
+        op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
+        if (op_id < 0)
+            continue;
+
+        cutMarkGoalZoneOp(&private->cut, &private->relax, op_id);
+    }
+
+    sendGoalZoneResponse(private, comm, planMAMsgAgent(msg));
+}
+/**** GOAL ZONE END ****/
+
+
+/**** FIND CUT ****/
+/**
+ * In this step, justification graph is explored from the initial state
+ * until it reaches the goal-zone. Operators that end in goal-zone fact are
+ * marked as they are in cut.
+ */
 
 static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                                int add_state)
@@ -795,6 +1132,78 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     return -1;
 }
 
+static void sendFindCutResponse(private_t *private, plan_ma_comm_t *comm,
+                                int agent_id)
+{
+    plan_ma_msg_t *msg;
+    int i, len, *ops, op_id;
+
+    // TODO: Comment
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                       PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE,
+                       planMACommId(comm));
+
+    len = private->public_op.size;
+    ops = private->public_op.op;
+    for (i = 0; i < len; ++i){
+        op_id = ops[i];
+        if (private->cut.op[op_id].state == CUT_START_ZONE){
+            op_id = private->relax.cref.op_id[op_id];
+            if (op_id < 0)
+                continue;
+            op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
+            // TODO: Better API in ma_msg module
+            planMAMsgAddOp(msg, op_id, PLAN_COST_INVALID, -1,
+                           PLAN_COST_INVALID);
+        }
+    }
+
+    // Set minimal cost of cut so far
+    planMAMsgSetMinCutCost(msg, private->cut.min_cut);
+
+    planMACommSendToNode(comm, agent_id, msg);
+    planMAMsgDel(msg);
+}
+
+static void privateFindCut(private_t *private, plan_ma_comm_t *comm,
+                           const plan_ma_msg_t *msg)
+{
+    int i, size, fact_id, op_id;
+
+    // TODO: Comment
+    if (planMAMsgHasStateFull(msg)){
+        for (i = 0; i < private->relax.cref.fact_id.var_size; ++i){
+            fact_id = planMAMsgStateFullVal(msg, i);
+            fact_id = planFactId(&private->relax.cref.fact_id, i, fact_id);
+            cutFind(&private->cut, &private->relax, fact_id, 1);
+        }
+        for (i = 0; i < private->relax.cref.fake_pre_size; ++i){
+            fact_id = private->relax.cref.fake_pre[i].fact_id;
+            cutFind(&private->cut, &private->relax, fact_id, 1);
+        }
+    }
+
+    size = planMAMsgOpSize(msg);
+    for (i = 0; i < size; ++i){
+        op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
+        op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
+        if (op_id < 0)
+            continue;
+
+        cutFindOp(&private->cut, &private->relax, op_id);
+    }
+
+    sendFindCutResponse(private, comm, planMAMsgAgent(msg));
+}
+/**** FIND CUT END ****/
+
+
+/**** CUT ****/
+/**
+ * In this step, information about cut is distributed among all agents in
+ * cluster.
+ */
+
 static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
 {
     plan_ma_msg_t *msg[heur->agent_size];
@@ -881,432 +1290,6 @@ static int stepCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     return -1;
 }
 
-static void sendHMaxIncRequest(plan_heur_ma_lm_cut_t *heur,
-                               plan_ma_comm_t *comm, int agent_id)
-{
-    plan_ma_msg_t *msg;
-
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                       PLAN_MA_MSG_HEUR_LM_CUT_MAX_INC_REQUEST,
-                       planMACommId(comm));
-    planMACommSendToNode(comm, agent_id, msg);
-    planMAMsgDel(msg);
-}
-
-static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
-                    const plan_ma_msg_t *msg)
-{
-    int i, updated_ops_size;
-
-    // TODO: Comment
-    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax'");
-    cutApply(&heur->cut, &heur->relax, heur->updated_ops, &updated_ops_size);
-    hmaxResetNonSupportedOps(&heur->relax, &heur->cut,
-                             heur->updated_ops, &updated_ops_size);
-    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainHMax");
-    planHeurRelaxIncMaxFull(&heur->relax, heur->updated_ops, updated_ops_size);
-    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax");
-
-    for (i = 0; i < heur->agent_size; ++i){
-        if (i == heur->agent_id)
-            continue;
-        sendHMaxIncRequest(heur, comm, i);
-    }
-
-    // Every agent must be requested at least once, so make sure of that.
-    // TODO: Refactor, see stepInit()
-    for (i = 0; i < heur->agent_size; ++i){
-        if (i == heur->agent_id){
-            heur->agent_changed[i] = 0;
-        }else{
-            heur->agent_changed[i] = 1;
-        }
-    }
-    heur->cur_agent_id = (planMACommId(comm) + 1) % heur->agent_size;
-
-    // Set all operators as changed
-    for (i = 0; i < heur->op_size; ++i)
-        heur->op[i].changed = 1;
-
-    // Send request to next agent
-    sendMaxRequest(heur, comm, heur->cur_agent_id);
-
-    heur->state = STATE_HMAX_UPDATE;
-    return -1;
-}
-
-
-static void updateHMax(plan_heur_ma_lm_cut_t *heur,
-                       const int *update_op, int update_op_size)
-{
-    int i, size;
-
-    // Remember old values of operators
-    size = sizeof(plan_heur_relax_op_t) * heur->relax.cref.op_size;
-    memcpy(heur->opcmp, heur->relax.op, size);
-
-    // Update h^max heuristic using changed operators
-    planHeurRelaxUpdateMaxFull(&heur->relax, update_op, update_op_size);
-
-    // Record changes in operators
-    for (i = 0; i < heur->op_size; ++i){
-        if (heur->op[i].owner != heur->agent_id
-                && !heur->op[i].changed
-                && heur->opcmp[i].value != heur->relax.op[i].value){
-            heur->op[i].changed = 1;
-            if (heur->op[i].owner >= 0)
-                heur->agent_changed[heur->op[i].owner] = 1;
-        }
-    }
-}
-
-static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
-                          const plan_ma_msg_t *msg)
-{
-    int other_agent_id, updated_ops_size;
-
-    if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
-            || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE){
-        fprintf(stderr, "Error[%d]: Heur response isn't for h^max"
-                        " heuristic.\n", comm->node_id);
-        return -1;
-    }
-
-    other_agent_id = planMAMsgAgent(msg);
-    if (other_agent_id != heur->cur_agent_id){
-        fprintf(stderr, "Error[%d]: Heur response from %d is expected, instead"
-                        " response from %d is received.\n",
-                        comm->node_id, heur->cur_agent_id, other_agent_id);
-        return -1;
-    }
-
-    // Update operators' values from message
-    hmaxUpdateOpValueFromMsg(msg, &heur->op_id_tr, heur->relax.op, NULL,
-                             heur->updated_ops, &updated_ops_size);
-
-    // Update h^max values of facts and operators considering changes in
-    // the operators
-    if (updated_ops_size > 0){
-        updateHMax(heur, heur->updated_ops, updated_ops_size);
-    }
-
-    // TODO: More comments
-    // Check if we are done
-    heur->cur_agent_id = nextAgentId(heur);
-    if (heur->cur_agent_id >= 0){
-        sendMaxRequest(heur, comm, heur->cur_agent_id);
-    }else{
-        // TODO: Check dead-end on goal fact and also >PLAN_COST_MAX/2
-        if (heur->relax.fact[heur->relax.cref.goal_id].value == 0){
-            heur->state = STATE_FINISH;
-            return 0;
-        }
-
-        sendSuppRequest(heur, comm);
-        heur->state = STATE_GOAL_ZONE;
-        return 0;
-    }
-
-    return -1;
-}
-
-static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
-                      const plan_ma_msg_t *msg)
-{
-    // TODO: Why? Do we need this for something?
-    // Refactor with mainLoop()
-    //heur->heur_value = heur->relax.fact[heur->relax.cref.goal_id].value;
-    return -1;
-}
-
-
-
-
-
-// TODO: Rename
-static void requestMaxSendEmptyResponse(plan_ma_comm_t *comm,
-                                        const plan_ma_msg_t *req)
-{
-    plan_ma_msg_t *msg;
-    int target_agent;
-
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE,
-                       planMACommId(comm));
-    target_agent = planMAMsgAgent(req);
-    planMACommSendToNode(comm, target_agent, msg);
-    planMAMsgDel(msg);
-}
-
-
-// TODO: Rename, comment
-static void allocPrivate(plan_heur_ma_lm_cut_t *heur, int agent_id)
-{
-    int i;
-
-    if (agent_id < heur->private_size)
-        return;
-
-    heur->private = BOR_REALLOC_ARR(heur->private, private_t, agent_id + 1);
-    for (i = heur->private_size; i < agent_id + 1; ++i)
-        privateInit(heur->private + i, heur->prob);
-    heur->private_size = agent_id + 1;
-}
-
-static void privateInitRequest(private_t *private, plan_ma_comm_t *comm,
-                               const plan_ma_msg_t *msg)
-{
-    PLAN_STATE_STACK(state, private->relax.cref.fact_id.var_size);
-
-    // Early exit if we have no private operators
-    if (private->relax.cref.op_size == 0)
-        return;
-
-    // Run full relaxation heuristic
-    planMAMsgHeurMaxState(msg, &state);
-    hmaxFull(&private->relax, &state);
-}
-
-static void privateMaxIncRequest(private_t *private, plan_ma_comm_t *comm,
-                                 const plan_ma_msg_t *msg)
-{
-    int updated_ops_size;
-
-    // TODO: Comment
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc'");
-    cutApply(&private->cut, &private->relax,
-             private->updated_ops, &updated_ops_size);
-    hmaxResetNonSupportedOps(&private->relax, &private->cut,
-                             private->updated_ops, &updated_ops_size);
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc''");
-    planHeurRelaxIncMaxFull(&private->relax, private->updated_ops,
-                            updated_ops_size);
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc");
-}
-
-static void privateMaxSendResponse(private_t *private, plan_ma_comm_t *comm,
-                                   int agent_id)
-{
-    int i, op_id;
-    plan_cost_t value;
-    plan_ma_msg_t *msg;
-
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                       PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE,
-                       planMACommId(comm));
-
-    // Check all public operators and send all that were changed
-    for (i = 0; i < private->public_op.size; ++i){
-        op_id = private->public_op.op[i];
-        if (private->opcmp[op_id].value == private->relax.op[op_id].value)
-            continue;
-        if (private->relax.op[op_id].unsat > 0)
-            continue;
-
-        value = private->relax.op[op_id].value;
-        op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
-        planMAMsgHeurLMCutMaxAddOp(msg, op_id, value);
-    }
-    planMACommSendToNode(comm, agent_id, msg);
-    planMAMsgDel(msg);
-}
-
-static void privateMaxRequest(private_t *private, plan_ma_comm_t *comm,
-                              const plan_ma_msg_t *msg)
-{
-    int updated_ops_size;
-
-    // Early exit if we have no private operators
-    if (private->relax.cref.op_size == 0){
-        requestMaxSendEmptyResponse(comm, msg);
-        return;
-    }
-
-    // Copy current state of operators to compare array.
-    // This has to be done before relax->op values are changed according to
-    // the received message because we need to compare on the state of
-    // operators that is assumed by the initiator agent.
-    memcpy(private->opcmp, private->relax.op,
-           sizeof(plan_heur_relax_op_t) * private->relax.cref.op_size);
-
-    // Update operators' values from received message
-    hmaxUpdateOpValueFromMsg(msg, &private->op_id_tr,
-                             private->relax.op, private->opcmp,
-                             private->updated_ops, &updated_ops_size);
-
-    // Update .relax structure if something was changed
-    if (updated_ops_size > 0){
-        planHeurRelaxUpdateMaxFull(&private->relax, private->updated_ops,
-                                   updated_ops_size);
-    }
-
-    // Send response to the main agent
-    privateMaxSendResponse(private, comm, planMAMsgAgent(msg));
-}
-
-static void privateSuppRequest(private_t *private, plan_ma_comm_t *comm,
-                               const plan_ma_msg_t *msg)
-{
-    int i, size, op_id;
-
-    // Mark all received operators as without supporter fact because the
-    // supporter fact is hold by the main agent.
-    size = planMAMsgHeurLMCutSuppOpSize(msg);
-    for (i = 0; i < size; ++i){
-        op_id = planMAMsgHeurLMCutSuppOp(msg, i);
-        op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
-        if (op_id >= 0)
-            private->relax.op[op_id].supp = -1;
-    }
-
-    // Initialize cut_t structure it will be needed in next phases
-    cutInitCycle(&private->cut, &private->relax);
-
-    // TODO: 
-#if 0 /* DEBUG */
-    // Check that all operators have support either in this agent or in the
-    // main agent
-    int j;
-    for (j = 0; j < private->op_id_tr.loc_to_glob_size; ++j){
-        int supp = private->relax.op[j].supp;
-        int found = 0;
-
-        for (i = 0; i < size; ++i){
-            op_id = planMAMsgHeurLMCutSuppOp(msg, i);
-            op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
-            if (op_id == j){
-                found = 1;
-                if (supp != -1){
-                    fprintf(stderr, "[%d] Error: Supporter for %d(%d) on"
-                                    " both agents.\n",
-                            comm->node_id, op_id,
-                            planMAMsgHeurLMCutSuppOp(msg, i));
-                    break;
-                }
-            }
-        }
-
-        if (!found && supp == -1 && private->relax.op[j].unsat == 0){
-            fprintf(stderr, "[%d] Error: Supporter for %d(%d) is -1 on both"
-                            " agents.\n",
-                    comm->node_id, j, planOpIdTrGlob(&private->op_id_tr, j));
-        }
-    }
-#endif
-}
-
-static void sendGoalZoneResponse(private_t *private, plan_ma_comm_t *comm,
-                                 int agent_id)
-{
-    plan_ma_msg_t *msg;
-    int i, len, *ops, op_id;
-
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                       PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_RESPONSE,
-                       planMACommId(comm));
-
-    // TODO: Comment
-    len = private->public_op.size;
-    ops = private->public_op.op;
-    for (i = 0; i < len; ++i){
-        op_id = ops[i];
-        if (private->cut.op[op_id].state == CUT_GOAL_ZONE){
-            op_id = private->relax.cref.op_id[op_id];
-            if (op_id < 0)
-                continue;
-            op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
-            // TODO: Better API in ma_msg module
-            planMAMsgAddOp(msg, op_id, PLAN_COST_INVALID, -1,
-                           PLAN_COST_INVALID);
-        }
-    }
-
-    planMACommSendToNode(comm, agent_id, msg);
-    planMAMsgDel(msg);
-}
-
-static void privateGoalZoneRequest(private_t *private, plan_ma_comm_t *comm,
-                                   const plan_ma_msg_t *msg)
-{
-    int i, size, op_id;
-
-    // TODO: Comment
-    size = planMAMsgOpSize(msg);
-    for (i = 0; i < size; ++i){
-        op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
-        op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
-        if (op_id < 0)
-            continue;
-
-        cutMarkGoalZoneOp(&private->cut, &private->relax, op_id);
-    }
-
-    sendGoalZoneResponse(private, comm, planMAMsgAgent(msg));
-}
-
-static void sendFindCutResponse(private_t *private, plan_ma_comm_t *comm,
-                                int agent_id)
-{
-    plan_ma_msg_t *msg;
-    int i, len, *ops, op_id;
-
-    // TODO: Comment
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                       PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE,
-                       planMACommId(comm));
-
-    len = private->public_op.size;
-    ops = private->public_op.op;
-    for (i = 0; i < len; ++i){
-        op_id = ops[i];
-        if (private->cut.op[op_id].state == CUT_START_ZONE){
-            op_id = private->relax.cref.op_id[op_id];
-            if (op_id < 0)
-                continue;
-            op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
-            // TODO: Better API in ma_msg module
-            planMAMsgAddOp(msg, op_id, PLAN_COST_INVALID, -1,
-                           PLAN_COST_INVALID);
-        }
-    }
-
-    // Set minimal cost of cut so far
-    planMAMsgSetMinCutCost(msg, private->cut.min_cut);
-
-    planMACommSendToNode(comm, agent_id, msg);
-    planMAMsgDel(msg);
-}
-
-static void privateFindCutRequest(private_t *private, plan_ma_comm_t *comm,
-                                  const plan_ma_msg_t *msg)
-{
-    int i, size, fact_id, op_id;
-
-    // TODO: Comment
-    if (planMAMsgHasStateFull(msg)){
-        for (i = 0; i < private->relax.cref.fact_id.var_size; ++i){
-            fact_id = planMAMsgStateFullVal(msg, i);
-            fact_id = planFactId(&private->relax.cref.fact_id, i, fact_id);
-            cutFind(&private->cut, &private->relax, fact_id, 1);
-        }
-        for (i = 0; i < private->relax.cref.fake_pre_size; ++i){
-            fact_id = private->relax.cref.fake_pre[i].fact_id;
-            cutFind(&private->cut, &private->relax, fact_id, 1);
-        }
-    }
-
-    size = planMAMsgOpSize(msg);
-    for (i = 0; i < size; ++i){
-        op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
-        op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
-        if (op_id < 0)
-            continue;
-
-        cutFindOp(&private->cut, &private->relax, op_id);
-    }
-
-    sendFindCutResponse(private, comm, planMAMsgAgent(msg));
-}
-
 static void sendCutResponse(private_t *private, plan_ma_comm_t *comm,
                             int agent_id)
 {
@@ -1329,8 +1312,8 @@ static void sendCutResponse(private_t *private, plan_ma_comm_t *comm,
     planMAMsgDel(msg);
 }
 
-static void privateCutRequest(private_t *private, plan_ma_comm_t *comm,
-                              const plan_ma_msg_t *msg)
+static void privateCut(private_t *private, plan_ma_comm_t *comm,
+                       const plan_ma_msg_t *msg)
 {
     int i, size, op_id;
 
@@ -1349,55 +1332,111 @@ static void privateCutRequest(private_t *private, plan_ma_comm_t *comm,
 
     sendCutResponse(private, comm, planMAMsgAgent(msg));
 }
+/**** CUT END ****/
 
-static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
-                          const plan_ma_msg_t *msg)
+
+static int stepFinish(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
+                      const plan_ma_msg_t *msg)
 {
-    plan_heur_ma_lm_cut_t *heur = HEUR(_heur);
-    private_t *private;
-    int type, subtype;
+    // TODO: Why? Do we need this for something?
+    // Refactor with mainLoop()
+    //heur->heur_value = heur->relax.fact[heur->relax.cref.goal_id].value;
+    return -1;
+}
 
-    // Allocate private structure if needed
-    allocPrivate(heur, planMAMsgAgent(msg));
-    private = heur->private + planMAMsgAgent(msg);
 
-    type = planMAMsgType(msg);
-    subtype = planMAMsgSubType(msg);
 
-    if (type == PLAN_MA_MSG_HEUR){
-        if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_INIT_REQUEST){
-            privateInitRequest(private, comm, msg);
-            return;
+/**** HMAX ****/
+static void hmaxUpdateOpValueFromMsg(const plan_ma_msg_t *msg,
+                                     const plan_op_id_tr_t *op_id_tr,
+                                     plan_heur_relax_op_t *op,
+                                     plan_heur_relax_op_t *op_all,
+                                     int *updated_ops, int *updated_ops_size)
+{
+    int i, op_size, op_id;
+    plan_cost_t op_value, value;
 
-        }else if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_MAX_INC_REQUEST){
-            privateMaxIncRequest(private, comm, msg);
-            return;
+    *updated_ops_size = 0;
 
-        }else if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST){
-            privateMaxRequest(private, comm, msg);
-            return;
+    op_size = planMAMsgOpSize(msg);
+    for (i = 0; i < op_size; ++i){
+        // Read operator data from message
+        op_id = planMAMsgOp(msg, i, NULL, NULL, &op_value);
 
-        }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_SUPP_REQUEST){
-            privateSuppRequest(private, comm, msg);
-            return;
+        // Translate operator ID from global ID to local ID and ignore
+        // those which are unknown
+        op_id = planOpIdTrLoc(op_id_tr, op_id);
+        if (op_id < 0)
+            continue;
 
-        }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_REQUEST){
-            privateGoalZoneRequest(private, comm, msg);
-            return;
+        // Write operator's value if it is requested
+        if (op_all)
+            op_all[op_id].value = op_value;
 
-        }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_REQUEST){
-            privateFindCutRequest(private, comm, msg);
-            return;
+        // Determine current value of operator
+        value = op[op_id].value;
 
-        }else if(subtype == PLAN_MA_MSG_HEUR_LM_CUT_CUT_REQUEST){
-            privateCutRequest(private, comm, msg);
-            return;
+        // Record updated value of operator and write operator's ID to
+        // output array
+        if (value < op_value){
+            op[op_id].value = op_value;
+            updated_ops[*updated_ops_size] = op_id;
+            ++(*updated_ops_size);
         }
     }
-
-    fprintf(stderr, "Error[%d]: The request isn't for lm-cut heuristic.\n",
-            comm->node_id);
 }
+
+static void hmaxFull(plan_heur_relax_t *relax, const plan_state_t *state)
+{
+    int i;
+
+    planHeurRelaxFull(relax, state);
+
+    // Modify unreachable operators so it can be propagated to other agents
+    for (i = 0; i < relax->cref.op_size; ++i){
+        if (relax->op[i].unsat > 0){
+            relax->op[i].value = PLAN_COST_UNREACHABLE;
+            relax->op[i].cost = 0;
+            relax->op[i].supp = -1;
+        }
+    }
+}
+
+static void hmaxResetNonSupportedOps(plan_heur_relax_t *relax,
+                                     const cut_t *cut,
+                                     int *updated_ops,
+                                     int *updated_ops_size)
+{
+    int op_id, i, len, *facts, fact_id, supp;
+    plan_heur_relax_op_t *op;
+    plan_cost_t value;
+
+    for (op_id = 0; op_id < relax->cref.op_size; ++op_id){
+        op = relax->op + op_id;
+        if (op->supp != -1 || op->unsat > 0)
+            continue;
+
+        // TODO: Comment, refactor?
+        value = -1;
+        supp = -1;
+        len = relax->cref.op_pre[op_id].size;
+        facts = relax->cref.op_pre[op_id].fact;
+        for (i = 0; i < len; ++i){
+            fact_id = facts[i];
+            if (relax->fact[fact_id].value > value){
+                value = relax->fact[fact_id].value;
+                supp = fact_id;
+            }
+        }
+
+        relax->op[op_id].value = value + relax->op[op_id].cost;
+        relax->op[op_id].supp = supp;
+        if (!cut->op[op_id].in_cut){
+            updated_ops[(*updated_ops_size)++] = op_id;
+        }
+    }
+}
+/**** HMAX END ****/
 
 
 /*** CUT ***/
@@ -1557,6 +1596,61 @@ static void cutApply(cut_t *cut, plan_heur_relax_t *relax,
 }
 /*** CUT END ***/
 
+
+/**** COMMON ****/
+static void privateAlloc(plan_heur_ma_lm_cut_t *heur, int agent_id)
+{
+    int i;
+
+    if (agent_id < heur->private_size)
+        return;
+
+    heur->private = BOR_REALLOC_ARR(heur->private, private_t, agent_id + 1);
+    for (i = heur->private_size; i < agent_id + 1; ++i)
+        privateInit(heur->private + i, heur->prob);
+    heur->private_size = agent_id + 1;
+}
+
+static int nextAgentId(const plan_heur_ma_lm_cut_t *heur)
+{
+    int i, from, to, id;
+
+    from = 0;
+    if (heur->cur_agent_id >= 0)
+        from = heur->cur_agent_id + 1;
+    to = from + heur->agent_size;
+
+    for (i = from; i < to; ++i){
+        id = i % heur->agent_size;
+        if (heur->agent_changed[id])
+            return id;
+    }
+    return -1;
+}
+
+static int agentSize(const plan_op_t *op, int op_size)
+{
+    int agent_size = 0;
+    int i;
+
+    for (i = 0; i < op_size; ++i){
+        agent_size = BOR_MAX(agent_size, op[i].owner + 1);
+    }
+
+    return agent_size;
+}
+
+static int checkConditionalEffects(const plan_op_t *op, int op_size)
+{
+    int i;
+
+    for (i = 0; i < op_size; ++i){
+        if (op[i].cond_eff_size > 0)
+            return 1;
+    }
+    return 0;
+}
+/**** COMMON END ****/
 
 
 // TODO: ifdef DEBUG or something

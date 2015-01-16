@@ -175,6 +175,8 @@ static plan_heur_t *_heurNew(const char *name,
         heur = planHeurMARelaxMaxNew(prob);
     }else if (strcmp(name, "ma-ff") == 0){
         heur = planHeurMARelaxFFNew(prob);
+    }else if (strcmp(name, "ma-lm-cut") == 0){
+        heur = planHeurMALMCutNew(prob);
     }else{
         fprintf(stderr, "Error: Invalid heuristic type: `%s'\n", name);
     }

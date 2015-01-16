@@ -180,6 +180,10 @@ static void createMsgsForAgents(plan_heur_ma_lm_cut_t *heur, int subtype,
  *  sent. All messages are also deleted. */
 static int sendMsgs(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     plan_ma_msg_t **msg, int only_agent_changed);
+/** Returns true if we reached to dead-end */
+static int checkDeadEnd(const plan_heur_relax_t *relax);
+/** Returns true if computation of h^lm-cut is finished */
+static int checkFinish(const plan_heur_relax_t *relax);
 
 static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg, plan_heur_res_t *res);
@@ -630,14 +634,21 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
         updateHMax(heur, heur->updated_ops, updated_ops_size);
     }
 
-    // TODO: More comments
-    // Check if we are done
     heur->cur_agent_id = nextAgentId(heur);
     if (heur->cur_agent_id >= 0){
+        // If there are more agents that have changed operators send the
+        // request and wait for response.
         sendHMaxRequest(heur, comm, heur->cur_agent_id);
+        return -1;
+
     }else{
-        // TODO: Check dead-end on goal fact and also >PLAN_COST_MAX/2
-        if (heur->relax.fact[heur->relax.cref.goal_id].value == 0){
+        // Detect dead-end or if computation is finished
+        if (checkDeadEnd(&heur->relax)){
+            heur->heur_value = PLAN_HEUR_DEAD_END;
+            heur->state = STATE_FINISH;
+            return 0;
+
+        }else if (checkFinish(&heur->relax)){
             heur->state = STATE_FINISH;
             return 0;
         }
@@ -1624,6 +1635,23 @@ static int sendMsgs(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     return sent;
 }
 
+static int checkDeadEnd(const plan_heur_relax_t *relax)
+{
+    int goal_id = relax->cref.goal_id;
+    plan_heur_relax_fact_t *fact = relax->fact + goal_id;
+
+    if (fact->value == PLAN_HEUR_DEAD_END
+            || fact->value >= PLAN_COST_UNREACHABLE)
+        return 1;
+    return 0;
+}
+
+static int checkFinish(const plan_heur_relax_t *relax)
+{
+    int goal_id = relax->cref.goal_id;
+    plan_heur_relax_fact_t *fact = relax->fact + goal_id;
+    return fact->value == 0;
+}
 /**** COMMON END ****/
 
 

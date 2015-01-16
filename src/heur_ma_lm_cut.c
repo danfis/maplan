@@ -184,6 +184,8 @@ static int sendMsgs(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 static int checkDeadEnd(const plan_heur_relax_t *relax);
 /** Returns true if computation of h^lm-cut is finished */
 static int checkFinish(const plan_heur_relax_t *relax);
+static void updateHMaxByCut(plan_heur_relax_t *relax, cut_t *cut,
+                            int *updated_ops);
 
 static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg, plan_heur_res_t *res);
@@ -777,17 +779,13 @@ static void sendHMaxIncRequest(plan_heur_ma_lm_cut_t *heur,
 static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg)
 {
-    int i, updated_ops_size;
+    int i;
 
-    // TODO: Comment
-    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax'");
-    cutApply(&heur->cut, &heur->relax, heur->updated_ops, &updated_ops_size);
-    hmaxResetNonSupportedOps(&heur->relax, &heur->cut,
-                             heur->updated_ops, &updated_ops_size);
-    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "MainHMax");
-    planHeurRelaxIncMaxFull(&heur->relax, heur->updated_ops, updated_ops_size);
-    //debugRelax(&heur->relax, comm->node_id, &heur->op_id_tr, "Main HMax");
+    // Update h^max values according to the cut
+    updateHMaxByCut(&heur->relax, &heur->cut, heur->updated_ops);
 
+    // Send request to each agent so they update their state of relaxed
+    // problem according to the current cut.
     for (i = 0; i < heur->agent_size; ++i){
         if (i == heur->agent_id)
             continue;
@@ -807,18 +805,7 @@ static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 static void privateHMaxInc(private_t *private, plan_ma_comm_t *comm,
                            const plan_ma_msg_t *msg)
 {
-    int updated_ops_size;
-
-    // TODO: Comment
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc'");
-    cutApply(&private->cut, &private->relax,
-             private->updated_ops, &updated_ops_size);
-    hmaxResetNonSupportedOps(&private->relax, &private->cut,
-                             private->updated_ops, &updated_ops_size);
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc''");
-    planHeurRelaxIncMaxFull(&private->relax, private->updated_ops,
-                            updated_ops_size);
-    //debugRelax(&private->relax, comm->node_id, &private->op_id_tr, "Private MaxInc");
+    updateHMaxByCut(&private->relax, &private->cut, private->updated_ops);
 }
 /**** HMAX INC END ****/
 
@@ -1651,6 +1638,19 @@ static int checkFinish(const plan_heur_relax_t *relax)
     int goal_id = relax->cref.goal_id;
     plan_heur_relax_fact_t *fact = relax->fact + goal_id;
     return fact->value == 0;
+}
+
+static void updateHMaxByCut(plan_heur_relax_t *relax, cut_t *cut,
+                            int *updated_ops)
+{
+    int updated_ops_size = 0;
+
+    // Apply cut to current state of relaxed problem
+    cutApply(cut, relax, updated_ops, &updated_ops_size);
+    // Update operators for which we don't know supporters
+    hmaxResetNonSupportedOps(relax, cut, updated_ops, &updated_ops_size);
+    // Update h^max according to changes
+    planHeurRelaxIncMaxFull(relax, updated_ops, updated_ops_size);
 }
 /**** COMMON END ****/
 

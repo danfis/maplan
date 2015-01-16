@@ -252,10 +252,10 @@ int planMAMsgHeurType(const plan_ma_msg_t *msg)
     if (type != PLAN_MA_MSG_HEUR)
         return PLAN_MA_MSG_HEUR_NONE;
 
-    if ((subtype & 0x0f) == subtype)
+    if ((subtype & 0x00ff) == subtype)
         return PLAN_MA_MSG_HEUR_REQUEST;
 
-    if ((subtype & 0xf0) == subtype)
+    if ((subtype & 0xff00) == subtype)
         return PLAN_MA_MSG_HEUR_UPDATE;
 
     return PLAN_MA_MSG_HEUR_NONE;

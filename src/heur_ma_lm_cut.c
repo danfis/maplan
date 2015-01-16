@@ -364,11 +364,11 @@ static void heurMARequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
             privateInitStep(private, comm, msg);
             return;
 
-        }else if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_MAX_INC_REQUEST){
+        }else if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_HMAX_INC_REQUEST){
             privateHMaxInc(private, comm, msg);
             return;
 
-        }else if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST){
+        }else if (subtype == PLAN_MA_MSG_HEUR_LM_CUT_HMAX_REQUEST){
             privateHMax(private, comm, msg);
             return;
 
@@ -490,7 +490,7 @@ static void sendHMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     int i, op_id, value;
     ma_lm_cut_op_t op;
 
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST,
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_LM_CUT_HMAX_REQUEST,
                        planMACommId(comm));
 
     // Add ID and value of all operators there were changed to the message.
@@ -612,7 +612,7 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     int other_agent_id, updated_ops_size;
 
     if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
-            || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE){
+            || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_LM_CUT_HMAX_RESPONSE){
         fprintf(stderr, "Error[%d]: Heur response isn't for h^max"
                         " heuristic.\n", comm->node_id);
         return -1;
@@ -669,7 +669,7 @@ static void sendHMaxEmptyResponse(plan_ma_comm_t *comm,
     plan_ma_msg_t *msg;
     int target_agent;
 
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE,
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_LM_CUT_HMAX_RESPONSE,
                        planMACommId(comm));
     target_agent = planMAMsgAgent(req);
     planMACommSendToNode(comm, target_agent, msg);
@@ -684,7 +684,7 @@ static void sendHMaxResponse(private_t *private, plan_ma_comm_t *comm,
     plan_ma_msg_t *msg;
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                       PLAN_MA_MSG_HEUR_LM_CUT_MAX_RESPONSE,
+                       PLAN_MA_MSG_HEUR_LM_CUT_HMAX_RESPONSE,
                        planMACommId(comm));
 
     // Check all public operators and send all that were changed
@@ -770,7 +770,7 @@ static void sendHMaxIncRequest(plan_heur_ma_lm_cut_t *heur,
     plan_ma_msg_t *msg;
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                       PLAN_MA_MSG_HEUR_LM_CUT_MAX_INC_REQUEST,
+                       PLAN_MA_MSG_HEUR_LM_CUT_HMAX_INC_REQUEST,
                        planMACommId(comm));
     planMACommSendToNode(comm, agent_id, msg);
     planMAMsgDel(msg);

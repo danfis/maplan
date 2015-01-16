@@ -261,128 +261,11 @@ void planMAMsgHeurFFSetRequest(plan_ma_msg_t *msg,
 void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id);
 
 /**
- * Adds operator to message related to FF heuristic.
- */
-#define planMAMsgHeurFFAddOp(msg, op_id, cost, owner) \
-    planMAMsgAddOp((msg), (op_id), (cost), (owner), PLAN_COST_INVALID)
-
-/**
- * Writes to state argument state stored in the message.
- */
-#define planMAMsgHeurFFState planMAMsgStateFull
-
-/**
  * Returns goal op ID stored in the message.
  */
 int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
 
-/**
- * Returns number of operators stored in message.
- */
-#define planMAMsgHeurFFOpSize planMAMsgOpSize
 
-/**
- * Returns i'th operator's ID and its cost and owner.
- */
-#define planMAMsgHeurFFOp(msg, i, cost, owner) \
-    planMAMsgOp((msg), (i), (cost), (owner), NULL)
-
-
-
-/**
- * Sets request for Max heuristic.
- */
-#define planMAMsgHeurMaxSetRequest planMAMsgSetStateFull
-
-/**
- * Adds operator to message related to Max heuristic.
- */
-#define planMAMsgHeurMaxAddOp(msg, op_id, value) \
-    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, value)
-
-/**
- * Loads state from the message.
- */
-#define planMAMsgHeurMaxState planMAMsgStateFull
-#define planMAMsgHeurMaxStateVal planMAMsgStateFullVal
-
-/**
- * Returns number of operators stored in message.
- */
-#define planMAMsgHeurMaxOpSize planMAMsgOpSize
-
-/**
- * Returns i'th operator's ID and its value
- */
-#define planMAMsgHeurMaxOp(msg, i, value) \
-    planMAMsgOp((msg), (i), NULL, NULL, (value))
-
-
-
-/**
- * Sets init-request for max phase of lm-cut heuristic.
- */
-#define planMAMsgHeurLMCutSetInitRequest planMAMsgSetStateFull2
-
-/**
- * Adds operator to the max request/repsonse.
- */
-#define planMAMsgHeurLMCutMaxAddOp(msg, op_id, value) \
-    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, value)
-
-/**
- * Returns number of operators stored in message.
- */
-#define planMAMsgHeurLMCutMaxOpSize planMAMsgOpSize
-
-/**
- * Returns i'th operator's ID and its value
- */
-#define planMAMsgHeurLMCutMaxOp(msg, i, value) \
-    planMAMsgOp((msg), (i), NULL, NULL, (value))
-
-
-
-/**
- * Adds operator to the HEUR_LM_CUT_SUPP_* message.
- */
-#define planMAMsgHeurLMCutSuppAddOp(msg, op_id) \
-    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, PLAN_COST_INVALID)
-
-/**
- * Returns number of operators stored in the message.
- */
-#define planMAMsgHeurLMCutSuppOpSize planMAMsgOpSize
-
-/**
- * Returns ID of the i'th operator.
- */
-#define planMAMsgHeurLMCutSuppOp(msg, i) \
-    planMAMsgOp((msg), (i), NULL, NULL, NULL)
-
-
-/**
- * Set full state in the message.
- */
-#define planMAMsgHeurLMCutFindCutSetState(msg, state) \
-    planMAMsgSetStateFull2((msg), (state))
-
-/**
- * Adds operator to the *FIND_CUT* message.
- */
-#define planMAMsgHeurLMCutFindCutAddOp(msg, op_id) \
-    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, PLAN_COST_INVALID)
-
-/**
- * Returns number of operators stored in the message.
- */
-#define planMAMsgHeurLMCutFindCutOpSize planMAMsgOpSize
-
-/**
- * Returns ID of the i'th operator.
- */
-#define planMAMsgHeurLMCutFindCutOp(msg, i) \
-    planMAMsgOp((msg), (i), NULL, NULL, NULL)
 
 
 /**
@@ -417,6 +300,24 @@ void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,
                     int owner, plan_cost_t value);
 
 /**
+ * Adds only op_id part of operator.
+ */
+#define planMAMsgAddOpId(msg, op_id) \
+    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, PLAN_COST_INVALID)
+
+/**
+ * Adds op_id and value part of operator.
+ */
+#define planMAMsgAddOpIdValue(msg, op_id, value) \
+    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, (value))
+
+/**
+ * Adds op_id, cost and owner of operator.
+ */
+#define planMAMsgAddOpIdCostOwner(msg, op_id, cost, owner) \
+    planMAMsgAddOp((msg), (op_id), (cost), (owner), PLAN_COST_INVALID)
+
+/**
  * Returns number of operators stored in message.
  */
 int planMAMsgOpSize(const plan_ma_msg_t *msg);
@@ -427,6 +328,23 @@ int planMAMsgOpSize(const plan_ma_msg_t *msg);
  */
 int planMAMsgOp(const plan_ma_msg_t *msg, int i,
                 plan_cost_t *cost, int *owner, plan_cost_t *value);
+
+/**
+ * Returns i'th op_id.
+ */
+#define planMAMsgOpId(msg, i) planMAMsgOp((msg), (i), NULL, NULL, NULL)
+
+/**
+ * Returns i'th op_id and value.
+ */
+#define planMAMsgOpIdValue(msg, i, value) \
+    planMAMsgOp((msg), (i), NULL, NULL, (value))
+
+/**
+ * Returns i'th operator's ID and its cost and owner.
+ */
+#define planMAMsgOpIdCostOwner(msg, i, cost, owner) \
+    planMAMsgOp((msg), (i), (cost), (owner), NULL)
 
 
 /**

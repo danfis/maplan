@@ -144,7 +144,6 @@ submodule:
 	git submodule update
 
 third-party: submodule
-	$(MAKE) -C third-party/translate
 	$(MAKE) -C third-party/boruvka
 	$(MAKE) -C third-party/opts
 	cd third-party/nanomsg \
@@ -161,6 +160,7 @@ third-party: submodule
 					&& make \
 					&& make install; \
 		fi;
+	$(MAKE) -C third-party/translate
 	$(MAKE) -C third-party/VAL
 
 third-party-clean:

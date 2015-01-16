@@ -487,7 +487,7 @@ static void sendHMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_LM_CUT_MAX_REQUEST,
                        planMACommId(comm));
 
-    // TODO: comment
+    // Add ID and value of all operators there were changed to the message.
     for (i = 0; i < heur->op_size; ++i){
         op = heur->op[i];
         if (op.owner == agent_id && op.changed){
@@ -650,9 +650,8 @@ static int stepHMaxUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     return -1;
 }
 
-// TODO: Rename
-static void requestMaxSendEmptyResponse(plan_ma_comm_t *comm,
-                                        const plan_ma_msg_t *req)
+static void sendHMaxEmptyResponse(plan_ma_comm_t *comm,
+                                  const plan_ma_msg_t *req)
 {
     plan_ma_msg_t *msg;
     int target_agent;
@@ -664,9 +663,8 @@ static void requestMaxSendEmptyResponse(plan_ma_comm_t *comm,
     planMAMsgDel(msg);
 }
 
-// TODO: Rename
-static void privateMaxSendResponse(private_t *private, plan_ma_comm_t *comm,
-                                   int agent_id)
+static void sendHMaxResponse(private_t *private, plan_ma_comm_t *comm,
+                             int agent_id)
 {
     int i, op_id;
     plan_cost_t value;
@@ -699,7 +697,7 @@ static void privateHMax(private_t *private, plan_ma_comm_t *comm,
 
     // Early exit if we have no private operators
     if (private->relax.cref.op_size == 0){
-        requestMaxSendEmptyResponse(comm, msg);
+        sendHMaxEmptyResponse(comm, msg);
         return;
     }
 
@@ -722,7 +720,7 @@ static void privateHMax(private_t *private, plan_ma_comm_t *comm,
     }
 
     // Send response to the main agent
-    privateMaxSendResponse(private, comm, planMAMsgAgent(msg));
+    sendHMaxResponse(private, comm, planMAMsgAgent(msg));
 }
 
 static void privateSupp(private_t *private, plan_ma_comm_t *comm,
@@ -829,12 +827,14 @@ static int sendGoalZoneRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *com
     // Create msg for each agent
     createMsgsForAgents(heur, PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_REQUEST, msg);
 
-    // TODO: Comment
+    // Add to message all operators from goal zone
     zeroizeAgentChanged(heur);
     for (i = 0; i < heur->op_size; ++i){
         if (heur->cut.op[i].state == CUT_GOAL_ZONE){
+            // Mark operator as done to prevent repeated sending
             heur->cut.op[i].state = CUT_OP_DONE;
 
+            // Skip operators this agent is owner of
             agent_id = heur->op[i].owner;
             if (agent_id == heur->agent_id)
                 continue;
@@ -852,11 +852,15 @@ static int sendGoalZoneRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *com
 static int stepGoalZone(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg)
 {
-    // TODO: Comment
+    // Initialize cut structure because we are searching for cut in a new
+    // justification graph.
     cutInitCycle(&heur->cut, &heur->relax);
 
+    // Mark operators and facts in goal-zone
     cutMarkGoalZone(&heur->cut, &heur->relax, heur->relax.cref.goal_id);
 
+    // Send requests to other agents if needed, if not proceed directly to
+    // find-cut step
     if (sendGoalZoneRequests(heur, comm) == 0){
         heur->state = STATE_FIND_CUT;
         return 0;
@@ -871,7 +875,7 @@ static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 {
     int i, size, op_id;
 
-    // TODO: comment
+    // Explore goal-zone from all received operators
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
         op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
@@ -880,8 +884,9 @@ static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
             continue;
         cutMarkGoalZoneOp(&heur->cut, &heur->relax, op_id);
     }
-    //debugCut(&heur->cut, &heur->relax, comm->node_id, &heur->op_id_tr, "MainGoalZoneUpdate");
 
+    // Check if we are waiting for more responses. If not, send another
+    // bulk of requests if needed or proceed to find-cut step.
     heur->agent_changed[planMAMsgAgent(msg)] = 0;
     if (nextAgentId(heur) < 0){
         if (sendGoalZoneRequests(heur, comm) == 0){
@@ -904,12 +909,13 @@ static void sendGoalZoneResponse(private_t *private, plan_ma_comm_t *comm,
                        PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_RESPONSE,
                        planMACommId(comm));
 
-    // TODO: Comment
+    // Add operators that in goal-zone
     len = private->public_op.size;
     ops = private->public_op.op;
     for (i = 0; i < len; ++i){
         op_id = ops[i];
         if (private->cut.op[op_id].state == CUT_GOAL_ZONE){
+            private->cut.op[op_id].state = CUT_OP_DONE;
             op_id = private->relax.cref.op_id[op_id];
             if (op_id < 0)
                 continue;
@@ -929,7 +935,7 @@ static void privateGoalZone(private_t *private, plan_ma_comm_t *comm,
 {
     int i, size, op_id;
 
-    // TODO: Comment
+    // Proceed with goal-zone exploration from the received operators
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
         op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
@@ -973,7 +979,8 @@ static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm
         }
     }
 
-    // TODO: comment
+    // Add operators from start-zone to a corresponding message according
+    // to an owner of the opetator.
     for (i = 0; i < heur->op_size; ++i){
         if (heur->cut.op[i].state == CUT_START_ZONE){
             heur->cut.op[i].state = CUT_OP_DONE;
@@ -1057,16 +1064,17 @@ static void sendFindCutResponse(private_t *private, plan_ma_comm_t *comm,
     plan_ma_msg_t *msg;
     int i, len, *ops, op_id;
 
-    // TODO: Comment
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE,
                        planMACommId(comm));
 
+    // Add operators that were discovered in start-zone
     len = private->public_op.size;
     ops = private->public_op.op;
     for (i = 0; i < len; ++i){
         op_id = ops[i];
         if (private->cut.op[op_id].state == CUT_START_ZONE){
+            private->cut.op[op_id].state = CUT_OP_DONE;
             op_id = private->relax.cref.op_id[op_id];
             if (op_id < 0)
                 continue;
@@ -1089,7 +1097,8 @@ static void privateFindCut(private_t *private, plan_ma_comm_t *comm,
 {
     int i, size, fact_id, op_id;
 
-    // TODO: Comment
+    // If also state was received start exploring start-zone from that state
+    // and all fake preconditions.
     if (planMAMsgHasStateFull(msg)){
         for (i = 0; i < private->relax.cref.fact_id.var_size; ++i){
             fact_id = planMAMsgStateFullVal(msg, i);
@@ -1102,6 +1111,7 @@ static void privateFindCut(private_t *private, plan_ma_comm_t *comm,
         }
     }
 
+    // Proceed with exploring from the received operators
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
         op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
@@ -1140,7 +1150,7 @@ static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
         heur->agent_changed[agent_id] = 1;
     }
 
-    // TODO: Comment
+    // Add operators from cut to a corresponding msg
     for (i = 0; i < heur->op_size; ++i){
         op = heur->op + i;
         if (op->owner == heur->agent_id)
@@ -1180,8 +1190,8 @@ static int stepCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                          const plan_ma_msg_t *msg)
 {
     int i, size, op_id;
-    // TODO: Comment
 
+    // Add received operators to the cut
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
         op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
@@ -1192,6 +1202,7 @@ static int stepCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
         heur->cut.op[op_id].in_cut = 1;
     }
 
+    // Wait for all other responses and then proceed to hmax-step
     heur->agent_changed[planMAMsgAgent(msg)] = 0;
     if (nextAgentId(heur) < 0){
         heur->state = STATE_HMAX;
@@ -1211,11 +1222,13 @@ static void sendCutResponse(private_t *private, plan_ma_comm_t *comm,
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_CUT_RESPONSE,
                        planMACommId(comm));
-    // TODO: Comment
+
+    // Add all operators from cut
     for (i = 0; i < private->public_op.size; ++i){
         op_id = private->public_op.op[i];
         if (private->cut.op[op_id].in_cut){
             op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
+            // TODO
             planMAMsgAddOp(msg, op_id, PLAN_COST_INVALID, -1,
                            PLAN_COST_INVALID);
         }
@@ -1229,7 +1242,7 @@ static void privateCut(private_t *private, plan_ma_comm_t *comm,
 {
     int i, size, op_id;
 
-    // TODO: Comment
+    // Add all received operators to the cut
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
         op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
@@ -1240,6 +1253,7 @@ static void privateCut(private_t *private, plan_ma_comm_t *comm,
         private->cut.op[op_id].in_cut = 1;
     }
 
+    // Update cost of the cut
     private->cut.min_cut = planMAMsgMinCutCost(msg);
 
     sendCutResponse(private, comm, planMAMsgAgent(msg));
@@ -1318,7 +1332,7 @@ static void hmaxResetNonSupportedOps(plan_heur_relax_t *relax,
         if (op->supp != -1 || op->unsat > 0)
             continue;
 
-        // TODO: Comment, refactor?
+        // Find biggest value and remember that fact as supporter
         value = -1;
         supp = -1;
         len = relax->cref.op_pre[op_id].size;

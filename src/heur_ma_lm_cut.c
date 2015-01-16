@@ -167,6 +167,7 @@ static int nextAgentId(const plan_heur_ma_lm_cut_t *heur);
 static int agentSize(const plan_op_t *op, int op_size);
 /** Returns true if any operator has a conditional effect */
 static int checkConditionalEffects(const plan_op_t *op, int op_size);
+static void setAllAgentsAndOpsAsChanged(plan_heur_ma_lm_cut_t *heur);
 
 static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                     const plan_ma_msg_t *msg, plan_heur_res_t *res);
@@ -498,20 +499,13 @@ static int stepInit(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     int i;
 
     // Every agent must be requested at least once, so make sure of that.
-    // TODO: Refactor?
-    for (i = 0; i < heur->agent_size; ++i){
-        if (i == heur->agent_id){
-            heur->agent_changed[i] = 0;
-        }else{
-            heur->agent_changed[i] = 1;
-            sendInitRequest(heur, comm, i);
-        }
-    }
-    heur->cur_agent_id = (planMACommId(comm) + 1) % heur->agent_size;
+    setAllAgentsAndOpsAsChanged(heur);
 
-    // Set all operators as changed
-    for (i = 0; i < heur->op_size; ++i)
-        heur->op[i].changed = 1;
+    // Send init requests
+    for (i = 0; i < heur->agent_size; ++i){
+        if (i != heur->agent_id)
+            sendInitRequest(heur, comm, i);
+    }
 
     // h^max heuristics for all facts and operators reachable from the
     // state
@@ -796,19 +790,7 @@ static int stepHMax(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     }
 
     // Every agent must be requested at least once, so make sure of that.
-    // TODO: Refactor, see stepInit()
-    for (i = 0; i < heur->agent_size; ++i){
-        if (i == heur->agent_id){
-            heur->agent_changed[i] = 0;
-        }else{
-            heur->agent_changed[i] = 1;
-        }
-    }
-    heur->cur_agent_id = (planMACommId(comm) + 1) % heur->agent_size;
-
-    // Set all operators as changed
-    for (i = 0; i < heur->op_size; ++i)
-        heur->op[i].changed = 1;
+    setAllAgentsAndOpsAsChanged(heur);
 
     // Send request to next agent
     sendHMaxRequest(heur, comm, heur->cur_agent_id);
@@ -1620,6 +1602,26 @@ static int checkConditionalEffects(const plan_op_t *op, int op_size)
     }
     return 0;
 }
+
+static void setAllAgentsAndOpsAsChanged(plan_heur_ma_lm_cut_t *heur)
+{
+    int i;
+
+    // Set all agents as changed and choose next agent
+    for (i = 0; i < heur->agent_size; ++i){
+        if (i == heur->agent_id){
+            heur->agent_changed[i] = 0;
+        }else{
+            heur->agent_changed[i] = 1;
+        }
+    }
+    heur->cur_agent_id = (heur->agent_id + 1) % heur->agent_size;
+
+    // Set all operators as changed
+    for (i = 0; i < heur->op_size; ++i)
+        heur->op[i].changed = 1;
+}
+
 /**** COMMON END ****/
 
 

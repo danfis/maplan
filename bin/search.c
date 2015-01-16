@@ -175,6 +175,8 @@ static plan_heur_t *_heurNew(const char *name,
         heur = planHeurMARelaxMaxNew(prob);
     }else if (strcmp(name, "ma-ff") == 0){
         heur = planHeurMARelaxFFNew(prob);
+    }else if (strcmp(name, "ma-lm-cut") == 0){
+        heur = planHeurMALMCutNew(prob);
     }else{
         fprintf(stderr, "Error: Invalid heuristic type: `%s'\n", name);
     }
@@ -403,6 +405,7 @@ static int multiAgent2(const options_t *o, plan_problem_agents_t *prob)
 static int multiAgent(const options_t *o)
 {
     plan_problem_agents_t *prob;
+    FILE *fout;
     int ret;
 
     // Load problem file
@@ -413,6 +416,18 @@ static int multiAgent(const options_t *o)
     }else{
         printProblemMA(prob);
         printf("\n");
+    }
+
+    if (o->dot_graph){
+        fout = fopen(o->dot_graph, "w");
+        if (fout){
+            planProblemAgentsDotGraph(prob, fout);
+            fclose(fout);
+        }else{
+            fprintf(stderr, "Error: Could not open file `%s'\n",
+                    o->dot_graph);
+            return -1;
+        }
     }
 
     ret = multiAgent2(o, prob);

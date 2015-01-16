@@ -252,10 +252,10 @@ int planMAMsgHeurType(const plan_ma_msg_t *msg)
     if (type != PLAN_MA_MSG_HEUR)
         return PLAN_MA_MSG_HEUR_NONE;
 
-    if ((subtype & 0x0f) == subtype)
+    if ((subtype & 0x00ff) == subtype)
         return PLAN_MA_MSG_HEUR_REQUEST;
 
-    if ((subtype & 0xf0) == subtype)
+    if ((subtype & 0xff00) == subtype)
         return PLAN_MA_MSG_HEUR_UPDATE;
 
     return PLAN_MA_MSG_HEUR_NONE;
@@ -294,6 +294,21 @@ void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size)
 
     for (int i = 0; i < size; ++i)
         proto->add_state_full(state[i]);
+}
+
+void planMAMsgSetStateFull2(plan_ma_msg_t *msg, const plan_state_t *state)
+{
+    PlanMAMsg *proto = PROTO(msg);
+
+    int size = planStateSize(state);
+    for (int i = 0; i < size; ++i)
+        proto->add_state_full(planStateGet(state, i));
+}
+
+int planMAMsgHasStateFull(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->state_full_size() > 0;
 }
 
 void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state)
@@ -344,4 +359,16 @@ int planMAMsgOp(const plan_ma_msg_t *msg, int i,
     if (value)
         *value = op.value();
     return op.op_id();
+}
+
+void planMAMsgSetMinCutCost(plan_ma_msg_t *msg, plan_cost_t cost)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_min_cut_cost(cost);
+}
+
+plan_cost_t planMAMsgMinCutCost(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    return proto->min_cut_cost();
 }

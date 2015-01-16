@@ -43,10 +43,22 @@ extern "C" {
 /**
  * Heur sub-types
  */
-#define PLAN_MA_MSG_HEUR_FF_REQUEST   0x01
-#define PLAN_MA_MSG_HEUR_FF_RESPONSE  0x10
-#define PLAN_MA_MSG_HEUR_MAX_REQUEST  0x02
-#define PLAN_MA_MSG_HEUR_MAX_RESPONSE 0x20
+#define PLAN_MA_MSG_HEUR_FF_REQUEST   0x0001
+#define PLAN_MA_MSG_HEUR_FF_RESPONSE  0x0100
+#define PLAN_MA_MSG_HEUR_MAX_REQUEST  0x0002
+#define PLAN_MA_MSG_HEUR_MAX_RESPONSE 0x0200
+
+#define PLAN_MA_MSG_HEUR_LM_CUT_INIT_REQUEST       0x0003
+#define PLAN_MA_MSG_HEUR_LM_CUT_HMAX_REQUEST       0x0004
+#define PLAN_MA_MSG_HEUR_LM_CUT_HMAX_RESPONSE      0x0400
+#define PLAN_MA_MSG_HEUR_LM_CUT_HMAX_INC_REQUEST   0x0005
+#define PLAN_MA_MSG_HEUR_LM_CUT_SUPP_REQUEST       0x0006
+#define PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_REQUEST   0x0007
+#define PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE  0x0700
+#define PLAN_MA_MSG_HEUR_LM_CUT_CUT_REQUEST        0x0008
+#define PLAN_MA_MSG_HEUR_LM_CUT_CUT_RESPONSE       0x0800
+#define PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_REQUEST  0x0009
+#define PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_RESPONSE 0x0900
 
 /**
  * Returns values for planMAMsgHeurType().
@@ -249,69 +261,27 @@ void planMAMsgHeurFFSetRequest(plan_ma_msg_t *msg,
 void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id);
 
 /**
- * Adds operator to message related to FF heuristic.
- */
-#define planMAMsgHeurFFAddOp(msg, op_id, cost, owner) \
-    planMAMsgAddOp((msg), (op_id), (cost), (owner), PLAN_COST_INVALID)
-
-/**
- * Writes to state argument state stored in the message.
- */
-#define planMAMsgHeurFFState planMAMsgStateFull
-
-/**
  * Returns goal op ID stored in the message.
  */
 int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
 
-/**
- * Returns number of operators stored in message.
- */
-#define planMAMsgHeurFFOpSize planMAMsgOpSize
-
-/**
- * Returns i'th operator's ID and its cost and owner.
- */
-#define planMAMsgHeurFFOp(msg, i, cost, owner) \
-    planMAMsgOp((msg), (i), (cost), (owner), NULL)
 
 
 
 /**
- * Sets request for Max heuristic.
- */
-#define planMAMsgHeurMaxSetRequest planMAMsgSetStateFull
-
-/**
- * Adds operator to message related to Max heuristic.
- */
-#define planMAMsgHeurMaxAddOp(msg, op_id, value) \
-    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, value)
-
-/**
- * Loads state from the message.
- */
-#define planMAMsgHeurMaxState planMAMsgStateFull
-#define planMAMsgHeurMaxStateVal planMAMsgStateFullVal
-
-/**
- * Returns number of operators stored in message.
- */
-#define planMAMsgHeurMaxOpSize planMAMsgOpSize
-
-/**
- * Returns i'th operator's ID and its value
- */
-#define planMAMsgHeurMaxOp(msg, i, value) \
-    planMAMsgOp((msg), (i), NULL, NULL, (value))
-
-
-
-
-/**
- * Sets full state member of the message.\
+ * Sets full state member of the message.
  */
 void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size);
+
+/**
+ * Sets full state member of the message.
+ */
+void planMAMsgSetStateFull2(plan_ma_msg_t *msg, const plan_state_t *state);
+
+/**
+ * Returns true if the full state is set.
+ */
+int planMAMsgHasStateFull(const plan_ma_msg_t *msg);
 
 /**
  * Loads full state from the message
@@ -330,6 +300,24 @@ void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,
                     int owner, plan_cost_t value);
 
 /**
+ * Adds only op_id part of operator.
+ */
+#define planMAMsgAddOpId(msg, op_id) \
+    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, PLAN_COST_INVALID)
+
+/**
+ * Adds op_id and value part of operator.
+ */
+#define planMAMsgAddOpIdValue(msg, op_id, value) \
+    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, (value))
+
+/**
+ * Adds op_id, cost and owner of operator.
+ */
+#define planMAMsgAddOpIdCostOwner(msg, op_id, cost, owner) \
+    planMAMsgAddOp((msg), (op_id), (cost), (owner), PLAN_COST_INVALID)
+
+/**
  * Returns number of operators stored in message.
  */
 int planMAMsgOpSize(const plan_ma_msg_t *msg);
@@ -341,6 +329,33 @@ int planMAMsgOpSize(const plan_ma_msg_t *msg);
 int planMAMsgOp(const plan_ma_msg_t *msg, int i,
                 plan_cost_t *cost, int *owner, plan_cost_t *value);
 
+/**
+ * Returns i'th op_id.
+ */
+#define planMAMsgOpId(msg, i) planMAMsgOp((msg), (i), NULL, NULL, NULL)
+
+/**
+ * Returns i'th op_id and value.
+ */
+#define planMAMsgOpIdValue(msg, i, value) \
+    planMAMsgOp((msg), (i), NULL, NULL, (value))
+
+/**
+ * Returns i'th operator's ID and its cost and owner.
+ */
+#define planMAMsgOpIdCostOwner(msg, i, cost, owner) \
+    planMAMsgOp((msg), (i), (cost), (owner), NULL)
+
+
+/**
+ * Sets min-cut-cost value.
+ */
+void planMAMsgSetMinCutCost(plan_ma_msg_t *msg, plan_cost_t cost);
+
+/**
+ * Returns min-cut-cost value.
+ */
+plan_cost_t planMAMsgMinCutCost(const plan_ma_msg_t *msg);
 
 #ifdef __cplusplus
 } /* extern "C" */

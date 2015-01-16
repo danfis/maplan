@@ -346,8 +346,9 @@ static void incRelaxOpMax(plan_heur_relax_t *relax,
 
     // Consider this operator only if the enabling fact is the supporter
     // because we know that the supporting fact maximizes the operator's
-    // value
-    if (op->supp != fact_id)
+    // value.
+    // Also skip operators that are not reachable.
+    if (op->supp != fact_id || op->unsat > 0)
         return;
 
     // If the value does not correspond to the supporter's value, find out
@@ -358,20 +359,21 @@ static void incRelaxOpMax(plan_heur_relax_t *relax,
     }
 }
 
-void planHeurRelaxIncMax(plan_heur_relax_t *relax,
-                         const int *changed_op, int changed_op_size)
+void incMax(plan_heur_relax_t *relax,
+            const int *changed_op, int changed_op_size, int goal_id)
 {
     plan_prio_queue_t queue;
     int i, size, *op, op_id;
-    int fact_id, goal_id;
+    int fact_id;
     plan_cost_t value;
     plan_heur_relax_fact_t *fact;
 
     planPrioQueueInit(&queue);
 
-    goal_id = relax->cref.goal_id;
-
     for (i = 0; i < changed_op_size; ++i){
+        // Skip unreachable operators
+        if (relax->op[changed_op[i]].unsat > 0)
+            continue;
         relaxAddEffects(relax, &queue, changed_op[i],
                         relax->op[changed_op[i]].value);
     }
@@ -396,6 +398,16 @@ void planHeurRelaxIncMax(plan_heur_relax_t *relax,
     planPrioQueueFree(&queue);
 }
 
+void planHeurRelaxIncMax(plan_heur_relax_t *relax, const int *op, int op_size)
+{
+    incMax(relax, op, op_size, relax->cref.goal_id);
+}
+
+void planHeurRelaxIncMaxFull(plan_heur_relax_t *relax,
+                             const int *op, int op_size)
+{
+    incMax(relax, op, op_size, -1);
+}
 
 
 static int updateFactValue(plan_heur_relax_t *relax, int fact_id)
@@ -478,8 +490,9 @@ static void updateMaxFact(plan_heur_relax_t *relax,
     ops_size = relax->cref.fact_pre[fact_id].size;
     for (i = 0; i < ops_size; ++i){
         op = relax->op + ops[i];
-        if (op->value < op->cost + fact_value){
+        if (op->unsat == 0 && op->value < op->cost + fact_value){
             op->value = op->cost + fact_value;
+            op->supp = fact_id;
             updateMaxOp(relax, queue, ops[i]);
         }
     }
@@ -493,8 +506,13 @@ void planHeurRelaxUpdateMaxFull(plan_heur_relax_t *relax,
 
     planPrioQueueInit(&queue);
 
-    for (i = 0; i < op_size; ++i)
+    for (i = 0; i < op_size; ++i){
+        // Skip unreachable operators
+        if (relax->op[op[i]].unsat > 0)
+            continue;
+        relax->op[op[i]].supp = -1;
         updateMaxOp(relax, &queue, op[i]);
+    }
 
 
     while (!planPrioQueueEmpty(&queue)){

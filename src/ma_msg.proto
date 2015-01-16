@@ -151,4 +151,5 @@ message PlanMAMsg {
     optional int32 snapshot_ack = 12;
     repeated int32 state_full = 13;
     optional int32 goal_op_id = 14;
+    optional int32 min_cut_cost = 15;
 }

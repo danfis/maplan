@@ -28,6 +28,7 @@ def runCmd(cmd):
     if os.system(cmd) != 0:
         sys.exit(-1)
 
+### PLAN ###
 def planCheckResources(args):
     if not checkBin(args.python_bin):
         return False
@@ -97,6 +98,7 @@ def planLoadProblems(args):
     problems = []
 
     benchmarks = BENCHMARKS[args.bench_name]
+    task_i = 0
     for bench in benchmarks:
         domain = bench['domain']
         for problem in bench['problems']:
@@ -108,7 +110,8 @@ def planLoadProblems(args):
                 ma_agents = planMAAgents(addl)
 
             for r in range(args.repeats):
-                rel_dir = '{0}:{1}:{2:02d}'.format(domain, problem, r)
+                rel_dir = '{0:06d}-{1}:{2}:{3:02d}'.format(task_i, domain, problem, r)
+                task_i += 1
                 d = {}
                 d['domain_name']  = domain
                 d['problem_name'] = problem
@@ -125,7 +128,6 @@ def planLoadProblems(args):
     return problems
 
 def planCloneRepo(args, bench_root):
-    args.search_bin = 'asdf'
     root = os.path.join(bench_root, 'repo')
     runCmd('git clone {0} {1}'.format(SEARCH_REPO, root))
     runCmd('cd {0} && git checkout -b bench origin/{1}'.format(root, args.branch))
@@ -148,6 +150,10 @@ def planCloneRepo(args, bench_root):
         print('Error: Could not find `{0}\''.format(args.translate))
         sys.exit(-1)
 
+    args.python_path = os.path.join(root, 'third-party/protobuf/python/build/protobuf-2.6.1-py2.7.egg')
+    if not os.path.isfile(args.python_path):
+        print('Error: Could not find `{0}\''.format(args.python_path))
+        sys.exit(-1)
 
 def planPrepareDisk(args, problems_in):
     root = os.path.join(os.path.abspath('.'), args.name)
@@ -212,6 +218,8 @@ def planTasks(args, problems):
                             },
               'stdout'  : os.path.join(problem['dir'], 'stdout'),
               'stderr'  : os.path.join(problem['dir'], 'stderr'),
+              'python'  : args.python_bin,
+              'python_path' : args.python_path,
             }
         tasks.append(d)
     return tasks
@@ -246,6 +254,140 @@ def mainPlan(args):
         pickle.dump(bench, fout)
     print('Benchmark plan saved to `{0}\''.format(bench_fn))
     return 0
+### PLAN END ###
+
+### TASK ###
+def taskToScratch(task):
+    scratch = copy.deepcopy(task)
+
+    scratchdir = os.environ['SCRATCHDIR']
+    scratch['scratchdir'] = scratchdir
+    scratch['problem']['domain_pddl'] = os.path.join(scratchdir, 'domain.pddl')
+    scratch['problem']['pddl'] = os.path.join(scratchdir, 'prob.pddl')
+    if task['problem']['addl']:
+        scratch['problem']['addl'] = os.path.join(scratchdir, 'prob.addl')
+    if task['problem']['proto']:
+        scratch['problem']['proto'] = os.path.join(scratchdir, 'prob.proto')
+
+    scratch['search']['plan'] = os.path.join(scratchdir, 'search.plan')
+    scratch['search']['stdout'] = os.path.join(scratchdir, 'search.out')
+    scratch['search']['stderr'] = os.path.join(scratchdir, 'search.err')
+    scratch['search']['bin'] = os.path.join(scratchdir, 'search')
+
+    scratch['validate']['stdout'] = os.path.join(scratchdir, 'validate.out')
+    scratch['validate']['stderr'] = os.path.join(scratchdir, 'validate.err')
+
+    scratch['translate']['stdout'] = os.path.join(scratchdir, 'translate.out')
+    scratch['translate']['stderr'] = os.path.join(scratchdir, 'translate.err')
+
+    for key in ['domain_pddl', 'pddl', 'addl', 'proto']:
+        if task['problem'][key] is None:
+            continue
+        shutil.copy(task['problem'][key], scratch['problem'][key])
+    shutil.copy(task['search']['bin'], scratch['search']['bin'])
+
+    scratch['proto'] = os.path.join(scratchdir, 'proto')
+    task['scratch_proto'] = scratch['proto']
+    return scratch
+
+def _cpy(src, dst):
+    if os.path.isfile(src):
+        shutil.copy(src, dst)
+def scratchToTask(scratch, task):
+    _cpy(scratch['translate']['stdout'], task['translate']['stdout'])
+    _cpy(scratch['translate']['stderr'], task['translate']['stderr'])
+    _cpy(scratch['search']['stdout'], task['search']['stdout'])
+    _cpy(scratch['search']['stderr'], task['search']['stderr'])
+    _cpy(scratch['search']['plan'], task['search']['plan'])
+    _cpy(scratch['validate']['stdout'], task['validate']['stdout'])
+    _cpy(scratch['validate']['stderr'], task['validate']['stderr'])
+    _cpy(scratch['proto'], os.path.join(task['problem']['dir'], 'translate.proto'))
+
+def taskDelScratch(scratch):
+    os.system('rm -rf {0}/*'.format(scratch['scratchdir']))
+
+class TaskTranslate(object):
+    def __init__(self, task):
+        cmd = ''
+        if task['python_path'] is not None:
+            cmd += 'PYTHONPATH="{0}" '.format(task['python_path'])
+        cmd += task['python']
+        cmd += ' ' + task['translate']['bin']
+        cmd += ' ' + task['problem']['domain_pddl']
+        cmd += ' ' + task['problem']['pddl']
+        if task['problem']['addl'] is not None:
+            cmd += ' {0}'.format(task['problem']['addl'])
+        cmd += ' --proto --output {0}'.format(task['proto'])
+        cmd += ' >{0}'.format(task['translate']['stdout'])
+        cmd += ' 2>{0}'.format(task['translate']['stderr'])
+        self.cmd = cmd
+
+    def run(self):
+        print('CMD: {0}'.format(self.cmd))
+        os.system(self.cmd)
+
+class TaskSearch(object):
+    def __init__(self, task):
+        cmd  = task['search']['bin']
+        cmd += ' ' + ' '.join([str(x) for x in task['search']['opts']])
+        cmd += ' -o {0}'.format(task['search']['plan'])
+        if 'proto' in task:
+            cmd += ' -p {0}'.format(task['proto'])
+        else:
+            cmd += ' -p {0}'.format(task['problem']['proto'])
+        #if task['problem']['ma']:
+        #    cmd += ' --ma'
+        cmd += ' >{0}'.format(task['search']['stdout'])
+        cmd += ' 2>{0}'.format(task['search']['stderr'])
+
+        self.cmd = cmd
+
+    def run(self):
+        print('CMD: {0}'.format(self.cmd))
+        os.system(self.cmd)
+
+class TaskValidate(object):
+    def __init__(self, task):
+        cmd  = task['validate']['bin']
+        cmd += ' ' + task['problem']['domain_pddl']
+        cmd += ' ' + task['problem']['pddl']
+        cmd += ' ' + task['search']['plan']
+        cmd += ' >{0}'.format(task['validate']['stdout'])
+        cmd += ' 2>{0}'.format(task['validate']['stderr'])
+
+        self.cmd = cmd
+
+    def run(self):
+        print('CMD: {0}'.format(self.cmd))
+        os.system(self.cmd)
+
+def mainTask():
+    plan_data = os.environ['BENCH_DATA_FN']
+    task_i = int(os.environ['BENCH_TASK_I'])
+
+    bench = pickle.load(open(plan_data, 'r'))
+    task = bench['tasks'][task_i]
+    print 'Task:'
+    pprint(task)
+    print
+
+    scratch = taskToScratch(task)
+    print 'Scratch Task:'
+    pprint(scratch)
+    print
+
+    translate = TaskTranslate(scratch)
+    translate.run()
+
+    search = TaskSearch(scratch)
+    search.run()
+
+    validate = TaskValidate(scratch)
+    validate.run()
+
+    scratchToTask(scratch, task)
+    taskDelScratch(scratch)
+### TASK END ###
 
 
 
@@ -271,11 +413,16 @@ BENCHMARKS = {
 
 
 if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        sys.exit(mainTask())
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--bench-dir', dest = 'bench_dir', type = str,
                         default = BENCHMARKS_DIR)
     parser.add_argument('--python-bin', dest = 'python_bin', type = str,
                         default = PYTHON)
+    parser.add_argument('--python-path', dest = 'python_path', type = str,
+                        default = None)
     parser.add_argument('--search-bin', dest = 'search_bin', type = str,
                         default = SEARCH)
     parser.add_argument('--validate-bin', dest = 'validate_bin', type = str,
@@ -304,8 +451,6 @@ if __name__ == '__main__':
                               type = int, required = True)
     parser_bench.add_argument('--branch', dest = 'branch', type = str,
                               default = '')
-
-    parser_task = subparsers.add_parser('task')
 
     parser_results = subparsers.add_parser('results')
 

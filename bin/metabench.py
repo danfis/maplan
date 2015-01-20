@@ -308,9 +308,17 @@ def taskDelScratch(scratch):
 
 class TaskTranslate(object):
     def __init__(self, task):
+        # This does not work :(
+        #os.system('module add python-2.7.6-gcc')
+        #os.system('module add python27-modules-gcc')
+
         cmd = ''
         if task['python_path'] is not None:
-            cmd += 'PYTHONPATH="{0}" '.format(task['python_path'])
+            path = task['python_path']
+            path += ':/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages'
+            if 'PYTHONPATH' in os.environ:
+                path += ':' + os.environ['PYTHONPATH']
+            cmd += 'PYTHONPATH="{0}" '.format(path)
         cmd += task['python']
         cmd += ' ' + task['translate']['bin']
         cmd += ' ' + task['problem']['domain_pddl']
@@ -335,8 +343,8 @@ class TaskSearch(object):
             cmd += ' -p {0}'.format(task['proto'])
         else:
             cmd += ' -p {0}'.format(task['problem']['proto'])
-        #if task['problem']['ma']:
-        #    cmd += ' --ma'
+        if task['problem']['ma']:
+            cmd += ' --ma'
         cmd += ' >{0}'.format(task['search']['stdout'])
         cmd += ' 2>{0}'.format(task['search']['stderr'])
 

@@ -440,6 +440,34 @@ def mainTask():
 ### TASK END ###
 
 
+### QSUB ###
+def mainQSub(args):
+    bench = pickle.load(open(args.bench_data, 'r'))
+
+    bench_fn = os.path.abspath(args.bench_data)
+    self_fn = os.path.abspath(sys.argv[0])
+    for task_i, task in enumerate(bench['tasks']):
+        nodes = 1
+
+        ppn = 1
+        if task['problem']['ma']:
+            ppn = task['problem']['ma-agents'] + 1
+
+        qargs = ['qsub']
+        qargs += ['-l', 'nodes={0}:ppn={1}:{2}'.format(nodes, ppn, args.resources)]
+        qargs += ['-l', 'walltime={0}s'.format(task['max_time'])]
+        qargs += ['-l', 'mem={0}mb'.format(task['max_mem'])]
+        qargs += ['-l', 'scratch=400mb:local']
+        qargs += ['-o', task['stdout']]
+        qargs += ['-e', task['stderr']]
+        qargs += ['-v', 'BENCH_DATA_FN={0},BENCH_TASK_I={1}'.format(bench_fn, task_i)]
+        qargs += [self_fn]
+
+        cmd = ' '.join(qargs)
+        print('CMD {0}'.format(cmd))
+        os.system(cmd)
+### QSUB END ###
+
 
 BENCHMARKS = {
     'ma-easy' : [
@@ -502,10 +530,16 @@ if __name__ == '__main__':
     parser_bench.add_argument('--branch', dest = 'branch', type = str,
                               default = '')
 
+    parser_bench = subparsers.add_parser('qsub')
+    parser_bench.add_argument('bench_data')
+    parser_bench.add_argument('-r', dest = 'resources', required = True)
+
     parser_results = subparsers.add_parser('results')
 
     args = parser.parse_args()
 
     if args.command == 'plan':
         sys.exit(mainPlan(args))
+    elif args.command == 'qsub':
+        sys.exit(mainQSub(args))
 

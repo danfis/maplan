@@ -14,6 +14,7 @@ SEARCH = '/home/danfis/dev/libplan/bin/search'
 TRANSLATE = '/home/danfis/dev/libplan/third-party/translate/translate.py'
 VALIDATE = '/home/danfis/dev/libplan/third-party/VAL/validate'
 BENCHMARKS_DIR = '/home/danfis/dev/plan-data/benchmarks'
+SEARCH_REPO = 'git@gitlab.fel.cvut.cz:fiserdan/libplan.git'
 
 
 def checkBin(path):
@@ -22,20 +23,28 @@ def checkBin(path):
         return False
     return True
 
+def runCmd(cmd):
+    print('CMD: {0}'.format(cmd))
+    if os.system(cmd) != 0:
+        sys.exit(-1)
+
 def planCheckResources(args):
     if not checkBin(args.python_bin):
-        return False
-    if not checkBin(args.search_bin):
-        return False
-    if not checkBin(args.validate_bin):
-        return False
-    if not checkBin(args.translate):
         return False
     if os.path.isdir(args.name) or os.path.isfile(args.name):
         print('Error: Bench `{0}\' already exists'.format(args.name))
         return False
     if args.bench_name not in BENCHMARKS:
         print('Error: Unkown benchmark `{0}\''.format(args.bench_name))
+        return False
+    if len(args.branch) > 0:
+        return True
+
+    if not checkBin(args.search_bin):
+        return False
+    if not checkBin(args.validate_bin):
+        return False
+    if not checkBin(args.translate):
         return False
     return True
 
@@ -115,9 +124,37 @@ def planLoadProblems(args):
 
     return problems
 
+def planCloneRepo(args, bench_root):
+    args.search_bin = 'asdf'
+    root = os.path.join(bench_root, 'repo')
+    runCmd('git clone {0} {1}'.format(SEARCH_REPO, root))
+    runCmd('cd {0} && git checkout -b bench origin/{1}'.format(root, args.branch))
+    runCmd('cd {0} && CFLAGS="-O3 -march=corei7" CXXFLAGS="-O3 -march=corei7" make third-party'.format(root))
+    runCmd('cd {0} && CFLAGS="-O3 -march=corei7" CXXFLAGS="-O3 -march=corei7" make'.format(root))
+    runCmd('cd {0} && CFLAGS="-O3 -march=corei7" CXXFLAGS="-O3 -march=corei7" make -C bin'.format(root))
+
+    args.search_bin = os.path.join(root, 'bin/search')
+    if not os.path.isfile(args.search_bin):
+        print('Error: Could not find `{0}\''.format(args.search_bin))
+        sys.exit(-1)
+
+    args.validate_bin = os.path.join(root, 'third-party/VAL/validate')
+    if not os.path.isfile(args.validate_bin):
+        print('Error: Could not find `{0}\''.format(args.validate_bin))
+        sys.exit(-1)
+
+    args.translate = os.path.join(root, 'third-party/translate/translate.py')
+    if not os.path.isfile(args.translate):
+        print('Error: Could not find `{0}\''.format(args.translate))
+        sys.exit(-1)
+
+
 def planPrepareDisk(args, problems_in):
     root = os.path.join(os.path.abspath('.'), args.name)
     os.mkdir(root)
+
+    if len(args.branch) > 0:
+        planCloneRepo(args, root)
 
     problems = []
     for problem in problems_in:
@@ -265,6 +302,8 @@ if __name__ == '__main__':
                               type = int, required = True)
     parser_bench.add_argument('--max-mem', dest = 'max_mem',
                               type = int, required = True)
+    parser_bench.add_argument('--branch', dest = 'branch', type = str,
+                              default = '')
 
     parser_task = subparsers.add_parser('task')
 

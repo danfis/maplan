@@ -5,6 +5,8 @@ import os
 import re
 import copy
 import time
+import threading
+import subprocess
 import cPickle as pickle
 import shutil
 import argparse
@@ -204,6 +206,7 @@ def planTasks(args, problems):
               'stderr' : os.path.join(problem['dir'], 'search.err'),
               'bin'    : os.path.join(problem['dir'], 'search'),
               'opts'   : search_opts,
+              'max_time' : args.max_time,
             }
         shutil.copy(args.search_bin, s['bin'])
 
@@ -221,6 +224,10 @@ def planTasks(args, problems):
               'stderr'  : os.path.join(problem['dir'], 'stderr'),
               'python'  : args.python_bin,
               'python_path' : args.python_path,
+
+              # Add ten minutes for translate and validate
+              'max_time' : args.max_time + (10 * 60),
+              'max_mem' : args.max_mem,
             }
         tasks.append(d)
     return tasks
@@ -341,27 +348,45 @@ class TaskTranslate(object):
 
 class TaskSearch(object):
     def __init__(self, task):
-        cmd  = task['search']['bin']
-        cmd += ' ' + ' '.join([str(x) for x in task['search']['opts']])
-        cmd += ' -o {0}'.format(task['search']['plan'])
+        args = [task['search']['bin']]
+        args += [str(x) for x in task['search']['opts']]
+        args += ['-o', task['search']['plan']]
         if 'proto' in task:
-            cmd += ' -p {0}'.format(task['proto'])
+            args += ['-p', task['proto']]
         else:
-            cmd += ' -p {0}'.format(task['problem']['proto'])
+            args += ['-p', task['problem']['proto']]
         if task['problem']['ma']:
-            cmd += ' --ma'
-        cmd += ' >{0}'.format(task['search']['stdout'])
-        cmd += ' 2>{0}'.format(task['search']['stderr'])
+            args += ['--ma']
 
-        self.cmd = cmd
+        self.args = args
+        self.stdout = task['search']['stdout']
+        self.stderr = task['search']['stderr']
+        self.pipe = None
+        self.timeout = task['search']['max_time']
 
     def run(self):
+        fout = open(self.stdout, 'w')
+        ferr = open(self.stderr, 'w')
+
+        abort_timeout = threading.Timer(self.timeout, self.abort)
+        abort_timeout.start()
+
         start_time = time.time()
-        print('CMD: {0}'.format(self.cmd))
-        os.system(self.cmd)
+        print('CMD: {0}'.format(' '.join(self.args)))
+        self.pipe = subprocess.Popen(self.args, stdout = fout, stderr = ferr)
+        self.pipe.wait()
         end_time = time.time()
         overall_time = end_time - start_time
         print('Search Time: {0}'.format(overall_time))
+
+        abort_timeout.cancel()
+
+    def abort(self):
+        if self.pipe is not None:
+            self.pipe.terminate()
+        print >>sys.stderr, 'TIMEOUT'
+        sys.stderr.flush()
+        print('TIMEOUT')
 
 class TaskValidate(object):
     def __init__(self, task):
@@ -399,12 +424,11 @@ def mainTask():
     print
 
     translate = TaskTranslate(scratch)
-    translate.run()
-
     search = TaskSearch(scratch)
-    search.run()
-
     validate = TaskValidate(scratch)
+
+    translate.run()
+    search.run()
     validate.run()
 
     scratchToTask(scratch, task)

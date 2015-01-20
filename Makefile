@@ -160,6 +160,10 @@ third-party: submodule
 					&& make \
 					&& make install; \
 		fi;
+	cd third-party/protobuf/python \
+		&& if test ! -f build/lib/google/__init__.py; then \
+				$(PYTHON2) setup.py build; \
+		fi;
 	$(MAKE) -C third-party/translate
 	$(MAKE) -C third-party/VAL
 

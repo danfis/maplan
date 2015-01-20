@@ -4,6 +4,9 @@
 from __future__ import print_function
 
 import sys
+import os
+if os.path.isdir('../protobuf/python/build/lib/google'):
+    sys.path.insert(0, os.path.abspath('../protobuf/python/build/lib'))
 
 def python_version_supported():
     major, minor = sys.version_info[:2]

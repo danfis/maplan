@@ -4,6 +4,7 @@ import sys
 import os
 import re
 import copy
+import time
 import cPickle as pickle
 import shutil
 import argparse
@@ -331,8 +332,12 @@ class TaskTranslate(object):
         self.cmd = cmd
 
     def run(self):
+        start_time = time.time()
         print('CMD: {0}'.format(self.cmd))
         os.system(self.cmd)
+        end_time = time.time()
+        overall_time = end_time - start_time
+        print('Translate Time: {0}'.format(overall_time))
 
 class TaskSearch(object):
     def __init__(self, task):
@@ -351,8 +356,12 @@ class TaskSearch(object):
         self.cmd = cmd
 
     def run(self):
+        start_time = time.time()
         print('CMD: {0}'.format(self.cmd))
         os.system(self.cmd)
+        end_time = time.time()
+        overall_time = end_time - start_time
+        print('Search Time: {0}'.format(overall_time))
 
 class TaskValidate(object):
     def __init__(self, task):
@@ -366,10 +375,15 @@ class TaskValidate(object):
         self.cmd = cmd
 
     def run(self):
+        start_time = time.time()
         print('CMD: {0}'.format(self.cmd))
         os.system(self.cmd)
+        end_time = time.time()
+        overall_time = end_time - start_time
+        print('Validate Time: {0}'.format(overall_time))
 
 def mainTask():
+    start_time = time.time()
     plan_data = os.environ['BENCH_DATA_FN']
     task_i = int(os.environ['BENCH_TASK_I'])
 
@@ -395,6 +409,10 @@ def mainTask():
 
     scratchToTask(scratch, task)
     taskDelScratch(scratch)
+
+    end_time = time.time()
+    overall_time = end_time - start_time
+    print('Overall Time: {0}'.format(overall_time))
 ### TASK END ###
 
 

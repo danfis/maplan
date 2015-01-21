@@ -44,6 +44,11 @@ void planMASearchDel(plan_ma_search_t *ma_search);
  */
 int planMASearchRun(plan_ma_search_t *search, plan_path_t *path);
 
+/**
+ * Aborts ma-search process from outside (can be called from other thread).
+ */
+void planMASearchAbort(plan_ma_search_t *search);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -148,6 +148,11 @@ void planSearchDel(plan_search_t *search);
 int planSearchRun(plan_search_t *search, plan_path_t *path);
 
 /**
+ * Aborts search. This function can be called from other thread.
+ */
+void planSearchAbort(plan_search_t *search);
+
+/**
  * Extracts path between initial state and the specified goal state.
  * Returns initial state ID where path was extracted from the goal state.
  */
@@ -284,6 +289,7 @@ typedef struct _plan_search_block_t plan_search_block_t;
  * Common base struct for all search algorithms.
  */
 struct _plan_search_t {
+    int abort;
     plan_heur_t *heur;      /*!< Heuristic function */
     int heur_del;           /*!< True if .heur should be deleted */
     plan_state_id_t initial_state;

@@ -203,6 +203,11 @@ int planMASearchRun(plan_ma_search_t *ma, plan_path_t *path)
     return ma->res;
 }
 
+void planMASearchAbort(plan_ma_search_t *search)
+{
+    planSearchAbort(search->search);
+}
+
 
 static int searchPostStep(plan_search_t *search, int res, void *ud)
 {

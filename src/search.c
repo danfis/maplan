@@ -32,6 +32,8 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     res = search->init_step_fn(search);
     while (res == PLAN_SEARCH_CONT){
         res = search->step_fn(search);
+        if (search->abort)
+            res = PLAN_SEARCH_ABORT;
 
         ++steps;
         if (res == PLAN_SEARCH_CONT
@@ -61,6 +63,11 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     }
 
     return res;
+}
+
+void planSearchAbort(plan_search_t *search)
+{
+    search->abort = 1;
 }
 
 plan_state_id_t planSearchExtractPath(const plan_search_t *search,
@@ -122,6 +129,7 @@ void _planSearchInit(plan_search_t *search,
                      plan_search_insert_node_fn insert_node_fn,
                      plan_search_top_node_cost_fn top_node_cost_fn)
 {
+    search->abort         = 0;
     search->heur          = params->heur;
     search->heur_del      = params->heur_del;
     search->initial_state = params->prob->initial_state;

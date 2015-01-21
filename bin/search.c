@@ -26,14 +26,34 @@ struct _ma_th_t {
 };
 typedef struct _ma_th_t ma_th_t;
 
+static int aborted = 0;
+
 static struct {
+    int initialized;
     pthread_t th;
+    pthread_mutex_t lock;
     int sleeptime;
     int max_time;
     int max_mem;
 
     bor_timer_t timer;
+    plan_search_t *search;
+    plan_ma_search_t *ma_search[64];
+    int ma_search_size;
 } limit_monitor;
+
+static void limitMonitorAbort(void)
+{
+    int i;
+
+    pthread_mutex_lock(&limit_monitor.lock);
+    if (limit_monitor.search)
+        planSearchAbort(limit_monitor.search);
+    for (i = 0; i < limit_monitor.ma_search_size; ++i)
+        planMASearchAbort(limit_monitor.ma_search[i]);
+    aborted = 1;
+    pthread_mutex_unlock(&limit_monitor.lock);
+}
 
 static void *limitMonitorTh(void *_)
 {
@@ -52,7 +72,8 @@ static void *limitMonitorTh(void *_)
             fprintf(stderr, "Aborting due to exceeded hard time limit"
                             " (elapsed %f, limit: %d.\n",
                     elapsed, limit_monitor.max_time);
-            exit(-1);
+            limitMonitorAbort();
+            break;
         }
 
         if (getrusage(RUSAGE_SELF, &usg) == 0){
@@ -61,7 +82,8 @@ static void *limitMonitorTh(void *_)
                 fprintf(stderr, "Aborting due to exceeded hard mem limit"
                                 " (peak-mem: %d, limit: %d).\n",
                         peak_mem, limit_monitor.max_mem);
-                exit(-1);
+                limitMonitorAbort();
+                break;
             }
         }
 
@@ -72,11 +94,18 @@ static void *limitMonitorTh(void *_)
 
 static void limitMonitorStart(int sleeptime, int max_time, int max_mem)
 {
+    limit_monitor.initialized = 1;
+    pthread_mutex_init(&limit_monitor.lock, NULL);
+
     limit_monitor.sleeptime = sleeptime;
-    // Give the hard limit monitor 10 minutes and 1GB slack
-    limit_monitor.max_time = max_time + (10 * 60);
-    limit_monitor.max_mem = max_mem + 1024;
+    // Give the hard limit monitor 2 minutes more
+    limit_monitor.max_time = max_time + (2 * 60);
+    limit_monitor.max_mem = max_mem;
     borTimerStart(&limit_monitor.timer);
+
+    limit_monitor.search = NULL;
+    limit_monitor.ma_search_size = 0;
+
     pthread_create(&limit_monitor.th, NULL, limitMonitorTh, NULL);
 }
 
@@ -84,6 +113,27 @@ static void limitMonitorJoin(void)
 {
     pthread_cancel(limit_monitor.th);
     pthread_join(limit_monitor.th, NULL);
+    pthread_mutex_destroy(&limit_monitor.lock);
+}
+
+static void limitMonitorSetSearch(plan_search_t *search)
+{
+    if (!limit_monitor.initialized)
+        return;
+
+    pthread_mutex_lock(&limit_monitor.lock);
+    limit_monitor.search = search;
+    pthread_mutex_unlock(&limit_monitor.lock);
+}
+
+static void limitMonitorAddMASearch(plan_ma_search_t *ma_search)
+{
+    if (!limit_monitor.initialized)
+        return;
+
+    pthread_mutex_lock(&limit_monitor.lock);
+    limit_monitor.ma_search[limit_monitor.ma_search_size++] = ma_search;
+    pthread_mutex_unlock(&limit_monitor.lock);
 }
 
 
@@ -360,15 +410,20 @@ static int singleThread(const options_t *o)
         printProblem(prob);
         printf("\n");
     }
+    if (aborted)
+        return 0;
 
     // Create heuristic function
     heur = heurNew(o, prob);
+    if (aborted)
+        return 0;
 
     // Create search algorithm
     progress_data.max_time = o->max_time;
     progress_data.max_mem = o->max_mem;
     progress_data.agent_id = 0;
     search = searchNew(o, prob, heur, &progress_data);
+    limitMonitorSetSearch(search);
 
     // Run search
     planPathInit(&path);
@@ -403,6 +458,7 @@ static void maThRun(int id, void *data, const bor_tasks_thinfo_t *_)
     }
 
     ma_search = planMASearchNew(&params);
+    limitMonitorAddMASearch(ma_search);
     th->res = planMASearchRun(ma_search, &th->path);
     planMASearchDel(ma_search);
 }
@@ -424,8 +480,14 @@ static int multiAgent2(const options_t *o, plan_problem_agents_t *prob)
         th[i].progress_data.agent_id = i;
 
         heur = heurNewMA(o, prob, i);
+        if (aborted)
+            return 0;
+
         th[i].search = searchNew(o, prob->agent + i, heur,
                                  &th[i].progress_data);
+        if (aborted)
+            return 0;
+
         planPathInit(&th[i].path);
         th[i].comm = planMACommInprocNew(i, prob->agent_size);
         //th[i].comm = planMACommIPCNew(i, prob->agent_size, "/tmp/A");

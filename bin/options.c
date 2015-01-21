@@ -78,6 +78,9 @@ static int readOpts(options_t *o, int argc, char *argv[])
     optsAddDesc("dot-graph", 0x0, OPTS_STR, &o->dot_graph, NULL,
                 "Prints problem definition as graph in DOT format in"
                 " specified file. (default: None)");
+    optsAddDesc("hard-limit-sleeptime", 0x0, OPTS_INT, &o->hard_limit_sleeptime,
+                NULL, "Sleeptime in seconds for hard limit monitor."
+                " Set to -1 to disable hard limit monitor. (default: 5)");
 
     if (opts(&argc, argv) != 0){
         return -1;
@@ -261,6 +264,7 @@ int options(options_t *o, int argc, char *argv[])
     o->search = default_search;
     o->search_opts = NULL;
     o->search_opts_len = 0;
+    o->hard_limit_sleeptime = 5;
 
     if (readOpts(o, argc, argv) != 0 || o->help){
         usage(argv[0]);

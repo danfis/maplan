@@ -227,7 +227,8 @@ def planTasks(args, problems):
 
               # Add ten minutes for translate and validate
               'max_time' : args.max_time + (10 * 60),
-              'max_mem' : args.max_mem,
+              # Add half GB slack
+              'max_mem' : args.max_mem + 512,
             }
         tasks.append(d)
     return tasks

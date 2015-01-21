@@ -542,6 +542,12 @@ static int multiAgent(const options_t *o)
         printf("\n");
     }
 
+    if (prob->agent_size <= 1){
+        fprintf(stderr, "Error: Cannot run multi-agent planner on one"
+                        " agent problem. It's just silly.\n");
+        return -1;
+    }
+
     if (o->dot_graph){
         fout = fopen(o->dot_graph, "w");
         if (fout){

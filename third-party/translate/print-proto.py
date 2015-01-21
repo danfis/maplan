@@ -2,8 +2,6 @@
 
 import sys
 import os
-if os.path.isdir('../protobuf/python/build/lib/google'):
-    sys.path.insert(0, os.path.abspath('../protobuf/python/build/lib'))
 
 import problemdef_pb2
 

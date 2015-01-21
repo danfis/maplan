@@ -171,6 +171,7 @@ static void printProblem(const plan_problem_t *prob)
     printf("Bytes per state: %d\n",
            planStatePackerBufSize(prob->state_pool->packer));
     printf("Size of state id: %d\n", (int)sizeof(plan_state_id_t));
+    printf("Duplicate operators removed: %d\n", prob->duplicate_ops_removed);
 }
 
 static void printProblemMA(const plan_problem_agents_t *prob)

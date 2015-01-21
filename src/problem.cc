@@ -32,6 +32,7 @@ static void pruneUnimportantVars(plan_problem_t *oldp,
                                  const PlanProblem *proto,
                                  const int *important_var,
                                  plan_var_id_t *var_order);
+static void pruneDuplicateOps(plan_problem_t *prob);
 
 /** Initializes agent's problem struct from global problem struct */
 static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src);
@@ -137,6 +138,7 @@ static int loadProblem(plan_problem_t *p,
 
     // Load problem from the protobuffer
     loadProtoProblem(p, proto, NULL, -1);
+    p->duplicate_ops_removed = 0;
 
     // Fix problem with causal graph
     if (flags & PLAN_PROBLEM_USE_CG){
@@ -151,9 +153,11 @@ static int loadProblem(plan_problem_t *p,
             var_order = cg->var_order;
         }
 
+        pruneDuplicateOps(p);
         p->succ_gen = planSuccGenNew(p->op, p->op_size, var_order);
         planCausalGraphDel(cg);
     }else{
+        pruneDuplicateOps(p);
         p->succ_gen = planSuccGenNew(p->op, p->op_size, NULL);
     }
 
@@ -620,6 +624,103 @@ static void pruneUnimportantVars(plan_problem_t *p,
 
     planProblemFree(p);
     loadProtoProblem(p, proto, var_map, var_size);
+}
+
+static int cmpPartState(const plan_part_state_t *p1,
+                        const plan_part_state_t *p2)
+{
+    int i, size = p1->num_vars;
+    int isset1, isset2;
+    plan_val_t val1, val2;
+
+    for (i = 0; i < size; ++i){
+        isset1 = planPartStateIsSet(p1, i);
+        isset2 = planPartStateIsSet(p2, i);
+        if (isset1 == isset2){
+            if (!isset1)
+                continue;
+
+            val1 = planPartStateGet(p1, i);
+            val2 = planPartStateGet(p2, i);
+            if (val1 != val2)
+                return val1 - val2;
+        }else{
+            return isset1 - isset2;
+        }
+    }
+
+    return 0;
+}
+
+static int cmpOp(const plan_op_t *op1, const plan_op_t *op2)
+{
+    int i, cmp;
+    plan_op_cond_eff_t *ce1, *ce2;
+
+    if (op1->pre->vals_size != op2->pre->vals_size)
+        return op1->pre->vals_size - op2->pre->vals_size;
+    if (op1->eff->vals_size != op2->eff->vals_size)
+        return op1->eff->vals_size - op2->eff->vals_size;
+    if (op1->cond_eff_size != op2->cond_eff_size)
+        return op1->cond_eff_size - op2->cond_eff_size;
+
+    if ((cmp = cmpPartState(op1->pre, op2->pre)) != 0)
+        return cmp;
+    if ((cmp = cmpPartState(op1->eff, op2->eff)) != 0)
+        return cmp;
+
+    for (i = 0; i < op1->cond_eff_size; ++i){
+        ce1 = op1->cond_eff + i;
+        ce2 = op2->cond_eff + i;
+        if ((cmp = cmpPartState(ce1->pre, ce2->pre)) != 0)
+            return cmp;
+        if ((cmp = cmpPartState(ce1->eff, ce2->eff)) != 0)
+            return cmp;
+    }
+
+    return 0;
+}
+
+static int duplicateOpsCmp(const void *a, const void *b)
+{
+    const plan_op_t *op1 = *(const plan_op_t **)a;
+    const plan_op_t *op2 = *(const plan_op_t **)b;
+    return cmpOp(op1, op2);
+}
+
+static void pruneDuplicateOps(plan_problem_t *prob)
+{
+    plan_op_t **sorted_ops;
+    int i, ins;
+
+    // Sort operators so that duplicates are one after other
+    sorted_ops = BOR_ALLOC_ARR(plan_op_t *, prob->op_size);
+    for (i = 0; i < prob->op_size; ++i)
+        sorted_ops[i] = prob->op + i;
+    qsort(sorted_ops, prob->op_size, sizeof(plan_op_t *), duplicateOpsCmp);
+
+    // Free duplicate operators and mark their position with global_id set
+    // to -1
+    for (i = 1; i < prob->op_size; ++i){
+        if (cmpOp(sorted_ops[i - 1], sorted_ops[i]) == 0){
+            planOpFree(sorted_ops[i - 1]);
+            sorted_ops[i - 1]->global_id = -1;
+        }
+    }
+
+    // Squash operators to a continuous array
+    for (i = 0, ins = 0; i < prob->op_size; ++i, ++ins){
+        if (prob->op[i].global_id == -1){
+            --ins;
+        }else if (ins != i){
+            prob->op[ins] = prob->op[i];
+            prob->op[ins].global_id = ins;
+        }
+    }
+    prob->duplicate_ops_removed = prob->op_size - ins;
+    prob->op_size = ins;
+
+    BOR_FREE(sorted_ops);
 }
 
 static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)

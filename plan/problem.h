@@ -30,6 +30,8 @@ struct _plan_problem_t {
     plan_op_t *op;                 /*!< Array of operators */
     int op_size;                   /*!< Number of operators */
     plan_succ_gen_t *succ_gen;     /*!< Successor generator */
+    int duplicate_ops_removed;     /*!< Number of duplicate operators that
+                                        were removed */
 
     /** Fllowing data are available only in case of agent problem defintion: */
     char *agent_name;   /*!< Name of the corresponding agent */

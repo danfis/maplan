@@ -15,7 +15,7 @@ Vars[13]:
 [12] name: `var22', range: 2, is_private: 0 0
 Initial state: 0:1 1:3 2:0 3:0 4:0 5:0 6:1 7:1 8:1 9:1 10:0 11:0 12:1
 Goal: 7:0 8:0 9:0
-Ops[43]:
+Ops[35]:
 [0] cost: 1, gid: 0, owner: -1 (0), private: 0, recv_agent: 0, name: `calibrate rover1 camera1 objective0 waypoint0'
 [0] pre: 1:0, eff: 6:0
 [1] cost: 1, gid: 1, owner: -1 (0), private: 0, recv_agent: 0, name: `calibrate rover1 camera1 objective0 waypoint1'
@@ -80,28 +80,12 @@ Ops[43]:
 [30] pre: 1:2 5:0 11:0, eff: 5:1 11:1
 [31] cost: 1, gid: 31, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 colour'
 [31] pre: 1:0 6:0, eff: 6:1 12:0
-[32] cost: 1, gid: 32, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 high_res'
+[32] cost: 1, gid: 32, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 low_res'
 [32] pre: 1:0 6:0, eff: 6:1
-[33] cost: 1, gid: 33, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 low_res'
-[33] pre: 1:0 6:0, eff: 6:1
-[34] cost: 1, gid: 34, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 colour'
-[34] pre: 1:0 6:0, eff: 6:1
-[35] cost: 1, gid: 35, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 high_res'
-[35] pre: 1:0 6:0, eff: 6:1
-[36] cost: 1, gid: 36, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 low_res'
-[36] pre: 1:0 6:0, eff: 6:1
-[37] cost: 1, gid: 37, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 colour'
-[37] pre: 1:1 6:0, eff: 6:1 12:0
-[38] cost: 1, gid: 38, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 high_res'
-[38] pre: 1:1 6:0, eff: 6:1
-[39] cost: 1, gid: 39, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 low_res'
-[39] pre: 1:1 6:0, eff: 6:1
-[40] cost: 1, gid: 40, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 colour'
-[40] pre: 1:1 6:0, eff: 6:1
-[41] cost: 1, gid: 41, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 high_res'
-[41] pre: 1:1 6:0, eff: 6:1
-[42] cost: 1, gid: 42, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
-[42] pre: 1:1 6:0, eff: 6:1
+[33] cost: 1, gid: 33, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 colour'
+[33] pre: 1:1 6:0, eff: 6:1 12:0
+[34] cost: 1, gid: 34, owner: -1 (0), private: 0, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
+[34] pre: 1:1 6:0, eff: 6:1
 Succ Gen: 1
 ---- testLoadFromProto END ----
 ---- testLoadFromProtoCondEff ----
@@ -3214,7 +3198,7 @@ Vars[13]:
 [12] name: `var22', range: 2, is_private: 0 0
 Initial state: 0:1 1:3 2:0 3:0 4:0 5:0 6:1 7:1 8:1 9:1 10:0 11:0 12:1
 Goal: 7:0 8:0 9:0
-Ops[43]:
+Ops[35]:
 [0] cost: 1, gid: 0, owner: -1 (2), private: 1, recv_agent: 0, name: `calibrate rover1 camera1 objective0 waypoint0'
 [0] pre: 1:0, eff: 6:0
 [1] cost: 1, gid: 1, owner: -1 (2), private: 1, recv_agent: 0, name: `calibrate rover1 camera1 objective0 waypoint1'
@@ -3279,28 +3263,12 @@ Ops[43]:
 [30] pre: 1:2 5:0 11:0, eff: 5:1 11:1
 [31] cost: 1, gid: 31, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 colour'
 [31] pre: 1:0 6:0, eff: 6:1 12:0
-[32] cost: 1, gid: 32, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 high_res'
+[32] cost: 1, gid: 32, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 low_res'
 [32] pre: 1:0 6:0, eff: 6:1
-[33] cost: 1, gid: 33, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 low_res'
-[33] pre: 1:0 6:0, eff: 6:1
-[34] cost: 1, gid: 34, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 colour'
-[34] pre: 1:0 6:0, eff: 6:1
-[35] cost: 1, gid: 35, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 high_res'
-[35] pre: 1:0 6:0, eff: 6:1
-[36] cost: 1, gid: 36, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 low_res'
-[36] pre: 1:0 6:0, eff: 6:1
-[37] cost: 1, gid: 37, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 colour'
-[37] pre: 1:1 6:0, eff: 6:1 12:0
-[38] cost: 1, gid: 38, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 high_res'
-[38] pre: 1:1 6:0, eff: 6:1
-[39] cost: 1, gid: 39, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 low_res'
-[39] pre: 1:1 6:0, eff: 6:1
-[40] cost: 1, gid: 40, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 colour'
-[40] pre: 1:1 6:0, eff: 6:1
-[41] cost: 1, gid: 41, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 high_res'
-[41] pre: 1:1 6:0, eff: 6:1
-[42] cost: 1, gid: 42, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
-[42] pre: 1:1 6:0, eff: 6:1
+[33] cost: 1, gid: 33, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 colour'
+[33] pre: 1:1 6:0, eff: 6:1 12:0
+[34] cost: 1, gid: 34, owner: -1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
+[34] pre: 1:1 6:0, eff: 6:1
 Succ Gen: 1
 ++++ rover0 ++++
 Agent ID: 0
@@ -3423,7 +3391,7 @@ Vars[13]:
 PrivateVal: 1:0 1:1 1:2 1:3 2:2 3:2 4:0 4:1 5:0 5:1 6:0 6:1 11:0 11:1 12:0
 Initial state: 0:1 1:3 2:0 3:0 4:0 5:0 6:1 7:1 8:1 9:1 10:0 11:0 12:1
 Goal: 7:0 8:0 9:0
-Ops[34]:
+Ops[26]:
 [0] cost: 1, gid: 0, owner: 1 (2), private: 1, recv_agent: 0, name: `calibrate rover1 camera1 objective0 waypoint0'
 [0] pre: 1:0, eff: 6:0
 [1] cost: 1, gid: 1, owner: 1 (2), private: 1, recv_agent: 0, name: `calibrate rover1 camera1 objective0 waypoint1'
@@ -3470,31 +3438,15 @@ Ops[34]:
 [21] pre: 1:2 5:0 11:0, eff: 5:1 11:1
 [22] cost: 1, gid: 31, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 colour'
 [22] pre: 1:0 6:0, eff: 6:1 12:0
-[23] cost: 1, gid: 32, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 high_res'
+[23] cost: 1, gid: 32, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 low_res'
 [23] pre: 1:0 6:0, eff: 6:1
-[24] cost: 1, gid: 33, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 low_res'
-[24] pre: 1:0 6:0, eff: 6:1
-[25] cost: 1, gid: 34, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 colour'
-[25] pre: 1:0 6:0, eff: 6:1
-[26] cost: 1, gid: 35, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 high_res'
-[26] pre: 1:0 6:0, eff: 6:1
-[27] cost: 1, gid: 36, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 low_res'
-[27] pre: 1:0 6:0, eff: 6:1
-[28] cost: 1, gid: 37, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 colour'
-[28] pre: 1:1 6:0, eff: 6:1 12:0
-[29] cost: 1, gid: 38, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 high_res'
-[29] pre: 1:1 6:0, eff: 6:1
-[30] cost: 1, gid: 39, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 low_res'
-[30] pre: 1:1 6:0, eff: 6:1
-[31] cost: 1, gid: 40, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 colour'
-[31] pre: 1:1 6:0, eff: 6:1
-[32] cost: 1, gid: 41, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 high_res'
-[32] pre: 1:1 6:0, eff: 6:1
-[33] cost: 1, gid: 42, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
-[33] pre: 1:1 6:0, eff: 6:1
+[24] cost: 1, gid: 33, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 colour'
+[24] pre: 1:1 6:0, eff: 6:1 12:0
+[25] cost: 1, gid: 34, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
+[25] pre: 1:1 6:0, eff: 6:1
 Succ Gen: 1
 Proj op:
-Ops[38]:
+Ops[30]:
 [0] cost: 1, gid: 0, owner: 1 (2), private: 1, recv_agent: 0, name: `calibrate rover1 camera1 objective0 waypoint0'
 [0] pre: 1:0, eff: 6:0
 [1] cost: 1, gid: 1, owner: 1 (2), private: 1, recv_agent: 0, name: `calibrate rover1 camera1 objective0 waypoint1'
@@ -3549,30 +3501,14 @@ Ops[38]:
 [25] pre: 1:2 5:0 11:0, eff: 5:1 11:1
 [26] cost: 1, gid: 31, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 colour'
 [26] pre: 1:0 6:0, eff: 6:1 12:0
-[27] cost: 1, gid: 32, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 high_res'
+[27] cost: 1, gid: 32, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 low_res'
 [27] pre: 1:0 6:0, eff: 6:1
-[28] cost: 1, gid: 33, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 low_res'
-[28] pre: 1:0 6:0, eff: 6:1
-[29] cost: 1, gid: 34, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 colour'
-[29] pre: 1:0 6:0, eff: 6:1
-[30] cost: 1, gid: 35, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 high_res'
-[30] pre: 1:0 6:0, eff: 6:1
-[31] cost: 1, gid: 36, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 low_res'
-[31] pre: 1:0 6:0, eff: 6:1
-[32] cost: 1, gid: 37, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 colour'
-[32] pre: 1:1 6:0, eff: 6:1 12:0
-[33] cost: 1, gid: 38, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 high_res'
-[33] pre: 1:1 6:0, eff: 6:1
-[34] cost: 1, gid: 39, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 low_res'
-[34] pre: 1:1 6:0, eff: 6:1
-[35] cost: 1, gid: 40, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 colour'
-[35] pre: 1:1 6:0, eff: 6:1
-[36] cost: 1, gid: 41, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 high_res'
-[36] pre: 1:1 6:0, eff: 6:1
-[37] cost: 1, gid: 42, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
-[37] pre: 1:1 6:0, eff: 6:1
+[28] cost: 1, gid: 33, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 colour'
+[28] pre: 1:1 6:0, eff: 6:1 12:0
+[29] cost: 1, gid: 34, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
+[29] pre: 1:1 6:0, eff: 6:1
 Private Proj op:
-Ops[34]:
+Ops[26]:
 [0] cost: 1, gid: 0, owner: 1 (2), private: 1, recv_agent: 0, name: `calibrate rover1 camera1 objective0 waypoint0'
 [0] pre: 1:0, eff: 6:0
 [1] cost: 1, gid: 1, owner: 1 (2), private: 1, recv_agent: 0, name: `calibrate rover1 camera1 objective0 waypoint1'
@@ -3619,28 +3555,12 @@ Ops[34]:
 [21] pre: 1:2 5:0 11:0, eff: 5:1 11:1
 [22] cost: 1, gid: 31, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 colour'
 [22] pre: 1:0 6:0, eff: 6:1 12:0
-[23] cost: 1, gid: 32, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 high_res'
+[23] cost: 1, gid: 32, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 low_res'
 [23] pre: 1:0 6:0, eff: 6:1
-[24] cost: 1, gid: 33, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective0 camera1 low_res'
-[24] pre: 1:0 6:0, eff: 6:1
-[25] cost: 1, gid: 34, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 colour'
-[25] pre: 1:0 6:0, eff: 6:1
-[26] cost: 1, gid: 35, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 high_res'
-[26] pre: 1:0 6:0, eff: 6:1
-[27] cost: 1, gid: 36, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint0 objective1 camera1 low_res'
-[27] pre: 1:0 6:0, eff: 6:1
-[28] cost: 1, gid: 37, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 colour'
-[28] pre: 1:1 6:0, eff: 6:1 12:0
-[29] cost: 1, gid: 38, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 high_res'
-[29] pre: 1:1 6:0, eff: 6:1
-[30] cost: 1, gid: 39, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 low_res'
-[30] pre: 1:1 6:0, eff: 6:1
-[31] cost: 1, gid: 40, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 colour'
-[31] pre: 1:1 6:0, eff: 6:1
-[32] cost: 1, gid: 41, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 high_res'
-[32] pre: 1:1 6:0, eff: 6:1
-[33] cost: 1, gid: 42, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
-[33] pre: 1:1 6:0, eff: 6:1
+[24] cost: 1, gid: 33, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective0 camera1 colour'
+[24] pre: 1:1 6:0, eff: 6:1 12:0
+[25] cost: 1, gid: 34, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
+[25] pre: 1:1 6:0, eff: 6:1
 ++++ rover1 END ++++
 ---- ../data/ma-benchmarks/rovers/p03.proto END ----
 ---- ../data/ma-benchmarks/depot/pfile1.proto ----

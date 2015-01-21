@@ -567,7 +567,7 @@ BENCHMARKS = {
         },
 
         { 'domain' : 'satellites',
-          'problems' : [ 'p01-pfile1', 'p02-pfile2', 'p03-pfile3',
+          'problems' : [ 'p03-pfile3',
                          'p04-pfile4', 'p05-pfile5', 'p06-pfile6',
                          'p07-pfile7', 'p08-pfile8', 'p09-pfile9',
                          'p10-pfile10', 'p11-pfile11', 'p12-pfile12',

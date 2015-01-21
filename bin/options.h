@@ -11,6 +11,7 @@ struct _options_t {
     int progress_freq;
     int print_heur_init;
     char *dot_graph;
+    int hard_limit_sleeptime;
 
     char *heur;
     char **heur_opts;

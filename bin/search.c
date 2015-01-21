@@ -1,3 +1,5 @@
+#include <sys/resource.h>
+#include <unistd.h>
 #include <boruvka/tasks.h>
 #include <plan/ma_msg.h>
 #include <plan/problem.h>
@@ -23,6 +25,66 @@ struct _ma_th_t {
     int res;
 };
 typedef struct _ma_th_t ma_th_t;
+
+static struct {
+    pthread_t th;
+    int sleeptime;
+    int max_time;
+    int max_mem;
+
+    bor_timer_t timer;
+} limit_monitor;
+
+static void *limitMonitorTh(void *_)
+{
+    struct rusage usg;
+    int peak_mem;
+    float elapsed;
+
+    // Enable cancelability and enable cancelation in sleep() call
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
+    while (1){
+        borTimerStop(&limit_monitor.timer);
+        elapsed = borTimerElapsedInSF(&limit_monitor.timer);
+        if ((int)elapsed > limit_monitor.max_time){
+            fprintf(stderr, "Aborting due to exceeded hard time limit"
+                            " (elapsed %f, limit: %d.\n",
+                    elapsed, limit_monitor.max_time);
+            exit(-1);
+        }
+
+        if (getrusage(RUSAGE_SELF, &usg) == 0){
+            peak_mem = usg.ru_maxrss / 1024L;
+            if (peak_mem > limit_monitor.max_mem){
+                fprintf(stderr, "Aborting due to exceeded hard mem limit"
+                                " (peak-mem: %d, limit: %d).\n",
+                        peak_mem, limit_monitor.max_mem);
+                exit(-1);
+            }
+        }
+
+        sleep(limit_monitor.sleeptime);
+    }
+    return NULL;
+}
+
+static void limitMonitorStart(int sleeptime, int max_time, int max_mem)
+{
+    limit_monitor.sleeptime = sleeptime;
+    // Give the hard limit monitor 10 minutes and 1GB slack
+    limit_monitor.max_time = max_time + (10 * 60);
+    limit_monitor.max_mem = max_mem + 1024;
+    borTimerStart(&limit_monitor.timer);
+    pthread_create(&limit_monitor.th, NULL, limitMonitorTh, NULL);
+}
+
+static void limitMonitorJoin(void)
+{
+    pthread_cancel(limit_monitor.th);
+    pthread_join(limit_monitor.th, NULL);
+}
 
 
 static int progress(const plan_search_stat_t *stat, void *data)
@@ -446,6 +508,11 @@ int main(int argc, char *argv[])
     if (options(&opts, argc, argv) != 0)
         return -1;
 
+    if (opts.hard_limit_sleeptime > 0){
+        limitMonitorStart(opts.hard_limit_sleeptime,
+                          opts.max_time, opts.max_mem);
+    }
+
     if (opts.ma){
         if (multiAgent(&opts) != 0)
             return -1;
@@ -453,6 +520,9 @@ int main(int argc, char *argv[])
         if (singleThread(&opts) != 0)
             return -1;
     }
+
+    if (opts.hard_limit_sleeptime > 0)
+        limitMonitorJoin();
 
     optionsFree(&opts);
     planShutdownProtobuf();

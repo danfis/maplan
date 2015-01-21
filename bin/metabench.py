@@ -620,9 +620,9 @@ BENCHMARKS = {
         },
 
         { 'domain' : 'zenotravel',
-          'problems' : [ 'pfile1', 'pfile10', 'pfile12', 'pfile13',
+          'problems' : [ 'pfile10', 'pfile12', 'pfile13',
                          'pfile14', 'pfile15', 'pfile16', 'pfile17',
-                         'pfile18', 'pfile19', 'pfile2', 'pfile20',
+                         'pfile18', 'pfile19', 'pfile20',
                          'pfile3', 'pfile4', 'pfile5', 'pfile6', 'pfile7',
                          'pfile8', 'pfile9', ]
         },

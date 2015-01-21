@@ -363,14 +363,16 @@ class TaskSearch(object):
         self.stdout = task['search']['stdout']
         self.stderr = task['search']['stderr']
         self.pipe = None
-        self.timeout = task['search']['max_time']
+
+        # add 5 minutes slack for timeout
+        #self.timeout = task['search']['max_time'] + (10 * 60)
 
     def run(self):
         fout = open(self.stdout, 'w')
         ferr = open(self.stderr, 'w')
 
-        abort_timeout = threading.Timer(self.timeout, self.abort)
-        abort_timeout.start()
+        #abort_timeout = threading.Timer(self.timeout, self.abort)
+        #abort_timeout.start()
 
         start_time = time.time()
         print('CMD: {0}'.format(' '.join(self.args)))
@@ -380,7 +382,7 @@ class TaskSearch(object):
         overall_time = end_time - start_time
         print('Search Time: {0}'.format(overall_time))
 
-        abort_timeout.cancel()
+        #abort_timeout.cancel()
 
     def abort(self):
         if self.pipe is not None:

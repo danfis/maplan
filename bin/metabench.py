@@ -5,6 +5,7 @@ import os
 import re
 import copy
 import time
+import csv
 import threading
 import subprocess
 import cPickle as pickle
@@ -19,6 +20,11 @@ VALIDATE = '/home/danfis/dev/libplan/third-party/VAL/validate'
 BENCHMARKS_DIR = '/home/danfis/dev/plan-data/benchmarks'
 SEARCH_REPO = 'git@gitlab.fel.cvut.cz:fiserdan/libplan.git'
 
+def abspath(path):
+    abspath = os.path.abspath(path)
+    if abspath.startswith('/auto/praha1/'):
+        abspath = '/storage/praha1/home/' + abspath[13:]
+    return abspath
 
 def checkBin(path):
     if not os.path.isfile(path):
@@ -38,8 +44,8 @@ def planCheckResources(args):
     if os.path.isdir(args.name) or os.path.isfile(args.name):
         print('Error: Bench `{0}\' already exists'.format(args.name))
         return False
-    if args.bench_name not in BENCHMARKS:
-        print('Error: Unkown benchmark `{0}\''.format(args.bench_name))
+    if args.bench_set not in BENCHMARKS:
+        print('Error: Unkown benchmark `{0}\''.format(args.bench_set))
         return False
     if len(args.branch) > 0:
         return True
@@ -100,7 +106,7 @@ def planMAAgents(addl):
 def planLoadProblems(args):
     problems = []
 
-    benchmarks = BENCHMARKS[args.bench_name]
+    benchmarks = BENCHMARKS[args.bench_set]
     task_i = 0
     for bench in benchmarks:
         domain = bench['domain']
@@ -159,7 +165,7 @@ def planCloneRepo(args, bench_root):
         sys.exit(-1)
 
 def planPrepareDisk(args, problems_in):
-    root = os.path.join(os.path.abspath('.'), args.name)
+    root = os.path.join(abspath('.'), args.name)
     os.mkdir(root)
 
     if len(args.branch) > 0:
@@ -222,11 +228,12 @@ def planTasks(args, problems):
                             },
               'stdout'  : os.path.join(problem['dir'], 'stdout'),
               'stderr'  : os.path.join(problem['dir'], 'stderr'),
+              'done'    : os.path.join(problem['dir'], 'done'),
               'python'  : args.python_bin,
               'python_path' : args.python_path,
 
-              # Add ten minutes for translate and validate
-              'max_time' : args.max_time + (10 * 60),
+              # Add 12 minutes for translate and validate
+              'max_time' : args.max_time + (12 * 60),
               # Add half GB slack
               'max_mem' : args.max_mem + 512,
             }
@@ -253,7 +260,7 @@ def mainPlan(args):
         return -1
 
     bench = { 'name' : args.name,
-              'dir'  : os.path.abspath(args.name),
+              'dir'  : abspath(args.name),
               'argv' : sys.argv,
               'tasks' : tasks,
             }
@@ -436,6 +443,9 @@ def mainTask():
 
     scratchToTask(scratch, task)
     taskDelScratch(scratch)
+    fout = open(task['done'], 'w')
+    fout.write('DONE\n')
+    fout.close()
 
     end_time = time.time()
     overall_time = end_time - start_time
@@ -447,9 +457,22 @@ def mainTask():
 def mainQSub(args):
     bench = pickle.load(open(args.bench_data, 'r'))
 
-    bench_fn = os.path.abspath(args.bench_data)
-    self_fn = os.path.abspath(sys.argv[0])
+    if args.cluster == 'luna':
+        resources = 'xeon:nodecpus16:cl_luna'
+        queue = '@arien'
+    elif args.cluster == 'zapat':
+        resources = 'nodecpus16:cl_zapat'
+        queue = '@wagap'
+
+    bench_fn = abspath(args.bench_data)
+    self_fn = abspath(sys.argv[0])
     for task_i, task in enumerate(bench['tasks']):
+        if os.path.isfile(task['done']):
+            print('Skipping {0} ({1}/{2}/{3})'
+                        .format(task_i, task['problem']['domain_name'],
+                                task['problem']['problem_name'],
+                                task['problem']['repeat']))
+            continue
         nodes = 1
 
         ppn = 1
@@ -458,10 +481,11 @@ def mainQSub(args):
         ppn = min(ppn, 16)
 
         qargs = ['qsub']
-        qargs += ['-l', 'nodes={0}:ppn={1}:{2}'.format(nodes, ppn, args.resources)]
+        qargs += ['-l', 'nodes={0}:ppn={1}:{2}'.format(nodes, ppn, resources)]
         qargs += ['-l', 'walltime={0}s'.format(task['max_time'])]
         qargs += ['-l', 'mem={0}mb'.format(task['max_mem'])]
         qargs += ['-l', 'scratch=400mb:local']
+        qargs += ['-q', queue]
         qargs += ['-o', task['stdout']]
         qargs += ['-e', task['stderr']]
         qargs += ['-v', 'BENCH_DATA_FN={0},BENCH_TASK_I={1}'.format(bench_fn, task_i)]
@@ -471,6 +495,258 @@ def mainQSub(args):
         print('CMD {0}'.format(cmd))
         os.system(cmd)
 ### QSUB END ###
+
+
+### RESULTS ###
+def toInt(s):
+    s = s.lstrip('0')
+    if len(s) == 0:
+        return 0
+    return int(s)
+
+pat_ma = re.compile('^Multi-agent: ([0-9])$')
+pat_max_time = re.compile('^Max time: ([0-9]+) s$')
+pat_max_mem = re.compile('^Max mem: ([0-9]+) MB$')
+pat_heur = re.compile('^Heur: (.+)$')
+pat_search_alg = re.compile('^Search: (.+)$')
+pat_num_vars = re.compile('^Num variables: ([0-9]+)$')
+pat_num_ops = re.compile('^Num operators: ([0-9]+)$')
+pat_bytes_per_state = re.compile('^Bytes per state: ([0-9]+)$')
+pat_num_agents = re.compile('^Num agents: ([0-9]+)$')
+pat_plan_cost = re.compile('^Path Cost: ([0-9]+)$')
+pat_init_state_heur = re.compile('^.*Init State Heur: ([0-9]+)$')
+pat_search_search_time = re.compile('^ *Search Time: ([0-9.]+)$')
+pat_evaluated_states = re.compile('^ *Evaluated States: ([0-9]+)$')
+pat_expanded_states = re.compile('^ *Expanded States: ([0-9]+)$')
+pat_generated_states = re.compile('^ *Generated States: ([0-9]+)$')
+pat_peak_mem = re.compile('^ *Peak Memory: ([0-9]+) kb$')
+pat_search_overall_time = re.compile('^Overall Time: ([0-9.]+)$')
+pat_translate_time = re.compile('^Translate Time: ([0-9.]+)$')
+pat_search_time = re.compile('^Search Time: ([0-9.]+)$')
+pat_validate_time = re.compile('^Validate Time: ([0-9.]+)$')
+pat_overall_time = re.compile('^Overall Time: ([0-9.]+)$')
+pat_search_abort_time = re.compile('^.*Abort: Exceeded max-time.*$')
+pat_search_abort_mem = re.compile('^.*Abort: Exceeded max-mem.*$')
+
+def strToBool(s):
+    return bool(int(s))
+
+def matchSet(match, d, key, conv = None):
+    if match is None:
+        return
+
+    val = match.group(1)
+    if conv is not None:
+        val = conv(val)
+
+    if type(d[key]) is list:
+        d[key].append(val)
+    else:
+        d[key] = val
+
+def matchLineInt(line, pat, d, key):
+    matchSet(pat.match(line), d, key, int)
+def matchLineFloat(line, pat, d, key):
+    matchSet(pat.match(line), d, key, float)
+def matchLineBool(line, pat, d, key):
+    matchSet(pat.match(line), d, key, strToBool)
+def matchLine(line, pat, d, key):
+    matchSet(pat.match(line), d, key)
+
+def parseSearchOut(dir, d):
+    path = os.path.join(dir, 'search.out')
+    if not os.path.isfile(path):
+        d['aborted'] = True
+        return
+
+    with open(path, 'r') as fin:
+        for line in fin:
+            line = line.rstrip()
+            matchLineBool(line, pat_ma, d, 'ma')
+            matchLineInt(line, pat_max_time, d, 'max-time')
+            matchLineInt(line, pat_max_mem, d, 'max-mem')
+            matchLine(line, pat_heur, d, 'heur')
+            matchLine(line, pat_search_alg, d, 'search-alg')
+            matchLineInt(line, pat_num_vars, d, 'num-variables')
+            matchLineInt(line, pat_num_ops, d, 'num-operators')
+            matchLineInt(line, pat_bytes_per_state, d, 'bytes-per-state')
+            matchLineInt(line, pat_num_agents, d, 'ma-agents')
+            if line == 'Solution found.':
+                d['found'] = True
+            matchLineInt(line, pat_plan_cost, d, 'plan-cost')
+            matchLineInt(line, pat_init_state_heur, d, 'init-state-heur')
+            matchLineFloat(line, pat_search_search_time, d, 'search-search-time')
+            matchLineInt(line, pat_evaluated_states, d, 'evaluated-states')
+            matchLineInt(line, pat_expanded_states, d, 'expanded-states')
+            matchLineInt(line, pat_generated_states, d, 'generated-states')
+            matchLineInt(line, pat_peak_mem, d, 'peak-mem')
+            matchLineFloat(line, pat_search_overall_time, d, 'search-overall-time')
+
+def parseSearchErr(dir, d):
+    path = os.path.join(dir, 'search.err')
+    if not os.path.isfile(path):
+        d['aborted'] = True
+        return
+
+    with open(path, 'r') as fin:
+        for line in fin:
+            line = line.rstrip()
+            if line.startswith('Aborting due to exceeded hard time limit') \
+                or pat_search_abort_time.match(line) is not None:
+                d['search-abort-time'] = True;
+                d['aborted'] = True
+            if line.startswith('Aborting due to exceeded hard mem limit') \
+                or pat_search_abort_mem.match(line) is not None:
+                d['search-abort-mem'] = True
+                d['aborted'] = True
+
+def parseStderr(dir, d):
+    path = os.path.join(dir, 'stderr')
+    if not os.path.isfile(path):
+        d['aborted'] = True
+        return
+
+    with open(path, 'r') as fin:
+        for line in fin:
+            line = line.rstrip()
+            if line == 'TIMEOUT':
+                d['timeout'] = True
+
+def parseStdout(dir, d):
+    path = os.path.join(dir, 'stdout')
+    if not os.path.isfile(path):
+        d['aborted'] = True
+        return
+
+    with open(path, 'r') as fin:
+        for line in fin:
+            line = line.rstrip()
+            matchLineFloat(line, pat_translate_time, d, 'translate-time')
+            matchLineFloat(line, pat_search_time, d, 'search-time')
+            matchLineFloat(line, pat_validate_time, d, 'validate-time')
+            matchLineFloat(line, pat_overall_time, d, 'overall-time')
+
+def parseValidate(dir, d):
+    path = os.path.join(dir, 'validate.out')
+    if not os.path.isfile(path):
+        d['aborted'] = True
+        return
+
+    with open(path, 'r') as fin:
+        for line in fin:
+            line = line.rstrip()
+            if line == 'Successful plans:':
+                d['valid-plan'] = True
+
+def parseDone(dir, d):
+    path = os.path.join(dir, 'done')
+    if os.path.isfile(path):
+        d['done'] = True
+    else:
+        d['done'] = False
+
+def parseProb(dir, task_i, domain, problem, repeat):
+    d = { 'id' : task_i,
+          'domain' : domain,
+          'problem' : problem,
+          'repeat' : repeat,
+
+          'ma' : False,
+          'max-time' : -1,
+          'max-mem' : -1,
+          'heur' : '',
+          'search-alg' : '',
+          'num-variables' : -1,
+          'num-operators' : -1,
+          'bytes-per-state' : -1,
+          'ma-agents' : -1,
+          'found' : False,
+          'plan-cost' : -1,
+          'init-state-heur' : [],
+          'evaluated-states' : [],
+          'expanded-states' : [],
+          'generated-states' : [],
+          'search-search-time' : [],
+          'search-overall-time' : -1,
+          'search-abort-time' : False,
+          'search-abort-mem' : False,
+          'peak-mem' : [],
+
+          'translate-time' : -1,
+          'search-time' : -1,
+          'validate-time' : -1,
+          'overall-time' : -1,
+          'timeout' : False,
+          'valid-plan' : False,
+
+          'aborted' : False,
+          'done' : False,
+        }
+
+    parseSearchOut(dir, d)
+    parseSearchErr(dir, d)
+    parseStderr(dir, d)
+    parseStdout(dir, d)
+    parseValidate(dir, d)
+    parseDone(dir, d)
+
+    return d
+
+def csvCell(val):
+    if type(val) is list:
+        val = [str(x) for x in val]
+        return ';'.join(val)
+    return val
+
+def csvRow(d, keys):
+    return [csvCell(d[key]) for key in keys]
+
+def writeCSVRaw(data, fn):
+    header = [ 'id', 'domain', 'problem', 'repeat',
+               'ma', 'max-time', 'max-mem', 'heur', 'search-alg',
+               'num-variables', 'num-operators', 'bytes-per-state',
+               'ma-agents', 'found', 'plan-cost', 'init-state-heur',
+               'evaluated-states', 'expanded-states',
+               'generated-states', 'search-search-time',
+               'search-overall-time', 'search-abort-time',
+               'search-abort-mem', 'peak-mem',
+
+               'translate-time', 'search-time', 'validate-time',
+               'overall-time', 'timeout', 'valid-plan',
+
+               'aborted', 'done' ]
+
+    with open(fn, 'w') as fout:
+        writer = csv.writer(fout, delimiter = ',')
+        writer.writerow(header)
+        for d in data:
+            row = csvRow(d, header)
+            writer.writerow(row)
+
+pat_prob_dir = re.compile('^([0-9]+)-([^:]+):([^:]+):([0-9]+)$')
+def mainResults(args):
+    bench_dir = args.bench_dir
+    problem_dirs = sorted(os.listdir(bench_dir))
+    data = []
+    for d in problem_dirs:
+        match = pat_prob_dir.match(d)
+        if match is None:
+            continue
+
+        dir = os.path.join(bench_dir, d)
+        task_i = toInt(match.group(1))
+        domain = match.group(2)
+        problem = match.group(3)
+        repeat = toInt(match.group(4))
+        data.append(parseProb(dir, task_i, domain, problem, repeat))
+
+    print('Writing raw data to `results.pickle\'...')
+    with open('results.pickle', 'wb') as fout:
+        pickle.dump(data, fout)
+    print('Writing raw data to `results.csv\'')
+    writeCSVRaw(data, 'results.csv')
+
+### RESULTS END ###
 
 
 BENCHMARKS = {
@@ -796,6 +1072,29 @@ BENCHMARKS = {
                          'pfile3', 'pfile4', 'pfile5', 'pfile6', 'pfile7',
                          'pfile8', 'pfile9', ]
         },
+
+    ],
+
+    'test' : [
+        { 'domain' : 'depot',
+          'problems' : [ 'pfile1', 'pfile2' ],
+        },
+
+        { 'domain' : 'driverlog',
+          'problems' : [ 'pfile1', 'pfile2' ],
+        },
+
+        { 'domain' : 'test',
+          'problems' : [ 'pfile' ],
+        },
+
+        { 'domain' : 'mablocks',
+          'problems' : [ '5-15-3' ],
+        },
+
+        { 'domain' : 'blocksworld',
+          'problems' : [ 'probBLOCKS-10-0' ],
+        },
     ],
 }
 
@@ -820,12 +1119,12 @@ if __name__ == '__main__':
 
     subparsers = parser.add_subparsers(dest = 'command')
 
-    parser_bench = subparsers.add_parser('plan')
+    parser_bench = subparsers.add_parser('create')
     parser_bench.add_argument('-r', '--repeats', dest = 'repeats', type = int,
                               default = 5)
     parser_bench.add_argument('-n', '--name', dest = 'name', type = str,
                               required = True)
-    parser_bench.add_argument('-b', '--bench-name', dest = 'bench_name',
+    parser_bench.add_argument('-b', '--bench-set', dest = 'bench_set',
                               type = str, required = True)
     parser_bench.add_argument('--ma', action = 'store_const', const = True,
                               dest = 'ma', default = False)
@@ -842,14 +1141,18 @@ if __name__ == '__main__':
 
     parser_bench = subparsers.add_parser('qsub')
     parser_bench.add_argument('bench_data')
-    parser_bench.add_argument('-r', dest = 'resources', required = True)
+    parser_bench.add_argument('-c', '--cluster', dest = 'cluster',
+                              choices = ('luna', 'zapat'), required = True)
 
     parser_results = subparsers.add_parser('results')
+    parser_results.add_argument('bench_dir')
 
     args = parser.parse_args()
 
-    if args.command == 'plan':
+    if args.command == 'create':
         sys.exit(mainPlan(args))
     elif args.command == 'qsub':
         sys.exit(mainQSub(args))
+    elif args.command == 'results':
+        sys.exit(mainResults(args))
 

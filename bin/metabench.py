@@ -455,6 +455,7 @@ def mainQSub(args):
         ppn = 1
         if task['problem']['ma']:
             ppn = task['problem']['ma-agents'] + 1
+        ppn = min(ppn, 16)
 
         qargs = ['qsub']
         qargs += ['-l', 'nodes={0}:ppn={1}:{2}'.format(nodes, ppn, args.resources)]

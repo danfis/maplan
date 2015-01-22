@@ -26,8 +26,6 @@ struct _ma_th_t {
 };
 typedef struct _ma_th_t ma_th_t;
 
-static int aborted = 0;
-
 static struct {
     int initialized;
     pthread_t th;
@@ -44,15 +42,21 @@ static struct {
 
 static void limitMonitorAbort(void)
 {
-    int i;
+    int i, aborted = 0;
 
     pthread_mutex_lock(&limit_monitor.lock);
-    if (limit_monitor.search)
+    if (limit_monitor.search){
         planSearchAbort(limit_monitor.search);
-    for (i = 0; i < limit_monitor.ma_search_size; ++i)
+        aborted = 1;
+    }
+    for (i = 0; i < limit_monitor.ma_search_size; ++i){
         planMASearchAbort(limit_monitor.ma_search[i]);
-    aborted = 1;
+        aborted = 1;
+    }
     pthread_mutex_unlock(&limit_monitor.lock);
+
+    if (!aborted)
+        exit(-1);
 }
 
 static void *limitMonitorTh(void *_)
@@ -421,13 +425,9 @@ static int singleThread(const options_t *o)
         printProblem(prob);
         printf("\n");
     }
-    if (aborted)
-        return 0;
 
     // Create heuristic function
     heur = heurNew(o, prob);
-    if (aborted)
-        return 0;
 
     // Create search algorithm
     progress_data.max_time = o->max_time;
@@ -492,13 +492,8 @@ static int multiAgent2(const options_t *o, plan_problem_agents_t *prob)
         th[i].progress_data.agent_id = i;
 
         heur = heurNewMA(o, prob, i);
-        if (aborted)
-            return 0;
-
         th[i].search = searchNew(o, prob->agent + i, heur,
                                  &th[i].progress_data);
-        if (aborted)
-            return 0;
 
         planPathInit(&th[i].path);
         th[i].comm = planMACommInprocNew(i, prob->agent_size);

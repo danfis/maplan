@@ -72,6 +72,7 @@ static void *limitMonitorTh(void *_)
             fprintf(stderr, "Aborting due to exceeded hard time limit"
                             " (elapsed %f, limit: %d.\n",
                     elapsed, limit_monitor.max_time);
+            fflush(stderr);
             limitMonitorAbort();
             break;
         }
@@ -82,6 +83,7 @@ static void *limitMonitorTh(void *_)
                 fprintf(stderr, "Aborting due to exceeded hard mem limit"
                                 " (peak-mem: %d, limit: %d).\n",
                         peak_mem, limit_monitor.max_mem);
+                fflush(stderr);
                 limitMonitorAbort();
                 break;
             }
@@ -148,15 +150,18 @@ static int progress(const plan_search_stat_t *stat, void *data)
             stat->steps, stat->evaluated_states, stat->expanded_states,
             stat->generated_states,
             stat->found);
+    fflush(stderr);
 
     if (p->max_time > 0 && stat->elapsed_time > p->max_time){
         fprintf(stderr, "%02d:: Abort: Exceeded max-time.\n", p->agent_id);
+        fflush(stderr);
         printf("Abort: Exceeded max-time.\n");
         return PLAN_SEARCH_ABORT;
     }
 
     if (p->max_mem > 0 && stat->peak_memory > p->max_mem){
         fprintf(stderr, "%02d:: Abort: Exceeded max-mem.\n", p->agent_id);
+        fflush(stderr);
         printf("Abort: Exceeded max-mem.\n");
         return PLAN_SEARCH_ABORT;
     }
@@ -172,6 +177,7 @@ static void printProblem(const plan_problem_t *prob)
            planStatePackerBufSize(prob->state_pool->packer));
     printf("Size of state id: %d\n", (int)sizeof(plan_state_id_t));
     printf("Duplicate operators removed: %d\n", prob->duplicate_ops_removed);
+    fflush(stdout);
 }
 
 static void printProblemMA(const plan_problem_agents_t *prob)
@@ -186,6 +192,7 @@ static void printProblemMA(const plan_problem_agents_t *prob)
         printf("    num operators: %d\n", prob->agent[i].op_size);
         printf("    projected operators: %d\n", prob->agent[i].proj_op_size);
     }
+    fflush(stdout);
 }
 
 static void printStat(const plan_search_stat_t *stat, const char *prefix)
@@ -226,6 +233,7 @@ static void printResults(const options_t *o, int res, plan_path_t *path)
     }else if (res == PLAN_SEARCH_ABORT){
         printf("Search Aborted.\n");
     }
+    fflush(stdout);
 }
 
 static void printInitHeur(const options_t *o, plan_search_t *search)
@@ -233,6 +241,7 @@ static void printInitHeur(const options_t *o, plan_search_t *search)
     if (o->print_heur_init){
         printf("Init State Heur: %d\n",
                 (int)planSearchStateHeur(search, search->initial_state));
+        fflush(stdout);
     }
 }
 
@@ -242,6 +251,7 @@ static void printInitHeurMA(const options_t *o, plan_search_t *search,
     if (o->print_heur_init){
         printf("%02d:: Init State Heur: %d\n", agent_id,
                 (int)planSearchStateHeur(search, search->initial_state));
+        fflush(stdout);
     }
 }
 
@@ -435,6 +445,7 @@ static int singleThread(const options_t *o)
     printInitHeur(o, search);
     printf("\n");
     printStat(&search->stat, "");
+    fflush(stdout);
 
     planPathFree(&path);
     planSearchDel(search);

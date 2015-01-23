@@ -19,7 +19,7 @@ LDFLAGS += -lstdc++
 CHECK_REG=cu/check-regressions
 CHECK_TS ?=
 
-TARGETS = test
+TARGETS = test optimal-cost
 
 OBJS  = load-from-file.o
 OBJS += state.o
@@ -45,6 +45,8 @@ test: main.c cu $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $< $(OBJS) $(LDFLAGS)
 search: search.c ../libplan.a
 	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS) -L../../opts -lopts
+optimal-cost: optimal-cost.c state_pool.c
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<

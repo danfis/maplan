@@ -590,7 +590,7 @@ static int tracePathInit(const plan_search_t *search,
 
     planPathInit(&path);
     init_state = planSearchExtractPath(search, goal_state, &path);
-    if (init_state == 0){
+    if (init_state == search->initial_state){
         planPathCopy(path_out, &path);
         planPathFree(&path);
         return 0;

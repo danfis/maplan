@@ -544,6 +544,8 @@ class TaskSearchFD(object):
         self.stderr = task['search']['stderr']
         self.pipe = None
         self.infile = task['sas']
+        self.plan_fn = task['search']['plan']
+        self.scratchdir = task['scratchdir']
 
         self.timeout = task['search']['max_time']
 
@@ -562,6 +564,8 @@ class TaskSearchFD(object):
         end_time = time.time()
         overall_time = end_time - start_time
         print('Search Time: {0}'.format(overall_time))
+
+        _cpy('{0}/sas_plan'.format(self.scratchdir), self.plan_fn)
 
         abort_timeout.cancel()
 
@@ -652,6 +656,8 @@ def mainTask():
     print 'Scratch Task:'
     pprint(scratch)
     print
+
+    os.chdir(scratch['scratchdir'])
 
     if 'fast-downward' in task and task['fast-downward']:
         translate = TaskTranslateSAS(scratch)

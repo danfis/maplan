@@ -745,19 +745,29 @@ pat_max_mem = re.compile('^Max mem: ([0-9]+) MB$')
 pat_heur = re.compile('^Heur: (.+)$')
 pat_search_alg = re.compile('^Search: (.+)$')
 pat_num_vars = re.compile('^Num variables: ([0-9]+)$')
+pat_num_vars_fd = re.compile('^Variables: ([0-9]+)$')
 pat_num_ops = re.compile('^Num operators: ([0-9]+)$')
 pat_bytes_per_state = re.compile('^Bytes per state: ([0-9]+)$')
 pat_num_agents = re.compile('^Num agents: ([0-9]+)$')
 pat_plan_cost = re.compile('^Path Cost: ([0-9]+)$')
+pat_plan_cost_fd = re.compile('^Plan cost: ([0-9]+)$')
 pat_init_state_heur = re.compile('^.*Init State Heur: ([0-9]+)$')
+pat_init_state_heur_fd = re.compile('^Initial state h value: ([0-9]+)\.$')
 pat_search_search_time = re.compile('^ *Search Time: ([0-9.]+)$')
+pat_search_search_time_fd = re.compile('^Search time: ([0-9.]+)s$')
 pat_evaluated_states = re.compile('^ *Evaluated States: ([0-9]+)$')
 pat_expanded_states = re.compile('^ *Expanded States: ([0-9]+)$')
 pat_generated_states = re.compile('^ *Generated States: ([0-9]+)$')
+pat_evaluated_states_fd = re.compile('^Evaluated ([0-9]+) state.*$')
+pat_expanded_states_fd = re.compile('^Expanded ([0-9]+) state.*$')
+pat_generated_states_fd = re.compile('^Generated ([0-9]+) state.*$')
 pat_peak_mem = re.compile('^ *Peak Memory: ([0-9]+) kb$')
+pat_peak_mem_fd = re.compile('^Peak memory: ([0-9]+) KB$')
 pat_search_overall_time = re.compile('^Overall Time: ([0-9.]+)$')
+pat_search_overall_time_fd = re.compile('^Total time: ([0-9.]+)s$')
 pat_translate_time = re.compile('^Translate Time: ([0-9.]+)$')
 pat_search_time = re.compile('^Search Time: ([0-9.]+)$')
+pat_preprocess_time = re.compile('^Preprocess Time: ([0-9.]+)$')
 pat_validate_time = re.compile('^Validate Time: ([0-9.]+)$')
 pat_overall_time = re.compile('^Overall Time: ([0-9.]+)$')
 pat_search_abort_time = re.compile('^.*Abort: Exceeded max-time.*$')
@@ -835,6 +845,33 @@ def parseSearchErr(dir, d):
                 d['search-abort-mem'] = True
                 d['aborted'] = True
 
+def parseSearchFDOut(dir, d):
+    path = os.path.join(dir, 'search.out')
+    if not os.path.isfile(path):
+        d['aborted'] = True
+        return
+
+    with open(path, 'r') as fin:
+        for line in fin:
+            line = line.rstrip()
+
+            matchLineInt(line, pat_num_vars_fd, d, 'num-variables')
+            matchLineInt(line, pat_bytes_per_state, d, 'bytes-per-state')
+            if line == 'Solution found.':
+                d['found'] = True
+            matchLineInt(line, pat_plan_cost_fd, d, 'plan-cost')
+            matchLineInt(line, pat_init_state_heur_fd, d, 'init-state-heur')
+            matchLineFloat(line, pat_search_search_time_fd, d, 'search-search-time')
+            matchLineInt(line, pat_evaluated_states_fd, d, 'evaluated-states')
+            matchLineInt(line, pat_expanded_states_fd, d, 'expanded-states')
+            matchLineInt(line, pat_generated_states_fd, d, 'generated-states')
+            matchLineInt(line, pat_peak_mem_fd, d, 'peak-mem')
+            matchLineFloat(line, pat_search_overall_time_fd, d, 'search-overall-time')
+
+    for i in range(len(d['peak-mem'])):
+        if d['peak-mem'][i] > 0:
+            d['peak-mem'][i] /= 1024
+
 def parseStderr(dir, d):
     path = os.path.join(dir, 'stderr')
     if not os.path.isfile(path):
@@ -858,6 +895,7 @@ def parseStdout(dir, d):
             line = line.rstrip()
             matchLineFloat(line, pat_translate_time, d, 'translate-time')
             matchLineFloat(line, pat_search_time, d, 'search-time')
+            matchLineFloat(line, pat_preprocess_time, d, 'preprocess-time')
             matchLineFloat(line, pat_validate_time, d, 'validate-time')
             matchLineFloat(line, pat_overall_time, d, 'overall-time')
 
@@ -909,6 +947,7 @@ def parseProb(dir, task_i, domain, problem, repeat, type):
 
           'translate-time' : -1,
           'search-time' : -1,
+          'preprocess-time' : -1,
           'validate-time' : -1,
           'overall-time' : -1,
           'timeout' : False,
@@ -922,7 +961,7 @@ def parseProb(dir, task_i, domain, problem, repeat, type):
         parseSearchOut(dir, d)
         parseSearchErr(dir, d)
     elif type == 'fd':
-        pass
+        parseSearchFDOut(dir, d)
 
     parseStderr(dir, d)
     parseStdout(dir, d)
@@ -950,8 +989,8 @@ def writeCSVRaw(data, fn):
                'search-overall-time', 'search-abort-time',
                'search-abort-mem', 'peak-mem',
 
-               'translate-time', 'search-time', 'validate-time',
-               'overall-time', 'timeout', 'valid-plan',
+               'translate-time', 'search-time', 'preprocess-time',
+               'validate-time', 'overall-time', 'timeout', 'valid-plan',
 
                'aborted', 'done' ]
 
@@ -965,6 +1004,8 @@ def writeCSVRaw(data, fn):
 pat_prob_dir = re.compile('^([0-9]+)-([^:]+):([^:]+):([0-9]+)$')
 def _mainResults(args, type = 'libplan'):
     bench_dir = args.bench_dir
+    tasks = pickle.load(open(os.path.join(bench_dir, 'bench.pickle'), 'r'))
+    tasks = tasks['tasks']
     problem_dirs = sorted(os.listdir(bench_dir))
     data = []
     for d in problem_dirs:
@@ -978,6 +1019,11 @@ def _mainResults(args, type = 'libplan'):
         problem = match.group(3)
         repeat = toInt(match.group(4))
         d = parseProb(dir, task_i, domain, problem, repeat, type)
+        if type == 'fd':
+            d['max-time'] = tasks[task_i]['search']['max_time']
+            d['max-mem'] = tasks[task_i]['search']['max_mem']
+            d['search-alg'] = tasks[task_i]['search']['opts'][1]
+
         data.append(d)
 
     print('Writing raw data to `results.pickle\'...')

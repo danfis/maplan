@@ -19,6 +19,8 @@ TRANSLATE = '/home/danfis/dev/libplan/third-party/translate/translate.py'
 VALIDATE = '/home/danfis/dev/libplan/third-party/VAL/validate'
 BENCHMARKS_DIR = '/home/danfis/dev/plan-data/benchmarks'
 SEARCH_REPO = 'git@gitlab.fel.cvut.cz:fiserdan/libplan.git'
+FD_REPO = 'https://github.com/danfis/fast-downward'
+#FD_REPO = '/home/danfis/dev/fast-downward.mirror'
 
 def abspath(path):
     abspath = os.path.abspath(path)
@@ -136,6 +138,33 @@ def planLoadProblems(args):
 
     return problems
 
+def copyDataToDir(root, problems_in):
+    problems = []
+    for problem in problems_in:
+        d = copy.copy(problem)
+        d['dir'] = os.path.join(root, problem['dir'])
+        d['domain_pddl'] = os.path.basename(problem['domain_pddl'])
+        d['domain_pddl'] = os.path.join(d['dir'], d['domain_pddl'])
+        d['pddl'] = os.path.basename(problem['pddl'])
+        d['pddl'] = os.path.join(d['dir'], d['pddl'])
+        if d['addl']:
+            d['addl'] = os.path.basename(problem['addl'])
+            d['addl'] = os.path.join(d['dir'], d['addl'])
+        if d['proto']:
+            d['proto'] = os.path.basename(problem['proto'])
+            d['proto'] = os.path.join(d['dir'], d['proto'])
+
+        os.mkdir(d['dir'])
+        shutil.copy(problem['domain_pddl'], d['domain_pddl'])
+        shutil.copy(problem['pddl'], d['pddl'])
+        if d['addl']:
+            shutil.copy(problem['addl'], d['addl'])
+        if d['proto']:
+            shutil.copy(problem['proto'], d['proto'])
+
+        problems.append(d)
+    return problems
+
 def planCloneRepo(args, bench_root):
     root = os.path.join(bench_root, 'repo')
     runCmd('git clone {0} {1}'.format(SEARCH_REPO, root))
@@ -171,31 +200,7 @@ def planPrepareDisk(args, problems_in):
     if len(args.branch) > 0:
         planCloneRepo(args, root)
 
-    problems = []
-    for problem in problems_in:
-        d = copy.copy(problem)
-        d['dir'] = os.path.join(root, problem['dir'])
-        d['domain_pddl'] = os.path.basename(problem['domain_pddl'])
-        d['domain_pddl'] = os.path.join(d['dir'], d['domain_pddl'])
-        d['pddl'] = os.path.basename(problem['pddl'])
-        d['pddl'] = os.path.join(d['dir'], d['pddl'])
-        if d['addl']:
-            d['addl'] = os.path.basename(problem['addl'])
-            d['addl'] = os.path.join(d['dir'], d['addl'])
-        if d['proto']:
-            d['proto'] = os.path.basename(problem['proto'])
-            d['proto'] = os.path.join(d['dir'], d['proto'])
-
-        os.mkdir(d['dir'])
-        shutil.copy(problem['domain_pddl'], d['domain_pddl'])
-        shutil.copy(problem['pddl'], d['pddl'])
-        if d['addl']:
-            shutil.copy(problem['addl'], d['addl'])
-        if d['proto']:
-            shutil.copy(problem['proto'], d['proto'])
-
-        problems.append(d)
-    return problems
+    return copyDataToDir(root, problems_in)
 
 def planTasks(args, problems):
     search_opts = [ '-s', args.search_alg,
@@ -213,6 +218,7 @@ def planTasks(args, problems):
               'bin'    : os.path.join(problem['dir'], 'search'),
               'opts'   : search_opts,
               'max_time' : args.max_time,
+              'max_mem' : args.max_mem,
             }
         shutil.copy(args.search_bin, s['bin'])
 
@@ -272,6 +278,129 @@ def mainPlan(args):
     return 0
 ### PLAN END ###
 
+
+### CREATE-FD ###
+
+def createFDCloneRepo(args, bench_root):
+    root = os.path.join(bench_root, 'repo')
+    runCmd('git clone {0} {1}'.format(FD_REPO, root))
+    runCmd('cd {0} && git checkout -b bench origin/{1}'.format(root, args.branch))
+    runCmd('sed -i "s|CXXFLAGS =|CXXFLAGS = -march=corei7|" {0}/src/preprocess/Makefile'.format(root))
+    runCmd('sed -i "s|CXXFLAGS =|CXXFLAGS = -march=corei7|" {0}/src/search/Makefile'.format(root))
+    runCmd('cd {0} && DOWNWARD_BITWIDTH=64 make -C src/preprocess'.format(root))
+    runCmd('cd {0} && DOWNWARD_BITWIDTH=64 make -C src/search'.format(root))
+    runCmd('cd {0} && make -C src/VAL'.format(root))
+
+    args.search_bin = os.path.join(root, 'src/search/downward-release')
+    if not os.path.isfile(args.search_bin):
+        print('Error: Could not find `{0}\''.format(args.search_bin))
+        sys.exit(-1)
+
+    args.preprocess_bin = os.path.join(root, 'src/preprocess/preprocess')
+    if not os.path.isfile(args.preprocess_bin):
+        print('Error: Could not find `{0}\''.format(args.preprocess_bin))
+        sys.exit(-1)
+
+    args.validate_bin = os.path.join(root, 'src/VAL/validate')
+    if not os.path.isfile(args.validate_bin):
+        print('Error: Could not find `{0}\''.format(args.validate_bin))
+        sys.exit(-1)
+
+    args.translate = os.path.join(root, 'src/translate/translate.py')
+    if not os.path.isfile(args.translate):
+        print('Error: Could not find `{0}\''.format(args.translate))
+        sys.exit(-1)
+
+def createFDPrepareDisk(args, problems_in):
+    root = os.path.join(abspath('.'), args.name)
+    os.mkdir(root)
+
+    if len(args.branch) > 0:
+        createFDCloneRepo(args, root)
+
+    return copyDataToDir(root, problems_in)
+
+def createFDTasks(args, problems):
+    search_opts = [ '--search', args.search_alg,
+                  ]
+              
+    tasks = []
+    for problem in problems:
+        s = { 'plan'   : os.path.join(problem['dir'], 'search.plan'),
+              'stdout' : os.path.join(problem['dir'], 'search.out'),
+              'stderr' : os.path.join(problem['dir'], 'search.err'),
+              'bin'    : args.search_bin,
+              'opts'   : search_opts,
+              'max_time' : args.max_time,
+              'max_mem' : args.max_mem,
+            }
+
+        problem['sas'] = os.path.join(problem['dir'], 'problem.sas')
+        d = { 'fast-downward' : True,
+              'problem' : problem,
+              'search'  : s,
+              'validate' : { 'bin' : args.validate_bin,
+                             'stdout' : os.path.join(problem['dir'], 'validate.out'),
+                             'stderr' : os.path.join(problem['dir'], 'validate.err'),
+                           },
+              'preprocess' : { 'bin' : args.preprocess_bin,
+                               'stdout' : os.path.join(problem['dir'], 'preprocess.out'),
+                               'stderr' : os.path.join(problem['dir'], 'preprocess.err'),
+                             },
+              'translate' : { 'bin' : args.translate,
+                              'stdout' : os.path.join(problem['dir'], 'translate.out'),
+                              'stderr' : os.path.join(problem['dir'], 'translate.err'),
+                            },
+              'stdout'  : os.path.join(problem['dir'], 'stdout'),
+              'stderr'  : os.path.join(problem['dir'], 'stderr'),
+              'done'    : os.path.join(problem['dir'], 'done'),
+              'python'  : args.python_bin,
+              'python_path' : args.python_path,
+
+              # Add 12 minutes for translate and validate
+              'max_time' : args.max_time + (12 * 60),
+              # Add half GB slack
+              'max_mem' : args.max_mem + 512,
+            }
+        tasks.append(d)
+    return tasks
+
+def mainCreateFD(args):
+    args.ma = False
+    args.heur = ''
+
+    if not planCheckResources(args):
+        return -1
+
+    print('Loading problems...')
+    problems = planLoadProblems(args)
+    if problems is None:
+        return -1
+
+    print('Preparing disk data...')
+    problems = createFDPrepareDisk(args, problems)
+    if problems is None:
+        return -1
+
+    print('Preparing tasks...')
+    tasks = createFDTasks(args, problems)
+    if tasks is None:
+        return -1
+
+    bench = { 'name' : args.name,
+              'dir'  : abspath(args.name),
+              'argv' : sys.argv,
+              'tasks' : tasks,
+            }
+
+    bench_fn = os.path.join(bench['dir'], 'bench.pickle')
+    with open(bench_fn, 'w') as fout:
+        pickle.dump(bench, fout)
+    print('Benchmark plan saved to `{0}\''.format(bench_fn))
+    return 0
+
+### CREATE-FD END ###
+
 ### TASK ###
 def taskToScratch(task):
     scratch = copy.deepcopy(task)
@@ -296,6 +425,10 @@ def taskToScratch(task):
     scratch['translate']['stdout'] = os.path.join(scratchdir, 'translate.out')
     scratch['translate']['stderr'] = os.path.join(scratchdir, 'translate.err')
 
+    if 'preprocess' in scratch:
+        scratch['preprocess']['stdout'] = os.path.join(scratchdir, 'preprocess.out')
+        scratch['preprocess']['stderr'] = os.path.join(scratchdir, 'preprocess.err')
+
     for key in ['domain_pddl', 'pddl', 'addl', 'proto']:
         if task['problem'][key] is None:
             continue
@@ -304,6 +437,8 @@ def taskToScratch(task):
 
     scratch['proto'] = os.path.join(scratchdir, 'proto')
     task['scratch_proto'] = scratch['proto']
+    scratch['sas'] = os.path.join(scratchdir, 'sas')
+    scratch['tr-sas'] = os.path.join(scratchdir, 'tr-sas')
     return scratch
 
 def _cpy(src, dst):
@@ -318,6 +453,8 @@ def scratchToTask(scratch, task):
     _cpy(scratch['validate']['stdout'], task['validate']['stdout'])
     _cpy(scratch['validate']['stderr'], task['validate']['stderr'])
     _cpy(scratch['proto'], os.path.join(task['problem']['dir'], 'translate.proto'))
+    _cpy(scratch['tr-sas'], os.path.join(task['problem']['dir'], 'translate.sas'))
+    _cpy(scratch['sas'], os.path.join(task['problem']['dir'], 'preprocess.sas'))
 
 def taskDelScratch(scratch):
     os.system('rm -rf {0}/*'.format(scratch['scratchdir']))
@@ -353,6 +490,93 @@ class TaskTranslate(object):
         end_time = time.time()
         overall_time = end_time - start_time
         print('Translate Time: {0}'.format(overall_time))
+
+class TaskTranslateSAS(object):
+    def __init__(self, task):
+        cmd = 'cd {0} && '.format(task['scratchdir'])
+        cmd += task['python']
+        cmd += ' ' + task['translate']['bin']
+        cmd += ' ' + task['problem']['domain_pddl']
+        cmd += ' ' + task['problem']['pddl']
+        cmd += ' >{0}'.format(task['translate']['stdout'])
+        cmd += ' 2>{0}'.format(task['translate']['stderr'])
+        self.translate_cmd = cmd
+
+        cmd = 'cd {0} && '.format(task['scratchdir'])
+        cmd += task['preprocess']['bin']
+        cmd += ' ' + task['problem']['domain_pddl']
+        cmd += ' ' + task['problem']['pddl']
+        cmd += ' <output.sas'
+        cmd += ' >{0}'.format(task['preprocess']['stdout'])
+        cmd += ' 2>{0}'.format(task['preprocess']['stderr'])
+        self.preprocess_cmd = cmd
+
+        self.task_sas = task['sas']
+        self.task_tr_sas = task['tr-sas']
+        self.scratchdir = task['scratchdir']
+
+    def run(self):
+        start_time = time.time()
+        print('CMD: {0}'.format(self.translate_cmd))
+        os.system(self.translate_cmd)
+        end_time = time.time()
+        overall_time = end_time - start_time
+        print('Translate Time: {0}'.format(overall_time))
+
+        shutil.copy('{0}/output.sas'.format(self.scratchdir), self.task_tr_sas)
+
+        start_time = time.time()
+        print('CMD: {0}'.format(self.preprocess_cmd))
+        os.system(self.preprocess_cmd)
+        end_time = time.time()
+        overall_time = end_time - start_time
+        print('Preprocess Time: {0}'.format(overall_time))
+
+        shutil.copy('{0}/output'.format(self.scratchdir), self.task_sas)
+
+class TaskSearchFD(object):
+    def __init__(self, task):
+        args = [task['search']['bin']]
+        args += [str(x) for x in task['search']['opts']]
+
+        self.args = args
+        self.stdout = task['search']['stdout']
+        self.stderr = task['search']['stderr']
+        self.pipe = None
+        self.infile = task['sas']
+        self.plan_fn = task['search']['plan']
+        self.scratchdir = task['scratchdir']
+
+        self.timeout = task['search']['max_time']
+
+    def run(self):
+        fout = open(self.stdout, 'w')
+        ferr = open(self.stderr, 'w')
+
+        abort_timeout = threading.Timer(self.timeout, self.abort)
+        abort_timeout.start()
+
+        start_time = time.time()
+        print('CMD: {0}'.format(' '.join(self.args)))
+        with open(self.infile, 'r') as fin:
+            self.pipe = subprocess.Popen(self.args, stdin = fin, stdout = fout, stderr = ferr)
+            self.pipe.wait()
+        end_time = time.time()
+        overall_time = end_time - start_time
+        print('Search Time: {0}'.format(overall_time))
+
+        _cpy('{0}/sas_plan'.format(self.scratchdir), self.plan_fn)
+
+        abort_timeout.cancel()
+
+    def abort(self):
+        if self.pipe is not None:
+            self.pipe.terminate()
+        print >>sys.stderr, 'TIMEOUT'
+        sys.stderr.flush()
+        print('TIMEOUT')
+
+
 
 class TaskSearch(object):
     def __init__(self, task):
@@ -433,13 +657,24 @@ def mainTask():
     pprint(scratch)
     print
 
-    translate = TaskTranslate(scratch)
-    search = TaskSearch(scratch)
-    validate = TaskValidate(scratch)
+    os.chdir(scratch['scratchdir'])
 
-    translate.run()
-    search.run()
-    validate.run()
+    if 'fast-downward' in task and task['fast-downward']:
+        translate = TaskTranslateSAS(scratch)
+        search = TaskSearchFD(scratch)
+        validate = TaskValidate(scratch)
+
+        translate.run()
+        search.run()
+        validate.run()
+    else:
+        translate = TaskTranslate(scratch)
+        search = TaskSearch(scratch)
+        validate = TaskValidate(scratch)
+
+        translate.run()
+        search.run()
+        validate.run()
 
     scratchToTask(scratch, task)
     taskDelScratch(scratch)
@@ -510,19 +745,29 @@ pat_max_mem = re.compile('^Max mem: ([0-9]+) MB$')
 pat_heur = re.compile('^Heur: (.+)$')
 pat_search_alg = re.compile('^Search: (.+)$')
 pat_num_vars = re.compile('^Num variables: ([0-9]+)$')
+pat_num_vars_fd = re.compile('^Variables: ([0-9]+)$')
 pat_num_ops = re.compile('^Num operators: ([0-9]+)$')
 pat_bytes_per_state = re.compile('^Bytes per state: ([0-9]+)$')
 pat_num_agents = re.compile('^Num agents: ([0-9]+)$')
 pat_plan_cost = re.compile('^Path Cost: ([0-9]+)$')
+pat_plan_cost_fd = re.compile('^Plan cost: ([0-9]+)$')
 pat_init_state_heur = re.compile('^.*Init State Heur: ([0-9]+)$')
+pat_init_state_heur_fd = re.compile('^Initial state h value: ([0-9]+)\.$')
 pat_search_search_time = re.compile('^ *Search Time: ([0-9.]+)$')
+pat_search_search_time_fd = re.compile('^Search time: ([0-9.]+)s$')
 pat_evaluated_states = re.compile('^ *Evaluated States: ([0-9]+)$')
 pat_expanded_states = re.compile('^ *Expanded States: ([0-9]+)$')
 pat_generated_states = re.compile('^ *Generated States: ([0-9]+)$')
+pat_evaluated_states_fd = re.compile('^Evaluated ([0-9]+) state.*$')
+pat_expanded_states_fd = re.compile('^Expanded ([0-9]+) state.*$')
+pat_generated_states_fd = re.compile('^Generated ([0-9]+) state.*$')
 pat_peak_mem = re.compile('^ *Peak Memory: ([0-9]+) kb$')
+pat_peak_mem_fd = re.compile('^Peak memory: ([0-9]+) KB$')
 pat_search_overall_time = re.compile('^Overall Time: ([0-9.]+)$')
+pat_search_overall_time_fd = re.compile('^Total time: ([0-9.]+)s$')
 pat_translate_time = re.compile('^Translate Time: ([0-9.]+)$')
 pat_search_time = re.compile('^Search Time: ([0-9.]+)$')
+pat_preprocess_time = re.compile('^Preprocess Time: ([0-9.]+)$')
 pat_validate_time = re.compile('^Validate Time: ([0-9.]+)$')
 pat_overall_time = re.compile('^Overall Time: ([0-9.]+)$')
 pat_search_abort_time = re.compile('^.*Abort: Exceeded max-time.*$')
@@ -600,6 +845,33 @@ def parseSearchErr(dir, d):
                 d['search-abort-mem'] = True
                 d['aborted'] = True
 
+def parseSearchFDOut(dir, d):
+    path = os.path.join(dir, 'search.out')
+    if not os.path.isfile(path):
+        d['aborted'] = True
+        return
+
+    with open(path, 'r') as fin:
+        for line in fin:
+            line = line.rstrip()
+
+            matchLineInt(line, pat_num_vars_fd, d, 'num-variables')
+            matchLineInt(line, pat_bytes_per_state, d, 'bytes-per-state')
+            if line == 'Solution found.':
+                d['found'] = True
+            matchLineInt(line, pat_plan_cost_fd, d, 'plan-cost')
+            matchLineInt(line, pat_init_state_heur_fd, d, 'init-state-heur')
+            matchLineFloat(line, pat_search_search_time_fd, d, 'search-search-time')
+            matchLineInt(line, pat_evaluated_states_fd, d, 'evaluated-states')
+            matchLineInt(line, pat_expanded_states_fd, d, 'expanded-states')
+            matchLineInt(line, pat_generated_states_fd, d, 'generated-states')
+            matchLineInt(line, pat_peak_mem_fd, d, 'peak-mem')
+            matchLineFloat(line, pat_search_overall_time_fd, d, 'search-overall-time')
+
+    for i in range(len(d['peak-mem'])):
+        if d['peak-mem'][i] > 0:
+            d['peak-mem'][i] /= 1024
+
 def parseStderr(dir, d):
     path = os.path.join(dir, 'stderr')
     if not os.path.isfile(path):
@@ -623,6 +895,7 @@ def parseStdout(dir, d):
             line = line.rstrip()
             matchLineFloat(line, pat_translate_time, d, 'translate-time')
             matchLineFloat(line, pat_search_time, d, 'search-time')
+            matchLineFloat(line, pat_preprocess_time, d, 'preprocess-time')
             matchLineFloat(line, pat_validate_time, d, 'validate-time')
             matchLineFloat(line, pat_overall_time, d, 'overall-time')
 
@@ -645,7 +918,7 @@ def parseDone(dir, d):
     else:
         d['done'] = False
 
-def parseProb(dir, task_i, domain, problem, repeat):
+def parseProb(dir, task_i, domain, problem, repeat, type):
     d = { 'id' : task_i,
           'domain' : domain,
           'problem' : problem,
@@ -674,6 +947,7 @@ def parseProb(dir, task_i, domain, problem, repeat):
 
           'translate-time' : -1,
           'search-time' : -1,
+          'preprocess-time' : -1,
           'validate-time' : -1,
           'overall-time' : -1,
           'timeout' : False,
@@ -683,8 +957,12 @@ def parseProb(dir, task_i, domain, problem, repeat):
           'done' : False,
         }
 
-    parseSearchOut(dir, d)
-    parseSearchErr(dir, d)
+    if type == 'libplan':
+        parseSearchOut(dir, d)
+        parseSearchErr(dir, d)
+    elif type == 'fd':
+        parseSearchFDOut(dir, d)
+
     parseStderr(dir, d)
     parseStdout(dir, d)
     parseValidate(dir, d)
@@ -711,8 +989,8 @@ def writeCSVRaw(data, fn):
                'search-overall-time', 'search-abort-time',
                'search-abort-mem', 'peak-mem',
 
-               'translate-time', 'search-time', 'validate-time',
-               'overall-time', 'timeout', 'valid-plan',
+               'translate-time', 'search-time', 'preprocess-time',
+               'validate-time', 'overall-time', 'timeout', 'valid-plan',
 
                'aborted', 'done' ]
 
@@ -724,8 +1002,10 @@ def writeCSVRaw(data, fn):
             writer.writerow(row)
 
 pat_prob_dir = re.compile('^([0-9]+)-([^:]+):([^:]+):([0-9]+)$')
-def mainResults(args):
+def _mainResults(args, type = 'libplan'):
     bench_dir = args.bench_dir
+    tasks = pickle.load(open(os.path.join(bench_dir, 'bench.pickle'), 'r'))
+    tasks = tasks['tasks']
     problem_dirs = sorted(os.listdir(bench_dir))
     data = []
     for d in problem_dirs:
@@ -738,13 +1018,25 @@ def mainResults(args):
         domain = match.group(2)
         problem = match.group(3)
         repeat = toInt(match.group(4))
-        data.append(parseProb(dir, task_i, domain, problem, repeat))
+        d = parseProb(dir, task_i, domain, problem, repeat, type)
+        if type == 'fd':
+            d['max-time'] = tasks[task_i]['search']['max_time']
+            d['max-mem'] = tasks[task_i]['search']['max_mem']
+            d['search-alg'] = tasks[task_i]['search']['opts'][1]
+
+        data.append(d)
 
     print('Writing raw data to `results.pickle\'...')
     with open('results.pickle', 'wb') as fout:
         pickle.dump(data, fout)
     print('Writing raw data to `results.csv\'')
     writeCSVRaw(data, 'results.csv')
+
+def mainResults(args):
+    _mainResults(args)
+
+def mainResultsFD(args):
+    _mainResults(args, type = 'fd')
 
 ### RESULTS END ###
 
@@ -1139,6 +1431,22 @@ if __name__ == '__main__':
     parser_bench.add_argument('--branch', dest = 'branch', type = str,
                               default = '')
 
+    parser_bench = subparsers.add_parser('create-fd')
+    parser_bench.add_argument('-r', '--repeats', dest = 'repeats', type = int,
+                              default = 5)
+    parser_bench.add_argument('-n', '--name', dest = 'name', type = str,
+                              required = True)
+    parser_bench.add_argument('-b', '--bench-set', dest = 'bench_set',
+                              type = str, required = True)
+    parser_bench.add_argument('-s', '--search-alg', dest = 'search_alg',
+                              type = str, required = True)
+    parser_bench.add_argument('--max-time', dest = 'max_time',
+                              type = int, required = True)
+    parser_bench.add_argument('--max-mem', dest = 'max_mem',
+                              type = int, required = True)
+    parser_bench.add_argument('--branch', dest = 'branch', type = str,
+                              required = True)
+
     parser_bench = subparsers.add_parser('qsub')
     parser_bench.add_argument('bench_data')
     parser_bench.add_argument('-c', '--cluster', dest = 'cluster',
@@ -1147,12 +1455,19 @@ if __name__ == '__main__':
     parser_results = subparsers.add_parser('results')
     parser_results.add_argument('bench_dir')
 
+    parser_results = subparsers.add_parser('results-fd')
+    parser_results.add_argument('bench_dir')
+
     args = parser.parse_args()
 
     if args.command == 'create':
         sys.exit(mainPlan(args))
+    elif args.command == 'create-fd':
+        sys.exit(mainCreateFD(args))
     elif args.command == 'qsub':
         sys.exit(mainQSub(args))
     elif args.command == 'results':
         sys.exit(mainResults(args))
+    elif args.command == 'results-fd':
+        sys.exit(mainResultsFD(args))
 

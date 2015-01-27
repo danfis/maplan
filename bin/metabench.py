@@ -880,7 +880,7 @@ def parseDone(dir, d):
     else:
         d['done'] = False
 
-def parseProb(dir, task_i, domain, problem, repeat):
+def parseProb(dir, task_i, domain, problem, repeat, type):
     d = { 'id' : task_i,
           'domain' : domain,
           'problem' : problem,
@@ -918,8 +918,12 @@ def parseProb(dir, task_i, domain, problem, repeat):
           'done' : False,
         }
 
-    parseSearchOut(dir, d)
-    parseSearchErr(dir, d)
+    if type == 'libplan':
+        parseSearchOut(dir, d)
+        parseSearchErr(dir, d)
+    elif type == 'fd':
+        pass
+
     parseStderr(dir, d)
     parseStdout(dir, d)
     parseValidate(dir, d)
@@ -959,7 +963,7 @@ def writeCSVRaw(data, fn):
             writer.writerow(row)
 
 pat_prob_dir = re.compile('^([0-9]+)-([^:]+):([^:]+):([0-9]+)$')
-def mainResults(args):
+def _mainResults(args, type = 'libplan'):
     bench_dir = args.bench_dir
     problem_dirs = sorted(os.listdir(bench_dir))
     data = []
@@ -973,13 +977,20 @@ def mainResults(args):
         domain = match.group(2)
         problem = match.group(3)
         repeat = toInt(match.group(4))
-        data.append(parseProb(dir, task_i, domain, problem, repeat))
+        d = parseProb(dir, task_i, domain, problem, repeat, type)
+        data.append(d)
 
     print('Writing raw data to `results.pickle\'...')
     with open('results.pickle', 'wb') as fout:
         pickle.dump(data, fout)
     print('Writing raw data to `results.csv\'')
     writeCSVRaw(data, 'results.csv')
+
+def mainResults(args):
+    _mainResults(args)
+
+def mainResultsFD(args):
+    _mainResults(args, type = 'fd')
 
 ### RESULTS END ###
 
@@ -1398,6 +1409,9 @@ if __name__ == '__main__':
     parser_results = subparsers.add_parser('results')
     parser_results.add_argument('bench_dir')
 
+    parser_results = subparsers.add_parser('results-fd')
+    parser_results.add_argument('bench_dir')
+
     args = parser.parse_args()
 
     if args.command == 'create':
@@ -1408,4 +1422,6 @@ if __name__ == '__main__':
         sys.exit(mainQSub(args))
     elif args.command == 'results':
         sys.exit(mainResults(args))
+    elif args.command == 'results-fd':
+        sys.exit(mainResultsFD(args))
 

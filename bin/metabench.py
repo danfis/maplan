@@ -1197,6 +1197,103 @@ BENCHMARKS = {
         },
     ],
 
+    'ma1' : [
+        { 'domain' : 'blocksworld',
+          'problems' : [ 'probBLOCKS-10-0', 'probBLOCKS-10-1',
+                         'probBLOCKS-10-2', 'probBLOCKS-11-0',
+                         'probBLOCKS-11-1', 'probBLOCKS-11-2',
+                         'probBLOCKS-12-0', 'probBLOCKS-12-1',
+                         'probBLOCKS-13-0', 'probBLOCKS-13-1',
+                         'probBLOCKS-14-0', 'probBLOCKS-14-1',
+                         'probBLOCKS-15-0', 'probBLOCKS-15-1',
+                         'probBLOCKS-16-1', 'probBLOCKS-16-2',
+                         'probBLOCKS-17-0', 'probBLOCKS-4-0',
+                         'probBLOCKS-4-1', 'probBLOCKS-4-2',
+                         'probBLOCKS-5-0', 'probBLOCKS-5-1',
+                         'probBLOCKS-5-2', 'probBLOCKS-6-0',
+                         'probBLOCKS-6-1', 'probBLOCKS-6-2',
+                         'probBLOCKS-7-0', 'probBLOCKS-7-1',
+                         'probBLOCKS-7-2', 'probBLOCKS-8-0',
+                         'probBLOCKS-8-1', 'probBLOCKS-8-2',
+                         'probBLOCKS-9-0', 'probBLOCKS-9-1',
+                         'probBLOCKS-9-2', ]
+        },
+
+        { 'domain' : 'depot',
+          'problems' : [ 'pfile1', 'pfile10', 'pfile11', 'pfile12',
+                         'pfile13', 'pfile14', 'pfile15', 'pfile16',
+                         'pfile17', 'pfile18', 'pfile19', 'pfile2',
+                         'pfile20', 'pfile3', 'pfile4', 'pfile5', 'pfile6',
+                         'pfile7', 'pfile8', 'pfile9', ]
+        },
+
+        { 'domain' : 'driverlog',
+          'problems' : [ 'pfile1', 'pfile10', 'pfile11', 'pfile12',
+                         'pfile13', 'pfile14', 'pfile15', 'pfile16',
+                         'pfile17', 'pfile18', 'pfile19', 'pfile2',
+                         'pfile20', 'pfile3', 'pfile4', 'pfile5', 'pfile6',
+                         'pfile7', 'pfile8', 'pfile9', ]
+        },
+
+        { 'domain' : 'elevators08',
+          'problems' : [ 'p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07',
+                         'p08', 'p09', 'p10', 'p11', 'p12', 'p13', 'p14',
+                         'p15', 'p16', 'p17', 'p18', 'p19', 'p20', 'p21',
+                         'p22', 'p23', 'p24', 'p25', 'p26', 'p27', 'p28',
+                         'p29', 'p30', ]
+        },
+
+        { 'domain' : 'logistics00',
+          'problems' : [ 'probLOGISTICS-10-0', 'probLOGISTICS-10-1',
+                         'probLOGISTICS-11-0', 'probLOGISTICS-11-1',
+                         'probLOGISTICS-12-0', 'probLOGISTICS-12-1',
+                         'probLOGISTICS-13-0', 'probLOGISTICS-13-1',
+                         'probLOGISTICS-14-0', 'probLOGISTICS-14-1',
+                         'probLOGISTICS-15-0', 'probLOGISTICS-15-1',
+                         'probLOGISTICS-4-0', 'probLOGISTICS-5-0',
+                         'probLOGISTICS-6-0', 'probLOGISTICS-7-0',
+                         'probLOGISTICS-8-0', 'probLOGISTICS-8-1',
+                         'probLOGISTICS-9-0', 'probLOGISTICS-9-1', ]
+        },
+
+        { 'domain' : 'rovers',
+          'problems' : [ 'p03', 'p04', 'p05', 'p06', 'p07',
+                         'p08', 'p09', 'p10', 'p11', 'p12', 'p13', 'p14',
+                         'p15', 'p16', 'p17', 'p18', 'p19', 'p20', ]
+        },
+
+        { 'domain' : 'satellites',
+          'problems' : [ 'p03-pfile3',
+                         'p04-pfile4', 'p05-pfile5', 'p06-pfile6',
+                         'p07-pfile7', 'p08-pfile8', 'p09-pfile9',
+                         'p10-pfile10', 'p11-pfile11', 'p12-pfile12',
+                         'p13-pfile13', 'p14-pfile14', 'p15-pfile15',
+                         'p16-pfile16', 'p17-pfile17', 'p18-pfile18',
+                         'p19-pfile19', 'p20-pfile20', ]
+        },
+
+        { 'domain' : 'sokoban',
+          'problems' : [ 'p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07',
+                         'p08', 'p09', 'p10', ]
+        },
+
+        { 'domain' : 'woodworking08',
+          'problems' : [ 'p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07',
+                         'p08', 'p09', 'p10', 'p11', 'p12', 'p13', 'p14',
+                         'p15', 'p16', 'p17', 'p18', 'p19', 'p20', 'p21',
+                         'p22', 'p23', 'p24', 'p25', 'p26', 'p27', 'p28',
+                         'p29', 'p30', ]
+        },
+
+        { 'domain' : 'zenotravel',
+          'problems' : [ 'pfile10', 'pfile12', 'pfile13',
+                         'pfile14', 'pfile15', 'pfile16', 'pfile17',
+                         'pfile18', 'pfile19', 'pfile20',
+                         'pfile3', 'pfile4', 'pfile5', 'pfile6', 'pfile7',
+                         'pfile8', 'pfile9', ]
+        },
+    ],
+
     'ma-easy' : [
         { 'domain' : 'depot',
           'problems' : [ 'pfile1', 'pfile2' ],

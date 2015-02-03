@@ -616,7 +616,7 @@ CoScalar newtonsMethod(const Polynomial & p,CoScalar startPt,CoScalar accuracy)
 {
    //return -1 to show the method has failed on this ocassion, we will always be finding roots on (0,1)
 	Polynomial pDiff = p.diff();
-	CoScalar approxRoot,diffVal;
+	CoScalar approxRoot = 0.,diffVal;
 	CoScalar lastApproxRoot = startPt;
 	int limit = 50 + int(1/accuracy); //should normally be within accurrcy < 10 steps, so limit is more than enough
 	int i = 0;

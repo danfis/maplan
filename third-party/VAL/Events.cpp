@@ -732,7 +732,7 @@ bool Events::triggerContinuousEvents(Validator * v,bool init)
        };
           
       vector<const Action*> eventsToTrigger;
-      CoScalar eventTriggerTime;
+      CoScalar eventTriggerTime = 0.;
       //extract the first group of events to be triggered (including processes)
       for(vector<pair<const Action *,intervalEnd> >::iterator i = ctsTriggeredEvents.begin(); i != ctsTriggeredEvents.end(); ++i)
       {

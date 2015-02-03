@@ -2696,7 +2696,7 @@ pair<double,double> getSlideLimits(const plan * aPlan, string actionName,double 
   pair<double,double> slideLimits;
   double startTime = 0;
   double endTime = -1;
-  double duration;
+  double duration = 0.;
 
   for(pc_list<plan_step*>::const_iterator i = aPlan->begin(); i != aPlan->end(); ++i)
   {
@@ -2863,7 +2863,7 @@ void PlanRepair::repairPlan()
 void moveActionTimes(const plan * aPlan,const plan_step * firstAction,double startTime, double shiftTime)//,include double current time
 {
   bool shift = false;
-  double currentShift;
+  double currentShift = 0.;
 
   for(pc_list<plan_step*>::const_iterator i = aPlan->begin(); i != aPlan->end(); ++i)
     {

@@ -20,7 +20,8 @@ SEARCHDIRS := -iquote -I${MYCODEDIR}
 
 # makemake variables
 
-DEPENDFLAGS := -g -Wall -Werror ${SEARCHDIRS}
+#DEPENDFLAGS := -g -Wall -Werror ${SEARCHDIRS}
+DEPENDFLAGS := -O3 -Wall -Werror ${SEARCHDIRS}
 
 # C preprocessor (C, C++, FORTRAN)
 
@@ -28,7 +29,7 @@ CPPFLAGS =
 
 # C compiler
 
-CC     := gcc
+CC     ?= gcc
 CFLAGS  = ${DEPENDFLAGS}
 
 %.o : %.c
@@ -36,8 +37,8 @@ CFLAGS  = ${DEPENDFLAGS}
 
 # C++ compiler
 
-CXX      := g++
-CXXFLAGS  = ${DEPENDFLAGS} -ansi -Wall
+CXX      ?= g++
+CXXFLAGS  += ${DEPENDFLAGS} -ansi -Wall
 
 %.o : %.cc
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} -c $< -o $@

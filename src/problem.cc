@@ -882,6 +882,7 @@ static void createProjectedOps(const plan_op_t *ops, int ops_size,
             }else{
                 planOpSetFirstOwner(proj_op);
             }
+            planOpPack(proj_op, agent->state_pool->packer);
             ++agent->proj_op_size;
         }else{
             planOpFree(proj_op);

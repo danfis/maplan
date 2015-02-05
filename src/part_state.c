@@ -13,11 +13,9 @@ plan_part_state_t *planPartStateNew(int size)
     ps = BOR_ALLOC(plan_part_state_t);
     ps->size = size;
     ps->val    = BOR_ALLOC_ARR(plan_val_t, size);
-    ps->is_set = BOR_ALLOC_ARR(int, size);
 
     for (i = 0; i < size; ++i){
         ps->val[i] = PLAN_VAL_UNDEFINED;
-        ps->is_set[i] = 0;
     }
 
     ps->valbuf = NULL;
@@ -33,8 +31,6 @@ void planPartStateDel(plan_part_state_t *part_state)
 {
     if (part_state->val)
         BOR_FREE(part_state->val);
-    if (part_state->is_set)
-        BOR_FREE(part_state->is_set);
     if (part_state->valbuf)
         BOR_FREE(part_state->valbuf);
     if (part_state->maskbuf)
@@ -67,7 +63,6 @@ void planPartStateSet(plan_part_state_t *state,
                       plan_val_t val)
 {
     state->val[var] = val;
-    state->is_set[var] = 1;
 
     if (state->valbuf){
         BOR_FREE(state->valbuf);
@@ -90,7 +85,6 @@ void planPartStateUnset(plan_part_state_t *state, plan_var_id_t var)
     int i;
 
     state->val[var] = PLAN_VAL_UNDEFINED;
-    state->is_set[var] = 0;
 
     if (state->valbuf){
         BOR_FREE(state->valbuf);

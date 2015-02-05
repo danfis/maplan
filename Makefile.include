@@ -21,6 +21,7 @@ endif
 
 DEBUG ?= no
 PROFIL ?= no
+WERROR ?= no
 
 ifeq '$(PROFIL)' 'yes'
   DEBUG = yes
@@ -41,6 +42,10 @@ ifeq '$(PROFIL)' 'yes'
 endif
 CFLAGS += -Wall -pedantic --std=gnu99
 CXXFLAGS += -Wall -pedantic
+
+ifeq '$(WERROR)' 'yes'
+  CFLAGS += -Werror
+endif
 
 LDFLAGS += -pthread
 LDFLAGS += $(SYSTEM_LDFLAGS)

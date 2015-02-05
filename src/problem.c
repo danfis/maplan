@@ -78,6 +78,23 @@ void planProblemAgentsDel(plan_problem_agents_t *agents)
     BOR_FREE(agents);
 }
 
+void planProblemPack(plan_problem_t *p)
+{
+    int i;
+
+    planPartStatePack(p->goal, p->state_pool->packer);
+    for (i = 0; i < p->op_size; ++i)
+        planOpPack(p->op + i);
+}
+
+void planProblemAgentsPack(plan_problem_agents_t *p)
+{
+    int i;
+
+    planProblemPack(&p->glob);
+    for (i = 0; i < p->agent_size; ++i)
+        planProblemPack(p->agent + i);
+}
 
 
 static void dotGraphOpLabel(const plan_problem_agents_t *agents,

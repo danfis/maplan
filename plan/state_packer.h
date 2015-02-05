@@ -61,10 +61,22 @@ void planStatePackerUnpack(const plan_state_packer_t *p,
 void planStatePackerPackPartState(const plan_state_packer_t *p,
                                   plan_part_state_t *part_state);
 
+/**
+ * Just alternative call of planStatePackerPackPartState().
+ */
+_bor_inline void planPartStatePack(plan_part_state_t *ps,
+                                   const plan_state_packer_t *p);
+
 /**** INLINES ****/
 _bor_inline int planStatePackerBufSize(const plan_state_packer_t *p)
 {
     return p->bufsize;
+}
+
+_bor_inline void planPartStatePack(plan_part_state_t *ps,
+                                   const plan_state_packer_t *p)
+{
+    planStatePackerPackPartState(p, ps);
 }
 
 #ifdef __cplusplus

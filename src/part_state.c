@@ -150,6 +150,28 @@ int planPartStateIsSubset(const plan_part_state_t *ps1,
     return 1;
 }
 
+int planPartStateIsSubsetPackedState(const plan_part_state_t *part_state,
+                                     const void *bufstate)
+{
+    void *masked_state;
+    int size, cmp;
+
+    // prepare temporary buffer
+    size = part_state->bufsize;
+    masked_state = BOR_ALLOC_ARR(char, size);
+
+    // mask out values we are not interested in
+    bitAnd(bufstate, part_state->maskbuf, size, masked_state);
+
+    // compare resulting buffers
+    cmp = memcmp(masked_state, part_state->valbuf, size);
+
+    // free temporary buffer
+    BOR_FREE(masked_state);
+
+    return cmp == 0;
+}
+
 int planPartStateEq(const plan_part_state_t *ps1,
                     const plan_part_state_t *ps2)
 {

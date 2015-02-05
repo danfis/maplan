@@ -143,6 +143,11 @@ int planOpIsOwner(const plan_op_t *op, int agent_id);
  */
 void planOpSetFirstOwner(plan_op_t *op);
 
+/**
+ * Pack all part-states.
+ */
+void planOpPack(plan_op_t *op);
+
 /**** INLINES ****/
 _bor_inline void planOpSetPre(plan_op_t *op, plan_var_id_t var, plan_val_t val)
 {

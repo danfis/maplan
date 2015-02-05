@@ -75,6 +75,7 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags)
 
     p = BOR_ALLOC(plan_problem_t);
     loadProblem(p, proto, flags);
+    planProblemPack(p);
 
     delete proto;
 
@@ -93,6 +94,7 @@ plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags)
     p = BOR_ALLOC(plan_problem_agents_t);
     loadProblem(&p->glob, proto, flags);
     loadAgents(p, proto, flags);
+    planProblemAgentsPack(p);
 
     delete proto;
 

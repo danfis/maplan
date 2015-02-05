@@ -93,6 +93,15 @@ void planProblemAgentsDotGraph(const plan_problem_agents_t *agents,
 _bor_inline int planProblemCheckGoal(plan_problem_t *p,
                                      plan_state_id_t state_id);
 
+/**
+ * Pack part-states and operators.
+ */
+void planProblemPack(plan_problem_t *p);
+
+/**
+ * Same as planProblemPack() but for plan_problem_agents_t
+ */
+void planProblemAgentsPack(plan_problem_agents_t *p);
 
 /**
  * Creates an array of operators that are private projections of the given

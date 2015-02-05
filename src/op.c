@@ -151,6 +151,8 @@ void planOpCondEffSimplify(plan_op_t *op)
         return;
 
     cond_eff_size = op->cond_eff_size;
+    // TODO: Remove this once plan-part-state can work in non-packed mode
+    planOpPack(op);
 
     // Try to merge conditional effects with same conditions
     for (i = 0; i < op->cond_eff_size - 1; ++i){
@@ -260,6 +262,19 @@ void planOpSetFirstOwner(plan_op_t *op)
             break;
         }
         ow >>= 1;
+    }
+}
+
+void planOpPack(plan_op_t *op)
+{
+    int i;
+
+    planPartStatePack(op->pre, op->state_pool->packer);
+    planPartStatePack(op->eff, op->state_pool->packer);
+
+    for (i = 0; i < op->cond_eff_size; ++i){
+        planPartStatePack(op->cond_eff[i].pre, op->state_pool->packer);
+        planPartStatePack(op->cond_eff[i].eff, op->state_pool->packer);
     }
 }
 

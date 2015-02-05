@@ -125,8 +125,8 @@ void planStatePackerPackPartState(const plan_state_packer_t *p,
         BOR_FREE(part_state->maskbuf);
 
     part_state->bufsize = p->bufsize;
-    part_state->valbuf  = BOR_ALLOC_ARR(char, p->bufsize);
-    part_state->maskbuf = BOR_ALLOC_ARR(char, p->bufsize);
+    part_state->valbuf  = BOR_CALLOC_ARR(char, p->bufsize);
+    part_state->maskbuf = BOR_CALLOC_ARR(char, p->bufsize);
     wbuf = part_state->maskbuf;
 
     PLAN_PART_STATE_FOR_EACH(part_state, i, var, val){

@@ -92,6 +92,13 @@ int planPartStateIsSubset(const plan_part_state_t *part_state1,
                           const plan_part_state_t *part_state2);
 
 /**
+ * Returns true if the partial state is a subset of the packed state.
+ * This call requires part_state to be packed before this call.
+ */
+int planPartStateIsSubsetPackedState(const plan_part_state_t *part_state,
+                                     const void *bufstate);
+
+/**
  * Returns true if the given part-states equal.
  */
 int planPartStateEq(const plan_part_state_t *part_state1,

@@ -29,6 +29,7 @@ TARGETS  = libplan.a
 OBJS  = problem
 OBJS += var
 OBJS += state
+OBJS += state_packer
 OBJS += op
 OBJS += op_id_tr
 OBJS += dataarr

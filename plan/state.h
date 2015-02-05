@@ -4,214 +4,35 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <boruvka/segmarr.h>
-#include <boruvka/htable.h>
-
 #include <plan/common.h>
-#include <plan/var.h>
-#include <plan/dataarr.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-/** Forward declaration */
-struct _plan_state_packer_var_t;
-
-/**
- * Struct implementing packing of states into binary buffers.
- */
-struct _plan_state_packer_t {
-    struct _plan_state_packer_var_t *vars;
-    int num_vars;
-    int bufsize;
-};
-typedef struct _plan_state_packer_t plan_state_packer_t;
-
-
-/**
- * Main struct managing all states and its corresponding informations.
- */
-struct _plan_state_pool_t {
-    int num_vars;        /*!< Num of variables per state */
-
-    plan_state_packer_t *packer;
-    plan_data_arr_t **data; /*!< Data arrays */
-    int data_size;       /*!< Number of data arrays */
-    bor_htable_t *htable;   /*!< Hash table for uniqueness of states. */
-    size_t num_states;
-};
-typedef struct _plan_state_pool_t plan_state_pool_t;
-
 
 /**
  * Struct containing "unpacked" state.
  */
 struct _plan_state_t {
     plan_val_t *val;
-    int num_vars;
+    int size;
 };
 typedef struct _plan_state_t plan_state_t;
 
+/**
+ * Define plan_state_t structure on stack (without malloc). VLA method is
+ * used.
+ */
 #define PLAN_STATE_STACK(name, var_size) \
     plan_val_t name ## __val__[var_size]; \
     plan_state_t state = { name ## __val__, var_size }
-
-
-struct _plan_part_state_pair_t {
-    plan_var_id_t var;
-    plan_val_t val;
-};
-typedef struct _plan_part_state_pair_t plan_part_state_pair_t;
-
-/**
- * Struct representing partial state.
- */
-struct _plan_part_state_t {
-    const plan_state_packer_t *packer;
-    plan_val_t *val; /*!< Array of unpacked values */
-    int *is_set;     /*!< Array of bool flags stating whether the
-                          corresponding value is set */
-    int num_vars;
-
-    void *valbuf;  /*!< Buffer of packed values */
-    void *maskbuf; /*!< Buffer of mask for values */
-
-    plan_part_state_pair_t *vals; /*!< Unrolled values */
-    int vals_size;
-};
-typedef struct _plan_part_state_t plan_part_state_t;
-
-
-
-/**
- * Initializes a new state pool.
- */
-plan_state_pool_t *planStatePoolNew(const plan_var_t *var, int var_size);
-
-/**
- * Frees previously allocated pool.
- */
-void planStatePoolDel(plan_state_pool_t *pool);
-
-/**
- * Reserves a data array with elements of specified size and each element
- * is initialized once it is allocated with using pair {init_fn} and
- * {init_data} (see dataarr.h).
- * The function returns ID by which the data array can be referenced later.
- */
-int planStatePoolDataReserve(plan_state_pool_t *pool,
-                             size_t element_size,
-                             plan_data_arr_el_init_fn init_fn,
-                             const void *init_data);
-
-/**
- * Returns an element from data array that corresponds to the specified
- * state.
- */
-void *planStatePoolData(plan_state_pool_t *pool,
-                        int data_id,
-                        plan_state_id_t state_id);
-
-/**
- * Inserts a new state into the pool.
- * If the pool already contains the same state nothing is changed and the
- * ID of the already present state is returned.
- */
-plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
-                                    const plan_state_t *state);
-
-/**
- * Same as planStatePoolInsert() but packed state is accepted as input.
- */
-plan_state_id_t planStatePoolInsertPacked(plan_state_pool_t *pool,
-                                          const void *packed_state);
-
-/**
- * Returns state ID corresponding to the given state.
- */
-plan_state_id_t planStatePoolFind(plan_state_pool_t *pool,
-                                  const plan_state_t *state);
-
-/**
- * Fills the given state structure with the values from the state specified
- * by its ID.
- */
-void planStatePoolGetState(const plan_state_pool_t *pool,
-                           plan_state_id_t sid,
-                           plan_state_t *state);
-
-/**
- * Returns pointer to the internally managed packed state corresponding to
- * the given state ID.
- */
-const void *planStatePoolGetPackedState(const plan_state_pool_t*pool,
-                                        plan_state_id_t sid);
-
-/**
- * Returns if the given partial state is subset of a state identified by
- * its ID.
- */
-int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
-                                   const plan_part_state_t *part_state,
-                                   plan_state_id_t sid);
-
-/**
- * Applies the partial state to the state identified by its ID and saves
- * the resulting state into state pool.
- * The ID of the resulting state is returned.
- */
-_bor_inline plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
-                                                        const plan_part_state_t *part_state,
-                                                        plan_state_id_t sid);
-
-/**
- * Same as planStatePoolApplyPartState() but uses "unrolled" mask and value
- * buffers from part-state directly.
- */
-plan_state_id_t planStatePoolApplyPartState2(plan_state_pool_t *pool,
-                                            const void *maskbuf,
-                                            const void *valbuf,
-                                            plan_state_id_t sid);
-
-/**
- * Creates a new object for packing states into binary buffers.
- */
-plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
-                                        int var_size);
-
-/**
- * Deletes a state packer object.
- */
-void planStatePackerDel(plan_state_packer_t *p);
-
-/**
- * Returns size of the buffer in bytes required for storing packed state.
- */
-_bor_inline int planStatePackerBufSize(const plan_state_packer_t *p);
-
-/**
- * Pack the given state into provided buffer that must be at least
- * planStatePackerBufSize(p) long.
- */
-void planStatePackerPack(const plan_state_packer_t *p,
-                         const plan_state_t *state,
-                         void *buffer);
-
-/**
- * Unpacks the given packed state into plan_state_t state structure.
- */
-void planStatePackerUnpack(const plan_state_packer_t *p,
-                           const void *buffer,
-                           plan_state_t *state);
-
 
 
 /**
  * Creates a new struct representing state.
  * Note that by calling this function no state is inserted into pool!
  */
-plan_state_t *planStateNew(const plan_state_pool_t *pool);
+plan_state_t *planStateNew(int size);
 
 /**
  * Destroyes previously created state struct.
@@ -257,105 +78,7 @@ void planStatePrint(const plan_state_t *state, FILE *fout);
 void planStateCopy(plan_state_t *dst, const plan_state_t *src);
 
 
-
-/**
- * Creates a partial state.
- */
-plan_part_state_t *planPartStateNew(const plan_state_pool_t *pool);
-
-/**
- * Destroys a partial state.
- */
-void planPartStateDel(plan_part_state_t *part_state);
-
-/**
- * Copies partial state from src to dst.
- */
-void planPartStateCopy(plan_part_state_t *dst, const plan_part_state_t *src);
-
-/**
- * Returns number of variable the state consists of.
- */
-_bor_inline int planPartStateSize(const plan_part_state_t *state);
-
-/**
- * Returns a value of a specified variable.
- */
-_bor_inline plan_val_t planPartStateGet(const plan_part_state_t *state,
-                                        plan_var_id_t var);
-
-/**
- * Sets a value of a specified variable.
- */
-void planPartStateSet(plan_part_state_t *state,
-                      plan_var_id_t var, plan_val_t val);
-
-/**
- * Unset the value of the specified variable.
- */
-void planPartStateUnset(plan_part_state_t *state, plan_var_id_t var);
-
-/**
- * Returns true if var's variable is set.
- */
-_bor_inline int planPartStateIsSet(const plan_part_state_t *state,
-                                   plan_var_id_t var);
-
-/**
- * Converts partial state to a state.
- * All non-set value of partial state will be set to PLAN_VAL_UNDEFINED in
- * the full state.
- */
-void planPartStateToState(const plan_part_state_t *part_state,
-                          plan_state_t *state);
-
-/**
- * Returns true if part_state1 is subset of part_state2.
- */
-int planPartStateIsSubset(const plan_part_state_t *part_state1,
-                          const plan_part_state_t *part_state2);
-
-/**
- * Returns true if the given part-states equal.
- */
-int planPartStateEq(const plan_part_state_t *part_state1,
-                    const plan_part_state_t *part_state2);
-
-/**
- * Macro for iterating over "unrolled" set values of partial state.
- */
-#define PLAN_PART_STATE_FOR_EACH(__part_state, __tmpi, __var, __val) \
-    if ((__part_state)->vals_size > 0) \
-    for ((__tmpi) = 0; \
-         (__tmpi) < (__part_state)->vals_size \
-            && ((__var) = (__part_state)->vals[(__tmpi)].var, \
-                (__val) = (__part_state)->vals[(__tmpi)].val, 1); \
-         ++(__tmpi))
-
-#define PLAN_PART_STATE_FOR_EACH_VAR(__part_state, __tmpi, __var) \
-    if ((__part_state)->vals_size > 0) \
-    for ((__tmpi) = 0; \
-         (__tmpi) < (__part_state)->vals_size \
-            && ((__var) = (__part_state)->vals[(__tmpi)].var, 1); \
-         ++(__tmpi))
-
-
-
 /**** INLINES ****/
-_bor_inline plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
-                                                        const plan_part_state_t *part_state,
-                                                        plan_state_id_t sid)
-{
-    return planStatePoolApplyPartState2(pool, part_state->maskbuf,
-                                        part_state->valbuf, sid);
-}
-
-_bor_inline int planStatePackerBufSize(const plan_state_packer_t *p)
-{
-    return p->bufsize;
-}
-
-
 _bor_inline plan_val_t planStateGet(const plan_state_t *state,
                                     plan_var_id_t var)
 {
@@ -371,24 +94,7 @@ _bor_inline void planStateSet(plan_state_t *state,
 
 _bor_inline int planStateSize(const plan_state_t *state)
 {
-    return state->num_vars;
-}
-
-_bor_inline int planPartStateSize(const plan_part_state_t *state)
-{
-    return state->num_vars;
-}
-
-_bor_inline plan_val_t planPartStateGet(const plan_part_state_t *state,
-                                        plan_var_id_t var)
-{
-    return state->val[var];
-}
-
-_bor_inline int planPartStateIsSet(const plan_part_state_t *state,
-                                   plan_var_id_t var)
-{
-    return state->is_set[var];
+    return state->size;
 }
 
 #ifdef __cplusplus

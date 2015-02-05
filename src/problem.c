@@ -132,7 +132,7 @@ static int dotGraphIsInit(const plan_problem_agents_t *agents,
     plan_state_t *state;
     int ret;
 
-    state = planStateNew(agents->glob.state_pool);
+    state = planStateNew(agents->glob.var_size);
     planStatePoolGetState(agents->glob.state_pool, 0, state);
     ret = (planStateGet(state, var) == val);
     planStateDel(state);

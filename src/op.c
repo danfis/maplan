@@ -17,8 +17,8 @@ void planOpInit(plan_op_t *op, plan_state_pool_t *state_pool)
 {
     bzero(op, sizeof(*op));
     op->state_pool = state_pool;
-    op->pre = planPartStateNew(state_pool);
-    op->eff = planPartStateNew(state_pool);
+    op->pre = planPartStateNew(state_pool->num_vars);
+    op->eff = planPartStateNew(state_pool->num_vars);
     op->cost = PLAN_COST_ZERO;
 
     op->owner = -1;
@@ -100,8 +100,8 @@ void planOpCopyPrivate(plan_op_t *dst, const plan_op_t *src,
 static void planOpCondEffInit(plan_op_cond_eff_t *ceff,
                               plan_state_pool_t *state_pool)
 {
-    ceff->pre = planPartStateNew(state_pool);
-    ceff->eff = planPartStateNew(state_pool);
+    ceff->pre = planPartStateNew(state_pool->num_vars);
+    ceff->eff = planPartStateNew(state_pool->num_vars);
 }
 
 void planOpSetName(plan_op_t *op, const char *name)

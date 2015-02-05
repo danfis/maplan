@@ -456,7 +456,7 @@ static void loadInitState(plan_problem_t *p, const PlanProblem *proto,
     plan_state_t *state;
     const PlanProblemState &proto_state = proto->init_state();
 
-    state = planStateNew(p->state_pool);
+    state = planStateNew(p->state_pool->num_vars);
     for (int i = 0; i < proto_state.val_size(); ++i){
         if (var_map[i] == PLAN_VAR_ID_UNDEFINED)
             continue;
@@ -471,7 +471,7 @@ static void loadGoal(plan_problem_t *p, const PlanProblem *proto,
 {
     const PlanProblemPartState &proto_goal = proto->goal();
 
-    p->goal = planPartStateNew(p->state_pool);
+    p->goal = planPartStateNew(p->state_pool->num_vars);
     for (int i = 0; i < proto_goal.val_size(); ++i){
         const PlanProblemVarVal &v = proto_goal.val(i);
         if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
@@ -629,7 +629,7 @@ static void pruneUnimportantVars(plan_problem_t *p,
 static int cmpPartState(const plan_part_state_t *p1,
                         const plan_part_state_t *p2)
 {
-    int i, size = p1->num_vars;
+    int i, size = p1->size;
     int isset1, isset2;
     plan_val_t val1, val2;
 
@@ -741,12 +741,12 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
 
     dst->state_pool = planStatePoolNew(dst->var, dst->var_size);
 
-    state = planStateNew(src->state_pool);
+    state = planStateNew(src->state_pool->num_vars);
     planStatePoolGetState(src->state_pool, src->initial_state, state);
     dst->initial_state = planStatePoolInsert(dst->state_pool, state);
     planStateDel(state);
 
-    dst->goal = planPartStateNew(dst->state_pool);
+    dst->goal = planPartStateNew(dst->state_pool->num_vars);
     planPartStateCopy(dst->goal, src->goal);
 
     dst->op_size = 0;

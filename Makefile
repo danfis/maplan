@@ -31,6 +31,7 @@ OBJS += var
 OBJS += state
 OBJS += part_state
 OBJS += state_packer
+OBJS += state_pool
 OBJS += op
 OBJS += op_id_tr
 OBJS += dataarr

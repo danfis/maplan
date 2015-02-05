@@ -115,7 +115,7 @@ static void testHeurMAProb(const plan_problem_agents_t *p,
     if (seq_heur_new)
         seq_heur = seq_heur_new(&p->glob);
 
-    seq_state = planStateNew(p->glob.state_pool);
+    seq_state = planStateNew(p->glob.var_size);
 
     for (i = 0; i < agent_size; ++i){
         statePoolReset(state_pool);

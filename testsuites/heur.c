@@ -54,7 +54,7 @@ static void runTest(const char *name,
 
     printf("-----\n%s\n%s\n", name, proto);
     p = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
-    state = planStateNew(p->state_pool);
+    state = planStateNew(p->state_pool->num_vars);
     statePoolInit(&state_pool, states);
 
     pref_ops = BOR_ALLOC_ARR(plan_op_t *, p->op_size);
@@ -105,7 +105,7 @@ static void heurRelaxIdentity(const char *proto, const char *states,
     plan_cost_t h, h2;
 
     p = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
-    state = planStateNew(p->state_pool);
+    state = planStateNew(p->state_pool->num_vars);
     statePoolInit(&state_pool, states);
 
     planHeurRelaxInit(&relax, type, p->var, p->var_size, p->goal,
@@ -132,7 +132,7 @@ static plan_part_state_t *relaxStateToPartState(const plan_state_t *s,
     int i, len;
     plan_val_t val;
 
-    ps = planPartStateNew(state_pool);
+    ps = planPartStateNew(state_pool->num_vars);
     len = planStateSize(s);
     for (i = 0; i < len; ++i){
         if (rand() < RAND_MAX / 2){
@@ -161,8 +161,8 @@ static void heurRelaxIdentity2(const char *proto, const char *states,
     plan_cost_t h, h2;
 
     p = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
-    state = planStateNew(p->state_pool);
-    init_state = planStateNew(p->state_pool);
+    state = planStateNew(p->var_size);
+    init_state = planStateNew(p->var_size);
     statePoolInit(&state_pool, states);
 
     statePoolNext(&state_pool, init_state);

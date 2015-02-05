@@ -16,7 +16,7 @@ TEST(testStateSpace)
 
     pool = planStatePoolNew(vars, 4);
     sspace = planStateSpaceNew(pool);
-    state = planStateNew(pool);
+    state = planStateNew(pool->num_vars);
 
     // insert first state
     planStateZeroize(state);

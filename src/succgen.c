@@ -116,8 +116,9 @@ int planSuccGenFind(const plan_succ_gen_t *sg,
                     plan_op_t **op, int op_size)
 {
     // Use variable-length array to speed it up.
-    plan_val_t vals[state->num_vars];
-    memcpy(vals, state->val, sizeof(plan_val_t) * state->num_vars);
+    int size = planStateSize(state);
+    plan_val_t vals[size];
+    memcpy(vals, state->val, sizeof(plan_val_t) * size);
     return treeFind(sg->root, vals, op, op_size);
 }
 
@@ -125,8 +126,9 @@ int planSuccGenFindPart(const plan_succ_gen_t *sg,
                         const plan_part_state_t *part_state,
                         plan_op_t **op, int op_size)
 {
-    plan_val_t vals[part_state->num_vars];
-    memcpy(vals, part_state->val, sizeof(plan_val_t) * part_state->num_vars);
+    int size = planPartStateSize(part_state);
+    plan_val_t vals[size];
+    memcpy(vals, part_state->val, sizeof(plan_val_t) * size);
     return treeFind(sg->root, vals, op, op_size);
 }
 

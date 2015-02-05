@@ -19,7 +19,7 @@ static void pInitState(const plan_state_pool_t *state_pool, plan_state_id_t sid)
     plan_state_t *state;
     int i, size;
 
-    state = planStateNew(state_pool);
+    state = planStateNew(state_pool->num_vars);
     planStatePoolGetState(state_pool, sid, state);
     size = planStateSize(state);
     printf("Initial state:");

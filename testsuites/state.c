@@ -1,5 +1,5 @@
 #include <cu/cu.h>
-#include "plan/state.h"
+#include "plan/state_pool.h"
 
 
 TEST(testStateBasic)
@@ -15,7 +15,7 @@ TEST(testStateBasic)
     planVarInit(vars + 3, "d", 7);
 
     pool = planStatePoolNew(vars, 4);
-    state = planStateNew(pool);
+    state = planStateNew(pool->num_vars);
 
     planStateZeroize(state);
     planStateSet(state, 0, 1);
@@ -123,7 +123,7 @@ TEST(testStatePreEff)
 
     pool = planStatePoolNew(vars, 4);
 
-    state = planStateNew(pool);
+    state = planStateNew(pool->num_vars);
     planStateSet(state, 0, 1);
     planStateSet(state, 1, 0);
     planStateSet(state, 2, 1);
@@ -149,20 +149,20 @@ TEST(testStatePreEff)
     ids[3] = planStatePoolInsert(pool, state);
 
 
-    parts[0] = planPartStateNew(pool);
+    parts[0] = planPartStateNew(pool->num_vars);
     planPartStateSet(parts[0], 0, 1);
     planPartStateSet(parts[0], 2, 1);
 
-    parts[1] = planPartStateNew(pool);
+    parts[1] = planPartStateNew(pool->num_vars);
     planPartStateSet(parts[1], 2, 1);
     planPartStateSet(parts[1], 3, 3);
 
-    parts[2] = planPartStateNew(pool);
+    parts[2] = planPartStateNew(pool->num_vars);
     planPartStateSet(parts[2], 0, 2);
     planPartStateSet(parts[2], 2, 0);
     planPartStateSet(parts[2], 3, 1);
 
-    parts[3] = planPartStateNew(pool);
+    parts[3] = planPartStateNew(pool->num_vars);
     planPartStateSet(parts[3], 3, 3);
 
 
@@ -327,7 +327,7 @@ TEST(testPartStateUnset)
     planVarInit(vars + 3, "d", 4);
 
     pool = planStatePoolNew(vars, 4);
-    ps = planPartStateNew(pool);
+    ps = planPartStateNew(pool->num_vars);
 
     planPartStateSet(ps, 1, 1);
     planPartStateSet(ps, 2, 0);
@@ -342,7 +342,7 @@ TEST(testPartStateUnset)
     assertEquals(planPartStateGet(ps, 2), 0);
     assertEquals(planPartStateGet(ps, 3), 3);
 
-    state = planStateNew(pool);
+    state = planStateNew(pool->num_vars);
     planStateSet(state, 0, 1);
     planStateSet(state, 1, 1);
     planStateSet(state, 2, 0);

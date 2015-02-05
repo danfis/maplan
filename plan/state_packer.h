@@ -3,6 +3,7 @@
 
 #include <plan/common.h>
 #include <plan/state.h>
+#include <plan/part_state.h>
 #include <plan/var.h>
 
 #ifdef __cplusplus
@@ -53,6 +54,12 @@ void planStatePackerUnpack(const plan_state_packer_t *p,
                            const void *buffer,
                            plan_state_t *state);
 
+/**
+ * Packs part-state into value and mask buffer stored within
+ * plan_part_state_t structure.
+ */
+void planStatePackerPackPartState(const plan_state_packer_t *p,
+                                  plan_part_state_t *part_state);
 
 /**** INLINES ****/
 _bor_inline int planStatePackerBufSize(const plan_state_packer_t *p)

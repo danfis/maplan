@@ -110,6 +110,31 @@ void planStatePackerUnpack(const plan_state_packer_t *p,
     }
 }
 
+void planStatePackerPackPartState(const plan_state_packer_t *p,
+                                  plan_part_state_t *part_state)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    plan_packer_word_t *wbuf;
+    int i;
+
+    // First allocate buffers
+    if (part_state->valbuf)
+        BOR_FREE(part_state->valbuf);
+    if (part_state->maskbuf)
+        BOR_FREE(part_state->maskbuf);
+
+    part_state->bufsize = p->bufsize;
+    part_state->valbuf  = BOR_ALLOC_ARR(char, p->bufsize);
+    part_state->maskbuf = BOR_ALLOC_ARR(char, p->bufsize);
+    wbuf = part_state->maskbuf;
+
+    PLAN_PART_STATE_FOR_EACH(part_state, i, var, val){
+        packerSetVar(p->vars + var, val, part_state->valbuf);
+        wbuf[p->vars[var].pos] |= p->vars[var].mask;
+    }
+}
+
 static int packerBitsNeeded(plan_val_t range)
 {
     plan_packer_word_t max_val = range - 1;

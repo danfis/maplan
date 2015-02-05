@@ -151,8 +151,6 @@ void planOpCondEffSimplify(plan_op_t *op)
         return;
 
     cond_eff_size = op->cond_eff_size;
-    // TODO: Remove this once plan-part-state can work in non-packed mode
-    planOpPack(op);
 
     // Try to merge conditional effects with same conditions
     for (i = 0; i < op->cond_eff_size - 1; ++i){

@@ -84,7 +84,7 @@ void planProblemPack(plan_problem_t *p)
 
     planPartStatePack(p->goal, p->state_pool->packer);
     for (i = 0; i < p->op_size; ++i)
-        planOpPack(p->op + i);
+        planOpPack(p->op + i, p->state_pool->packer);
 }
 
 void planProblemAgentsPack(plan_problem_agents_t *p)
@@ -254,7 +254,7 @@ void planProblemCreatePrivateProjOps(const plan_op_t *op, int op_size,
     dop_size = 0;
 
     for (i = 0; i < op_size; ++i){
-        planOpInit(dop + dop_size, op[i].state_pool);
+        planOpInit(dop + dop_size, var_size);
         planOpCopyPrivate(dop + dop_size, op + i, var);
         if (dop[dop_size].pre->vals_size > 0
                 || dop[dop_size].eff->vals_size > 0

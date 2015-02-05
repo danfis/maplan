@@ -1,24 +1,23 @@
+#include <strings.h>
+#include <string.h>
 #include <boruvka/alloc.h>
 
 #include "plan/op.h"
 
 /** Initializes and frees conditional effect */
-static void planOpCondEffInit(plan_op_cond_eff_t *ceff,
-                              plan_state_pool_t *state_pool);
+static void planOpCondEffInit(plan_op_cond_eff_t *ceff, int size);
 static void planOpCondEffFree(plan_op_cond_eff_t *ceff);
 /** Copies conditional effect from src to dst */
-static void planOpCondEffCopy(plan_state_pool_t *state_pool,
-                              plan_op_cond_eff_t *dst,
+static void planOpCondEffCopy(plan_op_cond_eff_t *dst,
                               const plan_op_cond_eff_t *src);
 /** Bit operator: a = a | b */
 _bor_inline void bitOr(void *a, const void *b, int size);
 
-void planOpInit(plan_op_t *op, plan_state_pool_t *state_pool)
+void planOpInit(plan_op_t *op, int var_size)
 {
     bzero(op, sizeof(*op));
-    op->state_pool = state_pool;
-    op->pre = planPartStateNew(state_pool->num_vars);
-    op->eff = planPartStateNew(state_pool->num_vars);
+    op->pre = planPartStateNew(var_size);
+    op->eff = planPartStateNew(var_size);
     op->cost = PLAN_COST_ZERO;
 
     op->owner = -1;
@@ -52,9 +51,8 @@ void planOpCopy(plan_op_t *dst, const plan_op_t *src)
         dst->cond_eff = BOR_ALLOC_ARR(plan_op_cond_eff_t,
                                       dst->cond_eff_size);
         for (i = 0; i < dst->cond_eff_size; ++i){
-            planOpCondEffInit(dst->cond_eff + i, dst->state_pool);
-            planOpCondEffCopy(dst->state_pool,
-                              dst->cond_eff + i, src->cond_eff + i);
+            planOpCondEffInit(dst->cond_eff + i, dst->eff->size);
+            planOpCondEffCopy(dst->cond_eff + i, src->cond_eff + i);
         }
     }
 
@@ -97,11 +95,10 @@ void planOpCopyPrivate(plan_op_t *dst, const plan_op_t *src,
     }
 }
 
-static void planOpCondEffInit(plan_op_cond_eff_t *ceff,
-                              plan_state_pool_t *state_pool)
+static void planOpCondEffInit(plan_op_cond_eff_t *ceff, int size)
 {
-    ceff->pre = planPartStateNew(state_pool->num_vars);
-    ceff->eff = planPartStateNew(state_pool->num_vars);
+    ceff->pre = planPartStateNew(size);
+    ceff->eff = planPartStateNew(size);
 }
 
 void planOpSetName(plan_op_t *op, const char *name)
@@ -116,8 +113,7 @@ int planOpAddCondEff(plan_op_t *op)
     ++op->cond_eff_size;
     op->cond_eff = BOR_REALLOC_ARR(op->cond_eff, plan_op_cond_eff_t,
                                    op->cond_eff_size);
-    planOpCondEffInit(op->cond_eff + op->cond_eff_size - 1,
-                            op->state_pool);
+    planOpCondEffInit(op->cond_eff + op->cond_eff_size - 1, op->eff->size);
     return op->cond_eff_size - 1;
 }
 
@@ -192,14 +188,16 @@ void planOpCondEffSimplify(plan_op_t *op)
     }
 }
 
-plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id)
+plan_state_id_t planOpApply(const plan_op_t *op,
+                            plan_state_pool_t *state_pool,
+                            plan_state_id_t state_id)
 {
     if (op->cond_eff_size == 0){
         // Use faster branch for non-conditional effects
-        return planStatePoolApplyPartState(op->state_pool, op->eff, state_id);
+        return planStatePoolApplyPartState(state_pool, op->eff, state_id);
 
     }else{
-        int size = planStatePackerBufSize(op->state_pool->packer);
+        int size = planStatePackerBufSize(state_pool->packer);
         char maskbuf[size];
         char valbuf[size];
         int i;
@@ -210,7 +208,7 @@ plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id)
 
         // Test conditional effects
         for (i = 0; i < op->cond_eff_size; ++i){
-            if (planStatePoolPartStateIsSubset(op->state_pool,
+            if (planStatePoolPartStateIsSubset(state_pool,
                                                op->cond_eff[i].pre,
                                                state_id)){
                 // If condition associated with the effect holds, extend
@@ -220,7 +218,7 @@ plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id)
             }
         }
 
-        return planStatePoolApplyPartState2(op->state_pool, maskbuf, valbuf,
+        return planStatePoolApplyPartState2(state_pool, maskbuf, valbuf,
                                             state_id);
     }
 }
@@ -263,16 +261,16 @@ void planOpSetFirstOwner(plan_op_t *op)
     }
 }
 
-void planOpPack(plan_op_t *op)
+void planOpPack(plan_op_t *op, plan_state_packer_t *packer)
 {
     int i;
 
-    planPartStatePack(op->pre, op->state_pool->packer);
-    planPartStatePack(op->eff, op->state_pool->packer);
+    planPartStatePack(op->pre, packer);
+    planPartStatePack(op->eff, packer);
 
     for (i = 0; i < op->cond_eff_size; ++i){
-        planPartStatePack(op->cond_eff[i].pre, op->state_pool->packer);
-        planPartStatePack(op->cond_eff[i].eff, op->state_pool->packer);
+        planPartStatePack(op->cond_eff[i].pre, packer);
+        planPartStatePack(op->cond_eff[i].eff, packer);
     }
 }
 
@@ -282,8 +280,7 @@ static void planOpCondEffFree(plan_op_cond_eff_t *ceff)
     planPartStateDel(ceff->eff);
 }
 
-static void planOpCondEffCopy(plan_state_pool_t *state_pool,
-                              plan_op_cond_eff_t *dst,
+static void planOpCondEffCopy(plan_op_cond_eff_t *dst,
                               const plan_op_cond_eff_t *src)
 {
     planPartStateCopy(dst->pre, src->pre);

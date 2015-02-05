@@ -172,7 +172,7 @@ static int planSearchAStarStep(plan_search_t *search)
     op_size = search->app_ops.op_found;
     for (i = 0; i < op_size; ++i){
         // Create a new state
-        next_state = planOpApply(op[i], cur_state);
+        next_state = planOpApply(op[i], search->state_pool, cur_state);
         // Compute its g() value
         g_cost = cur_node->cost + op[i]->cost;
 

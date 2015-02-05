@@ -499,7 +499,7 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
         const PlanProblemOperator &proto_op = proto->operator_(i);
         plan_op_t *op = p->op + ins;
 
-        planOpInit(op, p->state_pool);
+        planOpInit(op, p->var_size);
         op->name = strdup(proto_op.name().c_str());
         op->cost = proto_op.cost();
         op->global_id = ins;
@@ -873,7 +873,7 @@ static void createProjectedOps(const plan_op_t *ops, int ops_size,
 
         proj_op = agent->proj_op + agent->proj_op_size;
 
-        planOpInit(proj_op, agent->state_pool);
+        planOpInit(proj_op, agent->var_size);
         planOpCopy(proj_op, ops + opi);
 
         if (projectOp(proj_op, agent_id, vals)){
@@ -905,7 +905,7 @@ static void createOps(const plan_op_t *ops, int op_size,
     for (i = 0; i < op_size; ++i){
         op = ops + i;
         if (planOpIsOwner(op, agent_id)){
-            planOpInit(dst->op + dst->op_size, dst->state_pool);
+            planOpInit(dst->op + dst->op_size, dst->var_size);
             planOpCopy(dst->op + dst->op_size, op);
             dst->op[dst->op_size].owner = agent_id;
             planOpDelRecvAgent(dst->op + dst->op_size, agent_id);

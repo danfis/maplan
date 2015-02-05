@@ -120,30 +120,6 @@ void planPartStateToState(const plan_part_state_t *part_state,
            sizeof(plan_val_t) * part_state->size);
 }
 
-int planPartStateIsSubset(const plan_part_state_t *ps1,
-                          const plan_part_state_t *ps2)
-{
-    char buf[ps1->bufsize];
-
-    // TODO: Alternative version for unpacked part-states
-    // TODO: Check ps1->valbuf and ps2->valbuf?
-    if (!ps1->valbuf || !ps2->valbuf){
-        fprintf(stderr, "Fatal Error: Part-state is not packed!"
-                        " (planPartStateIsSubset)\n");
-        exit(-1);
-    }
-
-    bitAnd(ps1->maskbuf, ps2->maskbuf, ps1->bufsize, buf);
-    if (memcmp(buf, ps1->maskbuf, ps1->bufsize) != 0)
-        return 0;
-
-    bitAnd(ps1->valbuf, ps2->valbuf, ps1->bufsize, buf);
-    if (memcmp(buf, ps1->valbuf, ps1->bufsize) != 0)
-        return 0;
-
-    return 1;
-}
-
 int planPartStateIsSubsetPackedState(const plan_part_state_t *part_state,
                                      const void *bufstate)
 {

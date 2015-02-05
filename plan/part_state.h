@@ -84,12 +84,6 @@ void planPartStateToState(const plan_part_state_t *part_state,
                           plan_state_t *state);
 
 /**
- * Returns true if part_state1 is subset of part_state2.
- */
-int planPartStateIsSubset(const plan_part_state_t *part_state1,
-                          const plan_part_state_t *part_state2);
-
-/**
  * Returns true if the partial state is a subset of the packed state.
  * This call requires part_state to be packed before this call.
  */

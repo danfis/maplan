@@ -155,11 +155,13 @@ static int loadProblem(plan_problem_t *p,
             var_order = cg->var_order;
         }
 
-        pruneDuplicateOps(p);
+        if (flags & PLAN_PROBLEM_PRUNE_DUPLICATES)
+            pruneDuplicateOps(p);
         p->succ_gen = planSuccGenNew(p->op, p->op_size, var_order);
         planCausalGraphDel(cg);
     }else{
-        pruneDuplicateOps(p);
+        if (flags & PLAN_PROBLEM_PRUNE_DUPLICATES)
+            pruneDuplicateOps(p);
         p->succ_gen = planSuccGenNew(p->op, p->op_size, NULL);
     }
 

@@ -15,6 +15,11 @@ extern "C" {
  */
 #define PLAN_PROBLEM_USE_CG 0x1
 
+/**
+ * Turns on removing duplicate operators.
+ */
+#define PLAN_PROBLEM_PRUNE_DUPLICATES 0x2
+
 struct _plan_problem_private_val_t {
     int var;
     int val;

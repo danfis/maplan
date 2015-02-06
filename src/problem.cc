@@ -75,6 +75,7 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags)
 
     p = BOR_ALLOC(plan_problem_t);
     loadProblem(p, proto, flags);
+    planProblemPack(p);
 
     delete proto;
 
@@ -93,6 +94,7 @@ plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags)
     p = BOR_ALLOC(plan_problem_agents_t);
     loadProblem(&p->glob, proto, flags);
     loadAgents(p, proto, flags);
+    planProblemAgentsPack(p);
 
     delete proto;
 
@@ -153,11 +155,13 @@ static int loadProblem(plan_problem_t *p,
             var_order = cg->var_order;
         }
 
-        pruneDuplicateOps(p);
+        if (flags & PLAN_PROBLEM_PRUNE_DUPLICATES)
+            pruneDuplicateOps(p);
         p->succ_gen = planSuccGenNew(p->op, p->op_size, var_order);
         planCausalGraphDel(cg);
     }else{
-        pruneDuplicateOps(p);
+        if (flags & PLAN_PROBLEM_PRUNE_DUPLICATES)
+            pruneDuplicateOps(p);
         p->succ_gen = planSuccGenNew(p->op, p->op_size, NULL);
     }
 
@@ -456,7 +460,7 @@ static void loadInitState(plan_problem_t *p, const PlanProblem *proto,
     plan_state_t *state;
     const PlanProblemState &proto_state = proto->init_state();
 
-    state = planStateNew(p->state_pool);
+    state = planStateNew(p->state_pool->num_vars);
     for (int i = 0; i < proto_state.val_size(); ++i){
         if (var_map[i] == PLAN_VAR_ID_UNDEFINED)
             continue;
@@ -471,7 +475,7 @@ static void loadGoal(plan_problem_t *p, const PlanProblem *proto,
 {
     const PlanProblemPartState &proto_goal = proto->goal();
 
-    p->goal = planPartStateNew(p->state_pool);
+    p->goal = planPartStateNew(p->state_pool->num_vars);
     for (int i = 0; i < proto_goal.val_size(); ++i){
         const PlanProblemVarVal &v = proto_goal.val(i);
         if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
@@ -497,7 +501,7 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
         const PlanProblemOperator &proto_op = proto->operator_(i);
         plan_op_t *op = p->op + ins;
 
-        planOpInit(op, p->state_pool);
+        planOpInit(op, p->var_size);
         op->name = strdup(proto_op.name().c_str());
         op->cost = proto_op.cost();
         op->global_id = ins;
@@ -629,7 +633,7 @@ static void pruneUnimportantVars(plan_problem_t *p,
 static int cmpPartState(const plan_part_state_t *p1,
                         const plan_part_state_t *p2)
 {
-    int i, size = p1->num_vars;
+    int i, size = p1->size;
     int isset1, isset2;
     plan_val_t val1, val2;
 
@@ -741,12 +745,12 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
 
     dst->state_pool = planStatePoolNew(dst->var, dst->var_size);
 
-    state = planStateNew(src->state_pool);
+    state = planStateNew(src->state_pool->num_vars);
     planStatePoolGetState(src->state_pool, src->initial_state, state);
     dst->initial_state = planStatePoolInsert(dst->state_pool, state);
     planStateDel(state);
 
-    dst->goal = planPartStateNew(dst->state_pool);
+    dst->goal = planPartStateNew(dst->state_pool->num_vars);
     planPartStateCopy(dst->goal, src->goal);
 
     dst->op_size = 0;
@@ -871,7 +875,7 @@ static void createProjectedOps(const plan_op_t *ops, int ops_size,
 
         proj_op = agent->proj_op + agent->proj_op_size;
 
-        planOpInit(proj_op, agent->state_pool);
+        planOpInit(proj_op, agent->var_size);
         planOpCopy(proj_op, ops + opi);
 
         if (projectOp(proj_op, agent_id, vals)){
@@ -880,6 +884,7 @@ static void createProjectedOps(const plan_op_t *ops, int ops_size,
             }else{
                 planOpSetFirstOwner(proj_op);
             }
+            planOpPack(proj_op, agent->state_pool->packer);
             ++agent->proj_op_size;
         }else{
             planOpFree(proj_op);
@@ -903,7 +908,7 @@ static void createOps(const plan_op_t *ops, int op_size,
     for (i = 0; i < op_size; ++i){
         op = ops + i;
         if (planOpIsOwner(op, agent_id)){
-            planOpInit(dst->op + dst->op_size, dst->state_pool);
+            planOpInit(dst->op + dst->op_size, dst->var_size);
             planOpCopy(dst->op + dst->op_size, op);
             dst->op[dst->op_size].owner = agent_id;
             planOpDelRecvAgent(dst->op + dst->op_size, agent_id);

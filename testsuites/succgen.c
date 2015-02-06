@@ -63,7 +63,7 @@ static void test(const char *proto, const char *states)
     ops_size = prob->op_size;
     ops1 = BOR_ALLOC_ARR(plan_op_t *, ops_size);
     ops2 = BOR_ALLOC_ARR(plan_op_t *, ops_size);
-    state = planStateNew(prob->state_pool);
+    state = planStateNew(prob->state_pool->num_vars);
 
     for (i = 0; statePoolNext(&state_pool, state) == 0; ++i){
         sid = planStatePoolInsert(prob->state_pool, state);

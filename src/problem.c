@@ -78,6 +78,23 @@ void planProblemAgentsDel(plan_problem_agents_t *agents)
     BOR_FREE(agents);
 }
 
+void planProblemPack(plan_problem_t *p)
+{
+    int i;
+
+    planPartStatePack(p->goal, p->state_pool->packer);
+    for (i = 0; i < p->op_size; ++i)
+        planOpPack(p->op + i, p->state_pool->packer);
+}
+
+void planProblemAgentsPack(plan_problem_agents_t *p)
+{
+    int i;
+
+    planProblemPack(&p->glob);
+    for (i = 0; i < p->agent_size; ++i)
+        planProblemPack(p->agent + i);
+}
 
 
 static void dotGraphOpLabel(const plan_problem_agents_t *agents,
@@ -132,7 +149,7 @@ static int dotGraphIsInit(const plan_problem_agents_t *agents,
     plan_state_t *state;
     int ret;
 
-    state = planStateNew(agents->glob.state_pool);
+    state = planStateNew(agents->glob.var_size);
     planStatePoolGetState(agents->glob.state_pool, 0, state);
     ret = (planStateGet(state, var) == val);
     planStateDel(state);
@@ -237,7 +254,7 @@ void planProblemCreatePrivateProjOps(const plan_op_t *op, int op_size,
     dop_size = 0;
 
     for (i = 0; i < op_size; ++i){
-        planOpInit(dop + dop_size, op[i].state_pool);
+        planOpInit(dop + dop_size, var_size);
         planOpCopyPrivate(dop + dop_size, op + i, var);
         if (dop[dop_size].pre->vals_size > 0
                 || dop[dop_size].eff->vals_size > 0

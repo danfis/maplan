@@ -63,7 +63,7 @@ static void checkOptimalCost2(new_heur_fn new_heur, const char *proto,
     fcosts = fopen(costs, "r");
 
     p = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
-    state = planStateNew(p->state_pool);
+    state = planStateNew(p->var_size);
     statePoolInit(&state_pool, states);
     heur = new_heur(p);
 

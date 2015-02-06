@@ -138,7 +138,7 @@ static plan_state_space_node_t *createNode(plan_search_lazy_base_t *lb,
     int res;
 
     // Create a new state and check whether the state was already visited
-    cur_state_id = planOpApply(parent_op, parent_state_id);
+    cur_state_id = planOpApply(parent_op, search->state_pool, parent_state_id);
     cur_node = planStateSpaceNode(search->state_space, cur_state_id);
     if (!planStateSpaceNodeIsNew(cur_node)){
         *ret = PLAN_SEARCH_CONT;

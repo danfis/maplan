@@ -279,7 +279,7 @@ plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
     heur->opcmp = BOR_ALLOC_ARR(plan_heur_relax_op_t,
                                 heur->relax.cref.op_size);
 
-    heur->init_state = planStateNew(prob->state_pool);
+    heur->init_state = planStateNew(prob->state_pool->num_vars);
     heur->updated_ops = BOR_ALLOC_ARR(int, heur->relax.cref.op_size);
 
     cutInit(&heur->cut, &heur->relax);
@@ -993,7 +993,7 @@ static int stepFindCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     int i, fact_id;
 
     // Find cut from all facts in initial state and all fake preconditions
-    for (i = 0; i < heur->init_state->num_vars; ++i){
+    for (i = 0; i < heur->init_state->size; ++i){
         fact_id = planFactId(&heur->relax.cref.fact_id, i,
                              planStateGet(heur->init_state, i));
         cutFind(&heur->cut, &heur->relax, fact_id, 1);

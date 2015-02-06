@@ -2,7 +2,7 @@
 #define __PLAN_OP_H__
 
 #include <plan/common.h>
-#include <plan/state.h>
+#include <plan/state_pool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,8 +28,6 @@ struct _plan_op_t {
     plan_op_cond_eff_t *cond_eff;  /*!< Conditional effects */
     int cond_eff_size;             /*!< Number of conditional effects */
     plan_cost_t cost;              /*!< Cost of the operator */
-    plan_state_pool_t *state_pool; /*!< Reference to the state-pool this
-                                        operator is made from */
 
     int global_id;       /*!< Globally unique ID of the operator */
     int owner;           /*!< ID of the owner agent */
@@ -44,7 +42,7 @@ typedef struct _plan_op_t plan_op_t;
 /**
  * Initializes an empty operator.
  */
-void planOpInit(plan_op_t *op, plan_state_pool_t *state_pool);
+void planOpInit(plan_op_t *op, int var_size);
 
 /**
  * Frees resources allocated within operator.
@@ -116,7 +114,9 @@ void planOpCondEffSimplify(plan_op_t *op);
  * into state pool it has reference to. The ID of the resulting state is
  * returned.
  */
-plan_state_id_t planOpApply(const plan_op_t *op, plan_state_id_t state_id);
+plan_state_id_t planOpApply(const plan_op_t *op,
+                            plan_state_pool_t *state_pool,
+                            plan_state_id_t state_id);
 
 /**
  * Adds specified agent to the list of receiving agents.
@@ -142,6 +142,11 @@ int planOpIsOwner(const plan_op_t *op, int agent_id);
  * Copies first set owner from .ownerarr to .owner.
  */
 void planOpSetFirstOwner(plan_op_t *op);
+
+/**
+ * Pack all part-states.
+ */
+void planOpPack(plan_op_t *op, plan_state_packer_t *packer);
 
 /**** INLINES ****/
 _bor_inline void planOpSetPre(plan_op_t *op, plan_var_id_t var, plan_val_t val)

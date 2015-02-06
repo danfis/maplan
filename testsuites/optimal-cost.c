@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     }
 
     p = planProblemFromProto(argv[1], PLAN_PROBLEM_USE_CG);
-    state = planStateNew(p->state_pool);
+    state = planStateNew(p->var_size);
     statePoolInit(&state_pool, argv[2]);
     for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
         run(p, state);

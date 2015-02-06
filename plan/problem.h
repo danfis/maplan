@@ -15,6 +15,11 @@ extern "C" {
  */
 #define PLAN_PROBLEM_USE_CG 0x1
 
+/**
+ * Turns on removing duplicate operators.
+ */
+#define PLAN_PROBLEM_PRUNE_DUPLICATES 0x2
+
 struct _plan_problem_private_val_t {
     int var;
     int val;
@@ -93,6 +98,15 @@ void planProblemAgentsDotGraph(const plan_problem_agents_t *agents,
 _bor_inline int planProblemCheckGoal(plan_problem_t *p,
                                      plan_state_id_t state_id);
 
+/**
+ * Pack part-states and operators.
+ */
+void planProblemPack(plan_problem_t *p);
+
+/**
+ * Same as planProblemPack() but for plan_problem_agents_t
+ */
+void planProblemAgentsPack(plan_problem_agents_t *p);
 
 /**
  * Creates an array of operators that are private projections of the given

@@ -153,7 +153,7 @@ void _planSearchInit(plan_search_t *search,
     search->ma_heur_fn = NULL;
     search->ma_heur_data = NULL;
 
-    search->state    = planStateNew(search->state_pool);
+    search->state    = planStateNew(search->state_pool->num_vars);
     search->state_id = PLAN_NO_STATE;
     planSearchStatInit(&search->stat);
     planSearchApplicableOpsInit(&search->app_ops, params->prob->op_size);

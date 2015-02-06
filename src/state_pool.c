@@ -24,7 +24,9 @@ _bor_inline int planStateEq(const plan_state_pool_t *pool,
 /** Returns hash value of the specified state. */
 _bor_inline bor_htable_key_t planStateHash(const plan_state_pool_t *pool,
                                            plan_state_id_t sid);
-
+/** Inserts state into hash table and returns ID under which it is stored. */
+_bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
+                                             plan_state_id_t sid);
 
 /** Callbacks for bor_htable_t */
 static bor_htable_key_t htableHash(const bor_list_t *key, void *ud);
@@ -103,35 +105,6 @@ void *planStatePoolData(plan_state_pool_t *pool,
         return NULL;
 
     return planDataArrGet(pool->data[data_id], state_id);
-}
-
-
-_bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
-                                             plan_state_id_t sid)
-{
-    plan_state_htable_t *htable;
-    bor_list_t *hstate;
-    const plan_state_htable_t *hfound;
-
-    // allocate and initialize hash table element
-    htable = planDataArrGet(pool->data[DATA_HTABLE], sid);
-    htable->state_id = sid;
-
-    // insert it into hash table
-    hstate = borHTableInsertUnique(pool->htable, &htable->htable);
-
-    if (hstate == NULL){
-        // NULL is returned if the element was inserted into table, so
-        // increase number of elements in the pool
-        ++pool->num_states;
-        return sid;
-
-    }else{
-        // If the non-NULL was returned, it means that the same state was
-        // already in hash table.
-        hfound = HTABLE_STATE(hstate);
-        return hfound->state_id;
-    }
 }
 
 plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
@@ -258,8 +231,6 @@ _bor_inline plan_state_id_t applyPartStatePacked(plan_state_pool_t *pool,
 {
     void *statebuf, *newstate;
     plan_state_id_t newid;
-    plan_state_htable_t *hstate;
-    bor_list_t *hfound;
 
     // get corresponding state
     statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
@@ -273,24 +244,7 @@ _bor_inline plan_state_id_t applyPartStatePacked(plan_state_pool_t *pool,
     // apply partial state to the buffer of the new state
     planPartStateCreatePackedState(ps, statebuf, newstate);
 
-    // hash table struct correspodning to the new state and set it up
-    hstate = planDataArrGet(pool->data[DATA_HTABLE], newid);
-    hstate->state_id = newid;
-
-    // insert it into hash table
-    hfound = borHTableInsertUnique(pool->htable, &hstate->htable);
-
-    if (hfound == NULL){
-        // The state was inserted -- return the new id
-        ++pool->num_states;
-        return newid;
-
-    }else{
-        // Found in state pool, return its ID and forget the new state (by
-        // simply not increasing pool->num_states).
-        hstate = HTABLE_STATE(hfound);
-        return hstate->state_id;
-    }
+    return insertIntoHTable(pool, newid);
 }
 
 _bor_inline plan_state_id_t applyPartState(plan_state_pool_t *pool,
@@ -326,8 +280,6 @@ _bor_inline plan_state_id_t applyPartStatesPacked(plan_state_pool_t *pool,
 {
     void *statebuf, *newstate;
     plan_state_id_t newid;
-    plan_state_htable_t *hstate;
-    bor_list_t *hfound;
     int i;
 
     // get corresponding state
@@ -345,24 +297,7 @@ _bor_inline plan_state_id_t applyPartStatesPacked(plan_state_pool_t *pool,
         planPartStateUpdatePackedState(ps[i], newstate);
     }
 
-    // hash table struct correspodning to the new state and set it up
-    hstate = planDataArrGet(pool->data[DATA_HTABLE], newid);
-    hstate->state_id = newid;
-
-    // insert it into hash table
-    hfound = borHTableInsertUnique(pool->htable, &hstate->htable);
-
-    if (hfound == NULL){
-        // The state was inserted -- return the new id
-        ++pool->num_states;
-        return newid;
-
-    }else{
-        // Found in state pool, return its ID and forget the new state (by
-        // simply not increasing pool->num_states).
-        hstate = HTABLE_STATE(hfound);
-        return hstate->state_id;
-    }
+    return insertIntoHTable(pool, newid);
 }
 
 _bor_inline plan_state_id_t applyPartStates(plan_state_pool_t *pool,
@@ -410,6 +345,35 @@ _bor_inline bor_htable_key_t planStateHash(const plan_state_pool_t *pool,
     void *buf = planDataArrGet(pool->data[DATA_STATE], sid);
     return borCityHash_64(buf, planStatePackerBufSize(pool->packer));
 }
+
+_bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
+                                             plan_state_id_t sid)
+{
+    plan_state_htable_t *htable;
+    bor_list_t *hstate;
+    const plan_state_htable_t *hfound;
+
+    // allocate and initialize hash table element
+    htable = planDataArrGet(pool->data[DATA_HTABLE], sid);
+    htable->state_id = sid;
+
+    // insert it into hash table
+    hstate = borHTableInsertUnique(pool->htable, &htable->htable);
+
+    if (hstate == NULL){
+        // NULL is returned if the element was inserted into table, so
+        // increase number of elements in the pool
+        ++pool->num_states;
+        return sid;
+
+    }else{
+        // If the non-NULL was returned, it means that the same state was
+        // already in hash table.
+        hfound = HTABLE_STATE(hstate);
+        return hfound->state_id;
+    }
+}
+
 
 static bor_htable_key_t htableHash(const bor_list_t *key, void *ud)
 {

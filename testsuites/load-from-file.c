@@ -92,9 +92,10 @@ static void pPrivateVal(const plan_problem_private_val_t *pv, int pvsize)
 TEST(testLoadFromProto)
 {
     plan_problem_t *p;
+    int flags;
 
-    p = planProblemFromProto("../data/ma-benchmarks/rovers/p03.proto",
-                             PLAN_PROBLEM_USE_CG);
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    p = planProblemFromProto("../data/ma-benchmarks/rovers/p03.proto", flags);
     printf("---- testLoadFromProto ----\n");
     pVar(p->var, p->var_size);
     pInitState(p->state_pool, p->initial_state);
@@ -149,8 +150,10 @@ static void testAgentProto(const char *proto)
 {
     plan_problem_agents_t *agents;
     int i;
+    int flags;
 
-    agents = planProblemAgentsFromProto(proto, PLAN_PROBLEM_USE_CG);
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    agents = planProblemAgentsFromProto(proto, flags);
     assertNotEquals(agents, NULL);
     if (agents == NULL)
         return;

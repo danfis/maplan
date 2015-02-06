@@ -91,10 +91,37 @@ int planPartStateIsSubsetPackedState(const plan_part_state_t *part_state,
                                      const void *bufstate);
 
 /**
+ * Returns true if the partial state is a subset of the state.
+ */
+int planPartStateIsSubsetState(const plan_part_state_t *part_state,
+                               const plan_state_t *state);
+
+/**
  * Returns true if the given part-states equal.
  */
 int planPartStateEq(const plan_part_state_t *part_state1,
                     const plan_part_state_t *part_state2);
+
+/**
+ * Updates values in the given state with the values from partial state.
+ */
+void planPartStateUpdateState(const plan_part_state_t *part_state,
+                              plan_state_t *state);
+
+/**
+ * Updates values in the given packed state with the values from partial
+ * state.
+ */
+void planPartStateUpdatePackedState(const plan_part_state_t *part_state,
+                                    void *statebuf);
+
+/**
+ * Constructs a new packed state from the old by applying the partial state
+ * values.
+ */
+void planPartStateCreatePackedState(const plan_part_state_t *part_state,
+                                    const void *src_statebuf,
+                                    void *dst_statebuf);
 
 /**
  * Macro for iterating over "unrolled" set values of partial state.

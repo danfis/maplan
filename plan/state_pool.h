@@ -106,28 +106,18 @@ int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
  * the resulting state into state pool.
  * The ID of the resulting state is returned.
  */
-_bor_inline plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
-                                                        const plan_part_state_t *part_state,
-                                                        plan_state_id_t sid);
-
-/**
- * Same as planStatePoolApplyPartState() but uses "unrolled" mask and value
- * buffers from part-state directly.
- */
-plan_state_id_t planStatePoolApplyPartState2(plan_state_pool_t *pool,
-                                            const void *maskbuf,
-                                            const void *valbuf,
+plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
+                                            const plan_part_state_t *part_state,
                                             plan_state_id_t sid);
 
-
-/**** INLINES ****/
-_bor_inline plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
-                                                        const plan_part_state_t *part_state,
-                                                        plan_state_id_t sid)
-{
-    return planStatePoolApplyPartState2(pool, part_state->maskbuf,
-                                        part_state->valbuf, sid);
-}
+/**
+ * Applies consecutively partial states from the array to the given state
+ * and returns the newly create state.
+ */
+plan_state_id_t planStatePoolApplyPartStates(plan_state_pool_t *pool,
+                                             const plan_part_state_t **part_states,
+                                             int part_states_len,
+                                             plan_state_id_t sid);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -3,7 +3,10 @@
 #include "plan/part_state.h"
 
 /** Performs bit operation c = a AND b. */
-static void bitAnd(const void *a, const void *b, int size, void *c);
+_bor_inline void bitAnd(const void *a, const void *b, int size, void *c);
+/** Performs bit operator c = (a AND ~m) OR b. */
+_bor_inline void bitApplyWithMask(const void *a, const void *m, const void *b,
+                                  int size, void *c);
 
 plan_part_state_t *planPartStateNew(int size)
 {
@@ -142,16 +145,55 @@ int planPartStateIsSubsetPackedState(const plan_part_state_t *part_state,
     return cmp == 0;
 }
 
+int planPartStateIsSubsetState(const plan_part_state_t *part_state,
+                               const plan_state_t *state)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+
+    PLAN_PART_STATE_FOR_EACH(part_state, i, var, val){
+        if (planStateGet(state, var) != val)
+            return 0;
+    }
+
+    return 1;
+}
+
 int planPartStateEq(const plan_part_state_t *ps1,
                     const plan_part_state_t *ps2)
 {
     return memcmp(ps1->val, ps2->val, sizeof(plan_val_t) * ps1->size) == 0;
 }
 
+void planPartStateUpdateState(const plan_part_state_t *part_state,
+                              plan_state_t *state)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
 
+    PLAN_PART_STATE_FOR_EACH(part_state, i, var, val){
+        planStateSet(state, var, val);
+    }
+}
 
+void planPartStateUpdatePackedState(const plan_part_state_t *ps,
+                                    void *statebuf)
+{
+    bitApplyWithMask(statebuf, ps->maskbuf, ps->valbuf,
+                     ps->bufsize, statebuf);
+}
 
-static void bitAnd(const void *a, const void *b, int size, void *c)
+void planPartStateCreatePackedState(const plan_part_state_t *ps,
+                                    const void *src_statebuf,
+                                    void *dst_statebuf)
+{
+    bitApplyWithMask(src_statebuf, ps->maskbuf, ps->valbuf,
+                     ps->bufsize, dst_statebuf);
+}
+
+_bor_inline void bitAnd(const void *a, const void *b, int size, void *c)
 {
     const uint32_t *a32, *b32;
     uint32_t *c32;
@@ -173,5 +215,33 @@ static void bitAnd(const void *a, const void *b, int size, void *c)
     c8 = (uint8_t *)c32;
     for (; size8 != 0; --size8, ++a8, ++b8, ++c8){
         *c8 = *a8 & *b8;
+    }
+}
+
+_bor_inline void bitApplyWithMask(const void *a, const void *m, const void *b,
+                                  int size, void *c)
+{
+    const uint32_t *a32, *b32, *m32;
+    uint32_t *c32;
+    const uint8_t *a8, *b8, *m8;
+    uint8_t *c8;
+    int size32, size8;
+
+    size32 = size / 4;
+    a32 = a;
+    b32 = b;
+    m32 = m;
+    c32 = c;
+    for (; size32 != 0; --size32, ++a32, ++b32, ++c32, ++m32){
+        *c32 = (*a32 & ~*m32) | *b32;
+    }
+
+    size8 = size % 4;
+    a8 = (uint8_t *)a32;
+    b8 = (uint8_t *)b32;
+    m8 = (uint8_t *)m32;
+    c8 = (uint8_t *)c32;
+    for (; size8 != 0; --size8, ++a8, ++b8, ++c8, ++m8){
+        *c8 = (*a8 & ~*m8) | *b8;
     }
 }

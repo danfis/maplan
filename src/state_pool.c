@@ -25,10 +25,6 @@ _bor_inline int planStateEq(const plan_state_pool_t *pool,
 _bor_inline bor_htable_key_t planStateHash(const plan_state_pool_t *pool,
                                            plan_state_id_t sid);
 
-/** Performs bit operator c = (a AND ~m) OR b. */
-static void bitApplyWithMask(const void *a, const void *m, const void *b,
-                             int size, void *c);
-
 
 /** Callbacks for bor_htable_t */
 static bor_htable_key_t htableHash(const bor_list_t *key, void *ud);
@@ -214,7 +210,7 @@ void planStatePoolGetState(const plan_state_pool_t *pool,
     planStatePackerUnpack(pool->packer, statebuf, state);
 }
 
-const void *planStatePoolGetPackedState(const plan_state_pool_t*pool,
+const void *planStatePoolGetPackedState(const plan_state_pool_t *pool,
                                         plan_state_id_t sid)
 {
     if (sid >= pool->num_states)
@@ -222,32 +218,48 @@ const void *planStatePoolGetPackedState(const plan_state_pool_t*pool,
     return planDataArrGet(pool->data[DATA_STATE], sid);
 }
 
-int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
-                                   const plan_part_state_t *part_state,
-                                   plan_state_id_t sid)
+
+_bor_inline int isSubsetPacked(const plan_state_pool_t *pool,
+                               const plan_part_state_t *part_state,
+                               plan_state_id_t sid)
 {
     void *statebuf;
-
-    if (sid >= pool->num_states)
-        return 0;
 
     // get corresponding state
     statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
     return planPartStateIsSubsetPackedState(part_state, statebuf);
 }
 
-plan_state_id_t planStatePoolApplyPartState2(plan_state_pool_t *pool,
-                                             const void *maskbuf,
-                                             const void *valbuf,
-                                             plan_state_id_t sid)
+_bor_inline int isSubset(const plan_state_pool_t *pool,
+                         const plan_part_state_t *part_state,
+                         plan_state_id_t sid)
+{
+    PLAN_STATE_STACK(state, pool->num_vars);
+
+    planStatePoolGetState(pool, sid, &state);
+    return planPartStateIsSubsetState(part_state, &state);
+}
+
+int planStatePoolPartStateIsSubset(const plan_state_pool_t *pool,
+                                   const plan_part_state_t *part_state,
+                                   plan_state_id_t sid)
+{
+    if (sid >= pool->num_states)
+        return 0;
+
+    if (part_state->bufsize > 0)
+        return isSubsetPacked(pool, part_state, sid);
+    return isSubset(pool, part_state, sid);
+}
+
+_bor_inline plan_state_id_t applyPartStatePacked(plan_state_pool_t *pool,
+                                                 const plan_part_state_t *ps,
+                                                 plan_state_id_t sid)
 {
     void *statebuf, *newstate;
     plan_state_id_t newid;
     plan_state_htable_t *hstate;
     bor_list_t *hfound;
-
-    if (sid >= pool->num_states)
-        return PLAN_NO_STATE;
 
     // get corresponding state
     statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
@@ -259,8 +271,7 @@ plan_state_id_t planStatePoolApplyPartState2(plan_state_pool_t *pool,
     newstate = planDataArrGet(pool->data[DATA_STATE], newid);
 
     // apply partial state to the buffer of the new state
-    bitApplyWithMask(statebuf, maskbuf, valbuf,
-                     planStatePackerBufSize(pool->packer), newstate);
+    planPartStateCreatePackedState(ps, statebuf, newstate);
 
     // hash table struct correspodning to the new state and set it up
     hstate = planDataArrGet(pool->data[DATA_HTABLE], newid);
@@ -282,6 +293,104 @@ plan_state_id_t planStatePoolApplyPartState2(plan_state_pool_t *pool,
     }
 }
 
+_bor_inline plan_state_id_t applyPartState(plan_state_pool_t *pool,
+                                           const plan_part_state_t *ps,
+                                           plan_state_id_t sid)
+{
+    PLAN_STATE_STACK(state, pool->num_vars);
+
+    planStatePoolGetState(pool, sid, &state);
+    planPartStateUpdateState(ps, &state);
+    return planStatePoolInsert(pool, &state);
+}
+
+plan_state_id_t planStatePoolApplyPartState(plan_state_pool_t *pool,
+                                            const plan_part_state_t *ps,
+                                            plan_state_id_t sid)
+{
+    if (sid >= pool->num_states)
+        return PLAN_NO_STATE;
+
+    if (ps->bufsize > 0){
+        return applyPartStatePacked(pool, ps, sid);
+    }else{
+        return applyPartState(pool, ps, sid);
+    }
+}
+
+
+_bor_inline plan_state_id_t applyPartStatesPacked(plan_state_pool_t *pool,
+                                                  const plan_part_state_t **ps,
+                                                  int ps_len,
+                                                  plan_state_id_t sid)
+{
+    void *statebuf, *newstate;
+    plan_state_id_t newid;
+    plan_state_htable_t *hstate;
+    bor_list_t *hfound;
+    int i;
+
+    // get corresponding state
+    statebuf = planDataArrGet(pool->data[DATA_STATE], sid);
+
+    // remember ID of the new state (if it will be inserted)
+    newid = pool->num_states;
+
+    // get buffer of the new state
+    newstate = planDataArrGet(pool->data[DATA_STATE], newid);
+
+    // apply partial state to the buffer of the new state
+    planPartStateCreatePackedState(ps[0], statebuf, newstate);
+    for (i = 1; i < ps_len; ++i){
+        planPartStateUpdatePackedState(ps[i], newstate);
+    }
+
+    // hash table struct correspodning to the new state and set it up
+    hstate = planDataArrGet(pool->data[DATA_HTABLE], newid);
+    hstate->state_id = newid;
+
+    // insert it into hash table
+    hfound = borHTableInsertUnique(pool->htable, &hstate->htable);
+
+    if (hfound == NULL){
+        // The state was inserted -- return the new id
+        ++pool->num_states;
+        return newid;
+
+    }else{
+        // Found in state pool, return its ID and forget the new state (by
+        // simply not increasing pool->num_states).
+        hstate = HTABLE_STATE(hfound);
+        return hstate->state_id;
+    }
+}
+
+_bor_inline plan_state_id_t applyPartStates(plan_state_pool_t *pool,
+                                            const plan_part_state_t **ps,
+                                            int ps_len,
+                                            plan_state_id_t sid)
+{
+    PLAN_STATE_STACK(state, pool->num_vars);
+    int i;
+
+    planStatePoolGetState(pool, sid, &state);
+    for (i = 0; i < ps_len; ++i)
+        planPartStateUpdateState(ps[i], &state);
+    return planStatePoolInsert(pool, &state);
+}
+
+plan_state_id_t planStatePoolApplyPartStates(plan_state_pool_t *pool,
+                                             const plan_part_state_t **part_states,
+                                             int part_states_len,
+                                             plan_state_id_t sid)
+{
+    if (sid >= pool->num_states || part_states_len <= 0)
+        return PLAN_NO_STATE;
+
+    if (part_states[0]->bufsize > 0)
+        return applyPartStatesPacked(pool, part_states, part_states_len, sid);
+    return applyPartStates(pool, part_states, part_states_len, sid);
+}
 
 
 
@@ -317,32 +426,4 @@ static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud)
     plan_state_pool_t *pool = (plan_state_pool_t *)ud;
 
     return planStateEq(pool, s1->state_id, s2->state_id);
-}
-
-static void bitApplyWithMask(const void *a, const void *m, const void *b,
-                             int size, void *c)
-{
-    const uint32_t *a32, *b32, *m32;
-    uint32_t *c32;
-    const uint8_t *a8, *b8, *m8;
-    uint8_t *c8;
-    int size32, size8;
-
-    size32 = size / 4;
-    a32 = a;
-    b32 = b;
-    m32 = m;
-    c32 = c;
-    for (; size32 != 0; --size32, ++a32, ++b32, ++c32, ++m32){
-        *c32 = (*a32 & ~*m32) | *b32;
-    }
-
-    size8 = size % 4;
-    a8 = (uint8_t *)a32;
-    b8 = (uint8_t *)b32;
-    m8 = (uint8_t *)m32;
-    c8 = (uint8_t *)c32;
-    for (; size8 != 0; --size8, ++a8, ++b8, ++c8, ++m8){
-        *c8 = (*a8 & ~*m8) | *b8;
-    }
 }

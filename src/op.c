@@ -188,6 +188,25 @@ void planOpCondEffSimplify(plan_op_t *op)
     }
 }
 
+_bor_inline plan_state_id_t applyWithCondEff(const plan_op_t *op,
+                                             plan_state_pool_t *state_pool,
+                                             plan_state_id_t state_id)
+{
+    const plan_part_state_t *eff[op->cond_eff_size + 1];
+    const plan_op_cond_eff_t *ceff = op->cond_eff;
+    int i, efflen;
+
+    eff[0] = op->eff;
+    efflen = 1;
+    for (i = 0; i < op->cond_eff_size; ++i){
+        if (planStatePoolPartStateIsSubset(state_pool, ceff[i].pre, state_id)){
+            eff[efflen++] = ceff[i].eff;
+        }
+    }
+
+    return planStatePoolApplyPartStates(state_pool, eff, efflen, state_id);
+}
+
 plan_state_id_t planOpApply(const plan_op_t *op,
                             plan_state_pool_t *state_pool,
                             plan_state_id_t state_id)
@@ -197,29 +216,7 @@ plan_state_id_t planOpApply(const plan_op_t *op,
         return planStatePoolApplyPartState(state_pool, op->eff, state_id);
 
     }else{
-        int size = planStatePackerBufSize(state_pool->packer);
-        char maskbuf[size];
-        char valbuf[size];
-        int i;
-
-        // Initialize mask and value by non-conditional effects.
-        memcpy(maskbuf, op->eff->maskbuf, size);
-        memcpy(valbuf, op->eff->valbuf, size);
-
-        // Test conditional effects
-        for (i = 0; i < op->cond_eff_size; ++i){
-            if (planStatePoolPartStateIsSubset(state_pool,
-                                               op->cond_eff[i].pre,
-                                               state_id)){
-                // If condition associated with the effect holds, extend
-                // mask and value buffers accordingly.
-                bitOr(maskbuf, op->cond_eff[i].eff->maskbuf, size);
-                bitOr(valbuf, op->cond_eff[i].eff->valbuf, size);
-            }
-        }
-
-        return planStatePoolApplyPartState2(state_pool, maskbuf, valbuf,
-                                            state_id);
+        return applyWithCondEff(op, state_pool, state_id);
     }
 }
 

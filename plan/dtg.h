@@ -37,6 +37,15 @@ struct _plan_dtg_t {
 };
 typedef struct _plan_dtg_t plan_dtg_t;
 
+struct _plan_dtg_path_t {
+    int length; /*!< Length of the path */
+    const plan_dtg_trans_t **trans; /*!< Transitions on the path */
+};
+typedef struct _plan_dtg_path_t plan_dtg_path_t;
+
+void planDTGPathInit(plan_dtg_path_t *path);
+void planDTGPathFree(plan_dtg_path_t *path);
+
 /**
  * Constructs domain transition graph for all variables.
  */
@@ -47,6 +56,14 @@ void planDTGInit(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
  * Frees allocated resources.
  */
 void planDTGFree(plan_dtg_t *dtg);
+
+/**
+ * Finds shortest path between two values of a variable.
+ * Returns 0 if such a path was found, -1 otherwise.
+ */
+int planDTGPath(const plan_dtg_t *dtg, plan_var_id_t var,
+                plan_val_t from, plan_val_t to,
+                plan_dtg_path_t *path);
 
 /**
  * For debuf purposes

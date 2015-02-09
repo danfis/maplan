@@ -1,6 +1,19 @@
 #include <boruvka/alloc.h>
+#include <boruvka/fifo.h>
 
 #include "plan/dtg.h"
+
+void planDTGPathInit(plan_dtg_path_t *path)
+{
+    path->length = 0;
+    path->trans = NULL;
+}
+
+void planDTGPathFree(plan_dtg_path_t *path)
+{
+    if (path->trans)
+        BOR_FREE(path->trans);
+}
 
 static void dtgConnect(plan_dtg_var_t *dtg, plan_val_t pre, plan_val_t eff,
                        const plan_op_t *op)
@@ -78,6 +91,74 @@ void planDTGFree(plan_dtg_t *dtg)
     }
     BOR_FREE(dtg->dtg);
 }
+
+int planDTGPath(const plan_dtg_t *_dtg, plan_var_id_t var,
+                plan_val_t from, plan_val_t to,
+                plan_dtg_path_t *path)
+{
+    const plan_dtg_var_t *dtg = _dtg->dtg + var;
+    const plan_dtg_trans_t *trans;
+    bor_fifo_t fifo;
+    int i, *pre, val, found = 0;
+
+    if (from == to)
+        return 0;
+
+    // Initialize array for predecessors
+    pre = BOR_ALLOC_ARR(int, dtg->val_size);
+    for (i = 0; i < dtg->val_size; ++i)
+        pre[i] = -1;
+
+    borFifoInit(&fifo, sizeof(int));
+
+    // Use BFS to search graph
+    pre[from] = from;
+    val = from;
+    borFifoPush(&fifo, &val);
+    while (!borFifoEmpty(&fifo) && !found){
+        val = *(int *)borFifoFront(&fifo);
+        borFifoPop(&fifo);
+
+        trans = dtg->trans + (val * dtg->val_size);
+        for (i = 0; i < dtg->val_size; ++i, ++trans){
+            if (i == val || pre[i] != -1 || trans->ops_size == 0)
+                continue;
+            pre[i] = val;
+            if (i == to){
+                found = 1;
+                break;
+            }
+            borFifoPush(&fifo, &i);
+        }
+    }
+
+    if (found){
+        // Determine length of the path
+        path->length = 0;
+
+        val = to;
+        while (pre[val] != val){
+            ++path->length;
+            val = pre[val];
+        }
+
+        // Read out path
+        path->trans = BOR_ALLOC_ARR(const plan_dtg_trans_t *, path->length);
+        val = to;
+        for (i = path->length - 1; i >= 0; --i){
+            path->trans[i] = dtg->trans + (pre[val] * dtg->val_size) + val;
+            val = pre[val];
+        }
+    }
+
+    borFifoFree(&fifo);
+    BOR_FREE(pre);
+
+    if (found)
+        return 0;
+    return -1;
+}
+
 
 static void dtgVarPrint(const plan_dtg_var_t *dtg, FILE *fout)
 {

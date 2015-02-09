@@ -57,6 +57,7 @@ OBJS += search_ehc
 OBJS += search_lazy
 OBJS += search_astar
 OBJS += heur
+OBJS += dtg
 OBJS += fact_op_cross_ref
 OBJS += pref_op_selector
 OBJS += heur_relax

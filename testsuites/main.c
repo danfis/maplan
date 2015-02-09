@@ -16,6 +16,7 @@
 #include "causalgraph.h"
 #include "ma_search.h"
 #include "heur_admissible.h"
+#include "dtg.h"
 
 TEST(protobufTearDown)
 {
@@ -39,6 +40,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSCausalGraph),
     TEST_SUITE_ADD(TSMASearch),
     TEST_SUITE_ADD(TSHeurAdmissible),
+    TEST_SUITE_ADD(TSDTG),
     TEST_SUITES_CLOSURE
 };
 

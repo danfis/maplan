@@ -11,47 +11,47 @@ extern "C" {
 /**
  * Srtruct representing transition between pair of values.
  */
-struct _dtg_trans_t {
+struct _plan_dtg_trans_t {
     const plan_op_t **ops;
     int ops_size;
 };
-typedef struct _dtg_trans_t dtg_trans_t;
+typedef struct _plan_dtg_trans_t plan_dtg_trans_t;
 
 /**
  * Domain transition graph for one variable.
  */
-struct _dtg_var_t {
+struct _plan_dtg_var_t {
     plan_var_id_t var;   /*!< ID of the variable */
     plan_val_t val_size; /*!< Number of values */
-    dtg_trans_t *trans;  /*!< Incidence matrix containing transition
+    plan_dtg_trans_t *trans;  /*!< Incidence matrix containing transition
                               operators for each pair of values */
 };
-typedef struct _dtg_var_t dtg_var_t;
+typedef struct _plan_dtg_var_t plan_dtg_var_t;
 
 /**
  * Domain transition graph
  */
-struct _dtg_t {
+struct _plan_dtg_t {
     int var_size;   /*!< Number of variables */
-    dtg_var_t *dtg; /*!< DTG for each variable */
+    plan_dtg_var_t *dtg; /*!< DTG for each variable */
 };
-typedef struct _dtg_t dtg_t;
+typedef struct _plan_dtg_t plan_dtg_t;
 
 /**
  * Constructs domain transition graph for all variables.
  */
-void planDTGInit(dtg_t *dtg, const plan_var_t *var, int var_size,
+void planDTGInit(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
                  const plan_op_t *op, int op_size);
 
 /**
  * Frees allocated resources.
  */
-void planDTGFree(dtg_t *dtg);
+void planDTGFree(plan_dtg_t *dtg);
 
 /**
  * For debuf purposes
  */
-void planDTGPrint(const dtg_t *dtg, FILE *fout);
+void planDTGPrint(const plan_dtg_t *dtg, FILE *fout);
 
 #ifdef __cplusplus
 } /* extern "C" */

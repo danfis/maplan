@@ -2,10 +2,10 @@
 
 #include "plan/dtg.h"
 
-static void dtgConnect(dtg_var_t *dtg, plan_val_t pre, plan_val_t eff,
+static void dtgConnect(plan_dtg_var_t *dtg, plan_val_t pre, plan_val_t eff,
                        const plan_op_t *op)
 {
-    dtg_trans_t *trans;
+    plan_dtg_trans_t *trans;
 
     trans = dtg->trans + (pre * dtg->val_size) + eff;
     ++trans->ops_size;
@@ -14,7 +14,7 @@ static void dtgConnect(dtg_var_t *dtg, plan_val_t pre, plan_val_t eff,
     trans->ops[trans->ops_size - 1] = op;
 }
 
-static void dtgConnectAll(dtg_var_t *dtg, plan_val_t eff,
+static void dtgConnectAll(plan_dtg_var_t *dtg, plan_val_t eff,
                           const plan_op_t *op)
 {
     plan_val_t pre;
@@ -25,7 +25,7 @@ static void dtgConnectAll(dtg_var_t *dtg, plan_val_t eff,
     }
 }
 
-static void dtgUpdateByOp(dtg_t *dtg, const plan_op_t *op)
+static void dtgUpdateByOp(plan_dtg_t *dtg, const plan_op_t *op)
 {
     plan_var_id_t var;
     plan_val_t pre, eff;
@@ -41,19 +41,19 @@ static void dtgUpdateByOp(dtg_t *dtg, const plan_op_t *op)
     }
 }
 
-void planDTGInit(dtg_t *dtg, const plan_var_t *var, int var_size,
+void planDTGInit(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
                  const plan_op_t *op, int op_size)
 {
     int i, size;
 
     // Allocate structures for all DTGs
     dtg->var_size = var_size;
-    dtg->dtg = BOR_ALLOC_ARR(dtg_var_t, var_size);
+    dtg->dtg = BOR_ALLOC_ARR(plan_dtg_var_t, var_size);
     for (i = 0; i < var_size; ++i){
         dtg->dtg[i].var = i;
         dtg->dtg[i].val_size = var[i].range;
         size = var[i].range * var[i].range;
-        dtg->dtg[i].trans = BOR_CALLOC_ARR(dtg_trans_t, size);
+        dtg->dtg[i].trans = BOR_CALLOC_ARR(plan_dtg_trans_t, size);
     }
 
     for (i = 0; i < op_size; ++i){
@@ -61,7 +61,7 @@ void planDTGInit(dtg_t *dtg, const plan_var_t *var, int var_size,
     }
 }
 
-void planDTGFree(dtg_t *dtg)
+void planDTGFree(plan_dtg_t *dtg)
 {
     int i, j, size;
 
@@ -79,12 +79,12 @@ void planDTGFree(dtg_t *dtg)
     BOR_FREE(dtg->dtg);
 }
 
-static void dtgVarPrint(const dtg_var_t *dtg, FILE *fout)
+static void dtgVarPrint(const plan_dtg_var_t *dtg, FILE *fout)
 {
     plan_var_id_t var;
     plan_val_t val;
     int i, j, k, vi;
-    const dtg_trans_t *trans;
+    const plan_dtg_trans_t *trans;
 
     for (i = 0; i < dtg->val_size; ++i){
         for (j = 0; j < dtg->val_size; ++j){
@@ -112,7 +112,7 @@ static void dtgVarPrint(const dtg_var_t *dtg, FILE *fout)
     }
 }
 
-void planDTGPrint(const dtg_t *dtg, FILE *fout)
+void planDTGPrint(const plan_dtg_t *dtg, FILE *fout)
 {
     int i;
 

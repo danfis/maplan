@@ -4,7 +4,7 @@
 
 static void dtgDump(const char *proto)
 {
-    dtg_t dtg;
+    plan_dtg_t dtg;
     plan_problem_t *p;
     int flags;
 

@@ -11,6 +11,7 @@ import subprocess
 import cPickle as pickle
 import shutil
 import argparse
+import datetime
 from pprint import pprint
 
 PYTHON = '/usr/bin/python2'
@@ -21,6 +22,8 @@ BENCHMARKS_DIR = '/home/danfis/dev/plan-data/benchmarks'
 SEARCH_REPO = 'git@gitlab.fel.cvut.cz:fiserdan/libplan.git'
 FD_REPO = 'https://github.com/danfis/fast-downward'
 #FD_REPO = '/home/danfis/dev/fast-downward.mirror'
+MONGO_DB = 'metabench'
+MONGO_COLLECTION = 'results'
 
 def abspath(path):
     abspath = os.path.abspath(path)
@@ -1001,13 +1004,84 @@ def writeCSVRaw(data, fn):
             row = csvRow(d, header)
             writer.writerow(row)
 
+def insertToMongo(data):
+    import pymongo
+    client = pymongo.MongoClient()
+    db = client[MONGO_DB]
+    coll = db[MONGO_COLLECTION]
+    coll.ensure_index('test-id')
+    coll.ensure_index('date-from')
+    coll.ensure_index('date-to')
+    coll.ensure_index('git-tags')
+    coll.ensure_index('git-commit')
+    coll.ensure_index('git-short-commit')
+    coll.ensure_index('type')
+    coll.ensure_index('name')
+
+    q = { 'git-commit' : data[0]['git-commit'],
+          'type'       : data[0]['type'],
+          'name'       : data[0]['name'] }
+    d = coll.find_one(q)
+    if d is not None:
+        print 'Mongo: Data already in db ({0}, {1}, {2})!'.format(
+                    q['type'], q['name'], q['git-commit'])
+        print 'Mongo: --> test-id: {0}'.format(d['test-id'])
+        print 'Mongo: You can drop data by db.{0}.remove({{ \'test-id\' : {1} }})'.format(
+                    MONGO_COLLECTION, d['test-id'])
+        return
+
+    d = coll.find_one(sort = [('test-id', -1)])
+    if d == None:
+        test_id = 1
+    else:
+        test_id = d['test-id'] + 1
+
+    print 'Inserting into mongo...'
+    for d in data:
+        d['test-id'] = test_id
+        coll.insert(d)
+    print '  --> DONE'
+
 pat_prob_dir = re.compile('^([0-9]+)-([^:]+):([^:]+):([0-9]+)$')
 def _mainResults(args, type = 'libplan'):
     bench_dir = args.bench_dir
-    tasks = pickle.load(open(os.path.join(bench_dir, 'bench.pickle'), 'r'))
-    tasks = tasks['tasks']
+    bench = pickle.load(open(os.path.join(bench_dir, 'bench.pickle'), 'r'))
+    tasks = bench['tasks']
     problem_dirs = sorted(os.listdir(bench_dir))
+    problem_dirs = filter(lambda x: pat_prob_dir.match(x) is not None,
+                          problem_dirs)
     data = []
+
+    common = { 'type' : type,
+               'argv' : bench['argv'],
+               'name' : bench['name'],
+               'git-commit' : '',
+               'git-short-commit' : '',
+               'git-tags' : [],
+               'date-from' : None,
+               'date-to' : None,
+             }
+
+    mtime = [os.path.join(args.bench_dir, x) for x in problem_dirs]
+    mtime = [os.path.getmtime(x) for x in mtime]
+    mtime = [datetime.datetime.utcfromtimestamp(x) for x in mtime]
+    mtime = sorted(mtime)
+    common['date-from'] = mtime[0]
+    common['date-to'] = mtime[-1]
+
+    if os.path.isdir(os.path.join(args.bench_dir, 'repo')):
+        cmd = ['git',
+               '--git-dir={0}'.format(os.path.join(args.bench_dir, 'repo/.git')),
+               'log', '-n1', '--pretty=format:%h;;%H;;%D']
+        out = subprocess.check_output(cmd)
+        short_commit, commit, refs = out.split(';;')
+        refs = refs.split(', ')
+        tags = filter(lambda x: x.startswith('tag: '), refs)
+        tags = [x[5:] for x in tags]
+        common['git-short-commit'] = short_commit
+        common['git-commit'] = commit
+        common['git-tags'] = tags
+
     for d in problem_dirs:
         match = pat_prob_dir.match(d)
         if match is None:
@@ -1024,6 +1098,7 @@ def _mainResults(args, type = 'libplan'):
             d['max-mem'] = tasks[task_i]['search']['max_mem']
             d['search-alg'] = tasks[task_i]['search']['opts'][1]
 
+        d.update(common)
         data.append(d)
 
     print('Writing raw data to `results.pickle\'...')
@@ -1031,6 +1106,10 @@ def _mainResults(args, type = 'libplan'):
         pickle.dump(data, fout)
     print('Writing raw data to `results.csv\'')
     writeCSVRaw(data, 'results.csv')
+    try:
+        insertToMongo(data)
+    except Exception, e:
+        print('Mongo Error: ' + str(e))
 
 def mainResults(args):
     _mainResults(args)

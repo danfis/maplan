@@ -154,10 +154,10 @@ static void updateByPath(plan_heur_dtg_t *hdtg, const open_goal_t *goal)
         //        i, (long)op, goal->var, path_val[i], path_val[i + 1]);
         //fflush(stderr);
 
-        PLAN_PART_STATE_FOR_EACH(op->pre, _, var, val)
-            addGoal(hdtg, var, val);
         PLAN_PART_STATE_FOR_EACH(op->eff, _, var, val)
             addValue(hdtg, var, val);
+        PLAN_PART_STATE_FOR_EACH(op->pre, _, var, val)
+            addGoal(hdtg, var, val);
     }
 
     dtgPathFree(&path);
@@ -170,18 +170,21 @@ static void heurDTG(plan_heur_t *_heur, const plan_state_t *state,
     open_goal_t goal;
     int i, size;
 
+    // Add values from initial state
     valuesZeroize(&hdtg->values);
-    openGoalsZeroize(&hdtg->open_goals);
-    for (i = 0; i < hdtg->goal_size; ++i){
-        addGoal(hdtg, hdtg->goal[i].var, hdtg->goal[i].val);
-        //fprintf(stderr, "add-goal: var: %d, val: %d\n",
-        //        hdtg->goal[i].var, hdtg->goal[i].val);
-    }
     size = planStateSize(state);
     for (i = 0; i < size; ++i){
         addValue(hdtg, i, planStateGet(state, i));
         //fprintf(stderr, "add-value: var: %d, val: %d\n",
         //        i, planStateGet(state, i));
+    }
+
+    // Add goals to open-goals queue
+    openGoalsZeroize(&hdtg->open_goals);
+    for (i = 0; i < hdtg->goal_size; ++i){
+        addGoal(hdtg, hdtg->goal[i].var, hdtg->goal[i].val);
+        //fprintf(stderr, "add-goal: var: %d, val: %d\n",
+        //        hdtg->goal[i].var, hdtg->goal[i].val);
     }
 
     res->heur = 0;
@@ -204,6 +207,8 @@ static int minDist(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val,
 
     dtgPathExplore(&hdtg->dtg, var, val, &path);
 
+    // Find out a value from registered values to which leads a minimal
+    // path.
     len = INT_MAX;
     val_range = hdtg->values.val_range[var];
     vals = hdtg->values.val[var];
@@ -258,15 +263,42 @@ static const plan_op_t *minCostOp(plan_heur_dtg_t *hdtg, plan_var_id_t var,
 
 static void addGoal(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val)
 {
-    if (valuesGet(&hdtg->values, var, val) == 0)
-        openGoalsAdd(&hdtg->open_goals, var, val);
-    // TODO
+    int idx, min_dist;
+    plan_val_t min_val;
+
+    if (valuesGet(&hdtg->values, var, val) != 0)
+        return;
+
+    idx = openGoalsAdd(&hdtg->open_goals, var, val);
+    if (idx < 0)
+        return;
+
+    // Compute and cache minimal distance and corresponding value
+    min_dist = minDist(hdtg, var, val, &min_val);
+    hdtg->open_goals.goals[idx].min_dist = min_dist;
+    hdtg->open_goals.goals[idx].min_val = min_val;
 }
 
 static void addValue(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val)
 {
-    valuesSet(&hdtg->values, var, val, 1);
-    // TODO
+    int i, goals_size, min_dist;
+    plan_val_t min_val;
+    open_goal_t *goals;
+
+    if (valuesSet(&hdtg->values, var, val, 1) != 0)
+        return;
+
+    // Update cached min_dist and min_val members of open goals with same
+    // variable.
+    goals_size = hdtg->open_goals.goals_size;
+    goals = hdtg->open_goals.goals;
+    for (i = 0; i < goals_size; ++i){
+        if (goals[i].var == var){
+            min_dist = minDist(hdtg, var, goals[i].val, &min_val);
+            goals[i].min_dist = min_dist;
+            goals[i].min_val = min_val;
+        }
+    }
 }
 
 static open_goal_t nextOpenGoal(plan_heur_dtg_t *hdtg)
@@ -279,9 +311,6 @@ static open_goal_t nextOpenGoal(plan_heur_dtg_t *hdtg)
     max_cost = -1;
     max_i = 0;
     for (i = 0; i < goals_size; ++i){
-        // TODO
-        goals[i].min_dist = minDist(hdtg, goals[i].var, goals[i].val,
-                                    &goals[i].min_val);
         if (goals[i].min_dist > max_cost){
             max_cost = goals[i].min_dist;
             max_i = i;

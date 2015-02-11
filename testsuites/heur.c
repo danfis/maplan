@@ -37,6 +37,12 @@ static plan_heur_t *lmCutNew(plan_problem_t *p)
                             p->op, p->op_size);
 }
 
+static plan_heur_t *dtgNew(plan_problem_t *p)
+{
+    return planHeurDTGNew(p->var, p->var_size, p->goal,
+                          p->op, p->op_size);
+}
+
 typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);
 
 static void runTest(const char *name,
@@ -306,4 +312,18 @@ TEST(testHeurRelaxLMCut)
             "states/rovers-p15.txt", lmCutNew, 0);
     runTest("LM-CUT", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", lmCutNew, 0);
+}
+
+TEST(testHeurDTG)
+{
+    runTest("DTG", "../data/ma-benchmarks/depot/pfile1.proto",
+            "states/depot-pfile1.txt", dtgNew, 0);
+    runTest("DTG", "../data/ma-benchmarks/depot/pfile5.proto",
+            "states/depot-pfile5.txt", dtgNew, 1);
+    runTest("DTG", "../data/ma-benchmarks/rovers/p03.proto",
+            "states/rovers-p03.txt", dtgNew, 0);
+    runTest("DTG", "../data/ma-benchmarks/rovers/p15.proto",
+            "states/rovers-p15.txt", dtgNew, 0);
+    runTest("DTG", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", dtgNew, 0);
 }

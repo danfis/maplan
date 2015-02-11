@@ -1,8 +1,10 @@
 #include <boruvka/alloc.h>
 #include <plan/heur.h>
+#include <plan/dtg.h>
 
 struct _plan_heur_dtg_t {
     plan_heur_t heur;
+    plan_dtg_t dtg;
 };
 typedef struct _plan_heur_dtg_t plan_heur_dtg_t;
 
@@ -13,14 +15,15 @@ static void heurDTGDel(plan_heur_t *_heur);
 static void heurDTG(plan_heur_t *_heur, const plan_state_t *state,
                     plan_heur_res_t *res);
 
-plan_heur_t *planHeurDTG(const plan_var_t *var, int var_size,
-                         const plan_part_state_t *goal,
-                         const plan_op_t *op, int op_size)
+plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,
+                            const plan_part_state_t *goal,
+                            const plan_op_t *op, int op_size)
 {
     plan_heur_dtg_t *hdtg;
 
     hdtg = BOR_ALLOC(plan_heur_dtg_t);
     _planHeurInit(&hdtg->heur, heurDTGDel, heurDTG);
+    planDTGInit(&hdtg->dtg, var, var_size, op, op_size);
 
     return &hdtg->heur;
 }
@@ -28,6 +31,7 @@ plan_heur_t *planHeurDTG(const plan_var_t *var, int var_size,
 static void heurDTGDel(plan_heur_t *_heur)
 {
     plan_heur_dtg_t *hdtg = HEUR(_heur);
+    planDTGFree(&hdtg->dtg);
     _planHeurFree(&hdtg->heur);
     BOR_FREE(hdtg);
 }

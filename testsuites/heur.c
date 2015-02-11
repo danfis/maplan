@@ -70,6 +70,8 @@ static void runTest(const char *name,
     heur = new_heur(p);
 
     for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
+        //if (si != 4)
+        //    continue;
         planHeurResInit(&res);
         if (pref){
             res.pref_op = pref_ops;
@@ -89,6 +91,7 @@ static void runTest(const char *name,
                 printf("%s\n", res.pref_op[i]->name);
             }
         }
+        fflush(stdout);
     }
 
     BOR_FREE(pref_ops);

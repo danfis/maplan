@@ -1004,7 +1004,7 @@ def writeCSVRaw(data, fn):
             row = csvRow(d, header)
             writer.writerow(row)
 
-def insertToMongo(data):
+def insertToMongo(args, data):
     import pymongo
     client = pymongo.MongoClient()
     db = client[MONGO_DB]
@@ -1040,6 +1040,15 @@ def insertToMongo(data):
     for d in data:
         d['test-id'] = test_id
         coll.insert(d)
+    print '  --> DONE'
+
+    name = data[0]['name'].strip('/')
+    tar_name = '{0}-{1}-{2}'.format(data[0]['type'], name, data[0]['git-commit'])
+    tar_name = '{0:06d}-{1}'.format(test_id, tar_name)
+    print 'Creating tar {0}'.format(tar_name)
+    cmd = 'cd {0} && tar --xform \'s|^|{1}/|\' -cJf {1}.tar.xz *'
+    cmd = cmd.format(args.bench_dir, tar_name)
+    os.system(cmd)
     print '  --> DONE'
 
 pat_prob_dir = re.compile('^([0-9]+)-([^:]+):([^:]+):([0-9]+)$')
@@ -1107,7 +1116,7 @@ def _mainResults(args, type = 'libplan'):
     print('Writing raw data to `results.csv\'')
     writeCSVRaw(data, 'results.csv')
     try:
-        insertToMongo(data)
+        insertToMongo(args, data)
     except Exception, e:
         print('Mongo Error: ' + str(e))
 

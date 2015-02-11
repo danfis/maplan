@@ -295,6 +295,9 @@ static plan_heur_t *_heurNew(const char *name,
     }else if (strcmp(name, "ff") == 0){
         heur = planHeurRelaxFFNew(prob->var, prob->var_size,
                                   prob->goal, op, op_size);
+    }else if (strcmp(name, "dtg") == 0){
+        heur = planHeurDTGNew(prob->var, prob->var_size,
+                              prob->goal, op, op_size);
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
                                 prob->goal, op, op_size);

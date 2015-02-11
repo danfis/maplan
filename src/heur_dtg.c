@@ -222,13 +222,19 @@ static int minDist(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val,
     dtg_path_t *path;
     int len, i, val_range, *vals;
 
-    path = dtgPath(hdtg, var, val);
+    // Early exit if we are searching for path from val to val
+    vals = hdtg->values.val[var];
+    if (vals[val]){
+        if (d != NULL)
+            *d = val;
+        return 0;
+    }
 
     // Find out a value from registered values to which leads a minimal
     // path.
+    path = dtgPath(hdtg, var, val);
     len = INT_MAX;
     val_range = hdtg->values.val_range[var];
-    vals = hdtg->values.val[var];
     for (i = 0; i < val_range; ++i){
         //fprintf(stderr, "min_dist: [%d] %d, %d\n", i, vals[i], path.pre[i].len);
         if (vals[i] && path->pre[i].len < len){

@@ -7,6 +7,7 @@ TEST(testHeurRelaxAdd);
 TEST(testHeurRelaxMax);
 TEST(testHeurRelaxFF);
 TEST(testHeurRelaxLMCut);
+TEST(testHeurDTG);
 TEST(protobufTearDown);
 
 TEST_SUITE(TSHeur) {
@@ -16,6 +17,7 @@ TEST_SUITE(TSHeur) {
     TEST_ADD(testHeurRelaxMax),
     TEST_ADD(testHeurRelaxFF),
     TEST_ADD(testHeurRelaxLMCut),
+    TEST_ADD(testHeurDTG),
     TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE
 };

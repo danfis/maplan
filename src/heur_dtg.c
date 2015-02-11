@@ -147,25 +147,18 @@ static void heurDTGDel(plan_heur_t *_heur)
 
 static void updateByPath(plan_heur_dtg_t *hdtg, const open_goal_t *goal)
 {
-    int path_val[goal->min_dist + 1];
     dtg_path_t *path;
     const plan_op_t *op;
     plan_var_id_t var;
     plan_val_t val;
+    int from, to;
     int _, i, len = goal->min_dist;
 
     path = dtgPath(hdtg, goal->var, goal->val);
-
-    // read out path
-    path_val[0] = goal->min_val;
+    from = goal->min_val;
     for (i = 0; i < len; ++i){
-        path_val[i + 1] = path->pre[path_val[i]].val;
-        //fprintf(stderr, "path_val[%d]: %d\n", i, path_val[i]);
-    }
-    //fprintf(stderr, "path_val[%d]: %d\n", i, path_val[i]);
-
-    for (i = 0; i < len; ++i){
-        op = minCostOp(hdtg, goal->var, path_val[i], path_val[i + 1]);
+        to = path->pre[from].val;
+        op = minCostOp(hdtg, goal->var, from, to);
         //fprintf(stderr, "updateByPath: [%d], op %lx, var: %d, val: %d->%d\n",
         //        i, (long)op, goal->var, path_val[i], path_val[i + 1]);
         //fflush(stderr);
@@ -174,6 +167,8 @@ static void updateByPath(plan_heur_dtg_t *hdtg, const open_goal_t *goal)
             addValue(hdtg, var, val);
         PLAN_PART_STATE_FOR_EACH(op->pre, _, var, val)
             addGoal(hdtg, var, val);
+
+        from = to;
     }
 }
 

@@ -158,9 +158,6 @@ static void updateByPath(plan_heur_dtg_t *hdtg, const open_goal_t *goal)
     for (i = 0; i < len; ++i){
         to = path->pre[from].val;
         op = minCostOp(hdtg, goal->var, from, to);
-        //fprintf(stderr, "updateByPath: [%d], op %lx, var: %d, val: %d->%d\n",
-        //        i, (long)op, goal->var, path_val[i], path_val[i + 1]);
-        //fflush(stderr);
 
         PLAN_PART_STATE_FOR_EACH(op->eff, _, var, val)
             addValue(hdtg, var, val);
@@ -181,25 +178,17 @@ static void heurDTG(plan_heur_t *_heur, const plan_state_t *state,
     // Add values from initial state
     valuesZeroize(&hdtg->values);
     size = planStateSize(state);
-    for (i = 0; i < size; ++i){
+    for (i = 0; i < size; ++i)
         addValue(hdtg, i, planStateGet(state, i));
-        //fprintf(stderr, "add-value: var: %d, val: %d\n",
-        //        i, planStateGet(state, i));
-    }
 
     // Add goals to open-goals queue
     openGoalsZeroize(&hdtg->open_goals);
-    for (i = 0; i < hdtg->goal_size; ++i){
+    for (i = 0; i < hdtg->goal_size; ++i)
         addGoal(hdtg, hdtg->goal[i].var, hdtg->goal[i].val);
-        //fprintf(stderr, "add-goal: var: %d, val: %d\n",
-        //        hdtg->goal[i].var, hdtg->goal[i].val);
-    }
 
     res->heur = 0;
     while (hdtg->open_goals.goals_size > 0){
         goal = nextOpenGoal(hdtg);
-        //fprintf(stderr, "goal: var: %d, val: %d, min_dist: %d, min_val: %d\n",
-        //        goal.var, goal.val, goal.min_dist, goal.min_val);
         res->heur += goal.min_dist;
         updateByPath(hdtg, &goal);
     }
@@ -222,6 +211,9 @@ static int minDist(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val,
     dtg_path_t *path;
     int len, i, val_range, *vals;
 
+    if (d != NULL)
+        *d = -1;
+
     // Early exit if we are searching for path from val to val
     vals = hdtg->values.val[var];
     if (vals[val]){
@@ -236,7 +228,6 @@ static int minDist(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val,
     len = INT_MAX;
     val_range = hdtg->values.val_range[var];
     for (i = 0; i < val_range; ++i){
-        //fprintf(stderr, "min_dist: [%d] %d, %d\n", i, vals[i], path.pre[i].len);
         if (vals[i] && path->pre[i].len < len){
             len = path->pre[i].len;
             if (d != NULL)
@@ -378,12 +369,6 @@ static void dtgPathExplore(const plan_dtg_t *_dtg, plan_var_id_t var,
             borFifoPush(&fifo, &i);
         }
     }
-
-    //fprintf(stderr, "PathExplore var; %d, val: %d\n", var, val);
-    //for (i = 0; i < dtg->val_size; ++i){
-    //    fprintf(stderr, "[%d] val: %d, len: %d\n",
-    //            i, path->pre[i].val, path->pre[i].len);
-    //}
 }
 
 static void dtgPathFree(dtg_path_t *path)

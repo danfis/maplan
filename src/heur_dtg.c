@@ -141,17 +141,19 @@ static void heurDTG(plan_heur_t *_heur, const plan_state_t *state,
 
 
 
-static int minDist(plan_heur_dtg_t *dtg, plan_var_id_t var, plan_val_t val,
+static int minDist(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val,
                    plan_val_t *d)
 {
     dtg_path_t path;
-    int len, i;
+    int len, i, val_range, *vals;
 
-    dtgPathExplore(&dtg->dtg, var, val, &path);
+    dtgPathExplore(&hdtg->dtg, var, val, &path);
 
     len = PLAN_COST_MAX;
-    for (i = 0; i < dtg->dtg.dtg[var].val_size; ++i){
-        if (path.pre[i].len < len){
+    val_range = hdtg->values.val_range[var];
+    vals = hdtg->values.val[var];
+    for (i = 0; i < val_range; ++i){
+        if (vals[i] && path.pre[i].len < len){
             len = path.pre[i].len;
             if (d != NULL)
                 *d = path.pre[i].val;

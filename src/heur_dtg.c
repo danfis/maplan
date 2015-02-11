@@ -48,8 +48,7 @@ static void valuesFree(values_t *v);
 static void valuesZeroize(values_t *v);
 /** Sets variable-value pair in the structre if the current value is zero.
  *  Return 0 if new value was set and -1 otherwise. */
-static int valuesSet(values_t *v, plan_var_id_t var, plan_val_t val,
-                     int set_val);
+static int valuesSet(values_t *v, plan_var_id_t var, plan_val_t val);
 static int valuesGet(const values_t *v, plan_var_id_t var, plan_val_t val);
 
 
@@ -302,7 +301,7 @@ static void addValue(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val)
     plan_val_t min_val;
     open_goal_t *goals;
 
-    if (valuesSet(&hdtg->values, var, val, 1) != 0)
+    if (valuesSet(&hdtg->values, var, val) != 0)
         return;
 
     // Update cached min_dist and min_val members of open goals with same
@@ -459,12 +458,11 @@ static void valuesZeroize(values_t *v)
     bzero(v->val_arr, v->val_arr_byte_size);
 }
 
-static int valuesSet(values_t *v, plan_var_id_t var, plan_val_t val,
-                     int set_val)
+static int valuesSet(values_t *v, plan_var_id_t var, plan_val_t val)
 {
     if (v->val[var][val] != 0)
         return -1;
-    v->val[var][val] = set_val;
+    v->val[var][val] = 1;
     return 0;
 }
 
@@ -496,11 +494,9 @@ static void openGoalsZeroize(open_goals_t *g)
 
 static int openGoalsAdd(open_goals_t *g, plan_var_id_t var, plan_val_t val)
 {
-    int idx;
     open_goal_t *goal;
 
-    idx = g->values.val[var][val];
-    if (idx != 0)
+    if (valuesGet(&g->values, var, val) != 0)
         return -1;
 
     if (g->goals_size >= g->goals_alloc){
@@ -511,7 +507,7 @@ static int openGoalsAdd(open_goals_t *g, plan_var_id_t var, plan_val_t val)
     goal = g->goals + g->goals_size;
     goal->var = var;
     goal->val = val;
-    valuesSet(&g->values, var, val, g->goals_size + 1);
+    valuesSet(&g->values, var, val);
     ++g->goals_size;
 
     return g->goals_size - 1;
@@ -519,10 +515,7 @@ static int openGoalsAdd(open_goals_t *g, plan_var_id_t var, plan_val_t val)
 
 static void openGoalsRemove(open_goals_t *g, int i)
 {
-    if (g->goals_size > i){
-        g->values.val[g->goals[i].var][g->goals[i].val] *= -1;
+    if (g->goals_size > i)
         g->goals[i] = g->goals[g->goals_size - 1];
-        g->values.val[g->goals[i].var][g->goals[i].val] = i + 1;
-    }
     --g->goals_size;
 }

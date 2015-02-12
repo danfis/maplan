@@ -52,14 +52,7 @@ plan_part_state_t *planPartStateClone(const plan_part_state_t *p)
 
 void planPartStateInit(plan_part_state_t *ps, int size)
 {
-    int i;
-
     ps->size = size;
-    ps->val    = BOR_ALLOC_ARR(plan_val_t, size);
-
-    for (i = 0; i < size; ++i){
-        ps->val[i] = PLAN_VAL_UNDEFINED;
-    }
 
     ps->valbuf = NULL;
     ps->maskbuf = NULL;
@@ -70,8 +63,6 @@ void planPartStateInit(plan_part_state_t *ps, int size)
 
 void planPartStateFree(plan_part_state_t *part_state)
 {
-    if (part_state->val)
-        BOR_FREE(part_state->val);
     if (part_state->valbuf)
         BOR_FREE(part_state->valbuf);
     if (part_state->maskbuf)
@@ -102,8 +93,6 @@ void planPartStateSet(plan_part_state_t *state,
                       plan_var_id_t var,
                       plan_val_t val)
 {
-    state->val[var] = val;
-
     if (state->valbuf){
         BOR_FREE(state->valbuf);
         BOR_FREE(state->maskbuf);
@@ -123,8 +112,6 @@ void planPartStateSet(plan_part_state_t *state,
 void planPartStateUnset(plan_part_state_t *state, plan_var_id_t var)
 {
     int i;
-
-    state->val[var] = PLAN_VAL_UNDEFINED;
 
     if (state->valbuf){
         BOR_FREE(state->valbuf);
@@ -156,8 +143,12 @@ void planPartStateUnset(plan_part_state_t *state, plan_var_id_t var)
 void planPartStateToState(const plan_part_state_t *part_state,
                           plan_state_t *state)
 {
-    memcpy(state->val, part_state->val,
-           sizeof(plan_val_t) * part_state->size);
+    int i;
+
+    for (i = 0; i < part_state->size; ++i)
+        state->val[i] = PLAN_VAL_UNDEFINED;
+    for (i = 0; i < part_state->vals_size; ++i)
+        state->val[part_state->vals[i].var] = part_state->vals[i].val;
 }
 
 int planPartStateIsSubsetPackedState(const plan_part_state_t *part_state,
@@ -189,6 +180,7 @@ int planPartStateIsSubsetState(const plan_part_state_t *part_state,
     plan_val_t val;
     int i;
 
+    // TODO
     PLAN_PART_STATE_FOR_EACH(part_state, i, var, val){
         if (planStateGet(state, var) != val)
             return 0;
@@ -200,7 +192,18 @@ int planPartStateIsSubsetState(const plan_part_state_t *part_state,
 int planPartStateEq(const plan_part_state_t *ps1,
                     const plan_part_state_t *ps2)
 {
-    return memcmp(ps1->val, ps2->val, sizeof(plan_val_t) * ps1->size) == 0;
+    int i;
+
+    if (ps1->vals_size != ps2->vals_size)
+        return 0;
+
+    for (i = 0; i < ps1->vals_size; ++i){
+        if (ps1->vals[i].var != ps2->vals[i].var
+                || ps1->vals[i].val != ps2->vals[i].val){
+            return 0;
+        }
+    }
+    return 1;
 }
 
 void planPartStateUpdateState(const plan_part_state_t *part_state,

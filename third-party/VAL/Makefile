@@ -39,6 +39,7 @@ CFLAGS  = ${DEPENDFLAGS}
 
 CXX      ?= g++
 CXXFLAGS  += ${DEPENDFLAGS} -ansi -Wall
+CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
 
 %.o : %.cc
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} -c $< -o $@

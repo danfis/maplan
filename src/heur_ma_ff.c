@@ -23,6 +23,9 @@ struct _plan_heur_ma_ff_t {
     const plan_op_t *base_op;
     int base_op_size;
     plan_op_id_tr_t op_id_tr;
+    plan_op_t *private_op;
+    int private_op_size;
+    plan_op_id_tr_t private_op_id_tr;
 };
 typedef struct _plan_heur_ma_ff_t plan_heur_ma_ff_t;
 
@@ -46,6 +49,7 @@ static void maHeur(plan_heur_ma_ff_t *heur,
 /** Returns operator corresponding to its global ID or NULL if this node
  *  does not know this operator */
 static const plan_op_t *maOpFromId(plan_heur_ma_ff_t *heur, int op_id);
+static const plan_op_t *maPrivateOpFromId(plan_heur_ma_ff_t *heur, int op_id);
 /** Performs local exploration from the initial state stored in .ma.state
  *  to the specified goal. */
 static void maExploreLocal(plan_heur_ma_ff_t *heur,
@@ -99,6 +103,13 @@ plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
     heur->base_op_size = prob->proj_op_size;
 
     planOpIdTrInit(&heur->op_id_tr, prob->proj_op, prob->proj_op_size);
+
+    planProblemCreatePrivateProjOps(prob->op, prob->op_size,
+                                    prob->var, prob->var_size,
+                                    &heur->private_op,
+                                    &heur->private_op_size);
+    planOpIdTrInit(&heur->private_op_id_tr, heur->private_op,
+                  heur->private_op_size);
     return &heur->heur;
 }
 
@@ -120,6 +131,8 @@ static void heurDel(plan_heur_t *_heur)
     borRBTreeIntDel(heur->peer_op);
     BOR_FREE(heur->pre_peer_op);
     planOpIdTrFree(&heur->op_id_tr);
+    planProblemDestroyOps(heur->private_op, heur->private_op_size);
+    planOpIdTrFree(&heur->private_op_id_tr);
     BOR_FREE(heur);
 }
 
@@ -212,6 +225,16 @@ static const plan_op_t *maOpFromId(plan_heur_ma_ff_t *heur, int op_id)
     id = planOpIdTrLoc(&heur->op_id_tr, op_id);
     if (id >= 0)
         return heur->base_op + id;
+    return NULL;
+}
+
+static const plan_op_t *maPrivateOpFromId(plan_heur_ma_ff_t *heur, int op_id)
+{
+    int id;
+
+    id = planOpIdTrLoc(&heur->private_op_id_tr, op_id);
+    if (id >= 0)
+        return heur->private_op + id;
     return NULL;
 }
 
@@ -385,7 +408,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
     planMAMsgStateFull(msg, &state);
 
     // Find target operator
-    op = maOpFromId(heur, op_id);
+    op = maPrivateOpFromId(heur, op_id);
     if (op == NULL){
         maSendEmptyResponse(comm, agent_id, op_id);
         return;

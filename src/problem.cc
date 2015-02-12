@@ -755,23 +755,22 @@ static void pruneUnimportantVars(plan_problem_t *p,
 static int cmpPartState(const plan_part_state_t *p1,
                         const plan_part_state_t *p2)
 {
-    int i, size = p1->size;
-    int isset1, isset2;
-    plan_val_t val1, val2;
+    int i;
 
-    for (i = 0; i < size; ++i){
-        isset1 = planPartStateIsSet(p1, i);
-        isset2 = planPartStateIsSet(p2, i);
-        if (isset1 == isset2){
-            if (!isset1)
-                continue;
+    // First sort part-states with less values set
+    if (p1->vals_size < p2->vals_size){
+        return -1;
+    }else if (p1->vals_size > p2->vals_size){
+        return 1;
+    }
 
-            val1 = planPartStateGet(p1, i);
-            val2 = planPartStateGet(p2, i);
-            if (val1 != val2)
-                return val1 - val2;
-        }else{
-            return isset1 - isset2;
+    // We assume that in .vals_size are values sorted according to variable
+    // ID
+    for (i = 0; i < p1->vals_size; ++i){
+        if (p1->vals[i].var != p2->vals[i].var){
+            return p1->vals[i].var - p2->vals[i].var;
+        }else if (p1->vals[i].val != p2->vals[i].val){
+            return p1->vals[i].val - p2->vals[i].val;
         }
     }
 

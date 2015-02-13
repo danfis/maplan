@@ -46,7 +46,20 @@ static int openGoalsAdd(plan_heur_dtg_open_goals_t *g,
 /** Removes i'th goal */
 static void openGoalsRemove(plan_heur_dtg_open_goals_t *g, int i);
 
+/**
+ * Main structure for DTG heuristic
+ */
+struct _plan_heur_dtg_t {
+    plan_heur_t heur;
+    plan_dtg_t dtg;
+    plan_part_state_pair_t *goal;
+    int goal_size;
 
+    plan_heur_dtg_values_t values;
+    plan_heur_dtg_open_goals_t open_goals;
+    plan_heur_dtg_path_cache_t dtg_path;
+};
+typedef struct _plan_heur_dtg_t plan_heur_dtg_t;
 #define HEUR(parent) \
     bor_container_of((parent), plan_heur_dtg_t, heur)
 

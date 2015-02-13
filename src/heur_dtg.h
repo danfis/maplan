@@ -63,31 +63,21 @@ struct _plan_heur_dtg_open_goals_t {
 typedef struct _plan_heur_dtg_open_goals_t plan_heur_dtg_open_goals_t;
 
 /**
- * Main structure for DTG heuristic
+ * Base data structure for computing DTG heuristic.
  */
-struct _plan_heur_dtg_t {
-    plan_heur_t heur;
+struct _plan_heur_dtg_data_t {
     plan_dtg_t dtg;
-    plan_part_state_pair_t *goal;
-    int goal_size;
-
-    plan_heur_dtg_values_t values;
-    plan_heur_dtg_open_goals_t open_goals;
     plan_heur_dtg_path_cache_t dtg_path;
 };
-typedef struct _plan_heur_dtg_t plan_heur_dtg_t;
+typedef struct _plan_heur_dtg_data_t plan_heur_dtg_data_t;
 
 /**
- * Initializes DTG structure
+ * Contex struct for computing actual heuristic value.
  */
-void planHeurDTGInit(plan_heur_dtg_t *hdtg,
-                     const plan_var_t *var, int var_size,
-                     const plan_part_state_t *goal,
-                     const plan_op_t *op, int op_size);
-
-/**
- * Frees allocated resources
- */
-void planHeurDTGFree(plan_heur_dtg_t *hdtg);
+struct _plan_heur_dtg_ctx_t {
+    plan_heur_dtg_values_t values;
+    plan_heur_dtg_open_goals_t open_goals;
+};
+typedef struct _plan_heur_dtg_ctx_t plan_heur_dtg_ctx_t;
 
 #endif /* __PLAN_HEUR_DTG_H__ */

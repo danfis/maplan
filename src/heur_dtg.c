@@ -3,81 +3,87 @@
 #include <plan/heur.h>
 #include <plan/dtg.h>
 
-struct _dtg_path_pre_t {
+struct _plan_heur_dtg_path_pre_t {
     plan_val_t val;
     int len;
 };
-typedef struct _dtg_path_pre_t dtg_path_pre_t;
+typedef struct _plan_heur_dtg_path_pre_t plan_heur_dtg_path_pre_t;
 
-struct _dtg_path_t {
-    dtg_path_pre_t *pre;
+struct _plan_heur_dtg_path_t {
+    plan_heur_dtg_path_pre_t *pre;
 };
-typedef struct _dtg_path_t dtg_path_t;
+typedef struct _plan_heur_dtg_path_t plan_heur_dtg_path_t;
 
 static void dtgPathExplore(const plan_dtg_t *dtg, plan_var_id_t var,
-                           plan_val_t val, dtg_path_t *path);
-static void dtgPathFree(dtg_path_t *path);
+                           plan_val_t val, plan_heur_dtg_path_t *path);
+static void dtgPathFree(plan_heur_dtg_path_t *path);
 
-struct _dtg_path_cache_t {
+struct _plan_heur_dtg_path_cache_t {
     int var_size;
-    dtg_path_t **path;
+    plan_heur_dtg_path_t **path;
     int *range;
 };
-typedef struct _dtg_path_cache_t dtg_path_cache_t;
+typedef struct _plan_heur_dtg_path_cache_t plan_heur_dtg_path_cache_t;
 
-static void dtgPathCacheInit(dtg_path_cache_t *pc,
+static void dtgPathCacheInit(plan_heur_dtg_path_cache_t *pc,
                              const plan_var_t *var, int var_size);
-static void dtgPathCacheFree(dtg_path_cache_t *pc);
-static dtg_path_t *dtgPathCache(dtg_path_cache_t *pc, plan_var_id_t var,
-                                plan_val_t val);
+static void dtgPathCacheFree(plan_heur_dtg_path_cache_t *pc);
+static plan_heur_dtg_path_t *dtgPathCache(plan_heur_dtg_path_cache_t *pc,
+                                          plan_var_id_t var,
+                                          plan_val_t val);
 
 
-struct _values_t {
+struct _plan_heur_dtg_values_t {
     int *val_arr;          /*!< Array for all values from all variables */
     int val_arr_byte_size; /*!< Size of .value_arr in bytes */
     int **val;             /*!< Values indexed by variable ID */
     int *val_range;        /*!< Range of values for each variable */
 };
-typedef struct _values_t values_t;
+typedef struct _plan_heur_dtg_values_t plan_heur_dtg_values_t;
 
 /** Initializes structure */
-static void valuesInit(values_t *v, const plan_var_t *var, int var_size);
+static void valuesInit(plan_heur_dtg_values_t *v,
+                       const plan_var_t *var, int var_size);
 /** Free allocated resources */
-static void valuesFree(values_t *v);
+static void valuesFree(plan_heur_dtg_values_t *v);
 /** Set all values to zero */
-static void valuesZeroize(values_t *v);
+static void valuesZeroize(plan_heur_dtg_values_t *v);
 /** Sets variable-value pair in the structre if the current value is zero.
  *  Return 0 if new value was set and -1 otherwise. */
-static int valuesSet(values_t *v, plan_var_id_t var, plan_val_t val);
-static int valuesGet(const values_t *v, plan_var_id_t var, plan_val_t val);
+static int valuesSet(plan_heur_dtg_values_t *v,
+                     plan_var_id_t var, plan_val_t val);
+static int valuesGet(const plan_heur_dtg_values_t *v,
+                     plan_var_id_t var, plan_val_t val);
 
 
-struct _open_goal_t {
+struct _plan_heur_dtg_open_goal_t {
     plan_var_id_t var;
     plan_val_t val;
     plan_val_t min_val;
     int min_dist;
 };
-typedef struct _open_goal_t open_goal_t;
+typedef struct _plan_heur_dtg_open_goal_t plan_heur_dtg_open_goal_t;
 
-struct _open_goals_t {
-    values_t values;
-    open_goal_t *goals;
+struct _plan_heur_dtg_open_goals_t {
+    plan_heur_dtg_values_t values;
+    plan_heur_dtg_open_goal_t *goals;
     int goals_size;
     int goals_alloc;
 };
-typedef struct _open_goals_t open_goals_t;
+typedef struct _plan_heur_dtg_open_goals_t plan_heur_dtg_open_goals_t;
 
 /** Initializes structure */
-static void openGoalsInit(open_goals_t *g, const plan_var_t *var, int var_size);
+static void openGoalsInit(plan_heur_dtg_open_goals_t *g,
+                          const plan_var_t *var, int var_size);
 /** Free allocated resources */
-static void openGoalsFree(open_goals_t *g);
+static void openGoalsFree(plan_heur_dtg_open_goals_t *g);
 /** Set all values to zero */
-static void openGoalsZeroize(open_goals_t *g);
+static void openGoalsZeroize(plan_heur_dtg_open_goals_t *g);
 /** Adds goal to the structure */
-static int openGoalsAdd(open_goals_t *g, plan_var_id_t var, plan_val_t val);
+static int openGoalsAdd(plan_heur_dtg_open_goals_t *g,
+                        plan_var_id_t var, plan_val_t val);
 /** Removes i'th goal */
-static void openGoalsRemove(open_goals_t *g, int i);
+static void openGoalsRemove(plan_heur_dtg_open_goals_t *g, int i);
 
 struct _plan_heur_dtg_t {
     plan_heur_t heur;
@@ -85,9 +91,9 @@ struct _plan_heur_dtg_t {
     plan_part_state_pair_t *goal;
     int goal_size;
 
-    values_t values;
-    open_goals_t open_goals;
-    dtg_path_cache_t dtg_path;
+    plan_heur_dtg_values_t values;
+    plan_heur_dtg_open_goals_t open_goals;
+    plan_heur_dtg_path_cache_t dtg_path;
 };
 typedef struct _plan_heur_dtg_t plan_heur_dtg_t;
 
@@ -98,15 +104,16 @@ static void heurDTGDel(plan_heur_t *_heur);
 static void heurDTG(plan_heur_t *_heur, const plan_state_t *state,
                     plan_heur_res_t *res);
 
-static dtg_path_t *dtgPath(plan_heur_dtg_t *hdtg, plan_var_id_t var,
-                           plan_val_t val);
+static plan_heur_dtg_path_t *dtgPath(plan_heur_dtg_t *hdtg,
+                                     plan_var_id_t var,
+                                     plan_val_t val);
 static int minDist(plan_heur_dtg_t *dtg, plan_var_id_t var, plan_val_t val,
                    plan_val_t *d);
 static const plan_op_t *minCostOp(plan_heur_dtg_t *dtg, plan_var_id_t var,
                                   plan_val_t from, plan_val_t to);
 static void addGoal(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val);
 static void addValue(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val);
-static open_goal_t nextOpenGoal(plan_heur_dtg_t *hdtg);
+static plan_heur_dtg_open_goal_t nextOpenGoal(plan_heur_dtg_t *hdtg);
 
 plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,
                             const plan_part_state_t *goal,
@@ -144,9 +151,9 @@ static void heurDTGDel(plan_heur_t *_heur)
     BOR_FREE(hdtg);
 }
 
-static void updateByPath(plan_heur_dtg_t *hdtg, const open_goal_t *goal)
+static void updateByPath(plan_heur_dtg_t *hdtg, const plan_heur_dtg_open_goal_t *goal)
 {
-    dtg_path_t *path;
+    plan_heur_dtg_path_t *path;
     const plan_op_t *op;
     plan_var_id_t var;
     plan_val_t val;
@@ -172,7 +179,7 @@ static void heurDTG(plan_heur_t *_heur, const plan_state_t *state,
                     plan_heur_res_t *res)
 {
     plan_heur_dtg_t *hdtg = HEUR(_heur);
-    open_goal_t goal;
+    plan_heur_dtg_open_goal_t goal;
     int i, size;
 
     // Add values from initial state
@@ -195,10 +202,11 @@ static void heurDTG(plan_heur_t *_heur, const plan_state_t *state,
 }
 
 
-static dtg_path_t *dtgPath(plan_heur_dtg_t *hdtg, plan_var_id_t var,
-                           plan_val_t val)
+static plan_heur_dtg_path_t *dtgPath(plan_heur_dtg_t *hdtg,
+                                     plan_var_id_t var,
+                                     plan_val_t val)
 {
-    dtg_path_t *path;
+    plan_heur_dtg_path_t *path;
     path = dtgPathCache(&hdtg->dtg_path, var, val);
     if (path->pre == NULL)
         dtgPathExplore(&hdtg->dtg, var, val, path);
@@ -208,7 +216,7 @@ static dtg_path_t *dtgPath(plan_heur_dtg_t *hdtg, plan_var_id_t var,
 static int minDist(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val,
                    plan_val_t *d)
 {
-    dtg_path_t *path;
+    plan_heur_dtg_path_t *path;
     int len, i, val_range, *vals;
 
     if (d != NULL)
@@ -296,7 +304,7 @@ static void addValue(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val)
 {
     int i, goals_size, min_dist;
     plan_val_t min_val;
-    open_goal_t *goals;
+    plan_heur_dtg_open_goal_t *goals;
 
     if (valuesSet(&hdtg->values, var, val) != 0)
         return;
@@ -314,12 +322,12 @@ static void addValue(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val)
     }
 }
 
-static open_goal_t nextOpenGoal(plan_heur_dtg_t *hdtg)
+static plan_heur_dtg_open_goal_t nextOpenGoal(plan_heur_dtg_t *hdtg)
 {
     int i, max_cost, max_i;
     int goals_size = hdtg->open_goals.goals_size;
-    open_goal_t *goals = hdtg->open_goals.goals;
-    open_goal_t ret;
+    plan_heur_dtg_open_goal_t *goals = hdtg->open_goals.goals;
+    plan_heur_dtg_open_goal_t ret;
 
     max_cost = -1;
     max_i = 0;
@@ -336,7 +344,7 @@ static open_goal_t nextOpenGoal(plan_heur_dtg_t *hdtg)
 }
 
 static void dtgPathExplore(const plan_dtg_t *_dtg, plan_var_id_t var,
-                           plan_val_t val, dtg_path_t *path)
+                           plan_val_t val, plan_heur_dtg_path_t *path)
 {
     const plan_dtg_var_t *dtg = _dtg->dtg + var;
     const plan_dtg_trans_t *trans;
@@ -345,7 +353,7 @@ static void dtgPathExplore(const plan_dtg_t *_dtg, plan_var_id_t var,
     plan_val_t v;
     int i;
 
-    path->pre = BOR_ALLOC_ARR(dtg_path_pre_t, dtg->val_size);
+    path->pre = BOR_ALLOC_ARR(plan_heur_dtg_path_pre_t, dtg->val_size);
     for (i = 0; i < dtg->val_size; ++i){
         path->pre[i].val = -1;
         path->pre[i].len = INT_MAX;
@@ -371,27 +379,27 @@ static void dtgPathExplore(const plan_dtg_t *_dtg, plan_var_id_t var,
     }
 }
 
-static void dtgPathFree(dtg_path_t *path)
+static void dtgPathFree(plan_heur_dtg_path_t *path)
 {
     if (path->pre)
         BOR_FREE(path->pre);
 }
 
-static void dtgPathCacheInit(dtg_path_cache_t *pc,
+static void dtgPathCacheInit(plan_heur_dtg_path_cache_t *pc,
                              const plan_var_t *var, int var_size)
 {
     int i;
 
-    pc->path = BOR_ALLOC_ARR(dtg_path_t *, var_size);
+    pc->path = BOR_ALLOC_ARR(plan_heur_dtg_path_t *, var_size);
     pc->range = BOR_ALLOC_ARR(int, var_size);
     for (i = 0; i < var_size; ++i){
-        pc->path[i] = BOR_CALLOC_ARR(dtg_path_t, var[i].range);
+        pc->path[i] = BOR_CALLOC_ARR(plan_heur_dtg_path_t, var[i].range);
         pc->range[i] = var[i].range;
     }
     pc->var_size = var_size;
 }
 
-static void dtgPathCacheFree(dtg_path_cache_t *pc)
+static void dtgPathCacheFree(plan_heur_dtg_path_cache_t *pc)
 {
     int i, j;
 
@@ -406,14 +414,16 @@ static void dtgPathCacheFree(dtg_path_cache_t *pc)
     BOR_FREE(pc->range);
 }
 
-static dtg_path_t *dtgPathCache(dtg_path_cache_t *pc, plan_var_id_t var,
-                                plan_val_t val)
+static plan_heur_dtg_path_t *dtgPathCache(plan_heur_dtg_path_cache_t *pc,
+                                          plan_var_id_t var,
+                                          plan_val_t val)
 {
     return &pc->path[var][val];
 }
 
 
-static void valuesInit(values_t *v, const plan_var_t *var, int var_size)
+static void valuesInit(plan_heur_dtg_values_t *v,
+                       const plan_var_t *var, int var_size)
 {
     int i, *val;
 
@@ -437,19 +447,20 @@ static void valuesInit(values_t *v, const plan_var_t *var, int var_size)
     }
 }
 
-static void valuesFree(values_t *v)
+static void valuesFree(plan_heur_dtg_values_t *v)
 {
     BOR_FREE(v->val_arr);
     BOR_FREE(v->val);
     BOR_FREE(v->val_range);
 }
 
-static void valuesZeroize(values_t *v)
+static void valuesZeroize(plan_heur_dtg_values_t *v)
 {
     bzero(v->val_arr, v->val_arr_byte_size);
 }
 
-static int valuesSet(values_t *v, plan_var_id_t var, plan_val_t val)
+static int valuesSet(plan_heur_dtg_values_t *v,
+                     plan_var_id_t var, plan_val_t val)
 {
     if (v->val[var][val] != 0)
         return -1;
@@ -457,42 +468,46 @@ static int valuesSet(values_t *v, plan_var_id_t var, plan_val_t val)
     return 0;
 }
 
-static int valuesGet(const values_t *v, plan_var_id_t var, plan_val_t val)
+static int valuesGet(const plan_heur_dtg_values_t *v,
+                     plan_var_id_t var, plan_val_t val)
 {
     return v->val[var][val];
 }
 
-static void openGoalsInit(open_goals_t *g, const plan_var_t *var, int var_size)
+static void openGoalsInit(plan_heur_dtg_open_goals_t *g,
+                          const plan_var_t *var, int var_size)
 {
     valuesInit(&g->values, var, var_size);
     g->goals_size = 0;
     g->goals_alloc = 10;
-    g->goals = BOR_ALLOC_ARR(open_goal_t, g->goals_alloc);
+    g->goals = BOR_ALLOC_ARR(plan_heur_dtg_open_goal_t, g->goals_alloc);
 }
 
-static void openGoalsFree(open_goals_t *g)
+static void openGoalsFree(plan_heur_dtg_open_goals_t *g)
 {
     valuesFree(&g->values);
     if (g->goals)
         BOR_FREE(g->goals);
 }
 
-static void openGoalsZeroize(open_goals_t *g)
+static void openGoalsZeroize(plan_heur_dtg_open_goals_t *g)
 {
     valuesZeroize(&g->values);
     g->goals_size = 0;
 }
 
-static int openGoalsAdd(open_goals_t *g, plan_var_id_t var, plan_val_t val)
+static int openGoalsAdd(plan_heur_dtg_open_goals_t *g,
+                        plan_var_id_t var, plan_val_t val)
 {
-    open_goal_t *goal;
+    plan_heur_dtg_open_goal_t *goal;
 
     if (valuesGet(&g->values, var, val) != 0)
         return -1;
 
     if (g->goals_size >= g->goals_alloc){
         g->goals_alloc *= 2;
-        g->goals = BOR_REALLOC_ARR(g->goals, open_goal_t, g->goals_alloc);
+        g->goals = BOR_REALLOC_ARR(g->goals, plan_heur_dtg_open_goal_t,
+                                   g->goals_alloc);
     }
 
     goal = g->goals + g->goals_size;
@@ -504,7 +519,7 @@ static int openGoalsAdd(open_goals_t *g, plan_var_id_t var, plan_val_t val)
     return g->goals_size - 1;
 }
 
-static void openGoalsRemove(open_goals_t *g, int i)
+static void openGoalsRemove(plan_heur_dtg_open_goals_t *g, int i)
 {
     if (g->goals_size > i)
         g->goals[i] = g->goals[g->goals_size - 1];

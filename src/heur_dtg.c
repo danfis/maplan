@@ -32,7 +32,7 @@ plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,
     hdtg = BOR_ALLOC(plan_heur_dtg_t);
     _planHeurInit(&hdtg->heur, heurDTGDel, heurDTG);
     planHeurDTGDataInit(&hdtg->data, var, var_size, op, op_size);
-    planHeurDTGCtxInit(&hdtg->ctx, var, var_size);
+    planHeurDTGCtxInit(&hdtg->ctx, &hdtg->data);
 
     // Save goal values
     hdtg->goal = BOR_ALLOC_ARR(plan_part_state_pair_t, goal->vals_size);
@@ -88,8 +88,7 @@ static plan_heur_dtg_path_t *dtgPathCache(plan_heur_dtg_path_cache_t *pc,
 
 
 /** Initializes structure */
-static void valuesInit(plan_heur_dtg_values_t *v,
-                       const plan_var_t *var, int var_size);
+static void valuesInit(plan_heur_dtg_values_t *v, const plan_dtg_t *dtg);
 /** Free allocated resources */
 static void valuesFree(plan_heur_dtg_values_t *v);
 /** Set all values to zero */
@@ -103,8 +102,7 @@ static int valuesGet(const plan_heur_dtg_values_t *v,
 
 
 /** Initializes structure */
-static void openGoalsInit(plan_heur_dtg_open_goals_t *g,
-                          const plan_var_t *var, int var_size);
+static void openGoalsInit(plan_heur_dtg_open_goals_t *g, const plan_dtg_t *dtg);
 /** Free allocated resources */
 static void openGoalsFree(plan_heur_dtg_open_goals_t *g);
 /** Set all values to zero */
@@ -166,10 +164,10 @@ void planHeurDTGDataFree(plan_heur_dtg_data_t *dtg_data)
 
 
 void planHeurDTGCtxInit(plan_heur_dtg_ctx_t *dtg_ctx,
-                        const plan_var_t *var, int var_size)
+                        const plan_heur_dtg_data_t *dtg_data)
 {
-    valuesInit(&dtg_ctx->values, var, var_size);
-    openGoalsInit(&dtg_ctx->open_goals, var, var_size);
+    valuesInit(&dtg_ctx->values, &dtg_data->dtg);
+    openGoalsInit(&dtg_ctx->open_goals, &dtg_data->dtg);
     dtg_ctx->heur = 0;
 }
 
@@ -296,28 +294,27 @@ static plan_heur_dtg_path_t *dtgPathCache(plan_heur_dtg_path_cache_t *pc,
 }
 
 
-static void valuesInit(plan_heur_dtg_values_t *v,
-                       const plan_var_t *var, int var_size)
+static void valuesInit(plan_heur_dtg_values_t *v, const plan_dtg_t *dtg)
 {
     int i, *val;
 
     // First compute size of the array for all values
     v->val_arr_byte_size = 0;
-    for (i = 0; i < var_size; ++i)
-        v->val_arr_byte_size += var[i].range;
+    for (i = 0; i < dtg->var_size; ++i)
+        v->val_arr_byte_size += dtg->dtg[i].val_size;
     v->val_arr_byte_size *= sizeof(int);
 
     // Allocate array for all values
     v->val_arr = BOR_ALLOC_ARR(int, v->val_arr_byte_size / sizeof(int));
 
     // And allocate array for each variable separately
-    v->val = BOR_ALLOC_ARR(int *, var_size);
-    v->val_range = BOR_ALLOC_ARR(int, var_size);
+    v->val = BOR_ALLOC_ARR(int *, dtg->var_size);
+    v->val_range = BOR_ALLOC_ARR(int, dtg->var_size);
     val = v->val_arr;
-    for (i = 0; i < var_size; ++i){
+    for (i = 0; i < dtg->var_size; ++i){
         v->val[i] = val;
-        v->val_range[i] = var[i].range;
-        val += var[i].range;
+        v->val_range[i] = dtg->dtg[i].val_size;
+        val += dtg->dtg[i].val_size;
     }
 }
 
@@ -348,10 +345,9 @@ static int valuesGet(const plan_heur_dtg_values_t *v,
     return v->val[var][val];
 }
 
-static void openGoalsInit(plan_heur_dtg_open_goals_t *g,
-                          const plan_var_t *var, int var_size)
+static void openGoalsInit(plan_heur_dtg_open_goals_t *g, const plan_dtg_t *dtg)
 {
-    valuesInit(&g->values, var, var_size);
+    valuesInit(&g->values, dtg);
     g->goals_size = 0;
     g->goals_alloc = 10;
     g->goals = BOR_ALLOC_ARR(plan_heur_dtg_open_goal_t, g->goals_alloc);

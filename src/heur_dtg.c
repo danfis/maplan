@@ -78,6 +78,36 @@ static void addGoal(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val);
 static void addValue(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val);
 static plan_heur_dtg_open_goal_t nextOpenGoal(plan_heur_dtg_t *hdtg);
 
+
+void planHeurDTGDataInit(plan_heur_dtg_data_t *dtg_data,
+                         const plan_var_t *var, int var_size,
+                         const plan_op_t *op, int op_size)
+{
+    planDTGInit(&dtg_data->dtg, var, var_size, op, op_size);
+    dtgPathCacheInit(&dtg_data->dtg_path, var, var_size);
+}
+
+void planHeurDTGDataFree(plan_heur_dtg_data_t *dtg_data)
+{
+    dtgPathCacheFree(&dtg_data->dtg_path);
+    planDTGFree(&dtg_data->dtg);
+}
+
+
+void planHeurDTGCtxInit(plan_heur_dtg_ctx_t *dtg_ctx,
+                        const plan_var_t *var, int var_size)
+{
+    valuesInit(&dtg_ctx->values, var, var_size);
+    openGoalsInit(&dtg_ctx->open_goals, var, var_size);
+}
+
+void planHeurDTGCtxFree(plan_heur_dtg_ctx_t *dtg_ctx)
+{
+    openGoalsFree(&dtg_ctx->open_goals);
+    valuesFree(&dtg_ctx->values);
+}
+
+
 plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,
                             const plan_part_state_t *goal,
                             const plan_op_t *op, int op_size)

@@ -80,4 +80,29 @@ struct _plan_heur_dtg_ctx_t {
 };
 typedef struct _plan_heur_dtg_ctx_t plan_heur_dtg_ctx_t;
 
+
+/**
+ * Initialize *data* structure.
+ */
+void planHeurDTGDataInit(plan_heur_dtg_data_t *dtg_data,
+                         const plan_var_t *var, int var_size,
+                         const plan_op_t *op, int op_size);
+
+/**
+ * Fress allocated resources.
+ */
+void planHeurDTGDataFree(plan_heur_dtg_data_t *dtg_data);
+
+
+/**
+ * Initializes context structure.
+ */
+void planHeurDTGCtxInit(plan_heur_dtg_ctx_t *dtg_ctx,
+                        const plan_var_t *var, int var_size);
+
+/**
+ * Frees allocated resources.
+ */
+void planHeurDTGCtxFree(plan_heur_dtg_ctx_t *dtg_ctx);
+
 #endif /* __PLAN_HEUR_DTG_H__ */

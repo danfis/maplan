@@ -79,6 +79,32 @@ static void addValue(plan_heur_dtg_t *hdtg, plan_var_id_t var, plan_val_t val);
 static plan_heur_dtg_open_goal_t nextOpenGoal(plan_heur_dtg_t *hdtg);
 
 
+
+
+static plan_heur_dtg_path_t *dataDtgPath(plan_heur_dtg_data_t *dtg_data,
+                                         plan_var_id_t var,
+                                         plan_val_t val);
+
+static int ctxMinDist(plan_heur_dtg_ctx_t *dtg_ctx,
+                      plan_heur_dtg_data_t *dtg_data,
+                      plan_var_id_t var, plan_val_t val,
+                      plan_val_t *d);
+static const plan_op_t *ctxMinCostOp(plan_heur_dtg_ctx_t *dtg_ctx,
+                                     plan_heur_dtg_data_t *dtg_data,
+                                     plan_var_id_t var,
+                                     plan_val_t from, plan_val_t to);
+static void ctxAddGoal(plan_heur_dtg_ctx_t *dtg_ctx,
+                       plan_heur_dtg_data_t *dtg_data,
+                       plan_var_id_t var, plan_val_t val);
+static void ctxAddValue(plan_heur_dtg_ctx_t *dtg_ctx,
+                        plan_heur_dtg_data_t *dtg_data,
+                        plan_var_id_t var, plan_val_t val);
+static plan_heur_dtg_open_goal_t ctxNextOpenGoal(plan_heur_dtg_ctx_t *dtg_ctx);
+static plan_cost_t ctxUpdatePath(plan_heur_dtg_ctx_t *dtg_ctx,
+                                 plan_heur_dtg_data_t *dtg_data,
+                                 const plan_heur_dtg_open_goal_t *goal);
+
+
 void planHeurDTGDataInit(plan_heur_dtg_data_t *dtg_data,
                          const plan_var_t *var, int var_size,
                          const plan_op_t *op, int op_size)
@@ -99,6 +125,7 @@ void planHeurDTGCtxInit(plan_heur_dtg_ctx_t *dtg_ctx,
 {
     valuesInit(&dtg_ctx->values, var, var_size);
     openGoalsInit(&dtg_ctx->open_goals, var, var_size);
+    dtg_ctx->heur = 0;
 }
 
 void planHeurDTGCtxFree(plan_heur_dtg_ctx_t *dtg_ctx)
@@ -106,6 +133,225 @@ void planHeurDTGCtxFree(plan_heur_dtg_ctx_t *dtg_ctx)
     openGoalsFree(&dtg_ctx->open_goals);
     valuesFree(&dtg_ctx->values);
 }
+
+void planHeurDTGCtxInitStep(plan_heur_dtg_ctx_t *dtg_ctx,
+                            plan_heur_dtg_data_t *dtg_data,
+                            const plan_val_t *init_state, int init_state_size,
+                            const plan_part_state_pair_t *goal, int goal_size)
+{
+    int i;
+
+    // Add values from initial state
+    valuesZeroize(&dtg_ctx->values);
+    for (i = 0; i < init_state_size; ++i)
+        ctxAddValue(dtg_ctx, dtg_data, i, init_state[i]);
+
+    // Add goals to open-goals queue
+    openGoalsZeroize(&dtg_ctx->open_goals);
+    for (i = 0; i < goal_size; ++i)
+        ctxAddGoal(dtg_ctx, dtg_data, goal[i].var, goal[i].val);
+}
+
+int planHeurDTGCtxStep(plan_heur_dtg_ctx_t *dtg_ctx,
+                       plan_heur_dtg_data_t *dtg_data)
+{
+    plan_heur_dtg_open_goal_t goal;
+
+    if (dtg_ctx->open_goals.goals_size == 0)
+        return -1;
+
+    goal = ctxNextOpenGoal(dtg_ctx);
+    dtg_ctx->heur += ctxUpdatePath(dtg_ctx, dtg_data, &goal);
+    dtg_ctx->cur_open_goal = goal;
+    return 0;
+}
+
+
+static plan_heur_dtg_path_t *dataDtgPath(plan_heur_dtg_data_t *dtg_data,
+                                         plan_var_id_t var,
+                                         plan_val_t val)
+{
+    plan_heur_dtg_path_t *path;
+    path = dtgPathCache(&dtg_data->dtg_path, var, val);
+    if (path->pre == NULL)
+        dtgPathExplore(&dtg_data->dtg, var, val, path);
+    return path;
+}
+
+static int ctxMinDist(plan_heur_dtg_ctx_t *dtg_ctx,
+                      plan_heur_dtg_data_t *dtg_data,
+                      plan_var_id_t var, plan_val_t val,
+                      plan_val_t *d)
+{
+    plan_heur_dtg_path_t *path;
+    int len, i, val_range, *vals;
+
+    if (d != NULL)
+        *d = -1;
+
+    // Early exit if we are searching for path from val to val
+    vals = dtg_ctx->values.val[var];
+    if (vals[val]){
+        if (d != NULL)
+            *d = val;
+        return 0;
+    }
+
+    // Find out a value from registered values to which leads a minimal
+    // path.
+    path = dataDtgPath(dtg_data, var, val);
+    len = INT_MAX;
+    val_range = dtg_ctx->values.val_range[var];
+    for (i = 0; i < val_range; ++i){
+        if (vals[i] && path->pre[i].len < len){
+            len = path->pre[i].len;
+            if (d != NULL)
+                *d = i;
+        }
+    }
+
+    return len;
+}
+
+static const plan_op_t *ctxMinCostOp(plan_heur_dtg_ctx_t *dtg_ctx,
+                                     plan_heur_dtg_data_t *dtg_data,
+                                     plan_var_id_t var,
+                                     plan_val_t from, plan_val_t to)
+{
+    const plan_dtg_var_t *dtg = dtg_data->dtg.dtg + var;
+    const plan_dtg_trans_t *trans;
+    const plan_op_t *op, *min_cost_op;
+    int _, i, min_cost, cost, c;
+    plan_var_id_t opvar;
+    plan_val_t opval;
+
+
+    trans = dtg->trans + (from * dtg->val_size) + to;
+    min_cost = INT_MAX;
+    min_cost_op = NULL;
+    for (i = 0; i < trans->ops_size; ++i){
+        op = trans->ops[i];
+
+        cost = 0;
+        PLAN_PART_STATE_FOR_EACH(op->pre, _, opvar, opval){
+            c = ctxMinDist(dtg_ctx, dtg_data, opvar, opval, NULL);
+            if (c == INT_MAX){
+                cost = INT_MAX;
+                break;
+            }
+            cost += c;
+        }
+
+        if (cost < min_cost){
+            min_cost = cost;
+            min_cost_op = op;
+        }
+    }
+
+    return min_cost_op;
+}
+
+static void ctxAddGoal(plan_heur_dtg_ctx_t *dtg_ctx,
+                       plan_heur_dtg_data_t *dtg_data,
+                       plan_var_id_t var, plan_val_t val)
+{
+    int idx, min_dist;
+    plan_val_t min_val;
+
+    if (valuesGet(&dtg_ctx->values, var, val) != 0)
+        return;
+
+    idx = openGoalsAdd(&dtg_ctx->open_goals, var, val);
+    if (idx < 0)
+        return;
+
+    // Compute and cache minimal distance and corresponding value
+    min_dist = ctxMinDist(dtg_ctx, dtg_data, var, val, &min_val);
+    dtg_ctx->open_goals.goals[idx].min_dist = min_dist;
+    dtg_ctx->open_goals.goals[idx].min_val = min_val;
+}
+
+static void ctxAddValue(plan_heur_dtg_ctx_t *dtg_ctx,
+                        plan_heur_dtg_data_t *dtg_data,
+                        plan_var_id_t var, plan_val_t val)
+{
+    int i, goals_size, min_dist;
+    plan_val_t min_val;
+    plan_heur_dtg_open_goal_t *goals;
+
+    if (valuesSet(&dtg_ctx->values, var, val) != 0)
+        return;
+
+    // Update cached min_dist and min_val members of open goals with same
+    // variable.
+    goals_size = dtg_ctx->open_goals.goals_size;
+    goals = dtg_ctx->open_goals.goals;
+    for (i = 0; i < goals_size; ++i){
+        if (goals[i].var == var){
+            min_dist = ctxMinDist(dtg_ctx, dtg_data, var, goals[i].val, &min_val);
+            goals[i].min_dist = min_dist;
+            goals[i].min_val = min_val;
+        }
+    }
+}
+
+static plan_heur_dtg_open_goal_t ctxNextOpenGoal(plan_heur_dtg_ctx_t *dtg_ctx)
+{
+    int i, max_cost, max_i;
+    int goals_size = dtg_ctx->open_goals.goals_size;
+    plan_heur_dtg_open_goal_t *goals = dtg_ctx->open_goals.goals;
+    plan_heur_dtg_open_goal_t ret;
+
+    max_cost = -1;
+    max_i = 0;
+    for (i = 0; i < goals_size; ++i){
+        if (goals[i].min_dist > max_cost){
+            max_cost = goals[i].min_dist;
+            max_i = i;
+        }
+    }
+
+    ret = goals[max_i];
+    openGoalsRemove(&dtg_ctx->open_goals, max_i);
+    return ret;
+}
+
+static plan_cost_t ctxUpdatePath(plan_heur_dtg_ctx_t *dtg_ctx,
+                                 plan_heur_dtg_data_t *dtg_data,
+                                 const plan_heur_dtg_open_goal_t *goal)
+{
+    plan_heur_dtg_path_t *path;
+    const plan_op_t *op;
+    plan_var_id_t var;
+    plan_val_t val;
+    int from, to;
+    int _, i, len = goal->min_dist;
+    plan_cost_t cost = 0;
+
+    path = dataDtgPath(dtg_data, goal->var, goal->val);
+    from = goal->min_val;
+    for (i = 0; i < len; ++i){
+        to = path->pre[from].val;
+        op = ctxMinCostOp(dtg_ctx, dtg_data, goal->var, from, to);
+
+        PLAN_PART_STATE_FOR_EACH(op->eff, _, var, val)
+            ctxAddValue(dtg_ctx, dtg_data, var, val);
+        PLAN_PART_STATE_FOR_EACH(op->pre, _, var, val)
+            ctxAddGoal(dtg_ctx, dtg_data, var, val);
+
+        if (op->eff->vals_size > 0 && op->pre->vals_size > 0)
+            cost += 1;
+
+        from = to;
+    }
+
+    return cost;
+}
+
+
+
+
+
 
 
 plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,

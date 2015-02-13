@@ -77,6 +77,8 @@ typedef struct _plan_heur_dtg_data_t plan_heur_dtg_data_t;
 struct _plan_heur_dtg_ctx_t {
     plan_heur_dtg_values_t values;
     plan_heur_dtg_open_goals_t open_goals;
+    plan_cost_t heur;
+    plan_heur_dtg_open_goal_t cur_open_goal;
 };
 typedef struct _plan_heur_dtg_ctx_t plan_heur_dtg_ctx_t;
 
@@ -104,5 +106,22 @@ void planHeurDTGCtxInit(plan_heur_dtg_ctx_t *dtg_ctx,
  * Frees allocated resources.
  */
 void planHeurDTGCtxFree(plan_heur_dtg_ctx_t *dtg_ctx);
+
+/**
+ * Initializes context for next computation of the DTG heuristic.
+ */
+void planHeurDTGCtxInitStep(plan_heur_dtg_ctx_t *dtg_ctx,
+                            plan_heur_dtg_data_t *dtg_data,
+                            const plan_val_t *init_state, int init_state_size,
+                            const plan_part_state_pair_t *goal, int goal_size);
+
+/**
+ * Performs one step of algorithm.
+ * Updates .heur value and saves current open goal into .cur_open_goal.
+ * Returns 0 if one open goal was processed, -1 if there are no more open
+ * goals.
+ */
+int planHeurDTGCtxStep(plan_heur_dtg_ctx_t *dtg_ctx,
+                       plan_heur_dtg_data_t *dtg_data);
 
 #endif /* __PLAN_HEUR_DTG_H__ */

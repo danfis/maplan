@@ -1,24 +1,35 @@
 #ifndef __PLAN_HEUR_DTG_H__
 #define __PLAN_HEUR_DTG_H__
 
+/**
+ * Predecessor on the path.
+ */
 struct _plan_heur_dtg_path_pre_t {
-    plan_val_t val;
-    int len;
+    plan_val_t val; /*!< Predecessor value */
+    int len;        /*!< Length of path from init value */
 };
 typedef struct _plan_heur_dtg_path_pre_t plan_heur_dtg_path_pre_t;
 
 struct _plan_heur_dtg_path_t {
-    plan_heur_dtg_path_pre_t *pre;
+    plan_heur_dtg_path_pre_t *pre; /*!< Array of predecessor where is
+                                        stored path from init to all values */
 };
 typedef struct _plan_heur_dtg_path_t plan_heur_dtg_path_t;
 
+/**
+ * Cached paths found in DTG
+ */
 struct _plan_heur_dtg_path_cache_t {
-    int var_size;
-    plan_heur_dtg_path_t **path;
-    int *range;
+    int var_size;                /*!< Number of variables */
+    plan_heur_dtg_path_t **path; /*!< Array of arrays for each variable and
+                                      value */
+    int *range;                  /*!< Range of values for each variable */
 };
 typedef struct _plan_heur_dtg_path_cache_t plan_heur_dtg_path_cache_t;
 
+/**
+ * Flag arrays for all values
+ */
 struct _plan_heur_dtg_values_t {
     int *val_arr;          /*!< Array for all values from all variables */
     int val_arr_byte_size; /*!< Size of .value_arr in bytes */
@@ -27,22 +38,33 @@ struct _plan_heur_dtg_values_t {
 };
 typedef struct _plan_heur_dtg_values_t plan_heur_dtg_values_t;
 
+/**
+ * Structure representing an open goal.
+ */
 struct _plan_heur_dtg_open_goal_t {
-    plan_var_id_t var;
-    plan_val_t val;
-    plan_val_t min_val;
-    int min_dist;
+    plan_var_id_t var;  /*!< Variable ID */
+    plan_val_t val;     /*!< Value of the goal */
+    plan_val_t min_val; /*!< Value from which leads shortest path to this
+                             value */
+    int min_dist;       /*!< Length of the shortes path */
 };
 typedef struct _plan_heur_dtg_open_goal_t plan_heur_dtg_open_goal_t;
 
+/**
+ * List of open goals.
+ */
 struct _plan_heur_dtg_open_goals_t {
-    plan_heur_dtg_values_t values;
-    plan_heur_dtg_open_goal_t *goals;
-    int goals_size;
-    int goals_alloc;
+    plan_heur_dtg_values_t values;    /*!< Flags to prevent re-inserting
+                                           already processed open-goals */
+    plan_heur_dtg_open_goal_t *goals; /*!< Array of open goals */
+    int goals_size;                   /*!< Number of open goals */
+    int goals_alloc;                  /*!< Allocated elements in .goals[] */
 };
 typedef struct _plan_heur_dtg_open_goals_t plan_heur_dtg_open_goals_t;
 
+/**
+ * Main structure for DTG heuristic
+ */
 struct _plan_heur_dtg_t {
     plan_heur_t heur;
     plan_dtg_t dtg;
@@ -54,5 +76,18 @@ struct _plan_heur_dtg_t {
     plan_heur_dtg_path_cache_t dtg_path;
 };
 typedef struct _plan_heur_dtg_t plan_heur_dtg_t;
+
+/**
+ * Initializes DTG structure
+ */
+void planHeurDTGInit(plan_heur_dtg_t *hdtg,
+                     const plan_var_t *var, int var_size,
+                     const plan_part_state_t *goal,
+                     const plan_op_t *op, int op_size);
+
+/**
+ * Frees allocated resources
+ */
+void planHeurDTGFree(plan_heur_dtg_t *hdtg);
 
 #endif /* __PLAN_HEUR_DTG_H__ */

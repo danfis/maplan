@@ -79,7 +79,7 @@ static void dtgPathFree(plan_heur_dtg_path_t *path);
 
 /** Initializes and destroyes path cache */
 static void dtgPathCacheInit(plan_heur_dtg_path_cache_t *pc,
-                             const plan_var_t *var, int var_size);
+                             const plan_dtg_t *dtg);
 static void dtgPathCacheFree(plan_heur_dtg_path_cache_t *pc);
 /** Returns pointer to the cached dtg-path which may be empty */
 static plan_heur_dtg_path_t *dtgPathCache(plan_heur_dtg_path_cache_t *pc,
@@ -153,7 +153,15 @@ void planHeurDTGDataInit(plan_heur_dtg_data_t *dtg_data,
                          const plan_op_t *op, int op_size)
 {
     planDTGInit(&dtg_data->dtg, var, var_size, op, op_size);
-    dtgPathCacheInit(&dtg_data->dtg_path, var, var_size);
+    dtgPathCacheInit(&dtg_data->dtg_path, &dtg_data->dtg);
+}
+
+void planHeurDTGDataInitUnknown(plan_heur_dtg_data_t *dtg_data,
+                                const plan_var_t *var, int var_size,
+                                const plan_op_t *op, int op_size)
+{
+    planDTGInitUnknown(&dtg_data->dtg, var, var_size, op, op_size);
+    dtgPathCacheInit(&dtg_data->dtg_path, &dtg_data->dtg);
 }
 
 void planHeurDTGDataFree(plan_heur_dtg_data_t *dtg_data)
@@ -258,17 +266,17 @@ static void dtgPathFree(plan_heur_dtg_path_t *path)
 }
 
 static void dtgPathCacheInit(plan_heur_dtg_path_cache_t *pc,
-                             const plan_var_t *var, int var_size)
+                             const plan_dtg_t *dtg)
 {
     int i;
 
-    pc->path = BOR_ALLOC_ARR(plan_heur_dtg_path_t *, var_size);
-    pc->range = BOR_ALLOC_ARR(int, var_size);
-    for (i = 0; i < var_size; ++i){
-        pc->path[i] = BOR_CALLOC_ARR(plan_heur_dtg_path_t, var[i].range);
-        pc->range[i] = var[i].range;
+    pc->path = BOR_ALLOC_ARR(plan_heur_dtg_path_t *, dtg->var_size);
+    pc->range = BOR_ALLOC_ARR(int, dtg->var_size);
+    for (i = 0; i < dtg->var_size; ++i){
+        pc->path[i] = BOR_CALLOC_ARR(plan_heur_dtg_path_t, dtg->dtg[i].val_size);
+        pc->range[i] = dtg->dtg[i].val_size;
     }
-    pc->var_size = var_size;
+    pc->var_size = dtg->var_size;
 }
 
 static void dtgPathCacheFree(plan_heur_dtg_path_cache_t *pc)

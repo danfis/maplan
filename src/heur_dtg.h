@@ -1,6 +1,8 @@
 #ifndef __PLAN_HEUR_DTG_H__
 #define __PLAN_HEUR_DTG_H__
 
+#include <plan/dtg.h>
+
 /**
  * Predecessor on the path.
  */
@@ -89,6 +91,13 @@ typedef struct _plan_heur_dtg_ctx_t plan_heur_dtg_ctx_t;
 void planHeurDTGDataInit(plan_heur_dtg_data_t *dtg_data,
                          const plan_var_t *var, int var_size,
                          const plan_op_t *op, int op_size);
+
+/**
+ * Init with "unknown" value for each variable.
+ */
+void planHeurDTGDataInitUnknown(plan_heur_dtg_data_t *dtg_data,
+                                const plan_var_t *var, int var_size,
+                                const plan_op_t *op, int op_size);
 
 /**
  * Fress allocated resources.

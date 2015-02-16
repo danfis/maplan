@@ -53,6 +53,13 @@ void planDTGInit(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
                  const plan_op_t *op, int op_size);
 
 /**
+ * Same as planDTGInit() but adds one value to each variable as placeholder
+ * for unknown value.
+ */
+void planDTGInitUnknown(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
+                        const plan_op_t *op, int op_size);
+
+/**
  * Frees allocated resources.
  */
 void planDTGFree(plan_dtg_t *dtg);

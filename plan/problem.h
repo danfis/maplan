@@ -40,6 +40,7 @@ struct _plan_problem_t {
 
     /** Fllowing data are available only in case of agent problem defintion: */
     char *agent_name;   /*!< Name of the corresponding agent */
+    int agent_id;       /*!< ID of the agent enumerated from 0 */
     plan_op_t *proj_op; /*!< Projected operators */
     int proj_op_size;   /*!< Number of projected operators */
     plan_problem_private_val_t *private_val; /*!< List of private values */

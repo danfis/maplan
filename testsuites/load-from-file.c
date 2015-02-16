@@ -122,7 +122,7 @@ TEST(testLoadFromProtoCondEff)
     planProblemDel(p);
 }
 
-static void pAgent(int agent_id, const plan_problem_t *p)
+static void pAgent(const plan_problem_t *p)
 {
     plan_op_t *private_op;
     int private_op_size;
@@ -130,7 +130,7 @@ static void pAgent(int agent_id, const plan_problem_t *p)
                                     &private_op, &private_op_size);
 
     printf("++++ %s ++++\n", p->agent_name);
-    printf("Agent ID: %d\n", agent_id);
+    printf("Agent ID: %d\n", p->agent_id);
     pVar(p->var, p->var_size);
     pPrivateVal(p->private_val, p->private_val_size);
     pInitState(p->state_pool, p->initial_state);
@@ -166,7 +166,7 @@ static void testAgentProto(const char *proto)
     printf("Succ Gen: %d\n", (int)(agents->glob.succ_gen != NULL));
 
     for (i = 0; i < agents->agent_size; ++i)
-        pAgent(i, agents->agent + i);
+        pAgent(agents->agent + i);
 
     printf("---- %s END ----\n", proto);
     planProblemAgentsDel(agents);

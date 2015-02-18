@@ -218,3 +218,9 @@ TEST(testHeurMALMCut)
     runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/rovers/p15.proto",
                   "states/rovers-p15.txt", NULL, planHeurMALMCutNew, -1, NULL);
 }
+
+TEST(testHeurMADTG)
+{
+    runTestHeurMA("ma-dtg", "../data/simple/pfile.proto",
+                  "states/simple.txt", NULL, planHeurMADTGNew, -1, NULL);
+}

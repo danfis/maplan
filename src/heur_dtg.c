@@ -569,6 +569,8 @@ static plan_cost_t ctxUpdatePath(plan_heur_dtg_ctx_t *dtg_ctx,
 
     path = dataDtgPath(dtg_data, goal->var, goal->val);
     from = goal->min_val;
+    if (from < 0)
+        return 0;
     for (i = 0; i < len; ++i){
         to = path->pre[from].val;
         op = ctxMinCostOp(dtg_ctx, dtg_data, goal->var, from, to);

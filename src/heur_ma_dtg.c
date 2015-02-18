@@ -6,9 +6,9 @@ struct _plan_heur_ma_dtg_t {
     plan_heur_t heur;
     plan_heur_dtg_data_t data;
     plan_heur_dtg_ctx_t ctx;
+
     plan_part_state_t goal;
     plan_state_t state;
-
     plan_op_t *fake_op;
     int fake_op_size;
 };
@@ -38,6 +38,7 @@ plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def)
     _planHeurMAInit(&hdtg->heur, hdtgHeur, hdtgUpdate, hdtgRequest);
     initFakeOp(hdtg, agent_def);
     initDTGData(hdtg, agent_def);
+    planHeurDTGCtxInit(&hdtg->ctx, &hdtg->data);
 
     planPartStateInit(&hdtg->goal, agent_def->var_size);
     planPartStateCopy(&hdtg->goal, agent_def->goal);
@@ -66,6 +67,20 @@ static void hdtgDel(plan_heur_t *heur)
 static int hdtgHeur(plan_heur_t *heur, plan_ma_comm_t *comm,
                     const plan_state_t *state, plan_heur_res_t *res)
 {
+    plan_heur_ma_dtg_t *hdtg = HEUR(heur);
+
+    // Remember initial state
+    planStateCopy(&hdtg->state, state);
+
+    // Start computing dtg heuristic
+    planHeurDTGCtxInitStep(&hdtg->ctx, &hdtg->data,
+                           hdtg->state.val, hdtg->state.size,
+                           hdtg->goal.vals, hdtg->goal.vals_size);
+
+    // Run dtg heuristic
+    while (planHeurDTGCtxStep(&hdtg->ctx, &hdtg->data) == 0);
+    res->heur = hdtg->ctx.heur;
+
     // TODO
     return 0;
 }

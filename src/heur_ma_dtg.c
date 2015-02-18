@@ -6,6 +6,8 @@ struct _plan_heur_ma_dtg_t {
     plan_heur_t heur;
     plan_heur_dtg_data_t data;
     plan_heur_dtg_ctx_t ctx;
+    plan_part_state_t goal;
+    plan_state_t state;
 
     plan_op_t *fake_op;
     int fake_op_size;
@@ -37,6 +39,10 @@ plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def)
     initFakeOp(hdtg, agent_def);
     initDTGData(hdtg, agent_def);
 
+    planPartStateInit(&hdtg->goal, agent_def->var_size);
+    planPartStateCopy(&hdtg->goal, agent_def->goal);
+    planStateInit(&hdtg->state, agent_def->var_size);
+
     return &hdtg->heur;
 }
 
@@ -45,6 +51,8 @@ static void hdtgDel(plan_heur_t *heur)
     plan_heur_ma_dtg_t *hdtg = HEUR(heur);
     int i;
 
+    planPartStateFree(&hdtg->goal);
+    planStateFree(&hdtg->state);
     for (i = 0; i < hdtg->fake_op_size; ++i)
         planOpFree(hdtg->fake_op + i);
     if (hdtg->fake_op)

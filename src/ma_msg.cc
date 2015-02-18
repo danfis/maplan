@@ -5,6 +5,17 @@
 
 #define PROTO(msg) ((PlanMAMsg *)(msg))
 
+#define SETVAL(msg, name, value) \
+    PROTO(msg)->set_##name(value)
+#define GETVAL(msg, name) \
+    PROTO(msg)->name()
+#define ADDVAL(msg, name, value) \
+    PROTO(msg)->add_##name(value)
+#define GETARRVAL(msg, name, i) \
+    PROTO(msg)->name(i)
+#define ARRSIZE(msg, name) \
+    PROTO(msg)->name##_size()
+
 static int snapshot_token_counter = 0;
 
 static int stateId(const plan_ma_msg_t *msg)
@@ -371,4 +382,59 @@ plan_cost_t planMAMsgMinCutCost(const plan_ma_msg_t *msg)
 {
     const PlanMAMsg *proto = PROTO(msg);
     return proto->min_cut_cost();
+}
+
+void planMAMsgSetHeurToken(plan_ma_msg_t *msg, int token)
+{
+    SETVAL(msg, heur_token, token);
+}
+
+int planMAMsgHeurToken(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, heur_token);
+}
+
+void planMAMsgAddHeurRequestedAgent(plan_ma_msg_t *msg, int agent_id)
+{
+    ADDVAL(msg, heur_requested_agent, agent_id);
+}
+
+int planMAMsgHeurRequestedAgentSize(const plan_ma_msg_t *msg)
+{
+    return ARRSIZE(msg, heur_requested_agent);
+}
+
+int planMAMsgHeurRequestAgent(const plan_ma_msg_t *msg, int i)
+{
+    return GETARRVAL(msg, heur_requested_agent, i);
+}
+
+void planMAMsgSetHeurCost(plan_ma_msg_t *msg, int cost)
+{
+    SETVAL(msg, heur_cost, cost);
+}
+
+int planMAMsgHeurCost(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, heur_cost);
+}
+
+void planMAMsgSetDTGReq(plan_ma_msg_t *msg, plan_var_id_t var,
+                        plan_val_t from, plan_val_t to)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    PlanMAMsgDTGReq *req = proto->mutable_dtg_req();
+    req->set_var(var);
+    req->set_val_from(from);
+    req->set_val_to(to);
+}
+
+void planMAMsgDTGReq(const plan_ma_msg_t *msg, plan_var_id_t *var,
+                     plan_val_t *from, plan_val_t *to)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    const PlanMAMsgDTGReq &req = proto->dtg_req();
+    *var = req.var();
+    *from = req.val_from();
+    *to = req.val_to();
 }

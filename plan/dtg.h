@@ -65,6 +65,19 @@ void planDTGInitUnknown(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
 void planDTGFree(plan_dtg_t *dtg);
 
 /**
+ * Adds transition to var's DTG between the two specified values.
+ */
+void planDTGAddTrans(plan_dtg_t *dtg, plan_var_id_t var, plan_val_t from,
+                     plan_val_t to, const plan_op_t *op);
+
+/**
+ * Returns true if op is on transition between from and to.
+ */
+int planDTGHasTrans(const plan_dtg_t *dtg, plan_var_id_t var,
+                    plan_val_t from, plan_val_t to,
+                    const plan_op_t *op);
+
+/**
  * Finds shortest path between two values of a variable.
  * Returns 0 if such a path was found, -1 otherwise.
  */

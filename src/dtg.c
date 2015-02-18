@@ -104,6 +104,28 @@ void planDTGFree(plan_dtg_t *dtg)
     BOR_FREE(dtg->dtg);
 }
 
+void planDTGAddTrans(plan_dtg_t *dtg, plan_var_id_t var, plan_val_t from,
+                     plan_val_t to, const plan_op_t *op)
+{
+    dtgConnect(dtg->dtg + var, from, to, op);
+}
+
+int planDTGHasTrans(const plan_dtg_t *dtg, plan_var_id_t var,
+                    plan_val_t from, plan_val_t to,
+                    const plan_op_t *op)
+{
+    plan_dtg_trans_t *trans;
+    int i;
+
+    trans = dtg->dtg[var].trans + (from * dtg->dtg[var].val_size) + to;
+    for (i = 0; i < trans->ops_size; ++i){
+        if (trans->ops[i] == op)
+            return 1;
+    }
+
+    return 0;
+}
+
 int planDTGPath(const plan_dtg_t *_dtg, plan_var_id_t var,
                 plan_val_t from, plan_val_t to,
                 plan_dtg_path_t *path)

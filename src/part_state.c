@@ -11,9 +11,21 @@ _bor_inline void bitApplyWithMask(const void *a, const void *m, const void *b,
 plan_part_state_t *planPartStateNew(int size)
 {
     plan_part_state_t *ps;
+    ps = BOR_ALLOC(plan_part_state_t);
+    planPartStateInit(ps, size);
+    return ps;
+}
+
+void planPartStateDel(plan_part_state_t *part_state)
+{
+    planPartStateFree(part_state);
+    BOR_FREE(part_state);
+}
+
+void planPartStateInit(plan_part_state_t *ps, int size)
+{
     int i;
 
-    ps = BOR_ALLOC(plan_part_state_t);
     ps->size = size;
     ps->val    = BOR_ALLOC_ARR(plan_val_t, size);
 
@@ -26,11 +38,9 @@ plan_part_state_t *planPartStateNew(int size)
     ps->bufsize = 0;
     ps->vals = NULL;
     ps->vals_size = 0;
-
-    return ps;
 }
 
-void planPartStateDel(plan_part_state_t *part_state)
+void planPartStateFree(plan_part_state_t *part_state)
 {
     if (part_state->val)
         BOR_FREE(part_state->val);
@@ -40,7 +50,6 @@ void planPartStateDel(plan_part_state_t *part_state)
         BOR_FREE(part_state->maskbuf);
     if (part_state->vals)
         BOR_FREE(part_state->vals);
-    BOR_FREE(part_state);
 }
 
 void planPartStateCopy(plan_part_state_t *dst, const plan_part_state_t *src)

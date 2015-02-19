@@ -78,6 +78,14 @@ int planDTGHasTrans(const plan_dtg_t *dtg, plan_var_id_t var,
                     const plan_op_t *op);
 
 /**
+ * Returns a transition between two values.
+ */
+_bor_inline const plan_dtg_trans_t *planDTGTrans(const plan_dtg_t *dtg,
+                                                 plan_var_id_t var,
+                                                 plan_val_t from,
+                                                 plan_val_t to);
+
+/**
  * Finds shortest path between two values of a variable.
  * Returns 0 if such a path was found, -1 otherwise.
  */
@@ -89,6 +97,16 @@ int planDTGPath(const plan_dtg_t *dtg, plan_var_id_t var,
  * For debuf purposes
  */
 void planDTGPrint(const plan_dtg_t *dtg, FILE *fout);
+
+
+/**** INLINES: ****/
+_bor_inline const plan_dtg_trans_t *planDTGTrans(const plan_dtg_t *dtg,
+                                                 plan_var_id_t var,
+                                                 plan_val_t from,
+                                                 plan_val_t to)
+{
+    return dtg->dtg[var].trans + (from * dtg->dtg[var].val_size) + to;
+}
 
 #ifdef __cplusplus
 } /* extern "C" */

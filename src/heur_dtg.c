@@ -170,6 +170,13 @@ void planHeurDTGDataFree(plan_heur_dtg_data_t *dtg_data)
     planDTGFree(&dtg_data->dtg);
 }
 
+plan_heur_dtg_path_t *planHeurDTGDataPath(plan_heur_dtg_data_t *dtg_data,
+                                          plan_var_id_t var,
+                                          plan_val_t val)
+{
+    return dataDtgPath(dtg_data, var, val);
+}
+
 
 void planHeurDTGCtxInit(plan_heur_dtg_ctx_t *dtg_ctx,
                         const plan_heur_dtg_data_t *dtg_data)

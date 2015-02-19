@@ -399,14 +399,22 @@ int planMAMsgHeurCost(const plan_ma_msg_t *msg);
 /**
  * Sets request for DTG heuristic.
  */
-void planMAMsgSetDTGReq(plan_ma_msg_t *msg, plan_var_id_t var,
-                        plan_val_t from, plan_val_t to);
+void planMAMsgSetDTGReq(plan_ma_msg_t *msg, int var, int from, int to);
 
 /**
  * Returns data set by planMAMsgSetDTGReq()
  */
-void planMAMsgDTGReq(const plan_ma_msg_t *msg, plan_var_id_t *var,
-                     plan_val_t *from, plan_val_t *to);
+void planMAMsgDTGReq(const plan_ma_msg_t *msg, int *var, int *from, int *to);
+
+/**
+ * Sets initiator agent ID
+ */
+void planMAMsgSetInitAgent(plan_ma_msg_t *msg, int agent_id);
+
+/**
+ * Returns initiator agent ID
+ */
+int planMAMsgInitAgent(const plan_ma_msg_t *msg);
 
 #ifdef __cplusplus
 } /* extern "C" */

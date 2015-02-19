@@ -105,6 +105,12 @@ void planHeurDTGDataInitUnknown(plan_heur_dtg_data_t *dtg_data,
  */
 void planHeurDTGDataFree(plan_heur_dtg_data_t *dtg_data);
 
+/**
+ * Returns path corresponding to the var-val pair.
+ */
+plan_heur_dtg_path_t *planHeurDTGDataPath(plan_heur_dtg_data_t *dtg_data,
+                                          plan_var_id_t var,
+                                          plan_val_t val);
 
 /**
  * Initializes context structure.

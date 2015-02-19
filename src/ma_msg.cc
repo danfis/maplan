@@ -419,8 +419,7 @@ int planMAMsgHeurCost(const plan_ma_msg_t *msg)
     return GETVAL(msg, heur_cost);
 }
 
-void planMAMsgSetDTGReq(plan_ma_msg_t *msg, plan_var_id_t var,
-                        plan_val_t from, plan_val_t to)
+void planMAMsgSetDTGReq(plan_ma_msg_t *msg, int var, int from, int to)
 {
     PlanMAMsg *proto = PROTO(msg);
     PlanMAMsgDTGReq *req = proto->mutable_dtg_req();
@@ -429,12 +428,21 @@ void planMAMsgSetDTGReq(plan_ma_msg_t *msg, plan_var_id_t var,
     req->set_val_to(to);
 }
 
-void planMAMsgDTGReq(const plan_ma_msg_t *msg, plan_var_id_t *var,
-                     plan_val_t *from, plan_val_t *to)
+void planMAMsgDTGReq(const plan_ma_msg_t *msg, int *var, int *from, int *to)
 {
     const PlanMAMsg *proto = PROTO(msg);
     const PlanMAMsgDTGReq &req = proto->dtg_req();
     *var = req.var();
     *from = req.val_from();
     *to = req.val_to();
+}
+
+void planMAMsgSetInitAgent(plan_ma_msg_t *msg, int agent_id)
+{
+    SETVAL(msg, initiator_agent_id, agent_id);
+}
+
+int planMAMsgInitAgent(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, initiator_agent_id);
 }

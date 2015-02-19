@@ -8,6 +8,17 @@ struct _pending_req_t {
 };
 typedef struct _pending_req_t pending_req_t;
 
+struct _pending_reqs_t {
+    pending_req_t *pending; /*!< List of pending requests */
+    int response_agent;     /*!< ID of agent to which send response */
+    int response_token;     /*!< Token expected as response */
+    int response_depth;     /*!< Depth of a distributed recursion */
+    int base_cost;          /*!< Base cost to which add minimal cost from
+                                 requests */
+    int size;               /*!< Number of pending requests in this slot */
+};
+typedef struct _pending_reqs_t pending_reqs_t;
+
 struct _plan_heur_ma_dtg_t {
     plan_heur_t heur;
     plan_heur_dtg_data_t data;
@@ -17,8 +28,9 @@ struct _plan_heur_ma_dtg_t {
     plan_state_t state;
     plan_op_t *fake_op;
     int fake_op_size;
-    int token;
-    pending_req_t *waitlist;
+
+    pending_reqs_t *waitlist;
+    int waitlist_size;
 };
 typedef struct _plan_heur_ma_dtg_t plan_heur_ma_dtg_t;
 #define HEUR(parent) \
@@ -37,6 +49,9 @@ static void initFakeOp(plan_heur_ma_dtg_t *hdtg,
 static void initDTGData(plan_heur_ma_dtg_t *hdtg,
                         const plan_problem_t *prob);
 
+static void pendingReqsInit(plan_heur_ma_dtg_t *hdtg, pending_reqs_t *r);
+static void pendingReqsFree(plan_heur_ma_dtg_t *hdtg, pending_reqs_t *r);
+
 plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def)
 {
     plan_heur_ma_dtg_t *hdtg;
@@ -51,8 +66,9 @@ plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def)
     planPartStateInit(&hdtg->goal, agent_def->var_size);
     planPartStateCopy(&hdtg->goal, agent_def->goal);
     planStateInit(&hdtg->state, agent_def->var_size);
-    hdtg->token = 1;
-    hdtg->waitlist = BOR_CALLOC_ARR(pending_req_t, hdtg->fake_op_size);
+
+    hdtg->waitlist = NULL;
+    hdtg->waitlist_size = 0;
 
     return &hdtg->heur;
 }
@@ -62,7 +78,10 @@ static void hdtgDel(plan_heur_t *heur)
     plan_heur_ma_dtg_t *hdtg = HEUR(heur);
     int i;
 
-    BOR_FREE(hdtg->waitlist);
+    for (i = 0; i < hdtg->waitlist_size; ++i)
+        pendingReqsFree(hdtg, hdtg->waitlist + i);
+    if (hdtg->waitlist)
+        BOR_FREE(hdtg->waitlist);
     planPartStateFree(&hdtg->goal);
     planStateFree(&hdtg->state);
     for (i = 0; i < hdtg->fake_op_size; ++i)
@@ -70,6 +89,7 @@ static void hdtgDel(plan_heur_t *heur)
     if (hdtg->fake_op)
         BOR_FREE(hdtg->fake_op);
     planHeurDTGDataFree(&hdtg->data);
+    planHeurDTGCtxFree(&hdtg->ctx);
 
     _planHeurFree(&hdtg->heur);
     BOR_FREE(hdtg);
@@ -79,10 +99,18 @@ static void hdtgDel(plan_heur_t *heur)
 
 static int hdtgNextToken(plan_heur_ma_dtg_t *hdtg)
 {
-    ++hdtg->token;
-    if (hdtg->token == 0)
-        ++hdtg->token;
-    return hdtg->token;
+    int i;
+
+    for (i = 0; i < hdtg->waitlist_size; ++i){
+        if (hdtg->waitlist[i].size == 0)
+            return i;
+    }
+
+    ++hdtg->waitlist_size;
+    hdtg->waitlist = BOR_REALLOC_ARR(hdtg->waitlist, pending_reqs_t,
+                                     hdtg->waitlist_size);
+    pendingReqsInit(hdtg, hdtg->waitlist + hdtg->waitlist_size - 1);
+    return hdtg->waitlist_size - 1;
 }
 
 static int hdtgFindOwners(plan_heur_ma_dtg_t *hdtg,
@@ -123,71 +151,132 @@ static int hdtgFindOwners(plan_heur_ma_dtg_t *hdtg,
     return 0;
 }
 
-static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
-                           plan_ma_comm_t *comm,
-                           int var, int from, int to)
+static void hdtgSendResponse(plan_heur_ma_dtg_t *hdtg,
+                             plan_ma_comm_t *comm,
+                             int agent, int token, int cost,
+                             int depth)
 {
     plan_ma_msg_t *msg;
-    int token = 0;
+    int subtype;
+
+    subtype = PLAN_MA_MSG_HEUR_DTG_RESPONSE;
+    if (depth > 1)
+        subtype = PLAN_MA_MSG_HEUR_DTG_REQRESPONSE;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, subtype, comm->node_id);
+    planMAMsgSetHeurToken(msg, token);
+    planMAMsgSetHeurCost(msg, cost);
+    fprintf(stderr, "[%d] Send response to %d (depth: %d)\n",
+            comm->node_id, agent, depth);
+    fflush(stderr);
+    planMACommSendToNode(comm, agent, msg);
+    planMAMsgDel(msg);
+}
+
+static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
+                           plan_ma_comm_t *comm,
+                           int var, int from, int to,
+                           const plan_ma_msg_t *req_msg,
+                           int *token_out)
+{
+    plan_ma_msg_t *msg;
+    int token;
     int owner[hdtg->fake_op_size];
-    int i;
+    int i, size, o;
 
     if (hdtgFindOwners(hdtg, var, from, to, owner) != 0)
         return -1;
+    if (req_msg){
+        // Zeroize owners that were already asked
+        size = planMAMsgHeurRequestedAgentSize(req_msg);
+        for (i = 0; i < size; ++i){
+            owner[planMAMsgHeurRequestedAgent(req_msg, i)] = 0;
+        }
 
+        // Check whether some owner was left
+        for (o = 0, i = 0; i < hdtg->fake_op_size; ++i)
+            o += owner[i];
+        if (o == 0)
+            return -1;
+    }
+
+    token = hdtgNextToken(hdtg);
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_DTG_REQUEST,
                        comm->node_id);
-    planMAMsgSetInitAgent(msg, comm->node_id);
     planMAMsgSetStateFull2(msg, &hdtg->state);
     planMAMsgSetHeurToken(msg, token);
+    if (req_msg){
+        // Copy requested agents to the next request
+        size = planMAMsgHeurRequestedAgentSize(req_msg);
+        for (i = 0; i < size; ++i){
+            planMAMsgAddHeurRequestedAgent(msg,
+                    planMAMsgHeurRequestedAgent(req_msg, i));
+        }
+    }
+
     planMAMsgAddHeurRequestedAgent(msg, comm->node_id);
     planMAMsgSetDTGReq(msg, var, from, to);
 
-    for (i = 0; i < hdtg->fake_op_size; ++i){
-        if (owner[i]){
-            fprintf(stderr, "[%d] Send request to %d\n", comm->node_id, i);
-            fflush(stderr);
-            planMACommSendToNode(comm, i, msg);
+    hdtg->waitlist[token].base_cost = 0;
+    hdtg->waitlist[token].response_agent = -1;
 
-            // Add this request to the waitlist of pending requests
-            hdtg->waitlist[i].wait = 1;
-            hdtg->waitlist[i].cost = 0;
-        }
+    if (req_msg){
+        hdtg->waitlist[token].response_agent = planMAMsgAgent(req_msg);
+        hdtg->waitlist[token].response_token = planMAMsgHeurToken(req_msg);
+        hdtg->waitlist[token].response_depth
+                = planMAMsgHeurRequestedAgentSize(req_msg);
+    }
+
+    hdtg->waitlist[token].size = 0;
+    for (i = 0; i < hdtg->fake_op_size; ++i){
+        if (!owner[i])
+            continue;
+
+        // Add this request to the waitlist of pending requests
+        hdtg->waitlist[token].pending[i].wait = 1;
+        hdtg->waitlist[token].pending[i].cost = 0;
+        ++hdtg->waitlist[token].size;
+
+        fprintf(stderr, "[%d] Send request to %d, token: %d, depth: %d,"
+                        " response_agent: %d\n",
+                comm->node_id, i, planMAMsgHeurToken(msg),
+                hdtg->waitlist[token].response_depth,
+                hdtg->waitlist[token].response_agent);
+        fflush(stderr);
+        planMACommSendToNode(comm, i, msg);
     }
     planMAMsgDel(msg);
+
+    if (token_out)
+        *token_out = token;
 
     return 0;
 }
 
-static int hdtgSendOpenRequest(plan_heur_ma_dtg_t *hdtg,
-                               plan_ma_comm_t *comm,
-                               int var, int from)
-{
-    return hdtgSendRequest(hdtg, comm, var, from, -1);
-}
-
-static int hdtgStepRequest(plan_heur_ma_dtg_t *hdtg,
-                           plan_ma_comm_t *comm,
-                           const plan_heur_dtg_path_t *path,
-                           int var, int goal, int init_val)
+static int hdtgCheckPath(plan_heur_ma_dtg_t *hdtg,
+                         plan_ma_comm_t *comm,
+                         const plan_heur_dtg_path_t *path,
+                         int var, int goal, int init_val,
+                         const plan_ma_msg_t *req_msg,
+                         int *token_out)
 {
     int fake_val, prev_val, cur_val, next_val;
+    int ret;
 
     fake_val = hdtg->data.dtg.dtg[var].val_size - 1;
     prev_val = -1;
     cur_val = init_val;
 
     if (init_val == fake_val){
-        // Decrement heur value by 1 because we must substract cost of a
-        // fake transition.
-        hdtg->ctx.heur -= 1;
-
         // Send "open-ended" request to agents on transition
         next_val = path->pre[init_val].val;
-        if (hdtgSendOpenRequest(hdtg, comm, var, next_val) != 0){
-            hdtg->ctx.heur = PLAN_HEUR_DEAD_END;
+        ret = hdtgSendRequest(hdtg, comm, var, next_val, -1,
+                              req_msg, token_out);
+        if (ret != 0)
             return -1;
-        }
+
+        // Signal to decrement heur value by 1 because we must substract
+        // cost of a fake transition.
         return 1;
 
         prev_val = init_val;
@@ -196,23 +285,42 @@ static int hdtgStepRequest(plan_heur_ma_dtg_t *hdtg,
 
     while (cur_val != goal){
         if (cur_val == fake_val){
-            // Decrement heur value by 2 because we must substract cost of
-            // fake transitions to the fake value and from the fake value.
-            hdtg->ctx.heur -= 2;
-
             // Send request to agents on transition
             next_val = path->pre[cur_val].val;
-            if (hdtgSendRequest(hdtg, comm, var, next_val, prev_val) != 0){
-                hdtg->ctx.heur = PLAN_HEUR_DEAD_END;
+            ret = hdtgSendRequest(hdtg, comm, var, next_val, prev_val,
+                                  req_msg, token_out);
+            if (ret != 0)
                 return -1;
-            }
-            return 1;
+
+            // Signal to decrement heur value by 2 because we must
+            // substract cost oo fake transitions to the fake value and
+            // from the fake value.
+            return 2;
         }
 
         prev_val = cur_val;
         cur_val = path->pre[cur_val].val;
     }
 
+    return 0;
+}
+
+static int hdtgStepRequest(plan_heur_ma_dtg_t *hdtg,
+                           plan_ma_comm_t *comm,
+                           const plan_heur_dtg_path_t *path,
+                           int var, int goal, int init_val)
+{
+    int ret;
+
+    ret = hdtgCheckPath(hdtg, comm, path, var, goal, init_val, NULL, NULL);
+    if (ret < 0){
+        hdtg->ctx.heur = PLAN_HEUR_DEAD_END;
+        return -1;
+
+    }else if (ret > 0){
+        hdtg->ctx.heur -= ret;
+        return 1;
+    }
     return 0;
 }
 
@@ -284,47 +392,72 @@ static int hdtgHeur(plan_heur_t *heur, plan_ma_comm_t *comm,
     return 0;
 }
 
-static int hdtgUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
-                      const plan_ma_msg_t *msg, plan_heur_res_t *res)
+static int update(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm,
+                  const plan_ma_msg_t *msg)
 {
-    plan_heur_ma_dtg_t *hdtg = HEUR(heur);
+    pending_reqs_t *req;
     int token, agent_id, cost;
-    int ret;
+    int i, ret;
 
     // Read data from received message
     agent_id = planMAMsgAgent(msg);
     token = planMAMsgHeurToken(msg);
     cost = planMAMsgHeurCost(msg);
-    fprintf(stderr, "[%d] token: %d, agent: %d, cost: %d\n", comm->node_id, token,
-            agent_id, cost);
+    fprintf(stderr, "[%d] Update token: %d, agent: %d, cost: %d\n",
+            comm->node_id, token, agent_id, cost);
     fflush(stderr);
 
-    // Update heuristic value
-    hdtg->ctx.heur += cost;
+    // Find corresponding pending request
+    req = hdtg->waitlist + token;
 
-    // Proceed with dtg heuristic
-    while ((ret = hdtgStep(hdtg, comm)) == 0);
-    if (ret == 1)
+    // Record data from response
+    req->pending[agent_id].cost = cost;
+
+    // Decrement number of pending requests and if there are some requests
+    // still pending wait for them
+    --req->size;
+    if (req->size != 0)
         return -1;
 
-    res->heur = hdtg->ctx.heur;
+    // Find minimal cost and zeroize structure
+    for (i = 0; i < hdtg->fake_op_size; ++i){
+        if (req->pending[i].wait)
+            cost = BOR_MIN(cost, req->pending[i].cost);
+        req->pending[i].wait = 0;
+        req->pending[i].cost = 0;
+    }
+
+    // Update cost with base cost
+    cost += req->base_cost;
+
+    if (req->response_agent == -1){
+        // Update heuristic value
+        hdtg->ctx.heur += cost;
+
+        // Proceed with dtg heuristic
+        while ((ret = hdtgStep(hdtg, comm)) == 0);
+        if (ret == 1)
+            return -1;
+
+    }else{
+        // Send response to the parent caller
+        hdtgSendResponse(hdtg, comm, req->response_agent,
+                         req->response_token, cost, req->response_depth);
+    }
+
     return 0;
 }
 
-static void hdtgSendResponse(plan_heur_ma_dtg_t *hdtg,
-                             plan_ma_comm_t *comm,
-                             int agent, int token, int cost)
+static int hdtgUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
+                      const plan_ma_msg_t *msg, plan_heur_res_t *res)
 {
-    plan_ma_msg_t *msg;
+    plan_heur_ma_dtg_t *hdtg = HEUR(heur);
 
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_DTG_RESPONSE,
-                       comm->node_id);
-    planMAMsgSetHeurToken(msg, token);
-    planMAMsgSetHeurCost(msg, cost);
-    fprintf(stderr, "[%d] Send response to %d\n", comm->node_id, agent);
-    fflush(stderr);
-    planMACommSendToNode(comm, agent, msg);
-    planMAMsgDel(msg);
+    if (update(hdtg, comm, msg) == 0){
+        res->heur = hdtg->ctx.heur;
+        return 0;
+    }
+    return -1;
 }
 
 static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
@@ -333,20 +466,37 @@ static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
     plan_heur_ma_dtg_t *hdtg = HEUR(heur);
     PLAN_STATE_STACK(state, hdtg->data.dtg.var_size);
     const plan_heur_dtg_path_t *path;
-    int agent_id, token;
-    int var, val_from, val_to;
+    int subtype;
+    int agent_id, token, depth, req_token;
+    int var, val_from, val_to, cost;
+    int ret;
 
+    subtype = planMAMsgSubType(msg);
     if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
-            || planMAMsgSubType(msg) != PLAN_MA_MSG_HEUR_DTG_REQUEST){
+            || (subtype != PLAN_MA_MSG_HEUR_DTG_REQUEST
+                    && subtype != PLAN_MA_MSG_HEUR_DTG_REQRESPONSE)){
         fprintf(stderr, "[%d] Error: Invalid request received.\n",
                 comm->node_id);
         return;
     }
 
+    fprintf(stderr, "[%d] Received request from %d (%d), token: %d\n",
+            comm->node_id, planMAMsgAgent(msg), subtype,
+            planMAMsgHeurToken(msg));
+    // If the message is response from distributed recursion, just process
+    // this response and exit
+    if (subtype == PLAN_MA_MSG_HEUR_DTG_REQRESPONSE){
+        fprintf(stderr, "[%d] Update!\n", comm->node_id);
+        update(hdtg, comm, msg);
+        return;
+    }
+
+    // Read basic info from request
     agent_id = planMAMsgAgent(msg);
     token = planMAMsgHeurToken(msg);
-    fprintf(stderr, "[%d] %d\n", comm->node_id, agent_id);
+    depth = planMAMsgHeurRequestedAgentSize(msg);
 
+    // Determine variable ID and pair of values
     planMAMsgDTGReq(msg, &var, &val_from, &val_to);
     if (val_to == -1){
         planMAMsgStateFull(msg, &state);
@@ -356,21 +506,38 @@ static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
     fprintf(stderr, "[%d] var: %d, %d -> %d\n", comm->node_id, var, val_from, val_to);
     fflush(stderr);
 
+    // Get path corresponding to the 'from' value
     path = planHeurDTGDataPath(&hdtg->data, var, val_from);
-    // TODO: Check whole path and perform distributed recursion if
-    // necessary
+
+    // If val_to is unreachable try fake_val
+    if (path->pre[val_to].val == -1)
+        val_to = hdtg->data.dtg.dtg[var].val_size - 1;
+
+    // If val_to is still unreachable report it back
     if (path->pre[val_to].val == -1){
-        hdtgSendResponse(hdtg, comm, agent_id, token, 1000);
-    }else{
-        hdtgSendResponse(hdtg, comm, agent_id, token, path->pre[val_to].len);
+        hdtgSendResponse(hdtg, comm, agent_id, token, 1000, depth);
+        return;
     }
 
-    /*
-    fprintf(stderr, "[%d] len: %d\n", comm->node_id, path->pre[val_to].len);
-    fprintf(stderr, "[%d] pre: %d\n", comm->node_id, path->pre[val_to].val);
-    planDTGPrint(&hdtg->data.dtg, stderr);
-    fflush(stderr);
-    */
+    // Determine cost
+    cost = path->pre[val_to].len;
+
+    // Check path if it contains '?' values
+    ret = hdtgCheckPath(hdtg, comm, path, var, val_from, val_to, msg,
+                        &req_token);
+    if (ret < 0){
+        // Report dead end
+        hdtgSendResponse(hdtg, comm, agent_id, token, 1000, depth);
+
+    }else if (ret > 0){
+        // Update cost and save it as base cost
+        cost -= ret;
+        hdtg->waitlist[req_token].base_cost = cost;
+
+    }else{
+        // Just send response
+        hdtgSendResponse(hdtg, comm, agent_id, token, cost, depth);
+    }
 }
 
 static void dtgAddOp(plan_heur_ma_dtg_t *hdtg, const plan_op_t *op)
@@ -429,4 +596,16 @@ static void initDTGData(plan_heur_ma_dtg_t *hdtg,
             continue;
         dtgAddOp(hdtg, op);
     }
+}
+
+static void pendingReqsInit(plan_heur_ma_dtg_t *hdtg, pending_reqs_t *r)
+{
+    r->pending = BOR_CALLOC_ARR(pending_req_t, hdtg->fake_op_size);
+    r->size = 0;
+}
+
+static void pendingReqsFree(plan_heur_ma_dtg_t *hdtg, pending_reqs_t *r)
+{
+    if (r->pending)
+        BOR_FREE(r->pending);
 }

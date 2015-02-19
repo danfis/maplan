@@ -404,7 +404,7 @@ int planMAMsgHeurRequestedAgentSize(const plan_ma_msg_t *msg)
     return ARRSIZE(msg, heur_requested_agent);
 }
 
-int planMAMsgHeurRequestAgent(const plan_ma_msg_t *msg, int i)
+int planMAMsgHeurRequestedAgent(const plan_ma_msg_t *msg, int i)
 {
     return GETARRVAL(msg, heur_requested_agent, i);
 }

@@ -60,8 +60,9 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_REQUEST  0x0009
 #define PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_RESPONSE 0x0900
 
-#define PLAN_MA_MSG_HEUR_DTG_REQUEST  0x000a
-#define PLAN_MA_MSG_HEUR_DTG_RESPONSE 0x0a00
+#define PLAN_MA_MSG_HEUR_DTG_REQUEST     0x000a
+#define PLAN_MA_MSG_HEUR_DTG_RESPONSE    0x0a00
+#define PLAN_MA_MSG_HEUR_DTG_REQRESPONSE 0x000b
 
 /**
  * Returns values for planMAMsgHeurType().
@@ -384,7 +385,7 @@ int planMAMsgHeurRequestedAgentSize(const plan_ma_msg_t *msg);
 /**
  * Returns i'th ID from list of requested agents.
  */
-int planMAMsgHeurRequestAgent(const plan_ma_msg_t *msg, int i);
+int planMAMsgHeurRequestedAgent(const plan_ma_msg_t *msg, int i);
 
 /**
  * Sets cost of heuristic function.

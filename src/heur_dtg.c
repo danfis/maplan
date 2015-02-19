@@ -508,6 +508,7 @@ static void ctxAddGoal(plan_heur_dtg_ctx_t *dtg_ctx,
     min_dist = ctxMinDist(dtg_ctx, dtg_data, var, val, &min_val);
     dtg_ctx->open_goals.goals[idx].min_dist = min_dist;
     dtg_ctx->open_goals.goals[idx].min_val = min_val;
+    dtg_ctx->open_goals.goals[idx].path = dataDtgPath(dtg_data, var, val);
 }
 
 static void ctxAddValue(plan_heur_dtg_ctx_t *dtg_ctx,
@@ -530,6 +531,7 @@ static void ctxAddValue(plan_heur_dtg_ctx_t *dtg_ctx,
             min_dist = ctxMinDist(dtg_ctx, dtg_data, var, goals[i].val, &min_val);
             goals[i].min_dist = min_dist;
             goals[i].min_val = min_val;
+            goals[i].path = dataDtgPath(dtg_data, var, goals[i].val);
         }
     }
 }

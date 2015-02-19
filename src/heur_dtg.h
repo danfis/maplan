@@ -49,6 +49,7 @@ struct _plan_heur_dtg_open_goal_t {
     plan_val_t min_val; /*!< Value from which leads shortest path to this
                              value */
     int min_dist;       /*!< Length of the shortes path */
+    const plan_heur_dtg_path_t *path;
 };
 typedef struct _plan_heur_dtg_open_goal_t plan_heur_dtg_open_goal_t;
 

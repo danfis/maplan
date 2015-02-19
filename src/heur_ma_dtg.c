@@ -64,10 +64,84 @@ static void hdtgDel(plan_heur_t *heur)
     BOR_FREE(hdtg);
 }
 
+static int hdtgStepRequest(plan_heur_ma_dtg_t *hdtg,
+                           const plan_heur_dtg_path_t *path,
+                           int var, int goal, int init_val)
+{
+    int fake_val, prev_val, cur_val;
+
+    fake_val = hdtg->data.dtg.dtg[var].val_size - 1;
+    prev_val = -1;
+    cur_val = init_val;
+
+    if (init_val == fake_val){
+        // TODO: Decrement heur by 1 and find cost of path between cur_val
+        //       and fake_val
+        prev_val = init_val;
+        cur_val = path->pre[init_val].val;
+    }
+
+    while (cur_val != goal){
+        if (cur_val == fake_val){
+            // TODO: Decrement heur by 2 and find cost of path between
+            // values path->pre[cur_val].val, cur_val=fake_val and
+            // prev_val.
+        }
+
+        prev_val = cur_val;
+        cur_val = path->pre[cur_val].val;
+    }
+
+    return 0;
+}
+
+static int hdtgStepNoPath(plan_heur_ma_dtg_t *hdtg,
+                          plan_heur_dtg_open_goal_t open_goal)
+{
+    int fake_val;
+
+    fake_val = hdtg->data.dtg.dtg[open_goal.var].val_size - 1;
+    if (open_goal.path->pre[fake_val].val != -1){
+        // At least '?' value is reachable so try other agents and ask them
+        // for cost of path.
+        // But first we must 'invent' the local cost of path.
+        hdtg->ctx.heur += open_goal.path->pre[fake_val].len;
+        return hdtgStepRequest(hdtg, open_goal.path, open_goal.var,
+                               open_goal.val, fake_val);
+    }else{
+        // The '?' value isn't reacheble either -- this means we have
+        // reached dead-end.
+        hdtg->ctx.heur = PLAN_HEUR_DEAD_END;
+        return -1;
+    }
+}
+
+static int hdtgStep(plan_heur_ma_dtg_t *hdtg)
+{
+    plan_heur_dtg_open_goal_t open_goal;
+    int ret;
+
+    ret = planHeurDTGCtxStep(&hdtg->ctx, &hdtg->data);
+    if (ret == -1)
+        return -1;
+
+    open_goal = hdtg->ctx.cur_open_goal;
+    if (open_goal.min_val == -1){
+        // We haven't found any path in DTG -- find out whether the '?'
+        // value is reachable.
+        return hdtgStepNoPath(hdtg, open_goal);
+    }
+
+    // Check the path if we need to ask other agents
+    return hdtgStepRequest(hdtg, open_goal.path, open_goal.var,
+                           open_goal.val, open_goal.min_val);
+}
+
 static int hdtgHeur(plan_heur_t *heur, plan_ma_comm_t *comm,
                     const plan_state_t *state, plan_heur_res_t *res)
 {
     plan_heur_ma_dtg_t *hdtg = HEUR(heur);
+    int ret;
 
     // Remember initial state
     planStateCopy(&hdtg->state, state);
@@ -78,10 +152,11 @@ static int hdtgHeur(plan_heur_t *heur, plan_ma_comm_t *comm,
                            hdtg->goal.vals, hdtg->goal.vals_size);
 
     // Run dtg heuristic
-    while (planHeurDTGCtxStep(&hdtg->ctx, &hdtg->data) == 0);
-    res->heur = hdtg->ctx.heur;
+    while ((ret = hdtgStep(hdtg)) == 0);
+    if (ret == 1)
+        return -1;
 
-    // TODO
+    res->heur = hdtg->ctx.heur;
     return 0;
 }
 

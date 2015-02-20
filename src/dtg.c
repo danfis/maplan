@@ -54,8 +54,8 @@ static void dtgUpdateByOp(plan_dtg_t *dtg, const plan_op_t *op)
     }
 }
 
-void planDTGInit(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
-                 const plan_op_t *op, int op_size)
+static void _planDTGInit(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
+                         const plan_op_t *op, int op_size, int range_add)
 {
     int i, size;
 
@@ -64,14 +64,26 @@ void planDTGInit(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
     dtg->dtg = BOR_ALLOC_ARR(plan_dtg_var_t, var_size);
     for (i = 0; i < var_size; ++i){
         dtg->dtg[i].var = i;
-        dtg->dtg[i].val_size = var[i].range;
-        size = var[i].range * var[i].range;
+        dtg->dtg[i].val_size = var[i].range + range_add;
+        size = dtg->dtg[i].val_size * dtg->dtg[i].val_size;
         dtg->dtg[i].trans = BOR_CALLOC_ARR(plan_dtg_trans_t, size);
     }
 
     for (i = 0; i < op_size; ++i){
         dtgUpdateByOp(dtg, op + i);
     }
+}
+
+void planDTGInit(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
+                 const plan_op_t *op, int op_size)
+{
+    _planDTGInit(dtg, var, var_size, op, op_size, 0);
+}
+
+void planDTGInitUnknown(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
+                        const plan_op_t *op, int op_size)
+{
+    _planDTGInit(dtg, var, var_size, op, op_size, 1);
 }
 
 void planDTGFree(plan_dtg_t *dtg)
@@ -90,6 +102,28 @@ void planDTGFree(plan_dtg_t *dtg)
         }
     }
     BOR_FREE(dtg->dtg);
+}
+
+void planDTGAddTrans(plan_dtg_t *dtg, plan_var_id_t var, plan_val_t from,
+                     plan_val_t to, const plan_op_t *op)
+{
+    dtgConnect(dtg->dtg + var, from, to, op);
+}
+
+int planDTGHasTrans(const plan_dtg_t *dtg, plan_var_id_t var,
+                    plan_val_t from, plan_val_t to,
+                    const plan_op_t *op)
+{
+    plan_dtg_trans_t *trans;
+    int i;
+
+    trans = dtg->dtg[var].trans + (from * dtg->dtg[var].val_size) + to;
+    for (i = 0; i < trans->ops_size; ++i){
+        if (trans->ops[i] == op)
+            return 1;
+    }
+
+    return 0;
 }
 
 int planDTGPath(const plan_dtg_t *_dtg, plan_var_id_t var,

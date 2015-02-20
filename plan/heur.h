@@ -158,6 +158,11 @@ plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *agent_def);
 plan_heur_t *planHeurMALMCutNew(const plan_problem_t *agent_def);
 
 /**
+ * Multi-agent DTG heuristic.
+ */
+plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def);
+
+/**
  * Deletes heuristics object.
  */
 void planHeurDel(plan_heur_t *heur);

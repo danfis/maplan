@@ -391,6 +391,7 @@ static void loadAgents(plan_problem_agents_t *p,
         agent = p->agent + i;
         agentInitProblem(agent, &p->glob);
         agent->agent_name = strdup(proto->agent_name(i).c_str());
+        agent->agent_id = i;
     }
 
     // Set owners of the operators

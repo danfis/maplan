@@ -6,6 +6,13 @@ message PlanMAMsgOp {
     optional int32 value = 5;
 }
 
+message PlanMAMsgDTGReq {
+    required int32 var = 1;
+    required int32 val_from = 2;
+    required int32 val_to = 3;
+    repeated int32 reachable = 4;
+}
+
 
 message PlanMAMsg {
     required int32 type = 1;
@@ -24,4 +31,8 @@ message PlanMAMsg {
     repeated int32 state_full = 13;
     optional int32 goal_op_id = 14;
     optional int32 min_cut_cost = 15;
+    optional int32 heur_token = 16;
+    repeated int32 heur_requested_agent = 17;
+    optional int32 heur_cost = 18;
+    optional PlanMAMsgDTGReq dtg_req = 19;
 }

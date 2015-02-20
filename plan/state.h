@@ -40,6 +40,16 @@ plan_state_t *planStateNew(int size);
 void planStateDel(plan_state_t *state);
 
 /**
+ * Initialize state structure.
+ */
+void planStateInit(plan_state_t *state, int size);
+
+/**
+ * Frees state structure.
+ */
+void planStateFree(plan_state_t *state);
+
+/**
  * Returns value of the specified variable.
  */
 _bor_inline plan_val_t planStateGet(const plan_state_t *state,

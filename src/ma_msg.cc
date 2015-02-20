@@ -5,6 +5,17 @@
 
 #define PROTO(msg) ((PlanMAMsg *)(msg))
 
+#define SETVAL(msg, name, value) \
+    PROTO(msg)->set_##name(value)
+#define GETVAL(msg, name) \
+    PROTO(msg)->name()
+#define ADDVAL(msg, name, value) \
+    PROTO(msg)->add_##name(value)
+#define GETARRVAL(msg, name, i) \
+    PROTO(msg)->name(i)
+#define ARRSIZE(msg, name) \
+    PROTO(msg)->name##_size()
+
 static int snapshot_token_counter = 0;
 
 static int stateId(const plan_ma_msg_t *msg)
@@ -319,6 +330,19 @@ void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state)
         planStateSet(state, i, proto->state_full(i));
 }
 
+void planMAMsgCopyStateFull(plan_ma_msg_t *dst, const plan_ma_msg_t *src)
+{
+    PlanMAMsg *pdst = PROTO(dst);
+    const PlanMAMsg *psrc = PROTO(src);
+    int i, size;
+
+    pdst->clear_state_full();
+    size = psrc->state_full_size();
+    for (i = 0; i < size; ++i){
+        pdst->add_state_full(psrc->state_full(i));
+    }
+}
+
 plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var)
 {
     const PlanMAMsg *proto = PROTO(msg);
@@ -371,4 +395,102 @@ plan_cost_t planMAMsgMinCutCost(const plan_ma_msg_t *msg)
 {
     const PlanMAMsg *proto = PROTO(msg);
     return proto->min_cut_cost();
+}
+
+void planMAMsgSetHeurToken(plan_ma_msg_t *msg, int token)
+{
+    SETVAL(msg, heur_token, token);
+}
+
+int planMAMsgHeurToken(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, heur_token);
+}
+
+void planMAMsgAddHeurRequestedAgent(plan_ma_msg_t *msg, int agent_id)
+{
+    ADDVAL(msg, heur_requested_agent, agent_id);
+}
+
+int planMAMsgHeurRequestedAgentSize(const plan_ma_msg_t *msg)
+{
+    return ARRSIZE(msg, heur_requested_agent);
+}
+
+int planMAMsgHeurRequestedAgent(const plan_ma_msg_t *msg, int i)
+{
+    return GETARRVAL(msg, heur_requested_agent, i);
+}
+
+void planMAMsgSetHeurCost(plan_ma_msg_t *msg, int cost)
+{
+    SETVAL(msg, heur_cost, cost);
+}
+
+int planMAMsgHeurCost(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, heur_cost);
+}
+
+void planMAMsgSetDTGReq(plan_ma_msg_t *msg, int var, int from, int to)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    PlanMAMsgDTGReq *req = proto->mutable_dtg_req();
+    req->set_var(var);
+    req->set_val_from(from);
+    req->set_val_to(to);
+}
+
+void planMAMsgAddDTGReqReachable(plan_ma_msg_t *msg, int val)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    PlanMAMsgDTGReq *req = proto->mutable_dtg_req();
+    req->add_reachable(val);
+}
+
+void planMAMsgDTGReq(const plan_ma_msg_t *msg, int *var, int *from, int *to)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    const PlanMAMsgDTGReq &req = proto->dtg_req();
+    *var = req.var();
+    *from = req.val_from();
+    *to = req.val_to();
+}
+
+int planMAMsgDTGReqReachableSize(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    const PlanMAMsgDTGReq &req = proto->dtg_req();
+    return req.reachable_size();
+}
+
+int planMAMsgDTGReqReachable(const plan_ma_msg_t *msg, int i)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    const PlanMAMsgDTGReq &req = proto->dtg_req();
+    return req.reachable(i);
+}
+
+void planMAMsgCopyDTGReqReachable(plan_ma_msg_t *dst, const plan_ma_msg_t *src)
+{
+    PlanMAMsg *pdst = PROTO(dst);
+    const PlanMAMsg *psrc = PROTO(src);
+    PlanMAMsgDTGReq *dreq = pdst->mutable_dtg_req();
+    const PlanMAMsgDTGReq &sreq = psrc->dtg_req();
+    int i, size;
+
+    dreq->clear_reachable();
+    size = sreq.reachable_size();
+    for (i = 0; i < size; ++i)
+        dreq->add_reachable(sreq.reachable(i));
+}
+
+void planMAMsgSetInitAgent(plan_ma_msg_t *msg, int agent_id)
+{
+    SETVAL(msg, initiator_agent_id, agent_id);
+}
+
+int planMAMsgInitAgent(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, initiator_agent_id);
 }

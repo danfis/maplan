@@ -53,9 +53,37 @@ void planDTGInit(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
                  const plan_op_t *op, int op_size);
 
 /**
+ * Same as planDTGInit() but adds one value to each variable as placeholder
+ * for unknown value.
+ */
+void planDTGInitUnknown(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
+                        const plan_op_t *op, int op_size);
+
+/**
  * Frees allocated resources.
  */
 void planDTGFree(plan_dtg_t *dtg);
+
+/**
+ * Adds transition to var's DTG between the two specified values.
+ */
+void planDTGAddTrans(plan_dtg_t *dtg, plan_var_id_t var, plan_val_t from,
+                     plan_val_t to, const plan_op_t *op);
+
+/**
+ * Returns true if op is on transition between from and to.
+ */
+int planDTGHasTrans(const plan_dtg_t *dtg, plan_var_id_t var,
+                    plan_val_t from, plan_val_t to,
+                    const plan_op_t *op);
+
+/**
+ * Returns a transition between two values.
+ */
+_bor_inline const plan_dtg_trans_t *planDTGTrans(const plan_dtg_t *dtg,
+                                                 plan_var_id_t var,
+                                                 plan_val_t from,
+                                                 plan_val_t to);
 
 /**
  * Finds shortest path between two values of a variable.
@@ -69,6 +97,16 @@ int planDTGPath(const plan_dtg_t *dtg, plan_var_id_t var,
  * For debuf purposes
  */
 void planDTGPrint(const plan_dtg_t *dtg, FILE *fout);
+
+
+/**** INLINES: ****/
+_bor_inline const plan_dtg_trans_t *planDTGTrans(const plan_dtg_t *dtg,
+                                                 plan_var_id_t var,
+                                                 plan_val_t from,
+                                                 plan_val_t to)
+{
+    return dtg->dtg[var].trans + (from * dtg->dtg[var].val_size) + to;
+}
 
 #ifdef __cplusplus
 } /* extern "C" */

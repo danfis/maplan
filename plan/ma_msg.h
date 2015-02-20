@@ -60,6 +60,10 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_REQUEST  0x0009
 #define PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_RESPONSE 0x0900
 
+#define PLAN_MA_MSG_HEUR_DTG_REQUEST     0x000a
+#define PLAN_MA_MSG_HEUR_DTG_RESPONSE    0x0a00
+#define PLAN_MA_MSG_HEUR_DTG_REQRESPONSE 0x000b
+
 /**
  * Returns values for planMAMsgHeurType().
  */
@@ -289,6 +293,11 @@ int planMAMsgHasStateFull(const plan_ma_msg_t *msg);
 void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state);
 
 /**
+ * Copies state-full from src to dst.
+ */
+void planMAMsgCopyStateFull(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
+
+/**
  * Returns value of a specified variable in full state.
  */
 plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var);
@@ -356,6 +365,82 @@ void planMAMsgSetMinCutCost(plan_ma_msg_t *msg, plan_cost_t cost);
  * Returns min-cut-cost value.
  */
 plan_cost_t planMAMsgMinCutCost(const plan_ma_msg_t *msg);
+
+
+/**
+ * Sets token for heuristic.
+ */
+void planMAMsgSetHeurToken(plan_ma_msg_t *msg, int token);
+
+/**
+ * Returns heuristic token.
+ */
+int planMAMsgHeurToken(const plan_ma_msg_t *msg);
+
+/**
+ * Adds agent-id to the list of agents already requested.
+ */
+void planMAMsgAddHeurRequestedAgent(plan_ma_msg_t *msg, int agent_id);
+
+/**
+ * Returns number of IDs stored in list of requested agents.
+ */
+int planMAMsgHeurRequestedAgentSize(const plan_ma_msg_t *msg);
+
+/**
+ * Returns i'th ID from list of requested agents.
+ */
+int planMAMsgHeurRequestedAgent(const plan_ma_msg_t *msg, int i);
+
+/**
+ * Sets cost of heuristic function.
+ */
+void planMAMsgSetHeurCost(plan_ma_msg_t *msg, int cost);
+
+/**
+ * Returns cost of heuristic stored in message.
+ */
+int planMAMsgHeurCost(const plan_ma_msg_t *msg);
+
+/**
+ * Sets request for DTG heuristic.
+ */
+void planMAMsgSetDTGReq(plan_ma_msg_t *msg, int var, int from, int to);
+
+/**
+ * Adds value to list of dtg-reachable values.
+ */
+void planMAMsgAddDTGReqReachable(plan_ma_msg_t *msg, int val);
+
+/**
+ * Returns data set by planMAMsgSetDTGReq()
+ */
+void planMAMsgDTGReq(const plan_ma_msg_t *msg, int *var, int *from, int *to);
+
+/**
+ * Number of dtg-reachable values.
+ */
+int planMAMsgDTGReqReachableSize(const plan_ma_msg_t *msg);
+
+/**
+ * Returns i'th reachable value.
+ */
+int planMAMsgDTGReqReachable(const plan_ma_msg_t *msg, int i);
+
+/**
+ * Copies reachable from src to dst.
+ */
+void planMAMsgCopyDTGReqReachable(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
+
+/**
+ * Sets initiator agent ID
+ */
+void planMAMsgSetInitAgent(plan_ma_msg_t *msg, int agent_id);
+
+/**
+ * Returns initiator agent ID
+ */
+int planMAMsgInitAgent(const plan_ma_msg_t *msg);
 
 #ifdef __cplusplus
 } /* extern "C" */

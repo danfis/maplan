@@ -43,6 +43,16 @@ plan_part_state_t *planPartStateNew(int size);
 void planPartStateDel(plan_part_state_t *part_state);
 
 /**
+ * Initializes part-state structure.
+ */
+void planPartStateInit(plan_part_state_t *ps, int size);
+
+/**
+ * Frees allocated resources.
+ */
+void planPartStateFree(plan_part_state_t *ps);
+
+/**
  * Copies partial state from src to dst.
  */
 void planPartStateCopy(plan_part_state_t *dst, const plan_part_state_t *src);

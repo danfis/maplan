@@ -6,15 +6,26 @@ plan_state_t *planStateNew(int size)
 {
     plan_state_t *state;
     state = BOR_ALLOC(plan_state_t);
-    state->val = BOR_ALLOC_ARR(plan_val_t, size);
-    state->size = size;
+    planStateInit(state, size);
     return state;
 }
 
 void planStateDel(plan_state_t *state)
 {
-    BOR_FREE(state->val);
+    planStateFree(state);
     BOR_FREE(state);
+}
+
+void planStateInit(plan_state_t *state, int size)
+{
+    state->val = BOR_ALLOC_ARR(plan_val_t, size);
+    state->size = size;
+}
+
+void planStateFree(plan_state_t *state)
+{
+    if (state->val)
+        BOR_FREE(state->val);
 }
 
 void planStateZeroize(plan_state_t *state)

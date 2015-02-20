@@ -490,9 +490,10 @@ static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
     if (path->pre[val_to].val == -1)
         val_to = hdtg->data.dtg.dtg[var].val_size - 1;
 
-    // If val_to is still unreachable report it back
+    // If val_to is still unreachable report it back as zero (we don't know
+    // whether it is dead end or not)
     if (path->pre[val_to].val == -1){
-        hdtgSendResponse(hdtg, comm, agent_id, token, 1000, depth);
+        hdtgSendResponse(hdtg, comm, agent_id, token, 0, depth);
         return;
     }
 
@@ -503,8 +504,9 @@ static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
     ret = hdtgCheckPath(hdtg, comm, path, var, val_from, val_to, msg,
                         &req_token);
     if (ret < 0){
-        // Report dead end
-        hdtgSendResponse(hdtg, comm, agent_id, token, 1000, depth);
+        // Could not send request (either there is no path or we reached
+        // limit for distributed recursion) -- report back zero.
+        hdtgSendResponse(hdtg, comm, agent_id, token, 0, depth);
 
     }else if (ret > 0){
         // Save cost as a base cost for updates

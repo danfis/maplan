@@ -73,6 +73,20 @@ static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
                            int var, int from, int to,
                            const plan_ma_msg_t *req_msg,
                            int *token_out);
+/** Check path whether it contains '?' value and send request if so.
+ *  Returns >0 if request was send, 0 if path is ok and -1 if path is not
+ *  reachable. */
+static int hdtgCheckPath(plan_heur_ma_dtg_t *hdtg,
+                         plan_ma_comm_t *comm,
+                         const plan_heur_dtg_path_t *path,
+                         int var, int goal, int init_val,
+                         const plan_ma_msg_t *req_msg,
+                         int *token_out);
+/** Performs one step in dtg heuristic */
+static int hdtgStep(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm);
+/** Process response or req-response */
+static int update(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm,
+                  const plan_ma_msg_t *msg);
 
 plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def)
 {
@@ -117,123 +131,6 @@ static void hdtgDel(plan_heur_t *heur)
     BOR_FREE(hdtg);
 }
 
-
-
-static int hdtgCheckPath(plan_heur_ma_dtg_t *hdtg,
-                         plan_ma_comm_t *comm,
-                         const plan_heur_dtg_path_t *path,
-                         int var, int goal, int init_val,
-                         const plan_ma_msg_t *req_msg,
-                         int *token_out)
-{
-    int fake_val, prev_val, cur_val, next_val;
-    int ret;
-
-    fake_val = hdtg->data.dtg.dtg[var].val_size - 1;
-    prev_val = -1;
-    cur_val = init_val;
-
-    if (init_val == fake_val){
-        // Send "open-ended" request to agents on transition
-        next_val = path->pre[init_val].val;
-        ret = hdtgSendRequest(hdtg, comm, var, next_val, -1,
-                              req_msg, token_out);
-        if (ret != 0)
-            return -1;
-
-        // Signal to decrement heur value by 1 because we must substract
-        // cost of a fake transition.
-        return 1;
-
-        prev_val = init_val;
-        cur_val = path->pre[init_val].val;
-    }
-
-    while (cur_val != goal){
-        if (cur_val == fake_val){
-            // Send request to agents on transition
-            next_val = path->pre[cur_val].val;
-            ret = hdtgSendRequest(hdtg, comm, var, next_val, prev_val,
-                                  req_msg, token_out);
-            if (ret != 0)
-                return -1;
-
-            // Signal to decrement heur value by 2 because we must
-            // substract cost oo fake transitions to the fake value and
-            // from the fake value.
-            return 2;
-        }
-
-        prev_val = cur_val;
-        cur_val = path->pre[cur_val].val;
-    }
-
-    return 0;
-}
-
-static int hdtgStepRequest(plan_heur_ma_dtg_t *hdtg,
-                           plan_ma_comm_t *comm,
-                           const plan_heur_dtg_path_t *path,
-                           int var, int goal, int init_val)
-{
-    int ret;
-
-    ret = hdtgCheckPath(hdtg, comm, path, var, goal, init_val, NULL, NULL);
-    if (ret < 0){
-        // Path is not reachable. We must ignore this because the fact that
-        // this particular path isn't reachable does not mean there is no
-        // path from the initial state to the goal. It just can lead other
-        // way.
-        return 0;
-
-    }else if (ret > 0){
-        return 1;
-    }
-    return 0;
-}
-
-static int hdtgStepNoPath(plan_heur_ma_dtg_t *hdtg,
-                          plan_ma_comm_t *comm,
-                          plan_heur_dtg_open_goal_t open_goal)
-{
-    int fake_val;
-
-    fake_val = hdtg->data.dtg.dtg[open_goal.var].val_size - 1;
-    if (open_goal.path->pre[fake_val].val != -1){
-        // At least '?' value is reachable so try other agents and ask them
-        // for cost of path.
-        // But first we must 'invent' the local cost of path.
-        hdtg->ctx.heur += open_goal.path->pre[fake_val].len;
-        return hdtgStepRequest(hdtg, comm, open_goal.path, open_goal.var,
-                               open_goal.val, fake_val);
-    }else{
-        // The '?' value isn't reacheble either -- just ignore this because
-        // we cannot be sure it means dead-end.
-        return 0;
-    }
-}
-
-static int hdtgStep(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm)
-{
-    plan_heur_dtg_open_goal_t open_goal;
-    int ret;
-
-    ret = planHeurDTGCtxStep(&hdtg->ctx, &hdtg->data);
-    if (ret == -1)
-        return -1;
-
-    open_goal = hdtg->ctx.cur_open_goal;
-    if (open_goal.min_val == -1){
-        // We haven't found any path in DTG -- find out whether the '?'
-        // value is reachable.
-        return hdtgStepNoPath(hdtg, comm, open_goal);
-    }
-
-    // Check the path if we need to ask other agents
-    return hdtgStepRequest(hdtg, comm, open_goal.path, open_goal.var,
-                           open_goal.val, open_goal.min_val);
-}
-
 static int hdtgHeur(plan_heur_t *heur, plan_ma_comm_t *comm,
                     const plan_state_t *state, plan_heur_res_t *res)
 {
@@ -255,59 +152,6 @@ static int hdtgHeur(plan_heur_t *heur, plan_ma_comm_t *comm,
         return -1;
 
     res->heur = hdtg->ctx.heur;
-    return 0;
-}
-
-static int update(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm,
-                  const plan_ma_msg_t *msg)
-{
-    pending_reqs_t *req;
-    int token, agent_id, cost;
-    int i, ret;
-
-    // Read data from received message
-    agent_id = planMAMsgAgent(msg);
-    token = planMAMsgHeurToken(msg);
-    cost = planMAMsgHeurCost(msg);
-
-    // Find corresponding pending request
-    req = hdtg->waitlist + token;
-
-    // Record data from response
-    req->pending[agent_id].cost = cost;
-
-    // Decrement number of pending requests and if there are some requests
-    // still pending wait for them
-    --req->size;
-    if (req->size != 0)
-        return -1;
-
-    // Find minimal cost and zeroize structure
-    for (i = 0; i < hdtg->fake_op_size; ++i){
-        if (req->pending[i].wait)
-            cost = BOR_MIN(cost, req->pending[i].cost);
-        req->pending[i].wait = 0;
-        req->pending[i].cost = 0;
-    }
-
-    // Update cost with base cost
-    cost += req->base_cost;
-
-    if (req->response_agent == -1){
-        // Update heuristic value
-        hdtg->ctx.heur += cost;
-
-        // Proceed with dtg heuristic
-        while ((ret = hdtgStep(hdtg, comm)) == 0);
-        if (ret == 1)
-            return -1;
-
-    }else{
-        // Send response to the parent caller
-        hdtgSendResponse(hdtg, comm, req->response_agent,
-                         req->response_token, cost, req->response_depth);
-    }
-
     return 0;
 }
 
@@ -395,6 +239,9 @@ static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
         hdtgSendResponse(hdtg, comm, agent_id, token, cost, depth);
     }
 }
+
+
+
 
 static void dtgAddOp(plan_heur_ma_dtg_t *hdtg, const plan_op_t *op)
 {
@@ -646,3 +493,171 @@ static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
     return 0;
 }
 
+static int hdtgCheckPath(plan_heur_ma_dtg_t *hdtg,
+                         plan_ma_comm_t *comm,
+                         const plan_heur_dtg_path_t *path,
+                         int var, int goal, int init_val,
+                         const plan_ma_msg_t *req_msg,
+                         int *token_out)
+{
+    int fake_val, prev_val, cur_val, next_val;
+    int ret;
+
+    fake_val = hdtg->data.dtg.dtg[var].val_size - 1;
+    prev_val = -1;
+    cur_val = init_val;
+
+    if (init_val == fake_val){
+        // Send "open-ended" request to agents on transition
+        next_val = path->pre[init_val].val;
+        ret = hdtgSendRequest(hdtg, comm, var, next_val, -1,
+                              req_msg, token_out);
+        if (ret != 0)
+            return -1;
+
+        // Signal to decrement heur value by 1 because we must substract
+        // cost of a fake transition.
+        return 1;
+
+        prev_val = init_val;
+        cur_val = path->pre[init_val].val;
+    }
+
+    while (cur_val != goal){
+        if (cur_val == fake_val){
+            // Send request to agents on transition
+            next_val = path->pre[cur_val].val;
+            ret = hdtgSendRequest(hdtg, comm, var, next_val, prev_val,
+                                  req_msg, token_out);
+            if (ret != 0)
+                return -1;
+
+            // Signal to decrement heur value by 2 because we must
+            // substract cost oo fake transitions to the fake value and
+            // from the fake value.
+            return 2;
+        }
+
+        prev_val = cur_val;
+        cur_val = path->pre[cur_val].val;
+    }
+
+    return 0;
+}
+
+static int hdtgStepRequest(plan_heur_ma_dtg_t *hdtg,
+                           plan_ma_comm_t *comm,
+                           const plan_heur_dtg_path_t *path,
+                           int var, int goal, int init_val)
+{
+    int ret;
+
+    ret = hdtgCheckPath(hdtg, comm, path, var, goal, init_val, NULL, NULL);
+    if (ret < 0){
+        // Path is not reachable. We must ignore this because the fact that
+        // this particular path isn't reachable does not mean there is no
+        // path from the initial state to the goal. It just can lead other
+        // way.
+        return 0;
+
+    }else if (ret > 0){
+        return 1;
+    }
+    return 0;
+}
+
+static int hdtgStepNoPath(plan_heur_ma_dtg_t *hdtg,
+                          plan_ma_comm_t *comm,
+                          plan_heur_dtg_open_goal_t open_goal)
+{
+    int fake_val;
+
+    fake_val = hdtg->data.dtg.dtg[open_goal.var].val_size - 1;
+    if (open_goal.path->pre[fake_val].val != -1){
+        // At least '?' value is reachable so try other agents and ask them
+        // for cost of path.
+        // But first we must 'invent' the local cost of path.
+        hdtg->ctx.heur += open_goal.path->pre[fake_val].len;
+        return hdtgStepRequest(hdtg, comm, open_goal.path, open_goal.var,
+                               open_goal.val, fake_val);
+    }else{
+        // The '?' value isn't reacheble either -- just ignore this because
+        // we cannot be sure it means dead-end.
+        return 0;
+    }
+}
+
+static int hdtgStep(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm)
+{
+    plan_heur_dtg_open_goal_t open_goal;
+    int ret;
+
+    ret = planHeurDTGCtxStep(&hdtg->ctx, &hdtg->data);
+    if (ret == -1)
+        return -1;
+
+    open_goal = hdtg->ctx.cur_open_goal;
+    if (open_goal.min_val == -1){
+        // We haven't found any path in DTG -- find out whether the '?'
+        // value is reachable.
+        return hdtgStepNoPath(hdtg, comm, open_goal);
+    }
+
+    // Check the path if we need to ask other agents
+    return hdtgStepRequest(hdtg, comm, open_goal.path, open_goal.var,
+                           open_goal.val, open_goal.min_val);
+}
+
+
+static int update(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm,
+                  const plan_ma_msg_t *msg)
+{
+    pending_reqs_t *req;
+    int token, agent_id, cost;
+    int i, ret;
+
+    // Read data from received message
+    agent_id = planMAMsgAgent(msg);
+    token = planMAMsgHeurToken(msg);
+    cost = planMAMsgHeurCost(msg);
+
+    // Find corresponding pending request
+    req = hdtg->waitlist + token;
+
+    // Record data from response
+    req->pending[agent_id].cost = cost;
+
+    // Decrement number of pending requests and if there are some requests
+    // still pending wait for them
+    --req->size;
+    if (req->size != 0)
+        return -1;
+
+    // Find minimal cost and zeroize structure
+    for (i = 0; i < hdtg->fake_op_size; ++i){
+        if (req->pending[i].wait)
+            cost = BOR_MIN(cost, req->pending[i].cost);
+        req->pending[i].wait = 0;
+        req->pending[i].cost = 0;
+    }
+
+    // Update cost with base cost
+    cost += req->base_cost;
+
+    if (req->response_agent == -1){
+        // Update heuristic value
+        hdtg->ctx.heur += cost;
+
+        // Proceed with dtg heuristic
+        while ((ret = hdtgStep(hdtg, comm)) == 0);
+        if (ret == 1)
+            return -1;
+
+    }else{
+        // Send response to the parent caller
+        hdtgSendResponse(hdtg, comm, req->response_agent,
+                         req->response_token, cost, req->response_depth);
+    }
+
+    return 0;
+}

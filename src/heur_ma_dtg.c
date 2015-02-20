@@ -139,7 +139,8 @@ static int hdtgHeur(plan_heur_t *heur, plan_ma_comm_t *comm,
 
     // Remember initial state
     planStateCopy(&hdtg->state, state);
-    // TODO: disable unknown values
+    // Private values are copied too, because these values are not in DTG
+    // graph anyway, so the agent ignores these values.
 
     // Start computing dtg heuristic
     planHeurDTGCtxInitStep(&hdtg->ctx, &hdtg->data,

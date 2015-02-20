@@ -191,10 +191,17 @@ static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
     }
 
     token = hdtgNextToken(hdtg);
+
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_DTG_REQUEST,
                        comm->node_id);
-    planMAMsgSetStateFull2(msg, &hdtg->state);
     planMAMsgSetHeurToken(msg, token);
+    if (req_msg){
+        PLAN_STATE_STACK(state, planStateSize(&hdtg->state));
+        planMAMsgStateFull(req_msg, &state);
+        planMAMsgSetStateFull2(msg, &state);
+    }else{
+        planMAMsgSetStateFull2(msg, &hdtg->state);
+    }
     if (req_msg){
         // Copy requested agents to the next request
         size = planMAMsgHeurRequestedAgentSize(req_msg);

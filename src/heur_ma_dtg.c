@@ -209,6 +209,8 @@ static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
 
     hdtg->waitlist[token].base_cost = 0;
     hdtg->waitlist[token].response_agent = -1;
+    hdtg->waitlist[token].response_token = -1;
+    hdtg->waitlist[token].response_depth = 0;
 
     if (req_msg){
         hdtg->waitlist[token].response_agent = planMAMsgAgent(req_msg);
@@ -312,7 +314,6 @@ static int hdtgStepRequest(plan_heur_ma_dtg_t *hdtg,
         return -1;
 
     }else if (ret > 0){
-        hdtg->ctx.heur -= ret;
         return 1;
     }
     return 0;
@@ -324,6 +325,7 @@ static int hdtgStepNoPath(plan_heur_ma_dtg_t *hdtg,
 {
     int fake_val;
 
+    fprintf(stderr, "[%d] NoPath\n", comm->node_id);
     fake_val = hdtg->data.dtg.dtg[open_goal.var].val_size - 1;
     if (open_goal.path->pre[fake_val].val != -1){
         // At least '?' value is reachable so try other agents and ask them
@@ -346,11 +348,18 @@ static int hdtgStep(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm)
     plan_heur_dtg_open_goal_t open_goal;
     int ret;
 
+    fprintf(stderr, "[%d] Heur Before: %d\n", comm->node_id,
+            hdtg->ctx.heur);
     ret = planHeurDTGCtxStep(&hdtg->ctx, &hdtg->data);
+    fprintf(stderr, "[%d] Heur After: %d, ret: %d\n", comm->node_id,
+            hdtg->ctx.heur, ret);
     if (ret == -1)
         return -1;
 
     open_goal = hdtg->ctx.cur_open_goal;
+    fprintf(stderr, "[%d] open-goal: v: %d, %d->%d, dist: %d\n",
+            comm->node_id, open_goal.var, open_goal.val, open_goal.min_val,
+            open_goal.min_dist);
     if (open_goal.min_val == -1){
         // We haven't found any path in DTG -- find out whether the '?'
         // value is reachable.
@@ -423,11 +432,17 @@ static int update(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm,
     }
 
     // Update cost with base cost
+    fprintf(stderr, "[%d] cost: %d\n", comm->node_id, cost);
     cost += req->base_cost;
+    fprintf(stderr, "[%d] cost: %d\n", comm->node_id, cost);
 
     if (req->response_agent == -1){
         // Update heuristic value
+        fprintf(stderr, "[%d] Bheur-cost: %d\n", comm->node_id,
+                hdtg->ctx.heur);
         hdtg->ctx.heur += cost;
+        fprintf(stderr, "[%d] heur-cost: %d\n", comm->node_id,
+                hdtg->ctx.heur);
 
         // Proceed with dtg heuristic
         while ((ret = hdtgStep(hdtg, comm)) == 0);
@@ -525,8 +540,7 @@ static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
         hdtgSendResponse(hdtg, comm, agent_id, token, 1000, depth);
 
     }else if (ret > 0){
-        // Update cost and save it as base cost
-        cost -= ret;
+        // Save cost as a base cost for updates
         hdtg->waitlist[req_token].base_cost = cost;
 
     }else{

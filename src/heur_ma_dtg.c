@@ -123,8 +123,10 @@ static int hdtgFindOwners(plan_heur_ma_dtg_t *hdtg,
     bzero(owner, sizeof(int) * hdtg->fake_op_size);
     fake_val = hdtg->data.dtg.dtg[var].val_size - 1;
 
-    // Process first transition
-    trans = planDTGTrans(&hdtg->data.dtg, var, from, fake_val);
+    // Process first transition.
+    // Note that we need transition in an opposite way because we search
+    // for paths from goals to known facts.
+    trans = planDTGTrans(&hdtg->data.dtg, var, fake_val, from);
     fprintf(stderr, "%d->%d trans_size: %d\n", from, fake_val,
             trans->ops_size);
     for (i = 0; i < trans->ops_size; ++i){
@@ -316,9 +318,11 @@ static int hdtgStepRequest(plan_heur_ma_dtg_t *hdtg,
 
     ret = hdtgCheckPath(hdtg, comm, path, var, goal, init_val, NULL, NULL);
     if (ret < 0){
-        fprintf(stderr, "D\n");
-        hdtg->ctx.heur = PLAN_HEUR_DEAD_END;
-        return -1;
+        // Path is not reachable. We must ignore this because the fact that
+        // this particular path isn't reachable does not mean there is no
+        // path from the initial state to the goal. It just can lead other
+        // way.
+        return 0;
 
     }else if (ret > 0){
         return 1;
@@ -342,11 +346,9 @@ static int hdtgStepNoPath(plan_heur_ma_dtg_t *hdtg,
         return hdtgStepRequest(hdtg, comm, open_goal.path, open_goal.var,
                                open_goal.val, fake_val);
     }else{
-        // The '?' value isn't reacheble either -- this means we have
-        // reached dead-end.
-        fprintf(stderr, "D2\n");
-        hdtg->ctx.heur = PLAN_HEUR_DEAD_END;
-        return -1;
+        // The '?' value isn't reacheble either -- just ignore this because
+        // we cannot be sure it means dead-end.
+        return 0;
     }
 }
 

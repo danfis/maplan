@@ -127,11 +127,7 @@ static int hdtgFindOwners(plan_heur_ma_dtg_t *hdtg,
     // Note that we need transition in an opposite way because we search
     // for paths from goals to known facts.
     trans = planDTGTrans(&hdtg->data.dtg, var, fake_val, from);
-    fprintf(stderr, "%d->%d trans_size: %d\n", from, fake_val,
-            trans->ops_size);
     for (i = 0; i < trans->ops_size; ++i){
-        fprintf(stderr, "%d->%d agent: %d\n", from, fake_val,
-                trans->ops[i]->owner);
         owner[trans->ops[i]->owner] = 1;
         found = 1;
     }
@@ -158,9 +154,6 @@ static void hdtgSendResponse(plan_heur_ma_dtg_t *hdtg,
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR, subtype, comm->node_id);
     planMAMsgSetHeurToken(msg, token);
     planMAMsgSetHeurCost(msg, cost);
-    fprintf(stderr, "[%d] Send response to %d (depth: %d)\n",
-            comm->node_id, agent, depth);
-    fflush(stderr);
     planMACommSendToNode(comm, agent, msg);
     planMAMsgDel(msg);
 }
@@ -238,12 +231,6 @@ static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
         hdtg->waitlist[token].pending[i].cost = 0;
         ++hdtg->waitlist[token].size;
 
-        fprintf(stderr, "[%d] Send request to %d, token: %d, depth: %d,"
-                        " response_agent: %d\n",
-                comm->node_id, i, planMAMsgHeurToken(msg),
-                hdtg->waitlist[token].response_depth,
-                hdtg->waitlist[token].response_agent);
-        fflush(stderr);
         planMACommSendToNode(comm, i, msg);
     }
     planMAMsgDel(msg);
@@ -273,7 +260,6 @@ static int hdtgCheckPath(plan_heur_ma_dtg_t *hdtg,
         next_val = path->pre[init_val].val;
         ret = hdtgSendRequest(hdtg, comm, var, next_val, -1,
                               req_msg, token_out);
-        fprintf(stderr, "ret: %d\n", ret);
         if (ret != 0)
             return -1;
 
@@ -291,8 +277,6 @@ static int hdtgCheckPath(plan_heur_ma_dtg_t *hdtg,
             next_val = path->pre[cur_val].val;
             ret = hdtgSendRequest(hdtg, comm, var, next_val, prev_val,
                                   req_msg, token_out);
-            fprintf(stderr, "ret2: %d, var: %d, %d -> %d (-%d-)\n", ret,
-                    var, next_val, prev_val, cur_val);
             if (ret != 0)
                 return -1;
 
@@ -336,7 +320,6 @@ static int hdtgStepNoPath(plan_heur_ma_dtg_t *hdtg,
 {
     int fake_val;
 
-    fprintf(stderr, "[%d] NoPath\n", comm->node_id);
     fake_val = hdtg->data.dtg.dtg[open_goal.var].val_size - 1;
     if (open_goal.path->pre[fake_val].val != -1){
         // At least '?' value is reachable so try other agents and ask them
@@ -357,18 +340,11 @@ static int hdtgStep(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm)
     plan_heur_dtg_open_goal_t open_goal;
     int ret;
 
-    fprintf(stderr, "[%d] Heur Before: %d\n", comm->node_id,
-            hdtg->ctx.heur);
     ret = planHeurDTGCtxStep(&hdtg->ctx, &hdtg->data);
-    fprintf(stderr, "[%d] Heur After: %d, ret: %d\n", comm->node_id,
-            hdtg->ctx.heur, ret);
     if (ret == -1)
         return -1;
 
     open_goal = hdtg->ctx.cur_open_goal;
-    fprintf(stderr, "[%d] open-goal: v: %d, %d->%d, dist: %d\n",
-            comm->node_id, open_goal.var, open_goal.val, open_goal.min_val,
-            open_goal.min_dist);
     if (open_goal.min_val == -1){
         // We haven't found any path in DTG -- find out whether the '?'
         // value is reachable.
@@ -386,7 +362,6 @@ static int hdtgHeur(plan_heur_t *heur, plan_ma_comm_t *comm,
     plan_heur_ma_dtg_t *hdtg = HEUR(heur);
     int ret;
 
-    fprintf(stderr, "[%d] DTG HEUR\n", comm->node_id);
     // Remember initial state
     planStateCopy(&hdtg->state, state);
     // TODO: disable unknown values
@@ -416,9 +391,6 @@ static int update(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm,
     agent_id = planMAMsgAgent(msg);
     token = planMAMsgHeurToken(msg);
     cost = planMAMsgHeurCost(msg);
-    fprintf(stderr, "[%d] Update token: %d, agent: %d, cost: %d\n",
-            comm->node_id, token, agent_id, cost);
-    fflush(stderr);
 
     // Find corresponding pending request
     req = hdtg->waitlist + token;
@@ -441,17 +413,11 @@ static int update(plan_heur_ma_dtg_t *hdtg, plan_ma_comm_t *comm,
     }
 
     // Update cost with base cost
-    fprintf(stderr, "[%d] cost: %d\n", comm->node_id, cost);
     cost += req->base_cost;
-    fprintf(stderr, "[%d] cost: %d\n", comm->node_id, cost);
 
     if (req->response_agent == -1){
         // Update heuristic value
-        fprintf(stderr, "[%d] Bheur-cost: %d\n", comm->node_id,
-                hdtg->ctx.heur);
         hdtg->ctx.heur += cost;
-        fprintf(stderr, "[%d] heur-cost: %d\n", comm->node_id,
-                hdtg->ctx.heur);
 
         // Proceed with dtg heuristic
         while ((ret = hdtgStep(hdtg, comm)) == 0);
@@ -494,18 +460,12 @@ static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
     if (planMAMsgType(msg) != PLAN_MA_MSG_HEUR
             || (subtype != PLAN_MA_MSG_HEUR_DTG_REQUEST
                     && subtype != PLAN_MA_MSG_HEUR_DTG_REQRESPONSE)){
-        fprintf(stderr, "[%d] Error: Invalid request received.\n",
-                comm->node_id);
         return;
     }
 
-    fprintf(stderr, "[%d] Received request from %d (%d), token: %d\n",
-            comm->node_id, planMAMsgAgent(msg), subtype,
-            planMAMsgHeurToken(msg));
     // If the message is response from distributed recursion, just process
     // this response and exit
     if (subtype == PLAN_MA_MSG_HEUR_DTG_REQRESPONSE){
-        fprintf(stderr, "[%d] Update!\n", comm->node_id);
         update(hdtg, comm, msg);
         return;
     }
@@ -522,8 +482,6 @@ static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
         // TODO: disable unknown values
         val_to = planStateGet(&state, var);
     }
-    fprintf(stderr, "[%d] var: %d, %d -> %d\n", comm->node_id, var, val_from, val_to);
-    fflush(stderr);
 
     // Get path corresponding to the 'from' value
     path = planHeurDTGDataPath(&hdtg->data, var, val_from);

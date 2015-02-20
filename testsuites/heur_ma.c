@@ -50,8 +50,15 @@ static plan_cost_t testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
     int i;
 
     ++cnt;
-    //if (cnt != 1272)
-    //    return;
+    /*
+    if (cnt != 1378)
+        return;
+    for (i = 0; i < planStateSize(state); ++i)
+        fprintf(stdout, " %d", planStateGet(state, i));
+    fprintf(stdout, "\n");
+    */
+    //fprintf(stdout, "CNT %d\n", cnt);
+
 
     planHeurResInit(&res);
     status = planHeurMA(heur[agent_id], comm[agent_id], state, &res);
@@ -223,4 +230,12 @@ TEST(testHeurMADTG)
 {
     runTestHeurMA("ma-dtg", "../data/simple/pfile.proto",
                   "states/simple.txt", NULL, planHeurMADTGNew, -1, NULL);
+    runTestHeurMA("ma-dtg", "../data/ma-benchmarks/depot/pfile1.proto",
+                  "states/depot-pfile1.txt", NULL, planHeurMADTGNew, -1, NULL);
+    runTestHeurMA("ma-dtg", "../data/ma-benchmarks/depot/pfile5.proto",
+                  "states/depot-pfile5.txt", NULL, planHeurMADTGNew, 200, NULL);
+    runTestHeurMA("ma-dtg", "../data/ma-benchmarks/rovers/p03.proto",
+                  "states/rovers-p03.txt", NULL, planHeurMADTGNew, -1, NULL);
+    runTestHeurMA("ma-dtg", "../data/ma-benchmarks/rovers/p15.proto",
+                  "states/rovers-p15.txt", NULL, planHeurMADTGNew, -1, NULL);
 }

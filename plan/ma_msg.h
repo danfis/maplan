@@ -408,9 +408,29 @@ int planMAMsgHeurCost(const plan_ma_msg_t *msg);
 void planMAMsgSetDTGReq(plan_ma_msg_t *msg, int var, int from, int to);
 
 /**
+ * Adds value to list of dtg-reachable values.
+ */
+void planMAMsgAddDTGReqReachable(plan_ma_msg_t *msg, int val);
+
+/**
  * Returns data set by planMAMsgSetDTGReq()
  */
 void planMAMsgDTGReq(const plan_ma_msg_t *msg, int *var, int *from, int *to);
+
+/**
+ * Number of dtg-reachable values.
+ */
+int planMAMsgDTGReqReachableSize(const plan_ma_msg_t *msg);
+
+/**
+ * Returns i'th reachable value.
+ */
+int planMAMsgDTGReqReachable(const plan_ma_msg_t *msg, int i);
+
+/**
+ * Copies reachable from src to dst.
+ */
+void planMAMsgCopyDTGReqReachable(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
 
 /**
  * Sets initiator agent ID

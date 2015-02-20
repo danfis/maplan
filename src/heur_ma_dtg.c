@@ -167,11 +167,45 @@ static int hdtgUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
     return -1;
 }
 
+static void _reqDTG(plan_heur_ma_dtg_t *hdtg, const plan_ma_msg_t *msg,
+                    int *var, int *val_from, int *val_to_out)
+{
+    const plan_heur_dtg_path_t *path;
+    int val_to;
+    int i, size, val, vlen;
+
+    // Read var and value pair from message
+    planMAMsgDTGReq(msg, var, val_from, &val_to);
+
+    // Determine some usable val_to if not already set
+    path = planHeurDTGDataPath(&hdtg->data, *var, *val_from);
+
+    // If val_to was received as -1, find the nearest value from all
+    // reachable values also stored in message.
+    if (val_to == -1){
+        size = planMAMsgDTGReqReachableSize(msg);
+        vlen = INT_MAX;
+        for (i = 0; i < size; ++i){
+            val = planMAMsgDTGReqReachable(msg, i);
+            if (path->pre[val].val != -1 && path->pre[val].len < vlen){
+                vlen = path->pre[val].len;
+                val_to = val;
+            }
+        }
+    }
+
+    // If val_to is still -1 use fake-value
+    if (val_to == -1)
+        val_to = hdtg->data.dtg.dtg[*var].val_size - 1;
+
+    *val_to_out = val_to;
+}
+
 static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg)
 {
     plan_heur_ma_dtg_t *hdtg = HEUR(heur);
-    PLAN_STATE_STACK(state, hdtg->data.dtg.var_size);
+    //PLAN_STATE_STACK(state, hdtg->data.dtg.var_size);
     const plan_heur_dtg_path_t *path;
     int subtype;
     int agent_id, token, depth, req_token;
@@ -198,19 +232,10 @@ static void hdtgRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
     depth = planMAMsgHeurRequestedAgentSize(msg);
 
     // Determine variable ID and pair of values
-    planMAMsgDTGReq(msg, &var, &val_from, &val_to);
-    if (val_to == -1){
-        planMAMsgStateFull(msg, &state);
-        // TODO: disable unknown values
-        val_to = planStateGet(&state, var);
-    }
+    _reqDTG(hdtg, msg, &var, &val_from, &val_to);
 
     // Get path corresponding to the 'from' value
     path = planHeurDTGDataPath(&hdtg->data, var, val_from);
-
-    // If val_to is unreachable try fake_val
-    if (path->pre[val_to].val == -1)
-        val_to = hdtg->data.dtg.dtg[var].val_size - 1;
 
     // If val_to is still unreachable report it back as zero (we don't know
     // whether it is dead end or not)
@@ -403,20 +428,20 @@ static int _sendReqFindOwners(plan_heur_ma_dtg_t *hdtg,
     return 0;
 }
 
-static plan_ma_msg_t *_sendReqMsgNew(plan_ma_comm_t *comm,
+static plan_ma_msg_t *_sendReqMsgNew(plan_heur_ma_dtg_t *hdtg,
+                                     plan_ma_comm_t *comm,
                                      int var, int from, int to,
                                      int token, const int *owner,
-                                     const plan_state_t *state,
                                      const plan_ma_msg_t *req_msg)
 {
     plan_ma_msg_t *msg;
-    int i, size;
+    int i, size, range, *vals;
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_DTG_REQUEST,
                        comm->node_id);
     if (req_msg){
-        // Copy state
-        planMAMsgCopyStateFull(msg, req_msg);
+        // Copy reachable values
+        planMAMsgCopyDTGReqReachable(msg, req_msg);
 
         // Copy requested agents to the next request
         size = planMAMsgHeurRequestedAgentSize(req_msg);
@@ -426,7 +451,12 @@ static plan_ma_msg_t *_sendReqMsgNew(plan_ma_comm_t *comm,
         }
 
     }else{
-        planMAMsgSetStateFull2(msg, state);
+        vals = hdtg->ctx.values.val[var];
+        range = hdtg->ctx.values.val_range[var] - 1;
+        for (i = 0; i < range; ++i){
+            if (vals[i])
+                planMAMsgAddDTGReqReachable(msg, i);
+        }
     }
 
     planMAMsgSetHeurToken(msg, token);
@@ -456,8 +486,7 @@ static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
     token = hdtgNextToken(hdtg);
 
     // Create a message
-    msg = _sendReqMsgNew(comm, var, from, to, token, owner,
-                         &hdtg->state, req_msg);
+    msg = _sendReqMsgNew(hdtg, comm, var, from, to, token, owner, req_msg);
 
     // Initialize waitlist slot
     wait = hdtg->waitlist + token;

@@ -10,6 +10,7 @@ message PlanMAMsgDTGReq {
     required int32 var = 1;
     required int32 val_from = 2;
     required int32 val_to = 3;
+    repeated int32 reachable = 4;
 }
 
 

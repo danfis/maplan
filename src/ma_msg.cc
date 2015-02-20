@@ -441,6 +441,13 @@ void planMAMsgSetDTGReq(plan_ma_msg_t *msg, int var, int from, int to)
     req->set_val_to(to);
 }
 
+void planMAMsgAddDTGReqReachable(plan_ma_msg_t *msg, int val)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    PlanMAMsgDTGReq *req = proto->mutable_dtg_req();
+    req->add_reachable(val);
+}
+
 void planMAMsgDTGReq(const plan_ma_msg_t *msg, int *var, int *from, int *to)
 {
     const PlanMAMsg *proto = PROTO(msg);
@@ -448,6 +455,34 @@ void planMAMsgDTGReq(const plan_ma_msg_t *msg, int *var, int *from, int *to)
     *var = req.var();
     *from = req.val_from();
     *to = req.val_to();
+}
+
+int planMAMsgDTGReqReachableSize(const plan_ma_msg_t *msg)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    const PlanMAMsgDTGReq &req = proto->dtg_req();
+    return req.reachable_size();
+}
+
+int planMAMsgDTGReqReachable(const plan_ma_msg_t *msg, int i)
+{
+    const PlanMAMsg *proto = PROTO(msg);
+    const PlanMAMsgDTGReq &req = proto->dtg_req();
+    return req.reachable(i);
+}
+
+void planMAMsgCopyDTGReqReachable(plan_ma_msg_t *dst, const plan_ma_msg_t *src)
+{
+    PlanMAMsg *pdst = PROTO(dst);
+    const PlanMAMsg *psrc = PROTO(src);
+    PlanMAMsgDTGReq *dreq = pdst->mutable_dtg_req();
+    const PlanMAMsgDTGReq &sreq = psrc->dtg_req();
+    int i, size;
+
+    dreq->clear_reachable();
+    size = sreq.reachable_size();
+    for (i = 0; i < size; ++i)
+        dreq->add_reachable(sreq.reachable(i));
 }
 
 void planMAMsgSetInitAgent(plan_ma_msg_t *msg, int agent_id)

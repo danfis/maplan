@@ -125,26 +125,16 @@ static int hdtgFindOwners(plan_heur_ma_dtg_t *hdtg,
 
     // Process first transition
     trans = planDTGTrans(&hdtg->data.dtg, var, from, fake_val);
-    for (i = 0; i < trans->ops_size; ++i)
-        owner[trans->ops[i]->owner] += 1;
-
-    // Process second transition
-    if (to >= 0){
-        trans = planDTGTrans(&hdtg->data.dtg, var, fake_val, to);
-        for (i = 0; i < trans->ops_size; ++i)
-            owner[trans->ops[i]->owner] += 1;
-    }else{
-        for (i = 0; i < hdtg->fake_op_size; ++i)
-            owner[i] += 1;
+    fprintf(stderr, "%d->%d trans_size: %d\n", from, fake_val,
+            trans->ops_size);
+    for (i = 0; i < trans->ops_size; ++i){
+        fprintf(stderr, "%d->%d agent: %d\n", from, fake_val,
+                trans->ops[i]->owner);
+        owner[trans->ops[i]->owner] = 1;
+        found = 1;
     }
 
-    for (i = 0; i < hdtg->fake_op_size; ++i){
-        if (owner[i] == 2){
-            found = 1;
-        }else{
-            owner[i] = 0;
-        }
-    }
+    // Second transition is ignored because we don't need it
 
     if (!found)
         return -1;
@@ -272,6 +262,7 @@ static int hdtgCheckPath(plan_heur_ma_dtg_t *hdtg,
         next_val = path->pre[init_val].val;
         ret = hdtgSendRequest(hdtg, comm, var, next_val, -1,
                               req_msg, token_out);
+        fprintf(stderr, "ret: %d\n", ret);
         if (ret != 0)
             return -1;
 
@@ -289,6 +280,8 @@ static int hdtgCheckPath(plan_heur_ma_dtg_t *hdtg,
             next_val = path->pre[cur_val].val;
             ret = hdtgSendRequest(hdtg, comm, var, next_val, prev_val,
                                   req_msg, token_out);
+            fprintf(stderr, "ret2: %d, var: %d, %d -> %d (-%d-)\n", ret,
+                    var, next_val, prev_val, cur_val);
             if (ret != 0)
                 return -1;
 
@@ -314,6 +307,7 @@ static int hdtgStepRequest(plan_heur_ma_dtg_t *hdtg,
 
     ret = hdtgCheckPath(hdtg, comm, path, var, goal, init_val, NULL, NULL);
     if (ret < 0){
+        fprintf(stderr, "D\n");
         hdtg->ctx.heur = PLAN_HEUR_DEAD_END;
         return -1;
 
@@ -341,6 +335,7 @@ static int hdtgStepNoPath(plan_heur_ma_dtg_t *hdtg,
     }else{
         // The '?' value isn't reacheble either -- this means we have
         // reached dead-end.
+        fprintf(stderr, "D2\n");
         hdtg->ctx.heur = PLAN_HEUR_DEAD_END;
         return -1;
     }

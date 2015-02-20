@@ -52,6 +52,28 @@ static void initDTGData(plan_heur_ma_dtg_t *hdtg,
 static void pendingReqsInit(plan_heur_ma_dtg_t *hdtg, pending_reqs_t *r);
 static void pendingReqsFree(plan_heur_ma_dtg_t *hdtg, pending_reqs_t *r);
 
+/** Returns next available token, i.e., slot for pending requests.
+ *  If not available a new one is allocated. */
+static int hdtgNextToken(plan_heur_ma_dtg_t *hdtg);
+/** Sets 1 for each owner in {owner} array that should receive request for
+ *  path between from and to. */
+static int hdtgFindOwners(plan_heur_ma_dtg_t *hdtg,
+                          int var, int from, int to, int *owner);
+/** Sends response to the request. If depth > 1, RESRESPONSE is send which
+ *  enables distributed recursion */
+static void hdtgSendResponse(plan_heur_ma_dtg_t *hdtg,
+                             plan_ma_comm_t *comm,
+                             int agent, int token, int cost,
+                             int depth);
+/** Sends request to the agents on transition from-to.
+ *  If it is request from request (recursion), base request message req_msg
+ *  is provided. */
+static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
+                           plan_ma_comm_t *comm,
+                           int var, int from, int to,
+                           const plan_ma_msg_t *req_msg,
+                           int *token_out);
+
 plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def)
 {
     plan_heur_ma_dtg_t *hdtg;
@@ -96,150 +118,6 @@ static void hdtgDel(plan_heur_t *heur)
 }
 
 
-
-static int hdtgNextToken(plan_heur_ma_dtg_t *hdtg)
-{
-    int i;
-
-    for (i = 0; i < hdtg->waitlist_size; ++i){
-        if (hdtg->waitlist[i].size == 0)
-            return i;
-    }
-
-    ++hdtg->waitlist_size;
-    hdtg->waitlist = BOR_REALLOC_ARR(hdtg->waitlist, pending_reqs_t,
-                                     hdtg->waitlist_size);
-    pendingReqsInit(hdtg, hdtg->waitlist + hdtg->waitlist_size - 1);
-    return hdtg->waitlist_size - 1;
-}
-
-static int hdtgFindOwners(plan_heur_ma_dtg_t *hdtg,
-                          int var, int from, int to,
-                          int *owner)
-{
-    const plan_dtg_trans_t *trans;
-    int found = 0, fake_val, i;
-
-    bzero(owner, sizeof(int) * hdtg->fake_op_size);
-    fake_val = hdtg->data.dtg.dtg[var].val_size - 1;
-
-    // Process first transition.
-    // Note that we need transition in an opposite way because we search
-    // for paths from goals to known facts.
-    trans = planDTGTrans(&hdtg->data.dtg, var, fake_val, from);
-    for (i = 0; i < trans->ops_size; ++i){
-        owner[trans->ops[i]->owner] = 1;
-        found = 1;
-    }
-
-    // Second transition is ignored because we don't need it
-
-    if (!found)
-        return -1;
-    return 0;
-}
-
-static void hdtgSendResponse(plan_heur_ma_dtg_t *hdtg,
-                             plan_ma_comm_t *comm,
-                             int agent, int token, int cost,
-                             int depth)
-{
-    plan_ma_msg_t *msg;
-    int subtype;
-
-    subtype = PLAN_MA_MSG_HEUR_DTG_RESPONSE;
-    if (depth > 1)
-        subtype = PLAN_MA_MSG_HEUR_DTG_REQRESPONSE;
-
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, subtype, comm->node_id);
-    planMAMsgSetHeurToken(msg, token);
-    planMAMsgSetHeurCost(msg, cost);
-    planMACommSendToNode(comm, agent, msg);
-    planMAMsgDel(msg);
-}
-
-static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
-                           plan_ma_comm_t *comm,
-                           int var, int from, int to,
-                           const plan_ma_msg_t *req_msg,
-                           int *token_out)
-{
-    plan_ma_msg_t *msg;
-    int token;
-    int owner[hdtg->fake_op_size];
-    int i, size, o;
-
-    if (hdtgFindOwners(hdtg, var, from, to, owner) != 0)
-        return -1;
-    if (req_msg){
-        // Zeroize owners that were already asked
-        size = planMAMsgHeurRequestedAgentSize(req_msg);
-        for (i = 0; i < size; ++i){
-            owner[planMAMsgHeurRequestedAgent(req_msg, i)] = 0;
-        }
-
-        // Check whether some owner was left
-        for (o = 0, i = 0; i < hdtg->fake_op_size; ++i)
-            o += owner[i];
-        if (o == 0)
-            return -1;
-    }
-
-    token = hdtgNextToken(hdtg);
-
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_DTG_REQUEST,
-                       comm->node_id);
-    planMAMsgSetHeurToken(msg, token);
-    if (req_msg){
-        PLAN_STATE_STACK(state, planStateSize(&hdtg->state));
-        planMAMsgStateFull(req_msg, &state);
-        planMAMsgSetStateFull2(msg, &state);
-    }else{
-        planMAMsgSetStateFull2(msg, &hdtg->state);
-    }
-    if (req_msg){
-        // Copy requested agents to the next request
-        size = planMAMsgHeurRequestedAgentSize(req_msg);
-        for (i = 0; i < size; ++i){
-            planMAMsgAddHeurRequestedAgent(msg,
-                    planMAMsgHeurRequestedAgent(req_msg, i));
-        }
-    }
-
-    planMAMsgAddHeurRequestedAgent(msg, comm->node_id);
-    planMAMsgSetDTGReq(msg, var, from, to);
-
-    hdtg->waitlist[token].base_cost = 0;
-    hdtg->waitlist[token].response_agent = -1;
-    hdtg->waitlist[token].response_token = -1;
-    hdtg->waitlist[token].response_depth = 0;
-
-    if (req_msg){
-        hdtg->waitlist[token].response_agent = planMAMsgAgent(req_msg);
-        hdtg->waitlist[token].response_token = planMAMsgHeurToken(req_msg);
-        hdtg->waitlist[token].response_depth
-                = planMAMsgHeurRequestedAgentSize(req_msg);
-    }
-
-    hdtg->waitlist[token].size = 0;
-    for (i = 0; i < hdtg->fake_op_size; ++i){
-        if (!owner[i])
-            continue;
-
-        // Add this request to the waitlist of pending requests
-        hdtg->waitlist[token].pending[i].wait = 1;
-        hdtg->waitlist[token].pending[i].cost = 0;
-        ++hdtg->waitlist[token].size;
-
-        planMACommSendToNode(comm, i, msg);
-    }
-    planMAMsgDel(msg);
-
-    if (token_out)
-        *token_out = token;
-
-    return 0;
-}
 
 static int hdtgCheckPath(plan_heur_ma_dtg_t *hdtg,
                          plan_ma_comm_t *comm,
@@ -587,3 +465,184 @@ static void pendingReqsFree(plan_heur_ma_dtg_t *hdtg, pending_reqs_t *r)
     if (r->pending)
         BOR_FREE(r->pending);
 }
+
+
+static int hdtgNextToken(plan_heur_ma_dtg_t *hdtg)
+{
+    int i;
+
+    for (i = 0; i < hdtg->waitlist_size; ++i){
+        if (hdtg->waitlist[i].size == 0)
+            return i;
+    }
+
+    ++hdtg->waitlist_size;
+    hdtg->waitlist = BOR_REALLOC_ARR(hdtg->waitlist, pending_reqs_t,
+                                     hdtg->waitlist_size);
+    pendingReqsInit(hdtg, hdtg->waitlist + hdtg->waitlist_size - 1);
+    return hdtg->waitlist_size - 1;
+}
+
+static int hdtgFindOwners(plan_heur_ma_dtg_t *hdtg,
+                          int var, int from, int to,
+                          int *owner)
+{
+    const plan_dtg_trans_t *trans;
+    int found = 0, fake_val, i;
+
+    bzero(owner, sizeof(int) * hdtg->fake_op_size);
+    fake_val = hdtg->data.dtg.dtg[var].val_size - 1;
+
+    // Process first transition.
+    // Note that we need transition in an opposite way because we search
+    // for paths from goals to known facts.
+    trans = planDTGTrans(&hdtg->data.dtg, var, fake_val, from);
+    for (i = 0; i < trans->ops_size; ++i){
+        owner[trans->ops[i]->owner] = 1;
+        found = 1;
+    }
+
+    // Second transition is ignored because we don't need it
+
+    if (!found)
+        return -1;
+    return 0;
+}
+
+static void hdtgSendResponse(plan_heur_ma_dtg_t *hdtg,
+                             plan_ma_comm_t *comm,
+                             int agent, int token, int cost,
+                             int depth)
+{
+    plan_ma_msg_t *msg;
+    int subtype;
+
+    subtype = PLAN_MA_MSG_HEUR_DTG_RESPONSE;
+    if (depth > 1)
+        subtype = PLAN_MA_MSG_HEUR_DTG_REQRESPONSE;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, subtype, comm->node_id);
+    planMAMsgSetHeurToken(msg, token);
+    planMAMsgSetHeurCost(msg, cost);
+    planMACommSendToNode(comm, agent, msg);
+    planMAMsgDel(msg);
+}
+
+/** Wrapper for hdtgFindOwners() that processes also req_msg is set. */
+static int _sendReqFindOwners(plan_heur_ma_dtg_t *hdtg,
+                              int var, int from, int to,
+                              const plan_ma_msg_t *req_msg,
+                              int *owner)
+{
+    int i, size, sum;
+
+    if (hdtgFindOwners(hdtg, var, from, to, owner) != 0)
+        return -1;
+
+    if (req_msg){
+        // Zeroize owners that were already asked
+        size = planMAMsgHeurRequestedAgentSize(req_msg);
+        for (i = 0; i < size; ++i){
+            owner[planMAMsgHeurRequestedAgent(req_msg, i)] = 0;
+        }
+
+        // Check whether some owner was left
+        for (sum = 0, i = 0; i < hdtg->fake_op_size; ++i)
+            sum += owner[i];
+        if (sum == 0)
+            return -1;
+    }
+
+    return 0;
+}
+
+static plan_ma_msg_t *_sendReqMsgNew(plan_ma_comm_t *comm,
+                                     int var, int from, int to,
+                                     int token, const int *owner,
+                                     const plan_state_t *state,
+                                     const plan_ma_msg_t *req_msg)
+{
+    plan_ma_msg_t *msg;
+    int i, size;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_DTG_REQUEST,
+                       comm->node_id);
+    if (req_msg){
+        // Copy state
+        planMAMsgCopyStateFull(msg, req_msg);
+
+        // Copy requested agents to the next request
+        size = planMAMsgHeurRequestedAgentSize(req_msg);
+        for (i = 0; i < size; ++i){
+            planMAMsgAddHeurRequestedAgent(msg,
+                    planMAMsgHeurRequestedAgent(req_msg, i));
+        }
+
+    }else{
+        planMAMsgSetStateFull2(msg, state);
+    }
+
+    planMAMsgSetHeurToken(msg, token);
+    planMAMsgAddHeurRequestedAgent(msg, comm->node_id);
+    planMAMsgSetDTGReq(msg, var, from, to);
+
+    return msg;
+}
+
+static int hdtgSendRequest(plan_heur_ma_dtg_t *hdtg,
+                           plan_ma_comm_t *comm,
+                           int var, int from, int to,
+                           const plan_ma_msg_t *req_msg,
+                           int *token_out)
+{
+    plan_ma_msg_t *msg;
+    pending_reqs_t *wait;
+    int token;
+    int owner[hdtg->fake_op_size];
+    int i;
+
+    // Find out which agents are on receiving side.
+    if (_sendReqFindOwners(hdtg, var, from, to, req_msg, owner) != 0)
+        return -1;
+
+    // Reserve token (slot) for responses.
+    token = hdtgNextToken(hdtg);
+
+    // Create a message
+    msg = _sendReqMsgNew(comm, var, from, to, token, owner,
+                         &hdtg->state, req_msg);
+
+    // Initialize waitlist slot
+    wait = hdtg->waitlist + token;
+    wait->base_cost = 0;
+    wait->response_agent = -1;
+    wait->response_token = -1;
+    wait->response_depth = 0;
+    if (req_msg){
+        wait->response_agent = planMAMsgAgent(req_msg);
+        wait->response_token = planMAMsgHeurToken(req_msg);
+        wait->response_depth = planMAMsgHeurRequestedAgentSize(req_msg);
+    }
+
+    // Send message to agents and update corresponding items in waitlist
+    // slot.
+    wait->size = 0;
+    for (i = 0; i < hdtg->fake_op_size; ++i){
+        if (!owner[i])
+            continue;
+
+        // Add this request to the waitlist of pending requests
+        wait->pending[i].wait = 1;
+        wait->pending[i].cost = 0;
+        ++wait->size;
+
+        planMACommSendToNode(comm, i, msg);
+    }
+    planMAMsgDel(msg);
+
+    if (token_out)
+        *token_out = token;
+
+    return 0;
+}
+

@@ -293,6 +293,11 @@ int planMAMsgHasStateFull(const plan_ma_msg_t *msg);
 void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state);
 
 /**
+ * Copies state-full from src to dst.
+ */
+void planMAMsgCopyStateFull(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
+
+/**
  * Returns value of a specified variable in full state.
  */
 plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var);

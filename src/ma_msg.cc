@@ -330,6 +330,19 @@ void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state)
         planStateSet(state, i, proto->state_full(i));
 }
 
+void planMAMsgCopyStateFull(plan_ma_msg_t *dst, const plan_ma_msg_t *src)
+{
+    PlanMAMsg *pdst = PROTO(dst);
+    const PlanMAMsg *psrc = PROTO(src);
+    int i, size;
+
+    pdst->clear_state_full();
+    size = psrc->state_full_size();
+    for (i = 0; i < size; ++i){
+        pdst->add_state_full(psrc->state_full(i));
+    }
+}
+
 plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var)
 {
     const PlanMAMsg *proto = PROTO(msg);

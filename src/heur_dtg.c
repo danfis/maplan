@@ -473,8 +473,11 @@ static const plan_op_t *ctxMinCostOp(plan_heur_dtg_ctx_t *dtg_ctx,
 
 
     trans = dtg->trans + (from * dtg->val_size) + to;
+    if (trans->ops_size == 0)
+        return NULL;
+
     min_cost = INT_MAX;
-    min_cost_op = NULL;
+    min_cost_op = trans->ops[0];
     for (i = 0; i < trans->ops_size; ++i){
         op = trans->ops[i];
 

@@ -160,12 +160,7 @@ static void testAgentProto(const char *proto, FILE *fout)
         return;
 
     fprintf(fout, "---- %s ----\n", proto);
-    pVar(agents->glob.var, agents->glob.var_size, fout);
-    pInitState(agents->glob.state_pool, agents->glob.initial_state, fout);
-    pGoal(agents->glob.goal, fout);
-    pOp(agents->glob.op, agents->glob.op_size, fout);
-    fprintf(fout, "Succ Gen: %d\n", (int)(agents->glob.succ_gen != NULL));
-
+    pProblem(&agents->glob, fout);
     for (i = 0; i < agents->agent_size; ++i)
         pAgent(agents->agent + i, fout);
 
@@ -177,4 +172,63 @@ TEST(testLoadAgentFromProto)
 {
     testAgentProto("../data/ma-benchmarks/rovers/p03.proto", stdout);
     testAgentProto("../data/ma-benchmarks/depot/pfile1.proto", stdout);
+}
+
+static void cloneFromProto(const char *proto, int flags, FILE *f1, FILE *f2)
+{
+    plan_problem_t *p1, *p2;
+
+    p1 = planProblemFromProto(proto, flags);
+    p2 = planProblemClone(p1);
+
+    assertNotEquals(p1->var, p2->var);
+    assertNotEquals(p1->op, p2->op);
+    assertNotEquals(p1->goal, p2->goal);
+    assertNotEquals(p1->state_pool, p2->state_pool);
+    assertNotEquals(p1->succ_gen, p2->succ_gen);
+
+    assertEquals(p1->state_pool->num_states, p2->state_pool->num_states);
+    assertEquals(p1->state_pool->num_states, 1);
+
+    fprintf(f1, "---- %s %x ----\n", proto, flags);
+    pProblem(p1, f1);
+    fprintf(f1, "---- %s %x END ----\n", proto, flags);
+
+    fprintf(f2, "---- %s %x ----\n", proto, flags);
+    pProblem(p2, f2);
+    fprintf(f2, "---- %s %x END ----\n", proto, flags);
+
+    planProblemDel(p1);
+    planProblemDel(p2);
+}
+
+TEST(testLoadFromProtoClone)
+{
+    int flags;
+    FILE *f1, *f2;
+
+    f1 = fopen("regressions/temp.load-from-file-cmp-from-proto.out", "w");
+    f2 = fopen("regressions/tmp.temp.load-from-file-cmp-from-proto.out", "w");
+    if (f1 == NULL || f2 == NULL){
+        fprintf(stderr, "Could not open files for comparison!!\n");
+        return;
+    }
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    cloneFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
+
+    flags = PLAN_PROBLEM_USE_CG;
+    cloneFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
+
+    flags = 0;
+    cloneFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
+
+    fclose(f1);
+    fclose(f2);
 }

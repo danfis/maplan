@@ -157,6 +157,12 @@ static plan_state_space_node_t *createNode(plan_search_lazy_base_t *lb,
         return NULL;
     }
 
+    // Skip dead-end
+    if (cur_heur == PLAN_HEUR_DEAD_END){
+        *ret = PLAN_SEARCH_CONT;
+        return NULL;
+    }
+
     // get parent node for path cost computation
     parent_node = planStateSpaceNode(search->state_space, parent_state_id);
 

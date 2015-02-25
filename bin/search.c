@@ -419,7 +419,10 @@ static int singleThread(const options_t *o)
     plan_search_t *search;
     plan_path_t path;
     progress_t progress_data;
+    bor_timer_t load_timer;
     int res;
+
+    borTimerStart(&load_timer);
 
     // Load problem file
     prob = planProblemFromProto(o->proto, PLAN_PROBLEM_USE_CG);
@@ -427,7 +430,9 @@ static int singleThread(const options_t *o)
         fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
         return -1;
     }else{
+        borTimerStop(&load_timer);
         printProblem(prob);
+        printf("\nLoading Time: %f\n", borTimerElapsedInSF(&load_timer));
         printf("\n");
     }
 
@@ -541,8 +546,11 @@ static int multiAgent2(const options_t *o, plan_problem_agents_t *prob)
 static int multiAgent(const options_t *o)
 {
     plan_problem_agents_t *prob;
+    bor_timer_t load_timer;
     FILE *fout;
     int ret;
+
+    borTimerStart(&load_timer);
 
     // Load problem file
     prob = planProblemAgentsFromProto(o->proto, PLAN_PROBLEM_USE_CG);
@@ -550,7 +558,9 @@ static int multiAgent(const options_t *o)
         fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
         return -1;
     }else{
+        borTimerStop(&load_timer);
         printProblemMA(prob);
+        printf("\nLoading Time: %f\n", borTimerElapsedInSF(&load_timer));
         printf("\n");
     }
 

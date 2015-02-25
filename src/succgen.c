@@ -78,8 +78,10 @@ plan_succ_gen_t *planSuccGenNew(const plan_op_t *op, int opsize,
     // Determine size of the var_order array
     if (var_order != NULL){
         for (size = 0; var_order[size] != PLAN_VAR_ID_UNDEFINED; ++size);
-    }else{
+    }else if (opsize > 0){
         size = planPartStateSize(op[0].eff);
+    }else{
+        size = 0;
     }
 
     // Copy var_order to internal storage
@@ -92,14 +94,16 @@ plan_succ_gen_t *planSuccGenNew(const plan_op_t *op, int opsize,
         sg->var_order[size] = PLAN_VAR_ID_UNDEFINED;
     }
 
-    // prepare array for sorting operators
-    sorted_ops = BOR_ALLOC_ARR(plan_op_t *, opsize);
-    for (i = 0; i < opsize; ++i)
-        sorted_ops[i] = (plan_op_t *)(op + i);
+    if (opsize > 0){
+        // prepare array for sorting operators
+        sorted_ops = BOR_ALLOC_ARR(plan_op_t *, opsize);
+        for (i = 0; i < opsize; ++i)
+            sorted_ops[i] = (plan_op_t *)(op + i);
 
-    // Sort operators by values of preconditions.
-    qsort_r(sorted_ops, opsize, sizeof(plan_op_t *),
-            opsSortCmp, (void *)sg->var_order);
+        // Sort operators by values of preconditions.
+        qsort_r(sorted_ops, opsize, sizeof(plan_op_t *),
+                opsSortCmp, (void *)sg->var_order);
+    }
 
     sg->root = treeNew(sorted_ops, opsize, sg->var_order);
     sg->num_operators = opsize;

@@ -265,11 +265,11 @@ static plan_list_lazy_t *listLazyCreate(const options_t *o)
 
     if (optionsSearchOpt(o, "list-heap")){
         list = planListLazyHeapNew();
-    }else if (optionsSearchOpt(o, "list-bucket") == 0){
+    }else if (optionsSearchOpt(o, "list-bucket")){
         list = planListLazyBucketNew();
-    }else if (optionsSearchOpt(o, "list-rb") == 0){
+    }else if (optionsSearchOpt(o, "list-rb")){
         list = planListLazyRBTreeNew();
-    }else if (optionsSearchOpt(o, "list-splay") == 0){
+    }else if (optionsSearchOpt(o, "list-splay")){
         list = planListLazySplayTreeNew();
     }else{
         list = planListLazySplayTreeNew();

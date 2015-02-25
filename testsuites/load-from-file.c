@@ -232,3 +232,65 @@ TEST(testLoadFromProtoClone)
     fclose(f1);
     fclose(f2);
 }
+
+
+static void cloneAgentFromProto(const char *proto, int flags, FILE *f1, FILE *f2)
+{
+    plan_problem_agents_t *p1, *p2;
+    int i;
+
+    p1 = planProblemAgentsFromProto(proto, flags);
+    p2 = planProblemAgentsClone(p1);
+
+    assertNotEquals(p1->glob.var, p2->glob.var);
+    assertNotEquals(p1->glob.op, p2->glob.op);
+    assertNotEquals(p1->glob.goal, p2->glob.goal);
+    assertNotEquals(p1->glob.state_pool, p2->glob.state_pool);
+    assertNotEquals(p1->glob.succ_gen, p2->glob.succ_gen);
+
+    assertEquals(p1->glob.state_pool->num_states, p2->glob.state_pool->num_states);
+    assertEquals(p1->glob.state_pool->num_states, 1);
+
+    fprintf(f1, "---- %s %x ----\n", proto, flags);
+    pProblem(&p1->glob, f1);
+    for (i = 0; i < p1->agent_size; ++i)
+        pAgent(p1->agent + i, f1);
+    fprintf(f1, "---- %s %x END ----\n", proto, flags);
+
+    fprintf(f2, "---- %s %x ----\n", proto, flags);
+    pProblem(&p2->glob, f2);
+    for (i = 0; i < p2->agent_size; ++i)
+        pAgent(p2->agent + i, f2);
+    fprintf(f2, "---- %s %x END ----\n", proto, flags);
+
+    planProblemAgentsDel(p1);
+    planProblemAgentsDel(p2);
+}
+
+TEST(testLoadAgentFromProtoClone)
+{
+    int flags;
+    FILE *f1, *f2;
+
+    f1 = fopen("regressions/temp.load-from-file-agent-cmp-from-proto.out", "w");
+    f2 = fopen("regressions/tmp.temp.load-from-file-agent-cmp-from-proto.out", "w");
+    if (f1 == NULL || f2 == NULL){
+        fprintf(stderr, "Could not open files for comparison!!\n");
+        return;
+    }
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    cloneAgentFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneAgentFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+
+    flags = PLAN_PROBLEM_USE_CG;
+    cloneAgentFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneAgentFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+
+    flags = 0;
+    cloneAgentFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneAgentFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+
+    fclose(f1);
+    fclose(f2);
+}

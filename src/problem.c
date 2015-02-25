@@ -128,6 +128,20 @@ void planProblemAgentsDel(plan_problem_agents_t *agents)
     BOR_FREE(agents);
 }
 
+plan_problem_agents_t *planProblemAgentsClone(const plan_problem_agents_t *a)
+{
+    plan_problem_agents_t *prob;
+    int i;
+
+    prob = BOR_ALLOC(plan_problem_agents_t);
+    planProblemCopy(&prob->glob, &a->glob);
+    prob->agent_size = a->agent_size;
+    prob->agent = BOR_ALLOC_ARR(plan_problem_t, prob->agent_size);
+    for (i = 0; i < a->agent_size; ++i)
+        planProblemCopy(prob->agent + i, a->agent + i);
+    return prob;
+}
+
 void planProblemPack(plan_problem_t *p)
 {
     int i;

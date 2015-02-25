@@ -93,6 +93,11 @@ void planProblemCopy(plan_problem_t *dst, const plan_problem_t *src);
 plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags);
 
 /**
+ * Creates an exact copy of the problem definition object.
+ */
+plan_problem_agents_t *planProblemAgentsClone(const plan_problem_agents_t *a);
+
+/**
  * Deletes agent defitions.
  */
 void planProblemAgentsDel(plan_problem_agents_t *agents);

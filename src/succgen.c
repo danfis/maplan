@@ -71,31 +71,37 @@ plan_succ_gen_t *planSuccGenNew(const plan_op_t *op, int opsize,
 {
     plan_succ_gen_t *sg;
     plan_op_t **sorted_ops = NULL;
-    plan_var_id_t *_var_order;
-    int i;
-
-    if (opsize > 0){
-        if (var_order == NULL){
-            int size = planPartStateSize(op[0].eff);
-            _var_order = alloca(sizeof(plan_var_id_t) * (size + 1));
-            for (i = 0; i < size; ++i)
-                _var_order[i] = i;
-            _var_order[size] = PLAN_VAR_ID_UNDEFINED;
-            var_order = _var_order;
-        }
-
-        // prepare array for sorting operators
-        sorted_ops = BOR_ALLOC_ARR(plan_op_t *, opsize);
-        for (i = 0; i < opsize; ++i)
-            sorted_ops[i] = (plan_op_t *)(op + i);
-
-        // Sort operators by values of preconditions.
-        qsort_r(sorted_ops, opsize, sizeof(plan_op_t *),
-                opsSortCmp, (void *)var_order);
-    }
+    int i, size;
 
     sg = BOR_ALLOC(plan_succ_gen_t);
-    sg->root = treeNew(sorted_ops, opsize, var_order);
+
+    // Determine size of the var_order array
+    if (var_order != NULL){
+        for (size = 0; var_order[size] != PLAN_VAR_ID_UNDEFINED; ++size);
+    }else{
+        size = planPartStateSize(op[0].eff);
+    }
+
+    // Copy var_order to internal storage
+    sg->var_order = BOR_ALLOC_ARR(plan_var_id_t, size + 1);
+    if (var_order != NULL){
+        memcpy(sg->var_order, var_order, sizeof(plan_var_id_t) * (size + 1));
+    }else{
+        for (i = 0; i < size; ++i)
+            sg->var_order[i] = i;
+        sg->var_order[size] = PLAN_VAR_ID_UNDEFINED;
+    }
+
+    // prepare array for sorting operators
+    sorted_ops = BOR_ALLOC_ARR(plan_op_t *, opsize);
+    for (i = 0; i < opsize; ++i)
+        sorted_ops[i] = (plan_op_t *)(op + i);
+
+    // Sort operators by values of preconditions.
+    qsort_r(sorted_ops, opsize, sizeof(plan_op_t *),
+            opsSortCmp, (void *)sg->var_order);
+
+    sg->root = treeNew(sorted_ops, opsize, sg->var_order);
     sg->num_operators = opsize;
 
     if (sorted_ops)
@@ -107,6 +113,8 @@ void planSuccGenDel(plan_succ_gen_t *sg)
 {
     if (sg->root)
         treeDel(sg->root);
+    if (sg->var_order)
+        BOR_FREE(sg->var_order);
 
     BOR_FREE(sg);
 }

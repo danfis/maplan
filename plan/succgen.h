@@ -15,6 +15,8 @@ struct _plan_succ_gen_tree_t;
 struct _plan_succ_gen_t {
     struct _plan_succ_gen_tree_t *root; /*!< Root of decision tree */
     int num_operators;
+    plan_var_id_t *var_order;           /*!< Copied order of variables to
+                                             enable cloning of the object */
 };
 typedef struct _plan_succ_gen_t plan_succ_gen_t;
 

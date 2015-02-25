@@ -22,6 +22,15 @@ void planPartStateDel(plan_part_state_t *part_state)
     BOR_FREE(part_state);
 }
 
+plan_part_state_t *planPartStateClone(const plan_part_state_t *p)
+{
+    plan_part_state_t *ps;
+    ps = BOR_ALLOC(plan_part_state_t);
+    planPartStateInit(ps, p->size);
+    planPartStateCopy(ps, p);
+    return ps;
+}
+
 void planPartStateInit(plan_part_state_t *ps, int size)
 {
     int i;

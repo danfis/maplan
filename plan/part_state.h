@@ -43,6 +43,11 @@ plan_part_state_t *planPartStateNew(int size);
 void planPartStateDel(plan_part_state_t *part_state);
 
 /**
+ * Creates an exact copy of the part-state object.
+ */
+plan_part_state_t *planPartStateClone(const plan_part_state_t *ps);
+
+/**
  * Initializes part-state structure.
  */
 void planPartStateInit(plan_part_state_t *ps, int size);

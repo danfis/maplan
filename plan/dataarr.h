@@ -18,17 +18,38 @@ struct _plan_data_arr_t {
 };
 typedef struct _plan_data_arr_t plan_data_arr_t;
 
-#define PLAN_DATA_ARR_GET(type, arr, i) \
-    (type *)planDataArrGet((arr), (i))
-
+/**
+ * Creates a new segmented array.
+ * The size of segment is determined automatically.
+ * If init_fn function callback is non-NULL, it is used for initialization
+ * of each element before the element is first returned. In this case
+ * init_data is used as last argument of init_fn function.
+ * If init_fn is NULL, the init_data should point to a memory of el_size
+ * size and the data it points at are copied to internal storage and used
+ * for initialization of each element before it is first returned.
+ */
 plan_data_arr_t *planDataArrNew(size_t el_size,
                                 plan_data_arr_el_init_fn init_fn,
                                 const void *init_data);
 
+/**
+ * Deletes segmented array
+ */
 void planDataArrDel(plan_data_arr_t *arr);
 
+/**
+ * Creates an exact copy of the segmented array.
+ */
+plan_data_arr_t *planDataArrClone(const plan_data_arr_t *arr);
+
+/**
+ * Returns pointer to the i'th element of the array.
+ */
 _bor_inline void *planDataArrGet(plan_data_arr_t *arr, size_t i);
 
+/**
+ * Ensures that the array has at least i elements.
+ */
 void planDataArrResize(plan_data_arr_t *arr, size_t i);
 
 /**** INLINES ****/

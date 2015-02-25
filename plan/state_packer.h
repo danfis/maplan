@@ -35,6 +35,11 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
 void planStatePackerDel(plan_state_packer_t *p);
 
 /**
+ * Creates an exact copy of the packer object.
+ */
+plan_state_packer_t *planStatePackerClone(const plan_state_packer_t *p);
+
+/**
  * Returns size of the buffer in bytes required for storing packed state.
  */
 _bor_inline int planStatePackerBufSize(const plan_state_packer_t *p);

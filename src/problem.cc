@@ -927,6 +927,9 @@ static void setPrivateVals(plan_problem_t *agent, int agent_id,
                 = vals.privateVals(agent_id);
 
     agent->private_val_size = pv.size();
+    if (agent->private_val_size == 0)
+        return;
+
     agent->private_val = BOR_ALLOC_ARR(plan_problem_private_val_t,
                                        agent->private_val_size);
     for (size_t i = 0; i < pv.size(); ++i){

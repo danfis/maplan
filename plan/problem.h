@@ -62,6 +62,11 @@ typedef struct _plan_problem_agents_t plan_problem_agents_t;
 plan_problem_t *planProblemFromProto(const char *fn, int flags);
 
 /**
+ * Creates an exact copy of the problem object.
+ */
+plan_problem_t *planProblemClone(const plan_problem_t *p);
+
+/**
  * Free all allocated resources.
  */
 void planProblemDel(plan_problem_t *problem);
@@ -77,10 +82,20 @@ void planProblemInit(plan_problem_t *prob);
 void planProblemFree(plan_problem_t *prob);
 
 /**
+ * Copies problem object from src to dst.
+ */
+void planProblemCopy(plan_problem_t *dst, const plan_problem_t *src);
+
+/**
  * Loads agent problem definition from protbuf format.
  * For flags see PLAN_PROBLEM_* macros.
  */
 plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags);
+
+/**
+ * Creates an exact copy of the problem definition object.
+ */
+plan_problem_agents_t *planProblemAgentsClone(const plan_problem_agents_t *a);
 
 /**
  * Deletes agent defitions.

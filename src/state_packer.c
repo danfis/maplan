@@ -1,3 +1,4 @@
+#include <string.h>
 #include <boruvka/alloc.h>
 #include "plan/state_packer.h"
 
@@ -88,6 +89,19 @@ void planStatePackerDel(plan_state_packer_t *p)
     if (p->vars)
         BOR_FREE(p->vars);
     BOR_FREE(p);
+}
+
+plan_state_packer_t *planStatePackerClone(const plan_state_packer_t *p)
+{
+    plan_state_packer_t *packer;
+
+    packer = BOR_ALLOC(plan_state_packer_t);
+    packer->num_vars = p->num_vars;
+    packer->bufsize = p->bufsize;
+    packer->vars = BOR_ALLOC_ARR(plan_state_packer_var_t, p->num_vars);
+    memcpy(packer->vars, p->vars,
+           sizeof(plan_state_packer_var_t) * p->num_vars);
+    return packer;
 }
 
 void planStatePackerPack(const plan_state_packer_t *p,

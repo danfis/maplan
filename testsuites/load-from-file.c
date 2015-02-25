@@ -1,20 +1,20 @@
 #include <cu/cu.h>
 #include "plan/problem.h"
 
-static void pVar(const plan_var_t *var, int var_size)
+static void pVar(const plan_var_t *var, int var_size, FILE *fout)
 {
     int i, j;
 
-    printf("Vars[%d]:\n", var_size);
+    fprintf(fout, "Vars[%d]:\n", var_size);
     for (i = 0; i < var_size; ++i){
-        printf("[%d] name: `%s', range: %d, is_private:", i, var[i].name, var[i].range);
+        fprintf(fout, "[%d] name: `%s', range: %d, is_private:", i, var[i].name, var[i].range);
         for (j = 0; j < var[i].range; ++j)
-            printf(" %d", var[i].is_private[j]);
-        printf("\n");
+            fprintf(fout, " %d", var[i].is_private[j]);
+        fprintf(fout, "\n");
     }
 }
 
-static void pInitState(const plan_state_pool_t *state_pool, plan_state_id_t sid)
+static void pInitState(const plan_state_pool_t *state_pool, plan_state_id_t sid, FILE *fout)
 {
     plan_state_t *state;
     int i, size;
@@ -22,71 +22,80 @@ static void pInitState(const plan_state_pool_t *state_pool, plan_state_id_t sid)
     state = planStateNew(state_pool->num_vars);
     planStatePoolGetState(state_pool, sid, state);
     size = planStateSize(state);
-    printf("Initial state:");
+    fprintf(fout, "Initial state:");
     for (i = 0; i < size; ++i){
-        printf(" %d:%d", i, (int)planStateGet(state, i));
+        fprintf(fout, " %d:%d", i, (int)planStateGet(state, i));
     }
-    printf("\n");
+    fprintf(fout, "\n");
     planStateDel(state);
 }
 
-static void pPartState(const plan_part_state_t *p)
+static void pPartState(const plan_part_state_t *p, FILE *fout)
 {
     plan_var_id_t var;
     plan_val_t val;
     int i;
 
     PLAN_PART_STATE_FOR_EACH(p, i, var, val){
-        printf(" %d:%d", (int)var, (int)val);
+        fprintf(fout, " %d:%d", (int)var, (int)val);
     }
 }
 
-static void pGoal(const plan_part_state_t *p)
+static void pGoal(const plan_part_state_t *p, FILE *fout)
 {
-    printf("Goal:");
-    pPartState(p);
-    printf("\n");
+    fprintf(fout, "Goal:");
+    pPartState(p, fout);
+    fprintf(fout, "\n");
 }
 
-static void pOp(const plan_op_t *op, int op_size)
+static void pOp(const plan_op_t *op, int op_size, FILE *fout)
 {
     int i, j;
 
-    printf("Ops[%d]:\n", op_size);
+    fprintf(fout, "Ops[%d]:\n", op_size);
     for (i = 0; i < op_size; ++i){
-        printf("[%d] cost: %d, gid: %d, owner: %d (%lx),"
+        fprintf(fout, "[%d] cost: %d, gid: %d, owner: %d (%lx),"
                " private: %d, recv_agent: %lx, name: `%s'\n",
                i, (int)op[i].cost, op[i].global_id,
                op[i].owner, (unsigned long)op[i].ownerarr,
                op[i].is_private,
                (unsigned long)op[i].recv_agent,
                op[i].name);
-        printf("[%d] pre:", i);
-        pPartState(op[i].pre);
-        printf(", eff:");
-        pPartState(op[i].eff);
-        printf("\n");
+        fprintf(fout, "[%d] pre:", i);
+        pPartState(op[i].pre, fout);
+        fprintf(fout, ", eff:");
+        pPartState(op[i].eff, fout);
+        fprintf(fout, "\n");
 
         for (j = 0; j < op[i].cond_eff_size; ++j){
-            printf("[%d] cond_eff[%d]:", i, j);
-            printf(" pre:");
-            pPartState(op[i].cond_eff[j].pre);
-            printf(", eff:");
-            pPartState(op[i].cond_eff[j].eff);
-            printf("\n");
+            fprintf(fout, "[%d] cond_eff[%d]:", i, j);
+            fprintf(fout, " pre:");
+            pPartState(op[i].cond_eff[j].pre, fout);
+            fprintf(fout, ", eff:");
+            pPartState(op[i].cond_eff[j].eff, fout);
+            fprintf(fout, "\n");
         }
     }
 }
 
-static void pPrivateVal(const plan_problem_private_val_t *pv, int pvsize)
+static void pPrivateVal(const plan_problem_private_val_t *pv, int pvsize, FILE *fout)
 {
     int i;
 
-    printf("PrivateVal:");
+    fprintf(fout, "PrivateVal:");
     for (i = 0; i < pvsize; ++i){
-        printf(" %d:%d", pv[i].var, pv[i].val);
+        fprintf(fout, " %d:%d", pv[i].var, pv[i].val);
     }
-    printf("\n");
+    fprintf(fout, "\n");
+}
+
+static void pProblem(const plan_problem_t *p, FILE *fout)
+{
+    pVar(p->var, p->var_size, fout);
+    pInitState(p->state_pool, p->initial_state, fout);
+    pGoal(p->goal, fout);
+    pOp(p->op, p->op_size, fout);
+    fprintf(fout, "Succ Gen: %d\n", (int)(p->succ_gen != NULL));
 }
 
 TEST(testLoadFromProto)
@@ -97,11 +106,7 @@ TEST(testLoadFromProto)
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
     p = planProblemFromProto("../data/ma-benchmarks/rovers/p03.proto", flags);
     printf("---- testLoadFromProto ----\n");
-    pVar(p->var, p->var_size);
-    pInitState(p->state_pool, p->initial_state);
-    pGoal(p->goal);
-    pOp(p->op, p->op_size);
-    printf("Succ Gen: %d\n", (int)(p->succ_gen != NULL));
+    pProblem(p, stdout);
     printf("---- testLoadFromProto END ----\n");
     planProblemDel(p);
 }
@@ -113,40 +118,36 @@ TEST(testLoadFromProtoCondEff)
     p = planProblemFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
                              PLAN_PROBLEM_USE_CG);
     printf("---- testLoadFromProtoCondEff ----\n");
-    pVar(p->var, p->var_size);
-    pInitState(p->state_pool, p->initial_state);
-    pGoal(p->goal);
-    pOp(p->op, p->op_size);
-    printf("Succ Gen: %d\n", (int)(p->succ_gen != NULL));
+    pProblem(p, stdout);
     printf("---- testLoadFromProtoCondEff END ----\n");
     planProblemDel(p);
 }
 
-static void pAgent(const plan_problem_t *p)
+static void pAgent(const plan_problem_t *p, FILE *fout)
 {
     plan_op_t *private_op;
     int private_op_size;
     planProblemCreatePrivateProjOps(p->op, p->op_size, p->var, p->var_size,
                                     &private_op, &private_op_size);
 
-    printf("++++ %s ++++\n", p->agent_name);
-    printf("Agent ID: %d\n", p->agent_id);
-    pVar(p->var, p->var_size);
-    pPrivateVal(p->private_val, p->private_val_size);
-    pInitState(p->state_pool, p->initial_state);
-    pGoal(p->goal);
-    pOp(p->op, p->op_size);
-    printf("Succ Gen: %d\n", (int)(p->succ_gen != NULL));
-    printf("Proj op:\n");
-    pOp(p->proj_op, p->proj_op_size);
-    printf("Private Proj op:\n");
-    pOp(private_op, private_op_size);
-    printf("++++ %s END ++++\n", p->agent_name);
+    fprintf(fout, "++++ %s ++++\n", p->agent_name);
+    fprintf(fout, "Agent ID: %d\n", p->agent_id);
+    pVar(p->var, p->var_size, fout);
+    pPrivateVal(p->private_val, p->private_val_size, fout);
+    pInitState(p->state_pool, p->initial_state, fout);
+    pGoal(p->goal, fout);
+    pOp(p->op, p->op_size, fout);
+    fprintf(fout, "Succ Gen: %d\n", (int)(p->succ_gen != NULL));
+    fprintf(fout, "Proj op:\n");
+    pOp(p->proj_op, p->proj_op_size, fout);
+    fprintf(fout, "Private Proj op:\n");
+    pOp(private_op, private_op_size, fout);
+    fprintf(fout, "++++ %s END ++++\n", p->agent_name);
 
     planProblemDestroyOps(private_op, private_op_size);
 }
 
-static void testAgentProto(const char *proto)
+static void testAgentProto(const char *proto, FILE *fout)
 {
     plan_problem_agents_t *agents;
     int i;
@@ -158,22 +159,138 @@ static void testAgentProto(const char *proto)
     if (agents == NULL)
         return;
 
-    printf("---- %s ----\n", proto);
-    pVar(agents->glob.var, agents->glob.var_size);
-    pInitState(agents->glob.state_pool, agents->glob.initial_state);
-    pGoal(agents->glob.goal);
-    pOp(agents->glob.op, agents->glob.op_size);
-    printf("Succ Gen: %d\n", (int)(agents->glob.succ_gen != NULL));
-
+    fprintf(fout, "---- %s ----\n", proto);
+    pProblem(&agents->glob, fout);
     for (i = 0; i < agents->agent_size; ++i)
-        pAgent(agents->agent + i);
+        pAgent(agents->agent + i, fout);
 
-    printf("---- %s END ----\n", proto);
+    fprintf(fout, "---- %s END ----\n", proto);
     planProblemAgentsDel(agents);
 }
 
 TEST(testLoadAgentFromProto)
 {
-    testAgentProto("../data/ma-benchmarks/rovers/p03.proto");
-    testAgentProto("../data/ma-benchmarks/depot/pfile1.proto");
+    testAgentProto("../data/ma-benchmarks/rovers/p03.proto", stdout);
+    testAgentProto("../data/ma-benchmarks/depot/pfile1.proto", stdout);
+}
+
+static void cloneFromProto(const char *proto, int flags, FILE *f1, FILE *f2)
+{
+    plan_problem_t *p1, *p2;
+
+    p1 = planProblemFromProto(proto, flags);
+    p2 = planProblemClone(p1);
+
+    assertNotEquals(p1->var, p2->var);
+    assertNotEquals(p1->op, p2->op);
+    assertNotEquals(p1->goal, p2->goal);
+    assertNotEquals(p1->state_pool, p2->state_pool);
+    assertNotEquals(p1->succ_gen, p2->succ_gen);
+
+    assertEquals(p1->state_pool->num_states, p2->state_pool->num_states);
+    assertEquals(p1->state_pool->num_states, 1);
+
+    fprintf(f1, "---- %s %x ----\n", proto, flags);
+    pProblem(p1, f1);
+    fprintf(f1, "---- %s %x END ----\n", proto, flags);
+
+    fprintf(f2, "---- %s %x ----\n", proto, flags);
+    pProblem(p2, f2);
+    fprintf(f2, "---- %s %x END ----\n", proto, flags);
+
+    planProblemDel(p1);
+    planProblemDel(p2);
+}
+
+TEST(testLoadFromProtoClone)
+{
+    int flags;
+    FILE *f1, *f2;
+
+    f1 = fopen("regressions/temp.load-from-file-cmp-from-proto.out", "w");
+    f2 = fopen("regressions/tmp.temp.load-from-file-cmp-from-proto.out", "w");
+    if (f1 == NULL || f2 == NULL){
+        fprintf(stderr, "Could not open files for comparison!!\n");
+        return;
+    }
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    cloneFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
+
+    flags = PLAN_PROBLEM_USE_CG;
+    cloneFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
+
+    flags = 0;
+    cloneFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
+
+    fclose(f1);
+    fclose(f2);
+}
+
+
+static void cloneAgentFromProto(const char *proto, int flags, FILE *f1, FILE *f2)
+{
+    plan_problem_agents_t *p1, *p2;
+    int i;
+
+    p1 = planProblemAgentsFromProto(proto, flags);
+    p2 = planProblemAgentsClone(p1);
+
+    assertNotEquals(p1->glob.var, p2->glob.var);
+    assertNotEquals(p1->glob.op, p2->glob.op);
+    assertNotEquals(p1->glob.goal, p2->glob.goal);
+    assertNotEquals(p1->glob.state_pool, p2->glob.state_pool);
+    assertNotEquals(p1->glob.succ_gen, p2->glob.succ_gen);
+
+    assertEquals(p1->glob.state_pool->num_states, p2->glob.state_pool->num_states);
+    assertEquals(p1->glob.state_pool->num_states, 1);
+
+    fprintf(f1, "---- %s %x ----\n", proto, flags);
+    pProblem(&p1->glob, f1);
+    for (i = 0; i < p1->agent_size; ++i)
+        pAgent(p1->agent + i, f1);
+    fprintf(f1, "---- %s %x END ----\n", proto, flags);
+
+    fprintf(f2, "---- %s %x ----\n", proto, flags);
+    pProblem(&p2->glob, f2);
+    for (i = 0; i < p2->agent_size; ++i)
+        pAgent(p2->agent + i, f2);
+    fprintf(f2, "---- %s %x END ----\n", proto, flags);
+
+    planProblemAgentsDel(p1);
+    planProblemAgentsDel(p2);
+}
+
+TEST(testLoadAgentFromProtoClone)
+{
+    int flags;
+    FILE *f1, *f2;
+
+    f1 = fopen("regressions/temp.load-from-file-agent-cmp-from-proto.out", "w");
+    f2 = fopen("regressions/tmp.temp.load-from-file-agent-cmp-from-proto.out", "w");
+    if (f1 == NULL || f2 == NULL){
+        fprintf(stderr, "Could not open files for comparison!!\n");
+        return;
+    }
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    cloneAgentFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneAgentFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+
+    flags = PLAN_PROBLEM_USE_CG;
+    cloneAgentFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneAgentFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+
+    flags = 0;
+    cloneAgentFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
+    cloneAgentFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+
+    fclose(f1);
+    fclose(f2);
 }

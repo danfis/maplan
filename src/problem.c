@@ -63,6 +63,56 @@ void planProblemFree(plan_problem_t *plan)
     bzero(plan, sizeof(*plan));
 }
 
+plan_problem_t *planProblemClone(const plan_problem_t *p)
+{
+    plan_problem_t *prob;
+
+    prob = BOR_ALLOC(plan_problem_t);
+    planProblemCopy(prob, p);
+    return prob;
+}
+
+void planProblemCopy(plan_problem_t *dst, const plan_problem_t *src)
+{
+    int i;
+
+    memcpy(dst, src, sizeof(*src));
+
+    dst->var = BOR_ALLOC_ARR(plan_var_t, src->var_size);
+    for (i = 0; i < src->var_size; ++i)
+        planVarCopy(dst->var + i, src->var + i);
+    dst->state_pool = planStatePoolClone(src->state_pool);
+    dst->goal = planPartStateClone(src->goal);
+
+    dst->op = BOR_ALLOC_ARR(plan_op_t, src->op_size);
+    for (i = 0; i < src->op_size; ++i){
+        planOpInit(dst->op + i, src->var_size);
+        planOpCopy(dst->op + i, src->op + i);
+    }
+
+    if (src->succ_gen)
+        dst->succ_gen = planSuccGenNew(dst->op, dst->op_size,
+                                       src->succ_gen->var_order);
+
+    if (src->agent_name)
+        dst->agent_name = strdup(src->agent_name);
+    if (src->proj_op_size > 0){
+        dst->proj_op = BOR_ALLOC_ARR(plan_op_t, src->proj_op_size);
+        for (i = 0; i < src->proj_op_size; ++i){
+            planOpInit(dst->proj_op + i, src->var_size);
+            planOpCopy(dst->proj_op + i, src->proj_op + i);
+        }
+    }
+
+    if (src->private_val_size > 0){
+        dst->private_val = BOR_ALLOC_ARR(plan_problem_private_val_t,
+                                         src->private_val_size);
+        memcpy(dst->private_val, src->private_val,
+               sizeof(plan_problem_private_val_t) * src->private_val_size);
+    }
+
+    planProblemPack(dst);
+}
 
 void planProblemAgentsDel(plan_problem_agents_t *agents)
 {
@@ -76,6 +126,20 @@ void planProblemAgentsDel(plan_problem_agents_t *agents)
     if (agents->agent)
         BOR_FREE(agents->agent);
     BOR_FREE(agents);
+}
+
+plan_problem_agents_t *planProblemAgentsClone(const plan_problem_agents_t *a)
+{
+    plan_problem_agents_t *prob;
+    int i;
+
+    prob = BOR_ALLOC(plan_problem_agents_t);
+    planProblemCopy(&prob->glob, &a->glob);
+    prob->agent_size = a->agent_size;
+    prob->agent = BOR_ALLOC_ARR(plan_problem_t, prob->agent_size);
+    for (i = 0; i < a->agent_size; ++i)
+        planProblemCopy(prob->agent + i, a->agent + i);
+    return prob;
 }
 
 void planProblemPack(plan_problem_t *p)

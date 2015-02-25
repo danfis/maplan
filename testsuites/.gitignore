@@ -1,4 +1,5 @@
 regressions/tmp.*
+regressions/temp.*
 regressions/TSFibo.rand-*
 regressions/TSPairHeap.rand-*
 regressions/TSCD.geom.*

@@ -40,6 +40,11 @@ plan_state_pool_t *planStatePoolNew(const plan_var_t *var, int var_size);
 void planStatePoolDel(plan_state_pool_t *pool);
 
 /**
+ * Creates an exact copy of the state-pool.
+ */
+plan_state_pool_t *planStatePoolClone(const plan_state_pool_t *sp);
+
+/**
  * Reserves a data array with elements of specified size and each element
  * is initialized once it is allocated with using pair {init_fn} and
  * {init_data} (see dataarr.h).

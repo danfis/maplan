@@ -81,6 +81,26 @@ void planStatePoolDel(plan_state_pool_t *pool)
     BOR_FREE(pool);
 }
 
+plan_state_pool_t *planStatePoolClone(const plan_state_pool_t *sp)
+{
+    plan_state_pool_t *pool;
+    int i;
+
+    pool = BOR_ALLOC(plan_state_pool_t);
+    memcpy(pool, sp, sizeof(*sp));
+    pool->packer = planStatePackerClone(sp->packer);
+    pool->data = BOR_ALLOC_ARR(plan_data_arr_t *, sp->data_size);
+    for (i = 0; i < sp->data_size; ++i)
+        pool->data[i] = planDataArrClone(sp->data[i]);
+
+    pool->htable = borHTableNew(htableHash, htableEq, (void *)pool);
+    pool->num_states = 0;
+    for (i = 0; i < sp->num_states; ++i)
+        insertIntoHTable(pool, i);
+
+    return pool;
+}
+
 int planStatePoolDataReserve(plan_state_pool_t *pool,
                              size_t element_size,
                              plan_data_arr_el_init_fn init_fn,

@@ -46,6 +46,38 @@ void planDataArrDel(plan_data_arr_t *arr)
     BOR_FREE(arr);
 }
 
+plan_data_arr_t *planDataArrClone(const plan_data_arr_t *src)
+{
+    plan_data_arr_t *arr;
+    size_t elsize, segmsize;
+    void *data;
+    int i;
+
+    elsize = src->arr->el_size;
+    segmsize = src->arr->segm_size;
+
+    arr = BOR_ALLOC(plan_data_arr_t);
+    memcpy(arr, src, sizeof(*src));
+    arr->arr = borSegmArrNew(elsize, segmsize);
+    if (arr->arr == NULL){
+        fprintf(stderr, "Error: Too low segment size for segmented array.\n");
+        exit(-1);
+    }
+
+    if (!src->init_fn){
+        arr->init_data = BOR_ALLOC_ARR(char, elsize);
+        memcpy(arr->init_data, src->init_data, elsize);
+    }
+
+    arr->num_els = src->num_els;
+    for (i = 0; i < src->num_els; ++i){
+        data = borSegmArrGet(arr->arr, i);
+        memcpy(data, borSegmArrGet(src->arr, i), elsize);
+    }
+
+    return arr;
+}
+
 void planDataArrResize(plan_data_arr_t *arr, size_t eli)
 {
     size_t i;

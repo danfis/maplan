@@ -103,7 +103,8 @@ static void planMASnapshotUpdate(plan_ma_snapshot_t *s, plan_ma_msg_t *msg)
     if (s->mark[agent])
         return;
 
-    s->update_fn(s, msg);
+    if (s->update_fn != NULL)
+        s->update_fn(s, msg);
 }
 
 static int planMASnapshotSnapshotMsg(plan_ma_snapshot_t *s,

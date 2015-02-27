@@ -155,7 +155,12 @@ static plan_ma_msg_t *recv(plan_ma_comm_t *comm, int flag)
     if (recv_count > 0){
         msg = planMAMsgUnpacked(buf, recv_count);
         nn_freemsg(buf);
+
+    }else if (recv_count == 0){
+        fprintf(stderr, "Error Nanomsg[%d]: Received zero-sized message.",
+                comm->node_id);
     }
+
     return msg;
 }
 
@@ -166,7 +171,8 @@ plan_ma_msg_t *planMACommRecv(plan_ma_comm_t *comm)
     msg = recv(comm, NN_DONTWAIT);
     if (msg == NULL && errno != EAGAIN){
         fprintf(stderr, "Error Nanomsg[%d]: Error while receiving"
-                " message: %s\n", comm->node_id, nn_strerror(errno));
+                " message in non-blocking mode (errno: %d): %s\n",
+                comm->node_id, errno, nn_strerror(errno));
     }
 
     return msg;
@@ -179,7 +185,8 @@ static plan_ma_msg_t *recvBlock(plan_ma_comm_t *comm)
     msg = recv(comm, 0);
     if (msg == NULL){
         fprintf(stderr, "Error Nanomsg[%d]: Error while receiving"
-                " message: %s\n", comm->node_id, nn_strerror(errno));
+                " message in blocking mode (errno: %d): %s\n",
+                comm->node_id, errno, nn_strerror(errno));
     }
 
     return msg;
@@ -194,8 +201,14 @@ static plan_ma_msg_t *recvTimeout(plan_ma_comm_t *comm, int timeout)
     msg = recv(comm, 0);
     if (msg == NULL && errno != EAGAIN){
         fprintf(stderr, "Error Nanomsg[%d]: Error while receiving"
-                " message: %s\n", comm->node_id, nn_strerror(errno));
+                " message in timeout mode (errno: %d): %s\n",
+                comm->node_id, errno, nn_strerror(errno));
     }
+
+    // Reset socket to the blocking mode
+    timeout = -1;
+    nn_setsockopt(comm->recv_sock, NN_SOL_SOCKET, NN_RCVTIMEO,
+                  (const void *)&timeout, sizeof(timeout));
 
     return msg;
 }

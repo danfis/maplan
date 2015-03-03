@@ -229,7 +229,8 @@ static void printResults(const options_t *o, int res, plan_path_t *path)
             }
         }
 
-        printf("Path Cost: %d\n", (int)planPathCost(path));
+        printf("Plan Cost: %d\n", (int)planPathCost(path));
+        printf("Plan Length: %d\n", planPathLen(path));
 
     }else if (res == PLAN_SEARCH_NOT_FOUND){
         printf("Solution NOT found.\n");

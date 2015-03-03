@@ -87,3 +87,13 @@ plan_cost_t planPathCost(const plan_path_t *path)
 
     return cost;
 }
+
+int planPathLen(const plan_path_t *path)
+{
+    plan_path_op_t *op;
+    int len = 0;
+
+    BOR_LIST_FOR_EACH_ENTRY(path, plan_path_op_t, op, path)
+        ++len;
+    return len;
+}

@@ -60,6 +60,11 @@ void planPathPrint(const plan_path_t *path, FILE *fout);
 plan_cost_t planPathCost(const plan_path_t *path);
 
 /**
+ * Number of operators in path.
+ */
+int planPathLen(const plan_path_t *path);
+
+/**
  * Returns true if the path is empty.
  */
 _bor_inline int planPathEmpty(const plan_path_t *path);

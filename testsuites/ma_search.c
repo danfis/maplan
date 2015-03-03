@@ -83,6 +83,6 @@ static void maSearch(const char *proto, int optimal_cost)
 
 TEST(testMASearch)
 {
-    //maSearch("../data/ma-benchmarks/driverlog/pfile3.proto");
-    maSearch("../data/ma-benchmarks/depot/pfile1.proto", 10);
+    //maSearch("proto/driverlog-pfile3.proto");
+    maSearch("proto/depot-pfile1.proto", 10);
 }

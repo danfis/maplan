@@ -3457,7 +3457,7 @@ Ops[1220]:
 [1219] pre: 29:0 37:0 43:0 243:0, eff: 18:0 29:1 37:1
 Succ Gen: 1
 ---- testLoadFromProtoCondEff END ----
----- ../data/ma-benchmarks/rovers/p03.proto ----
+---- proto/rovers-p03.proto ----
 Vars[13]:
 [0] name: `var0', range: 3, is_private: 0 0 0
 [1] name: `var1', range: 4, is_private: 0 0 0 0
@@ -3838,8 +3838,8 @@ Ops[26]:
 [25] cost: 1, gid: 34, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
 [25] pre: 1:1 6:0, eff: 6:1
 ++++ rover1 END ++++
----- ../data/ma-benchmarks/rovers/p03.proto END ----
----- ../data/ma-benchmarks/depot/pfile1.proto ----
+---- proto/rovers-p03.proto END ----
+---- proto/depot-pfile1.proto ----
 Vars[14]:
 [0] name: `var0', range: 4, is_private: 0 0 0 0
 [1] name: `var1', range: 4, is_private: 0 0 0 0
@@ -5170,8 +5170,8 @@ Ops[72]:
 Private Proj op:
 Ops[0]:
 ++++ truck1 END ++++
----- ../data/ma-benchmarks/depot/pfile1.proto END ----
----- ../data/ma-benchmarks/openstacks-p03.proto ----
+---- proto/depot-pfile1.proto END ----
+---- proto/openstacks-p03.proto ----
 Vars[11]:
 [0] name: `var0', range: 2, is_private: 0 0
 [1] name: `var1', range: 2, is_private: 0 0
@@ -5776,8 +5776,8 @@ Ops[5]:
 [4] cost: 0, gid: 4, owner: 1 (2), private: 0, recv_agent: 1, name: `make-product-p5 manufacturer'
 [4] pre: 4:1, eff:
 ++++ manufacturer END ++++
----- ../data/ma-benchmarks/openstacks-p03.proto END ----
----- ../data/ma-benchmarks/openstacks-p03.proto ----
+---- proto/openstacks-p03.proto END ----
+---- proto/openstacks-p03.proto ----
 Vars[11]:
 [0] name: `var0', range: 2, is_private: 0 0
 [1] name: `var1', range: 2, is_private: 0 0
@@ -6382,4 +6382,4 @@ Ops[5]:
 [4] cost: 1, gid: 4, owner: 1 (2), private: 0, recv_agent: 1, name: `make-product-p5 manufacturer'
 [4] pre: 4:1, eff:
 ++++ manufacturer END ++++
----- ../data/ma-benchmarks/openstacks-p03.proto END ----
+---- proto/openstacks-p03.proto END ----

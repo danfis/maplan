@@ -1,4 +1,4 @@
--- ../data/ma-benchmarks/rovers/p01.proto --
+-- proto/rovers-p01.proto --
 DTG 0 (range: 4):
   (0) -- [14]navigate rover0 waypoint0 waypoint3 {0:0}->{0:3} --> (3)
   (1) -- [15]navigate rover0 waypoint1 waypoint2 {0:1}->{0:2} --> (2)
@@ -56,8 +56,8 @@ DTG 12 (range: 2):
   (1) -- [29]take_image rover0 waypoint1 objective1 camera0 high_res {0:1,7:0}->{7:1,12:0} --> (0)
   (1) -- [31]take_image rover0 waypoint2 objective1 camera0 high_res {0:2,7:0}->{7:1,12:0} --> (0)
   (1) -- [33]take_image rover0 waypoint3 objective1 camera0 high_res {0:3,7:0}->{7:1,12:0} --> (0)
--- ../data/ma-benchmarks/rovers/p01.proto END --
--- ../data/ma-benchmarks/depot/pfile1.proto --
+-- proto/rovers-p01.proto END --
+-- proto/depot-pfile1.proto --
 DTG 0 (range: 4):
   (0) -- [16]drop hoist1 crate0 crate1 distributor0 {1:1,8:0,12:3}->{0:1,5:0,7:0,8:1,12:5} --> (1)
   (0) -- [17]drop hoist1 crate0 pallet1 distributor0 {10:0,12:3}->{0:1,5:0,7:0,10:1,12:7} --> (1)
@@ -336,8 +336,8 @@ DTG 13 (range: 9):
   (8) -- [31]lift hoist0 crate1 pallet2 depot0 {1:0,4:0,8:0,13:8}->{1:3,4:1,8:1,11:0,13:2} --> (2)
   (8) -- [39]lift hoist1 crate1 pallet2 distributor0 {1:1,5:0,8:0,13:8}->{1:3,5:1,8:1,11:0,13:3} --> (3)
   (8) -- [47]lift hoist2 crate1 pallet2 distributor1 {1:2,6:0,8:0,13:8}->{1:3,6:1,8:1,11:0,13:4} --> (4)
--- ../data/ma-benchmarks/depot/pfile1.proto END --
--- ../data/ma-benchmarks/rovers/p03.proto --
+-- proto/depot-pfile1.proto END --
+-- proto/rovers-p03.proto --
 DTG 0 (range: 3):
   (0) -- [15]navigate rover0 waypoint0 waypoint1 {0:0}->{0:1} --> (1)
   (1) -- [16]navigate rover0 waypoint1 waypoint0 {0:1}->{0:0} --> (0)
@@ -394,4 +394,4 @@ DTG 11 (range: 2):
 DTG 12 (range: 2):
   (1) -- [31]take_image rover1 waypoint0 objective0 camera1 colour {1:0,6:0}->{6:1,12:0} --> (0)
   (1) -- [33]take_image rover1 waypoint1 objective0 camera1 colour {1:1,6:0}->{6:1,12:0} --> (0)
--- ../data/ma-benchmarks/rovers/p03.proto END --
+-- proto/rovers-p03.proto END --

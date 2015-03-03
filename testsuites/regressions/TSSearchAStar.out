@@ -1,4 +1,4 @@
-../data/ma-benchmarks/driverlog/pfile3.proto
+proto/driverlog-pfile3.proto
 (board-truck driver1 truck1 s1)
 (walk driver2 s0 p2-0)
 (load-truck package3 truck1 driver1 s1)
@@ -11,7 +11,7 @@
 (drive-truck truck1 s0 s1 driver1)
 (unload-truck package2 truck1 driver1 s1)
 (unload-truck package1 truck1 driver1 s1)
-../data/ma-benchmarks/depot/pfile2.proto
+proto/depot-pfile2.proto
 (lift hoist0 crate0 pallet0 depot0)
 (load hoist0 crate0 truck1 depot0)
 (lift hoist2 crate2 crate1 distributor1)

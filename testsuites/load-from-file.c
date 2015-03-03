@@ -104,21 +104,21 @@ TEST(testLoadFromProto)
     int flags;
 
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
-    p = planProblemFromProto("../data/ma-benchmarks/rovers/p03.proto", flags);
+    p = planProblemFromProto("proto/rovers-p03.proto", flags);
     printf("---- testLoadFromProto ----\n");
     pProblem(p, stdout);
     printf("---- testLoadFromProto END ----\n");
     planProblemDel(p);
 
     flags = PLAN_PROBLEM_USE_CG;
-    p = planProblemFromProto("../data/ma-benchmarks/openstacks-p03.proto", flags);
+    p = planProblemFromProto("proto/openstacks-p03.proto", flags);
     printf("---- testLoadFromProto ----\n");
     pProblem(p, stdout);
     printf("---- testLoadFromProto END ----\n");
     planProblemDel(p);
 
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_OP_UNIT_COST;
-    p = planProblemFromProto("../data/ma-benchmarks/openstacks-p03.proto", flags);
+    p = planProblemFromProto("proto/openstacks-p03.proto", flags);
     printf("---- testLoadFromProto unit-cost----\n");
     pProblem(p, stdout);
     printf("---- testLoadFromProto unit-cost END ----\n");
@@ -185,12 +185,12 @@ TEST(testLoadAgentFromProto)
     int flags;
 
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
-    testAgentProto("../data/ma-benchmarks/rovers/p03.proto", stdout, flags);
-    testAgentProto("../data/ma-benchmarks/depot/pfile1.proto", stdout, flags);
+    testAgentProto("proto/rovers-p03.proto", stdout, flags);
+    testAgentProto("proto/depot-pfile1.proto", stdout, flags);
     flags = PLAN_PROBLEM_USE_CG;
-    testAgentProto("../data/ma-benchmarks/openstacks-p03.proto", stdout, flags);
+    testAgentProto("proto/openstacks-p03.proto", stdout, flags);
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_OP_UNIT_COST;
-    testAgentProto("../data/ma-benchmarks/openstacks-p03.proto", stdout, flags);
+    testAgentProto("proto/openstacks-p03.proto", stdout, flags);
 }
 
 static void cloneFromProto(const char *proto, int flags, FILE *f1, FILE *f2)
@@ -234,18 +234,18 @@ TEST(testLoadFromProtoClone)
     }
 
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
-    cloneFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
-    cloneFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneFromProto("proto/rovers-p03.proto", flags, f1, f2);
+    cloneFromProto("proto/depot-pfile5.proto", flags, f1, f2);
     cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
 
     flags = PLAN_PROBLEM_USE_CG;
-    cloneFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
-    cloneFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneFromProto("proto/rovers-p03.proto", flags, f1, f2);
+    cloneFromProto("proto/depot-pfile5.proto", flags, f1, f2);
     cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
 
     flags = 0;
-    cloneFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
-    cloneFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneFromProto("proto/rovers-p03.proto", flags, f1, f2);
+    cloneFromProto("proto/depot-pfile5.proto", flags, f1, f2);
     cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
 
     fclose(f1);
@@ -299,16 +299,16 @@ TEST(testLoadAgentFromProtoClone)
     }
 
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
-    cloneAgentFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
-    cloneAgentFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneAgentFromProto("proto/rovers-p03.proto", flags, f1, f2);
+    cloneAgentFromProto("proto/depot-pfile5.proto", flags, f1, f2);
 
     flags = PLAN_PROBLEM_USE_CG;
-    cloneAgentFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
-    cloneAgentFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneAgentFromProto("proto/rovers-p03.proto", flags, f1, f2);
+    cloneAgentFromProto("proto/depot-pfile5.proto", flags, f1, f2);
 
     flags = 0;
-    cloneAgentFromProto("../data/ma-benchmarks/rovers/p03.proto", flags, f1, f2);
-    cloneAgentFromProto("../data/ma-benchmarks/depot/pfile5.proto", flags, f1, f2);
+    cloneAgentFromProto("proto/rovers-p03.proto", flags, f1, f2);
+    cloneAgentFromProto("proto/depot-pfile5.proto", flags, f1, f2);
 
     fclose(f1);
     fclose(f2);

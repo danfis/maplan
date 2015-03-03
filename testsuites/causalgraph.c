@@ -8,7 +8,7 @@ TEST(testCausalGraphImportantVar)
     plan_problem_t *prob;
     plan_causal_graph_t *cg;
 
-    prob = planProblemFromProto("../data/ma-benchmarks/rovers/p03.proto", 0);
+    prob = planProblemFromProto("proto/rovers-p03.proto", 0);
     cg = planCausalGraphNew(prob->var_size, prob->op, prob->op_size, prob->goal);
     assertTrue(cg->important_var[0]);
     assertTrue(cg->important_var[1]);
@@ -64,18 +64,18 @@ static void varOrder(const char *fn)
 
 TEST(testCausalGraphVarOrder)
 {
-    varOrder("../data/ma-benchmarks/rovers/p03.proto");
+    varOrder("proto/rovers-p03.proto");
 }
 
 TEST(testCausalGraphPruneUnimportantVar)
 {
     plan_problem_t *prob;
 
-    prob = planProblemFromProto("../data/ma-benchmarks/rovers/p03.proto", 0);
+    prob = planProblemFromProto("proto/rovers-p03.proto", 0);
     assertEquals(prob->var_size, 28);
     planProblemDel(prob);
 
-    prob = planProblemFromProto("../data/ma-benchmarks/rovers/p03.proto",
+    prob = planProblemFromProto("proto/rovers-p03.proto",
                                 PLAN_PROBLEM_USE_CG);
     assertEquals(prob->var_size, 13);
     planProblemDel(prob);

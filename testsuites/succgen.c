@@ -92,8 +92,8 @@ static void test(const char *proto, const char *states)
 
 TEST(testSuccGen)
 {
-    test("../data/ma-benchmarks/depot/pfile1.proto", "states/depot-pfile1.txt");
-    test("../data/ma-benchmarks/depot/pfile5.proto", "states/depot-pfile5.txt");
-    test("../data/ma-benchmarks/rovers/p03.proto", "states/rovers-p03.txt");
-    test("../data/ma-benchmarks/rovers/p15.proto", "states/rovers-p15.txt");
+    test("proto/depot-pfile1.proto", "states/depot-pfile1.txt");
+    test("proto/depot-pfile5.proto", "states/depot-pfile5.txt");
+    test("proto/rovers-p03.proto", "states/rovers-p03.txt");
+    test("proto/rovers-p15.proto", "states/rovers-p15.txt");
 }

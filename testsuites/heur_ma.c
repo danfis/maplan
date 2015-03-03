@@ -181,13 +181,13 @@ TEST(testHeurMAFF)
 {
     runTestHeurMA("ma-ff", "../data/simple/pfile.proto",
                   "states/simple.txt", NULL, planHeurMARelaxFFNew, -1, NULL);
-    runTestHeurMA("ma-ff", "../data/ma-benchmarks/depot/pfile1.proto",
+    runTestHeurMA("ma-ff", "proto/depot-pfile1.proto",
                   "states/depot-pfile1.txt", NULL, planHeurMARelaxFFNew, -1, NULL);
-    runTestHeurMA("ma-ff", "../data/ma-benchmarks/depot/pfile5.proto",
+    runTestHeurMA("ma-ff", "proto/depot-pfile5.proto",
                   "states/depot-pfile5.txt", NULL, planHeurMARelaxFFNew, 200, NULL);
-    runTestHeurMA("ma-ff", "../data/ma-benchmarks/rovers/p03.proto",
+    runTestHeurMA("ma-ff", "proto/rovers-p03.proto",
                   "states/rovers-p03.txt", NULL, planHeurMARelaxFFNew, -1, NULL);
-    runTestHeurMA("ma-ff", "../data/ma-benchmarks/rovers/p15.proto",
+    runTestHeurMA("ma-ff", "proto/rovers-p15.proto",
                   "states/rovers-p15.txt", NULL, planHeurMARelaxFFNew, -1, NULL);
 }
 
@@ -196,16 +196,16 @@ TEST(testHeurMAMax)
     runTestHeurMA("ma-max", "../data/simple/pfile.proto",
                   "states/simple.txt", NULL, planHeurMARelaxMaxNew, -1,
                   seqHeurMaxNew);
-    runTestHeurMA("ma-max", "../data/ma-benchmarks/depot/pfile1.proto",
+    runTestHeurMA("ma-max", "proto/depot-pfile1.proto",
                   "states/depot-pfile1.txt", NULL, planHeurMARelaxMaxNew, -1,
                   seqHeurMaxNew);
-    runTestHeurMA("ma-max", "../data/ma-benchmarks/depot/pfile5.proto",
+    runTestHeurMA("ma-max", "proto/depot-pfile5.proto",
                   "states/depot-pfile5.txt", NULL, planHeurMARelaxMaxNew, 200,
                   seqHeurMaxNew);
-    runTestHeurMA("ma-max", "../data/ma-benchmarks/rovers/p03.proto",
+    runTestHeurMA("ma-max", "proto/rovers-p03.proto",
                   "states/rovers-p03.txt", NULL, planHeurMARelaxMaxNew, -1,
                   seqHeurMaxNew);
-    runTestHeurMA("ma-max", "../data/ma-benchmarks/rovers/p15.proto",
+    runTestHeurMA("ma-max", "proto/rovers-p15.proto",
                   "states/rovers-p15.txt", NULL, planHeurMARelaxMaxNew, -1,
                   seqHeurMaxNew);
 }
@@ -214,15 +214,15 @@ TEST(testHeurMALMCut)
 {
     runTestHeurMA("ma-lm-cut", "../data/simple/pfile.proto",
                   "states/simple.txt", NULL, planHeurMALMCutNew, -1, NULL);
-    runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/depot/pfile1.proto",
+    runTestHeurMA("ma-lm-cut", "proto/depot-pfile1.proto",
                   "states/depot-pfile1.txt", "states/depot-pfile1.cost.txt",
                   planHeurMALMCutNew, -1, NULL);
-    runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/depot/pfile5.proto",
+    runTestHeurMA("ma-lm-cut", "proto/depot-pfile5.proto",
                   "states/depot-pfile5.txt", NULL, planHeurMALMCutNew, 200, NULL);
-    runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/rovers/p03.proto",
+    runTestHeurMA("ma-lm-cut", "proto/rovers-p03.proto",
                   "states/rovers-p03.txt", "states/rovers-p03.cost.txt",
                   planHeurMALMCutNew, -1, NULL);
-    runTestHeurMA("ma-lm-cut", "../data/ma-benchmarks/rovers/p15.proto",
+    runTestHeurMA("ma-lm-cut", "proto/rovers-p15.proto",
                   "states/rovers-p15.txt", NULL, planHeurMALMCutNew, -1, NULL);
 }
 
@@ -230,12 +230,12 @@ TEST(testHeurMADTG)
 {
     runTestHeurMA("ma-dtg", "../data/simple/pfile.proto",
                   "states/simple.txt", NULL, planHeurMADTGNew, -1, NULL);
-    runTestHeurMA("ma-dtg", "../data/ma-benchmarks/depot/pfile1.proto",
+    runTestHeurMA("ma-dtg", "proto/depot-pfile1.proto",
                   "states/depot-pfile1.txt", NULL, planHeurMADTGNew, -1, NULL);
-    runTestHeurMA("ma-dtg", "../data/ma-benchmarks/depot/pfile5.proto",
+    runTestHeurMA("ma-dtg", "proto/depot-pfile5.proto",
                   "states/depot-pfile5.txt", NULL, planHeurMADTGNew, 200, NULL);
-    runTestHeurMA("ma-dtg", "../data/ma-benchmarks/rovers/p03.proto",
+    runTestHeurMA("ma-dtg", "proto/rovers-p03.proto",
                   "states/rovers-p03.txt", NULL, planHeurMADTGNew, -1, NULL);
-    runTestHeurMA("ma-dtg", "../data/ma-benchmarks/rovers/p15.proto",
+    runTestHeurMA("ma-dtg", "proto/rovers-p15.proto",
                   "states/rovers-p15.txt", NULL, planHeurMADTGNew, -1, NULL);
 }

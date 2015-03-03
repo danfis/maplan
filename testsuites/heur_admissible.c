@@ -83,44 +83,44 @@ static void checkOptimalCost2(new_heur_fn new_heur, const char *proto,
 
 TEST(testHeurAdmissibleLMCut)
 {
-    checkOptimalCost(heurLMCut, "../data/ma-benchmarks/depot/pfile1.proto");
-    checkOptimalCost(heurLMCut, "../data/ma-benchmarks/depot/pfile2.proto");
-    checkOptimalCost(heurLMCut, "../data/ma-benchmarks/rovers/p01.proto");
-    checkOptimalCost(heurLMCut, "../data/ma-benchmarks/rovers/p02.proto");
-    checkOptimalCost(heurLMCut, "../data/ma-benchmarks/rovers/p03.proto");
+    checkOptimalCost(heurLMCut, "proto/depot-pfile1.proto");
+    checkOptimalCost(heurLMCut, "proto/depot-pfile2.proto");
+    checkOptimalCost(heurLMCut, "proto/rovers-p01.proto");
+    checkOptimalCost(heurLMCut, "proto/rovers-p02.proto");
+    checkOptimalCost(heurLMCut, "proto/rovers-p03.proto");
 
     checkOptimalCost2(heurLMCut,
-                      "../data/ma-benchmarks/depot/pfile1.proto",
+                      "proto/depot-pfile1.proto",
                       "states/depot-pfile1.txt",
                       "states/depot-pfile1.cost.txt");
     checkOptimalCost2(heurLMCut,
-                      "../data/ma-benchmarks/driverlog/pfile1.proto",
+                      "proto/driverlog-pfile1.proto",
                       "states/driverlog-pfile1.txt",
                       "states/driverlog-pfile1.cost.txt");
     checkOptimalCost2(heurLMCut,
-                      "../data/ma-benchmarks/rovers/p03.proto",
+                      "proto/rovers-p03.proto",
                       "states/rovers-p03.txt",
                       "states/rovers-p03.cost.txt");
 }
 
 TEST(testHeurAdmissibleMax)
 {
-    checkOptimalCost(heurMax, "../data/ma-benchmarks/depot/pfile1.proto");
-    checkOptimalCost(heurMax, "../data/ma-benchmarks/depot/pfile2.proto");
-    checkOptimalCost(heurMax, "../data/ma-benchmarks/rovers/p01.proto");
-    checkOptimalCost(heurMax, "../data/ma-benchmarks/rovers/p02.proto");
-    checkOptimalCost(heurMax, "../data/ma-benchmarks/rovers/p03.proto");
+    checkOptimalCost(heurMax, "proto/depot-pfile1.proto");
+    checkOptimalCost(heurMax, "proto/depot-pfile2.proto");
+    checkOptimalCost(heurMax, "proto/rovers-p01.proto");
+    checkOptimalCost(heurMax, "proto/rovers-p02.proto");
+    checkOptimalCost(heurMax, "proto/rovers-p03.proto");
 
     checkOptimalCost2(heurMax,
-                      "../data/ma-benchmarks/depot/pfile1.proto",
+                      "proto/depot-pfile1.proto",
                       "states/depot-pfile1.txt",
                       "states/depot-pfile1.cost.txt");
     checkOptimalCost2(heurMax,
-                      "../data/ma-benchmarks/driverlog/pfile1.proto",
+                      "proto/driverlog-pfile1.proto",
                       "states/driverlog-pfile1.txt",
                       "states/driverlog-pfile1.cost.txt");
     checkOptimalCost2(heurMax,
-                      "../data/ma-benchmarks/rovers/p03.proto",
+                      "proto/rovers-p03.proto",
                       "states/rovers-p03.txt",
                       "states/rovers-p03.cost.txt");
 }

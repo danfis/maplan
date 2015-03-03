@@ -21,9 +21,9 @@ static void dtgDump(const char *proto)
 
 TEST(dtgTest)
 {
-    dtgDump("../data/ma-benchmarks/rovers/p01.proto");
-    dtgDump("../data/ma-benchmarks/depot/pfile1.proto");
-    dtgDump("../data/ma-benchmarks/rovers/p03.proto");
+    dtgDump("proto/rovers-p01.proto");
+    dtgDump("proto/depot-pfile1.proto");
+    dtgDump("proto/rovers-p03.proto");
 }
 
 TEST(dtgPathTest)
@@ -34,7 +34,7 @@ TEST(dtgPathTest)
     int i, ret, flags;
 
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
-    p = planProblemFromProto("../data/ma-benchmarks/rovers/p01.proto", flags);
+    p = planProblemFromProto("proto/rovers-p01.proto", flags);
 
     planDTGInit(&dtg, p->var, p->var_size, p->op, p->op_size);
     planDTGPathInit(&path);

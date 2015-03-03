@@ -1,4 +1,4 @@
-VarOrder for `../data/ma-benchmarks/rovers/p03.proto':
+VarOrder for `proto/rovers-p03.proto':
 3 - var3
 19 - var19
 18 - var18

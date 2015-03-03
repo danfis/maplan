@@ -179,7 +179,7 @@ static void runTestHeurMA(const char *name, const char *proto,
 
 TEST(testHeurMAFF)
 {
-    runTestHeurMA("ma-ff", "../data/simple/pfile.proto",
+    runTestHeurMA("ma-ff", "proto/simple.proto",
                   "states/simple.txt", NULL, planHeurMARelaxFFNew, -1, NULL);
     runTestHeurMA("ma-ff", "proto/depot-pfile1.proto",
                   "states/depot-pfile1.txt", NULL, planHeurMARelaxFFNew, -1, NULL);
@@ -193,7 +193,7 @@ TEST(testHeurMAFF)
 
 TEST(testHeurMAMax)
 {
-    runTestHeurMA("ma-max", "../data/simple/pfile.proto",
+    runTestHeurMA("ma-max", "proto/simple.proto",
                   "states/simple.txt", NULL, planHeurMARelaxMaxNew, -1,
                   seqHeurMaxNew);
     runTestHeurMA("ma-max", "proto/depot-pfile1.proto",
@@ -212,7 +212,7 @@ TEST(testHeurMAMax)
 
 TEST(testHeurMALMCut)
 {
-    runTestHeurMA("ma-lm-cut", "../data/simple/pfile.proto",
+    runTestHeurMA("ma-lm-cut", "proto/simple.proto",
                   "states/simple.txt", NULL, planHeurMALMCutNew, -1, NULL);
     runTestHeurMA("ma-lm-cut", "proto/depot-pfile1.proto",
                   "states/depot-pfile1.txt", "states/depot-pfile1.cost.txt",
@@ -228,7 +228,7 @@ TEST(testHeurMALMCut)
 
 TEST(testHeurMADTG)
 {
-    runTestHeurMA("ma-dtg", "../data/simple/pfile.proto",
+    runTestHeurMA("ma-dtg", "proto/simple.proto",
                   "states/simple.txt", NULL, planHeurMADTGNew, -1, NULL);
     runTestHeurMA("ma-dtg", "proto/depot-pfile1.proto",
                   "states/depot-pfile1.txt", NULL, planHeurMADTGNew, -1, NULL);

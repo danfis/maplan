@@ -129,7 +129,7 @@ TEST(testLoadFromProtoCondEff)
 {
     plan_problem_t *p;
 
-    p = planProblemFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    p = planProblemFromProto("proto/CityCar-p3-2-2-0-1.proto",
                              PLAN_PROBLEM_USE_CG);
     printf("---- testLoadFromProtoCondEff ----\n");
     pProblem(p, stdout);
@@ -236,17 +236,17 @@ TEST(testLoadFromProtoClone)
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
     cloneFromProto("proto/rovers-p03.proto", flags, f1, f2);
     cloneFromProto("proto/depot-pfile5.proto", flags, f1, f2);
-    cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
+    cloneFromProto("proto/CityCar-p3-2-2-0-1.proto", flags, f1, f2);
 
     flags = PLAN_PROBLEM_USE_CG;
     cloneFromProto("proto/rovers-p03.proto", flags, f1, f2);
     cloneFromProto("proto/depot-pfile5.proto", flags, f1, f2);
-    cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
+    cloneFromProto("proto/CityCar-p3-2-2-0-1.proto", flags, f1, f2);
 
     flags = 0;
     cloneFromProto("proto/rovers-p03.proto", flags, f1, f2);
     cloneFromProto("proto/depot-pfile5.proto", flags, f1, f2);
-    cloneFromProto("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto", flags, f1, f2);
+    cloneFromProto("proto/CityCar-p3-2-2-0-1.proto", flags, f1, f2);
 
     fclose(f1);
     fclose(f2);

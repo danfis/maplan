@@ -1,4 +1,4 @@
----- ma-ff: ../data/simple/pfile.proto ----
+---- ma-ff: proto/simple.proto ----
 9 1 1 3 1
 8 1 1 6 1
 9 1 1 3 0
@@ -134,7 +134,7 @@
 2 1 0 5 0
 1 0 1 5 1
 0 0 1 1 0
----- ma-ff: ../data/simple/pfile.proto END ----
+---- ma-ff: proto/simple.proto END ----
 ---- ma-ff: proto/depot-pfile1.proto ----
 21 1 0 2 0 0 0 0 0 0 1 1 0 7 6
 17 3 0 2 0 0 1 0 1 0 1 0 0 3 6
@@ -11094,7 +11094,7 @@
 1 4 7 1 9 1 0 1 1 0 1 1 1 0 2 0 1 1 1 1 1 0 0 0 0 0 1 0 0 0 0 1 0 1 0 0 1 1 1
 1 4 7 1 9 1 0 1 1 0 1 1 1 0 2 0 1 1 1 1 1 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 1 1 1
 ---- ma-ff: proto/rovers-p15.proto END ----
----- ma-max: ../data/simple/pfile.proto ----
+---- ma-max: proto/simple.proto ----
 6 1 1 3 1
 6 1 1 6 1
 7 1 1 3 0
@@ -11230,7 +11230,7 @@
 2 1 0 5 0
 1 0 1 5 1
 0 0 1 1 0
----- ma-max: ../data/simple/pfile.proto END ----
+---- ma-max: proto/simple.proto END ----
 ---- ma-max: proto/depot-pfile1.proto ----
 4 1 0 2 0 0 0 0 0 0 1 1 0 7 6
 4 3 0 2 0 0 1 0 1 0 1 0 0 3 6
@@ -22190,7 +22190,7 @@
 1 4 7 1 9 1 0 1 1 0 1 1 1 0 2 0 1 1 1 1 1 0 0 0 0 0 1 0 0 0 0 1 0 1 0 0 1 1 1
 1 4 7 1 9 1 0 1 1 0 1 1 1 0 2 0 1 1 1 1 1 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 1 1 1
 ---- ma-max: proto/rovers-p15.proto END ----
----- ma-lm-cut: ../data/simple/pfile.proto ----
+---- ma-lm-cut: proto/simple.proto ----
 9 1 1 3 1
 8 1 1 6 1
 9 1 1 3 0
@@ -22326,7 +22326,7 @@
 2 1 0 5 0
 1 0 1 5 1
 0 0 1 1 0
----- ma-lm-cut: ../data/simple/pfile.proto END ----
+---- ma-lm-cut: proto/simple.proto END ----
 ---- ma-lm-cut: proto/depot-pfile1.proto ----
 7 1 0 2 0 0 0 0 0 0 1 1 0 7 6
 7 3 0 2 0 0 1 0 1 0 1 0 0 3 6
@@ -33286,7 +33286,7 @@
 1 4 7 1 9 1 0 1 1 0 1 1 1 0 2 0 1 1 1 1 1 0 0 0 0 0 1 0 0 0 0 1 0 1 0 0 1 1 1
 1 4 7 1 9 1 0 1 1 0 1 1 1 0 2 0 1 1 1 1 1 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 1 1 1
 ---- ma-lm-cut: proto/rovers-p15.proto END ----
----- ma-dtg: ../data/simple/pfile.proto ----
+---- ma-dtg: proto/simple.proto ----
 1 1 1 3 1
 1 1 1 6 1
 1 1 1 3 0
@@ -33422,7 +33422,7 @@
 2 1 0 5 0
 2 0 1 5 1
 0 0 1 1 0
----- ma-dtg: ../data/simple/pfile.proto END ----
+---- ma-dtg: proto/simple.proto END ----
 ---- ma-dtg: proto/depot-pfile1.proto ----
 4 1 0 2 0 0 0 0 0 0 1 1 0 7 6
 7 3 0 2 0 0 1 0 1 0 1 0 0 3 6

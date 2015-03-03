@@ -219,9 +219,9 @@ TEST(testHeurRelax)
                       "states/rovers-p15.txt", PLAN_HEUR_RELAX_TYPE_ADD);
     heurRelaxIdentity("proto/rovers-p15.proto",
                       "states/rovers-p15.txt", PLAN_HEUR_RELAX_TYPE_MAX);
-    heurRelaxIdentity("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    heurRelaxIdentity("proto/CityCar-p3-2-2-0-1.proto",
                       "states/citycar-p3-2-2-0-1.txt", PLAN_HEUR_RELAX_TYPE_ADD);
-    heurRelaxIdentity("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    heurRelaxIdentity("proto/CityCar-p3-2-2-0-1.proto",
                       "states/citycar-p3-2-2-0-1.txt", PLAN_HEUR_RELAX_TYPE_MAX);
 
     srand(time(NULL));
@@ -241,9 +241,9 @@ TEST(testHeurRelax)
                        "states/rovers-p15.txt", PLAN_HEUR_RELAX_TYPE_ADD);
     heurRelaxIdentity2("proto/rovers-p15.proto",
                        "states/rovers-p15.txt", PLAN_HEUR_RELAX_TYPE_MAX);
-    heurRelaxIdentity2("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    heurRelaxIdentity2("proto/CityCar-p3-2-2-0-1.proto",
                        "states/citycar-p3-2-2-0-1.txt", PLAN_HEUR_RELAX_TYPE_ADD);
-    heurRelaxIdentity2("../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    heurRelaxIdentity2("proto/CityCar-p3-2-2-0-1.proto",
                        "states/citycar-p3-2-2-0-1.txt", PLAN_HEUR_RELAX_TYPE_MAX);
 }
 
@@ -257,7 +257,7 @@ TEST(testHeurGoalCount)
             "states/rovers-p03.txt", goalCountNew, 0);
     runTest("goal-count", "proto/rovers-p15.proto",
             "states/rovers-p15.txt", goalCountNew, 0);
-    runTest("goal-count", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    runTest("goal-count", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", goalCountNew, 0);
 }
 
@@ -271,7 +271,7 @@ TEST(testHeurRelaxAdd)
             "states/rovers-p03.txt", addNew, 0);
     runTest("add", "proto/rovers-p15.proto",
             "states/rovers-p15.txt", addNew, 0);
-    runTest("add", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    runTest("add", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", addNew, 0);
 }
 
@@ -285,7 +285,7 @@ TEST(testHeurRelaxMax)
             "states/rovers-p03.txt", maxNew, 1);
     runTest("max", "proto/rovers-p15.proto",
             "states/rovers-p15.txt", maxNew, 0);
-    runTest("max", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    runTest("max", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", maxNew, 0);
 }
 
@@ -299,7 +299,7 @@ TEST(testHeurRelaxFF)
             "states/rovers-p03.txt", ffNew, 0);
     runTest("ff", "proto/rovers-p15.proto",
             "states/rovers-p15.txt", ffNew, 0);
-    runTest("ff", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    runTest("ff", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", ffNew, 0);
 }
 
@@ -313,7 +313,7 @@ TEST(testHeurRelaxLMCut)
             "states/rovers-p03.txt", lmCutNew, 0);
     runTest("LM-CUT", "proto/rovers-p15.proto",
             "states/rovers-p15.txt", lmCutNew, 0);
-    runTest("LM-CUT", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    runTest("LM-CUT", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", lmCutNew, 0);
 }
 
@@ -327,6 +327,6 @@ TEST(testHeurDTG)
             "states/rovers-p03.txt", dtgNew, 0);
     runTest("DTG", "proto/rovers-p15.proto",
             "states/rovers-p15.txt", dtgNew, 0);
-    runTest("DTG", "../data/ipc2014/satisficing/CityCar/p3-2-2-0-1.proto",
+    runTest("DTG", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", dtgNew, 0);
 }

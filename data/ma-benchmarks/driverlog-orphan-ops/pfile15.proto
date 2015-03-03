@@ -1,11567 +1,0 @@
-¤
-var0&Atom at(driver1, p0-11)Atom at(driver1, p0-2)Atom at(driver1, p0-5)Atom at(driver1, p0-6)Atom at(driver1, p1-5)Atom at(driver1, p10-0)Atom at(driver1, p10-1)Atom at(driver1, p11-2)Atom at(driver1, p2-1)Atom at(driver1, p2-4)Atom at(driver1, p2-8)Atom at(driver1, p4-7)Atom at(driver1, p5-9)Atom at(driver1, p6-11)Atom at(driver1, p6-9)Atom at(driver1, p7-2)Atom at(driver1, p8-1)Atom at(driver1, p8-3)Atom at(driver1, p8-4)Atom at(driver1, p8-7)Atom at(driver1, p9-11)Atom at(driver1, p9-4)Atom at(driver1, s0)Atom at(driver1, s1)Atom at(driver1, s10)Atom at(driver1, s11)Atom at(driver1, s2)Atom at(driver1, s3)Atom at(driver1, s4)Atom at(driver1, s5)Atom at(driver1, s6)Atom at(driver1, s7)Atom at(driver1, s8)Atom at(driver1, s9)Atom driving(driver1, truck1)Atom driving(driver1, truck2)Atom driving(driver1, truck3)Atom driving(driver1, truck4)¤
-var1&Atom at(driver2, p0-11)Atom at(driver2, p0-2)Atom at(driver2, p0-5)Atom at(driver2, p0-6)Atom at(driver2, p1-5)Atom at(driver2, p10-0)Atom at(driver2, p10-1)Atom at(driver2, p11-2)Atom at(driver2, p2-1)Atom at(driver2, p2-4)Atom at(driver2, p2-8)Atom at(driver2, p4-7)Atom at(driver2, p5-9)Atom at(driver2, p6-11)Atom at(driver2, p6-9)Atom at(driver2, p7-2)Atom at(driver2, p8-1)Atom at(driver2, p8-3)Atom at(driver2, p8-4)Atom at(driver2, p8-7)Atom at(driver2, p9-11)Atom at(driver2, p9-4)Atom at(driver2, s0)Atom at(driver2, s1)Atom at(driver2, s10)Atom at(driver2, s11)Atom at(driver2, s2)Atom at(driver2, s3)Atom at(driver2, s4)Atom at(driver2, s5)Atom at(driver2, s6)Atom at(driver2, s7)Atom at(driver2, s8)Atom at(driver2, s9)Atom driving(driver2, truck1)Atom driving(driver2, truck2)Atom driving(driver2, truck3)Atom driving(driver2, truck4)¤
-var2&Atom at(driver3, p0-11)Atom at(driver3, p0-2)Atom at(driver3, p0-5)Atom at(driver3, p0-6)Atom at(driver3, p1-5)Atom at(driver3, p10-0)Atom at(driver3, p10-1)Atom at(driver3, p11-2)Atom at(driver3, p2-1)Atom at(driver3, p2-4)Atom at(driver3, p2-8)Atom at(driver3, p4-7)Atom at(driver3, p5-9)Atom at(driver3, p6-11)Atom at(driver3, p6-9)Atom at(driver3, p7-2)Atom at(driver3, p8-1)Atom at(driver3, p8-3)Atom at(driver3, p8-4)Atom at(driver3, p8-7)Atom at(driver3, p9-11)Atom at(driver3, p9-4)Atom at(driver3, s0)Atom at(driver3, s1)Atom at(driver3, s10)Atom at(driver3, s11)Atom at(driver3, s2)Atom at(driver3, s3)Atom at(driver3, s4)Atom at(driver3, s5)Atom at(driver3, s6)Atom at(driver3, s7)Atom at(driver3, s8)Atom at(driver3, s9)Atom driving(driver3, truck1)Atom driving(driver3, truck2)Atom driving(driver3, truck3)Atom driving(driver3, truck4)¤
-var3&Atom at(driver4, p0-11)Atom at(driver4, p0-2)Atom at(driver4, p0-5)Atom at(driver4, p0-6)Atom at(driver4, p1-5)Atom at(driver4, p10-0)Atom at(driver4, p10-1)Atom at(driver4, p11-2)Atom at(driver4, p2-1)Atom at(driver4, p2-4)Atom at(driver4, p2-8)Atom at(driver4, p4-7)Atom at(driver4, p5-9)Atom at(driver4, p6-11)Atom at(driver4, p6-9)Atom at(driver4, p7-2)Atom at(driver4, p8-1)Atom at(driver4, p8-3)Atom at(driver4, p8-4)Atom at(driver4, p8-7)Atom at(driver4, p9-11)Atom at(driver4, p9-4)Atom at(driver4, s0)Atom at(driver4, s1)Atom at(driver4, s10)Atom at(driver4, s11)Atom at(driver4, s2)Atom at(driver4, s3)Atom at(driver4, s4)Atom at(driver4, s5)Atom at(driver4, s6)Atom at(driver4, s7)Atom at(driver4, s8)Atom at(driver4, s9)Atom driving(driver4, truck1)Atom driving(driver4, truck2)Atom driving(driver4, truck3)Atom driving(driver4, truck4)Š
-var4Atom at(package1, s0)Atom at(package1, s1)Atom at(package1, s10)Atom at(package1, s11)Atom at(package1, s2)Atom at(package1, s3)Atom at(package1, s4)Atom at(package1, s5)Atom at(package1, s6)Atom at(package1, s7)Atom at(package1, s8)Atom at(package1, s9)Atom in(package1, truck1)Atom in(package1, truck2)Atom in(package1, truck3)Atom in(package1, truck4)Š
-var5Atom at(package2, s0)Atom at(package2, s1)Atom at(package2, s10)Atom at(package2, s11)Atom at(package2, s2)Atom at(package2, s3)Atom at(package2, s4)Atom at(package2, s5)Atom at(package2, s6)Atom at(package2, s7)Atom at(package2, s8)Atom at(package2, s9)Atom in(package2, truck1)Atom in(package2, truck2)Atom in(package2, truck3)Atom in(package2, truck4)Š
-var6Atom at(package3, s0)Atom at(package3, s1)Atom at(package3, s10)Atom at(package3, s11)Atom at(package3, s2)Atom at(package3, s3)Atom at(package3, s4)Atom at(package3, s5)Atom at(package3, s6)Atom at(package3, s7)Atom at(package3, s8)Atom at(package3, s9)Atom in(package3, truck1)Atom in(package3, truck2)Atom in(package3, truck3)Atom in(package3, truck4)Š
-var7Atom at(package4, s0)Atom at(package4, s1)Atom at(package4, s10)Atom at(package4, s11)Atom at(package4, s2)Atom at(package4, s3)Atom at(package4, s4)Atom at(package4, s5)Atom at(package4, s6)Atom at(package4, s7)Atom at(package4, s8)Atom at(package4, s9)Atom in(package4, truck1)Atom in(package4, truck2)Atom in(package4, truck3)Atom in(package4, truck4)Š
-var8Atom at(package5, s0)Atom at(package5, s1)Atom at(package5, s10)Atom at(package5, s11)Atom at(package5, s2)Atom at(package5, s3)Atom at(package5, s4)Atom at(package5, s5)Atom at(package5, s6)Atom at(package5, s7)Atom at(package5, s8)Atom at(package5, s9)Atom in(package5, truck1)Atom in(package5, truck2)Atom in(package5, truck3)Atom in(package5, truck4)Š
-var9Atom at(package6, s0)Atom at(package6, s1)Atom at(package6, s10)Atom at(package6, s11)Atom at(package6, s2)Atom at(package6, s3)Atom at(package6, s4)Atom at(package6, s5)Atom at(package6, s6)Atom at(package6, s7)Atom at(package6, s8)Atom at(package6, s9)Atom in(package6, truck1)Atom in(package6, truck2)Atom in(package6, truck3)Atom in(package6, truck4)‹
-var10Atom at(package7, s0)Atom at(package7, s1)Atom at(package7, s10)Atom at(package7, s11)Atom at(package7, s2)Atom at(package7, s3)Atom at(package7, s4)Atom at(package7, s5)Atom at(package7, s6)Atom at(package7, s7)Atom at(package7, s8)Atom at(package7, s9)Atom in(package7, truck1)Atom in(package7, truck2)Atom in(package7, truck3)Atom in(package7, truck4)‹
-var11Atom at(package8, s0)Atom at(package8, s1)Atom at(package8, s10)Atom at(package8, s11)Atom at(package8, s2)Atom at(package8, s3)Atom at(package8, s4)Atom at(package8, s5)Atom at(package8, s6)Atom at(package8, s7)Atom at(package8, s8)Atom at(package8, s9)Atom in(package8, truck1)Atom in(package8, truck2)Atom in(package8, truck3)Atom in(package8, truck4)‡
-var12Atom at(truck1, s0)Atom at(truck1, s1)Atom at(truck1, s10)Atom at(truck1, s11)Atom at(truck1, s2)Atom at(truck1, s3)Atom at(truck1, s4)Atom at(truck1, s5)Atom at(truck1, s6)Atom at(truck1, s7)Atom at(truck1, s8)Atom at(truck1, s9)‡
-var13Atom at(truck2, s0)Atom at(truck2, s1)Atom at(truck2, s10)Atom at(truck2, s11)Atom at(truck2, s2)Atom at(truck2, s3)Atom at(truck2, s4)Atom at(truck2, s5)Atom at(truck2, s6)Atom at(truck2, s7)Atom at(truck2, s8)Atom at(truck2, s9)‡
-var14Atom at(truck3, s0)Atom at(truck3, s1)Atom at(truck3, s10)Atom at(truck3, s11)Atom at(truck3, s2)Atom at(truck3, s3)Atom at(truck3, s4)Atom at(truck3, s5)Atom at(truck3, s6)Atom at(truck3, s7)Atom at(truck3, s8)Atom at(truck3, s9)‡
-var15Atom at(truck4, s0)Atom at(truck4, s1)Atom at(truck4, s10)Atom at(truck4, s11)Atom at(truck4, s2)Atom at(truck4, s3)Atom at(truck4, s4)Atom at(truck4, s5)Atom at(truck4, s6)Atom at(truck4, s7)Atom at(truck4, s8)Atom at(truck4, s9)8
-var16Atom empty(truck1)NegatedAtom empty(truck1)8
-var17Atom empty(truck2)NegatedAtom empty(truck2)8
-var18Atom empty(truck3)NegatedAtom empty(truck3)8
-var19Atom empty(truck4)NegatedAtom empty(truck4)ä
-  
- 
- 
- 
- 
- 
- 
- 
- 
- 	
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-  
- !
- "
- #
- $
- %ä
- 
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-!
-"
-#
-$
-%ä
- 
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-!
-"
-#
-$
-%ä
- 
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-!
-"
-#
-$
-%`
- 
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-`
- 
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-`
- 
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-`
- 
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-`
- 
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-`
-	 
-	
-	
-	
-	
-	
-	
-	
-	
-		
-	
-
-	
-	
-	
-	
-	`
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-`
- 
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-H
- 
-
-
-
-
-
-
-
-
-	
-
-
-H
- 
-
-
-
-
-
-
-
-
-	
-
-
-H
- 
-
-
-
-
-
-
-
-
-	
-
-
-H
- 
-
-
-
-
-
-
-
-
-	
-
-
-
- "
-"
-"
-"
- 
- #
-#
-#
-#
- 
- $
-$
-$
-$
- 
- %
-%
-%
-%
- "( 
-
-    *<
- 
-
-
-
-	
- 
-	
-
-
- 
-
-2C
-board-truck driver1 truck1 s0
- 
- 
- "
- "
-2C
-board-truck driver1 truck1 s1
-
- 
- "
- "
-2D
-board-truck driver1 truck1 s10
-
- 
- "
- "
-2D
-board-truck driver1 truck1 s11
-
- 
- "
- "
-2C
-board-truck driver1 truck1 s2
-
- 
- "
- "
-2C
-board-truck driver1 truck1 s3
-
- 
- "
- "
-2C
-board-truck driver1 truck1 s4
-
- 
- "
- "
-2C
-board-truck driver1 truck1 s5
-
- 
- "
- "
-2C
-board-truck driver1 truck1 s6
-
- 
- "
- "
-2C
-board-truck driver1 truck1 s7
-	
- 
- "
- "
-2C
-board-truck driver1 truck1 s8
-
-
-  
- "
- "
-2C
-board-truck driver1 truck1 s9
-
- !
- "
- "
-2C
-board-truck driver1 truck2 s0
- 
- 
- "
- #
-2C
-board-truck driver1 truck2 s1
-
- 
- "
- #
-2D
-board-truck driver1 truck2 s10
-
- 
- "
- #
-2D
-board-truck driver1 truck2 s11
-
- 
- "
- #
-2C
-board-truck driver1 truck2 s2
-
- 
- "
- #
-2C
-board-truck driver1 truck2 s3
-
- 
- "
- #
-2C
-board-truck driver1 truck2 s4
-
- 
- "
- #
-2C
-board-truck driver1 truck2 s5
-
- 
- "
- #
-2C
-board-truck driver1 truck2 s6
-
- 
- "
- #
-2C
-board-truck driver1 truck2 s7
-	
- 
- "
- #
-2C
-board-truck driver1 truck2 s8
-
-
-  
- "
- #
-2C
-board-truck driver1 truck2 s9
-
- !
- "
- #
-2C
-board-truck driver1 truck3 s0
- 
- 
- "
- $
-2C
-board-truck driver1 truck3 s1
-
- 
- "
- $
-2D
-board-truck driver1 truck3 s10
-
- 
- "
- $
-2D
-board-truck driver1 truck3 s11
-
- 
- "
- $
-2C
-board-truck driver1 truck3 s2
-
- 
- "
- $
-2C
-board-truck driver1 truck3 s3
-
- 
- "
- $
-2C
-board-truck driver1 truck3 s4
-
- 
- "
- $
-2C
-board-truck driver1 truck3 s5
-
- 
- "
- $
-2C
-board-truck driver1 truck3 s6
-
- 
- "
- $
-2C
-board-truck driver1 truck3 s7
-	
- 
- "
- $
-2C
-board-truck driver1 truck3 s8
-
-
-  
- "
- $
-2C
-board-truck driver1 truck3 s9
-
- !
- "
- $
-2C
-board-truck driver1 truck4 s0
- 
- 
- "
- %
-2C
-board-truck driver1 truck4 s1
-
- 
- "
- %
-2D
-board-truck driver1 truck4 s10
-
- 
- "
- %
-2D
-board-truck driver1 truck4 s11
-
- 
- "
- %
-2C
-board-truck driver1 truck4 s2
-
- 
- "
- %
-2C
-board-truck driver1 truck4 s3
-
- 
- "
- %
-2C
-board-truck driver1 truck4 s4
-
- 
- "
- %
-2C
-board-truck driver1 truck4 s5
-
- 
- "
- %
-2C
-board-truck driver1 truck4 s6
-
- 
- "
- %
-2C
-board-truck driver1 truck4 s7
-	
- 
- "
- %
-2C
-board-truck driver1 truck4 s8
-
-
-  
- "
- %
-2C
-board-truck driver1 truck4 s9
-
- !
- "
- %
-2C
-board-truck driver2 truck1 s0
- 
-
- "
-"
-2C
-board-truck driver2 truck1 s1
-
-
- "
-"
-2D
-board-truck driver2 truck1 s10
-
-
- "
-"
-2D
-board-truck driver2 truck1 s11
-
-
- "
-"
-2C
-board-truck driver2 truck1 s2
-
-
- "
-"
-2C
-board-truck driver2 truck1 s3
-
-
- "
-"
-2C
-board-truck driver2 truck1 s4
-
-
- "
-"
-2C
-board-truck driver2 truck1 s5
-
-
- "
-"
-2C
-board-truck driver2 truck1 s6
-
-
- "
-"
-2C
-board-truck driver2 truck1 s7
-	
-
- "
-"
-2C
-board-truck driver2 truck1 s8
-
-
- 
- "
-"
-2C
-board-truck driver2 truck1 s9
-
-!
- "
-"
-2C
-board-truck driver2 truck2 s0
- 
-
- "
-#
-2C
-board-truck driver2 truck2 s1
-
-
- "
-#
-2D
-board-truck driver2 truck2 s10
-
-
- "
-#
-2D
-board-truck driver2 truck2 s11
-
-
- "
-#
-2C
-board-truck driver2 truck2 s2
-
-
- "
-#
-2C
-board-truck driver2 truck2 s3
-
-
- "
-#
-2C
-board-truck driver2 truck2 s4
-
-
- "
-#
-2C
-board-truck driver2 truck2 s5
-
-
- "
-#
-2C
-board-truck driver2 truck2 s6
-
-
- "
-#
-2C
-board-truck driver2 truck2 s7
-	
-
- "
-#
-2C
-board-truck driver2 truck2 s8
-
-
- 
- "
-#
-2C
-board-truck driver2 truck2 s9
-
-!
- "
-#
-2C
-board-truck driver2 truck3 s0
- 
-
- "
-$
-2C
-board-truck driver2 truck3 s1
-
-
- "
-$
-2D
-board-truck driver2 truck3 s10
-
-
- "
-$
-2D
-board-truck driver2 truck3 s11
-
-
- "
-$
-2C
-board-truck driver2 truck3 s2
-
-
- "
-$
-2C
-board-truck driver2 truck3 s3
-
-
- "
-$
-2C
-board-truck driver2 truck3 s4
-
-
- "
-$
-2C
-board-truck driver2 truck3 s5
-
-
- "
-$
-2C
-board-truck driver2 truck3 s6
-
-
- "
-$
-2C
-board-truck driver2 truck3 s7
-	
-
- "
-$
-2C
-board-truck driver2 truck3 s8
-
-
- 
- "
-$
-2C
-board-truck driver2 truck3 s9
-
-!
- "
-$
-2C
-board-truck driver2 truck4 s0
- 
-
- "
-%
-2C
-board-truck driver2 truck4 s1
-
-
- "
-%
-2D
-board-truck driver2 truck4 s10
-
-
- "
-%
-2D
-board-truck driver2 truck4 s11
-
-
- "
-%
-2C
-board-truck driver2 truck4 s2
-
-
- "
-%
-2C
-board-truck driver2 truck4 s3
-
-
- "
-%
-2C
-board-truck driver2 truck4 s4
-
-
- "
-%
-2C
-board-truck driver2 truck4 s5
-
-
- "
-%
-2C
-board-truck driver2 truck4 s6
-
-
- "
-%
-2C
-board-truck driver2 truck4 s7
-	
-
- "
-%
-2C
-board-truck driver2 truck4 s8
-
-
- 
- "
-%
-2C
-board-truck driver2 truck4 s9
-
-!
- "
-%
-2C
-board-truck driver3 truck1 s0
- 
-
- "
-"
-2C
-board-truck driver3 truck1 s1
-
-
- "
-"
-2D
-board-truck driver3 truck1 s10
-
-
- "
-"
-2D
-board-truck driver3 truck1 s11
-
-
- "
-"
-2C
-board-truck driver3 truck1 s2
-
-
- "
-"
-2C
-board-truck driver3 truck1 s3
-
-
- "
-"
-2C
-board-truck driver3 truck1 s4
-
-
- "
-"
-2C
-board-truck driver3 truck1 s5
-
-
- "
-"
-2C
-board-truck driver3 truck1 s6
-
-
- "
-"
-2C
-board-truck driver3 truck1 s7
-	
-
- "
-"
-2C
-board-truck driver3 truck1 s8
-
-
- 
- "
-"
-2C
-board-truck driver3 truck1 s9
-
-!
- "
-"
-2C
-board-truck driver3 truck2 s0
- 
-
- "
-#
-2C
-board-truck driver3 truck2 s1
-
-
- "
-#
-2D
-board-truck driver3 truck2 s10
-
-
- "
-#
-2D
-board-truck driver3 truck2 s11
-
-
- "
-#
-2C
-board-truck driver3 truck2 s2
-
-
- "
-#
-2C
-board-truck driver3 truck2 s3
-
-
- "
-#
-2C
-board-truck driver3 truck2 s4
-
-
- "
-#
-2C
-board-truck driver3 truck2 s5
-
-
- "
-#
-2C
-board-truck driver3 truck2 s6
-
-
- "
-#
-2C
-board-truck driver3 truck2 s7
-	
-
- "
-#
-2C
-board-truck driver3 truck2 s8
-
-
- 
- "
-#
-2C
-board-truck driver3 truck2 s9
-
-!
- "
-#
-2C
-board-truck driver3 truck3 s0
- 
-
- "
-$
-2C
-board-truck driver3 truck3 s1
-
-
- "
-$
-2D
-board-truck driver3 truck3 s10
-
-
- "
-$
-2D
-board-truck driver3 truck3 s11
-
-
- "
-$
-2C
-board-truck driver3 truck3 s2
-
-
- "
-$
-2C
-board-truck driver3 truck3 s3
-
-
- "
-$
-2C
-board-truck driver3 truck3 s4
-
-
- "
-$
-2C
-board-truck driver3 truck3 s5
-
-
- "
-$
-2C
-board-truck driver3 truck3 s6
-
-
- "
-$
-2C
-board-truck driver3 truck3 s7
-	
-
- "
-$
-2C
-board-truck driver3 truck3 s8
-
-
- 
- "
-$
-2C
-board-truck driver3 truck3 s9
-
-!
- "
-$
-2C
-board-truck driver3 truck4 s0
- 
-
- "
-%
-2C
-board-truck driver3 truck4 s1
-
-
- "
-%
-2D
-board-truck driver3 truck4 s10
-
-
- "
-%
-2D
-board-truck driver3 truck4 s11
-
-
- "
-%
-2C
-board-truck driver3 truck4 s2
-
-
- "
-%
-2C
-board-truck driver3 truck4 s3
-
-
- "
-%
-2C
-board-truck driver3 truck4 s4
-
-
- "
-%
-2C
-board-truck driver3 truck4 s5
-
-
- "
-%
-2C
-board-truck driver3 truck4 s6
-
-
- "
-%
-2C
-board-truck driver3 truck4 s7
-	
-
- "
-%
-2C
-board-truck driver3 truck4 s8
-
-
- 
- "
-%
-2C
-board-truck driver3 truck4 s9
-
-!
- "
-%
-2C
-board-truck driver4 truck1 s0
- 
-
- "
-"
-2C
-board-truck driver4 truck1 s1
-
-
- "
-"
-2D
-board-truck driver4 truck1 s10
-
-
- "
-"
-2D
-board-truck driver4 truck1 s11
-
-
- "
-"
-2C
-board-truck driver4 truck1 s2
-
-
- "
-"
-2C
-board-truck driver4 truck1 s3
-
-
- "
-"
-2C
-board-truck driver4 truck1 s4
-
-
- "
-"
-2C
-board-truck driver4 truck1 s5
-
-
- "
-"
-2C
-board-truck driver4 truck1 s6
-
-
- "
-"
-2C
-board-truck driver4 truck1 s7
-	
-
- "
-"
-2C
-board-truck driver4 truck1 s8
-
-
- 
- "
-"
-2C
-board-truck driver4 truck1 s9
-
-!
- "
-"
-2C
-board-truck driver4 truck2 s0
- 
-
- "
-#
-2C
-board-truck driver4 truck2 s1
-
-
- "
-#
-2D
-board-truck driver4 truck2 s10
-
-
- "
-#
-2D
-board-truck driver4 truck2 s11
-
-
- "
-#
-2C
-board-truck driver4 truck2 s2
-
-
- "
-#
-2C
-board-truck driver4 truck2 s3
-
-
- "
-#
-2C
-board-truck driver4 truck2 s4
-
-
- "
-#
-2C
-board-truck driver4 truck2 s5
-
-
- "
-#
-2C
-board-truck driver4 truck2 s6
-
-
- "
-#
-2C
-board-truck driver4 truck2 s7
-	
-
- "
-#
-2C
-board-truck driver4 truck2 s8
-
-
- 
- "
-#
-2C
-board-truck driver4 truck2 s9
-
-!
- "
-#
-2C
-board-truck driver4 truck3 s0
- 
-
- "
-$
-2C
-board-truck driver4 truck3 s1
-
-
- "
-$
-2D
-board-truck driver4 truck3 s10
-
-
- "
-$
-2D
-board-truck driver4 truck3 s11
-
-
- "
-$
-2C
-board-truck driver4 truck3 s2
-
-
- "
-$
-2C
-board-truck driver4 truck3 s3
-
-
- "
-$
-2C
-board-truck driver4 truck3 s4
-
-
- "
-$
-2C
-board-truck driver4 truck3 s5
-
-
- "
-$
-2C
-board-truck driver4 truck3 s6
-
-
- "
-$
-2C
-board-truck driver4 truck3 s7
-	
-
- "
-$
-2C
-board-truck driver4 truck3 s8
-
-
- 
- "
-$
-2C
-board-truck driver4 truck3 s9
-
-!
- "
-$
-2C
-board-truck driver4 truck4 s0
- 
-
- "
-%
-2C
-board-truck driver4 truck4 s1
-
-
- "
-%
-2D
-board-truck driver4 truck4 s10
-
-
- "
-%
-2D
-board-truck driver4 truck4 s11
-
-
- "
-%
-2C
-board-truck driver4 truck4 s2
-
-
- "
-%
-2C
-board-truck driver4 truck4 s3
-
-
- "
-%
-2C
-board-truck driver4 truck4 s4
-
-
- "
-%
-2C
-board-truck driver4 truck4 s5
-
-
- "
-%
-2C
-board-truck driver4 truck4 s6
-
-
- "
-%
-2C
-board-truck driver4 truck4 s7
-	
-
- "
-%
-2C
-board-truck driver4 truck4 s8
-
-
- 
- "
-%
-2C
-board-truck driver4 truck4 s9
-
-!
- "
-%
-2A
-!disembark-truck driver1 truck1 s0
- 
- ""
- 
- 2A
-!disembark-truck driver1 truck1 s1
-
- ""
- 
- 2B
-"disembark-truck driver1 truck1 s10
-
- ""
- 
- 2B
-"disembark-truck driver1 truck1 s11
-
- ""
- 
- 2A
-!disembark-truck driver1 truck1 s2
-
- ""
- 
- 2A
-!disembark-truck driver1 truck1 s3
-
- ""
- 
- 2A
-!disembark-truck driver1 truck1 s4
-
- ""
- 
- 2A
-!disembark-truck driver1 truck1 s5
-
- ""
- 
- 2A
-!disembark-truck driver1 truck1 s6
-
- ""
- 
- 2A
-!disembark-truck driver1 truck1 s7
-	
- ""
- 
- 2A
-!disembark-truck driver1 truck1 s8
-
-
- ""
-  
- 2A
-!disembark-truck driver1 truck1 s9
-
- ""
- !
- 2A
-!disembark-truck driver1 truck2 s0
- 
- #"
- 
- 2A
-!disembark-truck driver1 truck2 s1
-
- #"
- 
- 2B
-"disembark-truck driver1 truck2 s10
-
- #"
- 
- 2B
-"disembark-truck driver1 truck2 s11
-
- #"
- 
- 2A
-!disembark-truck driver1 truck2 s2
-
- #"
- 
- 2A
-!disembark-truck driver1 truck2 s3
-
- #"
- 
- 2A
-!disembark-truck driver1 truck2 s4
-
- #"
- 
- 2A
-!disembark-truck driver1 truck2 s5
-
- #"
- 
- 2A
-!disembark-truck driver1 truck2 s6
-
- #"
- 
- 2A
-!disembark-truck driver1 truck2 s7
-	
- #"
- 
- 2A
-!disembark-truck driver1 truck2 s8
-
-
- #"
-  
- 2A
-!disembark-truck driver1 truck2 s9
-
- #"
- !
- 2A
-!disembark-truck driver1 truck3 s0
- 
- $"
- 
- 2A
-!disembark-truck driver1 truck3 s1
-
- $"
- 
- 2B
-"disembark-truck driver1 truck3 s10
-
- $"
- 
- 2B
-"disembark-truck driver1 truck3 s11
-
- $"
- 
- 2A
-!disembark-truck driver1 truck3 s2
-
- $"
- 
- 2A
-!disembark-truck driver1 truck3 s3
-
- $"
- 
- 2A
-!disembark-truck driver1 truck3 s4
-
- $"
- 
- 2A
-!disembark-truck driver1 truck3 s5
-
- $"
- 
- 2A
-!disembark-truck driver1 truck3 s6
-
- $"
- 
- 2A
-!disembark-truck driver1 truck3 s7
-	
- $"
- 
- 2A
-!disembark-truck driver1 truck3 s8
-
-
- $"
-  
- 2A
-!disembark-truck driver1 truck3 s9
-
- $"
- !
- 2A
-!disembark-truck driver1 truck4 s0
- 
- %"
- 
- 2A
-!disembark-truck driver1 truck4 s1
-
- %"
- 
- 2B
-"disembark-truck driver1 truck4 s10
-
- %"
- 
- 2B
-"disembark-truck driver1 truck4 s11
-
- %"
- 
- 2A
-!disembark-truck driver1 truck4 s2
-
- %"
- 
- 2A
-!disembark-truck driver1 truck4 s3
-
- %"
- 
- 2A
-!disembark-truck driver1 truck4 s4
-
- %"
- 
- 2A
-!disembark-truck driver1 truck4 s5
-
- %"
- 
- 2A
-!disembark-truck driver1 truck4 s6
-
- %"
- 
- 2A
-!disembark-truck driver1 truck4 s7
-	
- %"
- 
- 2A
-!disembark-truck driver1 truck4 s8
-
-
- %"
-  
- 2A
-!disembark-truck driver1 truck4 s9
-
- %"
- !
- 2A
-!disembark-truck driver2 truck1 s0
- 
-""
-
- 2A
-!disembark-truck driver2 truck1 s1
-
-""
-
- 2B
-"disembark-truck driver2 truck1 s10
-
-""
-
- 2B
-"disembark-truck driver2 truck1 s11
-
-""
-
- 2A
-!disembark-truck driver2 truck1 s2
-
-""
-
- 2A
-!disembark-truck driver2 truck1 s3
-
-""
-
- 2A
-!disembark-truck driver2 truck1 s4
-
-""
-
- 2A
-!disembark-truck driver2 truck1 s5
-
-""
-
- 2A
-!disembark-truck driver2 truck1 s6
-
-""
-
- 2A
-!disembark-truck driver2 truck1 s7
-	
-""
-
- 2A
-!disembark-truck driver2 truck1 s8
-
-
-""
- 
- 2A
-!disembark-truck driver2 truck1 s9
-
-""
-!
- 2A
-!disembark-truck driver2 truck2 s0
- 
-#"
-
- 2A
-!disembark-truck driver2 truck2 s1
-
-#"
-
- 2B
-"disembark-truck driver2 truck2 s10
-
-#"
-
- 2B
-"disembark-truck driver2 truck2 s11
-
-#"
-
- 2A
-!disembark-truck driver2 truck2 s2
-
-#"
-
- 2A
-!disembark-truck driver2 truck2 s3
-
-#"
-
- 2A
-!disembark-truck driver2 truck2 s4
-
-#"
-
- 2A
-!disembark-truck driver2 truck2 s5
-
-#"
-
- 2A
-!disembark-truck driver2 truck2 s6
-
-#"
-
- 2A
-!disembark-truck driver2 truck2 s7
-	
-#"
-
- 2A
-!disembark-truck driver2 truck2 s8
-
-
-#"
- 
- 2A
-!disembark-truck driver2 truck2 s9
-
-#"
-!
- 2A
-!disembark-truck driver2 truck3 s0
- 
-$"
-
- 2A
-!disembark-truck driver2 truck3 s1
-
-$"
-
- 2B
-"disembark-truck driver2 truck3 s10
-
-$"
-
- 2B
-"disembark-truck driver2 truck3 s11
-
-$"
-
- 2A
-!disembark-truck driver2 truck3 s2
-
-$"
-
- 2A
-!disembark-truck driver2 truck3 s3
-
-$"
-
- 2A
-!disembark-truck driver2 truck3 s4
-
-$"
-
- 2A
-!disembark-truck driver2 truck3 s5
-
-$"
-
- 2A
-!disembark-truck driver2 truck3 s6
-
-$"
-
- 2A
-!disembark-truck driver2 truck3 s7
-	
-$"
-
- 2A
-!disembark-truck driver2 truck3 s8
-
-
-$"
- 
- 2A
-!disembark-truck driver2 truck3 s9
-
-$"
-!
- 2A
-!disembark-truck driver2 truck4 s0
- 
-%"
-
- 2A
-!disembark-truck driver2 truck4 s1
-
-%"
-
- 2B
-"disembark-truck driver2 truck4 s10
-
-%"
-
- 2B
-"disembark-truck driver2 truck4 s11
-
-%"
-
- 2A
-!disembark-truck driver2 truck4 s2
-
-%"
-
- 2A
-!disembark-truck driver2 truck4 s3
-
-%"
-
- 2A
-!disembark-truck driver2 truck4 s4
-
-%"
-
- 2A
-!disembark-truck driver2 truck4 s5
-
-%"
-
- 2A
-!disembark-truck driver2 truck4 s6
-
-%"
-
- 2A
-!disembark-truck driver2 truck4 s7
-	
-%"
-
- 2A
-!disembark-truck driver2 truck4 s8
-
-
-%"
- 
- 2A
-!disembark-truck driver2 truck4 s9
-
-%"
-!
- 2A
-!disembark-truck driver3 truck1 s0
- 
-""
-
- 2A
-!disembark-truck driver3 truck1 s1
-
-""
-
- 2B
-"disembark-truck driver3 truck1 s10
-
-""
-
- 2B
-"disembark-truck driver3 truck1 s11
-
-""
-
- 2A
-!disembark-truck driver3 truck1 s2
-
-""
-
- 2A
-!disembark-truck driver3 truck1 s3
-
-""
-
- 2A
-!disembark-truck driver3 truck1 s4
-
-""
-
- 2A
-!disembark-truck driver3 truck1 s5
-
-""
-
- 2A
-!disembark-truck driver3 truck1 s6
-
-""
-
- 2A
-!disembark-truck driver3 truck1 s7
-	
-""
-
- 2A
-!disembark-truck driver3 truck1 s8
-
-
-""
- 
- 2A
-!disembark-truck driver3 truck1 s9
-
-""
-!
- 2A
-!disembark-truck driver3 truck2 s0
- 
-#"
-
- 2A
-!disembark-truck driver3 truck2 s1
-
-#"
-
- 2B
-"disembark-truck driver3 truck2 s10
-
-#"
-
- 2B
-"disembark-truck driver3 truck2 s11
-
-#"
-
- 2A
-!disembark-truck driver3 truck2 s2
-
-#"
-
- 2A
-!disembark-truck driver3 truck2 s3
-
-#"
-
- 2A
-!disembark-truck driver3 truck2 s4
-
-#"
-
- 2A
-!disembark-truck driver3 truck2 s5
-
-#"
-
- 2A
-!disembark-truck driver3 truck2 s6
-
-#"
-
- 2A
-!disembark-truck driver3 truck2 s7
-	
-#"
-
- 2A
-!disembark-truck driver3 truck2 s8
-
-
-#"
- 
- 2A
-!disembark-truck driver3 truck2 s9
-
-#"
-!
- 2A
-!disembark-truck driver3 truck3 s0
- 
-$"
-
- 2A
-!disembark-truck driver3 truck3 s1
-
-$"
-
- 2B
-"disembark-truck driver3 truck3 s10
-
-$"
-
- 2B
-"disembark-truck driver3 truck3 s11
-
-$"
-
- 2A
-!disembark-truck driver3 truck3 s2
-
-$"
-
- 2A
-!disembark-truck driver3 truck3 s3
-
-$"
-
- 2A
-!disembark-truck driver3 truck3 s4
-
-$"
-
- 2A
-!disembark-truck driver3 truck3 s5
-
-$"
-
- 2A
-!disembark-truck driver3 truck3 s6
-
-$"
-
- 2A
-!disembark-truck driver3 truck3 s7
-	
-$"
-
- 2A
-!disembark-truck driver3 truck3 s8
-
-
-$"
- 
- 2A
-!disembark-truck driver3 truck3 s9
-
-$"
-!
- 2A
-!disembark-truck driver3 truck4 s0
- 
-%"
-
- 2A
-!disembark-truck driver3 truck4 s1
-
-%"
-
- 2B
-"disembark-truck driver3 truck4 s10
-
-%"
-
- 2B
-"disembark-truck driver3 truck4 s11
-
-%"
-
- 2A
-!disembark-truck driver3 truck4 s2
-
-%"
-
- 2A
-!disembark-truck driver3 truck4 s3
-
-%"
-
- 2A
-!disembark-truck driver3 truck4 s4
-
-%"
-
- 2A
-!disembark-truck driver3 truck4 s5
-
-%"
-
- 2A
-!disembark-truck driver3 truck4 s6
-
-%"
-
- 2A
-!disembark-truck driver3 truck4 s7
-	
-%"
-
- 2A
-!disembark-truck driver3 truck4 s8
-
-
-%"
- 
- 2A
-!disembark-truck driver3 truck4 s9
-
-%"
-!
- 2A
-!disembark-truck driver4 truck1 s0
- 
-""
-
- 2A
-!disembark-truck driver4 truck1 s1
-
-""
-
- 2B
-"disembark-truck driver4 truck1 s10
-
-""
-
- 2B
-"disembark-truck driver4 truck1 s11
-
-""
-
- 2A
-!disembark-truck driver4 truck1 s2
-
-""
-
- 2A
-!disembark-truck driver4 truck1 s3
-
-""
-
- 2A
-!disembark-truck driver4 truck1 s4
-
-""
-
- 2A
-!disembark-truck driver4 truck1 s5
-
-""
-
- 2A
-!disembark-truck driver4 truck1 s6
-
-""
-
- 2A
-!disembark-truck driver4 truck1 s7
-	
-""
-
- 2A
-!disembark-truck driver4 truck1 s8
-
-
-""
- 
- 2A
-!disembark-truck driver4 truck1 s9
-
-""
-!
- 2A
-!disembark-truck driver4 truck2 s0
- 
-#"
-
- 2A
-!disembark-truck driver4 truck2 s1
-
-#"
-
- 2B
-"disembark-truck driver4 truck2 s10
-
-#"
-
- 2B
-"disembark-truck driver4 truck2 s11
-
-#"
-
- 2A
-!disembark-truck driver4 truck2 s2
-
-#"
-
- 2A
-!disembark-truck driver4 truck2 s3
-
-#"
-
- 2A
-!disembark-truck driver4 truck2 s4
-
-#"
-
- 2A
-!disembark-truck driver4 truck2 s5
-
-#"
-
- 2A
-!disembark-truck driver4 truck2 s6
-
-#"
-
- 2A
-!disembark-truck driver4 truck2 s7
-	
-#"
-
- 2A
-!disembark-truck driver4 truck2 s8
-
-
-#"
- 
- 2A
-!disembark-truck driver4 truck2 s9
-
-#"
-!
- 2A
-!disembark-truck driver4 truck3 s0
- 
-$"
-
- 2A
-!disembark-truck driver4 truck3 s1
-
-$"
-
- 2B
-"disembark-truck driver4 truck3 s10
-
-$"
-
- 2B
-"disembark-truck driver4 truck3 s11
-
-$"
-
- 2A
-!disembark-truck driver4 truck3 s2
-
-$"
-
- 2A
-!disembark-truck driver4 truck3 s3
-
-$"
-
- 2A
-!disembark-truck driver4 truck3 s4
-
-$"
-
- 2A
-!disembark-truck driver4 truck3 s5
-
-$"
-
- 2A
-!disembark-truck driver4 truck3 s6
-
-$"
-
- 2A
-!disembark-truck driver4 truck3 s7
-	
-$"
-
- 2A
-!disembark-truck driver4 truck3 s8
-
-
-$"
- 
- 2A
-!disembark-truck driver4 truck3 s9
-
-$"
-!
- 2A
-!disembark-truck driver4 truck4 s0
- 
-%"
-
- 2A
-!disembark-truck driver4 truck4 s1
-
-%"
-
- 2B
-"disembark-truck driver4 truck4 s10
-
-%"
-
- 2B
-"disembark-truck driver4 truck4 s11
-
-%"
-
- 2A
-!disembark-truck driver4 truck4 s2
-
-%"
-
- 2A
-!disembark-truck driver4 truck4 s3
-
-%"
-
- 2A
-!disembark-truck driver4 truck4 s4
-
-%"
-
- 2A
-!disembark-truck driver4 truck4 s5
-
-%"
-
- 2A
-!disembark-truck driver4 truck4 s6
-
-%"
-
- 2A
-!disembark-truck driver4 truck4 s7
-	
-%"
-
- 2A
-!disembark-truck driver4 truck4 s8
-
-
-%"
- 
- 2A
-!disembark-truck driver4 truck4 s9
-
-%"
-!
- 2:
- drive-truck truck1 s0 s1 driver1
- "
- "
-2:
- drive-truck truck1 s0 s1 driver2
-"
- "
-2:
- drive-truck truck1 s0 s1 driver3
-"
- "
-2:
- drive-truck truck1 s0 s1 driver4
-"
- "
-2;
-!drive-truck truck1 s0 s11 driver1
- "
- "
-2;
-!drive-truck truck1 s0 s11 driver2
-"
- "
-2;
-!drive-truck truck1 s0 s11 driver3
-"
- "
-2;
-!drive-truck truck1 s0 s11 driver4
-"
- "
-2:
- drive-truck truck1 s0 s3 driver1
- "
- "
-2:
- drive-truck truck1 s0 s3 driver2
-"
- "
-2:
- drive-truck truck1 s0 s3 driver3
-"
- "
-2:
- drive-truck truck1 s0 s3 driver4
-"
- "
-2:
- drive-truck truck1 s0 s5 driver1
- "
- "
-2:
- drive-truck truck1 s0 s5 driver2
-"
- "
-2:
- drive-truck truck1 s0 s5 driver3
-"
- "
-2:
- drive-truck truck1 s0 s5 driver4
-"
- "
-2:
- drive-truck truck1 s0 s8 driver1
- "
- "
-
-2:
- drive-truck truck1 s0 s8 driver2
-"
- "
-
-2:
- drive-truck truck1 s0 s8 driver3
-"
- "
-
-2:
- drive-truck truck1 s0 s8 driver4
-"
- "
-
-2:
- drive-truck truck1 s0 s9 driver1
- "
- "
-2:
- drive-truck truck1 s0 s9 driver2
-"
- "
-2:
- drive-truck truck1 s0 s9 driver3
-"
- "
-2:
- drive-truck truck1 s0 s9 driver4
-"
- "
-2:
- drive-truck truck1 s1 s0 driver1
- "
-"
- 2:
- drive-truck truck1 s1 s0 driver2
-"
-"
- 2:
- drive-truck truck1 s1 s0 driver3
-"
-"
- 2:
- drive-truck truck1 s1 s0 driver4
-"
-"
- 2;
-!drive-truck truck1 s1 s10 driver1
- "
-"
-2;
-!drive-truck truck1 s1 s10 driver2
-"
-"
-2;
-!drive-truck truck1 s1 s10 driver3
-"
-"
-2;
-!drive-truck truck1 s1 s10 driver4
-"
-"
-2:
- drive-truck truck1 s1 s2 driver1
- "
-"
-2:
- drive-truck truck1 s1 s2 driver2
-"
-"
-2:
- drive-truck truck1 s1 s2 driver3
-"
-"
-2:
- drive-truck truck1 s1 s2 driver4
-"
-"
-2:
- drive-truck truck1 s1 s6 driver1
- "
-"
-2:
- drive-truck truck1 s1 s6 driver2
-"
-"
-2:
- drive-truck truck1 s1 s6 driver3
-"
-"
-2:
- drive-truck truck1 s1 s6 driver4
-"
-"
-2:
- drive-truck truck1 s1 s9 driver1
- "
-"
-2:
- drive-truck truck1 s1 s9 driver2
-"
-"
-2:
- drive-truck truck1 s1 s9 driver3
-"
-"
-2:
- drive-truck truck1 s1 s9 driver4
-"
-"
-2;
-!drive-truck truck1 s10 s1 driver1
- "
-"
-2;
-!drive-truck truck1 s10 s1 driver2
-"
-"
-2;
-!drive-truck truck1 s10 s1 driver3
-"
-"
-2;
-!drive-truck truck1 s10 s1 driver4
-"
-"
-2;
-!drive-truck truck1 s10 s2 driver1
- "
-"
-2;
-!drive-truck truck1 s10 s2 driver2
-"
-"
-2;
-!drive-truck truck1 s10 s2 driver3
-"
-"
-2;
-!drive-truck truck1 s10 s2 driver4
-"
-"
-2;
-!drive-truck truck1 s10 s3 driver1
- "
-"
-2;
-!drive-truck truck1 s10 s3 driver2
-"
-"
-2;
-!drive-truck truck1 s10 s3 driver3
-"
-"
-2;
-!drive-truck truck1 s10 s3 driver4
-"
-"
-2;
-!drive-truck truck1 s10 s6 driver1
- "
-"
-2;
-!drive-truck truck1 s10 s6 driver2
-"
-"
-2;
-!drive-truck truck1 s10 s6 driver3
-"
-"
-2;
-!drive-truck truck1 s10 s6 driver4
-"
-"
-2;
-!drive-truck truck1 s11 s0 driver1
- "
-"
- 2;
-!drive-truck truck1 s11 s0 driver2
-"
-"
- 2;
-!drive-truck truck1 s11 s0 driver3
-"
-"
- 2;
-!drive-truck truck1 s11 s0 driver4
-"
-"
- 2;
-!drive-truck truck1 s11 s3 driver1
- "
-"
-2;
-!drive-truck truck1 s11 s3 driver2
-"
-"
-2;
-!drive-truck truck1 s11 s3 driver3
-"
-"
-2;
-!drive-truck truck1 s11 s3 driver4
-"
-"
-2;
-!drive-truck truck1 s11 s7 driver1
- "
-"
-	2;
-!drive-truck truck1 s11 s7 driver2
-"
-"
-	2;
-!drive-truck truck1 s11 s7 driver3
-"
-"
-	2;
-!drive-truck truck1 s11 s7 driver4
-"
-"
-	2:
- drive-truck truck1 s2 s1 driver1
- "
-"
-2:
- drive-truck truck1 s2 s1 driver2
-"
-"
-2:
- drive-truck truck1 s2 s1 driver3
-"
-"
-2:
- drive-truck truck1 s2 s1 driver4
-"
-"
-2;
-!drive-truck truck1 s2 s10 driver1
- "
-"
-2;
-!drive-truck truck1 s2 s10 driver2
-"
-"
-2;
-!drive-truck truck1 s2 s10 driver3
-"
-"
-2;
-!drive-truck truck1 s2 s10 driver4
-"
-"
-2:
- drive-truck truck1 s2 s3 driver1
- "
-"
-2:
- drive-truck truck1 s2 s3 driver2
-"
-"
-2:
- drive-truck truck1 s2 s3 driver3
-"
-"
-2:
- drive-truck truck1 s2 s3 driver4
-"
-"
-2:
- drive-truck truck1 s2 s5 driver1
- "
-"
-2:
- drive-truck truck1 s2 s5 driver2
-"
-"
-2:
- drive-truck truck1 s2 s5 driver3
-"
-"
-2:
- drive-truck truck1 s2 s5 driver4
-"
-"
-2:
- drive-truck truck1 s2 s8 driver1
- "
-"
-
-2:
- drive-truck truck1 s2 s8 driver2
-"
-"
-
-2:
- drive-truck truck1 s2 s8 driver3
-"
-"
-
-2:
- drive-truck truck1 s2 s8 driver4
-"
-"
-
-2:
- drive-truck truck1 s2 s9 driver1
- "
-"
-2:
- drive-truck truck1 s2 s9 driver2
-"
-"
-2:
- drive-truck truck1 s2 s9 driver3
-"
-"
-2:
- drive-truck truck1 s2 s9 driver4
-"
-"
-2:
- drive-truck truck1 s3 s0 driver1
- "
-"
- 2:
- drive-truck truck1 s3 s0 driver2
-"
-"
- 2:
- drive-truck truck1 s3 s0 driver3
-"
-"
- 2:
- drive-truck truck1 s3 s0 driver4
-"
-"
- 2;
-!drive-truck truck1 s3 s10 driver1
- "
-"
-2;
-!drive-truck truck1 s3 s10 driver2
-"
-"
-2;
-!drive-truck truck1 s3 s10 driver3
-"
-"
-2;
-!drive-truck truck1 s3 s10 driver4
-"
-"
-2;
-!drive-truck truck1 s3 s11 driver1
- "
-"
-2;
-!drive-truck truck1 s3 s11 driver2
-"
-"
-2;
-!drive-truck truck1 s3 s11 driver3
-"
-"
-2;
-!drive-truck truck1 s3 s11 driver4
-"
-"
-2:
- drive-truck truck1 s3 s2 driver1
- "
-"
-2:
- drive-truck truck1 s3 s2 driver2
-"
-"
-2:
- drive-truck truck1 s3 s2 driver3
-"
-"
-2:
- drive-truck truck1 s3 s2 driver4
-"
-"
-2:
- drive-truck truck1 s3 s5 driver1
- "
-"
-2:
- drive-truck truck1 s3 s5 driver2
-"
-"
-2:
- drive-truck truck1 s3 s5 driver3
-"
-"
-2:
- drive-truck truck1 s3 s5 driver4
-"
-"
-2:
- drive-truck truck1 s3 s6 driver1
- "
-"
-2:
- drive-truck truck1 s3 s6 driver2
-"
-"
-2:
- drive-truck truck1 s3 s6 driver3
-"
-"
-2:
- drive-truck truck1 s3 s6 driver4
-"
-"
-2:
- drive-truck truck1 s3 s8 driver1
- "
-"
-
-2:
- drive-truck truck1 s3 s8 driver2
-"
-"
-
-2:
- drive-truck truck1 s3 s8 driver3
-"
-"
-
-2:
- drive-truck truck1 s3 s8 driver4
-"
-"
-
-2:
- drive-truck truck1 s3 s9 driver1
- "
-"
-2:
- drive-truck truck1 s3 s9 driver2
-"
-"
-2:
- drive-truck truck1 s3 s9 driver3
-"
-"
-2:
- drive-truck truck1 s3 s9 driver4
-"
-"
-2:
- drive-truck truck1 s4 s5 driver1
- "
-"
-2:
- drive-truck truck1 s4 s5 driver2
-"
-"
-2:
- drive-truck truck1 s4 s5 driver3
-"
-"
-2:
- drive-truck truck1 s4 s5 driver4
-"
-"
-2:
- drive-truck truck1 s4 s6 driver1
- "
-"
-2:
- drive-truck truck1 s4 s6 driver2
-"
-"
-2:
- drive-truck truck1 s4 s6 driver3
-"
-"
-2:
- drive-truck truck1 s4 s6 driver4
-"
-"
-2:
- drive-truck truck1 s4 s9 driver1
- "
-"
-2:
- drive-truck truck1 s4 s9 driver2
-"
-"
-2:
- drive-truck truck1 s4 s9 driver3
-"
-"
-2:
- drive-truck truck1 s4 s9 driver4
-"
-"
-2:
- drive-truck truck1 s5 s0 driver1
- "
-"
- 2:
- drive-truck truck1 s5 s0 driver2
-"
-"
- 2:
- drive-truck truck1 s5 s0 driver3
-"
-"
- 2:
- drive-truck truck1 s5 s0 driver4
-"
-"
- 2:
- drive-truck truck1 s5 s2 driver1
- "
-"
-2:
- drive-truck truck1 s5 s2 driver2
-"
-"
-2:
- drive-truck truck1 s5 s2 driver3
-"
-"
-2:
- drive-truck truck1 s5 s2 driver4
-"
-"
-2:
- drive-truck truck1 s5 s3 driver1
- "
-"
-2:
- drive-truck truck1 s5 s3 driver2
-"
-"
-2:
- drive-truck truck1 s5 s3 driver3
-"
-"
-2:
- drive-truck truck1 s5 s3 driver4
-"
-"
-2:
- drive-truck truck1 s5 s4 driver1
- "
-"
-2:
- drive-truck truck1 s5 s4 driver2
-"
-"
-2:
- drive-truck truck1 s5 s4 driver3
-"
-"
-2:
- drive-truck truck1 s5 s4 driver4
-"
-"
-2:
- drive-truck truck1 s5 s7 driver1
- "
-"
-	2:
- drive-truck truck1 s5 s7 driver2
-"
-"
-	2:
- drive-truck truck1 s5 s7 driver3
-"
-"
-	2:
- drive-truck truck1 s5 s7 driver4
-"
-"
-	2:
- drive-truck truck1 s5 s8 driver1
- "
-"
-
-2:
- drive-truck truck1 s5 s8 driver2
-"
-"
-
-2:
- drive-truck truck1 s5 s8 driver3
-"
-"
-
-2:
- drive-truck truck1 s5 s8 driver4
-"
-"
-
-2:
- drive-truck truck1 s5 s9 driver1
- "
-"
-2:
- drive-truck truck1 s5 s9 driver2
-"
-"
-2:
- drive-truck truck1 s5 s9 driver3
-"
-"
-2:
- drive-truck truck1 s5 s9 driver4
-"
-"
-2:
- drive-truck truck1 s6 s1 driver1
- "
-"
-2:
- drive-truck truck1 s6 s1 driver2
-"
-"
-2:
- drive-truck truck1 s6 s1 driver3
-"
-"
-2:
- drive-truck truck1 s6 s1 driver4
-"
-"
-2;
-!drive-truck truck1 s6 s10 driver1
- "
-"
-2;
-!drive-truck truck1 s6 s10 driver2
-"
-"
-2;
-!drive-truck truck1 s6 s10 driver3
-"
-"
-2;
-!drive-truck truck1 s6 s10 driver4
-"
-"
-2:
- drive-truck truck1 s6 s3 driver1
- "
-"
-2:
- drive-truck truck1 s6 s3 driver2
-"
-"
-2:
- drive-truck truck1 s6 s3 driver3
-"
-"
-2:
- drive-truck truck1 s6 s3 driver4
-"
-"
-2:
- drive-truck truck1 s6 s4 driver1
- "
-"
-2:
- drive-truck truck1 s6 s4 driver2
-"
-"
-2:
- drive-truck truck1 s6 s4 driver3
-"
-"
-2:
- drive-truck truck1 s6 s4 driver4
-"
-"
-2:
- drive-truck truck1 s6 s7 driver1
- "
-"
-	2:
- drive-truck truck1 s6 s7 driver2
-"
-"
-	2:
- drive-truck truck1 s6 s7 driver3
-"
-"
-	2:
- drive-truck truck1 s6 s7 driver4
-"
-"
-	2:
- drive-truck truck1 s6 s8 driver1
- "
-"
-
-2:
- drive-truck truck1 s6 s8 driver2
-"
-"
-
-2:
- drive-truck truck1 s6 s8 driver3
-"
-"
-
-2:
- drive-truck truck1 s6 s8 driver4
-"
-"
-
-2:
- drive-truck truck1 s6 s9 driver1
- "
-"
-2:
- drive-truck truck1 s6 s9 driver2
-"
-"
-2:
- drive-truck truck1 s6 s9 driver3
-"
-"
-2:
- drive-truck truck1 s6 s9 driver4
-"
-"
-2;
-!drive-truck truck1 s7 s11 driver1
- "
-	"
-2;
-!drive-truck truck1 s7 s11 driver2
-"
-	"
-2;
-!drive-truck truck1 s7 s11 driver3
-"
-	"
-2;
-!drive-truck truck1 s7 s11 driver4
-"
-	"
-2:
- drive-truck truck1 s7 s5 driver1
- "
-	"
-2:
- drive-truck truck1 s7 s5 driver2
-"
-	"
-2:
- drive-truck truck1 s7 s5 driver3
-"
-	"
-2:
- drive-truck truck1 s7 s5 driver4
-"
-	"
-2:
- drive-truck truck1 s7 s6 driver1
- "
-	"
-2:
- drive-truck truck1 s7 s6 driver2
-"
-	"
-2:
- drive-truck truck1 s7 s6 driver3
-"
-	"
-2:
- drive-truck truck1 s7 s6 driver4
-"
-	"
-2:
- drive-truck truck1 s7 s9 driver1
- "
-	"
-2:
- drive-truck truck1 s7 s9 driver2
-"
-	"
-2:
- drive-truck truck1 s7 s9 driver3
-"
-	"
-2:
- drive-truck truck1 s7 s9 driver4
-"
-	"
-2:
- drive-truck truck1 s8 s0 driver1
- "
-
-"
- 2:
- drive-truck truck1 s8 s0 driver2
-"
-
-"
- 2:
- drive-truck truck1 s8 s0 driver3
-"
-
-"
- 2:
- drive-truck truck1 s8 s0 driver4
-"
-
-"
- 2:
- drive-truck truck1 s8 s2 driver1
- "
-
-"
-2:
- drive-truck truck1 s8 s2 driver2
-"
-
-"
-2:
- drive-truck truck1 s8 s2 driver3
-"
-
-"
-2:
- drive-truck truck1 s8 s2 driver4
-"
-
-"
-2:
- drive-truck truck1 s8 s3 driver1
- "
-
-"
-2:
- drive-truck truck1 s8 s3 driver2
-"
-
-"
-2:
- drive-truck truck1 s8 s3 driver3
-"
-
-"
-2:
- drive-truck truck1 s8 s3 driver4
-"
-
-"
-2:
- drive-truck truck1 s8 s5 driver1
- "
-
-"
-2:
- drive-truck truck1 s8 s5 driver2
-"
-
-"
-2:
- drive-truck truck1 s8 s5 driver3
-"
-
-"
-2:
- drive-truck truck1 s8 s5 driver4
-"
-
-"
-2:
- drive-truck truck1 s8 s6 driver1
- "
-
-"
-2:
- drive-truck truck1 s8 s6 driver2
-"
-
-"
-2:
- drive-truck truck1 s8 s6 driver3
-"
-
-"
-2:
- drive-truck truck1 s8 s6 driver4
-"
-
-"
-2:
- drive-truck truck1 s8 s9 driver1
- "
-
-"
-2:
- drive-truck truck1 s8 s9 driver2
-"
-
-"
-2:
- drive-truck truck1 s8 s9 driver3
-"
-
-"
-2:
- drive-truck truck1 s8 s9 driver4
-"
-
-"
-2:
- drive-truck truck1 s9 s0 driver1
- "
-"
- 2:
- drive-truck truck1 s9 s0 driver2
-"
-"
- 2:
- drive-truck truck1 s9 s0 driver3
-"
-"
- 2:
- drive-truck truck1 s9 s0 driver4
-"
-"
- 2:
- drive-truck truck1 s9 s1 driver1
- "
-"
-2:
- drive-truck truck1 s9 s1 driver2
-"
-"
-2:
- drive-truck truck1 s9 s1 driver3
-"
-"
-2:
- drive-truck truck1 s9 s1 driver4
-"
-"
-2:
- drive-truck truck1 s9 s2 driver1
- "
-"
-2:
- drive-truck truck1 s9 s2 driver2
-"
-"
-2:
- drive-truck truck1 s9 s2 driver3
-"
-"
-2:
- drive-truck truck1 s9 s2 driver4
-"
-"
-2:
- drive-truck truck1 s9 s3 driver1
- "
-"
-2:
- drive-truck truck1 s9 s3 driver2
-"
-"
-2:
- drive-truck truck1 s9 s3 driver3
-"
-"
-2:
- drive-truck truck1 s9 s3 driver4
-"
-"
-2:
- drive-truck truck1 s9 s4 driver1
- "
-"
-2:
- drive-truck truck1 s9 s4 driver2
-"
-"
-2:
- drive-truck truck1 s9 s4 driver3
-"
-"
-2:
- drive-truck truck1 s9 s4 driver4
-"
-"
-2:
- drive-truck truck1 s9 s5 driver1
- "
-"
-2:
- drive-truck truck1 s9 s5 driver2
-"
-"
-2:
- drive-truck truck1 s9 s5 driver3
-"
-"
-2:
- drive-truck truck1 s9 s5 driver4
-"
-"
-2:
- drive-truck truck1 s9 s6 driver1
- "
-"
-2:
- drive-truck truck1 s9 s6 driver2
-"
-"
-2:
- drive-truck truck1 s9 s6 driver3
-"
-"
-2:
- drive-truck truck1 s9 s6 driver4
-"
-"
-2:
- drive-truck truck1 s9 s7 driver1
- "
-"
-	2:
- drive-truck truck1 s9 s7 driver2
-"
-"
-	2:
- drive-truck truck1 s9 s7 driver3
-"
-"
-	2:
- drive-truck truck1 s9 s7 driver4
-"
-"
-	2:
- drive-truck truck1 s9 s8 driver1
- "
-"
-
-2:
- drive-truck truck1 s9 s8 driver2
-"
-"
-
-2:
- drive-truck truck1 s9 s8 driver3
-"
-"
-
-2:
- drive-truck truck1 s9 s8 driver4
-"
-"
-
-2:
- drive-truck truck2 s0 s1 driver1
- #
- "
-2:
- drive-truck truck2 s0 s1 driver2
-#
- "
-2:
- drive-truck truck2 s0 s1 driver3
-#
- "
-2:
- drive-truck truck2 s0 s1 driver4
-#
- "
-2;
-!drive-truck truck2 s0 s11 driver1
- #
- "
-2;
-!drive-truck truck2 s0 s11 driver2
-#
- "
-2;
-!drive-truck truck2 s0 s11 driver3
-#
- "
-2;
-!drive-truck truck2 s0 s11 driver4
-#
- "
-2:
- drive-truck truck2 s0 s3 driver1
- #
- "
-2:
- drive-truck truck2 s0 s3 driver2
-#
- "
-2:
- drive-truck truck2 s0 s3 driver3
-#
- "
-2:
- drive-truck truck2 s0 s3 driver4
-#
- "
-2:
- drive-truck truck2 s0 s5 driver1
- #
- "
-2:
- drive-truck truck2 s0 s5 driver2
-#
- "
-2:
- drive-truck truck2 s0 s5 driver3
-#
- "
-2:
- drive-truck truck2 s0 s5 driver4
-#
- "
-2:
- drive-truck truck2 s0 s8 driver1
- #
- "
-
-2:
- drive-truck truck2 s0 s8 driver2
-#
- "
-
-2:
- drive-truck truck2 s0 s8 driver3
-#
- "
-
-2:
- drive-truck truck2 s0 s8 driver4
-#
- "
-
-2:
- drive-truck truck2 s0 s9 driver1
- #
- "
-2:
- drive-truck truck2 s0 s9 driver2
-#
- "
-2:
- drive-truck truck2 s0 s9 driver3
-#
- "
-2:
- drive-truck truck2 s0 s9 driver4
-#
- "
-2:
- drive-truck truck2 s1 s0 driver1
- #
-"
- 2:
- drive-truck truck2 s1 s0 driver2
-#
-"
- 2:
- drive-truck truck2 s1 s0 driver3
-#
-"
- 2:
- drive-truck truck2 s1 s0 driver4
-#
-"
- 2;
-!drive-truck truck2 s1 s10 driver1
- #
-"
-2;
-!drive-truck truck2 s1 s10 driver2
-#
-"
-2;
-!drive-truck truck2 s1 s10 driver3
-#
-"
-2;
-!drive-truck truck2 s1 s10 driver4
-#
-"
-2:
- drive-truck truck2 s1 s2 driver1
- #
-"
-2:
- drive-truck truck2 s1 s2 driver2
-#
-"
-2:
- drive-truck truck2 s1 s2 driver3
-#
-"
-2:
- drive-truck truck2 s1 s2 driver4
-#
-"
-2:
- drive-truck truck2 s1 s6 driver1
- #
-"
-2:
- drive-truck truck2 s1 s6 driver2
-#
-"
-2:
- drive-truck truck2 s1 s6 driver3
-#
-"
-2:
- drive-truck truck2 s1 s6 driver4
-#
-"
-2:
- drive-truck truck2 s1 s9 driver1
- #
-"
-2:
- drive-truck truck2 s1 s9 driver2
-#
-"
-2:
- drive-truck truck2 s1 s9 driver3
-#
-"
-2:
- drive-truck truck2 s1 s9 driver4
-#
-"
-2;
-!drive-truck truck2 s10 s1 driver1
- #
-"
-2;
-!drive-truck truck2 s10 s1 driver2
-#
-"
-2;
-!drive-truck truck2 s10 s1 driver3
-#
-"
-2;
-!drive-truck truck2 s10 s1 driver4
-#
-"
-2;
-!drive-truck truck2 s10 s2 driver1
- #
-"
-2;
-!drive-truck truck2 s10 s2 driver2
-#
-"
-2;
-!drive-truck truck2 s10 s2 driver3
-#
-"
-2;
-!drive-truck truck2 s10 s2 driver4
-#
-"
-2;
-!drive-truck truck2 s10 s3 driver1
- #
-"
-2;
-!drive-truck truck2 s10 s3 driver2
-#
-"
-2;
-!drive-truck truck2 s10 s3 driver3
-#
-"
-2;
-!drive-truck truck2 s10 s3 driver4
-#
-"
-2;
-!drive-truck truck2 s10 s6 driver1
- #
-"
-2;
-!drive-truck truck2 s10 s6 driver2
-#
-"
-2;
-!drive-truck truck2 s10 s6 driver3
-#
-"
-2;
-!drive-truck truck2 s10 s6 driver4
-#
-"
-2;
-!drive-truck truck2 s11 s0 driver1
- #
-"
- 2;
-!drive-truck truck2 s11 s0 driver2
-#
-"
- 2;
-!drive-truck truck2 s11 s0 driver3
-#
-"
- 2;
-!drive-truck truck2 s11 s0 driver4
-#
-"
- 2;
-!drive-truck truck2 s11 s3 driver1
- #
-"
-2;
-!drive-truck truck2 s11 s3 driver2
-#
-"
-2;
-!drive-truck truck2 s11 s3 driver3
-#
-"
-2;
-!drive-truck truck2 s11 s3 driver4
-#
-"
-2;
-!drive-truck truck2 s11 s7 driver1
- #
-"
-	2;
-!drive-truck truck2 s11 s7 driver2
-#
-"
-	2;
-!drive-truck truck2 s11 s7 driver3
-#
-"
-	2;
-!drive-truck truck2 s11 s7 driver4
-#
-"
-	2:
- drive-truck truck2 s2 s1 driver1
- #
-"
-2:
- drive-truck truck2 s2 s1 driver2
-#
-"
-2:
- drive-truck truck2 s2 s1 driver3
-#
-"
-2:
- drive-truck truck2 s2 s1 driver4
-#
-"
-2;
-!drive-truck truck2 s2 s10 driver1
- #
-"
-2;
-!drive-truck truck2 s2 s10 driver2
-#
-"
-2;
-!drive-truck truck2 s2 s10 driver3
-#
-"
-2;
-!drive-truck truck2 s2 s10 driver4
-#
-"
-2:
- drive-truck truck2 s2 s3 driver1
- #
-"
-2:
- drive-truck truck2 s2 s3 driver2
-#
-"
-2:
- drive-truck truck2 s2 s3 driver3
-#
-"
-2:
- drive-truck truck2 s2 s3 driver4
-#
-"
-2:
- drive-truck truck2 s2 s5 driver1
- #
-"
-2:
- drive-truck truck2 s2 s5 driver2
-#
-"
-2:
- drive-truck truck2 s2 s5 driver3
-#
-"
-2:
- drive-truck truck2 s2 s5 driver4
-#
-"
-2:
- drive-truck truck2 s2 s8 driver1
- #
-"
-
-2:
- drive-truck truck2 s2 s8 driver2
-#
-"
-
-2:
- drive-truck truck2 s2 s8 driver3
-#
-"
-
-2:
- drive-truck truck2 s2 s8 driver4
-#
-"
-
-2:
- drive-truck truck2 s2 s9 driver1
- #
-"
-2:
- drive-truck truck2 s2 s9 driver2
-#
-"
-2:
- drive-truck truck2 s2 s9 driver3
-#
-"
-2:
- drive-truck truck2 s2 s9 driver4
-#
-"
-2:
- drive-truck truck2 s3 s0 driver1
- #
-"
- 2:
- drive-truck truck2 s3 s0 driver2
-#
-"
- 2:
- drive-truck truck2 s3 s0 driver3
-#
-"
- 2:
- drive-truck truck2 s3 s0 driver4
-#
-"
- 2;
-!drive-truck truck2 s3 s10 driver1
- #
-"
-2;
-!drive-truck truck2 s3 s10 driver2
-#
-"
-2;
-!drive-truck truck2 s3 s10 driver3
-#
-"
-2;
-!drive-truck truck2 s3 s10 driver4
-#
-"
-2;
-!drive-truck truck2 s3 s11 driver1
- #
-"
-2;
-!drive-truck truck2 s3 s11 driver2
-#
-"
-2;
-!drive-truck truck2 s3 s11 driver3
-#
-"
-2;
-!drive-truck truck2 s3 s11 driver4
-#
-"
-2:
- drive-truck truck2 s3 s2 driver1
- #
-"
-2:
- drive-truck truck2 s3 s2 driver2
-#
-"
-2:
- drive-truck truck2 s3 s2 driver3
-#
-"
-2:
- drive-truck truck2 s3 s2 driver4
-#
-"
-2:
- drive-truck truck2 s3 s5 driver1
- #
-"
-2:
- drive-truck truck2 s3 s5 driver2
-#
-"
-2:
- drive-truck truck2 s3 s5 driver3
-#
-"
-2:
- drive-truck truck2 s3 s5 driver4
-#
-"
-2:
- drive-truck truck2 s3 s6 driver1
- #
-"
-2:
- drive-truck truck2 s3 s6 driver2
-#
-"
-2:
- drive-truck truck2 s3 s6 driver3
-#
-"
-2:
- drive-truck truck2 s3 s6 driver4
-#
-"
-2:
- drive-truck truck2 s3 s8 driver1
- #
-"
-
-2:
- drive-truck truck2 s3 s8 driver2
-#
-"
-
-2:
- drive-truck truck2 s3 s8 driver3
-#
-"
-
-2:
- drive-truck truck2 s3 s8 driver4
-#
-"
-
-2:
- drive-truck truck2 s3 s9 driver1
- #
-"
-2:
- drive-truck truck2 s3 s9 driver2
-#
-"
-2:
- drive-truck truck2 s3 s9 driver3
-#
-"
-2:
- drive-truck truck2 s3 s9 driver4
-#
-"
-2:
- drive-truck truck2 s4 s5 driver1
- #
-"
-2:
- drive-truck truck2 s4 s5 driver2
-#
-"
-2:
- drive-truck truck2 s4 s5 driver3
-#
-"
-2:
- drive-truck truck2 s4 s5 driver4
-#
-"
-2:
- drive-truck truck2 s4 s6 driver1
- #
-"
-2:
- drive-truck truck2 s4 s6 driver2
-#
-"
-2:
- drive-truck truck2 s4 s6 driver3
-#
-"
-2:
- drive-truck truck2 s4 s6 driver4
-#
-"
-2:
- drive-truck truck2 s4 s9 driver1
- #
-"
-2:
- drive-truck truck2 s4 s9 driver2
-#
-"
-2:
- drive-truck truck2 s4 s9 driver3
-#
-"
-2:
- drive-truck truck2 s4 s9 driver4
-#
-"
-2:
- drive-truck truck2 s5 s0 driver1
- #
-"
- 2:
- drive-truck truck2 s5 s0 driver2
-#
-"
- 2:
- drive-truck truck2 s5 s0 driver3
-#
-"
- 2:
- drive-truck truck2 s5 s0 driver4
-#
-"
- 2:
- drive-truck truck2 s5 s2 driver1
- #
-"
-2:
- drive-truck truck2 s5 s2 driver2
-#
-"
-2:
- drive-truck truck2 s5 s2 driver3
-#
-"
-2:
- drive-truck truck2 s5 s2 driver4
-#
-"
-2:
- drive-truck truck2 s5 s3 driver1
- #
-"
-2:
- drive-truck truck2 s5 s3 driver2
-#
-"
-2:
- drive-truck truck2 s5 s3 driver3
-#
-"
-2:
- drive-truck truck2 s5 s3 driver4
-#
-"
-2:
- drive-truck truck2 s5 s4 driver1
- #
-"
-2:
- drive-truck truck2 s5 s4 driver2
-#
-"
-2:
- drive-truck truck2 s5 s4 driver3
-#
-"
-2:
- drive-truck truck2 s5 s4 driver4
-#
-"
-2:
- drive-truck truck2 s5 s7 driver1
- #
-"
-	2:
- drive-truck truck2 s5 s7 driver2
-#
-"
-	2:
- drive-truck truck2 s5 s7 driver3
-#
-"
-	2:
- drive-truck truck2 s5 s7 driver4
-#
-"
-	2:
- drive-truck truck2 s5 s8 driver1
- #
-"
-
-2:
- drive-truck truck2 s5 s8 driver2
-#
-"
-
-2:
- drive-truck truck2 s5 s8 driver3
-#
-"
-
-2:
- drive-truck truck2 s5 s8 driver4
-#
-"
-
-2:
- drive-truck truck2 s5 s9 driver1
- #
-"
-2:
- drive-truck truck2 s5 s9 driver2
-#
-"
-2:
- drive-truck truck2 s5 s9 driver3
-#
-"
-2:
- drive-truck truck2 s5 s9 driver4
-#
-"
-2:
- drive-truck truck2 s6 s1 driver1
- #
-"
-2:
- drive-truck truck2 s6 s1 driver2
-#
-"
-2:
- drive-truck truck2 s6 s1 driver3
-#
-"
-2:
- drive-truck truck2 s6 s1 driver4
-#
-"
-2;
-!drive-truck truck2 s6 s10 driver1
- #
-"
-2;
-!drive-truck truck2 s6 s10 driver2
-#
-"
-2;
-!drive-truck truck2 s6 s10 driver3
-#
-"
-2;
-!drive-truck truck2 s6 s10 driver4
-#
-"
-2:
- drive-truck truck2 s6 s3 driver1
- #
-"
-2:
- drive-truck truck2 s6 s3 driver2
-#
-"
-2:
- drive-truck truck2 s6 s3 driver3
-#
-"
-2:
- drive-truck truck2 s6 s3 driver4
-#
-"
-2:
- drive-truck truck2 s6 s4 driver1
- #
-"
-2:
- drive-truck truck2 s6 s4 driver2
-#
-"
-2:
- drive-truck truck2 s6 s4 driver3
-#
-"
-2:
- drive-truck truck2 s6 s4 driver4
-#
-"
-2:
- drive-truck truck2 s6 s7 driver1
- #
-"
-	2:
- drive-truck truck2 s6 s7 driver2
-#
-"
-	2:
- drive-truck truck2 s6 s7 driver3
-#
-"
-	2:
- drive-truck truck2 s6 s7 driver4
-#
-"
-	2:
- drive-truck truck2 s6 s8 driver1
- #
-"
-
-2:
- drive-truck truck2 s6 s8 driver2
-#
-"
-
-2:
- drive-truck truck2 s6 s8 driver3
-#
-"
-
-2:
- drive-truck truck2 s6 s8 driver4
-#
-"
-
-2:
- drive-truck truck2 s6 s9 driver1
- #
-"
-2:
- drive-truck truck2 s6 s9 driver2
-#
-"
-2:
- drive-truck truck2 s6 s9 driver3
-#
-"
-2:
- drive-truck truck2 s6 s9 driver4
-#
-"
-2;
-!drive-truck truck2 s7 s11 driver1
- #
-	"
-2;
-!drive-truck truck2 s7 s11 driver2
-#
-	"
-2;
-!drive-truck truck2 s7 s11 driver3
-#
-	"
-2;
-!drive-truck truck2 s7 s11 driver4
-#
-	"
-2:
- drive-truck truck2 s7 s5 driver1
- #
-	"
-2:
- drive-truck truck2 s7 s5 driver2
-#
-	"
-2:
- drive-truck truck2 s7 s5 driver3
-#
-	"
-2:
- drive-truck truck2 s7 s5 driver4
-#
-	"
-2:
- drive-truck truck2 s7 s6 driver1
- #
-	"
-2:
- drive-truck truck2 s7 s6 driver2
-#
-	"
-2:
- drive-truck truck2 s7 s6 driver3
-#
-	"
-2:
- drive-truck truck2 s7 s6 driver4
-#
-	"
-2:
- drive-truck truck2 s7 s9 driver1
- #
-	"
-2:
- drive-truck truck2 s7 s9 driver2
-#
-	"
-2:
- drive-truck truck2 s7 s9 driver3
-#
-	"
-2:
- drive-truck truck2 s7 s9 driver4
-#
-	"
-2:
- drive-truck truck2 s8 s0 driver1
- #
-
-"
- 2:
- drive-truck truck2 s8 s0 driver2
-#
-
-"
- 2:
- drive-truck truck2 s8 s0 driver3
-#
-
-"
- 2:
- drive-truck truck2 s8 s0 driver4
-#
-
-"
- 2:
- drive-truck truck2 s8 s2 driver1
- #
-
-"
-2:
- drive-truck truck2 s8 s2 driver2
-#
-
-"
-2:
- drive-truck truck2 s8 s2 driver3
-#
-
-"
-2:
- drive-truck truck2 s8 s2 driver4
-#
-
-"
-2:
- drive-truck truck2 s8 s3 driver1
- #
-
-"
-2:
- drive-truck truck2 s8 s3 driver2
-#
-
-"
-2:
- drive-truck truck2 s8 s3 driver3
-#
-
-"
-2:
- drive-truck truck2 s8 s3 driver4
-#
-
-"
-2:
- drive-truck truck2 s8 s5 driver1
- #
-
-"
-2:
- drive-truck truck2 s8 s5 driver2
-#
-
-"
-2:
- drive-truck truck2 s8 s5 driver3
-#
-
-"
-2:
- drive-truck truck2 s8 s5 driver4
-#
-
-"
-2:
- drive-truck truck2 s8 s6 driver1
- #
-
-"
-2:
- drive-truck truck2 s8 s6 driver2
-#
-
-"
-2:
- drive-truck truck2 s8 s6 driver3
-#
-
-"
-2:
- drive-truck truck2 s8 s6 driver4
-#
-
-"
-2:
- drive-truck truck2 s8 s9 driver1
- #
-
-"
-2:
- drive-truck truck2 s8 s9 driver2
-#
-
-"
-2:
- drive-truck truck2 s8 s9 driver3
-#
-
-"
-2:
- drive-truck truck2 s8 s9 driver4
-#
-
-"
-2:
- drive-truck truck2 s9 s0 driver1
- #
-"
- 2:
- drive-truck truck2 s9 s0 driver2
-#
-"
- 2:
- drive-truck truck2 s9 s0 driver3
-#
-"
- 2:
- drive-truck truck2 s9 s0 driver4
-#
-"
- 2:
- drive-truck truck2 s9 s1 driver1
- #
-"
-2:
- drive-truck truck2 s9 s1 driver2
-#
-"
-2:
- drive-truck truck2 s9 s1 driver3
-#
-"
-2:
- drive-truck truck2 s9 s1 driver4
-#
-"
-2:
- drive-truck truck2 s9 s2 driver1
- #
-"
-2:
- drive-truck truck2 s9 s2 driver2
-#
-"
-2:
- drive-truck truck2 s9 s2 driver3
-#
-"
-2:
- drive-truck truck2 s9 s2 driver4
-#
-"
-2:
- drive-truck truck2 s9 s3 driver1
- #
-"
-2:
- drive-truck truck2 s9 s3 driver2
-#
-"
-2:
- drive-truck truck2 s9 s3 driver3
-#
-"
-2:
- drive-truck truck2 s9 s3 driver4
-#
-"
-2:
- drive-truck truck2 s9 s4 driver1
- #
-"
-2:
- drive-truck truck2 s9 s4 driver2
-#
-"
-2:
- drive-truck truck2 s9 s4 driver3
-#
-"
-2:
- drive-truck truck2 s9 s4 driver4
-#
-"
-2:
- drive-truck truck2 s9 s5 driver1
- #
-"
-2:
- drive-truck truck2 s9 s5 driver2
-#
-"
-2:
- drive-truck truck2 s9 s5 driver3
-#
-"
-2:
- drive-truck truck2 s9 s5 driver4
-#
-"
-2:
- drive-truck truck2 s9 s6 driver1
- #
-"
-2:
- drive-truck truck2 s9 s6 driver2
-#
-"
-2:
- drive-truck truck2 s9 s6 driver3
-#
-"
-2:
- drive-truck truck2 s9 s6 driver4
-#
-"
-2:
- drive-truck truck2 s9 s7 driver1
- #
-"
-	2:
- drive-truck truck2 s9 s7 driver2
-#
-"
-	2:
- drive-truck truck2 s9 s7 driver3
-#
-"
-	2:
- drive-truck truck2 s9 s7 driver4
-#
-"
-	2:
- drive-truck truck2 s9 s8 driver1
- #
-"
-
-2:
- drive-truck truck2 s9 s8 driver2
-#
-"
-
-2:
- drive-truck truck2 s9 s8 driver3
-#
-"
-
-2:
- drive-truck truck2 s9 s8 driver4
-#
-"
-
-2:
- drive-truck truck3 s0 s1 driver1
- $
- "
-2:
- drive-truck truck3 s0 s1 driver2
-$
- "
-2:
- drive-truck truck3 s0 s1 driver3
-$
- "
-2:
- drive-truck truck3 s0 s1 driver4
-$
- "
-2;
-!drive-truck truck3 s0 s11 driver1
- $
- "
-2;
-!drive-truck truck3 s0 s11 driver2
-$
- "
-2;
-!drive-truck truck3 s0 s11 driver3
-$
- "
-2;
-!drive-truck truck3 s0 s11 driver4
-$
- "
-2:
- drive-truck truck3 s0 s3 driver1
- $
- "
-2:
- drive-truck truck3 s0 s3 driver2
-$
- "
-2:
- drive-truck truck3 s0 s3 driver3
-$
- "
-2:
- drive-truck truck3 s0 s3 driver4
-$
- "
-2:
- drive-truck truck3 s0 s5 driver1
- $
- "
-2:
- drive-truck truck3 s0 s5 driver2
-$
- "
-2:
- drive-truck truck3 s0 s5 driver3
-$
- "
-2:
- drive-truck truck3 s0 s5 driver4
-$
- "
-2:
- drive-truck truck3 s0 s8 driver1
- $
- "
-
-2:
- drive-truck truck3 s0 s8 driver2
-$
- "
-
-2:
- drive-truck truck3 s0 s8 driver3
-$
- "
-
-2:
- drive-truck truck3 s0 s8 driver4
-$
- "
-
-2:
- drive-truck truck3 s0 s9 driver1
- $
- "
-2:
- drive-truck truck3 s0 s9 driver2
-$
- "
-2:
- drive-truck truck3 s0 s9 driver3
-$
- "
-2:
- drive-truck truck3 s0 s9 driver4
-$
- "
-2:
- drive-truck truck3 s1 s0 driver1
- $
-"
- 2:
- drive-truck truck3 s1 s0 driver2
-$
-"
- 2:
- drive-truck truck3 s1 s0 driver3
-$
-"
- 2:
- drive-truck truck3 s1 s0 driver4
-$
-"
- 2;
-!drive-truck truck3 s1 s10 driver1
- $
-"
-2;
-!drive-truck truck3 s1 s10 driver2
-$
-"
-2;
-!drive-truck truck3 s1 s10 driver3
-$
-"
-2;
-!drive-truck truck3 s1 s10 driver4
-$
-"
-2:
- drive-truck truck3 s1 s2 driver1
- $
-"
-2:
- drive-truck truck3 s1 s2 driver2
-$
-"
-2:
- drive-truck truck3 s1 s2 driver3
-$
-"
-2:
- drive-truck truck3 s1 s2 driver4
-$
-"
-2:
- drive-truck truck3 s1 s6 driver1
- $
-"
-2:
- drive-truck truck3 s1 s6 driver2
-$
-"
-2:
- drive-truck truck3 s1 s6 driver3
-$
-"
-2:
- drive-truck truck3 s1 s6 driver4
-$
-"
-2:
- drive-truck truck3 s1 s9 driver1
- $
-"
-2:
- drive-truck truck3 s1 s9 driver2
-$
-"
-2:
- drive-truck truck3 s1 s9 driver3
-$
-"
-2:
- drive-truck truck3 s1 s9 driver4
-$
-"
-2;
-!drive-truck truck3 s10 s1 driver1
- $
-"
-2;
-!drive-truck truck3 s10 s1 driver2
-$
-"
-2;
-!drive-truck truck3 s10 s1 driver3
-$
-"
-2;
-!drive-truck truck3 s10 s1 driver4
-$
-"
-2;
-!drive-truck truck3 s10 s2 driver1
- $
-"
-2;
-!drive-truck truck3 s10 s2 driver2
-$
-"
-2;
-!drive-truck truck3 s10 s2 driver3
-$
-"
-2;
-!drive-truck truck3 s10 s2 driver4
-$
-"
-2;
-!drive-truck truck3 s10 s3 driver1
- $
-"
-2;
-!drive-truck truck3 s10 s3 driver2
-$
-"
-2;
-!drive-truck truck3 s10 s3 driver3
-$
-"
-2;
-!drive-truck truck3 s10 s3 driver4
-$
-"
-2;
-!drive-truck truck3 s10 s6 driver1
- $
-"
-2;
-!drive-truck truck3 s10 s6 driver2
-$
-"
-2;
-!drive-truck truck3 s10 s6 driver3
-$
-"
-2;
-!drive-truck truck3 s10 s6 driver4
-$
-"
-2;
-!drive-truck truck3 s11 s0 driver1
- $
-"
- 2;
-!drive-truck truck3 s11 s0 driver2
-$
-"
- 2;
-!drive-truck truck3 s11 s0 driver3
-$
-"
- 2;
-!drive-truck truck3 s11 s0 driver4
-$
-"
- 2;
-!drive-truck truck3 s11 s3 driver1
- $
-"
-2;
-!drive-truck truck3 s11 s3 driver2
-$
-"
-2;
-!drive-truck truck3 s11 s3 driver3
-$
-"
-2;
-!drive-truck truck3 s11 s3 driver4
-$
-"
-2;
-!drive-truck truck3 s11 s7 driver1
- $
-"
-	2;
-!drive-truck truck3 s11 s7 driver2
-$
-"
-	2;
-!drive-truck truck3 s11 s7 driver3
-$
-"
-	2;
-!drive-truck truck3 s11 s7 driver4
-$
-"
-	2:
- drive-truck truck3 s2 s1 driver1
- $
-"
-2:
- drive-truck truck3 s2 s1 driver2
-$
-"
-2:
- drive-truck truck3 s2 s1 driver3
-$
-"
-2:
- drive-truck truck3 s2 s1 driver4
-$
-"
-2;
-!drive-truck truck3 s2 s10 driver1
- $
-"
-2;
-!drive-truck truck3 s2 s10 driver2
-$
-"
-2;
-!drive-truck truck3 s2 s10 driver3
-$
-"
-2;
-!drive-truck truck3 s2 s10 driver4
-$
-"
-2:
- drive-truck truck3 s2 s3 driver1
- $
-"
-2:
- drive-truck truck3 s2 s3 driver2
-$
-"
-2:
- drive-truck truck3 s2 s3 driver3
-$
-"
-2:
- drive-truck truck3 s2 s3 driver4
-$
-"
-2:
- drive-truck truck3 s2 s5 driver1
- $
-"
-2:
- drive-truck truck3 s2 s5 driver2
-$
-"
-2:
- drive-truck truck3 s2 s5 driver3
-$
-"
-2:
- drive-truck truck3 s2 s5 driver4
-$
-"
-2:
- drive-truck truck3 s2 s8 driver1
- $
-"
-
-2:
- drive-truck truck3 s2 s8 driver2
-$
-"
-
-2:
- drive-truck truck3 s2 s8 driver3
-$
-"
-
-2:
- drive-truck truck3 s2 s8 driver4
-$
-"
-
-2:
- drive-truck truck3 s2 s9 driver1
- $
-"
-2:
- drive-truck truck3 s2 s9 driver2
-$
-"
-2:
- drive-truck truck3 s2 s9 driver3
-$
-"
-2:
- drive-truck truck3 s2 s9 driver4
-$
-"
-2:
- drive-truck truck3 s3 s0 driver1
- $
-"
- 2:
- drive-truck truck3 s3 s0 driver2
-$
-"
- 2:
- drive-truck truck3 s3 s0 driver3
-$
-"
- 2:
- drive-truck truck3 s3 s0 driver4
-$
-"
- 2;
-!drive-truck truck3 s3 s10 driver1
- $
-"
-2;
-!drive-truck truck3 s3 s10 driver2
-$
-"
-2;
-!drive-truck truck3 s3 s10 driver3
-$
-"
-2;
-!drive-truck truck3 s3 s10 driver4
-$
-"
-2;
-!drive-truck truck3 s3 s11 driver1
- $
-"
-2;
-!drive-truck truck3 s3 s11 driver2
-$
-"
-2;
-!drive-truck truck3 s3 s11 driver3
-$
-"
-2;
-!drive-truck truck3 s3 s11 driver4
-$
-"
-2:
- drive-truck truck3 s3 s2 driver1
- $
-"
-2:
- drive-truck truck3 s3 s2 driver2
-$
-"
-2:
- drive-truck truck3 s3 s2 driver3
-$
-"
-2:
- drive-truck truck3 s3 s2 driver4
-$
-"
-2:
- drive-truck truck3 s3 s5 driver1
- $
-"
-2:
- drive-truck truck3 s3 s5 driver2
-$
-"
-2:
- drive-truck truck3 s3 s5 driver3
-$
-"
-2:
- drive-truck truck3 s3 s5 driver4
-$
-"
-2:
- drive-truck truck3 s3 s6 driver1
- $
-"
-2:
- drive-truck truck3 s3 s6 driver2
-$
-"
-2:
- drive-truck truck3 s3 s6 driver3
-$
-"
-2:
- drive-truck truck3 s3 s6 driver4
-$
-"
-2:
- drive-truck truck3 s3 s8 driver1
- $
-"
-
-2:
- drive-truck truck3 s3 s8 driver2
-$
-"
-
-2:
- drive-truck truck3 s3 s8 driver3
-$
-"
-
-2:
- drive-truck truck3 s3 s8 driver4
-$
-"
-
-2:
- drive-truck truck3 s3 s9 driver1
- $
-"
-2:
- drive-truck truck3 s3 s9 driver2
-$
-"
-2:
- drive-truck truck3 s3 s9 driver3
-$
-"
-2:
- drive-truck truck3 s3 s9 driver4
-$
-"
-2:
- drive-truck truck3 s4 s5 driver1
- $
-"
-2:
- drive-truck truck3 s4 s5 driver2
-$
-"
-2:
- drive-truck truck3 s4 s5 driver3
-$
-"
-2:
- drive-truck truck3 s4 s5 driver4
-$
-"
-2:
- drive-truck truck3 s4 s6 driver1
- $
-"
-2:
- drive-truck truck3 s4 s6 driver2
-$
-"
-2:
- drive-truck truck3 s4 s6 driver3
-$
-"
-2:
- drive-truck truck3 s4 s6 driver4
-$
-"
-2:
- drive-truck truck3 s4 s9 driver1
- $
-"
-2:
- drive-truck truck3 s4 s9 driver2
-$
-"
-2:
- drive-truck truck3 s4 s9 driver3
-$
-"
-2:
- drive-truck truck3 s4 s9 driver4
-$
-"
-2:
- drive-truck truck3 s5 s0 driver1
- $
-"
- 2:
- drive-truck truck3 s5 s0 driver2
-$
-"
- 2:
- drive-truck truck3 s5 s0 driver3
-$
-"
- 2:
- drive-truck truck3 s5 s0 driver4
-$
-"
- 2:
- drive-truck truck3 s5 s2 driver1
- $
-"
-2:
- drive-truck truck3 s5 s2 driver2
-$
-"
-2:
- drive-truck truck3 s5 s2 driver3
-$
-"
-2:
- drive-truck truck3 s5 s2 driver4
-$
-"
-2:
- drive-truck truck3 s5 s3 driver1
- $
-"
-2:
- drive-truck truck3 s5 s3 driver2
-$
-"
-2:
- drive-truck truck3 s5 s3 driver3
-$
-"
-2:
- drive-truck truck3 s5 s3 driver4
-$
-"
-2:
- drive-truck truck3 s5 s4 driver1
- $
-"
-2:
- drive-truck truck3 s5 s4 driver2
-$
-"
-2:
- drive-truck truck3 s5 s4 driver3
-$
-"
-2:
- drive-truck truck3 s5 s4 driver4
-$
-"
-2:
- drive-truck truck3 s5 s7 driver1
- $
-"
-	2:
- drive-truck truck3 s5 s7 driver2
-$
-"
-	2:
- drive-truck truck3 s5 s7 driver3
-$
-"
-	2:
- drive-truck truck3 s5 s7 driver4
-$
-"
-	2:
- drive-truck truck3 s5 s8 driver1
- $
-"
-
-2:
- drive-truck truck3 s5 s8 driver2
-$
-"
-
-2:
- drive-truck truck3 s5 s8 driver3
-$
-"
-
-2:
- drive-truck truck3 s5 s8 driver4
-$
-"
-
-2:
- drive-truck truck3 s5 s9 driver1
- $
-"
-2:
- drive-truck truck3 s5 s9 driver2
-$
-"
-2:
- drive-truck truck3 s5 s9 driver3
-$
-"
-2:
- drive-truck truck3 s5 s9 driver4
-$
-"
-2:
- drive-truck truck3 s6 s1 driver1
- $
-"
-2:
- drive-truck truck3 s6 s1 driver2
-$
-"
-2:
- drive-truck truck3 s6 s1 driver3
-$
-"
-2:
- drive-truck truck3 s6 s1 driver4
-$
-"
-2;
-!drive-truck truck3 s6 s10 driver1
- $
-"
-2;
-!drive-truck truck3 s6 s10 driver2
-$
-"
-2;
-!drive-truck truck3 s6 s10 driver3
-$
-"
-2;
-!drive-truck truck3 s6 s10 driver4
-$
-"
-2:
- drive-truck truck3 s6 s3 driver1
- $
-"
-2:
- drive-truck truck3 s6 s3 driver2
-$
-"
-2:
- drive-truck truck3 s6 s3 driver3
-$
-"
-2:
- drive-truck truck3 s6 s3 driver4
-$
-"
-2:
- drive-truck truck3 s6 s4 driver1
- $
-"
-2:
- drive-truck truck3 s6 s4 driver2
-$
-"
-2:
- drive-truck truck3 s6 s4 driver3
-$
-"
-2:
- drive-truck truck3 s6 s4 driver4
-$
-"
-2:
- drive-truck truck3 s6 s7 driver1
- $
-"
-	2:
- drive-truck truck3 s6 s7 driver2
-$
-"
-	2:
- drive-truck truck3 s6 s7 driver3
-$
-"
-	2:
- drive-truck truck3 s6 s7 driver4
-$
-"
-	2:
- drive-truck truck3 s6 s8 driver1
- $
-"
-
-2:
- drive-truck truck3 s6 s8 driver2
-$
-"
-
-2:
- drive-truck truck3 s6 s8 driver3
-$
-"
-
-2:
- drive-truck truck3 s6 s8 driver4
-$
-"
-
-2:
- drive-truck truck3 s6 s9 driver1
- $
-"
-2:
- drive-truck truck3 s6 s9 driver2
-$
-"
-2:
- drive-truck truck3 s6 s9 driver3
-$
-"
-2:
- drive-truck truck3 s6 s9 driver4
-$
-"
-2;
-!drive-truck truck3 s7 s11 driver1
- $
-	"
-2;
-!drive-truck truck3 s7 s11 driver2
-$
-	"
-2;
-!drive-truck truck3 s7 s11 driver3
-$
-	"
-2;
-!drive-truck truck3 s7 s11 driver4
-$
-	"
-2:
- drive-truck truck3 s7 s5 driver1
- $
-	"
-2:
- drive-truck truck3 s7 s5 driver2
-$
-	"
-2:
- drive-truck truck3 s7 s5 driver3
-$
-	"
-2:
- drive-truck truck3 s7 s5 driver4
-$
-	"
-2:
- drive-truck truck3 s7 s6 driver1
- $
-	"
-2:
- drive-truck truck3 s7 s6 driver2
-$
-	"
-2:
- drive-truck truck3 s7 s6 driver3
-$
-	"
-2:
- drive-truck truck3 s7 s6 driver4
-$
-	"
-2:
- drive-truck truck3 s7 s9 driver1
- $
-	"
-2:
- drive-truck truck3 s7 s9 driver2
-$
-	"
-2:
- drive-truck truck3 s7 s9 driver3
-$
-	"
-2:
- drive-truck truck3 s7 s9 driver4
-$
-	"
-2:
- drive-truck truck3 s8 s0 driver1
- $
-
-"
- 2:
- drive-truck truck3 s8 s0 driver2
-$
-
-"
- 2:
- drive-truck truck3 s8 s0 driver3
-$
-
-"
- 2:
- drive-truck truck3 s8 s0 driver4
-$
-
-"
- 2:
- drive-truck truck3 s8 s2 driver1
- $
-
-"
-2:
- drive-truck truck3 s8 s2 driver2
-$
-
-"
-2:
- drive-truck truck3 s8 s2 driver3
-$
-
-"
-2:
- drive-truck truck3 s8 s2 driver4
-$
-
-"
-2:
- drive-truck truck3 s8 s3 driver1
- $
-
-"
-2:
- drive-truck truck3 s8 s3 driver2
-$
-
-"
-2:
- drive-truck truck3 s8 s3 driver3
-$
-
-"
-2:
- drive-truck truck3 s8 s3 driver4
-$
-
-"
-2:
- drive-truck truck3 s8 s5 driver1
- $
-
-"
-2:
- drive-truck truck3 s8 s5 driver2
-$
-
-"
-2:
- drive-truck truck3 s8 s5 driver3
-$
-
-"
-2:
- drive-truck truck3 s8 s5 driver4
-$
-
-"
-2:
- drive-truck truck3 s8 s6 driver1
- $
-
-"
-2:
- drive-truck truck3 s8 s6 driver2
-$
-
-"
-2:
- drive-truck truck3 s8 s6 driver3
-$
-
-"
-2:
- drive-truck truck3 s8 s6 driver4
-$
-
-"
-2:
- drive-truck truck3 s8 s9 driver1
- $
-
-"
-2:
- drive-truck truck3 s8 s9 driver2
-$
-
-"
-2:
- drive-truck truck3 s8 s9 driver3
-$
-
-"
-2:
- drive-truck truck3 s8 s9 driver4
-$
-
-"
-2:
- drive-truck truck3 s9 s0 driver1
- $
-"
- 2:
- drive-truck truck3 s9 s0 driver2
-$
-"
- 2:
- drive-truck truck3 s9 s0 driver3
-$
-"
- 2:
- drive-truck truck3 s9 s0 driver4
-$
-"
- 2:
- drive-truck truck3 s9 s1 driver1
- $
-"
-2:
- drive-truck truck3 s9 s1 driver2
-$
-"
-2:
- drive-truck truck3 s9 s1 driver3
-$
-"
-2:
- drive-truck truck3 s9 s1 driver4
-$
-"
-2:
- drive-truck truck3 s9 s2 driver1
- $
-"
-2:
- drive-truck truck3 s9 s2 driver2
-$
-"
-2:
- drive-truck truck3 s9 s2 driver3
-$
-"
-2:
- drive-truck truck3 s9 s2 driver4
-$
-"
-2:
- drive-truck truck3 s9 s3 driver1
- $
-"
-2:
- drive-truck truck3 s9 s3 driver2
-$
-"
-2:
- drive-truck truck3 s9 s3 driver3
-$
-"
-2:
- drive-truck truck3 s9 s3 driver4
-$
-"
-2:
- drive-truck truck3 s9 s4 driver1
- $
-"
-2:
- drive-truck truck3 s9 s4 driver2
-$
-"
-2:
- drive-truck truck3 s9 s4 driver3
-$
-"
-2:
- drive-truck truck3 s9 s4 driver4
-$
-"
-2:
- drive-truck truck3 s9 s5 driver1
- $
-"
-2:
- drive-truck truck3 s9 s5 driver2
-$
-"
-2:
- drive-truck truck3 s9 s5 driver3
-$
-"
-2:
- drive-truck truck3 s9 s5 driver4
-$
-"
-2:
- drive-truck truck3 s9 s6 driver1
- $
-"
-2:
- drive-truck truck3 s9 s6 driver2
-$
-"
-2:
- drive-truck truck3 s9 s6 driver3
-$
-"
-2:
- drive-truck truck3 s9 s6 driver4
-$
-"
-2:
- drive-truck truck3 s9 s7 driver1
- $
-"
-	2:
- drive-truck truck3 s9 s7 driver2
-$
-"
-	2:
- drive-truck truck3 s9 s7 driver3
-$
-"
-	2:
- drive-truck truck3 s9 s7 driver4
-$
-"
-	2:
- drive-truck truck3 s9 s8 driver1
- $
-"
-
-2:
- drive-truck truck3 s9 s8 driver2
-$
-"
-
-2:
- drive-truck truck3 s9 s8 driver3
-$
-"
-
-2:
- drive-truck truck3 s9 s8 driver4
-$
-"
-
-2:
- drive-truck truck4 s0 s1 driver1
- %
- "
-2:
- drive-truck truck4 s0 s1 driver2
-%
- "
-2:
- drive-truck truck4 s0 s1 driver3
-%
- "
-2:
- drive-truck truck4 s0 s1 driver4
-%
- "
-2;
-!drive-truck truck4 s0 s11 driver1
- %
- "
-2;
-!drive-truck truck4 s0 s11 driver2
-%
- "
-2;
-!drive-truck truck4 s0 s11 driver3
-%
- "
-2;
-!drive-truck truck4 s0 s11 driver4
-%
- "
-2:
- drive-truck truck4 s0 s3 driver1
- %
- "
-2:
- drive-truck truck4 s0 s3 driver2
-%
- "
-2:
- drive-truck truck4 s0 s3 driver3
-%
- "
-2:
- drive-truck truck4 s0 s3 driver4
-%
- "
-2:
- drive-truck truck4 s0 s5 driver1
- %
- "
-2:
- drive-truck truck4 s0 s5 driver2
-%
- "
-2:
- drive-truck truck4 s0 s5 driver3
-%
- "
-2:
- drive-truck truck4 s0 s5 driver4
-%
- "
-2:
- drive-truck truck4 s0 s8 driver1
- %
- "
-
-2:
- drive-truck truck4 s0 s8 driver2
-%
- "
-
-2:
- drive-truck truck4 s0 s8 driver3
-%
- "
-
-2:
- drive-truck truck4 s0 s8 driver4
-%
- "
-
-2:
- drive-truck truck4 s0 s9 driver1
- %
- "
-2:
- drive-truck truck4 s0 s9 driver2
-%
- "
-2:
- drive-truck truck4 s0 s9 driver3
-%
- "
-2:
- drive-truck truck4 s0 s9 driver4
-%
- "
-2:
- drive-truck truck4 s1 s0 driver1
- %
-"
- 2:
- drive-truck truck4 s1 s0 driver2
-%
-"
- 2:
- drive-truck truck4 s1 s0 driver3
-%
-"
- 2:
- drive-truck truck4 s1 s0 driver4
-%
-"
- 2;
-!drive-truck truck4 s1 s10 driver1
- %
-"
-2;
-!drive-truck truck4 s1 s10 driver2
-%
-"
-2;
-!drive-truck truck4 s1 s10 driver3
-%
-"
-2;
-!drive-truck truck4 s1 s10 driver4
-%
-"
-2:
- drive-truck truck4 s1 s2 driver1
- %
-"
-2:
- drive-truck truck4 s1 s2 driver2
-%
-"
-2:
- drive-truck truck4 s1 s2 driver3
-%
-"
-2:
- drive-truck truck4 s1 s2 driver4
-%
-"
-2:
- drive-truck truck4 s1 s6 driver1
- %
-"
-2:
- drive-truck truck4 s1 s6 driver2
-%
-"
-2:
- drive-truck truck4 s1 s6 driver3
-%
-"
-2:
- drive-truck truck4 s1 s6 driver4
-%
-"
-2:
- drive-truck truck4 s1 s9 driver1
- %
-"
-2:
- drive-truck truck4 s1 s9 driver2
-%
-"
-2:
- drive-truck truck4 s1 s9 driver3
-%
-"
-2:
- drive-truck truck4 s1 s9 driver4
-%
-"
-2;
-!drive-truck truck4 s10 s1 driver1
- %
-"
-2;
-!drive-truck truck4 s10 s1 driver2
-%
-"
-2;
-!drive-truck truck4 s10 s1 driver3
-%
-"
-2;
-!drive-truck truck4 s10 s1 driver4
-%
-"
-2;
-!drive-truck truck4 s10 s2 driver1
- %
-"
-2;
-!drive-truck truck4 s10 s2 driver2
-%
-"
-2;
-!drive-truck truck4 s10 s2 driver3
-%
-"
-2;
-!drive-truck truck4 s10 s2 driver4
-%
-"
-2;
-!drive-truck truck4 s10 s3 driver1
- %
-"
-2;
-!drive-truck truck4 s10 s3 driver2
-%
-"
-2;
-!drive-truck truck4 s10 s3 driver3
-%
-"
-2;
-!drive-truck truck4 s10 s3 driver4
-%
-"
-2;
-!drive-truck truck4 s10 s6 driver1
- %
-"
-2;
-!drive-truck truck4 s10 s6 driver2
-%
-"
-2;
-!drive-truck truck4 s10 s6 driver3
-%
-"
-2;
-!drive-truck truck4 s10 s6 driver4
-%
-"
-2;
-!drive-truck truck4 s11 s0 driver1
- %
-"
- 2;
-!drive-truck truck4 s11 s0 driver2
-%
-"
- 2;
-!drive-truck truck4 s11 s0 driver3
-%
-"
- 2;
-!drive-truck truck4 s11 s0 driver4
-%
-"
- 2;
-!drive-truck truck4 s11 s3 driver1
- %
-"
-2;
-!drive-truck truck4 s11 s3 driver2
-%
-"
-2;
-!drive-truck truck4 s11 s3 driver3
-%
-"
-2;
-!drive-truck truck4 s11 s3 driver4
-%
-"
-2;
-!drive-truck truck4 s11 s7 driver1
- %
-"
-	2;
-!drive-truck truck4 s11 s7 driver2
-%
-"
-	2;
-!drive-truck truck4 s11 s7 driver3
-%
-"
-	2;
-!drive-truck truck4 s11 s7 driver4
-%
-"
-	2:
- drive-truck truck4 s2 s1 driver1
- %
-"
-2:
- drive-truck truck4 s2 s1 driver2
-%
-"
-2:
- drive-truck truck4 s2 s1 driver3
-%
-"
-2:
- drive-truck truck4 s2 s1 driver4
-%
-"
-2;
-!drive-truck truck4 s2 s10 driver1
- %
-"
-2;
-!drive-truck truck4 s2 s10 driver2
-%
-"
-2;
-!drive-truck truck4 s2 s10 driver3
-%
-"
-2;
-!drive-truck truck4 s2 s10 driver4
-%
-"
-2:
- drive-truck truck4 s2 s3 driver1
- %
-"
-2:
- drive-truck truck4 s2 s3 driver2
-%
-"
-2:
- drive-truck truck4 s2 s3 driver3
-%
-"
-2:
- drive-truck truck4 s2 s3 driver4
-%
-"
-2:
- drive-truck truck4 s2 s5 driver1
- %
-"
-2:
- drive-truck truck4 s2 s5 driver2
-%
-"
-2:
- drive-truck truck4 s2 s5 driver3
-%
-"
-2:
- drive-truck truck4 s2 s5 driver4
-%
-"
-2:
- drive-truck truck4 s2 s8 driver1
- %
-"
-
-2:
- drive-truck truck4 s2 s8 driver2
-%
-"
-
-2:
- drive-truck truck4 s2 s8 driver3
-%
-"
-
-2:
- drive-truck truck4 s2 s8 driver4
-%
-"
-
-2:
- drive-truck truck4 s2 s9 driver1
- %
-"
-2:
- drive-truck truck4 s2 s9 driver2
-%
-"
-2:
- drive-truck truck4 s2 s9 driver3
-%
-"
-2:
- drive-truck truck4 s2 s9 driver4
-%
-"
-2:
- drive-truck truck4 s3 s0 driver1
- %
-"
- 2:
- drive-truck truck4 s3 s0 driver2
-%
-"
- 2:
- drive-truck truck4 s3 s0 driver3
-%
-"
- 2:
- drive-truck truck4 s3 s0 driver4
-%
-"
- 2;
-!drive-truck truck4 s3 s10 driver1
- %
-"
-2;
-!drive-truck truck4 s3 s10 driver2
-%
-"
-2;
-!drive-truck truck4 s3 s10 driver3
-%
-"
-2;
-!drive-truck truck4 s3 s10 driver4
-%
-"
-2;
-!drive-truck truck4 s3 s11 driver1
- %
-"
-2;
-!drive-truck truck4 s3 s11 driver2
-%
-"
-2;
-!drive-truck truck4 s3 s11 driver3
-%
-"
-2;
-!drive-truck truck4 s3 s11 driver4
-%
-"
-2:
- drive-truck truck4 s3 s2 driver1
- %
-"
-2:
- drive-truck truck4 s3 s2 driver2
-%
-"
-2:
- drive-truck truck4 s3 s2 driver3
-%
-"
-2:
- drive-truck truck4 s3 s2 driver4
-%
-"
-2:
- drive-truck truck4 s3 s5 driver1
- %
-"
-2:
- drive-truck truck4 s3 s5 driver2
-%
-"
-2:
- drive-truck truck4 s3 s5 driver3
-%
-"
-2:
- drive-truck truck4 s3 s5 driver4
-%
-"
-2:
- drive-truck truck4 s3 s6 driver1
- %
-"
-2:
- drive-truck truck4 s3 s6 driver2
-%
-"
-2:
- drive-truck truck4 s3 s6 driver3
-%
-"
-2:
- drive-truck truck4 s3 s6 driver4
-%
-"
-2:
- drive-truck truck4 s3 s8 driver1
- %
-"
-
-2:
- drive-truck truck4 s3 s8 driver2
-%
-"
-
-2:
- drive-truck truck4 s3 s8 driver3
-%
-"
-
-2:
- drive-truck truck4 s3 s8 driver4
-%
-"
-
-2:
- drive-truck truck4 s3 s9 driver1
- %
-"
-2:
- drive-truck truck4 s3 s9 driver2
-%
-"
-2:
- drive-truck truck4 s3 s9 driver3
-%
-"
-2:
- drive-truck truck4 s3 s9 driver4
-%
-"
-2:
- drive-truck truck4 s4 s5 driver1
- %
-"
-2:
- drive-truck truck4 s4 s5 driver2
-%
-"
-2:
- drive-truck truck4 s4 s5 driver3
-%
-"
-2:
- drive-truck truck4 s4 s5 driver4
-%
-"
-2:
- drive-truck truck4 s4 s6 driver1
- %
-"
-2:
- drive-truck truck4 s4 s6 driver2
-%
-"
-2:
- drive-truck truck4 s4 s6 driver3
-%
-"
-2:
- drive-truck truck4 s4 s6 driver4
-%
-"
-2:
- drive-truck truck4 s4 s9 driver1
- %
-"
-2:
- drive-truck truck4 s4 s9 driver2
-%
-"
-2:
- drive-truck truck4 s4 s9 driver3
-%
-"
-2:
- drive-truck truck4 s4 s9 driver4
-%
-"
-2:
- drive-truck truck4 s5 s0 driver1
- %
-"
- 2:
- drive-truck truck4 s5 s0 driver2
-%
-"
- 2:
- drive-truck truck4 s5 s0 driver3
-%
-"
- 2:
- drive-truck truck4 s5 s0 driver4
-%
-"
- 2:
- drive-truck truck4 s5 s2 driver1
- %
-"
-2:
- drive-truck truck4 s5 s2 driver2
-%
-"
-2:
- drive-truck truck4 s5 s2 driver3
-%
-"
-2:
- drive-truck truck4 s5 s2 driver4
-%
-"
-2:
- drive-truck truck4 s5 s3 driver1
- %
-"
-2:
- drive-truck truck4 s5 s3 driver2
-%
-"
-2:
- drive-truck truck4 s5 s3 driver3
-%
-"
-2:
- drive-truck truck4 s5 s3 driver4
-%
-"
-2:
- drive-truck truck4 s5 s4 driver1
- %
-"
-2:
- drive-truck truck4 s5 s4 driver2
-%
-"
-2:
- drive-truck truck4 s5 s4 driver3
-%
-"
-2:
- drive-truck truck4 s5 s4 driver4
-%
-"
-2:
- drive-truck truck4 s5 s7 driver1
- %
-"
-	2:
- drive-truck truck4 s5 s7 driver2
-%
-"
-	2:
- drive-truck truck4 s5 s7 driver3
-%
-"
-	2:
- drive-truck truck4 s5 s7 driver4
-%
-"
-	2:
- drive-truck truck4 s5 s8 driver1
- %
-"
-
-2:
- drive-truck truck4 s5 s8 driver2
-%
-"
-
-2:
- drive-truck truck4 s5 s8 driver3
-%
-"
-
-2:
- drive-truck truck4 s5 s8 driver4
-%
-"
-
-2:
- drive-truck truck4 s5 s9 driver1
- %
-"
-2:
- drive-truck truck4 s5 s9 driver2
-%
-"
-2:
- drive-truck truck4 s5 s9 driver3
-%
-"
-2:
- drive-truck truck4 s5 s9 driver4
-%
-"
-2:
- drive-truck truck4 s6 s1 driver1
- %
-"
-2:
- drive-truck truck4 s6 s1 driver2
-%
-"
-2:
- drive-truck truck4 s6 s1 driver3
-%
-"
-2:
- drive-truck truck4 s6 s1 driver4
-%
-"
-2;
-!drive-truck truck4 s6 s10 driver1
- %
-"
-2;
-!drive-truck truck4 s6 s10 driver2
-%
-"
-2;
-!drive-truck truck4 s6 s10 driver3
-%
-"
-2;
-!drive-truck truck4 s6 s10 driver4
-%
-"
-2:
- drive-truck truck4 s6 s3 driver1
- %
-"
-2:
- drive-truck truck4 s6 s3 driver2
-%
-"
-2:
- drive-truck truck4 s6 s3 driver3
-%
-"
-2:
- drive-truck truck4 s6 s3 driver4
-%
-"
-2:
- drive-truck truck4 s6 s4 driver1
- %
-"
-2:
- drive-truck truck4 s6 s4 driver2
-%
-"
-2:
- drive-truck truck4 s6 s4 driver3
-%
-"
-2:
- drive-truck truck4 s6 s4 driver4
-%
-"
-2:
- drive-truck truck4 s6 s7 driver1
- %
-"
-	2:
- drive-truck truck4 s6 s7 driver2
-%
-"
-	2:
- drive-truck truck4 s6 s7 driver3
-%
-"
-	2:
- drive-truck truck4 s6 s7 driver4
-%
-"
-	2:
- drive-truck truck4 s6 s8 driver1
- %
-"
-
-2:
- drive-truck truck4 s6 s8 driver2
-%
-"
-
-2:
- drive-truck truck4 s6 s8 driver3
-%
-"
-
-2:
- drive-truck truck4 s6 s8 driver4
-%
-"
-
-2:
- drive-truck truck4 s6 s9 driver1
- %
-"
-2:
- drive-truck truck4 s6 s9 driver2
-%
-"
-2:
- drive-truck truck4 s6 s9 driver3
-%
-"
-2:
- drive-truck truck4 s6 s9 driver4
-%
-"
-2;
-!drive-truck truck4 s7 s11 driver1
- %
-	"
-2;
-!drive-truck truck4 s7 s11 driver2
-%
-	"
-2;
-!drive-truck truck4 s7 s11 driver3
-%
-	"
-2;
-!drive-truck truck4 s7 s11 driver4
-%
-	"
-2:
- drive-truck truck4 s7 s5 driver1
- %
-	"
-2:
- drive-truck truck4 s7 s5 driver2
-%
-	"
-2:
- drive-truck truck4 s7 s5 driver3
-%
-	"
-2:
- drive-truck truck4 s7 s5 driver4
-%
-	"
-2:
- drive-truck truck4 s7 s6 driver1
- %
-	"
-2:
- drive-truck truck4 s7 s6 driver2
-%
-	"
-2:
- drive-truck truck4 s7 s6 driver3
-%
-	"
-2:
- drive-truck truck4 s7 s6 driver4
-%
-	"
-2:
- drive-truck truck4 s7 s9 driver1
- %
-	"
-2:
- drive-truck truck4 s7 s9 driver2
-%
-	"
-2:
- drive-truck truck4 s7 s9 driver3
-%
-	"
-2:
- drive-truck truck4 s7 s9 driver4
-%
-	"
-2:
- drive-truck truck4 s8 s0 driver1
- %
-
-"
- 2:
- drive-truck truck4 s8 s0 driver2
-%
-
-"
- 2:
- drive-truck truck4 s8 s0 driver3
-%
-
-"
- 2:
- drive-truck truck4 s8 s0 driver4
-%
-
-"
- 2:
- drive-truck truck4 s8 s2 driver1
- %
-
-"
-2:
- drive-truck truck4 s8 s2 driver2
-%
-
-"
-2:
- drive-truck truck4 s8 s2 driver3
-%
-
-"
-2:
- drive-truck truck4 s8 s2 driver4
-%
-
-"
-2:
- drive-truck truck4 s8 s3 driver1
- %
-
-"
-2:
- drive-truck truck4 s8 s3 driver2
-%
-
-"
-2:
- drive-truck truck4 s8 s3 driver3
-%
-
-"
-2:
- drive-truck truck4 s8 s3 driver4
-%
-
-"
-2:
- drive-truck truck4 s8 s5 driver1
- %
-
-"
-2:
- drive-truck truck4 s8 s5 driver2
-%
-
-"
-2:
- drive-truck truck4 s8 s5 driver3
-%
-
-"
-2:
- drive-truck truck4 s8 s5 driver4
-%
-
-"
-2:
- drive-truck truck4 s8 s6 driver1
- %
-
-"
-2:
- drive-truck truck4 s8 s6 driver2
-%
-
-"
-2:
- drive-truck truck4 s8 s6 driver3
-%
-
-"
-2:
- drive-truck truck4 s8 s6 driver4
-%
-
-"
-2:
- drive-truck truck4 s8 s9 driver1
- %
-
-"
-2:
- drive-truck truck4 s8 s9 driver2
-%
-
-"
-2:
- drive-truck truck4 s8 s9 driver3
-%
-
-"
-2:
- drive-truck truck4 s8 s9 driver4
-%
-
-"
-2:
- drive-truck truck4 s9 s0 driver1
- %
-"
- 2:
- drive-truck truck4 s9 s0 driver2
-%
-"
- 2:
- drive-truck truck4 s9 s0 driver3
-%
-"
- 2:
- drive-truck truck4 s9 s0 driver4
-%
-"
- 2:
- drive-truck truck4 s9 s1 driver1
- %
-"
-2:
- drive-truck truck4 s9 s1 driver2
-%
-"
-2:
- drive-truck truck4 s9 s1 driver3
-%
-"
-2:
- drive-truck truck4 s9 s1 driver4
-%
-"
-2:
- drive-truck truck4 s9 s2 driver1
- %
-"
-2:
- drive-truck truck4 s9 s2 driver2
-%
-"
-2:
- drive-truck truck4 s9 s2 driver3
-%
-"
-2:
- drive-truck truck4 s9 s2 driver4
-%
-"
-2:
- drive-truck truck4 s9 s3 driver1
- %
-"
-2:
- drive-truck truck4 s9 s3 driver2
-%
-"
-2:
- drive-truck truck4 s9 s3 driver3
-%
-"
-2:
- drive-truck truck4 s9 s3 driver4
-%
-"
-2:
- drive-truck truck4 s9 s4 driver1
- %
-"
-2:
- drive-truck truck4 s9 s4 driver2
-%
-"
-2:
- drive-truck truck4 s9 s4 driver3
-%
-"
-2:
- drive-truck truck4 s9 s4 driver4
-%
-"
-2:
- drive-truck truck4 s9 s5 driver1
- %
-"
-2:
- drive-truck truck4 s9 s5 driver2
-%
-"
-2:
- drive-truck truck4 s9 s5 driver3
-%
-"
-2:
- drive-truck truck4 s9 s5 driver4
-%
-"
-2:
- drive-truck truck4 s9 s6 driver1
- %
-"
-2:
- drive-truck truck4 s9 s6 driver2
-%
-"
-2:
- drive-truck truck4 s9 s6 driver3
-%
-"
-2:
- drive-truck truck4 s9 s6 driver4
-%
-"
-2:
- drive-truck truck4 s9 s7 driver1
- %
-"
-	2:
- drive-truck truck4 s9 s7 driver2
-%
-"
-	2:
- drive-truck truck4 s9 s7 driver3
-%
-"
-	2:
- drive-truck truck4 s9 s7 driver4
-%
-"
-	2:
- drive-truck truck4 s9 s8 driver1
- %
-"
-
-2:
- drive-truck truck4 s9 s8 driver2
-%
-"
-
-2:
- drive-truck truck4 s9 s8 driver3
-%
-"
-
-2:
- drive-truck truck4 s9 s8 driver4
-%
-"
-
-27
-load-truck package1 truck1 s0
- 
- "
-27
-load-truck package1 truck1 s1
-
-"
-28
-load-truck package1 truck1 s10
-
-"
-28
-load-truck package1 truck1 s11
-
-"
-27
-load-truck package1 truck1 s2
-
-"
-27
-load-truck package1 truck1 s3
-
-"
-27
-load-truck package1 truck1 s4
-
-"
-27
-load-truck package1 truck1 s5
-
-"
-27
-load-truck package1 truck1 s6
-
-"
-27
-load-truck package1 truck1 s7
-	
-	"
-27
-load-truck package1 truck1 s8
-
-
-
-"
-27
-load-truck package1 truck1 s9
-
-"
-27
-load-truck package1 truck2 s0
- 
- "
-27
-load-truck package1 truck2 s1
-
-"
-28
-load-truck package1 truck2 s10
-
-"
-28
-load-truck package1 truck2 s11
-
-"
-27
-load-truck package1 truck2 s2
-
-"
-27
-load-truck package1 truck2 s3
-
-"
-27
-load-truck package1 truck2 s4
-
-"
-27
-load-truck package1 truck2 s5
-
-"
-27
-load-truck package1 truck2 s6
-
-"
-27
-load-truck package1 truck2 s7
-	
-	"
-27
-load-truck package1 truck2 s8
-
-
-
-"
-27
-load-truck package1 truck2 s9
-
-"
-27
-load-truck package1 truck3 s0
- 
- "
-27
-load-truck package1 truck3 s1
-
-"
-28
-load-truck package1 truck3 s10
-
-"
-28
-load-truck package1 truck3 s11
-
-"
-27
-load-truck package1 truck3 s2
-
-"
-27
-load-truck package1 truck3 s3
-
-"
-27
-load-truck package1 truck3 s4
-
-"
-27
-load-truck package1 truck3 s5
-
-"
-27
-load-truck package1 truck3 s6
-
-"
-27
-load-truck package1 truck3 s7
-	
-	"
-27
-load-truck package1 truck3 s8
-
-
-
-"
-27
-load-truck package1 truck3 s9
-
-"
-27
-load-truck package1 truck4 s0
- 
- "
-27
-load-truck package1 truck4 s1
-
-"
-28
-load-truck package1 truck4 s10
-
-"
-28
-load-truck package1 truck4 s11
-
-"
-27
-load-truck package1 truck4 s2
-
-"
-27
-load-truck package1 truck4 s3
-
-"
-27
-load-truck package1 truck4 s4
-
-"
-27
-load-truck package1 truck4 s5
-
-"
-27
-load-truck package1 truck4 s6
-
-"
-27
-load-truck package1 truck4 s7
-	
-	"
-27
-load-truck package1 truck4 s8
-
-
-
-"
-27
-load-truck package1 truck4 s9
-
-"
-27
-load-truck package2 truck1 s0
- 
- "
-27
-load-truck package2 truck1 s1
-
-"
-28
-load-truck package2 truck1 s10
-
-"
-28
-load-truck package2 truck1 s11
-
-"
-27
-load-truck package2 truck1 s2
-
-"
-27
-load-truck package2 truck1 s3
-
-"
-27
-load-truck package2 truck1 s4
-
-"
-27
-load-truck package2 truck1 s5
-
-"
-27
-load-truck package2 truck1 s6
-
-"
-27
-load-truck package2 truck1 s7
-	
-	"
-27
-load-truck package2 truck1 s8
-
-
-
-"
-27
-load-truck package2 truck1 s9
-
-"
-27
-load-truck package2 truck2 s0
- 
- "
-27
-load-truck package2 truck2 s1
-
-"
-28
-load-truck package2 truck2 s10
-
-"
-28
-load-truck package2 truck2 s11
-
-"
-27
-load-truck package2 truck2 s2
-
-"
-27
-load-truck package2 truck2 s3
-
-"
-27
-load-truck package2 truck2 s4
-
-"
-27
-load-truck package2 truck2 s5
-
-"
-27
-load-truck package2 truck2 s6
-
-"
-27
-load-truck package2 truck2 s7
-	
-	"
-27
-load-truck package2 truck2 s8
-
-
-
-"
-27
-load-truck package2 truck2 s9
-
-"
-27
-load-truck package2 truck3 s0
- 
- "
-27
-load-truck package2 truck3 s1
-
-"
-28
-load-truck package2 truck3 s10
-
-"
-28
-load-truck package2 truck3 s11
-
-"
-27
-load-truck package2 truck3 s2
-
-"
-27
-load-truck package2 truck3 s3
-
-"
-27
-load-truck package2 truck3 s4
-
-"
-27
-load-truck package2 truck3 s5
-
-"
-27
-load-truck package2 truck3 s6
-
-"
-27
-load-truck package2 truck3 s7
-	
-	"
-27
-load-truck package2 truck3 s8
-
-
-
-"
-27
-load-truck package2 truck3 s9
-
-"
-27
-load-truck package2 truck4 s0
- 
- "
-27
-load-truck package2 truck4 s1
-
-"
-28
-load-truck package2 truck4 s10
-
-"
-28
-load-truck package2 truck4 s11
-
-"
-27
-load-truck package2 truck4 s2
-
-"
-27
-load-truck package2 truck4 s3
-
-"
-27
-load-truck package2 truck4 s4
-
-"
-27
-load-truck package2 truck4 s5
-
-"
-27
-load-truck package2 truck4 s6
-
-"
-27
-load-truck package2 truck4 s7
-	
-	"
-27
-load-truck package2 truck4 s8
-
-
-
-"
-27
-load-truck package2 truck4 s9
-
-"
-27
-load-truck package3 truck1 s0
- 
- "
-27
-load-truck package3 truck1 s1
-
-"
-28
-load-truck package3 truck1 s10
-
-"
-28
-load-truck package3 truck1 s11
-
-"
-27
-load-truck package3 truck1 s2
-
-"
-27
-load-truck package3 truck1 s3
-
-"
-27
-load-truck package3 truck1 s4
-
-"
-27
-load-truck package3 truck1 s5
-
-"
-27
-load-truck package3 truck1 s6
-
-"
-27
-load-truck package3 truck1 s7
-	
-	"
-27
-load-truck package3 truck1 s8
-
-
-
-"
-27
-load-truck package3 truck1 s9
-
-"
-27
-load-truck package3 truck2 s0
- 
- "
-27
-load-truck package3 truck2 s1
-
-"
-28
-load-truck package3 truck2 s10
-
-"
-28
-load-truck package3 truck2 s11
-
-"
-27
-load-truck package3 truck2 s2
-
-"
-27
-load-truck package3 truck2 s3
-
-"
-27
-load-truck package3 truck2 s4
-
-"
-27
-load-truck package3 truck2 s5
-
-"
-27
-load-truck package3 truck2 s6
-
-"
-27
-load-truck package3 truck2 s7
-	
-	"
-27
-load-truck package3 truck2 s8
-
-
-
-"
-27
-load-truck package3 truck2 s9
-
-"
-27
-load-truck package3 truck3 s0
- 
- "
-27
-load-truck package3 truck3 s1
-
-"
-28
-load-truck package3 truck3 s10
-
-"
-28
-load-truck package3 truck3 s11
-
-"
-27
-load-truck package3 truck3 s2
-
-"
-27
-load-truck package3 truck3 s3
-
-"
-27
-load-truck package3 truck3 s4
-
-"
-27
-load-truck package3 truck3 s5
-
-"
-27
-load-truck package3 truck3 s6
-
-"
-27
-load-truck package3 truck3 s7
-	
-	"
-27
-load-truck package3 truck3 s8
-
-
-
-"
-27
-load-truck package3 truck3 s9
-
-"
-27
-load-truck package3 truck4 s0
- 
- "
-27
-load-truck package3 truck4 s1
-
-"
-28
-load-truck package3 truck4 s10
-
-"
-28
-load-truck package3 truck4 s11
-
-"
-27
-load-truck package3 truck4 s2
-
-"
-27
-load-truck package3 truck4 s3
-
-"
-27
-load-truck package3 truck4 s4
-
-"
-27
-load-truck package3 truck4 s5
-
-"
-27
-load-truck package3 truck4 s6
-
-"
-27
-load-truck package3 truck4 s7
-	
-	"
-27
-load-truck package3 truck4 s8
-
-
-
-"
-27
-load-truck package3 truck4 s9
-
-"
-27
-load-truck package4 truck1 s0
- 
- "
-27
-load-truck package4 truck1 s1
-
-"
-28
-load-truck package4 truck1 s10
-
-"
-28
-load-truck package4 truck1 s11
-
-"
-27
-load-truck package4 truck1 s2
-
-"
-27
-load-truck package4 truck1 s3
-
-"
-27
-load-truck package4 truck1 s4
-
-"
-27
-load-truck package4 truck1 s5
-
-"
-27
-load-truck package4 truck1 s6
-
-"
-27
-load-truck package4 truck1 s7
-	
-	"
-27
-load-truck package4 truck1 s8
-
-
-
-"
-27
-load-truck package4 truck1 s9
-
-"
-27
-load-truck package4 truck2 s0
- 
- "
-27
-load-truck package4 truck2 s1
-
-"
-28
-load-truck package4 truck2 s10
-
-"
-28
-load-truck package4 truck2 s11
-
-"
-27
-load-truck package4 truck2 s2
-
-"
-27
-load-truck package4 truck2 s3
-
-"
-27
-load-truck package4 truck2 s4
-
-"
-27
-load-truck package4 truck2 s5
-
-"
-27
-load-truck package4 truck2 s6
-
-"
-27
-load-truck package4 truck2 s7
-	
-	"
-27
-load-truck package4 truck2 s8
-
-
-
-"
-27
-load-truck package4 truck2 s9
-
-"
-27
-load-truck package4 truck3 s0
- 
- "
-27
-load-truck package4 truck3 s1
-
-"
-28
-load-truck package4 truck3 s10
-
-"
-28
-load-truck package4 truck3 s11
-
-"
-27
-load-truck package4 truck3 s2
-
-"
-27
-load-truck package4 truck3 s3
-
-"
-27
-load-truck package4 truck3 s4
-
-"
-27
-load-truck package4 truck3 s5
-
-"
-27
-load-truck package4 truck3 s6
-
-"
-27
-load-truck package4 truck3 s7
-	
-	"
-27
-load-truck package4 truck3 s8
-
-
-
-"
-27
-load-truck package4 truck3 s9
-
-"
-27
-load-truck package4 truck4 s0
- 
- "
-27
-load-truck package4 truck4 s1
-
-"
-28
-load-truck package4 truck4 s10
-
-"
-28
-load-truck package4 truck4 s11
-
-"
-27
-load-truck package4 truck4 s2
-
-"
-27
-load-truck package4 truck4 s3
-
-"
-27
-load-truck package4 truck4 s4
-
-"
-27
-load-truck package4 truck4 s5
-
-"
-27
-load-truck package4 truck4 s6
-
-"
-27
-load-truck package4 truck4 s7
-	
-	"
-27
-load-truck package4 truck4 s8
-
-
-
-"
-27
-load-truck package4 truck4 s9
-
-"
-27
-load-truck package5 truck1 s0
- 
- "
-27
-load-truck package5 truck1 s1
-
-"
-28
-load-truck package5 truck1 s10
-
-"
-28
-load-truck package5 truck1 s11
-
-"
-27
-load-truck package5 truck1 s2
-
-"
-27
-load-truck package5 truck1 s3
-
-"
-27
-load-truck package5 truck1 s4
-
-"
-27
-load-truck package5 truck1 s5
-
-"
-27
-load-truck package5 truck1 s6
-
-"
-27
-load-truck package5 truck1 s7
-	
-	"
-27
-load-truck package5 truck1 s8
-
-
-
-"
-27
-load-truck package5 truck1 s9
-
-"
-27
-load-truck package5 truck2 s0
- 
- "
-27
-load-truck package5 truck2 s1
-
-"
-28
-load-truck package5 truck2 s10
-
-"
-28
-load-truck package5 truck2 s11
-
-"
-27
-load-truck package5 truck2 s2
-
-"
-27
-load-truck package5 truck2 s3
-
-"
-27
-load-truck package5 truck2 s4
-
-"
-27
-load-truck package5 truck2 s5
-
-"
-27
-load-truck package5 truck2 s6
-
-"
-27
-load-truck package5 truck2 s7
-	
-	"
-27
-load-truck package5 truck2 s8
-
-
-
-"
-27
-load-truck package5 truck2 s9
-
-"
-27
-load-truck package5 truck3 s0
- 
- "
-27
-load-truck package5 truck3 s1
-
-"
-28
-load-truck package5 truck3 s10
-
-"
-28
-load-truck package5 truck3 s11
-
-"
-27
-load-truck package5 truck3 s2
-
-"
-27
-load-truck package5 truck3 s3
-
-"
-27
-load-truck package5 truck3 s4
-
-"
-27
-load-truck package5 truck3 s5
-
-"
-27
-load-truck package5 truck3 s6
-
-"
-27
-load-truck package5 truck3 s7
-	
-	"
-27
-load-truck package5 truck3 s8
-
-
-
-"
-27
-load-truck package5 truck3 s9
-
-"
-27
-load-truck package5 truck4 s0
- 
- "
-27
-load-truck package5 truck4 s1
-
-"
-28
-load-truck package5 truck4 s10
-
-"
-28
-load-truck package5 truck4 s11
-
-"
-27
-load-truck package5 truck4 s2
-
-"
-27
-load-truck package5 truck4 s3
-
-"
-27
-load-truck package5 truck4 s4
-
-"
-27
-load-truck package5 truck4 s5
-
-"
-27
-load-truck package5 truck4 s6
-
-"
-27
-load-truck package5 truck4 s7
-	
-	"
-27
-load-truck package5 truck4 s8
-
-
-
-"
-27
-load-truck package5 truck4 s9
-
-"
-27
-load-truck package6 truck1 s0
- 
-	 "
-	27
-load-truck package6 truck1 s1
-
-	"
-	28
-load-truck package6 truck1 s10
-
-	"
-	28
-load-truck package6 truck1 s11
-
-	"
-	27
-load-truck package6 truck1 s2
-
-	"
-	27
-load-truck package6 truck1 s3
-
-	"
-	27
-load-truck package6 truck1 s4
-
-	"
-	27
-load-truck package6 truck1 s5
-
-	"
-	27
-load-truck package6 truck1 s6
-
-	"
-	27
-load-truck package6 truck1 s7
-	
-		"
-	27
-load-truck package6 truck1 s8
-
-
-	
-"
-	27
-load-truck package6 truck1 s9
-
-	"
-	27
-load-truck package6 truck2 s0
- 
-	 "
-	27
-load-truck package6 truck2 s1
-
-	"
-	28
-load-truck package6 truck2 s10
-
-	"
-	28
-load-truck package6 truck2 s11
-
-	"
-	27
-load-truck package6 truck2 s2
-
-	"
-	27
-load-truck package6 truck2 s3
-
-	"
-	27
-load-truck package6 truck2 s4
-
-	"
-	27
-load-truck package6 truck2 s5
-
-	"
-	27
-load-truck package6 truck2 s6
-
-	"
-	27
-load-truck package6 truck2 s7
-	
-		"
-	27
-load-truck package6 truck2 s8
-
-
-	
-"
-	27
-load-truck package6 truck2 s9
-
-	"
-	27
-load-truck package6 truck3 s0
- 
-	 "
-	27
-load-truck package6 truck3 s1
-
-	"
-	28
-load-truck package6 truck3 s10
-
-	"
-	28
-load-truck package6 truck3 s11
-
-	"
-	27
-load-truck package6 truck3 s2
-
-	"
-	27
-load-truck package6 truck3 s3
-
-	"
-	27
-load-truck package6 truck3 s4
-
-	"
-	27
-load-truck package6 truck3 s5
-
-	"
-	27
-load-truck package6 truck3 s6
-
-	"
-	27
-load-truck package6 truck3 s7
-	
-		"
-	27
-load-truck package6 truck3 s8
-
-
-	
-"
-	27
-load-truck package6 truck3 s9
-
-	"
-	27
-load-truck package6 truck4 s0
- 
-	 "
-	27
-load-truck package6 truck4 s1
-
-	"
-	28
-load-truck package6 truck4 s10
-
-	"
-	28
-load-truck package6 truck4 s11
-
-	"
-	27
-load-truck package6 truck4 s2
-
-	"
-	27
-load-truck package6 truck4 s3
-
-	"
-	27
-load-truck package6 truck4 s4
-
-	"
-	27
-load-truck package6 truck4 s5
-
-	"
-	27
-load-truck package6 truck4 s6
-
-	"
-	27
-load-truck package6 truck4 s7
-	
-		"
-	27
-load-truck package6 truck4 s8
-
-
-	
-"
-	27
-load-truck package6 truck4 s9
-
-	"
-	27
-load-truck package7 truck1 s0
- 
-
- "
-
-27
-load-truck package7 truck1 s1
-
-
-"
-
-28
-load-truck package7 truck1 s10
-
-
-"
-
-28
-load-truck package7 truck1 s11
-
-
-"
-
-27
-load-truck package7 truck1 s2
-
-
-"
-
-27
-load-truck package7 truck1 s3
-
-
-"
-
-27
-load-truck package7 truck1 s4
-
-
-"
-
-27
-load-truck package7 truck1 s5
-
-
-"
-
-27
-load-truck package7 truck1 s6
-
-
-"
-
-27
-load-truck package7 truck1 s7
-	
-
-	"
-
-27
-load-truck package7 truck1 s8
-
-
-
-
-"
-
-27
-load-truck package7 truck1 s9
-
-
-"
-
-27
-load-truck package7 truck2 s0
- 
-
- "
-
-27
-load-truck package7 truck2 s1
-
-
-"
-
-28
-load-truck package7 truck2 s10
-
-
-"
-
-28
-load-truck package7 truck2 s11
-
-
-"
-
-27
-load-truck package7 truck2 s2
-
-
-"
-
-27
-load-truck package7 truck2 s3
-
-
-"
-
-27
-load-truck package7 truck2 s4
-
-
-"
-
-27
-load-truck package7 truck2 s5
-
-
-"
-
-27
-load-truck package7 truck2 s6
-
-
-"
-
-27
-load-truck package7 truck2 s7
-	
-
-	"
-
-27
-load-truck package7 truck2 s8
-
-
-
-
-"
-
-27
-load-truck package7 truck2 s9
-
-
-"
-
-27
-load-truck package7 truck3 s0
- 
-
- "
-
-27
-load-truck package7 truck3 s1
-
-
-"
-
-28
-load-truck package7 truck3 s10
-
-
-"
-
-28
-load-truck package7 truck3 s11
-
-
-"
-
-27
-load-truck package7 truck3 s2
-
-
-"
-
-27
-load-truck package7 truck3 s3
-
-
-"
-
-27
-load-truck package7 truck3 s4
-
-
-"
-
-27
-load-truck package7 truck3 s5
-
-
-"
-
-27
-load-truck package7 truck3 s6
-
-
-"
-
-27
-load-truck package7 truck3 s7
-	
-
-	"
-
-27
-load-truck package7 truck3 s8
-
-
-
-
-"
-
-27
-load-truck package7 truck3 s9
-
-
-"
-
-27
-load-truck package7 truck4 s0
- 
-
- "
-
-27
-load-truck package7 truck4 s1
-
-
-"
-
-28
-load-truck package7 truck4 s10
-
-
-"
-
-28
-load-truck package7 truck4 s11
-
-
-"
-
-27
-load-truck package7 truck4 s2
-
-
-"
-
-27
-load-truck package7 truck4 s3
-
-
-"
-
-27
-load-truck package7 truck4 s4
-
-
-"
-
-27
-load-truck package7 truck4 s5
-
-
-"
-
-27
-load-truck package7 truck4 s6
-
-
-"
-
-27
-load-truck package7 truck4 s7
-	
-
-	"
-
-27
-load-truck package7 truck4 s8
-
-
-
-
-"
-
-27
-load-truck package7 truck4 s9
-
-
-"
-
-27
-load-truck package8 truck1 s0
- 
- "
-27
-load-truck package8 truck1 s1
-
-"
-28
-load-truck package8 truck1 s10
-
-"
-28
-load-truck package8 truck1 s11
-
-"
-27
-load-truck package8 truck1 s2
-
-"
-27
-load-truck package8 truck1 s3
-
-"
-27
-load-truck package8 truck1 s4
-
-"
-27
-load-truck package8 truck1 s5
-
-"
-27
-load-truck package8 truck1 s6
-
-"
-27
-load-truck package8 truck1 s7
-	
-	"
-27
-load-truck package8 truck1 s8
-
-
-
-"
-27
-load-truck package8 truck1 s9
-
-"
-27
-load-truck package8 truck2 s0
- 
- "
-27
-load-truck package8 truck2 s1
-
-"
-28
-load-truck package8 truck2 s10
-
-"
-28
-load-truck package8 truck2 s11
-
-"
-27
-load-truck package8 truck2 s2
-
-"
-27
-load-truck package8 truck2 s3
-
-"
-27
-load-truck package8 truck2 s4
-
-"
-27
-load-truck package8 truck2 s5
-
-"
-27
-load-truck package8 truck2 s6
-
-"
-27
-load-truck package8 truck2 s7
-	
-	"
-27
-load-truck package8 truck2 s8
-
-
-
-"
-27
-load-truck package8 truck2 s9
-
-"
-27
-load-truck package8 truck3 s0
- 
- "
-27
-load-truck package8 truck3 s1
-
-"
-28
-load-truck package8 truck3 s10
-
-"
-28
-load-truck package8 truck3 s11
-
-"
-27
-load-truck package8 truck3 s2
-
-"
-27
-load-truck package8 truck3 s3
-
-"
-27
-load-truck package8 truck3 s4
-
-"
-27
-load-truck package8 truck3 s5
-
-"
-27
-load-truck package8 truck3 s6
-
-"
-27
-load-truck package8 truck3 s7
-	
-	"
-27
-load-truck package8 truck3 s8
-
-
-
-"
-27
-load-truck package8 truck3 s9
-
-"
-27
-load-truck package8 truck4 s0
- 
- "
-27
-load-truck package8 truck4 s1
-
-"
-28
-load-truck package8 truck4 s10
-
-"
-28
-load-truck package8 truck4 s11
-
-"
-27
-load-truck package8 truck4 s2
-
-"
-27
-load-truck package8 truck4 s3
-
-"
-27
-load-truck package8 truck4 s4
-
-"
-27
-load-truck package8 truck4 s5
-
-"
-27
-load-truck package8 truck4 s6
-
-"
-27
-load-truck package8 truck4 s7
-	
-	"
-27
-load-truck package8 truck4 s8
-
-
-
-"
-27
-load-truck package8 truck4 s9
-
-"
-29
-unload-truck package1 truck1 s0
- 
-"
- 29
-unload-truck package1 truck1 s1
-
-"
-2:
- unload-truck package1 truck1 s10
-
-"
-2:
- unload-truck package1 truck1 s11
-
-"
-29
-unload-truck package1 truck1 s2
-
-"
-29
-unload-truck package1 truck1 s3
-
-"
-29
-unload-truck package1 truck1 s4
-
-"
-29
-unload-truck package1 truck1 s5
-
-"
-29
-unload-truck package1 truck1 s6
-
-"
-29
-unload-truck package1 truck1 s7
-	
-"
-	29
-unload-truck package1 truck1 s8
-
-
-"
-
-29
-unload-truck package1 truck1 s9
-
-"
-29
-unload-truck package1 truck2 s0
- 
-"
- 29
-unload-truck package1 truck2 s1
-
-"
-2:
- unload-truck package1 truck2 s10
-
-"
-2:
- unload-truck package1 truck2 s11
-
-"
-29
-unload-truck package1 truck2 s2
-
-"
-29
-unload-truck package1 truck2 s3
-
-"
-29
-unload-truck package1 truck2 s4
-
-"
-29
-unload-truck package1 truck2 s5
-
-"
-29
-unload-truck package1 truck2 s6
-
-"
-29
-unload-truck package1 truck2 s7
-	
-"
-	29
-unload-truck package1 truck2 s8
-
-
-"
-
-29
-unload-truck package1 truck2 s9
-
-"
-29
-unload-truck package1 truck3 s0
- 
-"
- 29
-unload-truck package1 truck3 s1
-
-"
-2:
- unload-truck package1 truck3 s10
-
-"
-2:
- unload-truck package1 truck3 s11
-
-"
-29
-unload-truck package1 truck3 s2
-
-"
-29
-unload-truck package1 truck3 s3
-
-"
-29
-unload-truck package1 truck3 s4
-
-"
-29
-unload-truck package1 truck3 s5
-
-"
-29
-unload-truck package1 truck3 s6
-
-"
-29
-unload-truck package1 truck3 s7
-	
-"
-	29
-unload-truck package1 truck3 s8
-
-
-"
-
-29
-unload-truck package1 truck3 s9
-
-"
-29
-unload-truck package1 truck4 s0
- 
-"
- 29
-unload-truck package1 truck4 s1
-
-"
-2:
- unload-truck package1 truck4 s10
-
-"
-2:
- unload-truck package1 truck4 s11
-
-"
-29
-unload-truck package1 truck4 s2
-
-"
-29
-unload-truck package1 truck4 s3
-
-"
-29
-unload-truck package1 truck4 s4
-
-"
-29
-unload-truck package1 truck4 s5
-
-"
-29
-unload-truck package1 truck4 s6
-
-"
-29
-unload-truck package1 truck4 s7
-	
-"
-	29
-unload-truck package1 truck4 s8
-
-
-"
-
-29
-unload-truck package1 truck4 s9
-
-"
-29
-unload-truck package2 truck1 s0
- 
-"
- 29
-unload-truck package2 truck1 s1
-
-"
-2:
- unload-truck package2 truck1 s10
-
-"
-2:
- unload-truck package2 truck1 s11
-
-"
-29
-unload-truck package2 truck1 s2
-
-"
-29
-unload-truck package2 truck1 s3
-
-"
-29
-unload-truck package2 truck1 s4
-
-"
-29
-unload-truck package2 truck1 s5
-
-"
-29
-unload-truck package2 truck1 s6
-
-"
-29
-unload-truck package2 truck1 s7
-	
-"
-	29
-unload-truck package2 truck1 s8
-
-
-"
-
-29
-unload-truck package2 truck1 s9
-
-"
-29
-unload-truck package2 truck2 s0
- 
-"
- 29
-unload-truck package2 truck2 s1
-
-"
-2:
- unload-truck package2 truck2 s10
-
-"
-2:
- unload-truck package2 truck2 s11
-
-"
-29
-unload-truck package2 truck2 s2
-
-"
-29
-unload-truck package2 truck2 s3
-
-"
-29
-unload-truck package2 truck2 s4
-
-"
-29
-unload-truck package2 truck2 s5
-
-"
-29
-unload-truck package2 truck2 s6
-
-"
-29
-unload-truck package2 truck2 s7
-	
-"
-	29
-unload-truck package2 truck2 s8
-
-
-"
-
-29
-unload-truck package2 truck2 s9
-
-"
-29
-unload-truck package2 truck3 s0
- 
-"
- 29
-unload-truck package2 truck3 s1
-
-"
-2:
- unload-truck package2 truck3 s10
-
-"
-2:
- unload-truck package2 truck3 s11
-
-"
-29
-unload-truck package2 truck3 s2
-
-"
-29
-unload-truck package2 truck3 s3
-
-"
-29
-unload-truck package2 truck3 s4
-
-"
-29
-unload-truck package2 truck3 s5
-
-"
-29
-unload-truck package2 truck3 s6
-
-"
-29
-unload-truck package2 truck3 s7
-	
-"
-	29
-unload-truck package2 truck3 s8
-
-
-"
-
-29
-unload-truck package2 truck3 s9
-
-"
-29
-unload-truck package2 truck4 s0
- 
-"
- 29
-unload-truck package2 truck4 s1
-
-"
-2:
- unload-truck package2 truck4 s10
-
-"
-2:
- unload-truck package2 truck4 s11
-
-"
-29
-unload-truck package2 truck4 s2
-
-"
-29
-unload-truck package2 truck4 s3
-
-"
-29
-unload-truck package2 truck4 s4
-
-"
-29
-unload-truck package2 truck4 s5
-
-"
-29
-unload-truck package2 truck4 s6
-
-"
-29
-unload-truck package2 truck4 s7
-	
-"
-	29
-unload-truck package2 truck4 s8
-
-
-"
-
-29
-unload-truck package2 truck4 s9
-
-"
-29
-unload-truck package3 truck1 s0
- 
-"
- 29
-unload-truck package3 truck1 s1
-
-"
-2:
- unload-truck package3 truck1 s10
-
-"
-2:
- unload-truck package3 truck1 s11
-
-"
-29
-unload-truck package3 truck1 s2
-
-"
-29
-unload-truck package3 truck1 s3
-
-"
-29
-unload-truck package3 truck1 s4
-
-"
-29
-unload-truck package3 truck1 s5
-
-"
-29
-unload-truck package3 truck1 s6
-
-"
-29
-unload-truck package3 truck1 s7
-	
-"
-	29
-unload-truck package3 truck1 s8
-
-
-"
-
-29
-unload-truck package3 truck1 s9
-
-"
-29
-unload-truck package3 truck2 s0
- 
-"
- 29
-unload-truck package3 truck2 s1
-
-"
-2:
- unload-truck package3 truck2 s10
-
-"
-2:
- unload-truck package3 truck2 s11
-
-"
-29
-unload-truck package3 truck2 s2
-
-"
-29
-unload-truck package3 truck2 s3
-
-"
-29
-unload-truck package3 truck2 s4
-
-"
-29
-unload-truck package3 truck2 s5
-
-"
-29
-unload-truck package3 truck2 s6
-
-"
-29
-unload-truck package3 truck2 s7
-	
-"
-	29
-unload-truck package3 truck2 s8
-
-
-"
-
-29
-unload-truck package3 truck2 s9
-
-"
-29
-unload-truck package3 truck3 s0
- 
-"
- 29
-unload-truck package3 truck3 s1
-
-"
-2:
- unload-truck package3 truck3 s10
-
-"
-2:
- unload-truck package3 truck3 s11
-
-"
-29
-unload-truck package3 truck3 s2
-
-"
-29
-unload-truck package3 truck3 s3
-
-"
-29
-unload-truck package3 truck3 s4
-
-"
-29
-unload-truck package3 truck3 s5
-
-"
-29
-unload-truck package3 truck3 s6
-
-"
-29
-unload-truck package3 truck3 s7
-	
-"
-	29
-unload-truck package3 truck3 s8
-
-
-"
-
-29
-unload-truck package3 truck3 s9
-
-"
-29
-unload-truck package3 truck4 s0
- 
-"
- 29
-unload-truck package3 truck4 s1
-
-"
-2:
- unload-truck package3 truck4 s10
-
-"
-2:
- unload-truck package3 truck4 s11
-
-"
-29
-unload-truck package3 truck4 s2
-
-"
-29
-unload-truck package3 truck4 s3
-
-"
-29
-unload-truck package3 truck4 s4
-
-"
-29
-unload-truck package3 truck4 s5
-
-"
-29
-unload-truck package3 truck4 s6
-
-"
-29
-unload-truck package3 truck4 s7
-	
-"
-	29
-unload-truck package3 truck4 s8
-
-
-"
-
-29
-unload-truck package3 truck4 s9
-
-"
-29
-unload-truck package4 truck1 s0
- 
-"
- 29
-unload-truck package4 truck1 s1
-
-"
-2:
- unload-truck package4 truck1 s10
-
-"
-2:
- unload-truck package4 truck1 s11
-
-"
-29
-unload-truck package4 truck1 s2
-
-"
-29
-unload-truck package4 truck1 s3
-
-"
-29
-unload-truck package4 truck1 s4
-
-"
-29
-unload-truck package4 truck1 s5
-
-"
-29
-unload-truck package4 truck1 s6
-
-"
-29
-unload-truck package4 truck1 s7
-	
-"
-	29
-unload-truck package4 truck1 s8
-
-
-"
-
-29
-unload-truck package4 truck1 s9
-
-"
-29
-unload-truck package4 truck2 s0
- 
-"
- 29
-unload-truck package4 truck2 s1
-
-"
-2:
- unload-truck package4 truck2 s10
-
-"
-2:
- unload-truck package4 truck2 s11
-
-"
-29
-unload-truck package4 truck2 s2
-
-"
-29
-unload-truck package4 truck2 s3
-
-"
-29
-unload-truck package4 truck2 s4
-
-"
-29
-unload-truck package4 truck2 s5
-
-"
-29
-unload-truck package4 truck2 s6
-
-"
-29
-unload-truck package4 truck2 s7
-	
-"
-	29
-unload-truck package4 truck2 s8
-
-
-"
-
-29
-unload-truck package4 truck2 s9
-
-"
-29
-unload-truck package4 truck3 s0
- 
-"
- 29
-unload-truck package4 truck3 s1
-
-"
-2:
- unload-truck package4 truck3 s10
-
-"
-2:
- unload-truck package4 truck3 s11
-
-"
-29
-unload-truck package4 truck3 s2
-
-"
-29
-unload-truck package4 truck3 s3
-
-"
-29
-unload-truck package4 truck3 s4
-
-"
-29
-unload-truck package4 truck3 s5
-
-"
-29
-unload-truck package4 truck3 s6
-
-"
-29
-unload-truck package4 truck3 s7
-	
-"
-	29
-unload-truck package4 truck3 s8
-
-
-"
-
-29
-unload-truck package4 truck3 s9
-
-"
-29
-unload-truck package4 truck4 s0
- 
-"
- 29
-unload-truck package4 truck4 s1
-
-"
-2:
- unload-truck package4 truck4 s10
-
-"
-2:
- unload-truck package4 truck4 s11
-
-"
-29
-unload-truck package4 truck4 s2
-
-"
-29
-unload-truck package4 truck4 s3
-
-"
-29
-unload-truck package4 truck4 s4
-
-"
-29
-unload-truck package4 truck4 s5
-
-"
-29
-unload-truck package4 truck4 s6
-
-"
-29
-unload-truck package4 truck4 s7
-	
-"
-	29
-unload-truck package4 truck4 s8
-
-
-"
-
-29
-unload-truck package4 truck4 s9
-
-"
-29
-unload-truck package5 truck1 s0
- 
-"
- 29
-unload-truck package5 truck1 s1
-
-"
-2:
- unload-truck package5 truck1 s10
-
-"
-2:
- unload-truck package5 truck1 s11
-
-"
-29
-unload-truck package5 truck1 s2
-
-"
-29
-unload-truck package5 truck1 s3
-
-"
-29
-unload-truck package5 truck1 s4
-
-"
-29
-unload-truck package5 truck1 s5
-
-"
-29
-unload-truck package5 truck1 s6
-
-"
-29
-unload-truck package5 truck1 s7
-	
-"
-	29
-unload-truck package5 truck1 s8
-
-
-"
-
-29
-unload-truck package5 truck1 s9
-
-"
-29
-unload-truck package5 truck2 s0
- 
-"
- 29
-unload-truck package5 truck2 s1
-
-"
-2:
- unload-truck package5 truck2 s10
-
-"
-2:
- unload-truck package5 truck2 s11
-
-"
-29
-unload-truck package5 truck2 s2
-
-"
-29
-unload-truck package5 truck2 s3
-
-"
-29
-unload-truck package5 truck2 s4
-
-"
-29
-unload-truck package5 truck2 s5
-
-"
-29
-unload-truck package5 truck2 s6
-
-"
-29
-unload-truck package5 truck2 s7
-	
-"
-	29
-unload-truck package5 truck2 s8
-
-
-"
-
-29
-unload-truck package5 truck2 s9
-
-"
-29
-unload-truck package5 truck3 s0
- 
-"
- 29
-unload-truck package5 truck3 s1
-
-"
-2:
- unload-truck package5 truck3 s10
-
-"
-2:
- unload-truck package5 truck3 s11
-
-"
-29
-unload-truck package5 truck3 s2
-
-"
-29
-unload-truck package5 truck3 s3
-
-"
-29
-unload-truck package5 truck3 s4
-
-"
-29
-unload-truck package5 truck3 s5
-
-"
-29
-unload-truck package5 truck3 s6
-
-"
-29
-unload-truck package5 truck3 s7
-	
-"
-	29
-unload-truck package5 truck3 s8
-
-
-"
-
-29
-unload-truck package5 truck3 s9
-
-"
-29
-unload-truck package5 truck4 s0
- 
-"
- 29
-unload-truck package5 truck4 s1
-
-"
-2:
- unload-truck package5 truck4 s10
-
-"
-2:
- unload-truck package5 truck4 s11
-
-"
-29
-unload-truck package5 truck4 s2
-
-"
-29
-unload-truck package5 truck4 s3
-
-"
-29
-unload-truck package5 truck4 s4
-
-"
-29
-unload-truck package5 truck4 s5
-
-"
-29
-unload-truck package5 truck4 s6
-
-"
-29
-unload-truck package5 truck4 s7
-	
-"
-	29
-unload-truck package5 truck4 s8
-
-
-"
-
-29
-unload-truck package5 truck4 s9
-
-"
-29
-unload-truck package6 truck1 s0
- 
-	"
-	 29
-unload-truck package6 truck1 s1
-
-	"
-	2:
- unload-truck package6 truck1 s10
-
-	"
-	2:
- unload-truck package6 truck1 s11
-
-	"
-	29
-unload-truck package6 truck1 s2
-
-	"
-	29
-unload-truck package6 truck1 s3
-
-	"
-	29
-unload-truck package6 truck1 s4
-
-	"
-	29
-unload-truck package6 truck1 s5
-
-	"
-	29
-unload-truck package6 truck1 s6
-
-	"
-	29
-unload-truck package6 truck1 s7
-	
-	"
-		29
-unload-truck package6 truck1 s8
-
-
-	"
-	
-29
-unload-truck package6 truck1 s9
-
-	"
-	29
-unload-truck package6 truck2 s0
- 
-	"
-	 29
-unload-truck package6 truck2 s1
-
-	"
-	2:
- unload-truck package6 truck2 s10
-
-	"
-	2:
- unload-truck package6 truck2 s11
-
-	"
-	29
-unload-truck package6 truck2 s2
-
-	"
-	29
-unload-truck package6 truck2 s3
-
-	"
-	29
-unload-truck package6 truck2 s4
-
-	"
-	29
-unload-truck package6 truck2 s5
-
-	"
-	29
-unload-truck package6 truck2 s6
-
-	"
-	29
-unload-truck package6 truck2 s7
-	
-	"
-		29
-unload-truck package6 truck2 s8
-
-
-	"
-	
-29
-unload-truck package6 truck2 s9
-
-	"
-	29
-unload-truck package6 truck3 s0
- 
-	"
-	 29
-unload-truck package6 truck3 s1
-
-	"
-	2:
- unload-truck package6 truck3 s10
-
-	"
-	2:
- unload-truck package6 truck3 s11
-
-	"
-	29
-unload-truck package6 truck3 s2
-
-	"
-	29
-unload-truck package6 truck3 s3
-
-	"
-	29
-unload-truck package6 truck3 s4
-
-	"
-	29
-unload-truck package6 truck3 s5
-
-	"
-	29
-unload-truck package6 truck3 s6
-
-	"
-	29
-unload-truck package6 truck3 s7
-	
-	"
-		29
-unload-truck package6 truck3 s8
-
-
-	"
-	
-29
-unload-truck package6 truck3 s9
-
-	"
-	29
-unload-truck package6 truck4 s0
- 
-	"
-	 29
-unload-truck package6 truck4 s1
-
-	"
-	2:
- unload-truck package6 truck4 s10
-
-	"
-	2:
- unload-truck package6 truck4 s11
-
-	"
-	29
-unload-truck package6 truck4 s2
-
-	"
-	29
-unload-truck package6 truck4 s3
-
-	"
-	29
-unload-truck package6 truck4 s4
-
-	"
-	29
-unload-truck package6 truck4 s5
-
-	"
-	29
-unload-truck package6 truck4 s6
-
-	"
-	29
-unload-truck package6 truck4 s7
-	
-	"
-		29
-unload-truck package6 truck4 s8
-
-
-	"
-	
-29
-unload-truck package6 truck4 s9
-
-	"
-	29
-unload-truck package7 truck1 s0
- 
-
-"
-
- 29
-unload-truck package7 truck1 s1
-
-
-"
-
-2:
- unload-truck package7 truck1 s10
-
-
-"
-
-2:
- unload-truck package7 truck1 s11
-
-
-"
-
-29
-unload-truck package7 truck1 s2
-
-
-"
-
-29
-unload-truck package7 truck1 s3
-
-
-"
-
-29
-unload-truck package7 truck1 s4
-
-
-"
-
-29
-unload-truck package7 truck1 s5
-
-
-"
-
-29
-unload-truck package7 truck1 s6
-
-
-"
-
-29
-unload-truck package7 truck1 s7
-	
-
-"
-
-	29
-unload-truck package7 truck1 s8
-
-
-
-"
-
-
-29
-unload-truck package7 truck1 s9
-
-
-"
-
-29
-unload-truck package7 truck2 s0
- 
-
-"
-
- 29
-unload-truck package7 truck2 s1
-
-
-"
-
-2:
- unload-truck package7 truck2 s10
-
-
-"
-
-2:
- unload-truck package7 truck2 s11
-
-
-"
-
-29
-unload-truck package7 truck2 s2
-
-
-"
-
-29
-unload-truck package7 truck2 s3
-
-
-"
-
-29
-unload-truck package7 truck2 s4
-
-
-"
-
-29
-unload-truck package7 truck2 s5
-
-
-"
-
-29
-unload-truck package7 truck2 s6
-
-
-"
-
-29
-unload-truck package7 truck2 s7
-	
-
-"
-
-	29
-unload-truck package7 truck2 s8
-
-
-
-"
-
-
-29
-unload-truck package7 truck2 s9
-
-
-"
-
-29
-unload-truck package7 truck3 s0
- 
-
-"
-
- 29
-unload-truck package7 truck3 s1
-
-
-"
-
-2:
- unload-truck package7 truck3 s10
-
-
-"
-
-2:
- unload-truck package7 truck3 s11
-
-
-"
-
-29
-unload-truck package7 truck3 s2
-
-
-"
-
-29
-unload-truck package7 truck3 s3
-
-
-"
-
-29
-unload-truck package7 truck3 s4
-
-
-"
-
-29
-unload-truck package7 truck3 s5
-
-
-"
-
-29
-unload-truck package7 truck3 s6
-
-
-"
-
-29
-unload-truck package7 truck3 s7
-	
-
-"
-
-	29
-unload-truck package7 truck3 s8
-
-
-
-"
-
-
-29
-unload-truck package7 truck3 s9
-
-
-"
-
-29
-unload-truck package7 truck4 s0
- 
-
-"
-
- 29
-unload-truck package7 truck4 s1
-
-
-"
-
-2:
- unload-truck package7 truck4 s10
-
-
-"
-
-2:
- unload-truck package7 truck4 s11
-
-
-"
-
-29
-unload-truck package7 truck4 s2
-
-
-"
-
-29
-unload-truck package7 truck4 s3
-
-
-"
-
-29
-unload-truck package7 truck4 s4
-
-
-"
-
-29
-unload-truck package7 truck4 s5
-
-
-"
-
-29
-unload-truck package7 truck4 s6
-
-
-"
-
-29
-unload-truck package7 truck4 s7
-	
-
-"
-
-	29
-unload-truck package7 truck4 s8
-
-
-
-"
-
-
-29
-unload-truck package7 truck4 s9
-
-
-"
-
-29
-unload-truck package8 truck1 s0
- 
-"
- 29
-unload-truck package8 truck1 s1
-
-"
-2:
- unload-truck package8 truck1 s10
-
-"
-2:
- unload-truck package8 truck1 s11
-
-"
-29
-unload-truck package8 truck1 s2
-
-"
-29
-unload-truck package8 truck1 s3
-
-"
-29
-unload-truck package8 truck1 s4
-
-"
-29
-unload-truck package8 truck1 s5
-
-"
-29
-unload-truck package8 truck1 s6
-
-"
-29
-unload-truck package8 truck1 s7
-	
-"
-	29
-unload-truck package8 truck1 s8
-
-
-"
-
-29
-unload-truck package8 truck1 s9
-
-"
-29
-unload-truck package8 truck2 s0
- 
-"
- 29
-unload-truck package8 truck2 s1
-
-"
-2:
- unload-truck package8 truck2 s10
-
-"
-2:
- unload-truck package8 truck2 s11
-
-"
-29
-unload-truck package8 truck2 s2
-
-"
-29
-unload-truck package8 truck2 s3
-
-"
-29
-unload-truck package8 truck2 s4
-
-"
-29
-unload-truck package8 truck2 s5
-
-"
-29
-unload-truck package8 truck2 s6
-
-"
-29
-unload-truck package8 truck2 s7
-	
-"
-	29
-unload-truck package8 truck2 s8
-
-
-"
-
-29
-unload-truck package8 truck2 s9
-
-"
-29
-unload-truck package8 truck3 s0
- 
-"
- 29
-unload-truck package8 truck3 s1
-
-"
-2:
- unload-truck package8 truck3 s10
-
-"
-2:
- unload-truck package8 truck3 s11
-
-"
-29
-unload-truck package8 truck3 s2
-
-"
-29
-unload-truck package8 truck3 s3
-
-"
-29
-unload-truck package8 truck3 s4
-
-"
-29
-unload-truck package8 truck3 s5
-
-"
-29
-unload-truck package8 truck3 s6
-
-"
-29
-unload-truck package8 truck3 s7
-	
-"
-	29
-unload-truck package8 truck3 s8
-
-
-"
-
-29
-unload-truck package8 truck3 s9
-
-"
-29
-unload-truck package8 truck4 s0
- 
-"
- 29
-unload-truck package8 truck4 s1
-
-"
-2:
- unload-truck package8 truck4 s10
-
-"
-2:
- unload-truck package8 truck4 s11
-
-"
-29
-unload-truck package8 truck4 s2
-
-"
-29
-unload-truck package8 truck4 s3
-
-"
-29
-unload-truck package8 truck4 s4
-
-"
-29
-unload-truck package8 truck4 s5
-
-"
-29
-unload-truck package8 truck4 s6
-
-"
-29
-unload-truck package8 truck4 s7
-	
-"
-	29
-unload-truck package8 truck4 s8
-
-
-"
-
-29
-unload-truck package8 truck4 s9
-
-"
-2)
-walk driver1 p0-11 s0
-  "
- 2*
-walk driver1 p0-11 s11
-  "
- 2(
-walk driver1 p0-2 s0
- "
- 2(
-walk driver1 p0-2 s2
- "
- 2(
-walk driver1 p0-5 s0
- "
- 2(
-walk driver1 p0-5 s5
- "
- 2(
-walk driver1 p0-6 s0
- "
- 2(
-walk driver1 p0-6 s6
- "
- 2(
-walk driver1 p1-5 s1
- "
- 2(
-walk driver1 p1-5 s5
- "
- 2)
-walk driver1 p10-0 s0
- "
- 2*
-walk driver1 p10-0 s10
- "
- 2)
-walk driver1 p10-1 s1
- "
- 2*
-walk driver1 p10-1 s10
- "
- 2*
-walk driver1 p11-2 s11
- "
- 2)
-walk driver1 p11-2 s2
- "
- 2(
-walk driver1 p2-1 s1
- "
- 2(
-walk driver1 p2-1 s2
- "
- 2(
-walk driver1 p2-4 s2
- 	"
- 2(
-walk driver1 p2-4 s4
- 	"
- 2(
-walk driver1 p2-8 s2
- 
-"
- 2(
-walk driver1 p2-8 s8
- 
-"
-  2(
-walk driver1 p4-7 s4
- "
- 2(
-walk driver1 p4-7 s7
- "
- 2(
-walk driver1 p5-9 s5
- "
- 2(
-walk driver1 p5-9 s9
- "
- !2*
-walk driver1 p6-11 s11
- "
- 2)
-walk driver1 p6-11 s6
- "
- 2(
-walk driver1 p6-9 s6
- "
- 2(
-walk driver1 p6-9 s9
- "
- !2(
-walk driver1 p7-2 s2
- "
- 2(
-walk driver1 p7-2 s7
- "
- 2(
-walk driver1 p8-1 s1
- "
- 2(
-walk driver1 p8-1 s8
- "
-  2(
-walk driver1 p8-3 s3
- "
- 2(
-walk driver1 p8-3 s8
- "
-  2(
-walk driver1 p8-4 s4
- "
- 2(
-walk driver1 p8-4 s8
- "
-  2(
-walk driver1 p8-7 s7
- "
- 2(
-walk driver1 p8-7 s8
- "
-  2*
-walk driver1 p9-11 s11
- "
- 2)
-walk driver1 p9-11 s9
- "
- !2(
-walk driver1 p9-4 s4
- "
- 2(
-walk driver1 p9-4 s9
- "
- !2)
-walk driver1 s0 p0-11
- "
-  2(
-walk driver1 s0 p0-2
- "
- 2(
-walk driver1 s0 p0-5
- "
- 2(
-walk driver1 s0 p0-6
- "
- 2)
-walk driver1 s0 p10-0
- "
- 2(
-walk driver1 s1 p1-5
- "
- 2)
-walk driver1 s1 p10-1
- "
- 2(
-walk driver1 s1 p2-1
- "
- 2(
-walk driver1 s1 p8-1
- "
- 2*
-walk driver1 s10 p10-0
- "
- 2*
-walk driver1 s10 p10-1
- "
- 2*
-walk driver1 s11 p0-11
- "
-  2*
-walk driver1 s11 p11-2
- "
- 2*
-walk driver1 s11 p6-11
- "
- 2*
-walk driver1 s11 p9-11
- "
- 2(
-walk driver1 s2 p0-2
- "
- 2)
-walk driver1 s2 p11-2
- "
- 2(
-walk driver1 s2 p2-1
- "
- 2(
-walk driver1 s2 p2-4
- "
- 	2(
-walk driver1 s2 p2-8
- "
- 
-2(
-walk driver1 s2 p7-2
- "
- 2(
-walk driver1 s3 p8-3
- "
- 2(
-walk driver1 s4 p2-4
- "
- 	2(
-walk driver1 s4 p4-7
- "
- 2(
-walk driver1 s4 p8-4
- "
- 2(
-walk driver1 s4 p9-4
- "
- 2(
-walk driver1 s5 p0-5
- "
- 2(
-walk driver1 s5 p1-5
- "
- 2(
-walk driver1 s5 p5-9
- "
- 2(
-walk driver1 s6 p0-6
- "
- 2)
-walk driver1 s6 p6-11
- "
- 2(
-walk driver1 s6 p6-9
- "
- 2(
-walk driver1 s7 p4-7
- "
- 2(
-walk driver1 s7 p7-2
- "
- 2(
-walk driver1 s7 p8-7
- "
- 2(
-walk driver1 s8 p2-8
-  "
- 
-2(
-walk driver1 s8 p8-1
-  "
- 2(
-walk driver1 s8 p8-3
-  "
- 2(
-walk driver1 s8 p8-4
-  "
- 2(
-walk driver1 s8 p8-7
-  "
- 2(
-walk driver1 s9 p5-9
- !"
- 2(
-walk driver1 s9 p6-9
- !"
- 2)
-walk driver1 s9 p9-11
- !"
- 2(
-walk driver1 s9 p9-4
- !"
- 2)
-walk driver2 p0-11 s0
- "
-2*
-walk driver2 p0-11 s11
- "
-2(
-walk driver2 p0-2 s0
-"
-2(
-walk driver2 p0-2 s2
-"
-2(
-walk driver2 p0-5 s0
-"
-2(
-walk driver2 p0-5 s5
-"
-2(
-walk driver2 p0-6 s0
-"
-2(
-walk driver2 p0-6 s6
-"
-2(
-walk driver2 p1-5 s1
-"
-2(
-walk driver2 p1-5 s5
-"
-2)
-walk driver2 p10-0 s0
-"
-2*
-walk driver2 p10-0 s10
-"
-2)
-walk driver2 p10-1 s1
-"
-2*
-walk driver2 p10-1 s10
-"
-2*
-walk driver2 p11-2 s11
-"
-2)
-walk driver2 p11-2 s2
-"
-2(
-walk driver2 p2-1 s1
-"
-2(
-walk driver2 p2-1 s2
-"
-2(
-walk driver2 p2-4 s2
-	"
-2(
-walk driver2 p2-4 s4
-	"
-2(
-walk driver2 p2-8 s2
-
-"
-2(
-walk driver2 p2-8 s8
-
-"
- 2(
-walk driver2 p4-7 s4
-"
-2(
-walk driver2 p4-7 s7
-"
-2(
-walk driver2 p5-9 s5
-"
-2(
-walk driver2 p5-9 s9
-"
-!2*
-walk driver2 p6-11 s11
-"
-2)
-walk driver2 p6-11 s6
-"
-2(
-walk driver2 p6-9 s6
-"
-2(
-walk driver2 p6-9 s9
-"
-!2(
-walk driver2 p7-2 s2
-"
-2(
-walk driver2 p7-2 s7
-"
-2(
-walk driver2 p8-1 s1
-"
-2(
-walk driver2 p8-1 s8
-"
- 2(
-walk driver2 p8-3 s3
-"
-2(
-walk driver2 p8-3 s8
-"
- 2(
-walk driver2 p8-4 s4
-"
-2(
-walk driver2 p8-4 s8
-"
- 2(
-walk driver2 p8-7 s7
-"
-2(
-walk driver2 p8-7 s8
-"
- 2*
-walk driver2 p9-11 s11
-"
-2)
-walk driver2 p9-11 s9
-"
-!2(
-walk driver2 p9-4 s4
-"
-2(
-walk driver2 p9-4 s9
-"
-!2)
-walk driver2 s0 p0-11
-"
- 2(
-walk driver2 s0 p0-2
-"
-2(
-walk driver2 s0 p0-5
-"
-2(
-walk driver2 s0 p0-6
-"
-2)
-walk driver2 s0 p10-0
-"
-2(
-walk driver2 s1 p1-5
-"
-2)
-walk driver2 s1 p10-1
-"
-2(
-walk driver2 s1 p2-1
-"
-2(
-walk driver2 s1 p8-1
-"
-2*
-walk driver2 s10 p10-0
-"
-2*
-walk driver2 s10 p10-1
-"
-2*
-walk driver2 s11 p0-11
-"
- 2*
-walk driver2 s11 p11-2
-"
-2*
-walk driver2 s11 p6-11
-"
-2*
-walk driver2 s11 p9-11
-"
-2(
-walk driver2 s2 p0-2
-"
-2)
-walk driver2 s2 p11-2
-"
-2(
-walk driver2 s2 p2-1
-"
-2(
-walk driver2 s2 p2-4
-"
-	2(
-walk driver2 s2 p2-8
-"
-
-2(
-walk driver2 s2 p7-2
-"
-2(
-walk driver2 s3 p8-3
-"
-2(
-walk driver2 s4 p2-4
-"
-	2(
-walk driver2 s4 p4-7
-"
-2(
-walk driver2 s4 p8-4
-"
-2(
-walk driver2 s4 p9-4
-"
-2(
-walk driver2 s5 p0-5
-"
-2(
-walk driver2 s5 p1-5
-"
-2(
-walk driver2 s5 p5-9
-"
-2(
-walk driver2 s6 p0-6
-"
-2)
-walk driver2 s6 p6-11
-"
-2(
-walk driver2 s6 p6-9
-"
-2(
-walk driver2 s7 p4-7
-"
-2(
-walk driver2 s7 p7-2
-"
-2(
-walk driver2 s7 p8-7
-"
-2(
-walk driver2 s8 p2-8
- "
-
-2(
-walk driver2 s8 p8-1
- "
-2(
-walk driver2 s8 p8-3
- "
-2(
-walk driver2 s8 p8-4
- "
-2(
-walk driver2 s8 p8-7
- "
-2(
-walk driver2 s9 p5-9
-!"
-2(
-walk driver2 s9 p6-9
-!"
-2)
-walk driver2 s9 p9-11
-!"
-2(
-walk driver2 s9 p9-4
-!"
-2)
-walk driver3 p0-11 s0
- "
-2*
-walk driver3 p0-11 s11
- "
-2(
-walk driver3 p0-2 s0
-"
-2(
-walk driver3 p0-2 s2
-"
-2(
-walk driver3 p0-5 s0
-"
-2(
-walk driver3 p0-5 s5
-"
-2(
-walk driver3 p0-6 s0
-"
-2(
-walk driver3 p0-6 s6
-"
-2(
-walk driver3 p1-5 s1
-"
-2(
-walk driver3 p1-5 s5
-"
-2)
-walk driver3 p10-0 s0
-"
-2*
-walk driver3 p10-0 s10
-"
-2)
-walk driver3 p10-1 s1
-"
-2*
-walk driver3 p10-1 s10
-"
-2*
-walk driver3 p11-2 s11
-"
-2)
-walk driver3 p11-2 s2
-"
-2(
-walk driver3 p2-1 s1
-"
-2(
-walk driver3 p2-1 s2
-"
-2(
-walk driver3 p2-4 s2
-	"
-2(
-walk driver3 p2-4 s4
-	"
-2(
-walk driver3 p2-8 s2
-
-"
-2(
-walk driver3 p2-8 s8
-
-"
- 2(
-walk driver3 p4-7 s4
-"
-2(
-walk driver3 p4-7 s7
-"
-2(
-walk driver3 p5-9 s5
-"
-2(
-walk driver3 p5-9 s9
-"
-!2*
-walk driver3 p6-11 s11
-"
-2)
-walk driver3 p6-11 s6
-"
-2(
-walk driver3 p6-9 s6
-"
-2(
-walk driver3 p6-9 s9
-"
-!2(
-walk driver3 p7-2 s2
-"
-2(
-walk driver3 p7-2 s7
-"
-2(
-walk driver3 p8-1 s1
-"
-2(
-walk driver3 p8-1 s8
-"
- 2(
-walk driver3 p8-3 s3
-"
-2(
-walk driver3 p8-3 s8
-"
- 2(
-walk driver3 p8-4 s4
-"
-2(
-walk driver3 p8-4 s8
-"
- 2(
-walk driver3 p8-7 s7
-"
-2(
-walk driver3 p8-7 s8
-"
- 2*
-walk driver3 p9-11 s11
-"
-2)
-walk driver3 p9-11 s9
-"
-!2(
-walk driver3 p9-4 s4
-"
-2(
-walk driver3 p9-4 s9
-"
-!2)
-walk driver3 s0 p0-11
-"
- 2(
-walk driver3 s0 p0-2
-"
-2(
-walk driver3 s0 p0-5
-"
-2(
-walk driver3 s0 p0-6
-"
-2)
-walk driver3 s0 p10-0
-"
-2(
-walk driver3 s1 p1-5
-"
-2)
-walk driver3 s1 p10-1
-"
-2(
-walk driver3 s1 p2-1
-"
-2(
-walk driver3 s1 p8-1
-"
-2*
-walk driver3 s10 p10-0
-"
-2*
-walk driver3 s10 p10-1
-"
-2*
-walk driver3 s11 p0-11
-"
- 2*
-walk driver3 s11 p11-2
-"
-2*
-walk driver3 s11 p6-11
-"
-2*
-walk driver3 s11 p9-11
-"
-2(
-walk driver3 s2 p0-2
-"
-2)
-walk driver3 s2 p11-2
-"
-2(
-walk driver3 s2 p2-1
-"
-2(
-walk driver3 s2 p2-4
-"
-	2(
-walk driver3 s2 p2-8
-"
-
-2(
-walk driver3 s2 p7-2
-"
-2(
-walk driver3 s3 p8-3
-"
-2(
-walk driver3 s4 p2-4
-"
-	2(
-walk driver3 s4 p4-7
-"
-2(
-walk driver3 s4 p8-4
-"
-2(
-walk driver3 s4 p9-4
-"
-2(
-walk driver3 s5 p0-5
-"
-2(
-walk driver3 s5 p1-5
-"
-2(
-walk driver3 s5 p5-9
-"
-2(
-walk driver3 s6 p0-6
-"
-2)
-walk driver3 s6 p6-11
-"
-2(
-walk driver3 s6 p6-9
-"
-2(
-walk driver3 s7 p4-7
-"
-2(
-walk driver3 s7 p7-2
-"
-2(
-walk driver3 s7 p8-7
-"
-2(
-walk driver3 s8 p2-8
- "
-
-2(
-walk driver3 s8 p8-1
- "
-2(
-walk driver3 s8 p8-3
- "
-2(
-walk driver3 s8 p8-4
- "
-2(
-walk driver3 s8 p8-7
- "
-2(
-walk driver3 s9 p5-9
-!"
-2(
-walk driver3 s9 p6-9
-!"
-2)
-walk driver3 s9 p9-11
-!"
-2(
-walk driver3 s9 p9-4
-!"
-2)
-walk driver4 p0-11 s0
- "
-2*
-walk driver4 p0-11 s11
- "
-2(
-walk driver4 p0-2 s0
-"
-2(
-walk driver4 p0-2 s2
-"
-2(
-walk driver4 p0-5 s0
-"
-2(
-walk driver4 p0-5 s5
-"
-2(
-walk driver4 p0-6 s0
-"
-2(
-walk driver4 p0-6 s6
-"
-2(
-walk driver4 p1-5 s1
-"
-2(
-walk driver4 p1-5 s5
-"
-2)
-walk driver4 p10-0 s0
-"
-2*
-walk driver4 p10-0 s10
-"
-2)
-walk driver4 p10-1 s1
-"
-2*
-walk driver4 p10-1 s10
-"
-2*
-walk driver4 p11-2 s11
-"
-2)
-walk driver4 p11-2 s2
-"
-2(
-walk driver4 p2-1 s1
-"
-2(
-walk driver4 p2-1 s2
-"
-2(
-walk driver4 p2-4 s2
-	"
-2(
-walk driver4 p2-4 s4
-	"
-2(
-walk driver4 p2-8 s2
-
-"
-2(
-walk driver4 p2-8 s8
-
-"
- 2(
-walk driver4 p4-7 s4
-"
-2(
-walk driver4 p4-7 s7
-"
-2(
-walk driver4 p5-9 s5
-"
-2(
-walk driver4 p5-9 s9
-"
-!2*
-walk driver4 p6-11 s11
-"
-2)
-walk driver4 p6-11 s6
-"
-2(
-walk driver4 p6-9 s6
-"
-2(
-walk driver4 p6-9 s9
-"
-!2(
-walk driver4 p7-2 s2
-"
-2(
-walk driver4 p7-2 s7
-"
-2(
-walk driver4 p8-1 s1
-"
-2(
-walk driver4 p8-1 s8
-"
- 2(
-walk driver4 p8-3 s3
-"
-2(
-walk driver4 p8-3 s8
-"
- 2(
-walk driver4 p8-4 s4
-"
-2(
-walk driver4 p8-4 s8
-"
- 2(
-walk driver4 p8-7 s7
-"
-2(
-walk driver4 p8-7 s8
-"
- 2*
-walk driver4 p9-11 s11
-"
-2)
-walk driver4 p9-11 s9
-"
-!2(
-walk driver4 p9-4 s4
-"
-2(
-walk driver4 p9-4 s9
-"
-!2)
-walk driver4 s0 p0-11
-"
- 2(
-walk driver4 s0 p0-2
-"
-2(
-walk driver4 s0 p0-5
-"
-2(
-walk driver4 s0 p0-6
-"
-2)
-walk driver4 s0 p10-0
-"
-2(
-walk driver4 s1 p1-5
-"
-2)
-walk driver4 s1 p10-1
-"
-2(
-walk driver4 s1 p2-1
-"
-2(
-walk driver4 s1 p8-1
-"
-2*
-walk driver4 s10 p10-0
-"
-2*
-walk driver4 s10 p10-1
-"
-2*
-walk driver4 s11 p0-11
-"
- 2*
-walk driver4 s11 p11-2
-"
-2*
-walk driver4 s11 p6-11
-"
-2*
-walk driver4 s11 p9-11
-"
-2(
-walk driver4 s2 p0-2
-"
-2)
-walk driver4 s2 p11-2
-"
-2(
-walk driver4 s2 p2-1
-"
-2(
-walk driver4 s2 p2-4
-"
-	2(
-walk driver4 s2 p2-8
-"
-
-2(
-walk driver4 s2 p7-2
-"
-2(
-walk driver4 s3 p8-3
-"
-2(
-walk driver4 s4 p2-4
-"
-	2(
-walk driver4 s4 p4-7
-"
-2(
-walk driver4 s4 p8-4
-"
-2(
-walk driver4 s4 p9-4
-"
-2(
-walk driver4 s5 p0-5
-"
-2(
-walk driver4 s5 p1-5
-"
-2(
-walk driver4 s5 p5-9
-"
-2(
-walk driver4 s6 p0-6
-"
-2)
-walk driver4 s6 p6-11
-"
-2(
-walk driver4 s6 p6-9
-"
-2(
-walk driver4 s7 p4-7
-"
-2(
-walk driver4 s7 p7-2
-"
-2(
-walk driver4 s7 p8-7
-"
-2(
-walk driver4 s8 p2-8
- "
-
-2(
-walk driver4 s8 p8-1
- "
-2(
-walk driver4 s8 p8-3
- "
-2(
-walk driver4 s8 p8-4
- "
-2(
-walk driver4 s8 p8-7
- "
-2(
-walk driver4 s9 p5-9
-!"
-2(
-walk driver4 s9 p6-9
-!"
-2)
-walk driver4 s9 p9-11
-!"
-2(
-walk driver4 s9 p9-4
-!"
-:driver1:driver2:driver3:driver4

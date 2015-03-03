@@ -1,1802 +1,0 @@
-Ã
-var0Atom at(rover0, waypoint0)Atom at(rover0, waypoint1)Atom at(rover0, waypoint2)Atom at(rover0, waypoint3)Atom at(rover0, waypoint4)Atom at(rover0, waypoint5)Atom at(rover0, waypoint6)x
-var1Atom at(rover1, waypoint0)Atom at(rover1, waypoint1)Atom at(rover1, waypoint2)Atom at(rover1, waypoint6)∞
-var2Atom at(rover2, waypoint0)Atom at(rover2, waypoint1)Atom at(rover2, waypoint2)Atom at(rover2, waypoint3)Atom at(rover2, waypoint4)Atom at(rover2, waypoint5)Ã
-var3Atom at(rover3, waypoint0)Atom at(rover3, waypoint1)Atom at(rover3, waypoint2)Atom at(rover3, waypoint3)Atom at(rover3, waypoint4)Atom at(rover3, waypoint5)Atom at(rover3, waypoint6)¨
-var4Atom at_rock_sample(waypoint0)*Atom have_rock_analysis(rover0, waypoint0)*Atom have_rock_analysis(rover2, waypoint0)*Atom have_rock_analysis(rover3, waypoint0)¨
-var5Atom at_rock_sample(waypoint1)*Atom have_rock_analysis(rover0, waypoint1)*Atom have_rock_analysis(rover2, waypoint1)*Atom have_rock_analysis(rover3, waypoint1)¨
-var6Atom at_rock_sample(waypoint3)*Atom have_rock_analysis(rover0, waypoint3)*Atom have_rock_analysis(rover2, waypoint3)*Atom have_rock_analysis(rover3, waypoint3)¨
-var7Atom at_rock_sample(waypoint4)*Atom have_rock_analysis(rover0, waypoint4)*Atom have_rock_analysis(rover2, waypoint4)*Atom have_rock_analysis(rover3, waypoint4)Ä
-var8Atom at_rock_sample(waypoint6)*Atom have_rock_analysis(rover0, waypoint6)*Atom have_rock_analysis(rover3, waypoint6)¨
-var9Atom at_soil_sample(waypoint0)*Atom have_soil_analysis(rover0, waypoint0)*Atom have_soil_analysis(rover1, waypoint0)*Atom have_soil_analysis(rover3, waypoint0)Å
-var10Atom at_soil_sample(waypoint3)*Atom have_soil_analysis(rover0, waypoint3)*Atom have_soil_analysis(rover3, waypoint3)Å
-var11Atom at_soil_sample(waypoint4)*Atom have_soil_analysis(rover0, waypoint4)*Atom have_soil_analysis(rover3, waypoint4)≠
-var12Atom at_soil_sample(waypoint6)*Atom have_soil_analysis(rover0, waypoint6)*Atom have_soil_analysis(rover1, waypoint6)*Atom have_soil_analysis(rover3, waypoint6)T
-var13 Atom calibrated(camera0, rover1)'NegatedAtom calibrated(camera0, rover1)T
-var14 Atom calibrated(camera1, rover1)'NegatedAtom calibrated(camera1, rover1)T
-var15 Atom calibrated(camera2, rover1)'NegatedAtom calibrated(camera2, rover1)T
-var16 Atom calibrated(camera3, rover1)'NegatedAtom calibrated(camera3, rover1)T
-var17 Atom calibrated(camera4, rover2)'NegatedAtom calibrated(camera4, rover2)T
-var18 Atom calibrated(camera5, rover3)'NegatedAtom calibrated(camera5, rover3)t
-var190Atom communicated_image_data(objective0, colour)7NegatedAtom communicated_image_data(objective0, colour)x
-var202Atom communicated_image_data(objective0, high_res)9NegatedAtom communicated_image_data(objective0, high_res)v
-var211Atom communicated_image_data(objective0, low_res)8NegatedAtom communicated_image_data(objective0, low_res)t
-var220Atom communicated_image_data(objective1, colour)7NegatedAtom communicated_image_data(objective1, colour)x
-var232Atom communicated_image_data(objective1, high_res)9NegatedAtom communicated_image_data(objective1, high_res)v
-var241Atom communicated_image_data(objective1, low_res)8NegatedAtom communicated_image_data(objective1, low_res)t
-var250Atom communicated_image_data(objective2, colour)7NegatedAtom communicated_image_data(objective2, colour)x
-var262Atom communicated_image_data(objective2, high_res)9NegatedAtom communicated_image_data(objective2, high_res)v
-var271Atom communicated_image_data(objective2, low_res)8NegatedAtom communicated_image_data(objective2, low_res)t
-var280Atom communicated_image_data(objective3, colour)7NegatedAtom communicated_image_data(objective3, colour)x
-var292Atom communicated_image_data(objective3, high_res)9NegatedAtom communicated_image_data(objective3, high_res)v
-var301Atom communicated_image_data(objective3, low_res)8NegatedAtom communicated_image_data(objective3, low_res)`
-var31&Atom communicated_rock_data(waypoint0)-NegatedAtom communicated_rock_data(waypoint0)`
-var32&Atom communicated_rock_data(waypoint1)-NegatedAtom communicated_rock_data(waypoint1)`
-var33&Atom communicated_rock_data(waypoint3)-NegatedAtom communicated_rock_data(waypoint3)`
-var34&Atom communicated_rock_data(waypoint4)-NegatedAtom communicated_rock_data(waypoint4)`
-var35&Atom communicated_rock_data(waypoint6)-NegatedAtom communicated_rock_data(waypoint6)`
-var36&Atom communicated_soil_data(waypoint0)-NegatedAtom communicated_soil_data(waypoint0)`
-var37&Atom communicated_soil_data(waypoint3)-NegatedAtom communicated_soil_data(waypoint3)`
-var38&Atom communicated_soil_data(waypoint4)-NegatedAtom communicated_soil_data(waypoint4)`
-var39&Atom communicated_soil_data(waypoint6)-NegatedAtom communicated_soil_data(waypoint6):
-var40Atom empty(rover0store)Atom full(rover0store):
-var41Atom empty(rover1store)Atom full(rover1store):
-var42Atom empty(rover2store)Atom full(rover2store):
-var43Atom empty(rover3store)Atom full(rover3store)j
-var44+Atom have_image(rover1, objective0, colour)2NegatedAtom have_image(rover1, objective0, colour)n
-var45-Atom have_image(rover1, objective0, high_res)4NegatedAtom have_image(rover1, objective0, high_res)l
-var46,Atom have_image(rover1, objective0, low_res)3NegatedAtom have_image(rover1, objective0, low_res)j
-var47+Atom have_image(rover1, objective1, colour)2NegatedAtom have_image(rover1, objective1, colour)n
-var48-Atom have_image(rover1, objective1, high_res)4NegatedAtom have_image(rover1, objective1, high_res)l
-var49,Atom have_image(rover1, objective1, low_res)3NegatedAtom have_image(rover1, objective1, low_res)j
-var50+Atom have_image(rover1, objective2, colour)2NegatedAtom have_image(rover1, objective2, colour)n
-var51-Atom have_image(rover1, objective2, high_res)4NegatedAtom have_image(rover1, objective2, high_res)l
-var52,Atom have_image(rover1, objective2, low_res)3NegatedAtom have_image(rover1, objective2, low_res)j
-var53+Atom have_image(rover1, objective3, colour)2NegatedAtom have_image(rover1, objective3, colour)n
-var54-Atom have_image(rover1, objective3, high_res)4NegatedAtom have_image(rover1, objective3, high_res)l
-var55,Atom have_image(rover1, objective3, low_res)3NegatedAtom have_image(rover1, objective3, low_res)j
-var56+Atom have_image(rover2, objective0, colour)2NegatedAtom have_image(rover2, objective0, colour)j
-var57+Atom have_image(rover2, objective1, colour)2NegatedAtom have_image(rover2, objective1, colour)j
-var58+Atom have_image(rover2, objective2, colour)2NegatedAtom have_image(rover2, objective2, colour)j
-var59+Atom have_image(rover2, objective3, colour)2NegatedAtom have_image(rover2, objective3, colour)j
-var60+Atom have_image(rover3, objective0, colour)2NegatedAtom have_image(rover3, objective0, colour)n
-var61-Atom have_image(rover3, objective0, high_res)4NegatedAtom have_image(rover3, objective0, high_res)l
-var62,Atom have_image(rover3, objective0, low_res)3NegatedAtom have_image(rover3, objective0, low_res)j
-var63+Atom have_image(rover3, objective1, colour)2NegatedAtom have_image(rover3, objective1, colour)n
-var64-Atom have_image(rover3, objective1, high_res)4NegatedAtom have_image(rover3, objective1, high_res)l
-var65,Atom have_image(rover3, objective1, low_res)3NegatedAtom have_image(rover3, objective1, low_res)j
-var66+Atom have_image(rover3, objective2, colour)2NegatedAtom have_image(rover3, objective2, colour)n
-var67-Atom have_image(rover3, objective2, high_res)4NegatedAtom have_image(rover3, objective2, high_res)l
-var68,Atom have_image(rover3, objective2, low_res)3NegatedAtom have_image(rover3, objective2, low_res)j
-var69+Atom have_image(rover3, objective3, colour)2NegatedAtom have_image(rover3, objective3, colour)n
-var70-Atom have_image(rover3, objective3, high_res)4NegatedAtom have_image(rover3, objective3, high_res)l
-var71,Atom have_image(rover3, objective3, low_res)3NegatedAtom have_image(rover3, objective3, low_res)*
-  
- 
- 
- 
- 
- 
- 
- 
-
-
-$
- 
-
-
-
-
-*
- 
-
-
-
-
-
-
- 
-
-
-
- 
-
-
-
- 
-
-
-
- 
-
-
-
- 
-
-
-	 
-	
-	
-	
-
- 
-
-
-
-
- 
-
-
- 
-
-
-
-( 
-(
-) 
-)
-* 
-*
-+ 
-+"ê              *B
- 
- 
- 
- 
-  
-! 
-" 
-$ 
-% 
-& 
-' 2A
--calibrate rover1 camera0 objective2 waypoint0
- "
- 2A
--calibrate rover1 camera0 objective2 waypoint1
-"
- 2A
--calibrate rover1 camera0 objective2 waypoint2
-"
- 2A
--calibrate rover1 camera1 objective3 waypoint0
- "
- 2A
--calibrate rover1 camera1 objective3 waypoint1
-"
- 2A
--calibrate rover1 camera1 objective3 waypoint2
-"
- 2A
--calibrate rover1 camera2 objective1 waypoint0
- "
- 2A
--calibrate rover1 camera2 objective1 waypoint1
-"
- 2A
--calibrate rover1 camera2 objective1 waypoint2
-"
- 2A
--calibrate rover1 camera3 objective2 waypoint0
- "
- 2A
--calibrate rover1 camera3 objective2 waypoint1
-"
- 2A
--calibrate rover1 camera3 objective2 waypoint2
-"
- 2A
--calibrate rover2 camera4 objective0 waypoint0
- "
- 2A
--calibrate rover3 camera5 objective0 waypoint0
- "
- 2e
-Kcommunicate_image_data rover1 general objective0 colour waypoint0 waypoint1
- 
-, "
- 2e
-Kcommunicate_image_data rover1 general objective0 colour waypoint2 waypoint1
-
-, "
- 2g
-Mcommunicate_image_data rover1 general objective0 high_res waypoint0 waypoint1
- 
-- "
- 2g
-Mcommunicate_image_data rover1 general objective0 high_res waypoint2 waypoint1
-
-- "
- 2f
-Lcommunicate_image_data rover1 general objective0 low_res waypoint0 waypoint1
- 
-. "
- 2f
-Lcommunicate_image_data rover1 general objective0 low_res waypoint2 waypoint1
-
-. "
- 2e
-Kcommunicate_image_data rover1 general objective1 colour waypoint0 waypoint1
- 
-/ "
- 2e
-Kcommunicate_image_data rover1 general objective1 colour waypoint2 waypoint1
-
-/ "
- 2g
-Mcommunicate_image_data rover1 general objective1 high_res waypoint0 waypoint1
- 
-0 "
- 2g
-Mcommunicate_image_data rover1 general objective1 high_res waypoint2 waypoint1
-
-0 "
- 2f
-Lcommunicate_image_data rover1 general objective1 low_res waypoint0 waypoint1
- 
-1 "
- 2f
-Lcommunicate_image_data rover1 general objective1 low_res waypoint2 waypoint1
-
-1 "
- 2e
-Kcommunicate_image_data rover1 general objective2 colour waypoint0 waypoint1
- 
-2 "
- 2e
-Kcommunicate_image_data rover1 general objective2 colour waypoint2 waypoint1
-
-2 "
- 2g
-Mcommunicate_image_data rover1 general objective2 high_res waypoint0 waypoint1
- 
-3 "
- 2g
-Mcommunicate_image_data rover1 general objective2 high_res waypoint2 waypoint1
-
-3 "
- 2f
-Lcommunicate_image_data rover1 general objective2 low_res waypoint0 waypoint1
- 
-4 "
- 2f
-Lcommunicate_image_data rover1 general objective2 low_res waypoint2 waypoint1
-
-4 "
- 2e
-Kcommunicate_image_data rover1 general objective3 colour waypoint0 waypoint1
- 
-5 "
- 2e
-Kcommunicate_image_data rover1 general objective3 colour waypoint2 waypoint1
-
-5 "
- 2g
-Mcommunicate_image_data rover1 general objective3 high_res waypoint0 waypoint1
- 
-6 "
- 2g
-Mcommunicate_image_data rover1 general objective3 high_res waypoint2 waypoint1
-
-6 "
- 2f
-Lcommunicate_image_data rover1 general objective3 low_res waypoint0 waypoint1
- 
-7 "
- 2f
-Lcommunicate_image_data rover1 general objective3 low_res waypoint2 waypoint1
-
-7 "
- 2e
-Kcommunicate_image_data rover2 general objective0 colour waypoint0 waypoint1
- 
-8 "
- 2e
-Kcommunicate_image_data rover2 general objective0 colour waypoint2 waypoint1
-
-8 "
- 2e
-Kcommunicate_image_data rover2 general objective0 colour waypoint4 waypoint1
-
-8 "
- 2e
-Kcommunicate_image_data rover2 general objective0 colour waypoint5 waypoint1
-
-8 "
- 2e
-Kcommunicate_image_data rover2 general objective1 colour waypoint0 waypoint1
- 
-9 "
- 2e
-Kcommunicate_image_data rover2 general objective1 colour waypoint2 waypoint1
-
-9 "
- 2e
-Kcommunicate_image_data rover2 general objective1 colour waypoint4 waypoint1
-
-9 "
- 2e
-Kcommunicate_image_data rover2 general objective1 colour waypoint5 waypoint1
-
-9 "
- 2e
-Kcommunicate_image_data rover2 general objective2 colour waypoint0 waypoint1
- 
-: "
- 2e
-Kcommunicate_image_data rover2 general objective2 colour waypoint2 waypoint1
-
-: "
- 2e
-Kcommunicate_image_data rover2 general objective2 colour waypoint4 waypoint1
-
-: "
- 2e
-Kcommunicate_image_data rover2 general objective2 colour waypoint5 waypoint1
-
-: "
- 2e
-Kcommunicate_image_data rover2 general objective3 colour waypoint0 waypoint1
- 
-; "
- 2e
-Kcommunicate_image_data rover2 general objective3 colour waypoint2 waypoint1
-
-; "
- 2e
-Kcommunicate_image_data rover2 general objective3 colour waypoint4 waypoint1
-
-; "
- 2e
-Kcommunicate_image_data rover2 general objective3 colour waypoint5 waypoint1
-
-; "
- 2e
-Kcommunicate_image_data rover3 general objective0 colour waypoint0 waypoint1
- 
-< "
- 2e
-Kcommunicate_image_data rover3 general objective0 colour waypoint2 waypoint1
-
-< "
- 2e
-Kcommunicate_image_data rover3 general objective0 colour waypoint4 waypoint1
-
-< "
- 2e
-Kcommunicate_image_data rover3 general objective0 colour waypoint5 waypoint1
-
-< "
- 2g
-Mcommunicate_image_data rover3 general objective0 high_res waypoint0 waypoint1
- 
-= "
- 2g
-Mcommunicate_image_data rover3 general objective0 high_res waypoint2 waypoint1
-
-= "
- 2g
-Mcommunicate_image_data rover3 general objective0 high_res waypoint4 waypoint1
-
-= "
- 2g
-Mcommunicate_image_data rover3 general objective0 high_res waypoint5 waypoint1
-
-= "
- 2f
-Lcommunicate_image_data rover3 general objective0 low_res waypoint0 waypoint1
- 
-> "
- 2f
-Lcommunicate_image_data rover3 general objective0 low_res waypoint2 waypoint1
-
-> "
- 2f
-Lcommunicate_image_data rover3 general objective0 low_res waypoint4 waypoint1
-
-> "
- 2f
-Lcommunicate_image_data rover3 general objective0 low_res waypoint5 waypoint1
-
-> "
- 2e
-Kcommunicate_image_data rover3 general objective1 colour waypoint0 waypoint1
- 
-? "
- 2e
-Kcommunicate_image_data rover3 general objective1 colour waypoint2 waypoint1
-
-? "
- 2e
-Kcommunicate_image_data rover3 general objective1 colour waypoint4 waypoint1
-
-? "
- 2e
-Kcommunicate_image_data rover3 general objective1 colour waypoint5 waypoint1
-
-? "
- 2g
-Mcommunicate_image_data rover3 general objective1 high_res waypoint0 waypoint1
- 
-@ "
- 2g
-Mcommunicate_image_data rover3 general objective1 high_res waypoint2 waypoint1
-
-@ "
- 2g
-Mcommunicate_image_data rover3 general objective1 high_res waypoint4 waypoint1
-
-@ "
- 2g
-Mcommunicate_image_data rover3 general objective1 high_res waypoint5 waypoint1
-
-@ "
- 2f
-Lcommunicate_image_data rover3 general objective1 low_res waypoint0 waypoint1
- 
-A "
- 2f
-Lcommunicate_image_data rover3 general objective1 low_res waypoint2 waypoint1
-
-A "
- 2f
-Lcommunicate_image_data rover3 general objective1 low_res waypoint4 waypoint1
-
-A "
- 2f
-Lcommunicate_image_data rover3 general objective1 low_res waypoint5 waypoint1
-
-A "
- 2e
-Kcommunicate_image_data rover3 general objective2 colour waypoint0 waypoint1
- 
-B "
- 2e
-Kcommunicate_image_data rover3 general objective2 colour waypoint2 waypoint1
-
-B "
- 2e
-Kcommunicate_image_data rover3 general objective2 colour waypoint4 waypoint1
-
-B "
- 2e
-Kcommunicate_image_data rover3 general objective2 colour waypoint5 waypoint1
-
-B "
- 2g
-Mcommunicate_image_data rover3 general objective2 high_res waypoint0 waypoint1
- 
-C "
- 2g
-Mcommunicate_image_data rover3 general objective2 high_res waypoint2 waypoint1
-
-C "
- 2g
-Mcommunicate_image_data rover3 general objective2 high_res waypoint4 waypoint1
-
-C "
- 2g
-Mcommunicate_image_data rover3 general objective2 high_res waypoint5 waypoint1
-
-C "
- 2f
-Lcommunicate_image_data rover3 general objective2 low_res waypoint0 waypoint1
- 
-D "
- 2f
-Lcommunicate_image_data rover3 general objective2 low_res waypoint2 waypoint1
-
-D "
- 2f
-Lcommunicate_image_data rover3 general objective2 low_res waypoint4 waypoint1
-
-D "
- 2f
-Lcommunicate_image_data rover3 general objective2 low_res waypoint5 waypoint1
-
-D "
- 2e
-Kcommunicate_image_data rover3 general objective3 colour waypoint0 waypoint1
- 
-E "
- 2e
-Kcommunicate_image_data rover3 general objective3 colour waypoint2 waypoint1
-
-E "
- 2e
-Kcommunicate_image_data rover3 general objective3 colour waypoint4 waypoint1
-
-E "
- 2e
-Kcommunicate_image_data rover3 general objective3 colour waypoint5 waypoint1
-
-E "
- 2g
-Mcommunicate_image_data rover3 general objective3 high_res waypoint0 waypoint1
- 
-F "
- 2g
-Mcommunicate_image_data rover3 general objective3 high_res waypoint2 waypoint1
-
-F "
- 2g
-Mcommunicate_image_data rover3 general objective3 high_res waypoint4 waypoint1
-
-F "
- 2g
-Mcommunicate_image_data rover3 general objective3 high_res waypoint5 waypoint1
-
-F "
- 2f
-Lcommunicate_image_data rover3 general objective3 low_res waypoint0 waypoint1
- 
-G "
- 2f
-Lcommunicate_image_data rover3 general objective3 low_res waypoint2 waypoint1
-
-G "
- 2f
-Lcommunicate_image_data rover3 general objective3 low_res waypoint4 waypoint1
-
-G "
- 2f
-Lcommunicate_image_data rover3 general objective3 low_res waypoint5 waypoint1
-
-G "
- 2\
-Bcommunicate_rock_data rover0 general waypoint0 waypoint0 waypoint1
-  
-"
- 2\
-Bcommunicate_rock_data rover0 general waypoint0 waypoint2 waypoint1
- 
-"
- 2\
-Bcommunicate_rock_data rover0 general waypoint0 waypoint4 waypoint1
- 
-"
- 2\
-Bcommunicate_rock_data rover0 general waypoint0 waypoint5 waypoint1
- 
-"
- 2\
-Bcommunicate_rock_data rover0 general waypoint1 waypoint0 waypoint1
-  
-"
-  2\
-Bcommunicate_rock_data rover0 general waypoint1 waypoint2 waypoint1
- 
-"
-  2\
-Bcommunicate_rock_data rover0 general waypoint1 waypoint4 waypoint1
- 
-"
-  2\
-Bcommunicate_rock_data rover0 general waypoint1 waypoint5 waypoint1
- 
-"
-  2\
-Bcommunicate_rock_data rover0 general waypoint3 waypoint0 waypoint1
-  
-"
-! 2\
-Bcommunicate_rock_data rover0 general waypoint3 waypoint2 waypoint1
- 
-"
-! 2\
-Bcommunicate_rock_data rover0 general waypoint3 waypoint4 waypoint1
- 
-"
-! 2\
-Bcommunicate_rock_data rover0 general waypoint3 waypoint5 waypoint1
- 
-"
-! 2\
-Bcommunicate_rock_data rover0 general waypoint4 waypoint0 waypoint1
-  
-"
-" 2\
-Bcommunicate_rock_data rover0 general waypoint4 waypoint2 waypoint1
- 
-"
-" 2\
-Bcommunicate_rock_data rover0 general waypoint4 waypoint4 waypoint1
- 
-"
-" 2\
-Bcommunicate_rock_data rover0 general waypoint4 waypoint5 waypoint1
- 
-"
-" 2\
-Bcommunicate_rock_data rover0 general waypoint6 waypoint0 waypoint1
-  
-"
-# 2\
-Bcommunicate_rock_data rover0 general waypoint6 waypoint2 waypoint1
- 
-"
-# 2\
-Bcommunicate_rock_data rover0 general waypoint6 waypoint4 waypoint1
- 
-"
-# 2\
-Bcommunicate_rock_data rover0 general waypoint6 waypoint5 waypoint1
- 
-"
-# 2\
-Bcommunicate_rock_data rover2 general waypoint0 waypoint0 waypoint1
- 
-"
- 2\
-Bcommunicate_rock_data rover2 general waypoint0 waypoint2 waypoint1
-
-"
- 2\
-Bcommunicate_rock_data rover2 general waypoint0 waypoint4 waypoint1
-
-"
- 2\
-Bcommunicate_rock_data rover2 general waypoint0 waypoint5 waypoint1
-
-"
- 2\
-Bcommunicate_rock_data rover2 general waypoint1 waypoint0 waypoint1
- 
-"
-  2\
-Bcommunicate_rock_data rover2 general waypoint1 waypoint2 waypoint1
-
-"
-  2\
-Bcommunicate_rock_data rover2 general waypoint1 waypoint4 waypoint1
-
-"
-  2\
-Bcommunicate_rock_data rover2 general waypoint1 waypoint5 waypoint1
-
-"
-  2\
-Bcommunicate_rock_data rover2 general waypoint3 waypoint0 waypoint1
- 
-"
-! 2\
-Bcommunicate_rock_data rover2 general waypoint3 waypoint2 waypoint1
-
-"
-! 2\
-Bcommunicate_rock_data rover2 general waypoint3 waypoint4 waypoint1
-
-"
-! 2\
-Bcommunicate_rock_data rover2 general waypoint3 waypoint5 waypoint1
-
-"
-! 2\
-Bcommunicate_rock_data rover2 general waypoint4 waypoint0 waypoint1
- 
-"
-" 2\
-Bcommunicate_rock_data rover2 general waypoint4 waypoint2 waypoint1
-
-"
-" 2\
-Bcommunicate_rock_data rover2 general waypoint4 waypoint4 waypoint1
-
-"
-" 2\
-Bcommunicate_rock_data rover2 general waypoint4 waypoint5 waypoint1
-
-"
-" 2\
-Bcommunicate_rock_data rover3 general waypoint0 waypoint0 waypoint1
- 
-"
- 2\
-Bcommunicate_rock_data rover3 general waypoint0 waypoint2 waypoint1
-
-"
- 2\
-Bcommunicate_rock_data rover3 general waypoint0 waypoint4 waypoint1
-
-"
- 2\
-Bcommunicate_rock_data rover3 general waypoint0 waypoint5 waypoint1
-
-"
- 2\
-Bcommunicate_rock_data rover3 general waypoint1 waypoint0 waypoint1
- 
-"
-  2\
-Bcommunicate_rock_data rover3 general waypoint1 waypoint2 waypoint1
-
-"
-  2\
-Bcommunicate_rock_data rover3 general waypoint1 waypoint4 waypoint1
-
-"
-  2\
-Bcommunicate_rock_data rover3 general waypoint1 waypoint5 waypoint1
-
-"
-  2\
-Bcommunicate_rock_data rover3 general waypoint3 waypoint0 waypoint1
- 
-"
-! 2\
-Bcommunicate_rock_data rover3 general waypoint3 waypoint2 waypoint1
-
-"
-! 2\
-Bcommunicate_rock_data rover3 general waypoint3 waypoint4 waypoint1
-
-"
-! 2\
-Bcommunicate_rock_data rover3 general waypoint3 waypoint5 waypoint1
-
-"
-! 2\
-Bcommunicate_rock_data rover3 general waypoint4 waypoint0 waypoint1
- 
-"
-" 2\
-Bcommunicate_rock_data rover3 general waypoint4 waypoint2 waypoint1
-
-"
-" 2\
-Bcommunicate_rock_data rover3 general waypoint4 waypoint4 waypoint1
-
-"
-" 2\
-Bcommunicate_rock_data rover3 general waypoint4 waypoint5 waypoint1
-
-"
-" 2\
-Bcommunicate_rock_data rover3 general waypoint6 waypoint0 waypoint1
- 
-"
-# 2\
-Bcommunicate_rock_data rover3 general waypoint6 waypoint2 waypoint1
-
-"
-# 2\
-Bcommunicate_rock_data rover3 general waypoint6 waypoint4 waypoint1
-
-"
-# 2\
-Bcommunicate_rock_data rover3 general waypoint6 waypoint5 waypoint1
-
-"
-# 2\
-Bcommunicate_soil_data rover0 general waypoint0 waypoint0 waypoint1
-  
-	"
-$ 2\
-Bcommunicate_soil_data rover0 general waypoint0 waypoint2 waypoint1
- 
-	"
-$ 2\
-Bcommunicate_soil_data rover0 general waypoint0 waypoint4 waypoint1
- 
-	"
-$ 2\
-Bcommunicate_soil_data rover0 general waypoint0 waypoint5 waypoint1
- 
-	"
-$ 2\
-Bcommunicate_soil_data rover0 general waypoint3 waypoint0 waypoint1
-  
-
-"
-% 2\
-Bcommunicate_soil_data rover0 general waypoint3 waypoint2 waypoint1
- 
-
-"
-% 2\
-Bcommunicate_soil_data rover0 general waypoint3 waypoint4 waypoint1
- 
-
-"
-% 2\
-Bcommunicate_soil_data rover0 general waypoint3 waypoint5 waypoint1
- 
-
-"
-% 2\
-Bcommunicate_soil_data rover0 general waypoint4 waypoint0 waypoint1
-  
-"
-& 2\
-Bcommunicate_soil_data rover0 general waypoint4 waypoint2 waypoint1
- 
-"
-& 2\
-Bcommunicate_soil_data rover0 general waypoint4 waypoint4 waypoint1
- 
-"
-& 2\
-Bcommunicate_soil_data rover0 general waypoint4 waypoint5 waypoint1
- 
-"
-& 2\
-Bcommunicate_soil_data rover0 general waypoint6 waypoint0 waypoint1
-  
-"
-' 2\
-Bcommunicate_soil_data rover0 general waypoint6 waypoint2 waypoint1
- 
-"
-' 2\
-Bcommunicate_soil_data rover0 general waypoint6 waypoint4 waypoint1
- 
-"
-' 2\
-Bcommunicate_soil_data rover0 general waypoint6 waypoint5 waypoint1
- 
-"
-' 2\
-Bcommunicate_soil_data rover1 general waypoint0 waypoint0 waypoint1
- 
-	"
-$ 2\
-Bcommunicate_soil_data rover1 general waypoint0 waypoint2 waypoint1
-
-	"
-$ 2\
-Bcommunicate_soil_data rover1 general waypoint6 waypoint0 waypoint1
- 
-"
-' 2\
-Bcommunicate_soil_data rover1 general waypoint6 waypoint2 waypoint1
-
-"
-' 2\
-Bcommunicate_soil_data rover3 general waypoint0 waypoint0 waypoint1
- 
-	"
-$ 2\
-Bcommunicate_soil_data rover3 general waypoint0 waypoint2 waypoint1
-
-	"
-$ 2\
-Bcommunicate_soil_data rover3 general waypoint0 waypoint4 waypoint1
-
-	"
-$ 2\
-Bcommunicate_soil_data rover3 general waypoint0 waypoint5 waypoint1
-
-	"
-$ 2\
-Bcommunicate_soil_data rover3 general waypoint3 waypoint0 waypoint1
- 
-
-"
-% 2\
-Bcommunicate_soil_data rover3 general waypoint3 waypoint2 waypoint1
-
-
-"
-% 2\
-Bcommunicate_soil_data rover3 general waypoint3 waypoint4 waypoint1
-
-
-"
-% 2\
-Bcommunicate_soil_data rover3 general waypoint3 waypoint5 waypoint1
-
-
-"
-% 2\
-Bcommunicate_soil_data rover3 general waypoint4 waypoint0 waypoint1
- 
-"
-& 2\
-Bcommunicate_soil_data rover3 general waypoint4 waypoint2 waypoint1
-
-"
-& 2\
-Bcommunicate_soil_data rover3 general waypoint4 waypoint4 waypoint1
-
-"
-& 2\
-Bcommunicate_soil_data rover3 general waypoint4 waypoint5 waypoint1
-
-"
-& 2\
-Bcommunicate_soil_data rover3 general waypoint6 waypoint0 waypoint1
- 
-"
-' 2\
-Bcommunicate_soil_data rover3 general waypoint6 waypoint2 waypoint1
-
-"
-' 2\
-Bcommunicate_soil_data rover3 general waypoint6 waypoint4 waypoint1
-
-"
-' 2\
-Bcommunicate_soil_data rover3 general waypoint6 waypoint5 waypoint1
-
-"
-' 2+
-drop rover0 rover0store
-("
-( 2+
-drop rover1 rover1store
-)"
-) 2+
-drop rover2 rover2store
-*"
-* 2+
-drop rover3 rover3store
-+"
-+ 27
-#navigate rover0 waypoint0 waypoint4
-  "
- 27
-#navigate rover0 waypoint1 waypoint4
- "
- 27
-#navigate rover0 waypoint1 waypoint5
- "
- 27
-#navigate rover0 waypoint2 waypoint4
- "
- 27
-#navigate rover0 waypoint3 waypoint4
- "
- 27
-#navigate rover0 waypoint4 waypoint0
- "
-  27
-#navigate rover0 waypoint4 waypoint1
- "
- 27
-#navigate rover0 waypoint4 waypoint2
- "
- 27
-#navigate rover0 waypoint4 waypoint3
- "
- 27
-#navigate rover0 waypoint4 waypoint6
- "
- 27
-#navigate rover0 waypoint5 waypoint1
- "
- 27
-#navigate rover0 waypoint6 waypoint4
- "
- 27
-#navigate rover1 waypoint0 waypoint1
- "
-27
-#navigate rover1 waypoint0 waypoint2
- "
-27
-#navigate rover1 waypoint0 waypoint6
- "
-27
-#navigate rover1 waypoint1 waypoint0
-"
- 27
-#navigate rover1 waypoint2 waypoint0
-"
- 27
-#navigate rover1 waypoint6 waypoint0
-"
- 27
-#navigate rover2 waypoint0 waypoint4
- "
-27
-#navigate rover2 waypoint1 waypoint4
-"
-27
-#navigate rover2 waypoint2 waypoint4
-"
-27
-#navigate rover2 waypoint3 waypoint4
-"
-27
-#navigate rover2 waypoint3 waypoint5
-"
-27
-#navigate rover2 waypoint4 waypoint0
-"
- 27
-#navigate rover2 waypoint4 waypoint1
-"
-27
-#navigate rover2 waypoint4 waypoint2
-"
-27
-#navigate rover2 waypoint4 waypoint3
-"
-27
-#navigate rover2 waypoint5 waypoint3
-"
-27
-#navigate rover3 waypoint0 waypoint1
- "
-27
-#navigate rover3 waypoint0 waypoint2
- "
-27
-#navigate rover3 waypoint0 waypoint4
- "
-27
-#navigate rover3 waypoint0 waypoint6
- "
-27
-#navigate rover3 waypoint1 waypoint0
-"
- 27
-#navigate rover3 waypoint2 waypoint0
-"
- 27
-#navigate rover3 waypoint3 waypoint4
-"
-27
-#navigate rover3 waypoint4 waypoint0
-"
- 27
-#navigate rover3 waypoint4 waypoint3
-"
-27
-#navigate rover3 waypoint5 waypoint6
-"
-27
-#navigate rover3 waypoint6 waypoint0
-"
- 27
-#navigate rover3 waypoint6 waypoint5
-"
-2N
-(sample_rock rover0 rover0store waypoint0
-  
- 
-( "
-
-(2N
-(sample_rock rover0 rover0store waypoint1
- 
- 
-( "
-
-(2N
-(sample_rock rover0 rover0store waypoint3
- 
- 
-( "
-
-(2N
-(sample_rock rover0 rover0store waypoint4
- 
- 
-( "
-
-(2N
-(sample_rock rover0 rover0store waypoint6
- 
- 
-( "
-
-(2N
-(sample_rock rover2 rover2store waypoint0
- 
- 
-* "
-
-*2N
-(sample_rock rover2 rover2store waypoint1
-
- 
-* "
-
-*2N
-(sample_rock rover2 rover2store waypoint3
-
- 
-* "
-
-*2N
-(sample_rock rover2 rover2store waypoint4
-
- 
-* "
-
-*2N
-(sample_rock rover3 rover3store waypoint0
- 
- 
-+ "
-
-+2N
-(sample_rock rover3 rover3store waypoint1
-
- 
-+ "
-
-+2N
-(sample_rock rover3 rover3store waypoint3
-
- 
-+ "
-
-+2N
-(sample_rock rover3 rover3store waypoint4
-
- 
-+ "
-
-+2N
-(sample_rock rover3 rover3store waypoint6
-
- 
-+ "
-
-+2N
-(sample_soil rover0 rover0store waypoint0
-  
-	 
-( "
-	
-(2N
-(sample_soil rover0 rover0store waypoint3
- 
-
- 
-( "
-
-
-(2N
-(sample_soil rover0 rover0store waypoint4
- 
- 
-( "
-
-(2N
-(sample_soil rover0 rover0store waypoint6
- 
- 
-( "
-
-(2N
-(sample_soil rover1 rover1store waypoint0
- 
-	 
-) "
-	
-)2N
-(sample_soil rover1 rover1store waypoint6
-
- 
-) "
-
-)2N
-(sample_soil rover3 rover3store waypoint0
- 
-	 
-+ "
-	
-+2N
-(sample_soil rover3 rover3store waypoint3
-
-
- 
-+ "
-
-
-+2N
-(sample_soil rover3 rover3store waypoint4
-
- 
-+ "
-
-+2N
-(sample_soil rover3 rover3store waypoint6
-
- 
-+ "
-
-+2V
-6take_image rover1 waypoint0 objective0 camera0 low_res
- 
- "
-
-. 2U
-5take_image rover1 waypoint0 objective0 camera1 colour
- 
- "
-
-, 2U
-5take_image rover1 waypoint0 objective0 camera2 colour
- 
- "
-
-, 2V
-6take_image rover1 waypoint0 objective0 camera2 low_res
- 
- "
-
-. 2W
-7take_image rover1 waypoint0 objective0 camera3 high_res
- 
- "
-
-- 2V
-6take_image rover1 waypoint0 objective0 camera3 low_res
- 
- "
-
-. 2V
-6take_image rover1 waypoint0 objective1 camera0 low_res
- 
- "
-
-1 2U
-5take_image rover1 waypoint0 objective1 camera1 colour
- 
- "
-
-/ 2U
-5take_image rover1 waypoint0 objective1 camera2 colour
- 
- "
-
-/ 2V
-6take_image rover1 waypoint0 objective1 camera2 low_res
- 
- "
-
-1 2W
-7take_image rover1 waypoint0 objective1 camera3 high_res
- 
- "
-
-0 2V
-6take_image rover1 waypoint0 objective1 camera3 low_res
- 
- "
-
-1 2V
-6take_image rover1 waypoint0 objective2 camera0 low_res
- 
- "
-
-4 2U
-5take_image rover1 waypoint0 objective2 camera1 colour
- 
- "
-
-2 2U
-5take_image rover1 waypoint0 objective2 camera2 colour
- 
- "
-
-2 2V
-6take_image rover1 waypoint0 objective2 camera2 low_res
- 
- "
-
-4 2W
-7take_image rover1 waypoint0 objective2 camera3 high_res
- 
- "
-
-3 2V
-6take_image rover1 waypoint0 objective2 camera3 low_res
- 
- "
-
-4 2V
-6take_image rover1 waypoint0 objective3 camera0 low_res
- 
- "
-
-7 2U
-5take_image rover1 waypoint0 objective3 camera1 colour
- 
- "
-
-5 2U
-5take_image rover1 waypoint0 objective3 camera2 colour
- 
- "
-
-5 2V
-6take_image rover1 waypoint0 objective3 camera2 low_res
- 
- "
-
-7 2W
-7take_image rover1 waypoint0 objective3 camera3 high_res
- 
- "
-
-6 2V
-6take_image rover1 waypoint0 objective3 camera3 low_res
- 
- "
-
-7 2V
-6take_image rover1 waypoint1 objective1 camera0 low_res
-
- "
-
-1 2U
-5take_image rover1 waypoint1 objective1 camera1 colour
-
- "
-
-/ 2U
-5take_image rover1 waypoint1 objective1 camera2 colour
-
- "
-
-/ 2V
-6take_image rover1 waypoint1 objective1 camera2 low_res
-
- "
-
-1 2W
-7take_image rover1 waypoint1 objective1 camera3 high_res
-
- "
-
-0 2V
-6take_image rover1 waypoint1 objective1 camera3 low_res
-
- "
-
-1 2V
-6take_image rover1 waypoint1 objective2 camera0 low_res
-
- "
-
-4 2U
-5take_image rover1 waypoint1 objective2 camera1 colour
-
- "
-
-2 2U
-5take_image rover1 waypoint1 objective2 camera2 colour
-
- "
-
-2 2V
-6take_image rover1 waypoint1 objective2 camera2 low_res
-
- "
-
-4 2W
-7take_image rover1 waypoint1 objective2 camera3 high_res
-
- "
-
-3 2V
-6take_image rover1 waypoint1 objective2 camera3 low_res
-
- "
-
-4 2V
-6take_image rover1 waypoint1 objective3 camera0 low_res
-
- "
-
-7 2U
-5take_image rover1 waypoint1 objective3 camera1 colour
-
- "
-
-5 2U
-5take_image rover1 waypoint1 objective3 camera2 colour
-
- "
-
-5 2V
-6take_image rover1 waypoint1 objective3 camera2 low_res
-
- "
-
-7 2W
-7take_image rover1 waypoint1 objective3 camera3 high_res
-
- "
-
-6 2V
-6take_image rover1 waypoint1 objective3 camera3 low_res
-
- "
-
-7 2V
-6take_image rover1 waypoint2 objective1 camera0 low_res
-
- "
-
-1 2U
-5take_image rover1 waypoint2 objective1 camera1 colour
-
- "
-
-/ 2U
-5take_image rover1 waypoint2 objective1 camera2 colour
-
- "
-
-/ 2V
-6take_image rover1 waypoint2 objective1 camera2 low_res
-
- "
-
-1 2W
-7take_image rover1 waypoint2 objective1 camera3 high_res
-
- "
-
-0 2V
-6take_image rover1 waypoint2 objective1 camera3 low_res
-
- "
-
-1 2V
-6take_image rover1 waypoint2 objective2 camera0 low_res
-
- "
-
-4 2U
-5take_image rover1 waypoint2 objective2 camera1 colour
-
- "
-
-2 2U
-5take_image rover1 waypoint2 objective2 camera2 colour
-
- "
-
-2 2V
-6take_image rover1 waypoint2 objective2 camera2 low_res
-
- "
-
-4 2W
-7take_image rover1 waypoint2 objective2 camera3 high_res
-
- "
-
-3 2V
-6take_image rover1 waypoint2 objective2 camera3 low_res
-
- "
-
-4 2V
-6take_image rover1 waypoint2 objective3 camera0 low_res
-
- "
-
-7 2U
-5take_image rover1 waypoint2 objective3 camera1 colour
-
- "
-
-5 2U
-5take_image rover1 waypoint2 objective3 camera2 colour
-
- "
-
-5 2V
-6take_image rover1 waypoint2 objective3 camera2 low_res
-
- "
-
-7 2W
-7take_image rover1 waypoint2 objective3 camera3 high_res
-
- "
-
-6 2V
-6take_image rover1 waypoint2 objective3 camera3 low_res
-
- "
-
-7 2U
-5take_image rover2 waypoint0 objective0 camera4 colour
- 
- "
-
-8 2U
-5take_image rover2 waypoint0 objective1 camera4 colour
- 
- "
-
-9 2U
-5take_image rover2 waypoint0 objective2 camera4 colour
- 
- "
-
-: 2U
-5take_image rover2 waypoint0 objective3 camera4 colour
- 
- "
-
-; 2U
-5take_image rover2 waypoint1 objective1 camera4 colour
-
- "
-
-9 2U
-5take_image rover2 waypoint1 objective2 camera4 colour
-
- "
-
-: 2U
-5take_image rover2 waypoint1 objective3 camera4 colour
-
- "
-
-; 2U
-5take_image rover2 waypoint2 objective1 camera4 colour
-
- "
-
-9 2U
-5take_image rover2 waypoint2 objective2 camera4 colour
-
- "
-
-: 2U
-5take_image rover2 waypoint2 objective3 camera4 colour
-
- "
-
-; 2U
-5take_image rover2 waypoint3 objective1 camera4 colour
-
- "
-
-9 2U
-5take_image rover2 waypoint3 objective2 camera4 colour
-
- "
-
-: 2U
-5take_image rover2 waypoint3 objective3 camera4 colour
-
- "
-
-; 2U
-5take_image rover2 waypoint4 objective3 camera4 colour
-
- "
-
-; 2U
-5take_image rover2 waypoint5 objective3 camera4 colour
-
- "
-
-; 2U
-5take_image rover3 waypoint0 objective0 camera5 colour
- 
- "
-
-< 2W
-7take_image rover3 waypoint0 objective0 camera5 high_res
- 
- "
-
-= 2V
-6take_image rover3 waypoint0 objective0 camera5 low_res
- 
- "
-
-> 2U
-5take_image rover3 waypoint0 objective1 camera5 colour
- 
- "
-
-? 2W
-7take_image rover3 waypoint0 objective1 camera5 high_res
- 
- "
-
-@ 2V
-6take_image rover3 waypoint0 objective1 camera5 low_res
- 
- "
-
-A 2U
-5take_image rover3 waypoint0 objective2 camera5 colour
- 
- "
-
-B 2W
-7take_image rover3 waypoint0 objective2 camera5 high_res
- 
- "
-
-C 2V
-6take_image rover3 waypoint0 objective2 camera5 low_res
- 
- "
-
-D 2U
-5take_image rover3 waypoint0 objective3 camera5 colour
- 
- "
-
-E 2W
-7take_image rover3 waypoint0 objective3 camera5 high_res
- 
- "
-
-F 2V
-6take_image rover3 waypoint0 objective3 camera5 low_res
- 
- "
-
-G 2U
-5take_image rover3 waypoint1 objective1 camera5 colour
-
- "
-
-? 2W
-7take_image rover3 waypoint1 objective1 camera5 high_res
-
- "
-
-@ 2V
-6take_image rover3 waypoint1 objective1 camera5 low_res
-
- "
-
-A 2U
-5take_image rover3 waypoint1 objective2 camera5 colour
-
- "
-
-B 2W
-7take_image rover3 waypoint1 objective2 camera5 high_res
-
- "
-
-C 2V
-6take_image rover3 waypoint1 objective2 camera5 low_res
-
- "
-
-D 2U
-5take_image rover3 waypoint1 objective3 camera5 colour
-
- "
-
-E 2W
-7take_image rover3 waypoint1 objective3 camera5 high_res
-
- "
-
-F 2V
-6take_image rover3 waypoint1 objective3 camera5 low_res
-
- "
-
-G 2U
-5take_image rover3 waypoint2 objective1 camera5 colour
-
- "
-
-? 2W
-7take_image rover3 waypoint2 objective1 camera5 high_res
-
- "
-
-@ 2V
-6take_image rover3 waypoint2 objective1 camera5 low_res
-
- "
-
-A 2U
-5take_image rover3 waypoint2 objective2 camera5 colour
-
- "
-
-B 2W
-7take_image rover3 waypoint2 objective2 camera5 high_res
-
- "
-
-C 2V
-6take_image rover3 waypoint2 objective2 camera5 low_res
-
- "
-
-D 2U
-5take_image rover3 waypoint2 objective3 camera5 colour
-
- "
-
-E 2W
-7take_image rover3 waypoint2 objective3 camera5 high_res
-
- "
-
-F 2V
-6take_image rover3 waypoint2 objective3 camera5 low_res
-
- "
-
-G 2U
-5take_image rover3 waypoint3 objective1 camera5 colour
-
- "
-
-? 2W
-7take_image rover3 waypoint3 objective1 camera5 high_res
-
- "
-
-@ 2V
-6take_image rover3 waypoint3 objective1 camera5 low_res
-
- "
-
-A 2U
-5take_image rover3 waypoint3 objective2 camera5 colour
-
- "
-
-B 2W
-7take_image rover3 waypoint3 objective2 camera5 high_res
-
- "
-
-C 2V
-6take_image rover3 waypoint3 objective2 camera5 low_res
-
- "
-
-D 2U
-5take_image rover3 waypoint3 objective3 camera5 colour
-
- "
-
-E 2W
-7take_image rover3 waypoint3 objective3 camera5 high_res
-
- "
-
-F 2V
-6take_image rover3 waypoint3 objective3 camera5 low_res
-
- "
-
-G 2U
-5take_image rover3 waypoint4 objective3 camera5 colour
-
- "
-
-E 2W
-7take_image rover3 waypoint4 objective3 camera5 high_res
-
- "
-
-F 2V
-6take_image rover3 waypoint4 objective3 camera5 low_res
-
- "
-
-G 2U
-5take_image rover3 waypoint5 objective3 camera5 colour
-
- "
-
-E 2W
-7take_image rover3 waypoint5 objective3 camera5 high_res
-
- "
-
-F 2V
-6take_image rover3 waypoint5 objective3 camera5 low_res
-
- "
-
-G 

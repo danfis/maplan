@@ -135,7 +135,7 @@ static int loadProblem(plan_problem_t *p,
 {
     plan_causal_graph_t *cg;
     plan_var_id_t *var_order;
-    int size;
+    int i, size;
 
 
     // Load problem from the protobuffer
@@ -163,6 +163,11 @@ static int loadProblem(plan_problem_t *p,
         if (flags & PLAN_PROBLEM_PRUNE_DUPLICATES)
             pruneDuplicateOps(p);
         p->succ_gen = planSuccGenNew(p->op, p->op_size, NULL);
+    }
+
+    if (flags & PLAN_PROBLEM_OP_UNIT_COST){
+        for (i = 0; i < p->op_size; ++i)
+            p->op[i].cost = 1;
     }
 
     return 0;

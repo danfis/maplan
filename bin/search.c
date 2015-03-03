@@ -420,12 +420,16 @@ static int singleThread(const options_t *o)
     plan_path_t path;
     progress_t progress_data;
     bor_timer_t load_timer;
+    int flags;
     int res;
 
     borTimerStart(&load_timer);
 
     // Load problem file
-    prob = planProblemFromProto(o->proto, PLAN_PROBLEM_USE_CG);
+    flags = PLAN_PROBLEM_USE_CG;
+    if (o->op_unit_cost)
+        flags |= PLAN_PROBLEM_OP_UNIT_COST;
+    prob = planProblemFromProto(o->proto, flags);
     if (prob == NULL){
         fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
         return -1;
@@ -548,12 +552,16 @@ static int multiAgent(const options_t *o)
     plan_problem_agents_t *prob;
     bor_timer_t load_timer;
     FILE *fout;
+    int flags;
     int ret;
 
     borTimerStart(&load_timer);
 
     // Load problem file
-    prob = planProblemAgentsFromProto(o->proto, PLAN_PROBLEM_USE_CG);
+    flags = PLAN_PROBLEM_USE_CG;
+    if (o->op_unit_cost)
+        flags |= PLAN_PROBLEM_OP_UNIT_COST;
+    prob = planProblemAgentsFromProto(o->proto, flags);
     if (prob == NULL){
         fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
         return -1;

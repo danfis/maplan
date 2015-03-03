@@ -83,6 +83,8 @@ static int readOpts(options_t *o, int argc, char *argv[])
     optsAddDesc("hard-limit-sleeptime", 0x0, OPTS_INT, &o->hard_limit_sleeptime,
                 NULL, "Sleeptime in seconds for hard limit monitor."
                 " Set to -1 to disable hard limit monitor. (default: 5)");
+    optsAddDesc("op-unit-cost", 0x0, OPTS_NONE, &o->op_unit_cost, NULL,
+                "Force costs of all operators to one. (default: off)");
 
     if (opts(&argc, argv) != 0){
         return -1;
@@ -237,6 +239,7 @@ static void printOpts(const options_t *o)
     printf("Progress freq: %d\n", o->progress_freq);
     printf("Print heur init: %d\n", o->print_heur_init);
     printf("Dot graph: %s\n", o->dot_graph);
+    printf("Op unit cost: %d\n", o->op_unit_cost);
     printf("Heur: %s [", o->heur);
     for (i = 0; i < o->heur_opts_len; ++i){
         if (i > 0)
@@ -267,6 +270,7 @@ int options(options_t *o, int argc, char *argv[])
     o->search_opts = NULL;
     o->search_opts_len = 0;
     o->hard_limit_sleeptime = 5;
+    o->op_unit_cost = 0;
 
     if (readOpts(o, argc, argv) != 0 || o->help){
         usage(argv[0]);

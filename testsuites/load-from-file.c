@@ -109,6 +109,20 @@ TEST(testLoadFromProto)
     pProblem(p, stdout);
     printf("---- testLoadFromProto END ----\n");
     planProblemDel(p);
+
+    flags = PLAN_PROBLEM_USE_CG;
+    p = planProblemFromProto("../data/ma-benchmarks/openstacks-p03.proto", flags);
+    printf("---- testLoadFromProto ----\n");
+    pProblem(p, stdout);
+    printf("---- testLoadFromProto END ----\n");
+    planProblemDel(p);
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_OP_UNIT_COST;
+    p = planProblemFromProto("../data/ma-benchmarks/openstacks-p03.proto", flags);
+    printf("---- testLoadFromProto unit-cost----\n");
+    pProblem(p, stdout);
+    printf("---- testLoadFromProto unit-cost END ----\n");
+    planProblemDel(p);
 }
 
 TEST(testLoadFromProtoCondEff)
@@ -147,13 +161,11 @@ static void pAgent(const plan_problem_t *p, FILE *fout)
     planProblemDestroyOps(private_op, private_op_size);
 }
 
-static void testAgentProto(const char *proto, FILE *fout)
+static void testAgentProto(const char *proto, FILE *fout, int flags)
 {
     plan_problem_agents_t *agents;
     int i;
-    int flags;
 
-    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
     agents = planProblemAgentsFromProto(proto, flags);
     assertNotEquals(agents, NULL);
     if (agents == NULL)
@@ -170,8 +182,15 @@ static void testAgentProto(const char *proto, FILE *fout)
 
 TEST(testLoadAgentFromProto)
 {
-    testAgentProto("../data/ma-benchmarks/rovers/p03.proto", stdout);
-    testAgentProto("../data/ma-benchmarks/depot/pfile1.proto", stdout);
+    int flags;
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    testAgentProto("../data/ma-benchmarks/rovers/p03.proto", stdout, flags);
+    testAgentProto("../data/ma-benchmarks/depot/pfile1.proto", stdout, flags);
+    flags = PLAN_PROBLEM_USE_CG;
+    testAgentProto("../data/ma-benchmarks/openstacks-p03.proto", stdout, flags);
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_OP_UNIT_COST;
+    testAgentProto("../data/ma-benchmarks/openstacks-p03.proto", stdout, flags);
 }
 
 static void cloneFromProto(const char *proto, int flags, FILE *f1, FILE *f2)

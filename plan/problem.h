@@ -20,6 +20,11 @@ extern "C" {
  */
 #define PLAN_PROBLEM_PRUNE_DUPLICATES 0x2
 
+/**
+ * Set cost of all operators to one.
+ */
+#define PLAN_PROBLEM_OP_UNIT_COST 0x4
+
 struct _plan_problem_private_val_t {
     int var;
     int val;

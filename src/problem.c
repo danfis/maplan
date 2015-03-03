@@ -149,6 +149,8 @@ void planProblemPack(plan_problem_t *p)
     planPartStatePack(p->goal, p->state_pool->packer);
     for (i = 0; i < p->op_size; ++i)
         planOpPack(p->op + i, p->state_pool->packer);
+    for (i = 0; i < p->proj_op_size; ++i)
+        planOpPack(p->proj_op + i, p->state_pool->packer);
 }
 
 void planProblemAgentsPack(plan_problem_agents_t *p)

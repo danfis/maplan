@@ -144,11 +144,19 @@ def parse_domain(domain_pddl):
         elif field == ":constants":
             constants = pddl_types.parse_typed_list(opt[1:])
         elif field == ":predicates":
-            the_predicates = [predicates.Predicate.parse(entry)
-                              for entry in opt[1:]]
+            the_predicates = []
+            for entry in opt[1:]:
+                if entry[0] == ':private':
+                    for private_entry in entry[1:]:
+                        pred = predicates.Predicate.parse(private_entry, True)
+                        the_predicates += [pred]
+                    continue
+                the_predicates += [predicates.Predicate.parse(entry)]
+
             the_predicates += [predicates.Predicate("=",
                                  [pddl_types.TypedObject("?x", "object"),
                                   pddl_types.TypedObject("?y", "object")])]
+
         elif field == ":functions":
             the_functions = pddl_types.parse_typed_list(
                 opt[1:],

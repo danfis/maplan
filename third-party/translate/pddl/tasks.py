@@ -30,6 +30,32 @@ class Task(object):
         self.use_min_cost_metric = use_metric
         self.agents = agents
 
+        private_predicates = list(filter(lambda x: x.is_private, predicates))
+        self.private_predicate_names = set([x.name for x in private_predicates])
+        private_objects = list(filter(lambda x: x.is_private, objects))
+        self.private_object_names = set([x.name for x in private_objects])
+
+        self.mark_private_atoms(self.init)
+        self.mark_private_atoms(self.goal)
+
+    def mark_private_atoms(self, obj):
+        if isinstance(obj, conditions.Literal):
+            if obj.predicate in self.private_predicate_names:
+                obj.set_private(True)
+            elif len(set(obj.args) & self.private_object_names) > 0:
+                obj.set_private(True)
+
+        elif isinstance(obj, conditions.Condition):
+            for o in obj.parts:
+                self.mark_private_atoms(o)
+
+        elif isinstance(obj, list):
+            for o in obj:
+                self.mark_private_atoms(o)
+
+        else:
+            raise Exception('Uknown object!')
+
     def add_axiom(self, parameters, condition):
         name = "new-axiom@%d" % self.axiom_counter
         self.axiom_counter += 1

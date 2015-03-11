@@ -26,6 +26,7 @@ def expand_group(group, task, reachable_facts):
                 atom = pddl.Atom(fact.predicate, newargs)
                 if atom in reachable_facts:
                     result.append(atom)
+    task.mark_private_atoms(result)
     return result
 
 def instantiate_groups(groups, task, reachable_facts):

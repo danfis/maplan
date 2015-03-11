@@ -39,10 +39,11 @@ class TypedObject(object):
     def __ne__(self, other):
         return not self == other
     def __str__(self):
-        return "%s: %s [%d]" % (self.name, self.type, int(self.is_private))
+        return "%s%s: %s" % (('', '(P)')[int(self.is_private)],
+                             self.name, self.type)
     def __repr__(self):
-        return "<TypedObject %s: %s [%d]>" % (self.name, self.type,
-                                              int(self.is_private))
+        return "<TypedObject %s: %s%s>" % (self.name, self.type,
+                                           ('', ' private')[int(self.is_private)])
     def uniquify_name(self, type_map, renamings):
         if self.name not in type_map:
             type_map[self.name] = self.type

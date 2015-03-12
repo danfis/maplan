@@ -171,6 +171,12 @@ third-party: submodule
 				$(PYTHON2) setup.py build; \
 				$(PYTHON2) setup.py bdist_egg --dist-dir build; \
 		fi;
+	cd third-party/nanomsg4py \
+		&& if test ! -f nanomsg2module.so; then \
+				make third-party; \
+				make; \
+				ln -s ../nanomsg4py/nanomsg2module.so ../translate/nanomsg2module.so; \
+		fi;
 	$(MAKE) -C third-party/translate
 	$(MAKE) -C third-party/VAL
 

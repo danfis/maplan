@@ -107,7 +107,54 @@ def collect_all_mutex_groups(groups, atoms):
 def sort_groups(groups):
     return sorted(sorted(group) for group in groups)
 
-def compute_groups(task, atoms, reachable_action_params, partial_encoding=True):
+def get_public_groups(groups):
+    res = []
+    for g in groups:
+        g = list(filter(lambda x: not x.is_private, g))
+        if len(g) > 0:
+            g = ['{0}({1})'.format(x.predicate, ','.join(x.args)) for x in g]
+            res += [g]
+    return res
+
+def groupsToDict(groups):
+    d = {}
+    group_i = 0
+    for group in groups:
+        for atom in group:
+            d[atom] = group_i
+        group_i += 1
+    return d
+
+def splitGroup(group, group_dict):
+    if len(group) == 1:
+        return [group]
+    names = ['{0}({1})'.format(x.predicate, ','.join(x.args)) for x in group]
+    keys = [group_dict.get(x, None) for x in names]
+    diff_keys = set(filter(lambda x: x is not None, keys))
+    if len(diff_keys) == 1:
+        return [group]
+
+    groups = []
+    key_atoms = zip(keys, group)
+    for key in diff_keys:
+        g = [x[1] for x in filter(lambda x: x[0] == key, key_atoms)]
+        groups += [g]
+    g_none = [x[1] for x in filter(lambda x: x[0] is None, key_atoms)]
+    groups[0] += g_none
+    return groups
+
+def splitGroups(groups, peer_groups):
+    for p_groups in peer_groups:
+        group_dict = groupsToDict(p_groups)
+        new_groups = []
+        for group in groups:
+            new_groups += splitGroup(group, group_dict)
+        groups = new_groups
+    groups = sorted(sorted(group) for group in groups)
+    return groups
+
+def compute_groups(task, atoms, reachable_action_params, partial_encoding=True,
+                   comm = None):
     groups = invariant_finder.get_groups(task, reachable_action_params)
 
     with timers.timing("Instantiating groups"):
@@ -123,6 +170,15 @@ def compute_groups(task, atoms, reachable_action_params, partial_encoding=True):
     with timers.timing("Choosing groups", block=True):
         groups = choose_groups(groups, atoms, partial_encoding=partial_encoding)
     groups = sort_groups(groups)
+
+    if comm is not None:
+        public_groups = get_public_groups(groups)
+        public_mutex_groups = get_public_groups(mutex_groups)
+        comm.sendToAll([public_groups, public_mutex_groups])
+        res = comm.recvFromAll()
+        groups = splitGroups(groups, [x[0] for x in res])
+        mutex_groups = splitGroups(mutex_groups, [x[1] for x in res])
+
     with timers.timing("Building translation key"):
         translation_key = build_translation_key(groups)
 

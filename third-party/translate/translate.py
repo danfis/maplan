@@ -494,7 +494,47 @@ def unsolvable_sas_task(msg):
                              operators, axioms, metric)
 
 
-def pddl_to_sas(task):
+class AgentComm(object):
+    def __init__(self, agent_id, agent_url):
+        import nanomsg2
+        self.recv = nanomsg2.Socket(nanomsg2.AF_SP, nanomsg2.NN_PULL)
+        self.recv.bind(agent_url[agent_id])
+        self.send = []
+        for i, url in enumerate(agent_url):
+            if i != agent_id:
+                sock = nanomsg2.Socket(nanomsg2.AF_SP, nanomsg2.NN_PUSH)
+                sock.connect(url)
+                self.send += [sock]
+
+    def sendToAll(self, data):
+        import marshal as pickle
+        import nanomsg2
+        buf = pickle.dumps(data, -1)
+        buf = buffer(buf)
+        for sock in self.send:
+            sock.send(buf)
+
+    def recvFromAll(self):
+        import marshal as pickle
+        res = []
+        for s in self.send:
+            buf = self.recv.recv()
+            d = pickle.loads(buf)
+            res += [d]
+        return res
+
+    def close(self):
+        self.recv.shutdown()
+        self.recv.close()
+        for sock in self.send:
+            sock.shutdown()
+            sock.close()
+
+def pddl_to_sas(task, agent_id, agent_url):
+    comm = None
+    if agent_id >= 0:
+        comm = AgentComm(agent_id, agent_url)
+
     with timers.timing("Instantiating", block=True):
         (relaxed_reachable, atoms, actions, axioms,
          reachable_action_params) = instantiate.explore(task)
@@ -513,7 +553,8 @@ def pddl_to_sas(task):
     with timers.timing("Computing fact groups", block=True):
         groups, mutex_groups, translation_key = fact_groups.compute_groups(
             task, atoms, reachable_action_params,
-            partial_encoding=USE_PARTIAL_ENCODING)
+            partial_encoding=USE_PARTIAL_ENCODING,
+            comm = comm)
 
     with timers.timing("Building STRIPS to SAS dictionary"):
         ranges, strips_to_sas = strips_to_sas_dictionary(
@@ -544,6 +585,9 @@ def pddl_to_sas(task):
           simplified_effect_condition_counter)
     print("%d implied preconditions added" %
           added_implied_precondition_counter)
+
+    if comm is not None:
+        comm.close()
 
     if DETECT_UNREACHABLE:
         with timers.timing("Detecting unreachable propositions", block=True):
@@ -651,6 +695,10 @@ def parse_args():
                            default="output.sas", nargs="?")
     argparser.add_argument("--proto", "-p", dest="use_proto",
                            action="store_true")
+    argparser.add_argument("--agent-id", dest="agent_id", type=int,
+                           default=-1)
+    argparser.add_argument("--agent-url", dest="agent_url",
+                           action="append", default=[])
     return argparser.parse_args()
 
 
@@ -677,7 +725,7 @@ def main():
     use_proto = args.use_proto
     print('Use Proto:', use_proto)
 
-    sas_task = pddl_to_sas(task)
+    sas_task = pddl_to_sas(task, args.agent_id, args.agent_url)
     dump_statistics(sas_task)
 
     with timers.timing("Writing output"):

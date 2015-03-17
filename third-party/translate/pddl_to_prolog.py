@@ -144,7 +144,7 @@ def translate_typed_object(prog, obj, type_dict):
     for type_name in [obj.type] + supertypes:
         prog.add_fact(pddl.Atom(type_name, [obj.name]))
 
-def translate_facts(prog, task):
+def translate_facts(prog, task, add_fluents):
     type_dict = dict((type.name, type) for type in task.types)
     for obj in task.objects:
         translate_typed_object(prog, obj, type_dict)
@@ -152,12 +152,15 @@ def translate_facts(prog, task):
         assert isinstance(fact, pddl.Atom) or isinstance(fact, pddl.Assign)
         if isinstance(fact, pddl.Atom):
             prog.add_fact(fact)
+            add_fluents.discard(fact)
+    for f in add_fluents:
+        prog.add_fact(f)
 
-def translate(task):
+def translate(task, add_fluents = set()):
     # Note: The function requires that the task has been normalized.
     with timers.timing("Generating Datalog program"):
         prog = PrologProgram()
-        translate_facts(prog, task)
+        translate_facts(prog, task, add_fluents)
         for conditions, effect in normalize.build_exploration_rules(task):
             prog.add_rule(Rule(conditions, effect))
     with timers.timing("Normalizing Datalog program", block=True):

@@ -70,11 +70,57 @@ def instantiate(task, model):
     return (relaxed_reachable, fluent_facts, instantiated_actions,
             sorted(instantiated_axioms), reachable_action_parameters)
 
-def explore(task):
-    prog = pddl_to_prolog.translate(task)
+def _explore(task, add_fluents = set()):
+    prog = pddl_to_prolog.translate(task, add_fluents)
     model = build_model.compute_model(prog)
     with timers.timing("Completing instantiation"):
         return instantiate(task, model)
+
+def public_fluents(fluents):
+    fluents = filter(lambda x: not x.is_private, fluents)
+    return [(f.predicate, f.args) for f in fluents]
+
+def _exploreMA(task, add_pub_atoms = set()):
+    result = _explore(task, add_pub_atoms)
+    task.mark_private_atoms(result[1])
+    pub_fluents = public_fluents(result[1])
+    return result, pub_fluents
+
+def exploreMA(task, comm):
+    add_atoms = set()
+
+    if comm.agent_id == 0:
+        # Initial exploration done by the master agent
+        res, pub_fluents = _exploreMA(task, add_atoms)
+        comm.sendToNext(pub_fluents)
+
+    while True:
+        # receive all public fluents from the previous agent in ring
+        pub_fluents = comm.recvBlock()
+
+        if pub_fluents is None:
+            # Detect end of the distributed exploration
+            break
+
+        if comm.agent_id == 0:
+            # if the master agent has received the same set of fluents as
+            # it already has, it means that the set cannot change anymore
+            pub_cmp = public_fluents(res[1])
+            if sorted(pub_fluents) == sorted(pub_cmp):
+                comm.sendToAll(None)
+                break
+
+        add_atoms = set([pddl.Atom(x[0], x[1]) for x in pub_fluents])
+        res, pub_fluents = _exploreMA(task, add_atoms)
+        comm.sendToNext(pub_fluents)
+
+    return res
+
+def explore(task, comm = None):
+    if comm is not None:
+        return exploreMA(task, comm)
+    else:
+        return _explore(task)
 
 if __name__ == "__main__":
     task = pddl.open()

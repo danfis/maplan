@@ -575,7 +575,7 @@ class AgentComm(object):
 
 def pddl_to_sas(task, agent_id, agent_url):
     comm = None
-    if agent_id >= 0:
+    if agent_id >= 0 and len(agent_url) > 1:
         comm = AgentComm(agent_id, agent_url)
 
     with timers.timing("Instantiating", block=True):

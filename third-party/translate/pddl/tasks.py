@@ -49,12 +49,15 @@ class Task(object):
             for o in obj.parts:
                 self.mark_private_atoms(o)
 
-        elif isinstance(obj, list):
+        elif isinstance(obj, list) or isinstance(obj, set):
             for o in obj:
                 self.mark_private_atoms(o)
 
+        elif isinstance(obj, f_expression.FunctionAssignment):
+            pass
+
         else:
-            raise Exception('Uknown object!')
+            raise Exception('Uknown object!:' + str(type(obj)))
 
     def add_axiom(self, parameters, condition):
         name = "new-axiom@%d" % self.axiom_counter

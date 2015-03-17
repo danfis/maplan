@@ -107,58 +107,58 @@ def collect_all_mutex_groups(groups, atoms):
 def sort_groups(groups):
     return sorted(sorted(group) for group in groups)
 
-def get_public_groups(groups):
+def public_groups(groups):
     res = []
     for g in groups:
         g = list(filter(lambda x: not x.is_private, g))
         if len(g) > 0:
-            g = ['{0}({1})'.format(x.predicate, ','.join(x.args)) for x in g]
+            #g = ['{0}({1})'.format(x.predicate, ','.join(x.args)) for x in g]
+            g = [(x.predicate, x.args) for x in g]
             res += [g]
     return res
 
-def groupsToDict(groups):
-    d = {}
-    group_i = 0
-    for group in groups:
-        for atom in group:
-            d[atom] = group_i
-        group_i += 1
-    return d
+def ma_instantiate_groups(comm, groups, invariants, task, atoms):
+    # Send public mutex groups to all other agents
+    task.mark_private_atoms(groups)
+    comm.sendToAll(public_groups(groups))
 
-def splitGroup(group, group_dict):
-    if len(group) == 1:
-        return [group]
-    names = ['{0}({1})'.format(x.predicate, ','.join(x.args)) for x in group]
-    keys = [group_dict.get(x, None) for x in names]
-    diff_keys = set(filter(lambda x: x is not None, keys))
-    if len(diff_keys) == 1:
-        return [group]
+    # Extend set of initial atoms by mutex groups received from other
+    # agents
+    init_atoms = set(task.init)
+    for other_groups in comm.recvFromAll():
+        for group in other_groups:
+            if len(group) <= 1:
+                continue
 
-    groups = []
-    key_atoms = zip(keys, group)
-    for key in diff_keys:
-        g = [x[1] for x in filter(lambda x: x[0] == key, key_atoms)]
-        groups += [g]
-    g_none = [x[1] for x in filter(lambda x: x[0] is None, key_atoms)]
-    groups[0] += g_none
-    return groups
+            group = [pddl.Atom(x[0], x[1]) for x in group]
+            if all([x not in init_atoms for x in group]):
+                init_atoms.add(group[0])
 
-def splitGroups(groups, peer_groups):
-    for p_groups in peer_groups:
-        group_dict = groupsToDict(p_groups)
-        new_groups = []
-        for group in groups:
-            new_groups += splitGroup(group, group_dict)
-        groups = new_groups
-    groups = sorted(sorted(group) for group in groups)
+    # If we haven't received any additional atom, exit with the old mutex
+    # groups
+    if len(init_atoms) == len(task.init):
+        return groups
+
+    # Try to instantiate mutex groups from a newly constructed initial
+    # state
+    invariant_groups = invariant_finder.useful_groups(invariants, init_atoms)
+    invariant_groups = list(invariant_groups)
+    new_groups = instantiate_groups(invariant_groups, task, atoms)
+    if len(new_groups) > len(groups):
+        return new_groups
     return groups
 
 def compute_groups(task, atoms, reachable_action_params, partial_encoding=True,
                    comm = None):
-    groups = invariant_finder.get_groups(task, reachable_action_params)
+    invariants, groups = invariant_finder.get_groups(task, reachable_action_params)
 
     with timers.timing("Instantiating groups"):
         groups = instantiate_groups(groups, task, atoms)
+
+    if comm is not None:
+        # Try to instantiate another mutex groups that are based on initial
+        # states of other agents
+        groups = ma_instantiate_groups(comm, groups, invariants, task, atoms)
 
     # Sort here already to get deterministic mutex groups.
     groups = sort_groups(groups)
@@ -169,15 +169,6 @@ def compute_groups(task, atoms, reachable_action_params, partial_encoding=True,
         mutex_groups = collect_all_mutex_groups(groups, atoms)
     with timers.timing("Choosing groups", block=True):
         groups = choose_groups(groups, atoms, partial_encoding=partial_encoding)
-    groups = sort_groups(groups)
-
-    if comm is not None:
-        public_groups = get_public_groups(groups)
-        public_mutex_groups = get_public_groups(mutex_groups)
-        comm.sendToAll([public_groups, public_mutex_groups])
-        res = comm.recvFromAll()
-        groups = splitGroups(groups, [x[0] for x in res])
-        mutex_groups = splitGroups(mutex_groups, [x[1] for x in res])
 
     with timers.timing("Building translation key"):
         translation_key = build_translation_key(groups)

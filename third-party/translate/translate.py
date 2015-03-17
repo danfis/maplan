@@ -491,7 +491,7 @@ def unsolvable_sas_task(msg):
     axioms = []
     metric = True
     return sas_tasks.SASTask(variables, mutexes, init, goal,
-                             operators, axioms, metric)
+                             operators, axioms, metric, [])
 
 
 class AgentComm(object):
@@ -505,30 +505,73 @@ class AgentComm(object):
                 sock = nanomsg2.Socket(nanomsg2.AF_SP, nanomsg2.NN_PUSH)
                 sock.connect(url)
                 self.send += [sock]
+            else:
+                self.send += [None]
+
+        self.is_master = (agent_id == 0)
+        self.agent_id = agent_id
+        self.agent_size = len(agent_url)
+
+    def sendToMaster(self, data):
+        import marshal as pickle
+        buf = pickle.dumps(data, -1)
+        buf = buffer(buf)
+        self.send[0].send(buf)
 
     def sendToAll(self, data):
         import marshal as pickle
-        import nanomsg2
         buf = pickle.dumps(data, -1)
         buf = buffer(buf)
         for sock in self.send:
-            sock.send(buf)
+            if sock is not None:
+                sock.send(buf)
+
+    def sendTo(self, data, agent_id):
+        import marshal as pickle
+        buf = pickle.dumps(data, -1)
+        buf = buffer(buf)
+        self.send[agent_id].send(buf)
+
+    def sendToNext(self, data):
+        ai = (self.agent_id + 1) % self.agent_size
+        import sys
+        sys.stdout.flush()
+        return self.sendTo(data, ai)
+
+    def sendToMaster(self, data):
+        return self.sendTo(data, 0)
 
     def recvFromAll(self):
         import marshal as pickle
         res = []
         for s in self.send:
+            if s is None:
+                continue
             buf = self.recv.recv()
             d = pickle.loads(buf)
             res += [d]
         return res
 
+    def recvBlock(self):
+        import marshal as pickle
+        buf = self.recv.recv()
+        d = pickle.loads(buf)
+        return d
+
     def close(self):
+        if self.is_master:
+            self.recvFromAll()
+            self.sendToAll(None)
+        else:
+            self.sendToMaster(None)
+            self.recvBlock()
+
         self.recv.shutdown()
         self.recv.close()
         for sock in self.send:
-            sock.shutdown()
-            sock.close()
+            if sock is not None:
+                sock.shutdown()
+                sock.close()
 
 def pddl_to_sas(task, agent_id, agent_url):
     comm = None
@@ -537,7 +580,7 @@ def pddl_to_sas(task, agent_id, agent_url):
 
     with timers.timing("Instantiating", block=True):
         (relaxed_reachable, atoms, actions, axioms,
-         reachable_action_params) = instantiate.explore(task)
+         reachable_action_params) = instantiate.explore(task, comm)
 
     if not relaxed_reachable:
         return unsolvable_sas_task("No relaxed solution")
@@ -589,7 +632,7 @@ def pddl_to_sas(task, agent_id, agent_url):
     if comm is not None:
         comm.close()
 
-    if DETECT_UNREACHABLE:
+    if DETECT_UNREACHABLE and comm is None:
         with timers.timing("Detecting unreachable propositions", block=True):
             try:
                 simplify.filter_unreachable_propositions(sas_task)

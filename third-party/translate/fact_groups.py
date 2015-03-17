@@ -148,6 +148,17 @@ def ma_instantiate_groups(comm, groups, invariants, task, atoms):
         return new_groups
     return groups
 
+def split_groups_by_private_atoms(groups):
+    result = []
+    for group in groups:
+        public = [x for x in group if not x.is_private]
+        private = [x for x in group if x.is_private]
+        if len(public) > 0:
+            result += [public]
+        if len(private) > 0:
+            result += [private]
+    return result
+
 def compute_groups(task, atoms, reachable_action_params, partial_encoding=True,
                    comm = None):
     invariants, groups = invariant_finder.get_groups(task, reachable_action_params)
@@ -160,8 +171,12 @@ def compute_groups(task, atoms, reachable_action_params, partial_encoding=True,
         # states of other agents
         groups = ma_instantiate_groups(comm, groups, invariants, task, atoms)
 
+        # Separate private atoms to a separate groups
+        groups = split_groups_by_private_atoms(groups)
+
     # Sort here already to get deterministic mutex groups.
     groups = sort_groups(groups)
+
     # TODO: I think that collect_all_mutex_groups should do the same thing
     #       as choose_groups with partial_encoding=False, so these two should
     #       be unified.

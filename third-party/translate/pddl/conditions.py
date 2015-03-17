@@ -290,7 +290,7 @@ class Literal(Condition):
         return not self == other
     @property
     def key(self):
-        return str(self.predicate), self.args
+        return self.is_private, str(self.predicate), self.args
     def __lt__(self, other):
         return self.key < other.key
     def __le__(self, other):

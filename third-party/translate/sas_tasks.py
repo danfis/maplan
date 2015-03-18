@@ -5,7 +5,7 @@ SAS_FILE_VERSION = 3
 
 class SASTask:
     def __init__(self, variables, mutexes, init, goal,
-                 operators, axioms, metric, agents):
+                 operators, axioms, metric, agents, projected_operators):
         self.variables = variables
         self.mutexes = mutexes
         self.init = init
@@ -14,6 +14,7 @@ class SASTask:
         self.axioms = sorted(axioms, key=lambda axiom: (axiom.condition, axiom.effect))
         self.metric = metric
         self.agents = agents
+        self.projected_operators = projected_operators
 
     def output(self, stream):
         print("begin_version", file=stream)
@@ -51,7 +52,9 @@ class SASTask:
         self.init.output_proto(prob)
         self.goal.output_proto(prob)
         for op in self.operators:
-            op.output_proto(self.metric, prob)
+            op.output_proto(self.metric, prob.operator.add())
+        for op in self.projected_operators:
+            op.output_proto(self.metric, prob.projected_operator.add())
 
         for agent in self.agents:
             prob.agent_name.append(agent)
@@ -183,6 +186,9 @@ class SASOperator:
         self.prevail = sorted(prevail)
         self.pre_post = sorted(pre_post)
         self.cost = cost
+        self.owner = None
+        self.global_id = None
+        self.is_private = None
     def dump(self):
         print(self.name)
         print("Prevail:")
@@ -210,8 +216,7 @@ class SASOperator:
         print(self.cost, file=stream)
         print("end_operator", file=stream)
 
-    def output_proto(self, use_metric, prob):
-        proto = prob.operator.add()
+    def output_proto(self, use_metric, proto):
         proto.name = self.name[1:-1]
         if use_metric:
             proto.cost = self.cost
@@ -220,6 +225,9 @@ class SASOperator:
 
         ppre = proto.pre
         peff = proto.eff
+        # force to create at least empty arrays
+        del ppre.val[:]
+        del peff.val[:]
         for var, val in self.prevail:
             v = ppre.val.add()
             v.var = var
@@ -246,6 +254,13 @@ class SASOperator:
                     v = peff.val.add()
                     v.var = var
                     v.val = post
+
+        if self.owner is not None:
+            proto.owner = self.owner
+        if self.global_id is not None:
+            proto.global_id = self.global_id
+        if self.is_private is not None:
+            proto.is_private = self.is_private
 
     def get_encoding_size(self):
         size = 1 + len(self.prevail)

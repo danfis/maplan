@@ -53,6 +53,147 @@ simplified_effect_condition_counter = 0
 added_implied_precondition_counter = 0
 
 
+class AgentComm(object):
+    def __init__(self, agent_id, agent_url):
+        import nanomsg2
+        self.recv = nanomsg2.Socket(nanomsg2.AF_SP, nanomsg2.NN_PULL)
+        self.recv.bind(agent_url[agent_id])
+        self.send = []
+        for i, url in enumerate(agent_url):
+            if i != agent_id:
+                sock = nanomsg2.Socket(nanomsg2.AF_SP, nanomsg2.NN_PUSH)
+                sock.connect(url)
+                self.send += [sock]
+            else:
+                self.send += [None]
+
+        self.is_master = (agent_id == 0)
+        self.agent_id = agent_id
+        self.agent_size = len(agent_url)
+
+    def sendToMaster(self, data):
+        import marshal as pickle
+        buf = pickle.dumps(data, -1)
+        buf = buffer(buf)
+        self.send[0].send(buf)
+
+    def sendToAll(self, data):
+        import marshal as pickle
+        buf = pickle.dumps(data, -1)
+        buf = buffer(buf)
+        for sock in self.send:
+            if sock is not None:
+                sock.send(buf)
+
+    def sendTo(self, data, agent_id):
+        import marshal as pickle
+        buf = pickle.dumps(data, -1)
+        buf = buffer(buf)
+        self.send[agent_id].send(buf)
+
+    def sendToNext(self, data):
+        ai = (self.agent_id + 1) % self.agent_size
+        import sys
+        sys.stdout.flush()
+        return self.sendTo(data, ai)
+
+    def sendToMaster(self, data):
+        return self.sendTo(data, 0)
+
+    def recvFromAll(self):
+        import marshal as pickle
+        res = []
+        for s in self.send:
+            if s is None:
+                continue
+            buf = self.recv.recv()
+            d = pickle.loads(buf)
+            res += [d]
+        return res
+
+    def recvBlock(self):
+        import marshal as pickle
+        buf = self.recv.recv()
+        d = pickle.loads(buf)
+        return d
+
+    def close(self):
+        if self.is_master:
+            self.recvFromAll()
+            self.sendToAll(None)
+        else:
+            self.sendToMaster(None)
+            self.recvBlock()
+
+        self.recv.shutdown()
+        self.recv.close()
+        for sock in self.send:
+            if sock is not None:
+                sock.shutdown()
+                sock.close()
+
+def sort_operators(ops):
+    def key_action(x):
+        return (x.owner, x.name, x.prevail, x.pre_post)
+    return sorted(ops, key = key_action)
+
+def ma_assign_owner_global_id(comm, ops):
+    idx = 0
+    if not comm.is_master:
+        idx = comm.recvBlock()
+
+    for i, op in enumerate(ops):
+        op.global_id = idx + i
+        op.owner = comm.agent_id
+    comm.sendToNext(idx + len(ops))
+
+    if comm.is_master:
+        comm.recvBlock()
+
+def project_operator(op, is_private):
+    op.prevail = [x for x in op.prevail if not is_private[x[0]]]
+    op.pre_post = [x for x in op.pre_post if not is_private[x[0]]]
+    # TODO: detect conditional effects
+
+def project_operators(ops, private_vars):
+    ops = deepcopy(ops)
+    for op in ops:
+        project_operator(op, private_vars)
+
+    # Remove private operators
+    ops = [x for x in ops if len(x.prevail) > 0 or len(x.pre_post) > 0]
+    return ops
+
+def set_private_operators(ops, projected_ops):
+    private_ids  = set([o.global_id for o in ops])
+    private_ids -= set([o.global_id for o in projected_ops])
+    for op in ops:
+        op.is_private = False
+        if op.global_id in private_ids:
+            op.is_private = True
+
+def op_to_comm(op):
+    d = [op.name, op.prevail, op.pre_post, op.cost, op.owner, op.global_id]
+    return d
+
+def op_from_comm(d):
+    op = sas_tasks.SASOperator(d[0], d[1], d[2], d[3])
+    op.owner = d[4]
+    op.global_id = d[5]
+    return op
+
+def ma_exchange_projected_operators(comm, projected_ops):
+    send_actions = [op_to_comm(op) for op in projected_ops]
+    comm.sendToAll(send_actions)
+    ops = comm.recvFromAll()
+    ops = reduce(lambda x, y: x + y, ops)
+    ops = [op_from_comm(x) for x in ops]
+    ops = sorted(ops, key = lambda x: x.global_id)
+    for op in ops:
+        op.is_private = False
+    return ops
+
+
 def strips_to_sas_dictionary(groups, assert_partial):
     dictionary = {}
     for var_no, group in enumerate(groups):
@@ -417,7 +558,7 @@ def translate_task(strips_to_sas, ranges, translation_key, private_vars,
                    mutex_dict, mutex_ranges, mutex_key,
                    init, goals,
                    actions, axioms, metric, implied_facts,
-                   agents):
+                   agents, comm):
     with timers.timing("Processing axioms", block=True):
         axioms, axiom_init, axiom_layer_dict = axiom_rules.handle_axioms(
             actions, axioms, goals)
@@ -465,6 +606,18 @@ def translate_task(strips_to_sas, ranges, translation_key, private_vars,
     axioms = translate_strips_axioms(axioms, strips_to_sas, ranges, mutex_dict,
                                      mutex_ranges)
 
+    projected_ops = []
+    if comm is not None:
+        operators = sort_operators(operators)
+        ma_assign_owner_global_id(comm, operators)
+        projected_ops = project_operators(operators, private_vars)
+        set_private_operators(operators, projected_ops)
+        projected_ops = ma_exchange_projected_operators(comm, projected_ops)
+
+        # Add local operators to the projected operators from other agents
+        projected_ops += deepcopy(operators)
+        projected_ops = sorted(projected_ops, key = lambda x: x.global_id)
+
     axiom_layers = [-1] * len(ranges)
     for atom, layer in axiom_layer_dict.items():
         assert layer >= 0
@@ -474,7 +627,8 @@ def translate_task(strips_to_sas, ranges, translation_key, private_vars,
                                        translation_key, private_vars)
     mutexes = [sas_tasks.SASMutexGroup(group) for group in mutex_key]
     return sas_tasks.SASTask(variables, mutexes, init, goal,
-                             operators, axioms, metric, agents)
+                             operators, axioms, metric, agents,
+                             projected_ops)
 
 
 def unsolvable_sas_task(msg):
@@ -495,84 +649,6 @@ def unsolvable_sas_task(msg):
                              operators, axioms, metric, [])
 
 
-class AgentComm(object):
-    def __init__(self, agent_id, agent_url):
-        import nanomsg2
-        self.recv = nanomsg2.Socket(nanomsg2.AF_SP, nanomsg2.NN_PULL)
-        self.recv.bind(agent_url[agent_id])
-        self.send = []
-        for i, url in enumerate(agent_url):
-            if i != agent_id:
-                sock = nanomsg2.Socket(nanomsg2.AF_SP, nanomsg2.NN_PUSH)
-                sock.connect(url)
-                self.send += [sock]
-            else:
-                self.send += [None]
-
-        self.is_master = (agent_id == 0)
-        self.agent_id = agent_id
-        self.agent_size = len(agent_url)
-
-    def sendToMaster(self, data):
-        import marshal as pickle
-        buf = pickle.dumps(data, -1)
-        buf = buffer(buf)
-        self.send[0].send(buf)
-
-    def sendToAll(self, data):
-        import marshal as pickle
-        buf = pickle.dumps(data, -1)
-        buf = buffer(buf)
-        for sock in self.send:
-            if sock is not None:
-                sock.send(buf)
-
-    def sendTo(self, data, agent_id):
-        import marshal as pickle
-        buf = pickle.dumps(data, -1)
-        buf = buffer(buf)
-        self.send[agent_id].send(buf)
-
-    def sendToNext(self, data):
-        ai = (self.agent_id + 1) % self.agent_size
-        import sys
-        sys.stdout.flush()
-        return self.sendTo(data, ai)
-
-    def sendToMaster(self, data):
-        return self.sendTo(data, 0)
-
-    def recvFromAll(self):
-        import marshal as pickle
-        res = []
-        for s in self.send:
-            if s is None:
-                continue
-            buf = self.recv.recv()
-            d = pickle.loads(buf)
-            res += [d]
-        return res
-
-    def recvBlock(self):
-        import marshal as pickle
-        buf = self.recv.recv()
-        d = pickle.loads(buf)
-        return d
-
-    def close(self):
-        if self.is_master:
-            self.recvFromAll()
-            self.sendToAll(None)
-        else:
-            self.sendToMaster(None)
-            self.recvBlock()
-
-        self.recv.shutdown()
-        self.recv.close()
-        for sock in self.send:
-            if sock is not None:
-                sock.shutdown()
-                sock.close()
 
 def pddl_to_sas(task, agent_id, agent_url):
     comm = None
@@ -629,7 +705,7 @@ def pddl_to_sas(task, agent_id, agent_url):
             strips_to_sas, ranges, translation_key, private_vars,
             mutex_dict, mutex_ranges, mutex_key,
             task.init, goal_list, actions, axioms, task.use_min_cost_metric,
-            implied_facts, task.agents)
+            implied_facts, task.agents, comm)
 
     print("%d effect conditions simplified" %
           simplified_effect_condition_counter)

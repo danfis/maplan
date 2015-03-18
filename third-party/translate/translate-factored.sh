@@ -38,8 +38,8 @@ for i in $sizes; do
     pids="$pids $!"
 done
 
+trap "kill $pids" SIGINT SIGTERM
+
 for pid in $pids; do
     wait $pid
 done
-echo $size
-echo ${#domain[*]}

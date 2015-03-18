@@ -31,6 +31,7 @@ message PlanProblemVar {
     required string name = 1;
     required int32 range = 2;
     repeated string fact_name = 3;
+    optional bool is_private = 4;
 }
 
 /**

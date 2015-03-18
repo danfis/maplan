@@ -413,7 +413,7 @@ def dump_task(init, goals, actions, axioms, axiom_layer_dict):
     sys.stdout = old_stdout
 
 
-def translate_task(strips_to_sas, ranges, translation_key,
+def translate_task(strips_to_sas, ranges, translation_key, private_vars,
                    mutex_dict, mutex_ranges, mutex_key,
                    init, goals,
                    actions, axioms, metric, implied_facts,
@@ -470,7 +470,8 @@ def translate_task(strips_to_sas, ranges, translation_key,
         assert layer >= 0
         [(var, val)] = strips_to_sas[atom]
         axiom_layers[var] = layer
-    variables = sas_tasks.SASVariables(ranges, axiom_layers, translation_key)
+    variables = sas_tasks.SASVariables(ranges, axiom_layers,
+                                       translation_key, private_vars)
     mutexes = [sas_tasks.SASMutexGroup(group) for group in mutex_key]
     return sas_tasks.SASTask(variables, mutexes, init, goal,
                              operators, axioms, metric, agents)
@@ -603,6 +604,12 @@ def pddl_to_sas(task, agent_id, agent_url):
         ranges, strips_to_sas = strips_to_sas_dictionary(
             groups, assert_partial=USE_PARTIAL_ENCODING)
 
+    if comm is not None:
+        # Each group contains either all public or all private values
+        private_vars = [x[0].is_private for x in groups]
+    else:
+        private_vars = [None for _ in groups]
+
     with timers.timing("Building dictionary for full mutex groups"):
         mutex_ranges, mutex_dict = strips_to_sas_dictionary(
             mutex_groups, assert_partial=False)
@@ -619,7 +626,7 @@ def pddl_to_sas(task, agent_id, agent_url):
 
     with timers.timing("Translating task", block=True):
         sas_task = translate_task(
-            strips_to_sas, ranges, translation_key,
+            strips_to_sas, ranges, translation_key, private_vars,
             mutex_dict, mutex_ranges, mutex_key,
             task.init, goal_list, actions, axioms, task.use_min_cost_metric,
             implied_facts, task.agents)

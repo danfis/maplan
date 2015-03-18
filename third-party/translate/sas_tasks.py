@@ -72,10 +72,11 @@ class SASTask:
         return task_size
 
 class SASVariables:
-    def __init__(self, ranges, axiom_layers, value_names):
+    def __init__(self, ranges, axiom_layers, value_names, private_vars):
         self.ranges = ranges
         self.axiom_layers = axiom_layers
         self.value_names = value_names
+        self.is_private = private_vars
     def dump(self):
         for var, (rang, axiom_layer) in enumerate(zip(self.ranges, self.axiom_layers)):
             if axiom_layer != -1:
@@ -97,13 +98,15 @@ class SASVariables:
             print("end_variable", file=stream)
 
     def output_proto(self, prob):
-        for var, (rang, axiom_layer, values) in enumerate(zip(
-                self.ranges, self.axiom_layers, self.value_names)):
+        for var, (rang, axiom_layer, values, is_private) in enumerate(zip(
+                self.ranges, self.axiom_layers, self.value_names, self.is_private)):
             protovar = prob.var.add()
             protovar.name = "var%d" % var
             protovar.range = rang
             for value in values:
                 protovar.fact_name.append(value)
+            if is_private is not None:
+                protovar.is_private = is_private
 
     def get_encoding_size(self):
         # A variable with range k has encoding size k + 1 to also give the

@@ -89,17 +89,19 @@ def _exploreMA(task, add_pub_atoms = set()):
 def exploreMA(task, comm):
     add_atoms = set()
 
-    if comm.agent_id == 0:
+    if comm.is_master:
         # Initial exploration done by the master agent
         res, pub_fluents = _exploreMA(task, add_atoms)
-        comm.sendToNext(pub_fluents)
+        comm.sendInRing(pub_fluents)
 
     while True:
         # receive all public fluents from the previous agent in ring
-        pub_fluents = comm.recvBlock()
+        pub_fluents = comm.recvInRing()
 
         if pub_fluents is None:
             # Detect end of the distributed exploration
+            if not comm.is_master:
+                comm.sendInRing(None)
             break
 
         if comm.agent_id == 0:
@@ -107,12 +109,12 @@ def exploreMA(task, comm):
             # it already has, it means that the set cannot change anymore
             pub_cmp = public_fluents(res[1])
             if sorted(pub_fluents) == sorted(pub_cmp):
-                comm.sendToAll(None)
-                break
+                comm.sendInRing(None)
+                continue
 
         add_atoms = set([pddl.Atom(x[0], x[1]) for x in pub_fluents])
         res, pub_fluents = _exploreMA(task, add_atoms)
-        comm.sendToNext(pub_fluents)
+        comm.sendInRing(pub_fluents)
 
     return res
 

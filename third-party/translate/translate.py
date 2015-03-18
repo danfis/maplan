@@ -71,59 +71,69 @@ class AgentComm(object):
         self.agent_id = agent_id
         self.agent_size = len(agent_url)
 
-    def sendToMaster(self, data):
-        import marshal as pickle
-        buf = pickle.dumps(data, -1)
-        buf = buffer(buf)
-        self.send[0].send(buf)
+        self.msgs = []
 
     def sendToAll(self, data):
         import marshal as pickle
-        buf = pickle.dumps(data, -1)
+        buf = pickle.dumps((self.agent_id, data), -1)
         buf = buffer(buf)
         for sock in self.send:
             if sock is not None:
                 sock.send(buf)
 
-    def sendTo(self, data, agent_id):
+    def _sendTo(self, data, agent_id):
         import marshal as pickle
-        buf = pickle.dumps(data, -1)
+        buf = pickle.dumps((self.agent_id, data), -1)
         buf = buffer(buf)
         self.send[agent_id].send(buf)
 
-    def sendToNext(self, data):
+    def sendInRing(self, data):
         ai = (self.agent_id + 1) % self.agent_size
-        import sys
-        sys.stdout.flush()
-        return self.sendTo(data, ai)
+        return self._sendTo(data, ai)
 
     def sendToMaster(self, data):
-        return self.sendTo(data, 0)
+        return self._sendTo(data, 0)
 
-    def recvFromAll(self):
-        import marshal as pickle
-        res = []
-        for s in self.send:
-            if s is None:
-                continue
-            buf = self.recv.recv()
-            d = pickle.loads(buf)
-            res += [d]
-        return res
-
-    def recvBlock(self):
+    def _recv(self):
         import marshal as pickle
         buf = self.recv.recv()
-        d = pickle.loads(buf)
-        return d
+        return pickle.loads(buf)
+
+    def recvFromMaster(self):
+        return self.recvFrom(0)
+
+    def recvFrom(self, src_id):
+        for i, d in enumerate(self.msgs):
+            if d[0] == src_id:
+                self.msgs.pop(i)
+                return d[1]
+        d = self._recv()
+        while d[0] != src_id:
+            self.msgs.append(d)
+            d = self._recv()
+        return d[1]
+
+    def recvFromAll(self):
+        res = []
+        for i in range(self.agent_size):
+            if i == self.agent_id:
+                continue
+            res += [self.recvFrom(i)]
+        return res
+
+    def recvInRing(self):
+        src_id = self.agent_id - 1
+        if src_id < 0:
+            src_id = self.agent_size - 1
+        return self.recvFrom(src_id)
 
     def close(self):
         if self.is_master:
-            self.recvFromAll()
-            self.sendToAll(None)
-        else:
-            self.sendToMaster(None)
-            self.recvBlock()
+            self.sendInRing(None)
+        self.recvInRing()
+        if not self.is_master:
+            self.sendInRing(None)
+        self.setLinger(-1)
 
         self.recv.shutdown()
         self.recv.close()
@@ -140,15 +150,15 @@ def sort_operators(ops):
 def ma_assign_owner_global_id(comm, ops):
     idx = 0
     if not comm.is_master:
-        idx = comm.recvBlock()
+        idx = comm.recvInRing()
 
     for i, op in enumerate(ops):
         op.global_id = idx + i
         op.owner = comm.agent_id
-    comm.sendToNext(idx + len(ops))
+    comm.sendInRing(idx + len(ops))
 
     if comm.is_master:
-        comm.recvBlock()
+        comm.recvInRing()
 
 def project_operator(op, is_private):
     op.prevail = [x for x in op.prevail if not is_private[x[0]]]

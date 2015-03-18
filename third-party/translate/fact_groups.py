@@ -229,7 +229,7 @@ def ma_split_groups(comm, groups):
         # Slave just sends its public groups to the master and waits for
         # the splitted groups
         comm.sendToMaster(public_groups(pub_groups))
-        pub_groups = comm.recvBlock()
+        pub_groups = comm.recvFromMaster()
         pub_groups = [[pddl.Atom(x[0], x[1]) for x in g] for g in pub_groups]
 
     # Finally append private groups and return it

@@ -24,7 +24,9 @@ for domain in $(ls domain-*.pddl); do
     domains+=($domain)
     problems+=($problem)
     agent_names+=($agent_name)
-    agent_urls="$agent_urls --agent-url ipc://translate-agent-$size"
+    #agent_urls="$agent_urls --agent-url ipc://translate-agent-$size"
+    port=$(($size + 10000))
+    agent_urls="$agent_urls --agent-url tcp://127.0.0.1:$port"
     sizes="$sizes $size"
     size=$(($size + 1))
 done

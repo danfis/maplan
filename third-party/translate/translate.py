@@ -63,6 +63,7 @@ class AgentComm(object):
             if i != agent_id:
                 sock = nanomsg2.Socket(nanomsg2.AF_SP, nanomsg2.NN_PUSH)
                 sock.connect(url)
+                sock.setLinger(-1)
                 self.send += [sock]
             else:
                 self.send += [None]
@@ -129,11 +130,11 @@ class AgentComm(object):
 
     def close(self):
         if self.is_master:
-            self.sendInRing(None)
-        self.recvInRing()
-        if not self.is_master:
-            self.sendInRing(None)
-        self.setLinger(-1)
+            self.sendToAll(None)
+            self.recvFromAll()
+        else:
+            self.recvFromMaster()
+            self.sendToMaster(None)
 
         self.recv.shutdown()
         self.recv.close()

@@ -30,9 +30,10 @@ def get_objects_by_type(typed_objects, types):
             result[type].append(obj.name)
     return result
 
-def instantiate(task, model):
+def instantiate(task, model, add_fluents):
     relaxed_reachable = False
     fluent_facts = get_fluent_facts(task, model)
+    fluent_facts |= add_fluents
     init_facts = set(task.init)
 
     type_to_objects = get_objects_by_type(task.objects, task.types)
@@ -74,7 +75,7 @@ def _explore(task, add_fluents = set()):
     prog = pddl_to_prolog.translate(task, add_fluents)
     model = build_model.compute_model(prog)
     with timers.timing("Completing instantiation"):
-        return instantiate(task, model)
+        return instantiate(task, model, add_fluents)
 
 def public_fluents(fluents):
     fluents = filter(lambda x: not x.is_private, fluents)

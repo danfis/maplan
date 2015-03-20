@@ -7,6 +7,7 @@ import itertools
 import normalize
 import pddl
 import timers
+import copy
 
 class PrologProgram:
     def __init__(self):
@@ -144,7 +145,8 @@ def translate_typed_object(prog, obj, type_dict):
     for type_name in [obj.type] + supertypes:
         prog.add_fact(pddl.Atom(type_name, [obj.name]))
 
-def translate_facts(prog, task, add_fluents):
+def translate_facts(prog, task, _add_fluents):
+    add_fluents = copy.copy(_add_fluents)
     type_dict = dict((type.name, type) for type in task.types)
     for obj in task.objects:
         translate_typed_object(prog, obj, type_dict)

@@ -511,10 +511,84 @@ static void loadGoal(plan_problem_t *p, const PlanProblem *proto,
     }
 }
 
+static int loadOp(plan_op_t *op, int id, const PlanProblemOperator &proto_op,
+                  int var_size, const plan_var_id_t *var_map)
+{
+    int num_effects = 0;
+
+    planOpInit(op, var_size);
+    op->name = strdup(proto_op.name().c_str());
+    op->cost = proto_op.cost();
+    op->global_id = id;
+
+    if (proto_op.has_owner()){
+        planOpAddOwner(op, proto_op.owner());
+        planOpSetFirstOwner(op);
+    }
+
+    if (proto_op.has_global_id())
+        op->global_id = proto_op.global_id();
+
+    if (proto_op.has_is_private())
+        op->is_private = proto_op.is_private();
+
+    const PlanProblemPartState &proto_pre = proto_op.pre();
+    for (int j = 0; j < proto_pre.val_size(); ++j){
+        const PlanProblemVarVal &v = proto_pre.val(j);
+        if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
+            continue;
+
+        planOpSetPre(op, var_map[v.var()], v.val());
+    }
+
+    const PlanProblemPartState &proto_eff = proto_op.eff();
+    for (int j = 0; j < proto_eff.val_size(); ++j){
+        const PlanProblemVarVal &v = proto_eff.val(j);
+        if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
+            continue;
+
+        planOpSetEff(op, var_map[v.var()], v.val());
+        ++num_effects;
+    }
+
+    for (int j = 0; j < proto_op.cond_eff_size(); ++j){
+        int num_cond_eff = 0;
+        const PlanProblemCondEff &proto_cond_eff = proto_op.cond_eff(j);
+        int cond_eff_id = planOpAddCondEff(op);
+
+        const PlanProblemPartState &proto_pre = proto_cond_eff.pre();
+        for (int k = 0; k < proto_pre.val_size(); ++k){
+            const PlanProblemVarVal &v = proto_pre.val(k);
+            if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
+                continue;
+
+            planOpCondEffSetPre(op, cond_eff_id, var_map[v.var()], v.val());
+        }
+
+        const PlanProblemPartState &proto_eff = proto_cond_eff.eff();
+        for (int k = 0; k < proto_eff.val_size(); ++k){
+            const PlanProblemVarVal &v = proto_eff.val(k);
+            if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
+                continue;
+
+            planOpCondEffSetEff(op, cond_eff_id, var_map[v.var()], v.val());
+            ++num_effects;
+            ++num_cond_eff;
+        }
+
+        if (num_cond_eff == 0){
+            planOpDelLastCondEff(op);
+        }
+    }
+
+    return num_effects;
+}
+
 static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
                          const plan_var_id_t *var_map)
 {
     int i, len, ins;
+    int num_effects;
 
     len = proto->operator__size();
 
@@ -523,80 +597,14 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
     p->op = BOR_ALLOC_ARR(plan_op_t, p->op_size);
 
     for (i = 0, ins = 0; i < len; ++i){
-        int num_effects = 0;
-        const PlanProblemOperator &proto_op = proto->operator_(i);
-        plan_op_t *op = p->op + ins;
-
-        planOpInit(op, p->var_size);
-        op->name = strdup(proto_op.name().c_str());
-        op->cost = proto_op.cost();
-        op->global_id = ins;
-
-        if (proto_op.has_owner()){
-            planOpAddOwner(op, proto_op.owner());
-            planOpSetFirstOwner(op);
-        }
-
-        if (proto_op.has_global_id())
-            op->global_id = proto_op.global_id();
-
-        if (proto_op.has_is_private())
-            op->is_private = proto_op.is_private();
-
-        const PlanProblemPartState &proto_pre = proto_op.pre();
-        for (int j = 0; j < proto_pre.val_size(); ++j){
-            const PlanProblemVarVal &v = proto_pre.val(j);
-            if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
-                continue;
-
-            planOpSetPre(op, var_map[v.var()], v.val());
-        }
-
-        const PlanProblemPartState &proto_eff = proto_op.eff();
-        for (int j = 0; j < proto_eff.val_size(); ++j){
-            const PlanProblemVarVal &v = proto_eff.val(j);
-            if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
-                continue;
-
-            planOpSetEff(op, var_map[v.var()], v.val());
-            ++num_effects;
-        }
-
-        for (int j = 0; j < proto_op.cond_eff_size(); ++j){
-            int num_cond_eff = 0;
-            const PlanProblemCondEff &proto_cond_eff = proto_op.cond_eff(j);
-            int cond_eff_id = planOpAddCondEff(op);
-
-            const PlanProblemPartState &proto_pre = proto_cond_eff.pre();
-            for (int k = 0; k < proto_pre.val_size(); ++k){
-                const PlanProblemVarVal &v = proto_pre.val(k);
-                if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
-                    continue;
-
-                planOpCondEffSetPre(op, cond_eff_id, var_map[v.var()], v.val());
-            }
-
-            const PlanProblemPartState &proto_eff = proto_cond_eff.eff();
-            for (int k = 0; k < proto_eff.val_size(); ++k){
-                const PlanProblemVarVal &v = proto_eff.val(k);
-                if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
-                    continue;
-
-                planOpCondEffSetEff(op, cond_eff_id, var_map[v.var()], v.val());
-                ++num_effects;
-                ++num_cond_eff;
-            }
-
-            if (num_cond_eff == 0){
-                planOpDelLastCondEff(op);
-            }
-        }
+        num_effects = loadOp(p->op + ins, ins, proto->operator_(i),
+                             p->var_size, var_map);
 
         if (num_effects > 0){
-            planOpCondEffSimplify(op);
+            planOpCondEffSimplify(p->op + ins);
             ++ins;
         }else{
-            planOpFree(op);
+            planOpFree(p->op + ins);
         }
     }
 
@@ -605,6 +613,26 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
         p->op_size = ins;
         // and give back some memory
         p->op = BOR_REALLOC_ARR(p->op, plan_op_t, p->op_size);
+    }
+}
+
+static void loadProjOperator(plan_problem_t *p, const PlanProblem *proto,
+                             const plan_var_id_t *var_map)
+{
+    int i, len;
+
+    len = proto->projected_operator_size();
+    if (len == 0)
+        return;
+
+    // Allocate array for operators
+    p->proj_op_size = len;
+    p->proj_op = BOR_ALLOC_ARR(plan_op_t, p->proj_op_size);
+
+    for (i = 0; i < len; ++i){
+        loadOp(p->proj_op + i, i, proto->projected_operator(i),
+               p->var_size, var_map);
+        planOpCondEffSimplify(p->proj_op + i);
     }
 }
 
@@ -629,6 +657,7 @@ static void loadProtoProblem(plan_problem_t *p,
     loadInitState(p, proto, var_map);
     loadGoal(p, proto, var_map);
     loadOperator(p, proto, var_map);
+    loadProjOperator(p, proto, var_map);
 }
 
 static int hasUnimportantVars(const plan_causal_graph_t *cg)

@@ -49,3 +49,10 @@ void planVarSetPrivateVal(plan_var_t *var, plan_val_t val)
         var->is_private = 1;
 }
 
+void planVarSetPrivate(plan_var_t *var)
+{
+    plan_val_t i;
+    for (i = 0; i < var->range; ++i)
+        var->is_val_private[i] = 1;
+    var->is_private = 1;
+}

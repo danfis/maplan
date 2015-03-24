@@ -475,6 +475,8 @@ static void loadVar(plan_problem_t *p, const PlanProblem *proto,
         }
 
         planVarInit(var, proto_var.name().c_str(), proto_var.range());
+        if (proto_var.has_is_private() && proto_var.is_private())
+            planVarSetPrivate(var);
     }
 }
 

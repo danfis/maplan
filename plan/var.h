@@ -39,6 +39,11 @@ void planVarCopy(plan_var_t *dst, const plan_var_t *src);
  */
 void planVarSetPrivateVal(plan_var_t *var, plan_val_t val);
 
+/**
+ * Sets whole variable as private
+ */
+void planVarSetPrivate(plan_var_t *var);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

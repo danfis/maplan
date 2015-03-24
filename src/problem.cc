@@ -532,6 +532,17 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
         op->cost = proto_op.cost();
         op->global_id = ins;
 
+        if (proto_op.has_owner()){
+            planOpAddOwner(op, proto_op.owner());
+            planOpSetFirstOwner(op);
+        }
+
+        if (proto_op.has_global_id())
+            op->global_id = proto_op.global_id();
+
+        if (proto_op.has_is_private())
+            op->is_private = proto_op.is_private();
+
         const PlanProblemPartState &proto_pre = proto_op.pre();
         for (int j = 0; j < proto_pre.val_size(); ++j){
             const PlanProblemVarVal &v = proto_pre.val(j);

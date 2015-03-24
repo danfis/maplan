@@ -321,7 +321,7 @@ static void loadFactoredProto(const char *fn, int flags)
     plan_problem_t *p;
     p = planProblemFromProto(fn, flags);
     printf("---- testLoadFromFactoredProto: %s ----\n", fn);
-    pProblem(p, stdout);
+    pAgent(p, stdout);
     printf("---- testLoadFromFactoredProto: %s END ----\n", fn);
     planProblemDel(p);
 }
@@ -333,4 +333,6 @@ TEST(testLoadFromFactoredProto)
     flags = 0;
     loadFactoredProto("proto/driverlog-pfile1-driver1.proto", flags);
     loadFactoredProto("proto/driverlog-pfile1-driver2.proto", flags);
+    loadFactoredProto("proto/rovers-p03-rover0.proto", flags);
+    loadFactoredProto("proto/rovers-p03-rover1.proto", flags);
 }

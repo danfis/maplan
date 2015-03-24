@@ -67,6 +67,12 @@ typedef struct _plan_problem_agents_t plan_problem_agents_t;
 plan_problem_t *planProblemFromProto(const char *fn, int flags);
 
 /**
+ * Loads problem definition from a protobuf file containing factored
+ * problem.
+ */
+plan_problem_t *planProblemFromFactoredProto(const char *fn, int flags);
+
+/**
  * Creates an exact copy of the problem object.
  */
 plan_problem_t *planProblemClone(const plan_problem_t *p);

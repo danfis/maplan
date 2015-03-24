@@ -75,7 +75,7 @@ static void unsetNonPrivate(plan_part_state_t *dst,
     plan_val_t val;
 
     PLAN_PART_STATE_FOR_EACH(src, i, varid, val){
-        if (!var[varid].is_private[val])
+        if (!var[varid].is_val_private[val])
             planPartStateUnset(dst, varid);
     }
 }

@@ -13,7 +13,8 @@ extern "C" {
 struct _plan_var_t {
     char *name;
     plan_val_t range;
-    int *is_private;
+    int *is_val_private;
+    int is_private;
 };
 typedef struct _plan_var_t plan_var_t;
 

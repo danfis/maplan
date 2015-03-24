@@ -82,6 +82,24 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags)
     return p;
 }
 
+plan_problem_t *planProblemFromFactoredProto(const char *fn, int flags)
+{
+    plan_problem_t *p = NULL;
+    PlanProblem *proto = NULL;
+
+    proto = parseProto(fn);
+    if (proto == NULL)
+        return NULL;
+
+    p = BOR_ALLOC(plan_problem_t);
+    loadProblem(p, proto, flags);
+    planProblemPack(p);
+
+    delete proto;
+
+    return p;
+}
+
 plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags)
 {
     plan_problem_agents_t *p = NULL;
@@ -938,6 +956,6 @@ static void setPrivateVals(plan_problem_t *agent, int agent_id,
                                        agent->private_val_size);
     for (size_t i = 0; i < pv.size(); ++i){
         agent->private_val[i] = pv[i];
-        agent->var[pv[i].var].is_private[pv[i].val] = 1;
+        agent->var[pv[i].var].is_val_private[pv[i].val] = 1;
     }
 }

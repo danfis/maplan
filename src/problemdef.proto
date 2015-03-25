@@ -72,4 +72,5 @@ message PlanProblem {
     repeated PlanProblemOperator operator = 6;
     repeated string agent_name = 7;
     repeated PlanProblemOperator projected_operator = 8;
+    optional int32 agent_id = 9;
 }

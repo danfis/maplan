@@ -6384,7 +6384,7 @@ Ops[5]:
 ++++ manufacturer END ++++
 ---- proto/openstacks-p03.proto END ----
 ---- testLoadFromFactoredProto: proto/driverlog-pfile1-driver1.proto ----
-++++ (null) ++++
+++++ Agent0 ++++
 Agent ID: 0
 Vars[8]:
 [0] name: `var0', range: 6, is_private: 0, is_val_private: 0 0 0 0 0 0
@@ -6932,11 +6932,11 @@ Ops[48]:
 [46] pre: 7:1, eff:
 [47] cost: 1, gid: 47, owner: 0 (1), private: 0, recv_agent: 0, name: `unload-truck driver1 truck2 package2 s2'
 [47] pre: 7:1, eff:
-++++ (null) END ++++
+++++ Agent0 END ++++
 ---- testLoadFromFactoredProto: proto/driverlog-pfile1-driver1.proto END ----
 ---- testLoadFromFactoredProto: proto/driverlog-pfile1-driver2.proto ----
-++++ (null) ++++
-Agent ID: 0
+++++ Agent1 ++++
+Agent ID: 1
 Vars[9]:
 [0] name: `var0', range: 6, is_private: 0, is_val_private: 0 0 0 0 0 0
 [1] name: `var1', range: 6, is_private: 0, is_val_private: 0 0 0 0 0 0
@@ -7724,10 +7724,10 @@ Ops[104]:
 [102] pre: 7:3, eff: 7:1
 [103] cost: 1, gid: 167, owner: 1 (2), private: 1, recv_agent: 0, name: `walk driver2 s2 p1-2'
 [103] pre: 7:4, eff: 7:1
-++++ (null) END ++++
+++++ Agent1 END ++++
 ---- testLoadFromFactoredProto: proto/driverlog-pfile1-driver2.proto END ----
 ---- testLoadFromFactoredProto: proto/rovers-p03-rover0.proto ----
-++++ (null) ++++
+++++ Agent0 ++++
 Agent ID: 0
 Vars[24]:
 [0] name: `var0', range: 2, is_private: 0, is_val_private: 0 0
@@ -7937,11 +7937,11 @@ Ops[21]:
 [19] pre: 9:0 16:0, eff: 16:1 20:0
 [20] cost: 1, gid: 20, owner: 0 (1), private: 1, recv_agent: 0, name: `take_image rover0 waypoint1 objective1 camera0 low_res'
 [20] pre: 9:0 16:0, eff: 16:1 21:0
-++++ (null) END ++++
+++++ Agent0 END ++++
 ---- testLoadFromFactoredProto: proto/rovers-p03-rover0.proto END ----
 ---- testLoadFromFactoredProto: proto/rovers-p03-rover1.proto ----
-++++ (null) ++++
-Agent ID: 0
+++++ Agent1 ++++
+Agent ID: 1
 Vars[25]:
 [0] name: `var0', range: 2, is_private: 0, is_val_private: 0 0
 [1] name: `var1', range: 2, is_private: 0, is_val_private: 0 0
@@ -8323,5 +8323,5 @@ Ops[55]:
 [53] pre: 8:1 14:0, eff: 14:1 23:0
 [54] cost: 1, gid: 75, owner: 1 (2), private: 1, recv_agent: 0, name: `take_image rover1 waypoint1 objective1 camera1 low_res'
 [54] pre: 8:1 14:0, eff: 14:1 24:0
-++++ (null) END ++++
+++++ Agent1 END ++++
 ---- testLoadFromFactoredProto: proto/rovers-p03-rover1.proto END ----

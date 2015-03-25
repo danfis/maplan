@@ -640,6 +640,12 @@ static void loadProtoProblem(plan_problem_t *p,
     loadGoal(p, proto, var_map);
     loadOperator(p, proto, var_map);
     loadProjOperator(p, proto, var_map);
+
+    if (proto->has_agent_id()){
+        p->agent_id = proto->agent_id();
+        if (proto->agent_name_size() == 1)
+            p->agent_name = strdup(proto->agent_name(0).c_str());
+    }
 }
 
 static int hasUnimportantVars(const plan_causal_graph_t *cg)

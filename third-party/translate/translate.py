@@ -639,7 +639,7 @@ def translate_task(strips_to_sas, ranges, translation_key, private_vars,
     mutexes = [sas_tasks.SASMutexGroup(group) for group in mutex_key]
     return sas_tasks.SASTask(variables, mutexes, init, goal,
                              operators, axioms, metric, agents,
-                             projected_ops)
+                             projected_ops, comm)
 
 
 def unsolvable_sas_task(msg):

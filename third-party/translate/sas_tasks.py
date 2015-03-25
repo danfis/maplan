@@ -5,7 +5,7 @@ SAS_FILE_VERSION = 3
 
 class SASTask:
     def __init__(self, variables, mutexes, init, goal,
-                 operators, axioms, metric, agents, projected_operators):
+                 operators, axioms, metric, agents, projected_operators, comm):
         self.variables = variables
         self.mutexes = mutexes
         self.init = init
@@ -15,6 +15,11 @@ class SASTask:
         self.metric = metric
         self.agents = agents
         self.projected_operators = projected_operators
+        self.agent_id = None
+
+        if comm is not None:
+            self.agents = ['Agent{0}'.format(comm.agent_id)]
+            self.agent_id = comm.agent_id
 
     def output(self, stream):
         print("begin_version", file=stream)
@@ -58,6 +63,8 @@ class SASTask:
 
         for agent in self.agents:
             prob.agent_name.append(agent)
+        if self.agent_id is not None:
+            prob.agent_id = self.agent_id
 
         s = prob.SerializeToString()
         stream.write(s)

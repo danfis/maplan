@@ -95,7 +95,7 @@ void planProblemCopy(plan_problem_t *dst, const plan_problem_t *src)
                                        src->succ_gen->var_order);
 
     if (src->agent_name)
-        dst->agent_name = strdup(src->agent_name);
+        dst->agent_name = BOR_STRDUP(src->agent_name);
     if (src->proj_op_size > 0){
         dst->proj_op = BOR_ALLOC_ARR(plan_op_t, src->proj_op_size);
         for (i = 0; i < src->proj_op_size; ++i){

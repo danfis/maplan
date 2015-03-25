@@ -32,7 +32,7 @@ void planPathCopy(plan_path_t *dst, const plan_path_t *src)
     BOR_LIST_FOR_EACH_ENTRY(src, plan_path_op_t, src_op, path){
         op = BOR_ALLOC(plan_path_op_t);
         memcpy(op, src_op, sizeof(plan_path_op_t));
-        op->name = strdup(src_op->name);
+        op->name = BOR_STRDUP(src_op->name);
         borListAppend(dst, &op->path);
     }
 }
@@ -43,7 +43,7 @@ void planPathPrepend(plan_path_t *path, plan_op_t *op,
     plan_path_op_t *path_op;
 
     path_op = BOR_ALLOC(plan_path_op_t);
-    path_op->name = strdup(op->name);
+    path_op->name = BOR_STRDUP(op->name);
     path_op->cost = op->cost;
     path_op->op = op;
     path_op->from_state = from;
@@ -58,7 +58,7 @@ void planPathPrepend2(plan_path_t *path, const char *op_name,
     plan_path_op_t *path_op;
 
     path_op = BOR_ALLOC(plan_path_op_t);
-    path_op->name = strdup(op_name);
+    path_op->name = BOR_STRDUP(op_name);
     path_op->cost = op_cost;
     path_op->op = NULL;
     path_op->from_state = PLAN_NO_STATE;

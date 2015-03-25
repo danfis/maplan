@@ -193,7 +193,7 @@ _bor_inline int keynodeCmp(const plan_cost_t *kn1,
 static keynode_t *keynodeNew(int size)
 {
     keynode_t *kn;
-    kn = borRealloc(NULL, sizeof(keynode_t) + sizeof(plan_cost_t) * size);
+    kn = BOR_MALLOC(sizeof(keynode_t) + sizeof(plan_cost_t) * size);
     borFifoInit(&kn->fifo, sizeof(node_t));
     return kn;
 }

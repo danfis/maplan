@@ -395,7 +395,7 @@ static void loadAgents(plan_problem_agents_t *p,
     for (i = 0; i < p->agent_size; ++i){
         agent = p->agent + i;
         agentInitProblem(agent, &p->glob);
-        agent->agent_name = strdup(proto->agent_name(i).c_str());
+        agent->agent_name = BOR_STRDUP(proto->agent_name(i).c_str());
         agent->agent_id = i;
     }
 
@@ -461,7 +461,7 @@ static void loadVar(plan_problem_t *p, const PlanProblem *proto,
             planVarSetPrivate(var);
 
         for (int j = 0; j < proto_var.fact_name_size(); ++j){
-            char *name = strdup(proto_var.fact_name(j).c_str());
+            char *name = BOR_STRDUP(proto_var.fact_name(j).c_str());
             const char *val_name = name;
             if (strncmp(name, "Atom ", 5) == 0){
                 val_name += 5;
@@ -479,7 +479,7 @@ static void loadVar(plan_problem_t *p, const PlanProblem *proto,
             }
 
             planVarSetValName(var, j, val_name);
-            free(name);
+            BOR_FREE(name);
         }
     }
 }
@@ -521,7 +521,7 @@ static int loadOp(plan_op_t *op, int id, const PlanProblemOperator &proto_op,
     int num_effects = 0;
 
     planOpInit(op, var_size);
-    op->name = strdup(proto_op.name().c_str());
+    op->name = BOR_STRDUP(proto_op.name().c_str());
     op->cost = proto_op.cost();
     op->global_id = id;
 
@@ -666,7 +666,7 @@ static void loadProtoProblem(plan_problem_t *p,
     if (proto->has_agent_id()){
         p->agent_id = proto->agent_id();
         if (proto->agent_name_size() == 1)
-            p->agent_name = strdup(proto->agent_name(0).c_str());
+            p->agent_name = BOR_STRDUP(proto->agent_name(0).c_str());
     }
 }
 

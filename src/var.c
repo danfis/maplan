@@ -4,7 +4,7 @@
 
 void planVarInit(plan_var_t *var, const char *name, plan_val_t range)
 {
-    var->name = strdup(name);
+    var->name = BOR_STRDUP(name);
     var->range = range;
     var->is_val_private = BOR_CALLOC_ARR(int, var->range);
     var->is_private = 0;
@@ -32,7 +32,7 @@ void planVarCopy(plan_var_t *dst, const plan_var_t *src)
 {
     int i;
 
-    dst->name = strdup(src->name);
+    dst->name = BOR_STRDUP(src->name);
     dst->range = src->range;
     dst->is_private = src->is_private;
 
@@ -48,7 +48,7 @@ void planVarCopy(plan_var_t *dst, const plan_var_t *src)
         dst->val_name = BOR_CALLOC_ARR(char *, dst->range);
         for (i = 0; i < dst->range; ++i){
             if (src->val_name[i])
-                dst->val_name[i] = strdup(src->val_name[i]);
+                dst->val_name[i] = BOR_STRDUP(src->val_name[i]);
         }
     }
 }
@@ -82,5 +82,5 @@ void planVarSetValName(plan_var_t *var, plan_val_t val, const char *name)
 {
     if (var->val_name[val] != NULL)
         BOR_FREE(var->val_name[val]);
-    var->val_name[val] = strdup(name);
+    var->val_name[val] = BOR_STRDUP(name);
 }

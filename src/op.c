@@ -57,7 +57,7 @@ void planOpCopy(plan_op_t *dst, const plan_op_t *src)
     }
 
     dst->cost = src->cost;
-    dst->name = strdup(src->name);
+    dst->name = BOR_STRDUP(src->name);
 
     dst->global_id  = src->global_id;
     dst->owner      = src->owner;
@@ -105,7 +105,7 @@ void planOpSetName(plan_op_t *op, const char *name)
 {
     if (op->name)
         BOR_FREE(op->name);
-    op->name = strdup(name);
+    op->name = BOR_STRDUP(name);
 }
 
 int planOpAddCondEff(plan_op_t *op)

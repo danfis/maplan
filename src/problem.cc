@@ -127,6 +127,14 @@ static PlanProblem *parseProto(const char *fn)
         return NULL;
     }
 
+    if (proto->projected_operator_size() > 0 && !proto->has_agent_id()){
+        fprintf(stderr, "Error: Invalid .proto file. It contains projected"
+                " operators but not agent's ID.\n");
+        delete proto;
+        return NULL;
+    }
+
+
     return proto;
 }
 

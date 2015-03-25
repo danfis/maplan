@@ -12,6 +12,9 @@ static void pVar(const plan_var_t *var, int var_size, FILE *fout)
         fprintf(fout, ", is_val_private:");
         for (j = 0; j < var[i].range; ++j)
             fprintf(fout, " %d", var[i].is_val_private[j]);
+        fprintf(fout, ", val_name:");
+        for (j = 0; j < var[i].range; ++j)
+            fprintf(fout, " `%s'", var[i].val_name[j]);
         fprintf(fout, "\n");
     }
 }

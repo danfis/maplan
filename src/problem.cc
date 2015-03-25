@@ -459,6 +459,28 @@ static void loadVar(plan_problem_t *p, const PlanProblem *proto,
         planVarInit(var, proto_var.name().c_str(), proto_var.range());
         if (proto_var.has_is_private() && proto_var.is_private())
             planVarSetPrivate(var);
+
+        for (int j = 0; j < proto_var.fact_name_size(); ++j){
+            char *name = strdup(proto_var.fact_name(j).c_str());
+            const char *val_name = name;
+            if (strncmp(name, "Atom ", 5) == 0){
+                val_name += 5;
+
+            }else if (strncmp(name, "NegatedAtom ", 12) == 0){
+                name[9] = '(';
+                name[10] = 'N';
+                name[11] = ')';
+                val_name += 9;
+            }else if (strncmp(name, "(P)Atom ", 8) == 0){
+                name[5] = '(';
+                name[6] = 'P';
+                name[7] = ')';
+                val_name += 5;
+            }
+
+            planVarSetValName(var, j, val_name);
+            free(name);
+        }
     }
 }
 

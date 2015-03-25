@@ -16,6 +16,7 @@ struct _plan_var_t {
     int *is_val_private; /*!< Flag for each value signal whether it is
                               private */
     int is_private;      /*!< True if all values are private */
+    char **val_name;     /*!< Names of the values (i.e., corresponding facts) */
 };
 typedef struct _plan_var_t plan_var_t;
 
@@ -43,6 +44,11 @@ void planVarSetPrivateVal(plan_var_t *var, plan_val_t val);
  * Sets whole variable as private
  */
 void planVarSetPrivate(plan_var_t *var);
+
+/**
+ * Sets name of the value.
+ */
+void planVarSetValName(plan_var_t *var, plan_val_t val, const char *name);
 
 #ifdef __cplusplus
 } /* extern "C" */

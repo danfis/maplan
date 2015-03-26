@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "plan/dataarr.h"
 
-void elinit(void *d, const void *u)
+void elinit(void *d, int id, const void *u)
 {
     assertEquals((long)u, 1UL);
     memset(d, 1, 10);

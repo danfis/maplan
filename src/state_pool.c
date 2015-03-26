@@ -6,8 +6,7 @@
 struct _plan_state_packed_t {
     bor_list_t htable;        /*!< Connection into hash table */
     plan_state_id_t state_id; /*!< Corresponding state ID */
-    char data[];              /*!< Variable data containing packed state
-                                   bytearray or maybe more */
+    char statebuf[];          /*!< Variable data containing packed state */
 };
 typedef struct _plan_state_packed_t plan_state_packed_t;
 
@@ -337,7 +336,7 @@ plan_state_id_t planStatePoolApplyPartStates(plan_state_pool_t *pool,
 
 _bor_inline void *stateBuf(const plan_state_packed_t *s)
 {
-    return (void *)s->data;
+    return (void *)s->statebuf;
 }
 
 _bor_inline plan_state_packed_t *statePacked(const plan_state_pool_t *pool,

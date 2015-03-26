@@ -30,18 +30,27 @@ _bor_inline plan_state_packed_t *statePacked(const plan_state_pool_t *pool,
 
 /** Inserts state into hash table and returns ID under which it is stored. */
 _bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
-                                             plan_state_id_t sid,
                                              plan_state_packed_t *sp);
 
 /** Callbacks for bor_htable_t */
 static bor_htable_key_t htableHash(const bor_list_t *key, void *ud);
 static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud);
 
+// TODO
+static void statePackedInit(void *el, int id, const void *ud)
+{
+    plan_state_packed_t *sp = (plan_state_packed_t *)el;
+    plan_state_pool_t *pool = (plan_state_pool_t *)ud;
+    size_t size = planStatePackerBufSize(pool->packer);
+
+    sp->state_id = id;
+    memset(stateBuf(sp), 0, size);
+}
+
 plan_state_pool_t *planStatePoolNew(const plan_var_t *var, int var_size)
 {
     int state_size, size;
     plan_state_pool_t *pool;
-    plan_state_packed_t *state_packed_init;
 
     pool = BOR_ALLOC(plan_state_pool_t);
     pool->num_vars = var_size;
@@ -53,10 +62,7 @@ plan_state_pool_t *planStatePoolNew(const plan_var_t *var, int var_size)
 
     size  = sizeof(plan_state_packed_t);
     size += state_size;
-    state_packed_init = (plan_state_packed_t *)alloca(size);
-    memset(state_packed_init, 0, size);
-    state_packed_init->state_id = PLAN_NO_STATE; // TODO
-    pool->data[0] = planDataArrNew(size, NULL, state_packed_init);
+    pool->data[0] = planDataArrNew(size, statePackedInit, pool);
 
     pool->data_size = 1;
     pool->htable = borHTableNew(htableHash, htableEq, (void *)pool);
@@ -100,7 +106,7 @@ plan_state_pool_t *planStatePoolClone(const plan_state_pool_t *sp)
     pool->num_states = 0;
     for (i = 0; i < sp->num_states; ++i){
         state = statePacked(pool, i);
-        insertIntoHTable(pool, i, state);
+        insertIntoHTable(pool, state);
     }
 
     return pool;
@@ -145,7 +151,7 @@ plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
     sp = statePacked(pool, sid);
     planStatePackerPack(pool->packer, state, stateBuf(sp));
 
-    return insertIntoHTable(pool, sid, sp);
+    return insertIntoHTable(pool, sp);
 }
 
 plan_state_id_t planStatePoolInsertPacked(plan_state_pool_t *pool,
@@ -161,7 +167,7 @@ plan_state_id_t planStatePoolInsertPacked(plan_state_pool_t *pool,
     sp = statePacked(pool, sid);
     memcpy(stateBuf(sp), packed_state, planStatePackerBufSize(pool->packer));
 
-    return insertIntoHTable(pool, sid, sp);
+    return insertIntoHTable(pool, sp);
 }
 
 plan_state_id_t planStatePoolFind(plan_state_pool_t *pool,
@@ -178,9 +184,6 @@ plan_state_id_t planStatePoolFind(plan_state_pool_t *pool,
     // allocate a new state and initialize it with the given values
     sp = statePacked(pool, sid);
     planStatePackerPack(pool->packer, state, stateBuf(sp));
-
-    // initialize hash table element
-    sp->state_id = sid;
 
     // insert it into hash table
     hstate = borHTableFind(pool->htable, &sp->htable);
@@ -267,7 +270,7 @@ _bor_inline plan_state_id_t applyPartStatePacked(plan_state_pool_t *pool,
     // apply partial state to the buffer of the new state
     planPartStateCreatePackedState(ps, stateBuf(sp), stateBuf(newsp));
 
-    return insertIntoHTable(pool, newid, newsp);
+    return insertIntoHTable(pool, newsp);
 }
 
 _bor_inline plan_state_id_t applyPartState(plan_state_pool_t *pool,
@@ -320,7 +323,7 @@ _bor_inline plan_state_id_t applyPartStatesPacked(plan_state_pool_t *pool,
         planPartStateUpdatePackedState(ps[i], stateBuf(newsp));
     }
 
-    return insertIntoHTable(pool, newid, newsp);
+    return insertIntoHTable(pool, newsp);
 }
 
 _bor_inline plan_state_id_t applyPartStates(plan_state_pool_t *pool,
@@ -352,13 +355,9 @@ plan_state_id_t planStatePoolApplyPartStates(plan_state_pool_t *pool,
 
 
 _bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
-                                             plan_state_id_t sid,
                                              plan_state_packed_t *sp)
 {
     bor_list_t *hstate;
-
-    // initialize hash table element
-    sp->state_id = sid;
 
     // insert it into hash table
     hstate = borHTableInsertUnique(pool->htable, &sp->htable);
@@ -367,7 +366,7 @@ _bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
         // NULL is returned if the element was inserted into table, so
         // increase number of elements in the pool
         ++pool->num_states;
-        return sid;
+        return sp->state_id;
 
     }else{
         // If the non-NULL was returned, it means that the same state was

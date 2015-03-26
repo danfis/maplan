@@ -7,7 +7,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef void (*plan_data_arr_el_init_fn)(void *el, const void *userdata);
+typedef void (*plan_data_arr_el_init_fn)(void *el, int id, const void *userdata);
 
 struct _plan_data_arr_t {
     bor_segmarr_t *arr; /*!< Underlying segmented array */

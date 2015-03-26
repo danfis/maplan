@@ -19,19 +19,11 @@ typedef struct _plan_state_packed_t plan_state_packed_t;
 #define STATE_FROM_HTABLE(list) \
     BOR_LIST_ENTRY(list, plan_state_packed_t, htable)
 
-// TODO
-_bor_inline void *stateBuf(const plan_state_packed_t *s)
-{
-    return (void *)s->data;
-}
-
+/** Returns state buffer from the struct */
+_bor_inline void *stateBuf(const plan_state_packed_t *s);
+/** Returns state structure corresponding to the state ID */
 _bor_inline plan_state_packed_t *statePacked(const plan_state_pool_t *pool,
-                                             plan_state_id_t sid)
-{
-    return (plan_state_packed_t *)planDataArrGet(pool->data[0], sid);
-}
-
-
+                                             plan_state_id_t sid);
 
 /** Inserts state into hash table and returns ID under which it is stored. */
 _bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
@@ -41,16 +33,8 @@ _bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
 static bor_htable_key_t htableHash(const bor_list_t *key, void *ud);
 static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud);
 
-// TODO
-static void statePackedInit(void *el, int id, const void *ud)
-{
-    plan_state_packed_t *sp = (plan_state_packed_t *)el;
-    plan_state_pool_t *pool = (plan_state_pool_t *)ud;
-    size_t size = planStatePackerBufSize(pool->packer);
-
-    sp->state_id = id;
-    memset(stateBuf(sp), 0, size);
-}
+/** Initialization function for data array holding plan_state_packed_t */
+static void statePackedInit(void *el, int id, const void *ud);
 
 plan_state_pool_t *planStatePoolNew(const plan_var_t *var, int var_size)
 {
@@ -350,6 +334,18 @@ plan_state_id_t planStatePoolApplyPartStates(plan_state_pool_t *pool,
 }
 
 
+
+_bor_inline void *stateBuf(const plan_state_packed_t *s)
+{
+    return (void *)s->data;
+}
+
+_bor_inline plan_state_packed_t *statePacked(const plan_state_pool_t *pool,
+                                             plan_state_id_t sid)
+{
+    return (plan_state_packed_t *)planDataArrGet(pool->data[0], sid);
+}
+
 _bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
                                              plan_state_packed_t *sp)
 {
@@ -372,7 +368,6 @@ _bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,
     }
 }
 
-
 static bor_htable_key_t htableHash(const bor_list_t *key, void *ud)
 {
     const plan_state_packed_t *sp = STATE_FROM_HTABLE(key);
@@ -387,4 +382,14 @@ static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud)
     plan_state_pool_t *pool = (plan_state_pool_t *)ud;
     size_t size = planStatePackerBufSize(pool->packer);
     return memcmp(stateBuf(s1), stateBuf(s2), size) == 0;
+}
+
+static void statePackedInit(void *el, int id, const void *ud)
+{
+    plan_state_packed_t *sp = (plan_state_packed_t *)el;
+    plan_state_pool_t *pool = (plan_state_pool_t *)ud;
+    size_t size = planStatePackerBufSize(pool->packer);
+
+    sp->state_id = id;
+    memset(stateBuf(sp), 0, size);
 }

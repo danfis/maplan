@@ -11,6 +11,11 @@ struct _plan_state_packed_t {
 };
 typedef struct _plan_state_packed_t plan_state_packed_t;
 
+#define STATE_PACKED_STACK(name, pool) \
+    plan_state_packed_t *name = (plan_state_packed_t *)alloca( \
+            sizeof(plan_state_packed_t) + \
+            planStatePackerBufSize(pool->packer))
+
 #define STATE_FROM_HTABLE(list) \
     BOR_LIST_ENTRY(list, plan_state_packed_t, htable)
 
@@ -170,22 +175,13 @@ plan_state_id_t planStatePoolInsertPacked(plan_state_pool_t *pool,
     return insertIntoHTable(pool, sp);
 }
 
-plan_state_id_t planStatePoolFind(plan_state_pool_t *pool,
+plan_state_id_t planStatePoolFind(const plan_state_pool_t *pool,
                                   const plan_state_t *state)
 {
-    // TODO
-    plan_state_id_t sid;
+    STATE_PACKED_STACK(sp, pool);
     bor_list_t *hstate;
-    plan_state_packed_t *sp;
 
-    // determine state ID
-    sid = pool->num_states;
-
-    // allocate a new state and initialize it with the given values
-    sp = statePacked(pool, sid);
     planStatePackerPack(pool->packer, state, stateBuf(sp));
-
-    // insert it into hash table
     hstate = borHTableFind(pool->htable, &sp->htable);
 
     if (hstate == NULL){

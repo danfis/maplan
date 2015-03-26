@@ -80,7 +80,7 @@ plan_state_id_t planStatePoolInsertPacked(plan_state_pool_t *pool,
 /**
  * Returns state ID corresponding to the given state.
  */
-plan_state_id_t planStatePoolFind(plan_state_pool_t *pool,
+plan_state_id_t planStatePoolFind(const plan_state_pool_t *pool,
                                   const plan_state_t *state);
 
 /**

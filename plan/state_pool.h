@@ -23,7 +23,7 @@ struct _plan_state_pool_t {
 
     plan_state_packer_t *packer;
     plan_data_arr_t **data; /*!< Data arrays */
-    int data_size;       /*!< Number of data arrays */
+    int data_size;          /*!< Number of data arrays */
     bor_htable_t *htable;   /*!< Hash table for uniqueness of states. */
     size_t num_states;
 };

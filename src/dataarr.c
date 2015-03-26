@@ -88,7 +88,7 @@ void planDataArrResize(plan_data_arr_t *arr, size_t eli)
         if (!arr->init_fn){
             memcpy(data, arr->init_data, arr->arr->el_size);
         }else{
-            arr->init_fn(data, arr->init_data);
+            arr->init_fn(data, i, arr->init_data);
         }
     }
 

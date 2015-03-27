@@ -515,6 +515,9 @@ static void loadInitState(plan_problem_t *p, const PlanProblem *proto,
             continue;
         planStateSet(state, var_map[i], proto_state.val(i));
     }
+    if (p->ma_privacy_var >= 0)
+        planStateSet(state, p->ma_privacy_var, 0);
+
     p->initial_state = planStatePoolInsert(p->state_pool, state);
     planStateDel(state);
 }
@@ -769,6 +772,13 @@ static void loadProtoProblem(plan_problem_t *p,
     p->ma_privacy_var = -1;
 
     loadVar(p, proto, var_map, var_size);
+    if (ma_state_privacy){
+        p->var_size += 1;
+        p->var = BOR_REALLOC_ARR(p->var, plan_var_t, p->var_size);
+        p->ma_privacy_var = p->var_size - 1;
+        planVarInitMAPrivacy(p->var + p->ma_privacy_var, INT_MAX);
+    }
+
     p->state_pool = planStatePoolNew(p->var, p->var_size);
 
     if (var_map == NULL){

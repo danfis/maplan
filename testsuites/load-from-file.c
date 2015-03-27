@@ -347,6 +347,7 @@ TEST(testLoadFromFactoredProto)
     flags |= PLAN_PROBLEM_NUM_AGENTS(2);
     loadFactoredProto("proto/driverlog-pfile1-driver1.proto", flags);
     loadFactoredProto("proto/driverlog-pfile1-driver2.proto", flags);
+
     flags  = PLAN_PROBLEM_MA_STATE_PRIVACY;
     flags |= PLAN_PROBLEM_NUM_AGENTS(15);
     loadFactoredProto("proto/rovers-p03-rover0.proto", flags);

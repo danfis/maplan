@@ -10,11 +10,12 @@ static void pVar(const plan_var_t *var, int var_size, FILE *fout)
         fprintf(fout, "[%d] name: `%s', range: %d, is_private: %d",
                 i, var[i].name, var[i].range, var[i].is_private);
         fprintf(fout, ", is_val_private:");
-        for (j = 0; j < var[i].range; ++j)
+        for (j = 0; var[i].is_val_private && j < var[i].range; ++j)
             fprintf(fout, " %d", var[i].is_val_private[j]);
         fprintf(fout, ", val_name:");
-        for (j = 0; j < var[i].range; ++j)
+        for (j = 0; var[i].val_name && j < var[i].range; ++j)
             fprintf(fout, " `%s'", var[i].val_name[j]);
+        fprintf(fout, ", ma_privacy: %d", var[i].ma_privacy);
         fprintf(fout, "\n");
     }
 }
@@ -97,6 +98,7 @@ static void pPrivateVal(const plan_problem_private_val_t *pv, int pvsize, FILE *
 static void pProblem(const plan_problem_t *p, FILE *fout)
 {
     pVar(p->var, p->var_size, fout);
+    fprintf(fout, "ma_privacy_var: %d\n", p->ma_privacy_var);
     pInitState(p->state_pool, p->initial_state, fout);
     pGoal(p->goal, fout);
     pOp(p->op, p->op_size, fout);
@@ -151,7 +153,9 @@ static void pAgent(const plan_problem_t *p, FILE *fout)
 
     fprintf(fout, "++++ %s ++++\n", p->agent_name);
     fprintf(fout, "Agent ID: %d\n", p->agent_id);
+    fprintf(fout, "Num agents: %d\n", p->num_agents);
     pVar(p->var, p->var_size, fout);
+    fprintf(fout, "ma_privacy_var: %d\n", p->ma_privacy_var);
     pPrivateVal(p->private_val, p->private_val_size, fout);
     pInitState(p->state_pool, p->initial_state, fout);
     pGoal(p->goal, fout);
@@ -336,6 +340,15 @@ TEST(testLoadFromFactoredProto)
     flags = 0;
     loadFactoredProto("proto/driverlog-pfile1-driver1.proto", flags);
     loadFactoredProto("proto/driverlog-pfile1-driver2.proto", flags);
+    loadFactoredProto("proto/rovers-p03-rover0.proto", flags);
+    loadFactoredProto("proto/rovers-p03-rover1.proto", flags);
+
+    flags  = PLAN_PROBLEM_MA_STATE_PRIVACY;
+    flags |= PLAN_PROBLEM_NUM_AGENTS(2);
+    loadFactoredProto("proto/driverlog-pfile1-driver1.proto", flags);
+    loadFactoredProto("proto/driverlog-pfile1-driver2.proto", flags);
+    flags  = PLAN_PROBLEM_MA_STATE_PRIVACY;
+    flags |= PLAN_PROBLEM_NUM_AGENTS(15);
     loadFactoredProto("proto/rovers-p03-rover0.proto", flags);
     loadFactoredProto("proto/rovers-p03-rover1.proto", flags);
 }

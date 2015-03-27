@@ -18,16 +18,17 @@ static PlanProblem *parseProto(const char *fn);
 /** Loads problem from protobuffer */
 static int loadProblem(plan_problem_t *prob,
                        const PlanProblem *proto,
-                       int flags);
+                       unsigned flags);
 /** Load agents part from the protobuffer */
 static void loadAgents(plan_problem_agents_t *p,
                        const PlanProblem *proto,
-                       int flags);
+                       unsigned flags);
 
 static void loadProtoProblem(plan_problem_t *prob,
                              const PlanProblem *proto,
                              const plan_var_id_t *var_map,
-                             int var_size);
+                             int var_size,
+                             int ma_state_privacy);
 static int hasUnimportantVars(const plan_causal_graph_t *cg);
 static void pruneUnimportantVars(plan_problem_t *oldp,
                                  const PlanProblem *proto,
@@ -65,7 +66,7 @@ static void setPrivateVals(plan_problem_t *agent, int agent_id,
                            const AgentVarVals &vals);
 
 
-plan_problem_t *planProblemFromProto(const char *fn, int flags)
+plan_problem_t *planProblemFromProto(const char *fn, unsigned flags)
 {
     plan_problem_t *p = NULL;
     PlanProblem *proto = NULL;
@@ -83,7 +84,7 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags)
     return p;
 }
 
-plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags)
+plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, unsigned flags)
 {
     plan_problem_agents_t *p = NULL;
     PlanProblem *proto = NULL;
@@ -140,15 +141,18 @@ static PlanProblem *parseProto(const char *fn)
 
 static int loadProblem(plan_problem_t *p,
                        const PlanProblem *proto,
-                       int flags)
+                       unsigned flags)
 {
     plan_causal_graph_t *cg;
     plan_var_id_t *var_order;
-    int i, size;
+    int i, size, num_agents, ma_state_privacy;
 
 
     // Load problem from the protobuffer
-    loadProtoProblem(p, proto, NULL, -1);
+    ma_state_privacy = 0;
+    if (flags & PLAN_PROBLEM_MA_STATE_PRIVACY)
+        ma_state_privacy = 1;
+    loadProtoProblem(p, proto, NULL, -1, ma_state_privacy);
     p->duplicate_ops_removed = 0;
 
     // Fix problem with causal graph
@@ -177,6 +181,11 @@ static int loadProblem(plan_problem_t *p,
     if (flags & PLAN_PROBLEM_OP_UNIT_COST){
         for (i = 0; i < p->op_size; ++i)
             p->op[i].cost = 1;
+    }
+
+    num_agents = (flags & 0xff0u) >> 4;
+    if (num_agents > 0){
+        p->num_agents = num_agents;
     }
 
     return 0;
@@ -381,7 +390,7 @@ class AgentVarVals {
 
 static void loadAgents(plan_problem_agents_t *p,
                        const PlanProblem *proto,
-                       int flags)
+                       unsigned flags)
 {
     int i;
     plan_problem_t *agent;
@@ -406,6 +415,7 @@ static void loadAgents(plan_problem_agents_t *p,
         agentInitProblem(agent, &p->glob);
         agent->agent_name = BOR_STRDUP(proto->agent_name(i).c_str());
         agent->agent_id = i;
+        agent->num_agents = p->agent_size;
     }
 
     // Set owners of the operators
@@ -751,9 +761,12 @@ static void setOpRecvAgentFromProjOp(plan_problem_t *p)
 static void loadProtoProblem(plan_problem_t *p,
                              const PlanProblem *proto,
                              const plan_var_id_t *var_map,
-                             int var_size)
+                             int var_size,
+                             int ma_state_privacy)
 {
     bzero(p, sizeof(*p));
+
+    p->ma_privacy_var = -1;
 
     loadVar(p, proto, var_map, var_size);
     p->state_pool = planStatePoolNew(p->var, p->var_size);
@@ -792,7 +805,7 @@ static void pruneUnimportantVars(plan_problem_t *p,
                                  const int *important_var,
                                  plan_var_id_t *var_order)
 {
-    int i, id, var_size;
+    int i, id, var_size, ma_state_privacy;
     plan_var_id_t *var_map;
 
     // Create mapping from old var ID to the new ID
@@ -812,8 +825,9 @@ static void pruneUnimportantVars(plan_problem_t *p,
         *var_order = var_map[*var_order];
     }
 
+    ma_state_privacy = p->ma_privacy_var >= 0;
     planProblemFree(p);
-    loadProtoProblem(p, proto, var_map, var_size);
+    loadProtoProblem(p, proto, var_map, var_size, ma_state_privacy);
 }
 
 static int cmpPartState(const plan_part_state_t *p1,
@@ -918,7 +932,7 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
     int i;
     plan_state_t *state;
 
-    planProblemInit(dst);
+    memcpy(dst, src, sizeof(*src));
 
     dst->var_size = src->var_size;
     dst->var = BOR_ALLOC_ARR(plan_var_t, src->var_size);

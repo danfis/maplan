@@ -1,6 +1,5 @@
-#include <stdio.h>
 #include <boruvka/hfunc.h>
-#include <plan/agent_private_state.h>
+#include <plan/ma_private_state.h>
 
 struct _state_t {
     int id;
@@ -13,12 +12,14 @@ static void stateInit(void *el, int id, const void *ud)
 {
     state_t *state = (state_t *)el;
     state->id = id;
+    // No need to zeroize .state[] array because it is always fully
+    // rewritten before inserting.
 }
 
 static bor_htable_key_t htableHash(const bor_list_t *key, void *ud)
 {
     state_t *state = BOR_LIST_ENTRY(key, state_t, htable);
-    plan_agent_private_state_t *aps = (plan_agent_private_state_t *)ud;
+    plan_ma_private_state_t *aps = (plan_ma_private_state_t *)ud;
     return borCityHash_64(state->state, aps->state_size);
 }
 
@@ -26,13 +27,13 @@ static int htableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud)
 {
     state_t *s1 = BOR_LIST_ENTRY(k1, state_t, htable);
     state_t *s2 = BOR_LIST_ENTRY(k2, state_t, htable);
-    plan_agent_private_state_t *aps = (plan_agent_private_state_t *)ud;
+    plan_ma_private_state_t *aps = (plan_ma_private_state_t *)ud;
 
     return memcmp(s1->state, s2->state, aps->state_size) == 0;
 }
 
-void planAgentPrivateStateInit(plan_agent_private_state_t *aps,
-                               int num_agents, int agent_id)
+void planMAPrivateStateInit(plan_ma_private_state_t *aps,
+                            int num_agents, int agent_id)
 {
     size_t size;
 
@@ -47,7 +48,7 @@ void planAgentPrivateStateInit(plan_agent_private_state_t *aps,
     aps->htable = borHTableNew(htableHash, htableEq, aps);
 }
 
-void planAgentPrivateStateFree(plan_agent_private_state_t *aps)
+void planMAPrivateStateFree(plan_ma_private_state_t *aps)
 {
     if (aps->htable)
         borHTableDel(aps->htable);
@@ -55,8 +56,7 @@ void planAgentPrivateStateFree(plan_agent_private_state_t *aps)
         planDataArrDel(aps->states);
 }
 
-int planAgentPrivateStateInsert(plan_agent_private_state_t *aps,
-                                int *state_ids)
+int planMAPrivateStateInsert(plan_ma_private_state_t *aps, int *state_ids)
 {
     state_t *state;
     bor_list_t *hfound;
@@ -80,8 +80,8 @@ int planAgentPrivateStateInsert(plan_agent_private_state_t *aps,
     }
 }
 
-void planAgentPrivateStateGet(const plan_agent_private_state_t *aps, int id,
-                              int *state_ids)
+void planMAPrivateStateGet(const plan_ma_private_state_t *aps, int id,
+                           int *state_ids)
 {
     const state_t *state;
     const int *src;

@@ -164,6 +164,7 @@ plan_state_id_t planStatePoolFind(const plan_state_pool_t *pool,
     STATE_PACKED_STACK(sp, pool);
     bor_list_t *hstate;
 
+    memset(stateBuf(sp), 0, planStatePackerBufSize(pool->packer));
     planStatePackerPack(pool->packer, state, stateBuf(sp));
     hstate = borHTableFind(pool->htable, &sp->htable);
 

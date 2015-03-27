@@ -9,6 +9,17 @@ void planVarInit(plan_var_t *var, const char *name, plan_val_t range)
     var->is_val_private = BOR_CALLOC_ARR(int, var->range);
     var->is_private = 0;
     var->val_name = BOR_CALLOC_ARR(char *, var->range);
+    var->is_artificial = 0;
+}
+
+void planVarInitArtificial(plan_var_t *var, plan_val_t range)
+{
+    var->name = NULL;
+    var->range = range;
+    var->is_val_private = NULL;
+    var->is_private = 0;
+    var->val_name = NULL;
+    var->is_artificial = 1;
 }
 
 void planVarFree(plan_var_t *var)
@@ -35,6 +46,7 @@ void planVarCopy(plan_var_t *dst, const plan_var_t *src)
     dst->name = BOR_STRDUP(src->name);
     dst->range = src->range;
     dst->is_private = src->is_private;
+    dst->is_artificial = src->is_artificial;
 
     dst->is_val_private = NULL;
     if (src->is_val_private){

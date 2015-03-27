@@ -39,6 +39,7 @@ OBJS += state_pool.o
 OBJS += ma_search.o
 OBJS += heur_admissible.o
 OBJS += dtg.o
+OBJS += agent_private_state.o
 
 all: $(TARGETS)
 

@@ -17,8 +17,8 @@ struct _plan_var_t {
                               private */
     int is_private;      /*!< True if all values are private */
     char **val_name;     /*!< Names of the values (i.e., corresponding facts) */
-    int is_artificial;   /*!< True if the variable is artificial, i.e., is
-                              not part of state space but is used for other
+    int is_fake;         /*!< True if the variable is fake, i.e., is not
+                              part of state space but is used for other
                               purposes */
 };
 typedef struct _plan_var_t plan_var_t;
@@ -31,7 +31,7 @@ void planVarInit(plan_var_t *var, const char *name, plan_val_t range);
 /**
  * Initialize an artificial variable
  */
-void planVarInitArtificial(plan_var_t *var, plan_val_t range);
+void planVarInitFake(plan_var_t *var, plan_val_t range);
 
 /**
  * Frees allocated resources.

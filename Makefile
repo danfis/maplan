@@ -14,6 +14,8 @@ CXXFLAGS += -Wno-long-long
 TARGETS  = libplan.a
 
 OBJS  = problem
+OBJS += problem_pddl
+OBJS += lisp_file
 OBJS += var
 OBJS += state
 OBJS += part_state

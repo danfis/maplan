@@ -65,6 +65,19 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
 
     sortedVarsInit(&sorted_vars, var, var_size, p->vars);
 
+    // This arranges variables according to their bit length into array of
+    // bytes (more preciselly array of words as defined by
+    // plan_packer_word_t). Because optimal packing is NP-hard problem we
+    // use simple greedy algorithm: we try to fill one word after other
+    // always trying to fill the empty space with the biggest variable
+    // possible.
+    // Moreover, the variables are sorted so that the first are public
+    // variables, then private and the last ma-privacy variables.
+    // We need to do this because we may need to separate public variables
+    // and send them to other agent (in multi-agent mode) and then
+    // reconstruct the state again. This way it will be much easier and it
+    // will not harm in any way single-agent planning (because no private
+    // variables are there).
     is_set = 0;
     wordpos = -1;
     while (is_set < var_size){
@@ -173,7 +186,7 @@ static int sortCmpVar(const void *a, const void *b)
 {
     const plan_state_packer_var_t *va = *(const plan_state_packer_var_t **)a;
     const plan_state_packer_var_t *vb = *(const plan_state_packer_var_t **)b;
-    return va->bitlen - vb->bitlen;
+    return vb->bitlen - va->bitlen;
 }
 
 static plan_packer_word_t packerVarMask(int bitlen, int shift)

@@ -97,6 +97,26 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
     p->bufsize = sizeof(plan_packer_word_t) * (wordpos + 1);
 
     sortedVarsFree(&sorted_vars);
+
+    // Find last word where is stored a public variable
+    wordpos = 0;
+    for (i = 0; i < var_size; ++i){
+        if (!var[i].is_private && !var[i].ma_privacy)
+            wordpos = BOR_MAX(wordpos, p->vars[i].pos);
+    }
+    // and set bufsize needed for public part
+    p->pub_bufsize = sizeof(plan_packer_word_t) * (wordpos + 1);
+    p->pub_last_word = wordpos;
+
+    // Now set mask for the last word in public part buffer
+    p->pub_last_word_mask = 0u;
+    for (i = 0; i < var_size; ++i){
+        if (!var[i].is_private && !var[i].ma_privacy
+                && p->vars[i].pos == wordpos){
+            p->pub_last_word_mask |= p->vars[i].mask;
+        }
+    }
+
     /*
     for (i = 0; i < var_size; ++i){
         fprintf(stdout, "[%d] bitlen: %d, shift: %d, pos: %d\n",
@@ -173,10 +193,38 @@ void planStatePackerPackPartState(const plan_state_packer_t *p,
     }
 }
 
+void planStatePackerExtractPubPart(const plan_state_packer_t *p,
+                                   const void *bufstate,
+                                   void *pubbuf)
+{
+    // Copy beggining of the bufstate
+    memcpy(pubbuf, bufstate, p->pub_bufsize);
+
+    // Apply mask to the last word
+    ((plan_packer_word_t *)pubbuf)[p->pub_last_word] &= p->pub_last_word_mask;
+}
+
+void planStatePackerSetPubPart(const plan_state_packer_t *p,
+                               const void *pub_buffer,
+                               void *bufstate)
+{
+    const plan_packer_word_t *pubbuf = pub_buffer;
+    plan_packer_word_t *buf = bufstate;
+    int i;
+
+    // Copy all words from public part buffer but the last one.
+    for (i = 0; i < p->pub_last_word; ++i)
+        buf[i] = pubbuf[i];
+
+    // The last one must be applied with mask
+    buf[i] = (buf[i] & ~p->pub_last_word_mask) | pubbuf[i];
+}
+
 static int packerBitsNeeded(plan_val_t range)
 {
     plan_packer_word_t max_val = range - 1;
     int num = PLAN_PACKER_WORD_BITS;
+    max_val = BOR_MAX(1, max_val);
 
     for (; !(max_val & PLAN_PACKER_WORD_SET_HI_BIT); --num, max_val <<= 1);
     return num;

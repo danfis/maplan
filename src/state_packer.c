@@ -234,7 +234,12 @@ static int sortCmpVar(const void *a, const void *b)
 {
     const plan_state_packer_var_t *va = *(const plan_state_packer_var_t **)a;
     const plan_state_packer_var_t *vb = *(const plan_state_packer_var_t **)b;
-    return vb->bitlen - va->bitlen;
+    int cmp = vb->bitlen - va->bitlen;
+    // This stabilizes the sort because va and vb are both in the same
+    // array so this sorts them by their respective index in the array.
+    if (cmp == 0)
+        return va - vb;
+    return cmp;
 }
 
 static plan_packer_word_t packerVarMask(int bitlen, int shift)

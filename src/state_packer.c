@@ -34,9 +34,6 @@ struct _sorted_vars_t {
     plan_state_packer_var_t **private;
     int private_size;
     int private_left;
-    plan_state_packer_var_t **ma_privacy;
-    int ma_privacy_size;
-    int ma_privacy_left;
 };
 typedef struct _sorted_vars_t sorted_vars_t;
 
@@ -79,6 +76,10 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
     // will not harm in any way single-agent planning (because no private
     // variables are there).
     is_set = 0;
+    for (i = 0; i < var_size; ++i){
+        if (var[i].ma_privacy)
+            ++is_set;
+    }
     wordpos = -1;
     while (is_set < var_size){
         ++wordpos;
@@ -91,6 +92,15 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
             pvar->mask = packerVarMask(pvar->bitlen, pvar->shift);
             pvar->clear_mask = ~pvar->mask;
             ++is_set;
+        }
+    }
+    for (i = 0; i < var_size; ++i){
+        if (var[i].ma_privacy){
+            p->vars[i].bitlen = PLAN_PACKER_WORD_BITS;
+            p->vars[i].shift = 0;
+            p->vars[i].mask = ~0u;
+            p->vars[i].clear_mask = 0u;
+            p->vars[i].pos = ++wordpos;
         }
     }
 
@@ -284,16 +294,13 @@ static void sortedVarsInit(sorted_vars_t *sv, const plan_var_t *var,
     // Allocate arrays
     sv->pub = BOR_ALLOC_ARR(plan_state_packer_var_t *, var_size);
     sv->private = BOR_ALLOC_ARR(plan_state_packer_var_t *, var_size);
-    sv->ma_privacy = BOR_ALLOC_ARR(plan_state_packer_var_t *, var_size);
 
     // Find out size of each category and fill arrays
-    sv->pub_size = sv->private_size = sv->ma_privacy_size = 0;
+    sv->pub_size = sv->private_size = 0;
     for (i = 0; i < var_size; ++i){
-        if (var[i].ma_privacy){
-            sv->ma_privacy[sv->ma_privacy_size++] = pvar + i;
-        }else if (var[i].is_private){
+        if (var[i].is_private && !var[i].ma_privacy){
             sv->private[sv->private_size++] = pvar + i;
-        }else{
+        }else if (!var[i].ma_privacy){
             sv->pub[sv->pub_size++] = pvar + i;
         }
     }
@@ -303,12 +310,9 @@ static void sortedVarsInit(sorted_vars_t *sv, const plan_var_t *var,
         qsort(sv->pub, sv->pub_size, elsize, sortCmpVar);
     if (sv->private_size > 1)
         qsort(sv->private, sv->private_size, elsize, sortCmpVar);
-    if (sv->pub_size > 1)
-        qsort(sv->ma_privacy, sv->ma_privacy_size, elsize, sortCmpVar);
 
     sv->pub_left = sv->pub_size;
     sv->private_left = sv->private_size;
-    sv->ma_privacy_left = sv->ma_privacy_size;
 }
 
 static void sortedVarsFree(sorted_vars_t *sv)
@@ -317,8 +321,6 @@ static void sortedVarsFree(sorted_vars_t *sv)
         BOR_FREE(sv->pub);
     if (sv->private)
         BOR_FREE(sv->private);
-    if (sv->ma_privacy)
-        BOR_FREE(sv->ma_privacy);
 }
 
 #define SORTED_VARS_NEXT(sv, type, i, filled) \
@@ -341,13 +343,6 @@ static plan_state_packer_var_t *sortedVarsNext(sorted_vars_t *sv,
                     && sv->pub_left == 0
                     && i < sv->private_size; ++i){
         SORTED_VARS_NEXT(sv, private, i, filled_bits)
-    }
-
-    for (i = 0; sv->ma_privacy_left > 0
-                    && sv->pub_left == 0
-                    && sv->private_left == 0
-                    && i < sv->ma_privacy_size; ++i){
-        SORTED_VARS_NEXT(sv, ma_privacy, i, filled_bits)
     }
 
     return NULL;

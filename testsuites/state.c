@@ -433,6 +433,7 @@ static void _testPackerPubPart(int varsize)
     char *buf1, *buf2, *pubbuf;
     int i, pubsize = varsize / 2;
     int val, j;
+    int last_word;
 
     for (i = 0; i < varsize - 1; ++i)
         planVarInit(vars + i, "a", (rand() % 1024) + 1);
@@ -445,6 +446,9 @@ static void _testPackerPubPart(int varsize)
             planStatePackerBufSize(packer),
             planStatePackerBufSizePubPart(packer));
     */
+    last_word  = planStatePackerBufSize(packer);
+    last_word /= sizeof(plan_packer_word_t);
+    last_word -= 1;
 
     buf1 = BOR_ALLOC_ARR(char, planStatePackerBufSize(packer));
     buf2 = BOR_ALLOC_ARR(char, planStatePackerBufSize(packer));
@@ -463,6 +467,13 @@ static void _testPackerPubPart(int varsize)
 
         planStatePackerPack(packer, &state1, buf1);
         planStatePackerPack(packer, &state2, buf2);
+
+        // assert that ma-privacy variable is stored "as-is"
+        assertEquals(planStateGet(&state1, varsize - 1),
+                     ((plan_packer_word_t *)buf1)[last_word]);
+        assertEquals(planStateGet(&state2, varsize - 1),
+                     ((plan_packer_word_t *)buf2)[last_word]);
+
         planStatePackerExtractPubPart(packer, buf2, pubbuf);
         planStatePackerSetPubPart(packer, pubbuf, buf1);
         planStatePackerUnpack(packer, buf1, &state1);

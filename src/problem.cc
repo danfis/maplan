@@ -776,7 +776,7 @@ static void loadProtoProblem(plan_problem_t *p,
         p->var_size += 1;
         p->var = BOR_REALLOC_ARR(p->var, plan_var_t, p->var_size);
         p->ma_privacy_var = p->var_size - 1;
-        planVarInitMAPrivacy(p->var + p->ma_privacy_var, INT_MAX);
+        planVarInitMAPrivacy(p->var + p->ma_privacy_var);
     }
 
     p->state_pool = planStatePoolNew(p->var, p->var_size);

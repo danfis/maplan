@@ -436,7 +436,7 @@ static void _testPackerPubPart(int varsize)
 
     for (i = 0; i < varsize - 1; ++i)
         planVarInit(vars + i, "a", (rand() % 1024) + 1);
-    planVarInitMAPrivacy(vars + varsize - 1, INT_MAX);
+    planVarInitMAPrivacy(vars + varsize - 1);
     for (i = pubsize; i < varsize - 1; ++i)
         planVarSetPrivate(vars + i);
     packer = planStatePackerNew(vars, varsize);

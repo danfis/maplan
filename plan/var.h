@@ -30,7 +30,7 @@ void planVarInit(plan_var_t *var, const char *name, plan_val_t range);
 /**
  * Initialize an artificial variable
  */
-void planVarInitMAPrivacy(plan_var_t *var, plan_val_t range);
+void planVarInitMAPrivacy(plan_var_t *var);
 
 /**
  * Frees allocated resources.

@@ -12,10 +12,10 @@ void planVarInit(plan_var_t *var, const char *name, plan_val_t range)
     var->ma_privacy = 0;
 }
 
-void planVarInitMAPrivacy(plan_var_t *var, plan_val_t range)
+void planVarInitMAPrivacy(plan_var_t *var)
 {
     var->name = NULL;
-    var->range = range;
+    var->range = INT_MAX;
     var->is_val_private = NULL;
     var->is_private = 0;
     var->val_name = NULL;

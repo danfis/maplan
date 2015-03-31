@@ -88,6 +88,7 @@ clean:
 	rm -f $(TARGETS)
 	rm -f tmp.*
 	rm -f regressions/tmp.*
+	rm -f regressions/temp.*
 	rm -f $(BENCH_HEAP)
 
 .PHONY: all clean check check-valgrind cu

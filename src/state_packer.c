@@ -27,26 +27,43 @@ static void packerSetVar(const plan_state_packer_var_t *var,
 static plan_val_t packerGetVar(const plan_state_packer_var_t *var,
                                const void *buffer);
 
+struct _sorted_vars_t {
+    plan_state_packer_var_t **pub;
+    int pub_size;
+    int pub_left;
+    plan_state_packer_var_t **private;
+    int private_size;
+    int private_left;
+    plan_state_packer_var_t **ma_privacy;
+    int ma_privacy_size;
+    int ma_privacy_left;
+};
+typedef struct _sorted_vars_t sorted_vars_t;
+
+static void sortedVarsInit(sorted_vars_t *sv, const plan_var_t *var,
+                           int var_size, plan_state_packer_var_t *pvar);
+static void sortedVarsFree(sorted_vars_t *sv);
+static plan_state_packer_var_t *sortedVarsNext(sorted_vars_t *sv,
+                                               int filled_bits);
+
+
 plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
                                         int var_size)
 {
     int i, is_set, bitlen, wordpos;
     plan_state_packer_t *p;
-    plan_state_packer_var_t **pvars;
-
+    sorted_vars_t sorted_vars;
+    plan_state_packer_var_t *pvar;
 
     p = BOR_ALLOC(plan_state_packer_t);
     p->num_vars = var_size;
     p->vars = BOR_ALLOC_ARR(plan_state_packer_var_t, p->num_vars);
-
-    pvars = BOR_ALLOC_ARR(plan_state_packer_var_t *, p->num_vars);
-
     for (i = 0; i < var_size; ++i){
         p->vars[i].bitlen = packerBitsNeeded(var[i].range);
         p->vars[i].pos = -1;
-        pvars[i] = p->vars + i;
     }
-    qsort(pvars, var_size, sizeof(plan_state_packer_var_t *), sortCmpVar);
+
+    sortedVarsInit(&sorted_vars, var, var_size, p->vars);
 
     is_set = 0;
     wordpos = -1;
@@ -54,32 +71,26 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
         ++wordpos;
 
         bitlen = 0;
-        for (i = 0; i < var_size; ++i){
-            if (pvars[i]->pos == -1
-                    && pvars[i]->bitlen + bitlen <= PLAN_PACKER_WORD_BITS){
-                pvars[i]->pos = wordpos;
-                bitlen += pvars[i]->bitlen;
-                pvars[i]->shift = PLAN_PACKER_WORD_BITS - bitlen;
-                pvars[i]->mask = packerVarMask(pvars[i]->bitlen,
-                                               pvars[i]->shift);
-                pvars[i]->clear_mask = ~pvars[i]->mask;
-                ++is_set;
-            }
+        while ((pvar = sortedVarsNext(&sorted_vars, bitlen)) != NULL){
+            pvar->pos = wordpos;
+            bitlen += pvar->bitlen;
+            pvar->shift = PLAN_PACKER_WORD_BITS - bitlen;
+            pvar->mask = packerVarMask(pvar->bitlen, pvar->shift);
+            pvar->clear_mask = ~pvar->mask;
+            ++is_set;
         }
     }
 
     p->bufsize = sizeof(plan_packer_word_t) * (wordpos + 1);
 
-    // free temporary array
-    BOR_FREE(pvars);
-
+    sortedVarsFree(&sorted_vars);
     /*
     for (i = 0; i < var_size; ++i){
-        fprintf(stderr, "%d %d %d %d\n", (int)PLAN_PACKER_WORD_BITS,
-                p->vars[i].bitlen, p->vars[i].shift,
+        fprintf(stdout, "[%d] bitlen: %d, shift: %d, pos: %d\n",
+                i, p->vars[i].bitlen, p->vars[i].shift,
                 p->vars[i].pos);
     }
-    fprintf(stderr, "%lu\n", p->bufsize);
+    fprintf(stdout, "%d\n", p->bufsize);
     */
     return p;
 }
@@ -195,3 +206,84 @@ static plan_val_t packerGetVar(const plan_state_packer_var_t *var,
     val = (val & var->mask) >> var->shift;
     return val;
 }
+
+
+static void sortedVarsInit(sorted_vars_t *sv, const plan_var_t *var,
+                           int var_size, plan_state_packer_var_t *pvar)
+{
+    int i;
+    size_t elsize = sizeof(plan_state_packer_var_t *);
+
+
+    // Allocate arrays
+    sv->pub = BOR_ALLOC_ARR(plan_state_packer_var_t *, var_size);
+    sv->private = BOR_ALLOC_ARR(plan_state_packer_var_t *, var_size);
+    sv->ma_privacy = BOR_ALLOC_ARR(plan_state_packer_var_t *, var_size);
+
+    // Find out size of each category and fill arrays
+    sv->pub_size = sv->private_size = sv->ma_privacy_size = 0;
+    for (i = 0; i < var_size; ++i){
+        if (var[i].ma_privacy){
+            sv->ma_privacy[sv->ma_privacy_size++] = pvar + i;
+        }else if (var[i].is_private){
+            sv->private[sv->private_size++] = pvar + i;
+        }else{
+            sv->pub[sv->pub_size++] = pvar + i;
+        }
+    }
+
+    // Sort arrays
+    if (sv->pub_size > 1)
+        qsort(sv->pub, sv->pub_size, elsize, sortCmpVar);
+    if (sv->private_size > 1)
+        qsort(sv->private, sv->private_size, elsize, sortCmpVar);
+    if (sv->pub_size > 1)
+        qsort(sv->ma_privacy, sv->ma_privacy_size, elsize, sortCmpVar);
+
+    sv->pub_left = sv->pub_size;
+    sv->private_left = sv->private_size;
+    sv->ma_privacy_left = sv->ma_privacy_size;
+}
+
+static void sortedVarsFree(sorted_vars_t *sv)
+{
+    if (sv->pub)
+        BOR_FREE(sv->pub);
+    if (sv->private)
+        BOR_FREE(sv->private);
+    if (sv->ma_privacy)
+        BOR_FREE(sv->ma_privacy);
+}
+
+#define SORTED_VARS_NEXT(sv, type, i, filled) \
+    if ((sv)->type[(i)]->pos == -1 \
+            && (sv)->type[(i)]->bitlen + (filled) <= PLAN_PACKER_WORD_BITS){ \
+        (sv)->type##_left--; \
+        return (sv)->type[(i)]; \
+    }
+
+static plan_state_packer_var_t *sortedVarsNext(sorted_vars_t *sv,
+                                               int filled_bits)
+{
+    int i;
+
+    for (i = 0; sv->pub_left > 0 && i < sv->pub_size; ++i){
+        SORTED_VARS_NEXT(sv, pub, i, filled_bits)
+    }
+
+    for (i = 0; sv->private_left > 0
+                    && sv->pub_left == 0
+                    && i < sv->private_size; ++i){
+        SORTED_VARS_NEXT(sv, private, i, filled_bits)
+    }
+
+    for (i = 0; sv->ma_privacy_left > 0
+                    && sv->pub_left == 0
+                    && sv->private_left == 0
+                    && i < sv->ma_privacy_size; ++i){
+        SORTED_VARS_NEXT(sv, ma_privacy, i, filled_bits)
+    }
+
+    return NULL;
+}
+

@@ -94,6 +94,7 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
             ++is_set;
         }
     }
+    p->ma_privacy = 0;
     for (i = 0; i < var_size; ++i){
         if (var[i].ma_privacy){
             p->vars[i].bitlen = PLAN_PACKER_WORD_BITS;
@@ -101,6 +102,7 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
             p->vars[i].mask = ~0u;
             p->vars[i].clear_mask = 0u;
             p->vars[i].pos = ++wordpos;
+            p->ma_privacy = 1;
         }
     }
 

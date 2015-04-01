@@ -24,6 +24,7 @@ struct _plan_state_packer_t {
     int pub_last_word; /*!< ID of the last word */
     plan_packer_word_t pub_last_word_mask; /*!< Mask for the last word in
                                                 public buffer */
+    int ma_privacy; /*!< True if there is ma-privacy variable */
 };
 typedef struct _plan_state_packer_t plan_state_packer_t;
 

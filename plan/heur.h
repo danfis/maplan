@@ -93,7 +93,7 @@ struct _plan_heur_t {
                  instead of planHeur() */
     int ma_agent_size;
     int ma_agent_id;
-    plan_ma_state_t *ma_state;
+    const plan_ma_state_t *ma_state;
 };
 
 /**
@@ -185,7 +185,7 @@ void planHeur(plan_heur_t *heur, const plan_state_t *state,
  * planHeurMA().
  */
 void planHeurMAInit(plan_heur_t *heur, int agent_size, int agent_id,
-                    plan_ma_state_t *ma_state);
+                    const plan_ma_state_t *ma_state);
 
 /**
  * Multi-agent version of planHeur(), this function can send some messages

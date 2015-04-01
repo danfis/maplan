@@ -8,6 +8,8 @@ plan_ma_state_t *planMAStateNew(plan_state_pool_t *state_pool,
 
     ma_state = BOR_ALLOC(plan_ma_state_t);
     ma_state->state_pool = state_pool;
+    ma_state->packer = state_pool->packer;
+    ma_state->bufsize = planStatePackerBufSize(state_pool->packer);
     ma_state->num_agents = num_agents;
     ma_state->agent_id = agent_id;
     ma_state->ma_privacy = 0;
@@ -28,21 +30,33 @@ void planMAStateDel(plan_ma_state_t *ma_state)
     BOR_FREE(ma_state);
 }
 
-int planMAStateSetMAMsg(plan_ma_state_t *ma_state,
+int planMAStateSetMAMsg(const plan_ma_state_t *ma_state,
                         plan_state_id_t state_id,
                         plan_ma_msg_t *ma_msg)
 {
     const void *buf;
-    int buf_size;
 
     buf = planStatePoolGetPackedState(ma_state->state_pool, state_id);
-    buf_size = planStatePackerBufSize(ma_state->state_pool->packer);
     if (buf == NULL)
         return -1;
 
     // TODO: ma-privacy mode
-    planMAMsgSetStateBuf(ma_msg, buf, buf_size);
+    planMAMsgSetStateBuf(ma_msg, buf, ma_state->bufsize);
     planMAMsgSetStateId(ma_msg, state_id);
+    return 0;
+}
+
+int planMAStateSetMAMsg2(const plan_ma_state_t *ma_state,
+                         const plan_state_t *state,
+                         plan_ma_msg_t *ma_msg)
+{
+    void *buf;
+
+    // TODO: ma-privacy mode
+    buf = BOR_ALLOC_ARR(char, ma_state->bufsize);
+    planStatePackerPack(ma_state->packer, state, buf);
+    planMAMsgSetStateBuf(ma_msg, buf, ma_state->bufsize);
+    BOR_FREE(buf);
     return 0;
 }
 
@@ -56,4 +70,22 @@ plan_state_id_t planMAStateInsertFromMAMsg(plan_ma_state_t *ma_state,
     buf = planMAMsgStateBuf(ma_msg);
     state_id = planStatePoolInsertPacked(ma_state->state_pool, buf);
     return state_id;
+}
+
+void planMAStateGetFromMAMsg(const plan_ma_state_t *ma_state,
+                             const plan_ma_msg_t *ma_msg,
+                             plan_state_t *state)
+{
+    const void *buf;
+
+    // TODO: ma-privacy mode
+    buf = planMAMsgStateBuf(ma_msg);
+    planStatePackerUnpack(ma_state->packer, buf, state);
+}
+
+int planMAStateMAMsgIsSet(const plan_ma_state_t *ma_state,
+                          const plan_ma_msg_t *ma_msg)
+{
+    // TODO: ma-privacy mode
+    return planMAMsgStateBufSize(ma_msg) == ma_state->bufsize;
 }

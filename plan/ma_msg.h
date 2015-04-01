@@ -124,6 +124,18 @@ void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
 plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 
+/*** STATE ***/
+void planMAMsgSetStateBuf(plan_ma_msg_t *msg, const void *buf, size_t bufsize);
+void planMAMsgSetStateId(plan_ma_msg_t *msg, plan_state_id_t state_id);
+void planMAMsgSetStateCost(plan_ma_msg_t *msg, int cost);
+void planMAMsgSetStateHeur(plan_ma_msg_t *msg, int heur);
+
+const void *planMAMsgStateBuf(const plan_ma_msg_t *msg);
+int planMAMsgStateBufSize(const plan_ma_msg_t *msg);
+int planMAMsgStateId(const plan_ma_msg_t *msg);
+int planMAMsgStateCost(const plan_ma_msg_t *msg);
+int planMAMsgStateHeur(const plan_ma_msg_t *msg);
+
 
 /*** TERMINATE: ***/
 
@@ -136,40 +148,6 @@ void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id);
  * Returns ID of agent that started termination.
  */
 int planMAMsgTerminateAgent(const plan_ma_msg_t *msg);
-
-
-
-/*** PUBLIC STATE: ***/
-
-/**
- * Sets public-state message data.
- */
-void planMAMsgPublicStateSetState(plan_ma_msg_t *msg,
-                                  const void *statebuf,
-                                  size_t statebuf_size,
-                                  int state_id, int cost, int heur);
-
-/**
- * Returns pointer to the state buffer.
- */
-const void *planMAMsgPublicStateStateBuf(const plan_ma_msg_t *msg);
-
-/**
- * Returns state-id of the state in the source agent's pool.
- */
-int planMAMsgPublicStateStateId(const plan_ma_msg_t *msg);
-
-/**
- * Returns cost of the path from initial state to this state as computed by
- * remote agent.
- */
-int planMAMsgPublicStateCost(const plan_ma_msg_t *msg);
-
-/**
- * Returns heuristic value computed by the remote agent.
- */
-int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg);
-
 
 
 /*** TRACE PATH: ***/

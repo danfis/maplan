@@ -108,6 +108,52 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
     return (plan_ma_msg_t *)proto;
 }
 
+void planMAMsgSetStateBuf(plan_ma_msg_t *msg, const void *buf, size_t bufsize)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_state_buf(buf, bufsize);
+}
+
+void planMAMsgSetStateId(plan_ma_msg_t *msg, plan_state_id_t state_id)
+{
+    SETVAL(msg, state_id, state_id);
+}
+
+void planMAMsgSetStateCost(plan_ma_msg_t *msg, int cost)
+{
+    SETVAL(msg, state_cost, cost);
+}
+
+void planMAMsgSetStateHeur(plan_ma_msg_t *msg, int heur)
+{
+    SETVAL(msg, state_heur, heur);
+}
+
+const void *planMAMsgStateBuf(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_buf).data();
+}
+
+int planMAMsgStateBufSize(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_buf).size();
+}
+
+int planMAMsgStateId(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_id);
+}
+
+int planMAMsgStateCost(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_cost);
+}
+
+int planMAMsgStateHeur(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_heur);
+}
+
 
 void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id)
 {
@@ -121,46 +167,6 @@ int planMAMsgTerminateAgent(const plan_ma_msg_t *msg)
     return proto->terminate_agent_id();
 }
 
-void planMAMsgPublicStateSetState(plan_ma_msg_t *msg,
-                                  const void *statebuf,
-                                  size_t statebuf_size,
-                                  int state_id, int cost, int heur)
-{
-    PlanMAMsg *proto = PROTO(msg);
-    PlanMAMsgState *state = proto->mutable_state();
-    state->set_packed(statebuf, statebuf_size);
-    state->set_state_id(state_id);
-    state->set_cost(cost);
-    state->set_heur(heur);
-}
-
-const void *planMAMsgPublicStateStateBuf(const plan_ma_msg_t *msg)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    const PlanMAMsgState &state = proto->state();
-    return state.packed().data();
-}
-
-int planMAMsgPublicStateStateId(const plan_ma_msg_t *msg)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    const PlanMAMsgState &state = proto->state();
-    return state.state_id();
-}
-
-int planMAMsgPublicStateCost(const plan_ma_msg_t *msg)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    const PlanMAMsgState &state = proto->state();
-    return state.cost();
-}
-
-int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    const PlanMAMsgState &state = proto->state();
-    return state.heur();
-}
 
 void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id)
 {

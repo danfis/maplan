@@ -480,6 +480,23 @@ static void _testPackerPubPart(int varsize)
         for (i = 0; i < varsize; ++i){
             assertEquals(planStateGet(&state1, i), planStateGet(&state2, i));
         }
+
+        // Test *SetMAPrivacyVar() function
+        planStatePackerSetMAPrivacyVar(packer,
+                                       planStateGet(&state2, varsize - 1),
+                                       buf1);
+        planStatePackerUnpack(packer, buf1, &state1);
+        assertEquals(planStateGet(&state2, varsize - 1),
+                     planStateGet(&state1, varsize - 1));
+
+        int val = rand();
+        planStatePackerSetMAPrivacyVar(packer, val, buf1);
+        planStatePackerSetMAPrivacyVar(packer, val, buf2);
+        planStatePackerUnpack(packer, buf1, &state1);
+        planStatePackerUnpack(packer, buf2, &state2);
+        assertEquals(planStateGet(&state2, varsize - 1),
+                     planStateGet(&state1, varsize - 1));
+        assertEquals(planStateGet(&state2, varsize - 1), val);
     }
 
     BOR_FREE(buf1);

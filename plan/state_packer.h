@@ -97,6 +97,13 @@ void planStatePackerSetPubPart(const plan_state_packer_t *p,
                                const void *pub_buffer,
                                void *bufstate);
 
+/**
+ * Sets value of the ma-privacy variable directly into packed state.
+ */
+void planStatePackerSetMAPrivacyVar(const plan_state_packer_t *p,
+                                    plan_val_t val,
+                                    void *buf);
+
 /**** INLINES ****/
 _bor_inline int planStatePackerBufSize(const plan_state_packer_t *p)
 {

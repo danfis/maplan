@@ -136,6 +136,9 @@ int planMAMsgStateId(const plan_ma_msg_t *msg);
 int planMAMsgStateCost(const plan_ma_msg_t *msg);
 int planMAMsgStateHeur(const plan_ma_msg_t *msg);
 
+void planMAMsgSetGoalOpId(plan_ma_msg_t *msg, int goal_op_id);
+int planMAMsgGoalOpId(const plan_ma_msg_t *msg);
+
 
 /*** TERMINATE: ***/
 
@@ -230,24 +233,6 @@ int planMAMsgSnapshotAck(const plan_ma_msg_t *msg);
  */
 int planMAMsgHeurType(const plan_ma_msg_t *msg);
 
-/**
- * Sets request for FF heuristic.
- */
-void planMAMsgHeurFFSetRequest(plan_ma_msg_t *msg,
-                               const int *init_state, int init_state_size,
-                               int goal_op_id);
-
-/**
- * Sets response for FF heuristic.
- */
-void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id);
-
-/**
- * Returns goal op ID stored in the message.
- */
-int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
-
-
 
 
 /**
@@ -279,6 +264,8 @@ void planMAMsgCopyStateFull(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
  * Returns value of a specified variable in full state.
  */
 plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var);
+
+
 
 /**
  * Adds operator to the message.

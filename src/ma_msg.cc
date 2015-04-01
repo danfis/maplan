@@ -285,25 +285,14 @@ int planMAMsgHeurType(const plan_ma_msg_t *msg)
 }
 
 
-void planMAMsgHeurFFSetRequest(plan_ma_msg_t *msg,
-                               const int *init_state, int init_state_size,
-                               int goal_op_id)
+void planMAMsgSetGoalOpId(plan_ma_msg_t *msg, int goal_op_id)
 {
-    PlanMAMsg *proto = PROTO(msg);
-    planMAMsgSetStateFull(msg, init_state, init_state_size);
-    proto->set_goal_op_id(goal_op_id);
+    SETVAL(msg, goal_op_id, goal_op_id);
 }
 
-void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id)
+int planMAMsgGoalOpId(const plan_ma_msg_t *msg)
 {
-    PlanMAMsg *proto = PROTO(msg);
-    proto->set_goal_op_id(goal_op_id);
-}
-
-int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->goal_op_id();
+    return GETVAL(msg, goal_op_id);
 }
 
 

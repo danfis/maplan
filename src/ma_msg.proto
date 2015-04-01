@@ -30,7 +30,6 @@ message PlanMAMsg {
     optional int64 snapshot_token = 11;
     optional int32 snapshot_type = 12;
     optional int32 snapshot_ack = 13;
-    repeated int32 state_full = 14;
     optional int32 goal_op_id = 15;
     optional int32 min_cut_cost = 16;
     optional int32 heur_token = 17;

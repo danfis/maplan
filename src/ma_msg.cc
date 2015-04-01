@@ -296,60 +296,6 @@ int planMAMsgGoalOpId(const plan_ma_msg_t *msg)
 }
 
 
-
-
-
-
-void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size)
-{
-    PlanMAMsg *proto = PROTO(msg);
-
-    for (int i = 0; i < size; ++i)
-        proto->add_state_full(state[i]);
-}
-
-void planMAMsgSetStateFull2(plan_ma_msg_t *msg, const plan_state_t *state)
-{
-    PlanMAMsg *proto = PROTO(msg);
-
-    int size = planStateSize(state);
-    for (int i = 0; i < size; ++i)
-        proto->add_state_full(planStateGet(state, i));
-}
-
-int planMAMsgHasStateFull(const plan_ma_msg_t *msg)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->state_full_size() > 0;
-}
-
-void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    int len = proto->state_full_size();
-    for (int i = 0; i < len; ++i)
-        planStateSet(state, i, proto->state_full(i));
-}
-
-void planMAMsgCopyStateFull(plan_ma_msg_t *dst, const plan_ma_msg_t *src)
-{
-    PlanMAMsg *pdst = PROTO(dst);
-    const PlanMAMsg *psrc = PROTO(src);
-    int i, size;
-
-    pdst->clear_state_full();
-    size = psrc->state_full_size();
-    for (i = 0; i < size; ++i){
-        pdst->add_state_full(psrc->state_full(i));
-    }
-}
-
-plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->state_full(var);
-}
-
 void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,
                     int owner, plan_cost_t value)
 {

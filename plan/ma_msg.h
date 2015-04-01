@@ -236,38 +236,6 @@ int planMAMsgHeurType(const plan_ma_msg_t *msg);
 
 
 /**
- * Sets full state member of the message.
- */
-void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size);
-
-/**
- * Sets full state member of the message.
- */
-void planMAMsgSetStateFull2(plan_ma_msg_t *msg, const plan_state_t *state);
-
-/**
- * Returns true if the full state is set.
- */
-int planMAMsgHasStateFull(const plan_ma_msg_t *msg);
-
-/**
- * Loads full state from the message
- */
-void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state);
-
-/**
- * Copies state-full from src to dst.
- */
-void planMAMsgCopyStateFull(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
-
-/**
- * Returns value of a specified variable in full state.
- */
-plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var);
-
-
-
-/**
  * Adds operator to the message.
  */
 void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,

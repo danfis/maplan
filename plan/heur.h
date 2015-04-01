@@ -4,6 +4,7 @@
 #include <plan/common.h>
 #include <plan/problem.h>
 #include <plan/ma_comm.h>
+#include <plan/ma_state.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,6 +91,9 @@ struct _plan_heur_t {
 
     int ma; /*!< Set to true if planHeurMA*() functions should be used
                  instead of planHeur() */
+    int ma_agent_size;
+    int ma_agent_id;
+    const plan_ma_state_t *ma_state;
 };
 
 /**
@@ -174,6 +178,14 @@ void planHeurDel(plan_heur_t *heur);
  */
 void planHeur(plan_heur_t *heur, const plan_state_t *state,
               plan_heur_res_t *res);
+
+/**
+ * Initialization of heuristic in ma mode.
+ * This is called from within ma-search object before first call of
+ * planHeurMA().
+ */
+void planHeurMAInit(plan_heur_t *heur, int agent_size, int agent_id,
+                    const plan_ma_state_t *ma_state);
 
 /**
  * Multi-agent version of planHeur(), this function can send some messages

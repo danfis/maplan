@@ -174,8 +174,11 @@ plan_ma_search_t *planMASearchNew(plan_ma_search_params_t *params)
     ma_search->terminate = 0;
 
     ma_search->heur = NULL;
-    if (ma_search->search->heur->ma)
+    if (ma_search->search->heur->ma){
         ma_search->heur = ma_search->search->heur;
+        planHeurMAInit(ma_search->heur, ma_search->comm->node_size,
+                       ma_search->comm->node_id, ma_search->ma_state);
+    }
 
     return ma_search;
 }

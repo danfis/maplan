@@ -136,6 +136,9 @@ int planMAMsgStateId(const plan_ma_msg_t *msg);
 int planMAMsgStateCost(const plan_ma_msg_t *msg);
 int planMAMsgStateHeur(const plan_ma_msg_t *msg);
 
+void planMAMsgSetGoalOpId(plan_ma_msg_t *msg, int goal_op_id);
+int planMAMsgGoalOpId(const plan_ma_msg_t *msg);
+
 
 /*** TERMINATE: ***/
 
@@ -230,55 +233,7 @@ int planMAMsgSnapshotAck(const plan_ma_msg_t *msg);
  */
 int planMAMsgHeurType(const plan_ma_msg_t *msg);
 
-/**
- * Sets request for FF heuristic.
- */
-void planMAMsgHeurFFSetRequest(plan_ma_msg_t *msg,
-                               const int *init_state, int init_state_size,
-                               int goal_op_id);
 
-/**
- * Sets response for FF heuristic.
- */
-void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id);
-
-/**
- * Returns goal op ID stored in the message.
- */
-int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
-
-
-
-
-/**
- * Sets full state member of the message.
- */
-void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size);
-
-/**
- * Sets full state member of the message.
- */
-void planMAMsgSetStateFull2(plan_ma_msg_t *msg, const plan_state_t *state);
-
-/**
- * Returns true if the full state is set.
- */
-int planMAMsgHasStateFull(const plan_ma_msg_t *msg);
-
-/**
- * Loads full state from the message
- */
-void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state);
-
-/**
- * Copies state-full from src to dst.
- */
-void planMAMsgCopyStateFull(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
-
-/**
- * Returns value of a specified variable in full state.
- */
-plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var);
 
 /**
  * Adds operator to the message.

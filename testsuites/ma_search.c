@@ -25,32 +25,32 @@ static void maLMCutTask(int id, void *data, const bor_tasks_thinfo_t *_)
     planMASearchDel(ma_search);
 }
 
-static void runMALMCut(plan_problem_agents_t *p,
+static void runMALMCut(int agent_size, plan_problem_t **prob,
                        int optimal_cost)
 {
     plan_search_astar_params_t params;
     plan_search_t *search;
     plan_heur_t *heur;
     bor_tasks_t *tasks;
-    th_t th[p->agent_size];
+    th_t th[agent_size];
     int i;
     int found = 0;
 
 
-    tasks = borTasksNew(p->agent_size);
-    for (i = 0; i < p->agent_size; ++i){
-        heur = planHeurLMCutNew(p->agent[i].var, p->agent[i].var_size,
-                                p->agent[i].goal,
-                                p->agent[i].proj_op, p->agent[i].proj_op_size);
+    tasks = borTasksNew(agent_size);
+    for (i = 0; i < agent_size; ++i){
+        heur = planHeurLMCutNew(prob[i]->var, prob[i]->var_size,
+                                prob[i]->goal,
+                                prob[i]->proj_op, prob[i]->proj_op_size);
 
         planSearchAStarParamsInit(&params);
         params.search.heur = heur;
         params.search.heur_del = 1;
-        params.search.prob = &p->agent[i];
+        params.search.prob = prob[i];
         search = planSearchAStarNew(&params);
 
         th[i].search = search;
-        th[i].comm = planMACommInprocNew(i, p->agent_size);
+        th[i].comm = planMACommInprocNew(i, agent_size);
         planPathInit(&th[i].path);
         borTasksAdd(tasks, maLMCutTask, i, th + i);
     }
@@ -58,9 +58,11 @@ static void runMALMCut(plan_problem_agents_t *p,
     borTasksRun(tasks);
     borTasksDel(tasks);
 
-    for (i = 0; i < p->agent_size; ++i){
+    for (i = 0; i < agent_size; ++i){
         if (th[i].res == PLAN_SEARCH_FOUND){
             assertEquals(planPathCost(&th[i].path), optimal_cost);
+            //fprintf(stdout, "cost: %d\n", planPathCost(&th[i].path));
+            //planPathPrint(&th[i].path, stdout);
             found = 1;
         }
 
@@ -75,9 +77,14 @@ static void runMALMCut(plan_problem_agents_t *p,
 static void maSearch(const char *proto, int optimal_cost)
 {
     plan_problem_agents_t *p;
+    plan_problem_t **prob;
+    int i;
 
     p = planProblemAgentsFromProto(proto, PLAN_PROBLEM_USE_CG);
-    runMALMCut(p, optimal_cost);
+    prob = alloca(sizeof(plan_problem_t *) * p->agent_size);
+    for (i = 0; i < p->agent_size; ++i)
+        prob[i] = p->agent + i;
+    runMALMCut(p->agent_size, prob, optimal_cost);
     planProblemAgentsDel(p);
 }
 
@@ -85,4 +92,36 @@ TEST(testMASearch)
 {
     //maSearch("proto/driverlog-pfile3.proto");
     maSearch("proto/depot-pfile1.proto", 10);
+    maSearch("proto/driverlog-pfile1.proto", 7);
+}
+
+
+static void maSearchFactored(int optimal_cost, int agent_size, ...)
+{
+    va_list ap;
+    plan_problem_t *prob[agent_size];
+    const char *fn;
+    int flags, i;
+
+    va_start(ap, agent_size);
+    flags  = PLAN_PROBLEM_MA_STATE_PRIVACY;
+    flags |= PLAN_PROBLEM_NUM_AGENTS(agent_size);
+    for (i = 0; i < agent_size; ++i){
+        fn = va_arg(ap, const char *);
+        prob[i] = planProblemFromProto(fn, flags);
+    }
+    va_end(ap);
+
+    runMALMCut(agent_size, prob, optimal_cost);
+    for (i = 0; i < agent_size; ++i){
+        planProblemDel(prob[i]);
+    }
+}
+
+TEST(testMASearchFactored)
+{
+    maSearchFactored(7, 2, "proto/driverlog-pfile1-driver1.proto",
+                     "proto/driverlog-pfile1-driver2.proto");
+    maSearchFactored(11, 2, "proto/rovers-p03-rover0.proto",
+                     "proto/rovers-p03-rover1.proto");
 }

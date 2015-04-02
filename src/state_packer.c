@@ -241,6 +241,14 @@ void planStatePackerSetMAPrivacyVar(const plan_state_packer_t *p,
     ((plan_packer_word_t *)buf)[id] = val;
 }
 
+plan_val_t planStatePackerGetMAPrivacyVar(const plan_state_packer_t *p,
+                                          const void *buf)
+{
+    // The ma-privacy var is always the last word in the buffer
+    int id = (p->bufsize / sizeof(plan_packer_word_t)) - 1;
+    return ((plan_packer_word_t *)buf)[id];
+}
+
 static int packerBitsNeeded(plan_val_t range)
 {
     plan_packer_word_t max_val = range - 1;

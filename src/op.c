@@ -57,7 +57,7 @@ void planOpCopy(plan_op_t *dst, const plan_op_t *src)
     }
 
     dst->cost = src->cost;
-    dst->name = strdup(src->name);
+    dst->name = BOR_STRDUP(src->name);
 
     dst->global_id  = src->global_id;
     dst->owner      = src->owner;
@@ -75,7 +75,7 @@ static void unsetNonPrivate(plan_part_state_t *dst,
     plan_val_t val;
 
     PLAN_PART_STATE_FOR_EACH(src, i, varid, val){
-        if (!var[varid].is_private[val])
+        if (!var[varid].is_val_private[val])
             planPartStateUnset(dst, varid);
     }
 }
@@ -105,7 +105,7 @@ void planOpSetName(plan_op_t *op, const char *name)
 {
     if (op->name)
         BOR_FREE(op->name);
-    op->name = strdup(name);
+    op->name = BOR_STRDUP(name);
 }
 
 int planOpAddCondEff(plan_op_t *op)

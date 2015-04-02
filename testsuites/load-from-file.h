@@ -6,6 +6,7 @@ TEST(testLoadFromProtoCondEff);
 TEST(testLoadAgentFromProto);
 TEST(testLoadFromProtoClone);
 TEST(testLoadAgentFromProtoClone);
+TEST(testLoadFromFactoredProto);
 TEST(protobufTearDown);
 
 TEST_SUITE(TSLoadFromFile) {
@@ -14,6 +15,7 @@ TEST_SUITE(TSLoadFromFile) {
     TEST_ADD(testLoadAgentFromProto),
     TEST_ADD(testLoadFromProtoClone),
     TEST_ADD(testLoadAgentFromProtoClone),
+    TEST_ADD(testLoadFromFactoredProto),
     TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE
 };

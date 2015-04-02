@@ -98,8 +98,10 @@ static void findCutAddInit(plan_heur_lm_cut_t *heur,
     for (var = 0; var < len; ++var){
         val = planStateGet(state, var);
         id = planFactId(&heur->relax.cref.fact_id, var, val);
-        heur->fact_in_queue[id] = 1;
-        borLifoPush(queue, &id);
+        if (id >= 0){
+            heur->fact_in_queue[id] = 1;
+            borLifoPush(queue, &id);
+        }
     }
     id = heur->relax.cref.fake_pre[0].fact_id;
     heur->fact_in_queue[id] = 1;

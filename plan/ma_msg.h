@@ -124,6 +124,24 @@ void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
 plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 
+/*** STATE ***/
+void planMAMsgSetStateBuf(plan_ma_msg_t *msg, const void *buf, size_t bufsize);
+void planMAMsgSetStatePrivateIds(plan_ma_msg_t *msg, const int *ids, int size);
+void planMAMsgSetStateId(plan_ma_msg_t *msg, plan_state_id_t state_id);
+void planMAMsgSetStateCost(plan_ma_msg_t *msg, int cost);
+void planMAMsgSetStateHeur(plan_ma_msg_t *msg, int heur);
+
+const void *planMAMsgStateBuf(const plan_ma_msg_t *msg);
+int planMAMsgStateBufSize(const plan_ma_msg_t *msg);
+int planMAMsgStatePrivateIdsSize(const plan_ma_msg_t *msg);
+void planMAMsgStatePrivateIds(const plan_ma_msg_t *msg, int *ids);
+int planMAMsgStateId(const plan_ma_msg_t *msg);
+int planMAMsgStateCost(const plan_ma_msg_t *msg);
+int planMAMsgStateHeur(const plan_ma_msg_t *msg);
+
+void planMAMsgSetGoalOpId(plan_ma_msg_t *msg, int goal_op_id);
+int planMAMsgGoalOpId(const plan_ma_msg_t *msg);
+
 
 /*** TERMINATE: ***/
 
@@ -136,40 +154,6 @@ void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id);
  * Returns ID of agent that started termination.
  */
 int planMAMsgTerminateAgent(const plan_ma_msg_t *msg);
-
-
-
-/*** PUBLIC STATE: ***/
-
-/**
- * Sets public-state message data.
- */
-void planMAMsgPublicStateSetState(plan_ma_msg_t *msg,
-                                  const void *statebuf,
-                                  size_t statebuf_size,
-                                  int state_id, int cost, int heur);
-
-/**
- * Returns pointer to the state buffer.
- */
-const void *planMAMsgPublicStateStateBuf(const plan_ma_msg_t *msg);
-
-/**
- * Returns state-id of the state in the source agent's pool.
- */
-int planMAMsgPublicStateStateId(const plan_ma_msg_t *msg);
-
-/**
- * Returns cost of the path from initial state to this state as computed by
- * remote agent.
- */
-int planMAMsgPublicStateCost(const plan_ma_msg_t *msg);
-
-/**
- * Returns heuristic value computed by the remote agent.
- */
-int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg);
-
 
 
 /*** TRACE PATH: ***/
@@ -252,55 +236,7 @@ int planMAMsgSnapshotAck(const plan_ma_msg_t *msg);
  */
 int planMAMsgHeurType(const plan_ma_msg_t *msg);
 
-/**
- * Sets request for FF heuristic.
- */
-void planMAMsgHeurFFSetRequest(plan_ma_msg_t *msg,
-                               const int *init_state, int init_state_size,
-                               int goal_op_id);
 
-/**
- * Sets response for FF heuristic.
- */
-void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id);
-
-/**
- * Returns goal op ID stored in the message.
- */
-int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg);
-
-
-
-
-/**
- * Sets full state member of the message.
- */
-void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size);
-
-/**
- * Sets full state member of the message.
- */
-void planMAMsgSetStateFull2(plan_ma_msg_t *msg, const plan_state_t *state);
-
-/**
- * Returns true if the full state is set.
- */
-int planMAMsgHasStateFull(const plan_ma_msg_t *msg);
-
-/**
- * Loads full state from the message
- */
-void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state);
-
-/**
- * Copies state-full from src to dst.
- */
-void planMAMsgCopyStateFull(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
-
-/**
- * Returns value of a specified variable in full state.
- */
-plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var);
 
 /**
  * Adds operator to the message.

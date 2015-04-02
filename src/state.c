@@ -20,6 +20,7 @@ void planStateInit(plan_state_t *state, int size)
 {
     state->val = BOR_ALLOC_ARR(plan_val_t, size);
     state->size = size;
+    state->state_id = PLAN_NO_STATE;
 }
 
 void planStateFree(plan_state_t *state)

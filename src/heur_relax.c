@@ -76,8 +76,10 @@ static void relaxAddInitState(plan_heur_relax_t *relax,
     len = planStateSize(state);
     for (i = 0; i < len; ++i){
         fact_id = planFactId(&relax->cref.fact_id, i, planStateGet(state, i));
-        relax->fact[fact_id].value = 0;
-        planPrioQueuePush(queue, 0, fact_id);
+        if (fact_id >= 0){
+            relax->fact[fact_id].value = 0;
+            planPrioQueuePush(queue, 0, fact_id);
+        }
     }
 
     len = relax->cref.fake_pre_size;

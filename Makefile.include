@@ -59,7 +59,7 @@ ifeq '$(USE_LOCAL_OPTS)' 'yes'
 endif
 
 BORUVKA_CFLAGS ?=
-BORUVKA_LDFLGS ?=
+BORUVKA_LDFLAGS ?=
 USE_LOCAL_BORUVKA ?= $(shell if test -f $(BASEPATH_)/third-party/boruvka/libboruvka.a; then echo "yes"; else echo "no"; fi;)
 ifeq '$(USE_LOCAL_BORUVKA)' 'yes'
   BORUVKA_CFLAGS := -I$(BASEPATH_)/third-party/boruvka

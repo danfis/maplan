@@ -1,4 +1,5 @@
 #include <cu/cu.h>
+#include <boruvka/alloc.h>
 #include "plan/state_pool.h"
 
 
@@ -316,6 +317,10 @@ TEST(testStatePreEff)
     planPartStateDel(parts[2]);
     planPartStateDel(parts[3]);
     planStatePoolDel(pool);
+    planVarFree(vars + 0);
+    planVarFree(vars + 1);
+    planVarFree(vars + 2);
+    planVarFree(vars + 3);
 }
 
 TEST(testPartStateUnset)
@@ -417,4 +422,94 @@ TEST(testPartStateUnset)
     planVarFree(vars + 1);
     planVarFree(vars + 2);
     planVarFree(vars + 3);
+}
+
+static void _testPackerPubPart(int varsize)
+{
+    plan_var_t vars[varsize];
+    plan_state_packer_t *packer;
+    PLAN_STATE_STACK(state1, varsize);
+    PLAN_STATE_STACK(state2, varsize);
+    char *buf1, *buf2, *pubbuf;
+    int i, pubsize = varsize / 2;
+    int val, j;
+    int last_word;
+
+    for (i = 0; i < varsize - 1; ++i)
+        planVarInit(vars + i, "a", (rand() % 1024) + 1);
+    planVarInitMAPrivacy(vars + varsize - 1);
+    for (i = pubsize; i < varsize - 1; ++i)
+        planVarSetPrivate(vars + i);
+    packer = planStatePackerNew(vars, varsize);
+    /*
+    fprintf(stderr, "Size: %d %d\n",
+            planStatePackerBufSize(packer),
+            planStatePackerBufSizePubPart(packer));
+    */
+    last_word  = planStatePackerBufSize(packer);
+    last_word /= sizeof(plan_packer_word_t);
+    last_word -= 1;
+
+    buf1 = BOR_ALLOC_ARR(char, planStatePackerBufSize(packer));
+    buf2 = BOR_ALLOC_ARR(char, planStatePackerBufSize(packer));
+    pubbuf = BOR_ALLOC_ARR(char, planStatePackerBufSizePubPart(packer));
+
+    for (j = 0; j < 1000; ++j){
+        for (i = 0; i < pubsize; ++i){
+            planStateSet(&state1, i, rand() % vars[i].range);
+            planStateSet(&state2, i, rand() % vars[i].range);
+        }
+        for (i = pubsize; i < varsize; ++i){
+            val = rand() % vars[i].range;
+            planStateSet(&state1, i, val);
+            planStateSet(&state2, i, val);
+        }
+
+        planStatePackerPack(packer, &state1, buf1);
+        planStatePackerPack(packer, &state2, buf2);
+
+        // assert that ma-privacy variable is stored "as-is"
+        assertEquals(planStateGet(&state1, varsize - 1),
+                     ((plan_packer_word_t *)buf1)[last_word]);
+        assertEquals(planStateGet(&state2, varsize - 1),
+                     ((plan_packer_word_t *)buf2)[last_word]);
+
+        planStatePackerExtractPubPart(packer, buf2, pubbuf);
+        planStatePackerSetPubPart(packer, pubbuf, buf1);
+        planStatePackerUnpack(packer, buf1, &state1);
+        for (i = 0; i < varsize; ++i){
+            assertEquals(planStateGet(&state1, i), planStateGet(&state2, i));
+        }
+
+        // Test *SetMAPrivacyVar() function
+        planStatePackerSetMAPrivacyVar(packer,
+                                       planStateGet(&state2, varsize - 1),
+                                       buf1);
+        planStatePackerUnpack(packer, buf1, &state1);
+        assertEquals(planStateGet(&state2, varsize - 1),
+                     planStateGet(&state1, varsize - 1));
+
+        int val = rand();
+        planStatePackerSetMAPrivacyVar(packer, val, buf1);
+        planStatePackerSetMAPrivacyVar(packer, val, buf2);
+        planStatePackerUnpack(packer, buf1, &state1);
+        planStatePackerUnpack(packer, buf2, &state2);
+        assertEquals(planStateGet(&state2, varsize - 1),
+                     planStateGet(&state1, varsize - 1));
+        assertEquals(planStateGet(&state2, varsize - 1), val);
+    }
+
+    BOR_FREE(buf1);
+    BOR_FREE(buf2);
+    BOR_FREE(pubbuf);
+    planStatePackerDel(packer);
+    for (i = 0; i < varsize; ++i)
+        planVarFree(vars + i);
+}
+
+TEST(testPackerPubPart)
+{
+    _testPackerPubPart(7);
+    _testPackerPubPart(20);
+    _testPackerPubPart(100);
 }

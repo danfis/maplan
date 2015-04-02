@@ -38,7 +38,9 @@ _bor_inline int planFactId(const plan_fact_id_t *factid,
 _bor_inline int planFactId(const plan_fact_id_t *fid,
                            plan_var_id_t var, plan_val_t val)
 {
-    return fid->fact_id[var][val];
+    if (fid->fact_id[var] != NULL)
+        return fid->fact_id[var][val];
+    return -1;
 }
 
 #ifdef __cplusplus

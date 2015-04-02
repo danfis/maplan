@@ -38,6 +38,14 @@ void planHeur(plan_heur_t *heur, const plan_state_t *state,
     heur->heur_fn(heur, state, res);
 }
 
+void planHeurMAInit(plan_heur_t *heur, int agent_size, int agent_id,
+                    const plan_ma_state_t *ma_state)
+{
+    heur->ma_agent_size = agent_size;
+    heur->ma_agent_id = agent_id;
+    heur->ma_state = ma_state;
+}
+
 int planHeurMA(plan_heur_t *heur,
                plan_ma_comm_t *comm,
                const plan_state_t *state,

@@ -8,6 +8,7 @@
 #include "plan/problem.h"
 #include "plan/causalgraph.h"
 #include "problemdef.pb.h"
+#include "fact_id.h"
 
 /** Forward declaration */
 class AgentVarVals;
@@ -17,16 +18,17 @@ static PlanProblem *parseProto(const char *fn);
 /** Loads problem from protobuffer */
 static int loadProblem(plan_problem_t *prob,
                        const PlanProblem *proto,
-                       int flags);
+                       unsigned flags);
 /** Load agents part from the protobuffer */
 static void loadAgents(plan_problem_agents_t *p,
                        const PlanProblem *proto,
-                       int flags);
+                       unsigned flags);
 
 static void loadProtoProblem(plan_problem_t *prob,
                              const PlanProblem *proto,
                              const plan_var_id_t *var_map,
-                             int var_size);
+                             int var_size,
+                             int ma_state_privacy);
 static int hasUnimportantVars(const plan_causal_graph_t *cg);
 static void pruneUnimportantVars(plan_problem_t *oldp,
                                  const PlanProblem *proto,
@@ -64,7 +66,7 @@ static void setPrivateVals(plan_problem_t *agent, int agent_id,
                            const AgentVarVals &vals);
 
 
-plan_problem_t *planProblemFromProto(const char *fn, int flags)
+plan_problem_t *planProblemFromProto(const char *fn, unsigned flags)
 {
     plan_problem_t *p = NULL;
     PlanProblem *proto = NULL;
@@ -82,7 +84,7 @@ plan_problem_t *planProblemFromProto(const char *fn, int flags)
     return p;
 }
 
-plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, int flags)
+plan_problem_agents_t *planProblemAgentsFromProto(const char *fn, unsigned flags)
 {
     plan_problem_agents_t *p = NULL;
     PlanProblem *proto = NULL;
@@ -126,20 +128,31 @@ static PlanProblem *parseProto(const char *fn)
         return NULL;
     }
 
+    if (proto->projected_operator_size() > 0 && !proto->has_agent_id()){
+        fprintf(stderr, "Error: Invalid .proto file. It contains projected"
+                " operators but not agent's ID.\n");
+        delete proto;
+        return NULL;
+    }
+
+
     return proto;
 }
 
 static int loadProblem(plan_problem_t *p,
                        const PlanProblem *proto,
-                       int flags)
+                       unsigned flags)
 {
     plan_causal_graph_t *cg;
     plan_var_id_t *var_order;
-    int i, size;
+    int i, size, num_agents, ma_state_privacy;
 
 
     // Load problem from the protobuffer
-    loadProtoProblem(p, proto, NULL, -1);
+    ma_state_privacy = 0;
+    if (flags & PLAN_PROBLEM_MA_STATE_PRIVACY)
+        ma_state_privacy = 1;
+    loadProtoProblem(p, proto, NULL, -1, ma_state_privacy);
     p->duplicate_ops_removed = 0;
 
     // Fix problem with causal graph
@@ -168,6 +181,11 @@ static int loadProblem(plan_problem_t *p,
     if (flags & PLAN_PROBLEM_OP_UNIT_COST){
         for (i = 0; i < p->op_size; ++i)
             p->op[i].cost = 1;
+    }
+
+    num_agents = (flags & 0xff0u) >> 4;
+    if (num_agents > 0){
+        p->num_agents = num_agents;
     }
 
     return 0;
@@ -372,7 +390,7 @@ class AgentVarVals {
 
 static void loadAgents(plan_problem_agents_t *p,
                        const PlanProblem *proto,
-                       int flags)
+                       unsigned flags)
 {
     int i;
     plan_problem_t *agent;
@@ -395,8 +413,9 @@ static void loadAgents(plan_problem_agents_t *p,
     for (i = 0; i < p->agent_size; ++i){
         agent = p->agent + i;
         agentInitProblem(agent, &p->glob);
-        agent->agent_name = strdup(proto->agent_name(i).c_str());
+        agent->agent_name = BOR_STRDUP(proto->agent_name(i).c_str());
         agent->agent_id = i;
+        agent->num_agents = p->agent_size;
     }
 
     // Set owners of the operators
@@ -457,6 +476,30 @@ static void loadVar(plan_problem_t *p, const PlanProblem *proto,
         }
 
         planVarInit(var, proto_var.name().c_str(), proto_var.range());
+        if (proto_var.has_is_private() && proto_var.is_private())
+            planVarSetPrivate(var);
+
+        for (int j = 0; j < proto_var.fact_name_size(); ++j){
+            char *name = BOR_STRDUP(proto_var.fact_name(j).c_str());
+            const char *val_name = name;
+            if (strncmp(name, "Atom ", 5) == 0){
+                val_name += 5;
+
+            }else if (strncmp(name, "NegatedAtom ", 12) == 0){
+                name[9] = '(';
+                name[10] = 'N';
+                name[11] = ')';
+                val_name += 9;
+            }else if (strncmp(name, "(P)Atom ", 8) == 0){
+                name[5] = '(';
+                name[6] = 'P';
+                name[7] = ')';
+                val_name += 5;
+            }
+
+            planVarSetValName(var, j, val_name);
+            BOR_FREE(name);
+        }
     }
 }
 
@@ -472,6 +515,9 @@ static void loadInitState(plan_problem_t *p, const PlanProblem *proto,
             continue;
         planStateSet(state, var_map[i], proto_state.val(i));
     }
+    if (p->ma_privacy_var >= 0)
+        planStateSet(state, p->ma_privacy_var, 0);
+
     p->initial_state = planStatePoolInsert(p->state_pool, state);
     planStateDel(state);
 }
@@ -491,10 +537,84 @@ static void loadGoal(plan_problem_t *p, const PlanProblem *proto,
     }
 }
 
+static int loadOp(plan_op_t *op, int id, const PlanProblemOperator &proto_op,
+                  int var_size, const plan_var_id_t *var_map)
+{
+    int num_effects = 0;
+
+    planOpInit(op, var_size);
+    op->name = BOR_STRDUP(proto_op.name().c_str());
+    op->cost = proto_op.cost();
+    op->global_id = id;
+
+    if (proto_op.has_owner()){
+        planOpAddOwner(op, proto_op.owner());
+        planOpSetFirstOwner(op);
+    }
+
+    if (proto_op.has_global_id())
+        op->global_id = proto_op.global_id();
+
+    if (proto_op.has_is_private())
+        op->is_private = proto_op.is_private();
+
+    const PlanProblemPartState &proto_pre = proto_op.pre();
+    for (int j = 0; j < proto_pre.val_size(); ++j){
+        const PlanProblemVarVal &v = proto_pre.val(j);
+        if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
+            continue;
+
+        planOpSetPre(op, var_map[v.var()], v.val());
+    }
+
+    const PlanProblemPartState &proto_eff = proto_op.eff();
+    for (int j = 0; j < proto_eff.val_size(); ++j){
+        const PlanProblemVarVal &v = proto_eff.val(j);
+        if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
+            continue;
+
+        planOpSetEff(op, var_map[v.var()], v.val());
+        ++num_effects;
+    }
+
+    for (int j = 0; j < proto_op.cond_eff_size(); ++j){
+        int num_cond_eff = 0;
+        const PlanProblemCondEff &proto_cond_eff = proto_op.cond_eff(j);
+        int cond_eff_id = planOpAddCondEff(op);
+
+        const PlanProblemPartState &proto_pre = proto_cond_eff.pre();
+        for (int k = 0; k < proto_pre.val_size(); ++k){
+            const PlanProblemVarVal &v = proto_pre.val(k);
+            if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
+                continue;
+
+            planOpCondEffSetPre(op, cond_eff_id, var_map[v.var()], v.val());
+        }
+
+        const PlanProblemPartState &proto_eff = proto_cond_eff.eff();
+        for (int k = 0; k < proto_eff.val_size(); ++k){
+            const PlanProblemVarVal &v = proto_eff.val(k);
+            if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
+                continue;
+
+            planOpCondEffSetEff(op, cond_eff_id, var_map[v.var()], v.val());
+            ++num_effects;
+            ++num_cond_eff;
+        }
+
+        if (num_cond_eff == 0){
+            planOpDelLastCondEff(op);
+        }
+    }
+
+    return num_effects;
+}
+
 static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
                          const plan_var_id_t *var_map)
 {
     int i, len, ins;
+    int num_effects;
 
     len = proto->operator__size();
 
@@ -503,69 +623,14 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
     p->op = BOR_ALLOC_ARR(plan_op_t, p->op_size);
 
     for (i = 0, ins = 0; i < len; ++i){
-        int num_effects = 0;
-        const PlanProblemOperator &proto_op = proto->operator_(i);
-        plan_op_t *op = p->op + ins;
-
-        planOpInit(op, p->var_size);
-        op->name = strdup(proto_op.name().c_str());
-        op->cost = proto_op.cost();
-        op->global_id = ins;
-
-        const PlanProblemPartState &proto_pre = proto_op.pre();
-        for (int j = 0; j < proto_pre.val_size(); ++j){
-            const PlanProblemVarVal &v = proto_pre.val(j);
-            if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
-                continue;
-
-            planOpSetPre(op, var_map[v.var()], v.val());
-        }
-
-        const PlanProblemPartState &proto_eff = proto_op.eff();
-        for (int j = 0; j < proto_eff.val_size(); ++j){
-            const PlanProblemVarVal &v = proto_eff.val(j);
-            if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
-                continue;
-
-            planOpSetEff(op, var_map[v.var()], v.val());
-            ++num_effects;
-        }
-
-        for (int j = 0; j < proto_op.cond_eff_size(); ++j){
-            int num_cond_eff = 0;
-            const PlanProblemCondEff &proto_cond_eff = proto_op.cond_eff(j);
-            int cond_eff_id = planOpAddCondEff(op);
-
-            const PlanProblemPartState &proto_pre = proto_cond_eff.pre();
-            for (int k = 0; k < proto_pre.val_size(); ++k){
-                const PlanProblemVarVal &v = proto_pre.val(k);
-                if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
-                    continue;
-
-                planOpCondEffSetPre(op, cond_eff_id, var_map[v.var()], v.val());
-            }
-
-            const PlanProblemPartState &proto_eff = proto_cond_eff.eff();
-            for (int k = 0; k < proto_eff.val_size(); ++k){
-                const PlanProblemVarVal &v = proto_eff.val(k);
-                if (var_map[v.var()] == PLAN_VAR_ID_UNDEFINED)
-                    continue;
-
-                planOpCondEffSetEff(op, cond_eff_id, var_map[v.var()], v.val());
-                ++num_effects;
-                ++num_cond_eff;
-            }
-
-            if (num_cond_eff == 0){
-                planOpDelLastCondEff(op);
-            }
-        }
+        num_effects = loadOp(p->op + ins, ins, proto->operator_(i),
+                             p->var_size, var_map);
 
         if (num_effects > 0){
-            planOpCondEffSimplify(op);
+            planOpCondEffSimplify(p->op + ins);
             ++ins;
         }else{
-            planOpFree(op);
+            planOpFree(p->op + ins);
         }
     }
 
@@ -577,14 +642,143 @@ static void loadOperator(plan_problem_t *p, const PlanProblem *proto,
     }
 }
 
+static void loadProjOperator(plan_problem_t *p, const PlanProblem *proto,
+                             const plan_var_id_t *var_map)
+{
+    int i, len;
+
+    len = proto->projected_operator_size();
+    if (len == 0)
+        return;
+
+    // Allocate array for operators
+    p->proj_op_size = len;
+    p->proj_op = BOR_ALLOC_ARR(plan_op_t, p->proj_op_size);
+
+    for (i = 0; i < len; ++i){
+        loadOp(p->proj_op + i, i, proto->projected_operator(i),
+               p->var_size, var_map);
+        planOpCondEffSimplify(p->proj_op + i);
+    }
+}
+
+static void updateRecvFromProjOp(const plan_op_t *op, const plan_fact_id_t *fid,
+                                 uint64_t *recvarr)
+{
+    int fact_id, i;
+    uint64_t *recv, add_recv;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    add_recv = 1 << op->owner;
+    PLAN_PART_STATE_FOR_EACH(op->pre, i, var, val){
+        fact_id = planFactId(fid, var, val);
+        recv = recvarr + fact_id;
+        *recv |= add_recv;
+    }
+
+    for (i = 0; i < op->cond_eff_size; ++i){
+        PLAN_PART_STATE_FOR_EACH(op->cond_eff[i].pre, i, var, val){
+            fact_id = planFactId(fid, var, val);
+            recv = recvarr + fact_id;
+            *recv |= add_recv;
+        }
+    }
+}
+
+static void updateRecvFromGoal(const plan_part_state_t *goal,
+                               const plan_fact_id_t *fid,
+                               int agent_id, uint64_t *recvarr)
+{
+    int fact_id, i;
+    uint64_t *recv, add_recv;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    add_recv = 1 << agent_id;
+    add_recv = ~add_recv;
+    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
+        fact_id = planFactId(fid, var, val);
+        recv = recvarr + fact_id;
+        *recv = add_recv;
+    }
+}
+
+static void setOpRecv(plan_op_t *op, const plan_fact_id_t *fid,
+                      const uint64_t *recvarr)
+{
+    int fact_id, i;
+    const uint64_t *recv;
+    uint64_t set_recv;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    set_recv = 0;
+    PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
+        fact_id = planFactId(fid, var, val);
+        recv = recvarr + fact_id;
+        set_recv |= *recv;
+    }
+
+    for (i = 0; i < op->cond_eff_size; ++i){
+        PLAN_PART_STATE_FOR_EACH(op->cond_eff[i].eff, i, var, val){
+            fact_id = planFactId(fid, var, val);
+            recv = recvarr + fact_id;
+            set_recv |= *recv;
+        }
+    }
+
+    op->recv_agent = set_recv;
+}
+
+static void setOpRecvAgentFromProjOp(plan_problem_t *p)
+{
+    plan_fact_id_t fact_id;
+    uint64_t *recv;
+    int i;
+
+    if (p->proj_op_size == 0 || p->op_size == 0)
+        return;
+
+    planFactIdInit(&fact_id, p->var, p->var_size);
+    recv = BOR_CALLOC_ARR(uint64_t, fact_id.fact_size);
+
+    // Set recv bitarray for all .proj_op[] preconditions
+    for (i = 0; i < p->proj_op_size; ++i){
+        if (p->proj_op[i].owner != p->agent_id)
+            updateRecvFromProjOp(p->proj_op + i, &fact_id, recv);
+    }
+
+    // Set recv for goal
+    updateRecvFromGoal(p->goal, &fact_id, p->agent_id, recv);
+
+    // Set recv bitarray for all operators in .op[]
+    for (i = 0; i < p->op_size; ++i){
+        setOpRecv(p->op + i, &fact_id, recv);
+    }
+
+    BOR_FREE(recv);
+    planFactIdFree(&fact_id);
+}
+
 static void loadProtoProblem(plan_problem_t *p,
                              const PlanProblem *proto,
                              const plan_var_id_t *var_map,
-                             int var_size)
+                             int var_size,
+                             int ma_state_privacy)
 {
     bzero(p, sizeof(*p));
 
+    p->ma_privacy_var = -1;
+
     loadVar(p, proto, var_map, var_size);
+    if (ma_state_privacy){
+        p->var_size += 1;
+        p->var = BOR_REALLOC_ARR(p->var, plan_var_t, p->var_size);
+        p->ma_privacy_var = p->var_size - 1;
+        planVarInitMAPrivacy(p->var + p->ma_privacy_var);
+    }
+
     p->state_pool = planStatePoolNew(p->var, p->var_size);
 
     if (var_map == NULL){
@@ -598,6 +792,15 @@ static void loadProtoProblem(plan_problem_t *p,
     loadInitState(p, proto, var_map);
     loadGoal(p, proto, var_map);
     loadOperator(p, proto, var_map);
+    loadProjOperator(p, proto, var_map);
+
+    if (proto->has_agent_id()){
+        p->agent_id = proto->agent_id();
+        if (proto->agent_name_size() == 1)
+            p->agent_name = BOR_STRDUP(proto->agent_name(0).c_str());
+    }
+
+    setOpRecvAgentFromProjOp(p);
 }
 
 static int hasUnimportantVars(const plan_causal_graph_t *cg)
@@ -612,7 +815,7 @@ static void pruneUnimportantVars(plan_problem_t *p,
                                  const int *important_var,
                                  plan_var_id_t *var_order)
 {
-    int i, id, var_size;
+    int i, id, var_size, ma_state_privacy;
     plan_var_id_t *var_map;
 
     // Create mapping from old var ID to the new ID
@@ -632,8 +835,9 @@ static void pruneUnimportantVars(plan_problem_t *p,
         *var_order = var_map[*var_order];
     }
 
+    ma_state_privacy = p->ma_privacy_var >= 0;
     planProblemFree(p);
-    loadProtoProblem(p, proto, var_map, var_size);
+    loadProtoProblem(p, proto, var_map, var_size, ma_state_privacy);
 }
 
 static int cmpPartState(const plan_part_state_t *p1,
@@ -738,7 +942,7 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src)
     int i;
     plan_state_t *state;
 
-    planProblemInit(dst);
+    memcpy(dst, src, sizeof(*src));
 
     dst->var_size = src->var_size;
     dst->var = BOR_ALLOC_ARR(plan_var_t, src->var_size);
@@ -938,6 +1142,6 @@ static void setPrivateVals(plan_problem_t *agent, int agent_id,
                                        agent->private_val_size);
     for (size_t i = 0; i < pv.size(); ++i){
         agent->private_val[i] = pv[i];
-        agent->var[pv[i].var].is_private[pv[i].val] = 1;
+        planVarSetPrivateVal(agent->var + pv[i].var, pv[i].val);
     }
 }

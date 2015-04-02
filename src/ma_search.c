@@ -1,6 +1,7 @@
 #include <boruvka/alloc.h>
 
 #include "plan/ma_search.h"
+#include "plan/ma_state.h"
 
 #include "ma_snapshot.h"
 
@@ -12,6 +13,7 @@
 struct _plan_ma_search_t {
     plan_search_t *search;
     plan_ma_comm_t *comm; /*!< Communication channel between agents */
+    plan_ma_state_t *ma_state;
     int solution_verify;
 
     int pub_state_reg;
@@ -152,6 +154,9 @@ plan_ma_search_t *planMASearchNew(plan_ma_search_params_t *params)
     ma_search = BOR_ALLOC(plan_ma_search_t);
     ma_search->search = params->search;
     ma_search->comm = params->comm;
+    ma_search->ma_state = planMAStateNew(ma_search->search->state_pool,
+                                         ma_search->comm->node_size,
+                                         ma_search->comm->node_id);
     ma_search->solution_verify = params->verify_solution;
 
     msg_init.agent_id = -1;
@@ -169,14 +174,18 @@ plan_ma_search_t *planMASearchNew(plan_ma_search_params_t *params)
     ma_search->terminate = 0;
 
     ma_search->heur = NULL;
-    if (ma_search->search->heur->ma)
+    if (ma_search->search->heur->ma){
         ma_search->heur = ma_search->search->heur;
+        planHeurMAInit(ma_search->heur, ma_search->comm->node_size,
+                       ma_search->comm->node_id, ma_search->ma_state);
+    }
 
     return ma_search;
 }
 
 void planMASearchDel(plan_ma_search_t *ma_search)
 {
+    planMAStateDel(ma_search->ma_state);
     planMASnapshotRegFree(&ma_search->snapshot);
     planPathFree(&ma_search->path);
     BOR_FREE(ma_search);
@@ -387,32 +396,25 @@ static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg)
     return;
 }
 
-static int publicStateSet(plan_ma_msg_t *msg,
-                          plan_state_pool_t *state_pool,
+static int publicStateSet(plan_ma_state_t *ma_state,
+                          plan_ma_msg_t *msg,
                           plan_state_space_node_t *node)
 {
-    const void *statebuf;
-    size_t statebuf_size;
-
-    statebuf = planStatePoolGetPackedState(state_pool, node->state_id);
-    statebuf_size = planStatePackerBufSize(state_pool->packer);
-    if (statebuf == NULL)
+    if (planMAStateSetMAMsg(ma_state, node->state_id, msg) != 0)
         return -1;
-
-    planMAMsgPublicStateSetState(msg, statebuf, statebuf_size,
-                                 node->state_id, node->cost,
-                                 node->heuristic);
+    planMAMsgSetStateCost(msg, node->cost);
+    planMAMsgSetStateHeur(msg, node->heuristic);
     return 0;
 }
 
-static int publicStateSet2(plan_ma_msg_t *msg,
-                           plan_state_pool_t *state_pool,
+static int publicStateSet2(plan_ma_state_t *ma_state,
+                           plan_ma_msg_t *msg,
                            plan_state_space_t *state_space,
                            plan_state_id_t state_id)
 {
     plan_state_space_node_t *node;
     node = planStateSpaceNode(state_space, state_id);
-    return publicStateSet(msg, state_pool, node);
+    return publicStateSet(ma_state, msg, node);
 }
 
 static void publicStateSend(plan_ma_search_t *ma,
@@ -441,7 +443,7 @@ static void publicStateSend(plan_ma_search_t *ma,
         return;
 
     msg = planMAMsgNew(PLAN_MA_MSG_PUBLIC_STATE, 0, ma->comm->node_id);
-    publicStateSet(msg, ma->search->state_pool, node);
+    publicStateSet(ma->ma_state, msg, node);
 
     for (i = 0; i < ma->comm->node_size; ++i){
         if (i != ma->comm->node_id){
@@ -460,20 +462,17 @@ static void publicStateRecv(plan_ma_search_t *ma,
     pub_state_data_t *pub_state;
     plan_state_id_t state_id;
     plan_state_space_node_t *node;
-    const void *packed_state;
 
     // Unroll data from the message
-    packed_state = planMAMsgPublicStateStateBuf(msg);
-    cost         = planMAMsgPublicStateCost(msg);
-    heur         = planMAMsgPublicStateHeur(msg);
+    cost         = planMAMsgStateCost(msg);
+    heur         = planMAMsgStateHeur(msg);
 
     // Skip nodes that are worse than the best goal state so far
     if (cost >= ma->goal_cost)
         return;
 
     // Insert packed state into state-pool if not already inserted
-    state_id = planStatePoolInsertPacked(ma->search->state_pool,
-                                         packed_state);
+    state_id = planMAStateInsertFromMAMsg(ma->ma_state, msg);
 
     // Get public state reference data
     pub_state = planStatePoolData(ma->search->state_pool,
@@ -497,7 +496,7 @@ static void publicStateRecv(plan_ma_search_t *ma,
         }
 
         pub_state->agent_id = planMAMsgAgent(msg);
-        pub_state->state_id = planMAMsgPublicStateStateId(msg);
+        pub_state->state_id = planMAMsgStateId(msg);
 
         planSearchInsertNode(ma->search, node);
     }
@@ -691,7 +690,7 @@ static void solutionVerify(plan_ma_search_t *ma, plan_state_id_t goal)
     msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT, PLAN_MA_MSG_SNAPSHOT_INIT,
                        ma->comm->node_id);
     planMAMsgSnapshotSetType(msg, PLAN_MA_MSG_SOLUTION_VERIFICATION);
-    publicStateSet2(msg, ma->search->state_pool, ma->search->state_space, goal);
+    publicStateSet2(ma->ma_state, msg, ma->search->state_space, goal);
 
     // Create snapshot object and register it
     ver = solutionVerifyNew(ma, msg, 1);
@@ -773,7 +772,7 @@ static void solutionVerifyUpdate(plan_ma_snapshot_t *s,
         return;
 
     // Update lowest cost from the public state received before snapshot-mark
-    cost = planMAMsgPublicStateCost(msg);
+    cost = planMAMsgStateCost(msg);
     ver->lowest_cost = BOR_MIN(ver->lowest_cost, cost);
     DBG_SOLUTION_VERIFY(ver, "update");
 }
@@ -801,20 +800,17 @@ static void reinsertNAckedSolution(plan_ma_search_t *ma,
     pub_state_data_t *pub_state;
     plan_state_id_t state_id;
     plan_state_space_node_t *node;
-    const void *packed_state;
 
     // Unroll data from the message
-    packed_state = planMAMsgPublicStateStateBuf(msg);
-    cost         = planMAMsgPublicStateCost(msg);
-    heur         = planMAMsgPublicStateHeur(msg);
+    cost         = planMAMsgStateCost(msg);
+    heur         = planMAMsgStateHeur(msg);
 
     // Skip nodes that are worse than the best goal state so far
     if (cost > ma->goal_cost)
         return;
 
     // Insert packed state into state-pool if not already inserted
-    state_id = planStatePoolInsertPacked(ma->search->state_pool,
-                                         packed_state);
+    state_id = planMAStateInsertFromMAMsg(ma->ma_state, msg);
 
     // Get corresponding node
     node = planStateSpaceNode(ma->search->state_space, state_id);
@@ -830,7 +826,7 @@ static void reinsertNAckedSolution(plan_ma_search_t *ma,
         pub_state = planStatePoolData(ma->search->state_pool,
                                       ma->pub_state_reg, state_id);
         pub_state->agent_id = planMAMsgAgent(msg);
-        pub_state->state_id = planMAMsgPublicStateStateId(msg);
+        pub_state->state_id = planMAMsgStateId(msg);
     }
 
     planSearchInsertNode(ma->search, node);
@@ -843,7 +839,7 @@ static int solutionVerifyMarkFinalize(plan_ma_snapshot_t *s)
     int ack;
 
     ack = 0;
-    if (ver->lowest_cost >= planMAMsgPublicStateCost(ver->init_msg))
+    if (ver->lowest_cost >= planMAMsgStateCost(ver->init_msg))
         ack = 1;
 
     DBG_SOLUTION_VERIFY(ver, "mark-final");
@@ -868,7 +864,7 @@ static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s)
     plan_cost_t goal_cost;
     plan_state_id_t goal_id;
 
-    goal_cost = planMAMsgPublicStateCost(ver->init_msg);
+    goal_cost = planMAMsgStateCost(ver->init_msg);
 
     // Ignore the solution if we have already seen better
     if (ver->ma->goal_cost < goal_cost)
@@ -878,12 +874,12 @@ static void solutionVerifyResponseFinalize(plan_ma_snapshot_t *s)
         // All other agents ack'ed the solution and this agent also has
         // processed all states with lower cost, so we are done.
         ver->ma->goal_cost = goal_cost;
-        ver->ma->goal = planMAMsgPublicStateStateId(ver->init_msg);
+        ver->ma->goal = planMAMsgStateId(ver->init_msg);
         DBG_SOLUTION_VERIFY(ver, "response-final-trace-path");
-        tracePath(ver->ma, planMAMsgPublicStateStateId(ver->init_msg));
+        tracePath(ver->ma, planMAMsgStateId(ver->init_msg));
 
     }else if (ver->lowest_cost < goal_cost){
-        goal_id = planMAMsgPublicStateStateId(ver->init_msg);
+        goal_id = planMAMsgStateId(ver->init_msg);
         node = planStateSpaceNode(ver->ma->search->state_space, goal_id);
         planSearchInsertNode(ver->ma->search, node);
         DBG_SOLUTION_VERIFY(ver, "response-final-ins");

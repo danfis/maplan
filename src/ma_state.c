@@ -1,0 +1,226 @@
+#include <boruvka/alloc.h>
+#include <plan/ma_state.h>
+
+//#define ENABLE_ASSERTS
+
+plan_ma_state_t *planMAStateNew(plan_state_pool_t *state_pool,
+                                int num_agents, int agent_id)
+{
+    plan_ma_state_t *ma_state;
+    int i, id;
+    const void *buf;
+
+    ma_state = BOR_ALLOC(plan_ma_state_t);
+    ma_state->state_pool = state_pool;
+    ma_state->packer = state_pool->packer;
+    ma_state->num_agents = num_agents;
+    ma_state->agent_id = agent_id;
+    ma_state->bufsize = planStatePackerBufSize(state_pool->packer);
+    ma_state->buf = BOR_ALLOC_ARR(char, ma_state->bufsize);
+    ma_state->ma_privacy = 0;
+    ma_state->private_ids = NULL;
+    ma_state->pub_buf = NULL;
+    ma_state->pub_bufsize = 0;
+
+    if (state_pool->packer->ma_privacy){
+        // Enable ma-privacy mode
+        ma_state->ma_privacy = 1;
+
+        // Pre-allocate various arrays
+        ma_state->private_ids = BOR_ALLOC_ARR(int, num_agents);
+        ma_state->pub_bufsize = planStatePackerBufSizePubPart(ma_state->packer);
+        ma_state->pub_buf = BOR_ALLOC_ARR(char, ma_state->pub_bufsize);
+
+        // Initialize table of private state IDs
+        planMAPrivateStateInit(&ma_state->private_state, num_agents, agent_id);
+
+        // Prepare default array of private state identification.
+        for (i = 0; i < num_agents; ++i)
+            ma_state->private_ids[i] = 0;
+
+        // Insert default array
+        id = planMAPrivateStateInsert(&ma_state->private_state,
+                                      ma_state->private_ids);
+
+        // Make sure that we don't need any more records in
+        // ma_state->private_state structure.
+        for (i = 0; i < ma_state->state_pool->num_states; ++i){
+            buf = planStatePoolGetPackedState(state_pool, i);
+            while (planStatePackerGetMAPrivacyVar(ma_state->packer, buf) > id){
+                id = planMAPrivateStateInsert(&ma_state->private_state,
+                                              ma_state->private_ids);
+            }
+        }
+    }
+
+    return ma_state;
+}
+
+void planMAStateDel(plan_ma_state_t *ma_state)
+{
+    if (ma_state->ma_privacy)
+        planMAPrivateStateFree(&ma_state->private_state);
+    if (ma_state->private_ids != NULL)
+        BOR_FREE(ma_state->private_ids);
+    if (ma_state->pub_buf != NULL)
+        BOR_FREE(ma_state->pub_buf);
+    if (ma_state->buf != NULL)
+        BOR_FREE(ma_state->buf);
+    BOR_FREE(ma_state);
+}
+
+static void setPrivacyMAMsg(const plan_ma_state_t *ma_state,
+                            plan_state_id_t state_id, const void *buf,
+                            plan_ma_msg_t *ma_msg)
+{
+    int private_id;
+
+    // Get ID to ma_state->private_state table
+    private_id = planStatePackerGetMAPrivacyVar(ma_state->packer, buf);
+    if (private_id < 0){
+        fprintf(stderr, "MA-State Error: You are probably trying to send a"
+                        " state that is not completely defined. Make sure"
+                        " that you didn't use planMAStateGetFromMAMsg() and"
+                        " then re-sent the state again.\n");
+        exit(-1);
+    }
+
+    // Recover private IDs and set the corresponding local ID
+    planMAPrivateStateGet(&ma_state->private_state, private_id,
+                          ma_state->private_ids);
+    ma_state->private_ids[ma_state->agent_id] = state_id;
+
+    // Get packed public part
+    planStatePackerExtractPubPart(ma_state->packer, buf, ma_state->pub_buf);
+
+    // Set message
+    planMAMsgSetStateBuf(ma_msg, ma_state->pub_buf, ma_state->pub_bufsize);
+    planMAMsgSetStatePrivateIds(ma_msg, ma_state->private_ids,
+                                ma_state->num_agents);
+}
+
+int planMAStateSetMAMsg(const plan_ma_state_t *ma_state,
+                        plan_state_id_t state_id,
+                        plan_ma_msg_t *ma_msg)
+{
+    const void *buf;
+
+    buf = planStatePoolGetPackedState(ma_state->state_pool, state_id);
+    if (buf == NULL)
+        return -1;
+
+    if (ma_state->ma_privacy){
+        setPrivacyMAMsg(ma_state, state_id, buf, ma_msg);
+    }else{
+        planMAMsgSetStateBuf(ma_msg, buf, ma_state->bufsize);
+    }
+
+    planMAMsgSetStateId(ma_msg, state_id);
+    return 0;
+}
+
+int planMAStateSetMAMsg2(const plan_ma_state_t *ma_state,
+                         const plan_state_t *state,
+                         plan_ma_msg_t *ma_msg)
+{
+    planStatePackerPack(ma_state->packer, state, ma_state->buf);
+
+    if (ma_state->ma_privacy){
+        setPrivacyMAMsg(ma_state, state->state_id, ma_state->buf, ma_msg);
+    }else{
+        planMAMsgSetStateBuf(ma_msg, ma_state->buf, ma_state->bufsize);
+    }
+
+    return 0;
+}
+
+static void recoverPrivacyStateBuf(plan_ma_state_t *ma_state,
+                                   const plan_ma_msg_t *ma_msg,
+                                   int recover_privacy_var)
+{
+    const void *pubbuf;
+    const void *ref_statebuf;
+    plan_state_id_t ref_state_id;
+    int private_id;
+
+#ifdef ENABLE_ASSERTS
+    if (planMAMsgStateBufSize(ma_msg) != ma_state->pub_bufsize
+            || planMAMsgStatePrivateIdsSize(ma_msg) != ma_state->num_agents){
+        fprintf(stderr, "Error: You're trying to recover state from the"
+                        " wrong ma message. Exiting...\n");
+        exit(-1);
+    }
+#endif /* ENABLE_ASSERTS */
+
+    // Read packed public part of state and private state IDs from the
+    // message
+    pubbuf = planMAMsgStateBuf(ma_msg);
+    planMAMsgStatePrivateIds(ma_msg, ma_state->private_ids);
+
+    // Cherry-pick state ID corresponding to the current agent
+    ref_state_id = ma_state->private_ids[ma_state->agent_id];
+
+    // Retrieve packed state from which private part will be taken and copy
+    // it to the output buffer
+    ref_statebuf = planStatePoolGetPackedState(ma_state->state_pool,
+                                               ref_state_id);
+    memcpy(ma_state->buf, ref_statebuf, ma_state->bufsize);
+
+    // Exchange the public part of the output buffer with the received
+    // public part from the message.
+    planStatePackerSetPubPart(ma_state->packer, pubbuf, ma_state->buf);
+
+    if (recover_privacy_var){
+        // Get the correct ID to the table of private state IDs and set it to
+        // the output buffer
+        private_id = planMAPrivateStateInsert(&ma_state->private_state,
+                                              ma_state->private_ids);
+        planStatePackerSetMAPrivacyVar(ma_state->packer, private_id,
+                                       ma_state->buf);
+    }else{
+        // Set privacy var to some bogus value so we can detect it when it
+        // reused later.
+        planStatePackerSetMAPrivacyVar(ma_state->packer, -1, ma_state->buf);
+    }
+}
+
+plan_state_id_t planMAStateInsertFromMAMsg(plan_ma_state_t *ma_state,
+                                           const plan_ma_msg_t *ma_msg)
+{
+    const void *buf;
+
+    if (ma_state->ma_privacy){
+        recoverPrivacyStateBuf(ma_state, ma_msg, 1);
+        buf = ma_state->buf;
+    }else{
+        buf = planMAMsgStateBuf(ma_msg);
+    }
+    return planStatePoolInsertPacked(ma_state->state_pool, buf);
+}
+
+void planMAStateGetFromMAMsg(const plan_ma_state_t *ma_state,
+                             const plan_ma_msg_t *ma_msg,
+                             plan_state_t *state)
+{
+    const void *buf;
+
+    if (ma_state->ma_privacy){
+        // The retyping to non-const is ok in this case because the last
+        // argument, in fact, makes sure that nothing is really changed.
+        recoverPrivacyStateBuf((plan_ma_state_t *)ma_state, ma_msg, 0);
+        buf = ma_state->buf;
+    }else{
+        buf = planMAMsgStateBuf(ma_msg);
+    }
+    planStatePackerUnpack(ma_state->packer, buf, state);
+}
+
+int planMAStateMAMsgIsSet(const plan_ma_state_t *ma_state,
+                          const plan_ma_msg_t *ma_msg)
+{
+    if (ma_state->ma_privacy){
+        return planMAMsgStateBufSize(ma_msg) == ma_state->pub_bufsize;
+    }else{
+        return planMAMsgStateBufSize(ma_msg) == ma_state->bufsize;
+    }
+}

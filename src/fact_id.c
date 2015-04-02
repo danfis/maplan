@@ -11,8 +11,11 @@ void planFactIdInit(plan_fact_id_t *fid, const plan_var_t *var, int var_size)
 
     for (id = 0, i = 0; i < var_size; ++i){
         range = var[i].range;
-        if (var[i].ma_privacy)
-            range = 1;
+        if (var[i].ma_privacy){
+            // Ignore ma-privacy variables
+            fid->fact_id[i] = NULL;
+            continue;
+        }
 
         // allocate array for variable's values
         fid->fact_id[i] = BOR_ALLOC_ARR(int, range);

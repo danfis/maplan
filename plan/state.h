@@ -16,6 +16,7 @@ extern "C" {
 struct _plan_state_t {
     plan_val_t *val;
     int size;
+    plan_state_id_t state_id;
 };
 typedef struct _plan_state_t plan_state_t;
 
@@ -25,7 +26,7 @@ typedef struct _plan_state_t plan_state_t;
  */
 #define PLAN_STATE_STACK(name, var_size) \
     plan_val_t name ## __val__[var_size]; \
-    plan_state_t name = { name ## __val__, var_size }
+    plan_state_t name = { name ## __val__, var_size, PLAN_NO_STATE }
 
 
 /**

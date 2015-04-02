@@ -187,6 +187,7 @@ void planStatePoolGetState(const plan_state_pool_t *pool,
 
     sp = statePacked(pool, sid);
     planStatePackerUnpack(pool->packer, stateBuf(sp), state);
+    state->state_id = sid;
 }
 
 const void *planStatePoolGetPackedState(const plan_state_pool_t *pool,

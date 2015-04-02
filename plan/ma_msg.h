@@ -126,12 +126,15 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 /*** STATE ***/
 void planMAMsgSetStateBuf(plan_ma_msg_t *msg, const void *buf, size_t bufsize);
+void planMAMsgSetStatePrivateIds(plan_ma_msg_t *msg, const int *ids, int size);
 void planMAMsgSetStateId(plan_ma_msg_t *msg, plan_state_id_t state_id);
 void planMAMsgSetStateCost(plan_ma_msg_t *msg, int cost);
 void planMAMsgSetStateHeur(plan_ma_msg_t *msg, int heur);
 
 const void *planMAMsgStateBuf(const plan_ma_msg_t *msg);
 int planMAMsgStateBufSize(const plan_ma_msg_t *msg);
+int planMAMsgStatePrivateIdsSize(const plan_ma_msg_t *msg);
+void planMAMsgStatePrivateIds(const plan_ma_msg_t *msg, int *ids);
 int planMAMsgStateId(const plan_ma_msg_t *msg);
 int planMAMsgStateCost(const plan_ma_msg_t *msg);
 int planMAMsgStateHeur(const plan_ma_msg_t *msg);

@@ -114,6 +114,13 @@ void planMAMsgSetStateBuf(plan_ma_msg_t *msg, const void *buf, size_t bufsize)
     proto->set_state_buf(buf, bufsize);
 }
 
+void planMAMsgSetStatePrivateIds(plan_ma_msg_t *msg, const int *ids, int size)
+{
+    PlanMAMsg *m = PROTO(msg);
+    for (int i = 0; i < size; ++i)
+        m->add_state_private_id(ids[i]);
+}
+
 void planMAMsgSetStateId(plan_ma_msg_t *msg, plan_state_id_t state_id)
 {
     SETVAL(msg, state_id, state_id);
@@ -137,6 +144,20 @@ const void *planMAMsgStateBuf(const plan_ma_msg_t *msg)
 int planMAMsgStateBufSize(const plan_ma_msg_t *msg)
 {
     return GETVAL(msg, state_buf).size();
+}
+
+int planMAMsgStatePrivateIdsSize(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_private_id_size);
+}
+
+void planMAMsgStatePrivateIds(const plan_ma_msg_t *msg, int *ids)
+{
+    const PlanMAMsg *m = PROTO(msg);
+    int size = m->state_private_id_size();
+
+    for (int i = 0; i < size; ++i)
+        ids[i] = m->state_private_id(i);
 }
 
 int planMAMsgStateId(const plan_ma_msg_t *msg)

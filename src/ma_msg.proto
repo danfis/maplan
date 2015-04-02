@@ -20,16 +20,16 @@ message PlanMAMsg {
     optional int32 terminate_agent_id = 3;
 
     optional bytes state_buf = 4;
-    optional int32 state_id = 5;
-    optional int32 state_cost = 6;
-    optional int32 state_heur = 7;
-    repeated int32 state_private_id = 8;
+    repeated int32 state_private_id = 5;
+    optional int32 state_id = 6;
+    optional int32 state_cost = 7;
+    optional int32 state_heur = 8;
 
-    optional int32 initiator_agent_id = 9;
-    repeated PlanMAMsgOp op = 10;
-    optional int64 snapshot_token = 11;
-    optional int32 snapshot_type = 12;
-    optional int32 snapshot_ack = 13;
+    optional int32 initiator_agent_id = 10;
+    repeated PlanMAMsgOp op = 11;
+    optional int64 snapshot_token = 12;
+    optional int32 snapshot_type = 13;
+    optional int32 snapshot_ack = 14;
     optional int32 goal_op_id = 15;
     optional int32 min_cut_cost = 16;
     optional int32 heur_token = 17;

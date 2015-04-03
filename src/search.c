@@ -51,7 +51,8 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     }
 
     if (res == PLAN_SEARCH_FOUND){
-        extractPath(search->state_space, search->goal_state, path);
+        if (search->goal_state != PLAN_NO_STATE)
+            extractPath(search->state_space, search->goal_state, path);
         planSearchStatSetFound(&search->stat);
     }else{
         planSearchStatSetNotFound(&search->stat);

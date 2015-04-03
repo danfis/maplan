@@ -188,6 +188,16 @@ int planMAMsgTerminateAgent(const plan_ma_msg_t *msg)
     return proto->terminate_agent_id();
 }
 
+void planMAMsgSetSearchRes(plan_ma_msg_t *msg, int res)
+{
+    SETVAL(msg, search_res, res);
+}
+
+int planMAMsgSearchRes(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, search_res);
+}
+
 
 void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id)
 {

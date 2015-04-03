@@ -514,7 +514,9 @@ static void terminate(plan_ma_search_t *ma)
                        PLAN_MA_MSG_TERMINATE_REQUEST,
                        ma->comm->node_id);
     planMAMsgTerminateSetAgent(msg, ma->comm->node_id);
-    planMACommSendToAll(ma->comm, msg);
+    planMAMsgSetSearchRes(msg, ma->res);
+    planMAMsgTracePathAddPath(msg, &ma->path);
+    planMACommSendInRing(ma->comm, msg);
     planMAMsgDel(msg);
 
     ma->terminate = 1;
@@ -528,7 +530,14 @@ static int terminateMsg(plan_ma_search_t *ma_search,
     plan_ma_msg_t *term_msg;
 
     if (subtype == PLAN_MA_MSG_TERMINATE_FINAL){
-        // When TERMINATE signal is received, just terminate
+        // When the final TERMINATE signal is received, accept the results
+        // stored there and terminate
+        ma_search->res = planMAMsgSearchRes(msg);
+        if (!planPathEmpty(&ma_search->path)){
+            planPathFree(&ma_search->path);
+            planPathInit(&ma_search->path);
+        }
+        planMAMsgTracePathExtractPath(msg, &ma_search->path);
         return -1;
 
     }else{ // PLAN_MA_MSG_TERMINATE_REQUEST
@@ -545,6 +554,8 @@ static int terminateMsg(plan_ma_search_t *ma_search,
             term_msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
                                     PLAN_MA_MSG_TERMINATE_FINAL,
                                     ma_search->comm->node_id);
+            planMAMsgSetSearchRes(term_msg, ma_search->res);
+            planMAMsgTracePathAddPath(term_msg, &ma_search->path);
             planMACommSendToAll(ma_search->comm, term_msg);
             planMAMsgDel(term_msg);
             return -1;

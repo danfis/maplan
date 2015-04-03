@@ -155,6 +155,16 @@ void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id);
  */
 int planMAMsgTerminateAgent(const plan_ma_msg_t *msg);
 
+/**
+ * Sets a result code of search.
+ */
+void planMAMsgSetSearchRes(plan_ma_msg_t *msg, int res);
+
+/**
+ * Returns a result code.
+ */
+int planMAMsgSearchRes(const plan_ma_msg_t *msg);
+
 
 /*** TRACE PATH: ***/
 

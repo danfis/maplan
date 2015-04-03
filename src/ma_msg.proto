@@ -36,4 +36,5 @@ message PlanMAMsg {
     repeated int32 heur_requested_agent = 18;
     optional int32 heur_cost = 19;
     optional PlanMAMsgDTGReq dtg_req = 20;
+    optional int32 search_res = 21;
 }

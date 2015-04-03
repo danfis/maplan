@@ -242,8 +242,8 @@ static plan_state_id_t extractPath(plan_state_space_t *state_space,
 
     node = planStateSpaceNode(state_space, goal_state);
     while (node && node->op){
-        planPathPrepend(path, node->op,
-                        node->parent_state_id, node->state_id);
+        planPathPrependOp(path, node->op,
+                          node->parent_state_id, node->state_id);
         node = planStateSpaceNode(state_space, node->parent_state_id);
     }
 

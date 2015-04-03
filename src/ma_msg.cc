@@ -205,8 +205,10 @@ void planMAMsgTracePathAddPath(plan_ma_msg_t *msg, const plan_path_t *path)
         p = BOR_LIST_ENTRY(item, plan_path_op_t, path);
 
         PlanMAMsgOp *op = proto->add_op();
+        op->set_op_id(p->global_id);
         op->set_name(p->name);
         op->set_cost(p->cost);
+        op->set_owner(p->owner);
     }
 }
 
@@ -224,7 +226,8 @@ void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
     size = proto->op_size();
     for (int i = 0; i < size; ++i){
         const PlanMAMsgOp &op = proto->op(i);
-        planPathPrepend2(path, op.name().c_str(), op.cost());
+        planPathPrepend(path, op.name().c_str(), op.cost(), op.op_id(),
+                        op.owner(), PLAN_NO_STATE, PLAN_NO_STATE);
     }
 }
 

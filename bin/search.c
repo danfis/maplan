@@ -218,14 +218,19 @@ static void printResults(const options_t *o, int res, plan_path_t *path)
         printf("Solution found.\n");
 
         if (o->output != NULL){
-            fout = fopen(o->output, "w");
-            if (fout != NULL){
-                planPathPrint(path, fout);
-                fclose(fout);
-                printf("Plan written to `%s'\n", o->output);
+            if (strcmp(o->output, "-") == 0){
+                planPathPrint(path, stdout);
+                printf("Plan written to stdout\n");
             }else{
-                fprintf(stderr, "Error: Could not plan write to `%s'\n",
-                        o->output);
+                fout = fopen(o->output, "w");
+                if (fout != NULL){
+                    planPathPrint(path, fout);
+                    fclose(fout);
+                    printf("Plan written to `%s'\n", o->output);
+                }else{
+                    fprintf(stderr, "Error: Could not plan write to `%s'\n",
+                            o->output);
+                }
             }
         }
 

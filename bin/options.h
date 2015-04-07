@@ -3,7 +3,8 @@
 
 struct _options_t {
     int help;
-    int ma;
+    int ma_unfactor;
+    int ma_factor;
     char *proto;
     char *output;
     int max_time;

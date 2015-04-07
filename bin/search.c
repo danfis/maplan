@@ -8,6 +8,9 @@
 
 #include "options.h"
 
+static plan_problem_t *problem = NULL;
+static plan_problem_agents_t *agent_problem = NULL;
+
 struct _progress_t {
     int max_time;
     int max_mem;
@@ -265,6 +268,71 @@ static void printInitHeurMA(const options_t *o, plan_search_t *search,
     }
 }
 
+static int loadProblem(const options_t *o)
+{
+    bor_timer_t load_timer;
+    int flags;
+
+    borTimerStart(&load_timer);
+
+    flags = PLAN_PROBLEM_USE_CG;
+    if (o->op_unit_cost)
+        flags |= PLAN_PROBLEM_OP_UNIT_COST;
+
+    if (o->ma_unfactor){
+        agent_problem = planProblemAgentsFromProto(o->proto, flags);
+        if (agent_problem->agent_size <= 1){
+            // TODO: Maybe only warning and switch to single-agent mode.
+            fprintf(stderr, "Error: Cannot run multi-agent planner on one"
+                    " agent problem. It's just silly.\n");
+            return -1;
+        }
+    }else{
+        problem = planProblemFromProto(o->proto, flags);
+    }
+
+    if (problem == NULL && agent_problem == NULL){
+        fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
+        return -1;
+    }else{
+        borTimerStop(&load_timer);
+        if (problem != NULL)
+            printProblem(problem);
+        if (agent_problem != NULL)
+            printProblemMA(agent_problem);
+        printf("\nLoading Time: %f\n", borTimerElapsedInSF(&load_timer));
+        printf("\n");
+    }
+
+    return 0;
+}
+
+static int dotGraph(const options_t *o)
+{
+    FILE *fout;
+
+    if (!o->dot_graph)
+        return 0;
+
+    if (agent_problem == NULL){
+        fprintf(stderr, "Error: Can generate dot-graph only for multi-agent"
+                        " problem definition.\n");
+        return -1;
+    }
+
+    fout = fopen(o->dot_graph, "w");
+    if (fout){
+        planProblemAgentsDotGraph(agent_problem, fout);
+        fclose(fout);
+    }else{
+        fprintf(stderr, "Error: Could not open file `%s'\n",
+                o->dot_graph);
+        return -1;
+    }
+
+    return 0;
+}
+
 static plan_list_lazy_t *listLazyCreate(const options_t *o)
 {
     plan_list_lazy_t *list = NULL;
@@ -420,40 +488,20 @@ static plan_search_t *searchNew(const options_t *o,
 
 static int singleThread(const options_t *o)
 {
-    plan_problem_t *prob;
     plan_heur_t *heur;
     plan_search_t *search;
     plan_path_t path;
     progress_t progress_data;
-    bor_timer_t load_timer;
-    int flags;
     int res;
 
-    borTimerStart(&load_timer);
-
-    // Load problem file
-    flags = PLAN_PROBLEM_USE_CG;
-    if (o->op_unit_cost)
-        flags |= PLAN_PROBLEM_OP_UNIT_COST;
-    prob = planProblemFromProto(o->proto, flags);
-    if (prob == NULL){
-        fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
-        return -1;
-    }else{
-        borTimerStop(&load_timer);
-        printProblem(prob);
-        printf("\nLoading Time: %f\n", borTimerElapsedInSF(&load_timer));
-        printf("\n");
-    }
-
     // Create heuristic function
-    heur = heurNew(o, prob);
+    heur = heurNew(o, problem);
 
     // Create search algorithm
     progress_data.max_time = o->max_time;
     progress_data.max_mem = o->max_mem;
     progress_data.agent_id = 0;
-    search = searchNew(o, prob, heur, &progress_data);
+    search = searchNew(o, problem, heur, &progress_data);
     limitMonitorSetSearch(search);
 
     // Run search
@@ -469,7 +517,6 @@ static int singleThread(const options_t *o)
 
     planPathFree(&path);
     planSearchDel(search);
-    planProblemDel(prob);
 
     return 0;
 }
@@ -495,29 +542,28 @@ static void maThRun(int id, void *data, const bor_tasks_thinfo_t *_)
     planMASearchDel(ma_search);
 }
 
-static int multiAgent2(const options_t *o, plan_problem_agents_t *prob)
+static int maUnfactored(const options_t *o)
 {
     bor_tasks_t *tasks;
-    ma_th_t th[prob->agent_size];
+    ma_th_t th[agent_problem->agent_size];
     plan_heur_t *heur;
     int i;
 
-    tasks = borTasksNew(prob->agent_size);
+    tasks = borTasksNew(agent_problem->agent_size);
 
-    for (i = 0; i < prob->agent_size; ++i){
+    for (i = 0; i < agent_problem->agent_size; ++i){
         th[i].agent_id = i;
         th[i].opts = o;
         th[i].progress_data.max_time = o->max_time;
         th[i].progress_data.max_mem = o->max_mem;
         th[i].progress_data.agent_id = i;
 
-        heur = heurNewMA(o, prob, i);
-        th[i].search = searchNew(o, prob->agent + i, heur,
+        heur = heurNewMA(o, agent_problem, i);
+        th[i].search = searchNew(o, agent_problem->agent + i, heur,
                                  &th[i].progress_data);
 
         planPathInit(&th[i].path);
-        th[i].comm = planMACommInprocNew(i, prob->agent_size);
-        //th[i].comm = planMACommIPCNew(i, prob->agent_size, "/tmp/A");
+        th[i].comm = planMACommInprocNew(i, agent_problem->agent_size);
         borTasksAdd(tasks, maThRun, i, th + i);
     }
 
@@ -526,80 +572,31 @@ static int multiAgent2(const options_t *o, plan_problem_agents_t *prob)
 
 
     printf("\n");
-    for (i = 0; i < prob->agent_size; ++i){
+    for (i = 0; i < agent_problem->agent_size; ++i){
         if (th[i].res != PLAN_SEARCH_NOT_FOUND){
             printResults(o, th[i].res, &th[i].path);
             break;
 
         }
     }
-    if (i == prob->agent_size)
+    if (i == agent_problem->agent_size)
         printResults(o, PLAN_SEARCH_NOT_FOUND, NULL);
-    for (i = 0; i < prob->agent_size; ++i)
+    for (i = 0; i < agent_problem->agent_size; ++i)
         printInitHeurMA(o, th[i].search, i);
 
     printf("\n");
-    for (i = 0; i < prob->agent_size; ++i){
+    for (i = 0; i < agent_problem->agent_size; ++i){
         printf("Agent[%d] stats:\n", i);
         printStat(&th[i].search->stat, "    ");
     }
 
-    for (i = 0; i < prob->agent_size; ++i){
+    for (i = 0; i < agent_problem->agent_size; ++i){
         planPathFree(&th[i].path);
         planSearchDel(th[i].search);
         planMACommDel(th[i].comm);
     }
 
     return 0;
-}
-
-static int multiAgent(const options_t *o)
-{
-    plan_problem_agents_t *prob;
-    bor_timer_t load_timer;
-    FILE *fout;
-    int flags;
-    int ret;
-
-    borTimerStart(&load_timer);
-
-    // Load problem file
-    flags = PLAN_PROBLEM_USE_CG;
-    if (o->op_unit_cost)
-        flags |= PLAN_PROBLEM_OP_UNIT_COST;
-    prob = planProblemAgentsFromProto(o->proto, flags);
-    if (prob == NULL){
-        fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
-        return -1;
-    }else{
-        borTimerStop(&load_timer);
-        printProblemMA(prob);
-        printf("\nLoading Time: %f\n", borTimerElapsedInSF(&load_timer));
-        printf("\n");
-    }
-
-    if (prob->agent_size <= 1){
-        fprintf(stderr, "Error: Cannot run multi-agent planner on one"
-                        " agent problem. It's just silly.\n");
-        return -1;
-    }
-
-    if (o->dot_graph){
-        fout = fopen(o->dot_graph, "w");
-        if (fout){
-            planProblemAgentsDotGraph(prob, fout);
-            fclose(fout);
-        }else{
-            fprintf(stderr, "Error: Could not open file `%s'\n",
-                    o->dot_graph);
-            return -1;
-        }
-    }
-
-    ret = multiAgent2(o, prob);
-
-    planProblemAgentsDel(prob);
-    return ret;
 }
 
 int main(int argc, char *argv[])
@@ -617,8 +614,13 @@ int main(int argc, char *argv[])
                           opts.max_time, opts.max_mem);
     }
 
-    if (opts.ma){
-        if (multiAgent(&opts) != 0)
+    if (loadProblem(&opts) != 0)
+        return -1;
+    if (dotGraph(&opts) != 0)
+        return -1;
+
+    if (opts.ma_unfactor){
+        if (maUnfactored(&opts) != 0)
             return -1;
     }else{
         if (singleThread(&opts) != 0)
@@ -628,6 +630,10 @@ int main(int argc, char *argv[])
     if (opts.hard_limit_sleeptime > 0)
         limitMonitorJoin();
 
+    if (problem != NULL)
+        planProblemDel(problem);
+    if (agent_problem != NULL)
+        planProblemAgentsDel(agent_problem);
     optionsFree(&opts);
     planShutdownProtobuf();
 

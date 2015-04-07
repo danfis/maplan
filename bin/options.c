@@ -56,8 +56,10 @@ static int readOpts(options_t *o, int argc, char *argv[])
 
     optsAddDesc("help", 'h', OPTS_NONE, &o->help, NULL,
                 "Print this help.");
-    optsAddDesc("ma", 0x0, OPTS_NONE, &o->ma, NULL,
-                "Switch to multi-agent mode.");
+    optsAddDesc("ma-unfactor", 0x0, OPTS_NONE, &o->ma_unfactor, NULL,
+                "Switch to the unfactored multi-agent mode.");
+    optsAddDesc("ma-factor", 0x0, OPTS_NONE, &o->ma_factor, NULL,
+                "Switch to the factored multi-agent mode.");
     optsAddDesc("problem", 'p', OPTS_STR, &o->proto, NULL,
                 "Path to a problem definition in .proto format.");
     optsAddDesc("search", 's', OPTS_STR, &o->search, NULL,
@@ -231,7 +233,13 @@ static void printOpts(const options_t *o)
 {
     int i;
 
-    printf("Multi-agent: %d\n", o->ma);
+    if (o->ma_unfactor){
+        printf("Multi-agent: unfactored\n");
+    }else if (o->ma_factor){
+        printf("Multi-agent: factored\n");
+    }else{
+        printf("Multi-agent: no\n");
+    }
     printf("Proto: %s\n", o->proto);
     printf("Output: %s\n", o->output);
     printf("Max time: %d s\n", o->max_time);

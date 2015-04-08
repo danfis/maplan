@@ -572,15 +572,8 @@ static int maUnfactored(const options_t *o)
 
 
     printf("\n");
-    for (i = 0; i < agent_problem->agent_size; ++i){
-        if (th[i].res != PLAN_SEARCH_NOT_FOUND){
-            printResults(o, th[i].res, &th[i].path);
-            break;
-
-        }
-    }
-    if (i == agent_problem->agent_size)
-        printResults(o, PLAN_SEARCH_NOT_FOUND, NULL);
+    // All agents know the result
+    printResults(o, th[0].res, &th[0].path);
     for (i = 0; i < agent_problem->agent_size; ++i)
         printInitHeurMA(o, th[i].search, i);
 

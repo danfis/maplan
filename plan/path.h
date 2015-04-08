@@ -23,6 +23,7 @@ struct _plan_path_op_t {
     int owner;
     plan_state_id_t from_state;
     plan_state_id_t to_state;
+    int timestamp;
     bor_list_t path;
 };
 typedef struct _plan_path_op_t plan_path_op_t;
@@ -41,6 +42,12 @@ void planPathFree(plan_path_t *path);
  * Copies path from src to dst.
  */
 void planPathCopy(plan_path_t *dst, const plan_path_t *src);
+
+/**
+ * Copy a factored version of path into dst.
+ */
+void planPathCopyFactored(plan_path_t *dst, const plan_path_t *src,
+                          int agent_id);
 
 /**
  * Prepends an operator into path.

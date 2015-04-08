@@ -613,12 +613,19 @@ static void maFree(ma_t *ma)
 
 static void maPrintResults(ma_t *ma, int size, const options_t *o)
 {
+    plan_path_t path_factored;
     int i;
 
     printf("\n");
 
     // All agents know the result
-    printResults(o, ma[0].res, &ma[0].path);
+    if (o->ma_factor){
+        planPathCopyFactored(&path_factored, &ma[0].path, ma[0].agent_id);
+        printResults(o, ma[0].res, &path_factored);
+        planPathFree(&path_factored);
+    }else{
+        printResults(o, ma[0].res, &ma[0].path);
+    }
     for (i = 0; i < size; ++i)
         printInitHeurMA(o, ma[i].search, ma[i].agent_id);
 

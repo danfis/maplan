@@ -18,7 +18,7 @@ struct _progress_t {
 };
 typedef struct _progress_t progress_t;
 
-struct _ma_th_t {
+struct _ma_t {
     int agent_id;
     const options_t *opts;
     plan_search_t *search;
@@ -27,7 +27,7 @@ struct _ma_th_t {
     progress_t progress_data;
     int res;
 };
-typedef struct _ma_th_t ma_th_t;
+typedef struct _ma_t ma_t;
 
 static struct {
     int initialized;
@@ -521,16 +521,17 @@ static int singleThread(const options_t *o)
     return 0;
 }
 
-static void maThRun(int id, void *data, const bor_tasks_thinfo_t *_)
+
+
+static void maRun(int agent_id, ma_t *ma)
 {
-    ma_th_t *th = data;
     plan_ma_search_params_t params;
     plan_ma_search_t *ma_search;
 
     planMASearchParamsInit(&params);
-    params.comm = th->comm;
-    params.search = th->search;
-    if (strcmp(th->opts->search, "astar") == 0){
+    params.comm = ma->comm;
+    params.search = ma->search;
+    if (strcmp(ma->opts->search, "astar") == 0){
         params.verify_solution = 1;
     }else{
         params.verify_solution = 0;
@@ -538,58 +539,111 @@ static void maThRun(int id, void *data, const bor_tasks_thinfo_t *_)
 
     ma_search = planMASearchNew(&params);
     limitMonitorAddMASearch(ma_search);
-    th->res = planMASearchRun(ma_search, &th->path);
+    ma->res = planMASearchRun(ma_search, &ma->path);
     planMASearchDel(ma_search);
+}
+
+static void maInitUnfactored(ma_t *ma, int agent_id, const options_t *o)
+{
+    plan_heur_t *heur;
+
+    ma->agent_id = agent_id;
+    ma->opts = o;
+    ma->progress_data.max_time = o->max_time;
+    ma->progress_data.max_mem = o->max_mem;
+    ma->progress_data.agent_id = agent_id;
+
+    heur = heurNewMA(o, agent_problem, agent_id);
+    ma->search = searchNew(o, agent_problem->agent + agent_id, heur,
+                           &ma->progress_data);
+
+    planPathInit(&ma->path);
+
+    if (o->tcp_id >= 0){
+        ma->comm = planMACommTCPNew(agent_id, o->tcp_size, (const char **)o->tcp);
+    }else{
+        ma->comm = planMACommInprocNew(agent_id, agent_problem->agent_size);
+    }
+}
+
+static void maFree(ma_t *ma)
+{
+    planPathFree(&ma->path);
+    planSearchDel(ma->search);
+    planMACommDel(ma->comm);
+}
+
+static void maPrintResults(ma_t *ma, int size, const options_t *o)
+{
+    int i;
+
+    printf("\n");
+
+    // All agents know the result
+    printResults(o, ma[0].res, &ma[0].path);
+    for (i = 0; i < size; ++i)
+        printInitHeurMA(o, ma[i].search, ma[i].agent_id);
+
+    printf("\n");
+    for (i = 0; i < size; ++i){
+        printf("Agent[%d] stats:\n", ma[i].agent_id);
+        printStat(&ma[i].search->stat, "    ");
+    }
+}
+
+
+
+static void maThRun(int id, void *data, const bor_tasks_thinfo_t *_)
+{
+    maRun(id, (ma_t *)data);
+}
+
+static int maUnfactoredThread(const options_t *o)
+{
+    bor_tasks_t *tasks;
+    int agent_size = agent_problem->agent_size;
+    ma_t ma[agent_size];
+    int i;
+
+    for (i = 0; i < agent_size; ++i)
+        maInitUnfactored(ma + i, i, o);
+
+    tasks = borTasksNew(agent_size);
+    for (i = 0; i < agent_size; ++i)
+        borTasksAdd(tasks, maThRun, i, ma + i);
+    borTasksRun(tasks);
+    borTasksDel(tasks);
+
+    maPrintResults(ma, agent_size, o);
+    for (i = 0; i < agent_size; ++i)
+        maFree(ma + i);
+
+    return 0;
+}
+
+static int maUnfactoredTCP(const options_t *o)
+{
+    int agent_id = o->tcp_id;
+    ma_t ma;
+
+    if (o->tcp_id >= o->tcp_size){
+        fprintf(stderr, "Error: Invalid definition of tcp-based cluster.\n");
+        return -1;
+    }
+
+    maInitUnfactored(&ma, agent_id, o);
+    maRun(agent_id, &ma);
+    maPrintResults(&ma, 1, o);
+    maFree(&ma);
+
+    return 0;
 }
 
 static int maUnfactored(const options_t *o)
 {
-    bor_tasks_t *tasks;
-    ma_th_t th[agent_problem->agent_size];
-    plan_heur_t *heur;
-    int i;
-
-    tasks = borTasksNew(agent_problem->agent_size);
-
-    for (i = 0; i < agent_problem->agent_size; ++i){
-        th[i].agent_id = i;
-        th[i].opts = o;
-        th[i].progress_data.max_time = o->max_time;
-        th[i].progress_data.max_mem = o->max_mem;
-        th[i].progress_data.agent_id = i;
-
-        heur = heurNewMA(o, agent_problem, i);
-        th[i].search = searchNew(o, agent_problem->agent + i, heur,
-                                 &th[i].progress_data);
-
-        planPathInit(&th[i].path);
-        th[i].comm = planMACommInprocNew(i, agent_problem->agent_size);
-        borTasksAdd(tasks, maThRun, i, th + i);
-    }
-
-    borTasksRun(tasks);
-    borTasksDel(tasks);
-
-
-    printf("\n");
-    // All agents know the result
-    printResults(o, th[0].res, &th[0].path);
-    for (i = 0; i < agent_problem->agent_size; ++i)
-        printInitHeurMA(o, th[i].search, i);
-
-    printf("\n");
-    for (i = 0; i < agent_problem->agent_size; ++i){
-        printf("Agent[%d] stats:\n", i);
-        printStat(&th[i].search->stat, "    ");
-    }
-
-    for (i = 0; i < agent_problem->agent_size; ++i){
-        planPathFree(&th[i].path);
-        planSearchDel(th[i].search);
-        planMACommDel(th[i].comm);
-    }
-
-    return 0;
+    if (o->tcp_id == -1)
+        return maUnfactoredThread(o);
+    return maUnfactoredTCP(o);
 }
 
 int main(int argc, char *argv[])

@@ -271,11 +271,17 @@ static void printInitHeurMA(const options_t *o, plan_search_t *search,
 static int loadProblem(const options_t *o)
 {
     bor_timer_t load_timer;
-    int flags;
+    int flags = 0;
 
     borTimerStart(&load_timer);
 
-    flags = PLAN_PROBLEM_USE_CG;
+    if (o->ma_factor){
+        flags  = PLAN_PROBLEM_MA_STATE_PRIVACY;
+        flags |= PLAN_PROBLEM_NUM_AGENTS(o->ma_factor);
+    }else{
+        flags = PLAN_PROBLEM_USE_CG;
+    }
+
     if (o->op_unit_cost)
         flags |= PLAN_PROBLEM_OP_UNIT_COST;
 
@@ -302,6 +308,16 @@ static int loadProblem(const options_t *o)
             printProblemMA(agent_problem);
         printf("\nLoading Time: %f\n", borTimerElapsedInSF(&load_timer));
         printf("\n");
+    }
+
+    if (o->tcp_id >= 0
+            && o->ma_factor
+            && problem != NULL
+            && problem->agent_id != o->tcp_id){
+        fprintf(stderr, "Error: Agent ID from .proto file (%d) differs from"
+                        " agent ID specified by --tcp-id (%d)!\n",
+                        problem->agent_id, o->tcp_id);
+        return -1;
     }
 
     return 0;
@@ -400,27 +416,32 @@ static plan_heur_t *heurNew(const options_t *o,
 }
 
 static plan_heur_t *heurNewMA(const options_t *o,
-                              const plan_problem_agents_t *prob,
-                              int agent_id)
+                              const plan_problem_t *prob,
+                              const plan_problem_t *glob)
 {
     plan_heur_t *heur;
     const plan_op_t *op;
     int op_size;
 
     if (optionsHeurOpt(o, "loc")){
-        op = prob->agent[agent_id].op;
-        op_size = prob->agent[agent_id].op_size;
+        op = prob->op;
+        op_size = prob->op_size;
 
     }else if (optionsHeurOpt(o, "glob")){
-        op = prob->glob.op;
-        op_size = prob->glob.op_size;
+        if (glob == NULL){
+            fprintf(stderr, "Error: Heuristic based on global operators"
+                            " (:glob option) cannot be created.\n");
+            return NULL;
+        }
+        op = glob->op;
+        op_size = glob->op_size;
 
     }else{
-        op = prob->agent[agent_id].proj_op;
-        op_size = prob->agent[agent_id].proj_op_size;
+        op = prob->proj_op;
+        op_size = prob->proj_op_size;
     }
 
-    heur = _heurNew(o->heur, prob->agent + agent_id, op, op_size);
+    heur = _heurNew(o->heur, prob, op, op_size);
     return heur;
 }
 
@@ -543,7 +564,8 @@ static void maRun(int agent_id, ma_t *ma)
     planMASearchDel(ma_search);
 }
 
-static void maInitUnfactored(ma_t *ma, int agent_id, const options_t *o)
+static int maInit(ma_t *ma, int agent_id, const options_t *o,
+                  plan_problem_t *prob, plan_problem_t *globprob)
 {
     plan_heur_t *heur;
 
@@ -553,9 +575,11 @@ static void maInitUnfactored(ma_t *ma, int agent_id, const options_t *o)
     ma->progress_data.max_mem = o->max_mem;
     ma->progress_data.agent_id = agent_id;
 
-    heur = heurNewMA(o, agent_problem, agent_id);
-    ma->search = searchNew(o, agent_problem->agent + agent_id, heur,
-                           &ma->progress_data);
+    heur = heurNewMA(o, prob, globprob);
+    if (heur == NULL)
+        return -1;
+
+    ma->search = searchNew(o, prob, heur, &ma->progress_data);
 
     planPathInit(&ma->path);
 
@@ -564,6 +588,20 @@ static void maInitUnfactored(ma_t *ma, int agent_id, const options_t *o)
     }else{
         ma->comm = planMACommInprocNew(agent_id, agent_problem->agent_size);
     }
+
+    return 0;
+}
+
+static int maInitUnfactored(ma_t *ma, int agent_id, const options_t *o)
+{
+
+    return maInit(ma, agent_id, o, agent_problem->agent + agent_id,
+                  &agent_problem->glob);
+}
+
+static int maInitFactored(ma_t *ma, int agent_id, const options_t *o)
+{
+    return maInit(ma, agent_id, o, problem, NULL);
 }
 
 static void maFree(ma_t *ma)
@@ -605,8 +643,10 @@ static int maUnfactoredThread(const options_t *o)
     ma_t ma[agent_size];
     int i;
 
-    for (i = 0; i < agent_size; ++i)
-        maInitUnfactored(ma + i, i, o);
+    for (i = 0; i < agent_size; ++i){
+        if (maInitUnfactored(ma + i, i, o) != 0)
+            return -1;
+    }
 
     tasks = borTasksNew(agent_size);
     for (i = 0; i < agent_size; ++i)
@@ -631,7 +671,8 @@ static int maUnfactoredTCP(const options_t *o)
         return -1;
     }
 
-    maInitUnfactored(&ma, agent_id, o);
+    if (maInitUnfactored(&ma, agent_id, o) != 0)
+        return -1;
     maRun(agent_id, &ma);
     maPrintResults(&ma, 1, o);
     maFree(&ma);
@@ -644,6 +685,32 @@ static int maUnfactored(const options_t *o)
     if (o->tcp_id == -1)
         return maUnfactoredThread(o);
     return maUnfactoredTCP(o);
+}
+
+static int maFactoredTCP(const options_t *o)
+{
+    int agent_id = o->tcp_id;
+    ma_t ma;
+
+    if (o->tcp_id >= o->tcp_size){
+        fprintf(stderr, "Error: Invalid definition of tcp-based cluster.\n");
+        return -1;
+    }
+
+    if (maInitFactored(&ma, agent_id, o) != 0)
+        return -1;
+    maRun(agent_id, &ma);
+    maPrintResults(&ma, 1, o);
+    maFree(&ma);
+
+    return 0;
+}
+
+static int maFactored(const options_t *o)
+{
+    //if (o->tcp_id == -1)
+    //    return maFactoredThread(o);
+    return maFactoredTCP(o);
 }
 
 int main(int argc, char *argv[])
@@ -668,6 +735,9 @@ int main(int argc, char *argv[])
 
     if (opts->ma_unfactor){
         if (maUnfactored(opts) != 0)
+            return -1;
+    }else if (opts->ma_factor){
+        if (maFactored(opts) != 0)
             return -1;
     }else{
         if (singleThread(opts) != 0)

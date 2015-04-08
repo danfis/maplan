@@ -78,8 +78,9 @@ static int readOpts(int argc, char *argv[])
 
     optsAddDesc("ma-unfactor", 0x0, OPTS_NONE, &o->ma_unfactor, NULL,
                 "Switch to the unfactored multi-agent mode.");
-    optsAddDesc("ma-factor", 0x0, OPTS_NONE, &o->ma_factor, NULL,
-                "Switch to the factored multi-agent mode.");
+    optsAddDesc("ma-factor", 0x0, OPTS_INT, &o->ma_factor, NULL,
+                "Switch to the factored multi-agent mode with specified"
+                " number of agents in cluster.");
     optsAddDesc("tcp", 0x0, OPTS_STR, NULL, OPTS_CB(tcpAdd),
                 "Defines tcp ip-address:port for an agent. This options"
                 " should be used as many times as is number of agents in"
@@ -116,6 +117,20 @@ static int readOpts(int argc, char *argv[])
         for (i = 1; i < argc; ++i)
             fprintf(stderr, " `%s'", argv[i]);
         fprintf(stderr, "\n");
+        return -1;
+    }
+
+    if (o->tcp_id >= o->tcp_size || (o->tcp_size > 0 && o->tcp_id < 0)){
+        fprintf(stderr, "Error: tcp-id %d is out of bounds [0, %d]!\n",
+                o->tcp_id, o->tcp_size - 1);
+        return -1;
+    }
+
+    if (o->ma_factor && o->tcp_size > 0 && o->ma_factor != o->tcp_size){
+        fprintf(stderr, "Error: Size of cluster defined by --ma-factor"
+                        " (%d) does not match number of tcp addresses"
+                        " defined by --tcp (%d)!\n",
+                        o->ma_factor, o->tcp_size);
         return -1;
     }
 

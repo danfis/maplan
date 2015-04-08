@@ -5,6 +5,8 @@
 
 #include "options.h"
 
+static options_t _opts;
+
 struct _optdef_t {
     const char *name;
     const char **opts;
@@ -50,16 +52,21 @@ static optdef_t opt_heur[] = {
 };
 static int opt_heur_size = sizeof(opt_heur) / sizeof(optdef_t);
 
-static int readOpts(options_t *o, int argc, char *argv[])
+static void tcpAdd(const char *lname, char sname, const char *arg)
 {
+    options_t *o = &_opts;
+    ++o->tcp_size;
+    o->tcp = BOR_REALLOC_ARR(o->tcp, char *, o->tcp_size);
+    o->tcp[o->tcp_size - 1] = (char *)arg;
+}
+
+static int readOpts(int argc, char *argv[])
+{
+    options_t *o = &_opts;
     int i;
 
     optsAddDesc("help", 'h', OPTS_NONE, &o->help, NULL,
                 "Print this help.");
-    optsAddDesc("ma-unfactor", 0x0, OPTS_NONE, &o->ma_unfactor, NULL,
-                "Switch to the unfactored multi-agent mode.");
-    optsAddDesc("ma-factor", 0x0, OPTS_NONE, &o->ma_factor, NULL,
-                "Switch to the factored multi-agent mode.");
     optsAddDesc("problem", 'p', OPTS_STR, &o->proto, NULL,
                 "Path to a problem definition in .proto format.");
     optsAddDesc("search", 's', OPTS_STR, &o->search, NULL,
@@ -67,7 +74,20 @@ static int readOpts(options_t *o, int argc, char *argv[])
     optsAddDesc("heur", 'H', OPTS_STR, &o->heur, NULL,
                 "Define heuristic See below for options. (default: lm-cut)");
     optsAddDesc("output", 'o', OPTS_STR, &o->output, NULL,
-                "Path where to write resulting plan. (default: None)");
+                "Path where to write resulting plan. (default: None)\n");
+
+    optsAddDesc("ma-unfactor", 0x0, OPTS_NONE, &o->ma_unfactor, NULL,
+                "Switch to the unfactored multi-agent mode.");
+    optsAddDesc("ma-factor", 0x0, OPTS_NONE, &o->ma_factor, NULL,
+                "Switch to the factored multi-agent mode.");
+    optsAddDesc("tcp", 0x0, OPTS_STR, NULL, OPTS_CB(tcpAdd),
+                "Defines tcp ip-address:port for an agent. This options"
+                " should be used as many times as is number of agents in"
+                " cluster and in the same order for each agent.");
+    optsAddDesc("tcp-id", 0x0, OPTS_INT, &o->tcp_id, NULL,
+                "Sets ID of the agent and selects ip-address:port defined"
+                " by --tcp option.\n");
+
     optsAddDesc("print-heur-init", 0x0, OPTS_NONE, &o->print_heur_init, NULL,
                 "Prints heuristic value for the initial state to stdout."
                 " (default: Off)");
@@ -215,8 +235,9 @@ static int checkOptions(const optdef_t *def, int def_size,
     return 0;
 }
 
-static int parseSearch(options_t *o)
+static int parseSearch(void)
 {
+    options_t *o = &_opts;
     splitOptList(o->search, &o->search_opts, &o->search_opts_len);
     splitOptList(o->heur, &o->heur_opts, &o->heur_opts_len);
 
@@ -229,8 +250,9 @@ static int parseSearch(options_t *o)
     return 0;
 }
 
-static void printOpts(const options_t *o)
+static void printOpts(void)
 {
+    const options_t *o = &_opts;
     int i;
 
     if (o->ma_unfactor){
@@ -265,8 +287,10 @@ static void printOpts(const options_t *o)
     printf("\n");
 }
 
-int options(options_t *o, int argc, char *argv[])
+options_t *options(int argc, char *argv[])
 {
+    options_t *o = &_opts;
+
     bzero(o, sizeof(*o));
     o->max_time = 30 * 60;
     o->max_mem = 1024;
@@ -280,30 +304,30 @@ int options(options_t *o, int argc, char *argv[])
     o->hard_limit_sleeptime = 5;
     o->op_unit_cost = 0;
 
-    if (readOpts(o, argc, argv) != 0 || o->help){
+    if (readOpts(argc, argv) != 0 || o->help){
         usage(argv[0]);
-        return -1;
+        return NULL;
     }
 
     if (o->proto == NULL){
         fprintf(stderr, "Error: Problem file not specified! (see -p"
                         " option)\n\n");
         usage(argv[0]);
-        return -1;
+        return NULL;
     }
 
-    if (parseSearch(o) != 0){
+    if (parseSearch() != 0){
         usage(argv[0]);
-        return -1;
+        return NULL;
     }
 
-    printOpts(o);
-
-    return 0;
+    printOpts();
+    return o;
 }
 
-void optionsFree(options_t *o)
+void optionsFree(void)
 {
+    options_t *o = &_opts;
     if (o->heur_opts)
         BOR_FREE(o->heur_opts);
     if (o->search_opts)

@@ -594,40 +594,40 @@ static int maUnfactored(const options_t *o)
 
 int main(int argc, char *argv[])
 {
-    options_t opts;
+    options_t *opts;
     bor_timer_t timer;
 
     borTimerStart(&timer);
 
-    if (options(&opts, argc, argv) != 0)
+    if ((opts = options(argc, argv)) == NULL)
         return -1;
 
-    if (opts.hard_limit_sleeptime > 0){
-        limitMonitorStart(opts.hard_limit_sleeptime,
-                          opts.max_time, opts.max_mem);
+    if (opts->hard_limit_sleeptime > 0){
+        limitMonitorStart(opts->hard_limit_sleeptime,
+                          opts->max_time, opts->max_mem);
     }
 
-    if (loadProblem(&opts) != 0)
+    if (loadProblem(opts) != 0)
         return -1;
-    if (dotGraph(&opts) != 0)
+    if (dotGraph(opts) != 0)
         return -1;
 
-    if (opts.ma_unfactor){
-        if (maUnfactored(&opts) != 0)
+    if (opts->ma_unfactor){
+        if (maUnfactored(opts) != 0)
             return -1;
     }else{
-        if (singleThread(&opts) != 0)
+        if (singleThread(opts) != 0)
             return -1;
     }
 
-    if (opts.hard_limit_sleeptime > 0)
+    if (opts->hard_limit_sleeptime > 0)
         limitMonitorJoin();
 
     if (problem != NULL)
         planProblemDel(problem);
     if (agent_problem != NULL)
         planProblemAgentsDel(agent_problem);
-    optionsFree(&opts);
+    optionsFree();
     planShutdownProtobuf();
 
     borTimerStop(&timer);

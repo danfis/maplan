@@ -1,6 +1,9 @@
 #include <sys/resource.h>
 #include <unistd.h>
+#include <errno.h>
+#include <dirent.h>
 #include <boruvka/tasks.h>
+#include <boruvka/alloc.h>
 #include <plan/ma_msg.h>
 #include <plan/problem.h>
 #include <plan/search.h>
@@ -10,6 +13,8 @@
 
 static plan_problem_t *problem = NULL;
 static plan_problem_agents_t *agent_problem = NULL;
+static plan_problem_t **problems = NULL;
+static int problems_size = 0;
 
 struct _progress_t {
     int max_time;
@@ -268,6 +273,58 @@ static void printInitHeurMA(const options_t *o, plan_search_t *search,
     }
 }
 
+static int cmpProblems(const void *a, const void *b)
+{
+    const plan_problem_t *p1 = *(const plan_problem_t **)a;
+    const plan_problem_t *p2 = *(const plan_problem_t **)b;
+    return p1->agent_id - p2->agent_id;
+}
+
+static int loadProblemDir(const options_t *o, int flags)
+{
+    plan_problem_t *prob;
+    DIR *dir;
+    struct dirent *ent;
+    char fn[1024];
+    int len;
+
+    dir = opendir(o->proto);
+    if (dir == NULL){
+        fprintf(stderr, "Error: Could not open directory `%s' (%s)\n",
+                o->proto, strerror(errno));
+        return -1;
+    }
+
+    while ((ent = readdir(dir)) != NULL){
+        len = strlen(ent->d_name);
+        if (len >= 7 && strcmp(ent->d_name + len - 6, ".proto") == 0){
+            sprintf(fn, "%s/%s", o->proto, ent->d_name);
+            fprintf(stderr, "Loading: `%s'...\n", fn);
+            prob = planProblemFromProto(fn, flags);
+            if (prob == NULL){
+                closedir(dir);
+                return -1;
+            }
+
+            ++problems_size;
+            problems = BOR_REALLOC_ARR(problems, plan_problem_t *,
+                                       problems_size);
+            problems[problems_size - 1] = prob;
+            printProblem(prob);
+        }
+    }
+
+    closedir(dir);
+
+    if (problems_size == 0){
+        fprintf(stderr, "Error: No .proto files found\n");
+        return -1;
+    }
+
+    qsort(problems, problems_size, sizeof(plan_problem_t *), cmpProblems);
+    return 0;
+}
+
 static int loadProblem(const options_t *o)
 {
     bor_timer_t load_timer;
@@ -285,7 +342,11 @@ static int loadProblem(const options_t *o)
     if (o->op_unit_cost)
         flags |= PLAN_PROBLEM_OP_UNIT_COST;
 
-    if (o->ma_unfactor){
+    if (o->ma_factor && o->tcp_id < 0){
+        if (loadProblemDir(o, flags) != 0)
+            return -1;
+
+    }else if (o->ma_unfactor){
         agent_problem = planProblemAgentsFromProto(o->proto, flags);
         if (agent_problem->agent_size <= 1){
             // TODO: Maybe only warning and switch to single-agent mode.
@@ -297,7 +358,7 @@ static int loadProblem(const options_t *o)
         problem = planProblemFromProto(o->proto, flags);
     }
 
-    if (problem == NULL && agent_problem == NULL){
+    if (problem == NULL && agent_problem == NULL && problems == NULL){
         fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
         return -1;
     }else{
@@ -321,6 +382,14 @@ static int loadProblem(const options_t *o)
     }
 
     return 0;
+}
+
+static void delProblem(void)
+{
+    if (problem != NULL)
+        planProblemDel(problem);
+    if (agent_problem != NULL)
+        planProblemAgentsDel(agent_problem);
 }
 
 static int dotGraph(const options_t *o)
@@ -585,8 +654,13 @@ static int maInit(ma_t *ma, int agent_id, const options_t *o,
 
     if (o->tcp_id >= 0){
         ma->comm = planMACommTCPNew(agent_id, o->tcp_size, (const char **)o->tcp);
-    }else{
+    }else if (agent_problem){
         ma->comm = planMACommInprocNew(agent_id, agent_problem->agent_size);
+    }else if (problems_size > 0){
+        ma->comm = planMACommInprocNew(agent_id, problems_size);
+    }else{
+        fprintf(stderr, "Error: Cannot create communication channel.\n");
+        return -1;
     }
 
     return 0;
@@ -601,7 +675,9 @@ static int maInitUnfactored(ma_t *ma, int agent_id, const options_t *o)
 
 static int maInitFactored(ma_t *ma, int agent_id, const options_t *o)
 {
-    return maInit(ma, agent_id, o, problem, NULL);
+    if (problem != NULL)
+        return maInit(ma, agent_id, o, problem, NULL);
+    return maInit(ma, agent_id, o, problems[agent_id], NULL);
 }
 
 static void maFree(ma_t *ma)
@@ -619,7 +695,7 @@ static void maPrintResults(ma_t *ma, int size, const options_t *o)
     printf("\n");
 
     // All agents know the result
-    if (o->ma_factor){
+    if (o->ma_factor && size == 1){
         planPathCopyFactored(&path_factored, &ma[0].path, ma[0].agent_id);
         printResults(o, ma[0].res, &path_factored);
         planPathFree(&path_factored);
@@ -694,6 +770,31 @@ static int maUnfactored(const options_t *o)
     return maUnfactoredTCP(o);
 }
 
+static int maFactoredThread(const options_t *o)
+{
+    bor_tasks_t *tasks;
+    int agent_size = problems_size;
+    ma_t ma[agent_size];
+    int i;
+
+    for (i = 0; i < agent_size; ++i){
+        if (maInitFactored(ma + i, i, o) != 0)
+            return -1;
+    }
+
+    tasks = borTasksNew(agent_size);
+    for (i = 0; i < agent_size; ++i)
+        borTasksAdd(tasks, maThRun, i, ma + i);
+    borTasksRun(tasks);
+    borTasksDel(tasks);
+
+    maPrintResults(ma, agent_size, o);
+    for (i = 0; i < agent_size; ++i)
+        maFree(ma + i);
+
+    return 0;
+}
+
 static int maFactoredTCP(const options_t *o)
 {
     int agent_id = o->tcp_id;
@@ -715,8 +816,8 @@ static int maFactoredTCP(const options_t *o)
 
 static int maFactored(const options_t *o)
 {
-    //if (o->tcp_id == -1)
-    //    return maFactoredThread(o);
+    if (o->tcp_id < 0)
+        return maFactoredThread(o);
     return maFactoredTCP(o);
 }
 
@@ -754,10 +855,7 @@ int main(int argc, char *argv[])
     if (opts->hard_limit_sleeptime > 0)
         limitMonitorJoin();
 
-    if (problem != NULL)
-        planProblemDel(problem);
-    if (agent_problem != NULL)
-        planProblemAgentsDel(agent_problem);
+    delProblem();
     optionsFree();
     planShutdownProtobuf();
 

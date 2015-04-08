@@ -292,6 +292,7 @@ options_t *options(int argc, char *argv[])
     options_t *o = &_opts;
 
     bzero(o, sizeof(*o));
+    o->tcp_id = -1;
     o->max_time = 30 * 60;
     o->max_mem = 1024;
     o->progress_freq = 10000;

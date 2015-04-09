@@ -381,6 +381,13 @@ static int loadProblem(const options_t *o)
         return -1;
     }
 
+    if (problems_size > 0 && o->ma_factor != problems_size){
+        fprintf(stderr, "Error: Number of agents defined by --ma-factor"
+                        " (%d) differs from the actual number of agents"
+                        " (%d).\n", o->ma_factor, problems_size);
+        return -1;
+    }
+
     return 0;
 }
 

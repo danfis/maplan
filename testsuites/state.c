@@ -430,7 +430,7 @@ static void _testPackerPubPart(int varsize)
     plan_state_packer_t *packer;
     PLAN_STATE_STACK(state1, varsize);
     PLAN_STATE_STACK(state2, varsize);
-    char *buf1, *buf2, *pubbuf;
+    char *buf1, *buf2, *pubbuf, *privbuf;
     int i, pubsize = varsize / 2;
     int val, j;
     int last_word;
@@ -453,6 +453,7 @@ static void _testPackerPubPart(int varsize)
     buf1 = BOR_ALLOC_ARR(char, planStatePackerBufSize(packer));
     buf2 = BOR_ALLOC_ARR(char, planStatePackerBufSize(packer));
     pubbuf = BOR_ALLOC_ARR(char, planStatePackerBufSizePubPart(packer));
+    privbuf = BOR_ALLOC_ARR(char, planStatePackerBufSizePrivatePart(packer));
 
     for (j = 0; j < 1000; ++j){
         for (i = 0; i < pubsize; ++i){
@@ -499,9 +500,34 @@ static void _testPackerPubPart(int varsize)
         assertEquals(planStateGet(&state2, varsize - 1), val);
     }
 
+    for (j = 0; j < 1000; ++j){
+        for (i = 0; i < pubsize; ++i){
+            val = rand() % vars[i].range;
+            planStateSet(&state1, i, val);
+            planStateSet(&state2, i, val);
+        }
+        for (i = pubsize; i < varsize; ++i){
+            planStateSet(&state1, i, rand() % vars[i].range);
+            planStateSet(&state2, i, rand() % vars[i].range);
+        }
+        planStateSet(&state1, varsize - 1, 0);
+        planStateSet(&state2, varsize - 1, 0);
+
+        planStatePackerPack(packer, &state1, buf1);
+        planStatePackerPack(packer, &state2, buf2);
+
+        planStatePackerExtractPrivatePart(packer, buf2, privbuf);
+        planStatePackerSetPrivatePart(packer, privbuf, buf1);
+        planStatePackerUnpack(packer, buf1, &state1);
+        for (i = 0; i < varsize; ++i){
+            assertEquals(planStateGet(&state1, i), planStateGet(&state2, i));
+        }
+    }
+
     BOR_FREE(buf1);
     BOR_FREE(buf2);
     BOR_FREE(pubbuf);
+    BOR_FREE(privbuf);
     planStatePackerDel(packer);
     for (i = 0; i < varsize; ++i)
         planVarFree(vars + i);

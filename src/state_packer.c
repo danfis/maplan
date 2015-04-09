@@ -44,6 +44,66 @@ static plan_state_packer_var_t *sortedVarsNext(sorted_vars_t *sv,
                                                int filled_bits);
 
 
+static void setUpPubPart(plan_state_packer_t *p,
+                         const plan_var_t *var, int var_size)
+{
+    int wordpos, i;
+
+    // Find last word where is stored a public variable
+    wordpos = 0;
+    for (i = 0; i < var_size; ++i){
+        if (!var[i].is_private && !var[i].ma_privacy)
+            wordpos = BOR_MAX(wordpos, p->vars[i].pos);
+    }
+    // and set bufsize needed for public part
+    p->pub_bufsize = sizeof(plan_packer_word_t) * (wordpos + 1);
+    p->pub_last_word = wordpos;
+
+    // Now set mask for the last word in public part buffer
+    p->pub_last_word_mask = 0u;
+    for (i = 0; i < var_size; ++i){
+        if (!var[i].is_private && !var[i].ma_privacy
+                && p->vars[i].pos == wordpos){
+            p->pub_last_word_mask |= p->vars[i].mask;
+        }
+    }
+}
+
+static void setUpPrivatePart(plan_state_packer_t *p,
+                             const plan_var_t *var, int var_size)
+{
+    int first_word, last_word, i;
+
+    // Find the first and the last word where are stored private vars
+    first_word = var_size;
+    last_word = -1;
+    for (i = 0; i < var_size; ++i){
+        if (var[i].is_private && !var[i].ma_privacy){
+            first_word = BOR_MIN(first_word, p->vars[i].pos);
+            last_word = BOR_MAX(last_word, p->vars[i].pos);
+        }
+    }
+
+    if (last_word == -1){
+        // No private variables
+        p->private_bufsize = 0;
+        p->private_first_word = 0;
+        p->private_first_word_mask = 0;
+        return;
+    }
+
+    p->private_bufsize  = sizeof(plan_packer_word_t);
+    p->private_bufsize *= (last_word - first_word + 1);
+    p->private_first_word = first_word;
+    p->private_first_word_mask = 0;
+    for (i = 0; i < var_size; ++i){
+        if (var[i].is_private && !var[i].ma_privacy
+                && p->vars[i].pos == first_word){
+            p->private_first_word_mask |= p->vars[i].mask;
+        }
+    }
+}
+
 plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
                                         int var_size)
 {
@@ -110,24 +170,8 @@ plan_state_packer_t *planStatePackerNew(const plan_var_t *var,
 
     sortedVarsFree(&sorted_vars);
 
-    // Find last word where is stored a public variable
-    wordpos = 0;
-    for (i = 0; i < var_size; ++i){
-        if (!var[i].is_private && !var[i].ma_privacy)
-            wordpos = BOR_MAX(wordpos, p->vars[i].pos);
-    }
-    // and set bufsize needed for public part
-    p->pub_bufsize = sizeof(plan_packer_word_t) * (wordpos + 1);
-    p->pub_last_word = wordpos;
-
-    // Now set mask for the last word in public part buffer
-    p->pub_last_word_mask = 0u;
-    for (i = 0; i < var_size; ++i){
-        if (!var[i].is_private && !var[i].ma_privacy
-                && p->vars[i].pos == wordpos){
-            p->pub_last_word_mask |= p->vars[i].mask;
-        }
-    }
+    setUpPubPart(p, var, var_size);
+    setUpPrivatePart(p, var, var_size);
 
     /*
     for (i = 0; i < var_size; ++i){
@@ -230,6 +274,38 @@ void planStatePackerSetPubPart(const plan_state_packer_t *p,
 
     // The last one must be applied with mask
     buf[i] = (buf[i] & ~p->pub_last_word_mask) | pubbuf[i];
+}
+
+void planStatePackerExtractPrivatePart(const plan_state_packer_t *p,
+                                       const void *bufstate,
+                                       void *priv_buf)
+{
+    // Copy the corresponding part from the bufstate to the priv_buf buffer
+    memcpy(priv_buf, (plan_packer_word_t *)bufstate + p->private_first_word,
+           p->private_bufsize);
+
+    // Apply mask to the last word
+    ((plan_packer_word_t *)priv_buf)[0] &= p->private_first_word_mask;
+}
+
+void planStatePackerSetPrivatePart(const plan_state_packer_t *p,
+                                   const void *priv_buffer,
+                                   void *bufstate)
+{
+    const plan_packer_word_t *pbuf = priv_buffer;
+    plan_packer_word_t *buf = bufstate;
+
+    // Shift to the first private word
+    buf += p->private_first_word;
+
+    // Apply first word with the mask
+    buf[0] = (buf[0] & ~p->private_first_word_mask) | pbuf[0];
+
+    // Copy the rest
+    if (p->private_bufsize > sizeof(plan_packer_word_t)){
+        memcpy(buf + 1, pbuf + 1,
+               p->private_bufsize - sizeof(plan_packer_word_t));
+    }
 }
 
 void planStatePackerSetMAPrivacyVar(const plan_state_packer_t *p,

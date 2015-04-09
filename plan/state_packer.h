@@ -20,10 +20,17 @@ struct _plan_state_packer_t {
     struct _plan_state_packer_var_t *vars;
     int num_vars;
     int bufsize;
+
     int pub_bufsize; /*!< Size of the buffer for public part only */
     int pub_last_word; /*!< ID of the last word of public part */
     plan_packer_word_t pub_last_word_mask; /*!< Mask for the last word in
                                                 public buffer */
+
+    int private_bufsize; /*!< Size of the buffer for the private part only */
+    int private_first_word; /*!< ID of the first word where is stored
+                                 private part */
+    plan_packer_word_t private_first_word_mask;
+
     int ma_privacy; /*!< True if there is ma-privacy variable */
 };
 typedef struct _plan_state_packer_t plan_state_packer_t;
@@ -99,6 +106,26 @@ void planStatePackerSetPubPart(const plan_state_packer_t *p,
                                void *bufstate);
 
 /**
+ * Returns buffer size needed for the private part of the packed state.
+ */
+_bor_inline int planStatePackerBufSizePrivatePart(const plan_state_packer_t *p);
+
+/**
+ * Extracts private part of the packed state from bufstate and stores it
+ * into private_buffer output buffer.
+ */
+void planStatePackerExtractPrivatePart(const plan_state_packer_t *p,
+                                       const void *bufstate,
+                                       void *private_buffer);
+
+/**
+ * Sets private part of the bufstate to be same as private_buffer.
+ */
+void planStatePackerSetPrivatePart(const plan_state_packer_t *p,
+                                   const void *private_buffer,
+                                   void *bufstate);
+
+/**
  * Sets value of the ma-privacy variable directly into packed state.
  */
 void planStatePackerSetMAPrivacyVar(const plan_state_packer_t *p,
@@ -125,6 +152,11 @@ _bor_inline void planPartStatePack(plan_part_state_t *ps,
 _bor_inline int planStatePackerBufSizePubPart(const plan_state_packer_t *p)
 {
     return p->pub_bufsize;
+}
+
+_bor_inline int planStatePackerBufSizePrivatePart(const plan_state_packer_t *p)
+{
+    return p->private_bufsize;
 }
 
 #ifdef __cplusplus

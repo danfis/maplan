@@ -21,7 +21,7 @@ struct _plan_state_packer_t {
     int num_vars;
     int bufsize;
     int pub_bufsize; /*!< Size of the buffer for public part only */
-    int pub_last_word; /*!< ID of the last word */
+    int pub_last_word; /*!< ID of the last word of public part */
     plan_packer_word_t pub_last_word_mask; /*!< Mask for the last word in
                                                 public buffer */
     int ma_privacy; /*!< True if there is ma-privacy variable */

@@ -524,6 +524,27 @@ static void _testPackerPubPart(int varsize)
         }
     }
 
+    for (j = 0; j < 1000; ++j){
+        for (i = 0; i < varsize; ++i){
+            planStateSet(&state1, i, rand() % vars[i].range);
+            planStateSet(&state2, i, rand() % vars[i].range);
+        }
+        planStateSet(&state1, varsize - 1, 0);
+        planStateSet(&state2, varsize - 1, 0);
+
+        planStatePackerPack(packer, &state1, buf1);
+        planStatePackerPack(packer, &state2, buf2);
+
+        planStatePackerExtractPrivatePart(packer, buf2, privbuf);
+        planStatePackerSetPrivatePart(packer, privbuf, buf1);
+        planStatePackerExtractPubPart(packer, buf2, pubbuf);
+        planStatePackerSetPubPart(packer, pubbuf, buf1);
+        planStatePackerUnpack(packer, buf1, &state1);
+        for (i = 0; i < varsize; ++i){
+            assertEquals(planStateGet(&state1, i), planStateGet(&state2, i));
+        }
+    }
+
     BOR_FREE(buf1);
     BOR_FREE(buf2);
     BOR_FREE(pubbuf);

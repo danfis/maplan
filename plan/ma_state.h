@@ -1,6 +1,8 @@
 #ifndef __PLAN_MA_STATE_H__
 #define __PLAN_MA_STATE_H__
 
+#include <boruvka/htable.h>
+
 #include <plan/state_pool.h>
 #include <plan/ma_private_state.h>
 #include <plan/ma_msg.h>
@@ -23,6 +25,11 @@ struct _plan_ma_state_t {
     int *private_ids; /*!< Pre-allocated array for private IDs */
     void *pub_buf; /*!< Pre-allocated buffer for public part of packed state */
     int pub_bufsize; /*!< Size of the buffer for public part of packed state */
+
+    int priv_bufsize; /*!< Size of the private part of the packed state. */
+    plan_data_arr_t *priv_data; /*!< Array of elements in .priv_table */
+    bor_htable_t *priv_table; /*!< Hash table of unique private parts */
+    int priv_size; /*!< Number of private parts stored in table */
 };
 typedef struct _plan_ma_state_t plan_ma_state_t;
 

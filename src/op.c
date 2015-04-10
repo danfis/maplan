@@ -63,7 +63,6 @@ void planOpCopy(plan_op_t *dst, const plan_op_t *src)
     dst->owner      = src->owner;
     dst->ownerarr   = src->ownerarr;
     dst->is_private = src->is_private;
-    dst->recv_agent = src->recv_agent;
 }
 
 static void unsetNonPrivate(plan_part_state_t *dst,
@@ -218,18 +217,6 @@ plan_state_id_t planOpApply(const plan_op_t *op,
     }else{
         return applyWithCondEff(op, state_pool, state_id);
     }
-}
-
-void planOpAddRecvAgent(plan_op_t *op, int agent_id)
-{
-    uint64_t recv = 1 << agent_id;
-    op->recv_agent |= recv;
-}
-
-void planOpDelRecvAgent(plan_op_t *op, int agent_id)
-{
-    uint64_t recv = 1 << agent_id;
-    op->recv_agent &= ~recv;
 }
 
 void planOpAddOwner(plan_op_t *op, int agent_id)

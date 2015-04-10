@@ -41,9 +41,6 @@ static void agentInitProblem(plan_problem_t *dst, const plan_problem_t *src);
 /** Sets owner of the operators according to the agent names */
 static void setOpOwner(plan_op_t *ops, int op_size,
                        const plan_problem_agents_t *agents);
-/** Sets up .recv_agent bitarray of operators */
-static void setOpRecvAgent(plan_op_t *ops, int op_size,
-                           int agent_size, const AgentVarVals &vals);
 /** Sets private flag to operators */
 static void setOpPrivate(plan_op_t *ops, int op_size,
                          const AgentVarVals &vals);
@@ -424,9 +421,6 @@ static void loadAgents(plan_problem_agents_t *p,
     // Determine which variable values are used by which agents' operators
     var_vals.setUse(p->glob.op, p->glob.op_size, p->glob.goal);
 
-    // Set up receiving agents of the operators
-    setOpRecvAgent(p->glob.op, p->glob.op_size, p->agent_size, var_vals);
-
     // Mark private operators
     setOpPrivate(p->glob.op, p->glob.op_size, var_vals);
 
@@ -662,105 +656,6 @@ static void loadProjOperator(plan_problem_t *p, const PlanProblem *proto,
     }
 }
 
-static void updateRecvFromProjOp(const plan_op_t *op, const plan_fact_id_t *fid,
-                                 uint64_t *recvarr)
-{
-    int fact_id, i;
-    uint64_t *recv, add_recv;
-    plan_var_id_t var;
-    plan_val_t val;
-
-    add_recv = 1 << op->owner;
-    PLAN_PART_STATE_FOR_EACH(op->pre, i, var, val){
-        fact_id = planFactId(fid, var, val);
-        recv = recvarr + fact_id;
-        *recv |= add_recv;
-    }
-
-    for (i = 0; i < op->cond_eff_size; ++i){
-        PLAN_PART_STATE_FOR_EACH(op->cond_eff[i].pre, i, var, val){
-            fact_id = planFactId(fid, var, val);
-            recv = recvarr + fact_id;
-            *recv |= add_recv;
-        }
-    }
-}
-
-static void updateRecvFromGoal(const plan_part_state_t *goal,
-                               const plan_fact_id_t *fid,
-                               int agent_id, uint64_t *recvarr)
-{
-    int fact_id, i;
-    uint64_t *recv, add_recv;
-    plan_var_id_t var;
-    plan_val_t val;
-
-    add_recv = 1 << agent_id;
-    add_recv = ~add_recv;
-    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
-        fact_id = planFactId(fid, var, val);
-        recv = recvarr + fact_id;
-        *recv = add_recv;
-    }
-}
-
-static void setOpRecv(plan_op_t *op, const plan_fact_id_t *fid,
-                      const uint64_t *recvarr)
-{
-    int fact_id, i;
-    const uint64_t *recv;
-    uint64_t set_recv;
-    plan_var_id_t var;
-    plan_val_t val;
-
-    set_recv = 0;
-    PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
-        fact_id = planFactId(fid, var, val);
-        recv = recvarr + fact_id;
-        set_recv |= *recv;
-    }
-
-    for (i = 0; i < op->cond_eff_size; ++i){
-        PLAN_PART_STATE_FOR_EACH(op->cond_eff[i].eff, i, var, val){
-            fact_id = planFactId(fid, var, val);
-            recv = recvarr + fact_id;
-            set_recv |= *recv;
-        }
-    }
-
-    op->recv_agent = set_recv;
-}
-
-static void setOpRecvAgentFromProjOp(plan_problem_t *p)
-{
-    plan_fact_id_t fact_id;
-    uint64_t *recv;
-    int i;
-
-    if (p->proj_op_size == 0 || p->op_size == 0)
-        return;
-
-    planFactIdInit(&fact_id, p->var, p->var_size);
-    recv = BOR_CALLOC_ARR(uint64_t, fact_id.fact_size);
-
-    // Set recv bitarray for all .proj_op[] preconditions
-    for (i = 0; i < p->proj_op_size; ++i){
-        if (p->proj_op[i].owner != p->agent_id)
-            updateRecvFromProjOp(p->proj_op + i, &fact_id, recv);
-    }
-
-    // Set recv for goal
-    updateRecvFromGoal(p->goal, &fact_id, p->agent_id, recv);
-
-    // Set recv bitarray for all operators in .op[]
-    for (i = 0; i < p->op_size; ++i){
-        setOpRecv(p->op + i, &fact_id, recv);
-    }
-
-    BOR_FREE(recv);
-    planFactIdFree(&fact_id);
-}
-
 static void loadProtoProblem(plan_problem_t *p,
                              const PlanProblem *proto,
                              const plan_var_id_t *var_map,
@@ -799,8 +694,6 @@ static void loadProtoProblem(plan_problem_t *p,
         if (proto->agent_name_size() == 1)
             p->agent_name = BOR_STRDUP(proto->agent_name(0).c_str());
     }
-
-    setOpRecvAgentFromProjOp(p);
 }
 
 static int hasUnimportantVars(const plan_causal_graph_t *cg)
@@ -1006,28 +899,6 @@ static void setOpOwner(plan_op_t *ops, int op_size,
     }
 }
 
-static void setOpRecvAgent(plan_op_t *ops, int op_size,
-                           int agent_size, const AgentVarVals &vals)
-{
-    plan_op_t *op;
-    plan_var_id_t var;
-    plan_val_t val;
-    int i;
-
-    for (int opi = 0; opi < op_size; ++opi){
-        op = ops + opi;
-
-        for (int peer = 0; peer < agent_size; ++peer){
-            PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
-                if (vals.isPublic(var, val) && vals.usedAsPre(var, val, peer)){
-                    planOpAddRecvAgent(op, peer);
-                    break;
-                }
-            }
-        }
-    }
-}
-
 static void setOpPrivate(plan_op_t *ops, int op_size,
                          const AgentVarVals &vals)
 {
@@ -1120,7 +991,6 @@ static void createOps(const plan_op_t *ops, int op_size,
             planOpInit(dst->op + dst->op_size, dst->var_size);
             planOpCopy(dst->op + dst->op_size, op);
             dst->op[dst->op_size].owner = agent_id;
-            planOpDelRecvAgent(dst->op + dst->op_size, agent_id);
             ++dst->op_size;
         }
     }

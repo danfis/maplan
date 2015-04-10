@@ -423,7 +423,6 @@ static void publicStateSend(plan_ma_search_t *ma,
     int i;
     const pub_state_data_t *pub_state;
     plan_ma_msg_t *msg;
-    uint64_t recv_agent;
 
     if (node->op == NULL || node->op->is_private)
         return;
@@ -438,19 +437,12 @@ static void publicStateSend(plan_ma_search_t *ma,
     if (pub_state->agent_id != -1)
         return;
 
-    recv_agent = node->op->recv_agent;
-    if (recv_agent == 0)
-        return;
-
     msg = planMAMsgNew(PLAN_MA_MSG_PUBLIC_STATE, 0, ma->comm->node_id);
     publicStateSet(ma->ma_state, msg, node);
 
     for (i = 0; i < ma->comm->node_size; ++i){
-        if (i != ma->comm->node_id){
-            if ((recv_agent & 0x1UL) == 0x1UL)
-                planMACommSendToNode(ma->comm, i, msg);
-        }
-        recv_agent >>= 1;
+        if (i != ma->comm->node_id)
+            planMACommSendToNode(ma->comm, i, msg);
     }
     planMAMsgDel(msg);
 }

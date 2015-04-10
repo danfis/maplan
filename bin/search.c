@@ -280,115 +280,168 @@ static int cmpProblems(const void *a, const void *b)
     return p1->agent_id - p2->agent_id;
 }
 
-static int loadProblemDir(const options_t *o, int flags)
+static char **protoFilesInDir(const char *dirname, int *sizeout)
 {
-    plan_problem_t *prob;
+    char **files = NULL;
+    int size = 0;
+    int dnlen, fnlen;
     DIR *dir;
     struct dirent *ent;
-    char fn[1024];
-    int len;
 
-    dir = opendir(o->proto);
+    *sizeout = -1;
+    dir = opendir(dirname);
     if (dir == NULL){
         fprintf(stderr, "Error: Could not open directory `%s' (%s)\n",
-                o->proto, strerror(errno));
-        return -1;
+                dirname, strerror(errno));
+        return NULL;
     }
 
+    dnlen = strlen(dirname);
     while ((ent = readdir(dir)) != NULL){
-        len = strlen(ent->d_name);
-        if (len >= 7 && strcmp(ent->d_name + len - 6, ".proto") == 0){
-            sprintf(fn, "%s/%s", o->proto, ent->d_name);
-            fprintf(stderr, "Loading: `%s'...\n", fn);
-            prob = planProblemFromProto(fn, flags);
-            if (prob == NULL){
-                closedir(dir);
-                return -1;
-            }
-
-            ++problems_size;
-            problems = BOR_REALLOC_ARR(problems, plan_problem_t *,
-                                       problems_size);
-            problems[problems_size - 1] = prob;
-            printProblem(prob);
+        fnlen = strlen(ent->d_name);
+        if (fnlen >= 7 && strcmp(ent->d_name + fnlen - 6, ".proto") == 0){
+            files = BOR_REALLOC_ARR(files, char *, ++size);
+            files[size - 1] = BOR_ALLOC_ARR(char, dnlen + fnlen + 2);
+            sprintf(files[size - 1], "%s/%s", dirname, ent->d_name);
         }
     }
-
     closedir(dir);
 
-    if (problems_size == 0){
-        fprintf(stderr, "Error: No .proto files found\n");
+    *sizeout = size;
+    return files;
+}
+
+static int loadProblemMAFactorDir(const options_t *o)
+{
+    char **files;
+    int i, files_size, flags;
+
+    files = protoFilesInDir(o->proto, &files_size);
+    if (files == NULL){
+        if (files_size == 0)
+            fprintf(stderr, "Error: Could not find any .proto files in"
+                            " directory `%s'.\n", o->proto);
         return -1;
     }
 
-    qsort(problems, problems_size, sizeof(plan_problem_t *), cmpProblems);
-    return 0;
-}
-
-static int loadProblem(const options_t *o)
-{
-    bor_timer_t load_timer;
-    int flags = 0;
-
-    borTimerStart(&load_timer);
-
-    if (o->ma_factor){
-        flags  = PLAN_PROBLEM_MA_STATE_PRIVACY;
-        flags |= PLAN_PROBLEM_NUM_AGENTS(o->ma_factor);
-    }else{
-        flags = PLAN_PROBLEM_USE_CG;
-    }
-
+    flags  = PLAN_PROBLEM_MA_STATE_PRIVACY;
+    flags |= PLAN_PROBLEM_NUM_AGENTS(files_size);
     if (o->op_unit_cost)
         flags |= PLAN_PROBLEM_OP_UNIT_COST;
 
-    if (o->ma_factor && o->tcp_id < 0){
-        if (loadProblemDir(o, flags) != 0)
-            return -1;
-
-    }else if (o->ma_unfactor){
-        agent_problem = planProblemAgentsFromProto(o->proto, flags);
-        if (agent_problem->agent_size <= 1){
-            // TODO: Maybe only warning and switch to single-agent mode.
-            fprintf(stderr, "Error: Cannot run multi-agent planner on one"
-                    " agent problem. It's just silly.\n");
+    problems_size = files_size;
+    problems = BOR_ALLOC_ARR(plan_problem_t *, problems_size);
+    for (i = 0; i < files_size; ++i){
+        printf("Loading `%s'...\n", files[i]);
+        problems[i] = planProblemFromProto(files[i], flags);
+        if (problems[i] == NULL){
+            fprintf(stderr, "Error: Could not load problem definition from"
+                            " the file `%s'.\n", files[i]);
             return -1;
         }
-    }else{
-        problem = planProblemFromProto(o->proto, flags);
+        printProblem(problems[i]);
     }
 
-    if (problem == NULL && agent_problem == NULL && problems == NULL){
+    qsort(problems, problems_size, sizeof(plan_problem_t *), cmpProblems);
+
+    for (i = 0; i < files_size; ++i)
+        BOR_FREE(files[i]);
+    if (files)
+        BOR_FREE(files);
+    return 0;
+}
+
+static int loadProblemAgents(const options_t *o)
+{
+    int flags;
+
+    flags = PLAN_PROBLEM_USE_CG;
+    if (o->op_unit_cost)
+        flags |= PLAN_PROBLEM_OP_UNIT_COST;
+
+    agent_problem = planProblemAgentsFromProto(o->proto, flags);
+    if (agent_problem->agent_size <= 1){
+        // TODO: Maybe only warning and switch to single-agent mode.
+        fprintf(stderr, "Error: Cannot run multi-agent planner on one"
+                        " agent problem. It's just silly.\n");
+        return -1;
+    }
+
+    if (agent_problem == NULL){
         fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
         return -1;
-    }else{
-        borTimerStop(&load_timer);
-        if (problem != NULL)
-            printProblem(problem);
-        if (agent_problem != NULL)
-            printProblemMA(agent_problem);
-        printf("\nLoading Time: %f\n", borTimerElapsedInSF(&load_timer));
-        printf("\n");
     }
 
-    if (o->tcp_id >= 0
-            && o->ma_factor
-            && problem != NULL
-            && problem->agent_id != o->tcp_id){
+    printProblemMA(agent_problem);
+    return 0;
+}
+
+static int loadProblemSeq(const options_t *o)
+{
+    int flags;
+
+    flags = PLAN_PROBLEM_USE_CG;
+    if (o->op_unit_cost)
+        flags |= PLAN_PROBLEM_OP_UNIT_COST;
+
+    problem = planProblemFromProto(o->proto, flags);
+    if (problem == NULL){
+        fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
+        return -1;
+    }
+
+    printProblem(problem);
+    return 0;
+}
+
+static int loadProblemMAFactor(const options_t *o)
+{
+    int flags;
+
+    flags  = PLAN_PROBLEM_MA_STATE_PRIVACY;
+    flags |= PLAN_PROBLEM_NUM_AGENTS(o->tcp_size);
+    if (o->op_unit_cost)
+        flags |= PLAN_PROBLEM_OP_UNIT_COST;
+
+    problem = planProblemFromProto(o->proto, flags);
+    if (problem == NULL){
+        fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
+        return -1;
+    }
+
+    if (problem->agent_id != o->tcp_id){
         fprintf(stderr, "Error: Agent ID from .proto file (%d) differs from"
                         " agent ID specified by --tcp-id (%d)!\n",
                         problem->agent_id, o->tcp_id);
         return -1;
     }
 
-    if (problems_size > 0 && o->ma_factor != problems_size){
-        fprintf(stderr, "Error: Number of agents defined by --ma-factor"
-                        " (%d) differs from the actual number of agents"
-                        " (%d).\n", o->ma_factor, problems_size);
-        return -1;
+    printProblem(problem);
+    return 0;
+}
+
+static int loadProblem(const options_t *o)
+{
+    bor_timer_t load_timer;
+    int ret;
+
+    borTimerStart(&load_timer);
+
+    if (o->ma_factor){
+        ret = loadProblemMAFactor(o);
+    }else if (o->ma_factor_dir){
+        ret = loadProblemMAFactorDir(o);
+    }else if (o->ma_unfactor){
+        ret = loadProblemAgents(o);
+    }else{
+        ret = loadProblemSeq(o);
     }
 
-    return 0;
+    borTimerStop(&load_timer);
+    printf("\nLoading Time: %f\n", borTimerElapsedInSF(&load_timer));
+    printf("\n");
+
+    return ret;
 }
 
 static void delProblem(void)
@@ -827,13 +880,6 @@ static int maFactoredTCP(const options_t *o)
     return 0;
 }
 
-static int maFactored(const options_t *o)
-{
-    if (o->tcp_id < 0)
-        return maFactoredThread(o);
-    return maFactoredTCP(o);
-}
-
 int main(int argc, char *argv[])
 {
     options_t *opts;
@@ -858,7 +904,10 @@ int main(int argc, char *argv[])
         if (maUnfactored(opts) != 0)
             return -1;
     }else if (opts->ma_factor){
-        if (maFactored(opts) != 0)
+        if (maFactoredTCP(opts) != 0)
+            return -1;
+    }else if (opts->ma_factor_dir){
+        if (maFactoredThread(opts) != 0)
             return -1;
     }else{
         if (singleThread(opts) != 0)

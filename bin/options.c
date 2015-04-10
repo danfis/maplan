@@ -78,9 +78,13 @@ static int readOpts(int argc, char *argv[])
 
     optsAddDesc("ma-unfactor", 0x0, OPTS_NONE, &o->ma_unfactor, NULL,
                 "Switch to the unfactored multi-agent mode.");
-    optsAddDesc("ma-factor", 0x0, OPTS_INT, &o->ma_factor, NULL,
-                "Switch to the factored multi-agent mode with specified"
-                " number of agents in cluster.");
+    optsAddDesc("ma-factor", 0x0, OPTS_NONE, &o->ma_factor, NULL,
+                "Switch to the factored multi-agent mode. This option works"
+                " only in conjunction with --tpc-id and --tpc options.");
+    optsAddDesc("ma-factor-dir", 0x0, OPTS_NONE, &o->ma_factor_dir, NULL,
+                "Switch to the factored multi-agent (threaded) mode. This"
+                " option implies that as -p must be specified path do a"
+                " directory with .proto files containing factors.");
     optsAddDesc("tcp", 0x0, OPTS_STR, NULL, OPTS_CB(tcpAdd),
                 "Defines tcp ip-address:port for an agent. This options"
                 " should be used as many times as is number of agents in"
@@ -126,11 +130,9 @@ static int readOpts(int argc, char *argv[])
         return -1;
     }
 
-    if (o->ma_factor && o->tcp_size > 0 && o->ma_factor != o->tcp_size){
-        fprintf(stderr, "Error: Size of cluster defined by --ma-factor"
-                        " (%d) does not match number of tcp addresses"
-                        " defined by --tcp (%d)!\n",
-                        o->ma_factor, o->tcp_size);
+    if (o->ma_factor && o->tcp_size == 0){
+        fprintf(stderr, "Error: --ma-factor option works only in tcp based"
+                        " cluster.\n");
         return -1;
     }
 

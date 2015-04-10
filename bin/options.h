@@ -5,6 +5,7 @@ struct _options_t {
     int help;
     int ma_unfactor;
     int ma_factor;
+    int ma_factor_dir;
     char *proto;
     char *output;
     char **tcp;

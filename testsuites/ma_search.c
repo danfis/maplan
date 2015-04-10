@@ -124,4 +124,9 @@ TEST(testMASearchFactored)
                      "proto/driverlog-pfile1-driver2.proto");
     maSearchFactored(11, 2, "proto/rovers-p03-rover0.proto",
                      "proto/rovers-p03-rover1.proto");
+    maSearchFactored(10, 5, "proto/depot-pfile1-depot0.proto",
+                     "proto/depot-pfile1-distributor0.proto",
+                     "proto/depot-pfile1-distributor1.proto",
+                     "proto/depot-pfile1-truck0.proto",
+                     "proto/depot-pfile1-truck1.proto");
 }

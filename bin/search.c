@@ -189,6 +189,14 @@ static void printProblem(const plan_problem_t *prob)
            planStatePackerBufSize(prob->state_pool->packer));
     printf("Size of state id: %d\n", (int)sizeof(plan_state_id_t));
     printf("Duplicate operators removed: %d\n", prob->duplicate_ops_removed);
+    if (prob->agent_name != NULL){
+        printf("Agent name: %s\n", prob->agent_name);
+        printf("Agent ID: %d\n", prob->agent_id);
+        printf("Num agents: %d\n", prob->num_agents);
+    }
+    if (prob->proj_op != NULL){
+        printf("Num projected operators: %d\n", prob->proj_op_size);
+    }
     fflush(stdout);
 }
 

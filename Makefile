@@ -34,7 +34,6 @@ OBJS += state_packer
 OBJS += state_pool
 OBJS += op
 OBJS += op_id_tr
-OBJS += dataarr
 OBJS += succgen
 OBJS += causalgraph
 OBJS += path

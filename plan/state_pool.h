@@ -3,10 +3,10 @@
 
 #include <boruvka/segmarr.h>
 #include <boruvka/htable.h>
+#include <boruvka/extarr.h>
 
 #include <plan/common.h>
 #include <plan/var.h>
-#include <plan/dataarr.h>
 #include <plan/state.h>
 #include <plan/part_state.h>
 #include <plan/state_packer.h>
@@ -22,7 +22,7 @@ struct _plan_state_pool_t {
     int num_vars;        /*!< Num of variables per state */
 
     plan_state_packer_t *packer;
-    plan_data_arr_t **data; /*!< Data arrays */
+    bor_extarr_t **data;    /*!< Data arrays */
     int data_size;          /*!< Number of data arrays */
     bor_htable_t *htable;   /*!< Hash table for uniqueness of states. */
     size_t num_states;
@@ -47,12 +47,12 @@ plan_state_pool_t *planStatePoolClone(const plan_state_pool_t *sp);
 /**
  * Reserves a data array with elements of specified size and each element
  * is initialized once it is allocated with using pair {init_fn} and
- * {init_data} (see dataarr.h).
+ * {init_data} (see boruvka/extarr.h).
  * The function returns ID by which the data array can be referenced later.
  */
 int planStatePoolDataReserve(plan_state_pool_t *pool,
                              size_t element_size,
-                             plan_data_arr_el_init_fn init_fn,
+                             bor_extarr_el_init_fn init_fn,
                              const void *init_data);
 
 /**

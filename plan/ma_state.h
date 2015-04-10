@@ -2,6 +2,7 @@
 #define __PLAN_MA_STATE_H__
 
 #include <boruvka/htable.h>
+#include <boruvka/extarr.h>
 
 #include <plan/state_pool.h>
 #include <plan/ma_private_state.h>
@@ -27,7 +28,7 @@ struct _plan_ma_state_t {
     int pub_bufsize; /*!< Size of the buffer for public part of packed state */
 
     int priv_bufsize; /*!< Size of the private part of the packed state. */
-    plan_data_arr_t *priv_data; /*!< Array of elements in .priv_table */
+    bor_extarr_t *priv_data; /*!< Array of elements in .priv_table */
     bor_htable_t *priv_table; /*!< Hash table of unique private parts */
     int priv_size; /*!< Number of private parts stored in table */
 };

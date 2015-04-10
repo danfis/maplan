@@ -42,7 +42,7 @@ void planMAPrivateStateInit(plan_ma_private_state_t *aps,
 
     aps->state_size = sizeof(int) * (num_agents - 1);
     size = sizeof(state_t) + aps->state_size;
-    aps->states = planDataArrNew(size, stateInit, NULL);
+    aps->states = borExtArrNew2(size, 32, 128, stateInit, NULL);
     aps->num_states = 0;
 
     aps->htable = borHTableNew(htableHash, htableEq, aps);
@@ -53,7 +53,7 @@ void planMAPrivateStateFree(plan_ma_private_state_t *aps)
     if (aps->htable)
         borHTableDel(aps->htable);
     if (aps->states)
-        planDataArrDel(aps->states);
+        borExtArrDel(aps->states);
 }
 
 int planMAPrivateStateInsert(plan_ma_private_state_t *aps, int *state_ids)
@@ -63,7 +63,7 @@ int planMAPrivateStateInsert(plan_ma_private_state_t *aps, int *state_ids)
     int *dst;
     int i, j;
 
-    state = planDataArrGet(aps->states, aps->num_states);
+    state = borExtArrGet(aps->states, aps->num_states);
     dst = state->state;
     for (i = 0, j = 0; i < aps->num_agents; ++i){
         if (i != aps->agent_id)
@@ -87,7 +87,7 @@ void planMAPrivateStateGet(const plan_ma_private_state_t *aps, int id,
     const int *src;
     int i, j;
 
-    state = planDataArrGet(aps->states, id);
+    state = borExtArrGet(aps->states, id);
     src = state->state;
     for (i = 0, j = 0; i < aps->num_agents; ++i){
         if (i == aps->agent_id){

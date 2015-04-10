@@ -23,7 +23,6 @@ TARGETS = test optimal-cost
 
 OBJS  = load-from-file.o
 OBJS += state.o
-OBJS += dataarr.o
 OBJS += succgen.o
 OBJS += statespace.o
 #OBJS += search_ehc.o

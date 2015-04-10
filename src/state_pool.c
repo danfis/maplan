@@ -46,11 +46,11 @@ plan_state_pool_t *planStatePoolNew(const plan_var_t *var, int var_size)
     pool->packer = planStatePackerNew(var, var_size);
     state_size = planStatePackerBufSize(pool->packer);
 
-    pool->data = BOR_ALLOC_ARR(plan_data_arr_t *, 2);
+    pool->data = BOR_ALLOC_ARR(bor_extarr_t *, 2);
 
     size  = sizeof(plan_state_packed_t);
     size += state_size;
-    pool->data[0] = planDataArrNew(size, statePackedInit, pool);
+    pool->data[0] = borExtArrNew2(size, 128, 256, statePackedInit, pool);
 
     pool->data_size = 1;
     pool->htable = borHTableNew(htableHash, htableEq, (void *)pool);
@@ -67,7 +67,7 @@ void planStatePoolDel(plan_state_pool_t *pool)
         borHTableDel(pool->htable);
 
     for (i = 0; i < pool->data_size; ++i){
-        planDataArrDel(pool->data[i]);
+        borExtArrDel(pool->data[i]);
     }
     BOR_FREE(pool->data);
 
@@ -86,9 +86,9 @@ plan_state_pool_t *planStatePoolClone(const plan_state_pool_t *sp)
     pool = BOR_ALLOC(plan_state_pool_t);
     memcpy(pool, sp, sizeof(*sp));
     pool->packer = planStatePackerClone(sp->packer);
-    pool->data = BOR_ALLOC_ARR(plan_data_arr_t *, sp->data_size);
+    pool->data = BOR_ALLOC_ARR(bor_extarr_t *, sp->data_size);
     for (i = 0; i < sp->data_size; ++i)
-        pool->data[i] = planDataArrClone(sp->data[i]);
+        pool->data[i] = borExtArrClone(sp->data[i]);
 
     pool->htable = borHTableNew(htableHash, htableEq, (void *)pool);
     pool->num_states = 0;
@@ -102,17 +102,17 @@ plan_state_pool_t *planStatePoolClone(const plan_state_pool_t *sp)
 
 int planStatePoolDataReserve(plan_state_pool_t *pool,
                              size_t element_size,
-                             plan_data_arr_el_init_fn init_fn,
+                             bor_extarr_el_init_fn init_fn,
                              const void *init_data)
 {
     int data_id;
 
     data_id = pool->data_size;
     ++pool->data_size;
-    pool->data = BOR_REALLOC_ARR(pool->data, plan_data_arr_t *,
+    pool->data = BOR_REALLOC_ARR(pool->data, bor_extarr_t *,
                                  pool->data_size);
-    pool->data[data_id] = planDataArrNew(element_size,
-                                         init_fn, init_data);
+    pool->data[data_id] = borExtArrNew2(element_size, 128, 256,
+                                        init_fn, init_data);
     return data_id;
 }
 
@@ -123,7 +123,7 @@ void *planStatePoolData(plan_state_pool_t *pool,
     if (data_id >= pool->data_size)
         return NULL;
 
-    return planDataArrGet(pool->data[data_id], state_id);
+    return borExtArrGet(pool->data[data_id], state_id);
 }
 
 plan_state_id_t planStatePoolInsert(plan_state_pool_t *pool,
@@ -344,7 +344,7 @@ _bor_inline void *stateBuf(const plan_state_packed_t *s)
 _bor_inline plan_state_packed_t *statePacked(const plan_state_pool_t *pool,
                                              plan_state_id_t sid)
 {
-    return (plan_state_packed_t *)planDataArrGet(pool->data[0], sid);
+    return (plan_state_packed_t *)borExtArrGet(pool->data[0], sid);
 }
 
 _bor_inline plan_state_id_t insertIntoHTable(plan_state_pool_t *pool,

@@ -2,7 +2,6 @@
 #include "plan/ma_msg.h"
 #include "load-from-file.h"
 #include "state.h"
-#include "dataarr.h"
 #include "succgen.h"
 #include "statespace.h"
 //#include "search_ehc.h"
@@ -27,7 +26,6 @@ TEST(protobufTearDown)
 TEST_SUITES {
     TEST_SUITE_ADD(TSLoadFromFile),
     TEST_SUITE_ADD(TSState),
-    TEST_SUITE_ADD(TSDataArr),
     TEST_SUITE_ADD(TSSuccGen),
     TEST_SUITE_ADD(TSStateSpace),
     //TEST_SUITE_ADD(TSSearchEHC),

@@ -2,9 +2,9 @@
 #define __PLAN_MA_PRIVATE_STATE_H__
 
 #include <boruvka/htable.h>
+#include <boruvka/extarr.h>
 
 #include <plan/common.h>
-#include <plan/dataarr.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,7 +13,7 @@ extern "C" {
 struct _plan_ma_private_state_t {
     int num_agents;
     int agent_id;
-    plan_data_arr_t *states;
+    bor_extarr_t *states;
     int num_states;
     size_t state_size;
     bor_htable_t *htable;

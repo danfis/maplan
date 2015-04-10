@@ -67,7 +67,7 @@ plan_ma_state_t *planMAStateNew(plan_state_pool_t *state_pool,
         ma_state->priv_bufsize = planStatePackerBufSizePrivatePart(ma_state->packer);
         if (ma_state->priv_bufsize > 0){
             size = sizeof(priv_el_t) + ma_state->priv_bufsize;
-            ma_state->priv_data = planDataArrNew(size, privInitEl, NULL);
+            ma_state->priv_data = borExtArrNew2(size, 32, 128, privInitEl, NULL);
             ma_state->priv_table = borHTableNew(privTableHash, privTableEq,
                                                 (void *)ma_state);
         }
@@ -102,7 +102,7 @@ void planMAStateDel(plan_ma_state_t *ma_state)
     if (ma_state->priv_table)
         borHTableDel(ma_state->priv_table);
     if (ma_state->priv_data)
-        planDataArrDel(ma_state->priv_data);
+        borExtArrDel(ma_state->priv_data);
     BOR_FREE(ma_state);
 }
 
@@ -292,7 +292,7 @@ static int privID(plan_ma_state_t *ma_state, const void *statebuf)
         return 0;
 
     // Get next element from array
-    el = planDataArrGet(ma_state->priv_data, ma_state->priv_size);
+    el = borExtArrGet(ma_state->priv_data, ma_state->priv_size);
 
     // Read private part into that element so we can avoid another mem
     // allocation
@@ -316,6 +316,6 @@ static const void *privBuf(plan_ma_state_t *ma_state, int id)
     if (ma_state->priv_data == NULL)
         return NULL;
 
-    el = planDataArrGet(ma_state->priv_data, id);
+    el = borExtArrGet(ma_state->priv_data, id);
     return el->buf;
 }

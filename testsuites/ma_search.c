@@ -19,6 +19,7 @@ static void maLMCutTask(int id, void *data, const bor_tasks_thinfo_t *_)
     planMASearchParamsInit(&params);
     params.comm = th->comm;
     params.search = th->search;
+    params.verify_solution = 1;
 
     ma_search = planMASearchNew(&params);
     th->res = planMASearchRun(ma_search, &th->path);

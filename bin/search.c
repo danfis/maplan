@@ -393,10 +393,16 @@ static int loadProblem(const options_t *o)
 
 static void delProblem(void)
 {
+    int i;
+
     if (problem != NULL)
         planProblemDel(problem);
     if (agent_problem != NULL)
         planProblemAgentsDel(agent_problem);
+    for (i = 0; i < problems_size; ++i)
+        planProblemDel(problems[i]);
+    if (problems != NULL)
+        BOR_FREE(problems);
 }
 
 static int dotGraph(const options_t *o)

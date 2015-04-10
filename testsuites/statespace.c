@@ -70,4 +70,9 @@ TEST(testStateSpace)
     planStateDel(state);
     planStateSpaceDel(sspace);
     planStatePoolDel(pool);
+
+    planVarFree(vars + 0);
+    planVarFree(vars + 1);
+    planVarFree(vars + 2);
+    planVarFree(vars + 3);
 }

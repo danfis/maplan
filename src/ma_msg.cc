@@ -108,6 +108,73 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
     return (plan_ma_msg_t *)proto;
 }
 
+void planMAMsgSetStateBuf(plan_ma_msg_t *msg, const void *buf, size_t bufsize)
+{
+    PlanMAMsg *proto = PROTO(msg);
+    proto->set_state_buf(buf, bufsize);
+}
+
+void planMAMsgSetStatePrivateIds(plan_ma_msg_t *msg, const int *ids, int size)
+{
+    PlanMAMsg *m = PROTO(msg);
+    for (int i = 0; i < size; ++i)
+        m->add_state_private_id(ids[i]);
+}
+
+void planMAMsgSetStateId(plan_ma_msg_t *msg, plan_state_id_t state_id)
+{
+    SETVAL(msg, state_id, state_id);
+}
+
+void planMAMsgSetStateCost(plan_ma_msg_t *msg, int cost)
+{
+    SETVAL(msg, state_cost, cost);
+}
+
+void planMAMsgSetStateHeur(plan_ma_msg_t *msg, int heur)
+{
+    SETVAL(msg, state_heur, heur);
+}
+
+const void *planMAMsgStateBuf(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_buf).data();
+}
+
+int planMAMsgStateBufSize(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_buf).size();
+}
+
+int planMAMsgStatePrivateIdsSize(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_private_id_size);
+}
+
+void planMAMsgStatePrivateIds(const plan_ma_msg_t *msg, int *ids)
+{
+    const PlanMAMsg *m = PROTO(msg);
+    int size = m->state_private_id_size();
+
+    for (int i = 0; i < size; ++i)
+        ids[i] = m->state_private_id(i);
+}
+
+int planMAMsgStateId(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_id);
+}
+
+int planMAMsgStateCost(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_cost);
+}
+
+int planMAMsgStateHeur(const plan_ma_msg_t *msg)
+{
+    return GETVAL(msg, state_heur);
+}
+
 
 void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id)
 {
@@ -121,40 +188,16 @@ int planMAMsgTerminateAgent(const plan_ma_msg_t *msg)
     return proto->terminate_agent_id();
 }
 
-void planMAMsgPublicStateSetState(plan_ma_msg_t *msg,
-                                  const void *statebuf,
-                                  size_t statebuf_size,
-                                  int state_id, int cost, int heur)
+void planMAMsgSetSearchRes(plan_ma_msg_t *msg, int res)
 {
-    PlanMAMsg *proto = PROTO(msg);
-    proto->set_state(statebuf, statebuf_size);
-    proto->set_state_id(state_id);
-    proto->set_cost(cost);
-    proto->set_heur(heur);
+    SETVAL(msg, search_res, res);
 }
 
-const void *planMAMsgPublicStateStateBuf(const plan_ma_msg_t *msg)
+int planMAMsgSearchRes(const plan_ma_msg_t *msg)
 {
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->state().data();
+    return GETVAL(msg, search_res);
 }
 
-int planMAMsgPublicStateStateId(const plan_ma_msg_t *msg)
-{
-    return stateId(msg);
-}
-
-int planMAMsgPublicStateCost(const plan_ma_msg_t *msg)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->cost();
-}
-
-int planMAMsgPublicStateHeur(const plan_ma_msg_t *msg)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->heur();
-}
 
 void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id)
 {
@@ -172,8 +215,10 @@ void planMAMsgTracePathAddPath(plan_ma_msg_t *msg, const plan_path_t *path)
         p = BOR_LIST_ENTRY(item, plan_path_op_t, path);
 
         PlanMAMsgOp *op = proto->add_op();
+        op->set_op_id(p->global_id);
         op->set_name(p->name);
         op->set_cost(p->cost);
+        op->set_owner(p->owner);
     }
 }
 
@@ -191,7 +236,8 @@ void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
     size = proto->op_size();
     for (int i = 0; i < size; ++i){
         const PlanMAMsgOp &op = proto->op(i);
-        planPathPrepend2(path, op.name().c_str(), op.cost());
+        planPathPrepend(path, op.name().c_str(), op.cost(), op.op_id(),
+                        op.owner(), PLAN_NO_STATE, PLAN_NO_STATE);
     }
 }
 
@@ -273,81 +319,16 @@ int planMAMsgHeurType(const plan_ma_msg_t *msg)
 }
 
 
-void planMAMsgHeurFFSetRequest(plan_ma_msg_t *msg,
-                               const int *init_state, int init_state_size,
-                               int goal_op_id)
+void planMAMsgSetGoalOpId(plan_ma_msg_t *msg, int goal_op_id)
 {
-    PlanMAMsg *proto = PROTO(msg);
-    planMAMsgSetStateFull(msg, init_state, init_state_size);
-    proto->set_goal_op_id(goal_op_id);
+    SETVAL(msg, goal_op_id, goal_op_id);
 }
 
-void planMAMsgHeurFFSetResponse(plan_ma_msg_t *msg, int goal_op_id)
+int planMAMsgGoalOpId(const plan_ma_msg_t *msg)
 {
-    PlanMAMsg *proto = PROTO(msg);
-    proto->set_goal_op_id(goal_op_id);
+    return GETVAL(msg, goal_op_id);
 }
 
-int planMAMsgHeurFFOpId(const plan_ma_msg_t *msg)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->goal_op_id();
-}
-
-
-
-
-
-
-void planMAMsgSetStateFull(plan_ma_msg_t *msg, const int *state, int size)
-{
-    PlanMAMsg *proto = PROTO(msg);
-
-    for (int i = 0; i < size; ++i)
-        proto->add_state_full(state[i]);
-}
-
-void planMAMsgSetStateFull2(plan_ma_msg_t *msg, const plan_state_t *state)
-{
-    PlanMAMsg *proto = PROTO(msg);
-
-    int size = planStateSize(state);
-    for (int i = 0; i < size; ++i)
-        proto->add_state_full(planStateGet(state, i));
-}
-
-int planMAMsgHasStateFull(const plan_ma_msg_t *msg)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->state_full_size() > 0;
-}
-
-void planMAMsgStateFull(const plan_ma_msg_t *msg, plan_state_t *state)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    int len = proto->state_full_size();
-    for (int i = 0; i < len; ++i)
-        planStateSet(state, i, proto->state_full(i));
-}
-
-void planMAMsgCopyStateFull(plan_ma_msg_t *dst, const plan_ma_msg_t *src)
-{
-    PlanMAMsg *pdst = PROTO(dst);
-    const PlanMAMsg *psrc = PROTO(src);
-    int i, size;
-
-    pdst->clear_state_full();
-    size = psrc->state_full_size();
-    for (i = 0; i < size; ++i){
-        pdst->add_state_full(psrc->state_full(i));
-    }
-}
-
-plan_val_t planMAMsgStateFullVal(const plan_ma_msg_t *msg, plan_var_id_t var)
-{
-    const PlanMAMsg *proto = PROTO(msg);
-    return proto->state_full(var);
-}
 
 void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,
                     int owner, plan_cost_t value)

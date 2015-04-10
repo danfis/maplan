@@ -17,6 +17,7 @@
 #include "ma_search.h"
 #include "heur_admissible.h"
 #include "dtg.h"
+#include "ma_private_state.h"
 
 TEST(protobufTearDown)
 {
@@ -41,6 +42,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSMASearch),
     TEST_SUITE_ADD(TSHeurAdmissible),
     TEST_SUITE_ADD(TSDTG),
+    TEST_SUITE_ADD(TSMAPrivateState),
     TEST_SUITES_CLOSURE
 };
 

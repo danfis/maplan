@@ -33,8 +33,6 @@ struct _plan_op_t {
     int owner;           /*!< ID of the owner agent */
     uint64_t ownerarr;   /*!< Bit array of owners of the operator */
     int is_private;      /*!< True if the operator is private for the owner agent */
-    uint64_t recv_agent; /*!< Bit array -- 1 for agent that should receive
-                              effects of this operator */
 };
 typedef struct _plan_op_t plan_op_t;
 
@@ -117,16 +115,6 @@ void planOpCondEffSimplify(plan_op_t *op);
 plan_state_id_t planOpApply(const plan_op_t *op,
                             plan_state_pool_t *state_pool,
                             plan_state_id_t state_id);
-
-/**
- * Adds specified agent to the list of receiving agents.
- */
-void planOpAddRecvAgent(plan_op_t *op, int agent_id);
-
-/**
- * Removes specified agent from recv_agent bitarray.
- */
-void planOpDelRecvAgent(plan_op_t *op, int agent_id);
 
 /**
  * Adds the agent to the owner list

@@ -28,9 +28,10 @@ def set_supertypes(type_list):
 
 
 class TypedObject(object):
-    def __init__(self, name, type):
+    def __init__(self, name, type, private = False):
         self.name = name
         self.type = type
+        self.is_private = private
     def __hash__(self):
         return hash((self.name, self.type))
     def __eq__(self, other):
@@ -38,9 +39,11 @@ class TypedObject(object):
     def __ne__(self, other):
         return not self == other
     def __str__(self):
-        return "%s: %s" % (self.name, self.type)
+        return "%s%s: %s" % (('', '(P)')[int(self.is_private)],
+                             self.name, self.type)
     def __repr__(self):
-        return "<TypedObject %s: %s>" % (self.name, self.type)
+        return "<TypedObject %s: %s%s>" % (self.name, self.type,
+                                           ('', ' private')[int(self.is_private)])
     def uniquify_name(self, type_map, renamings):
         if self.name not in type_map:
             type_map[self.name] = self.type
@@ -50,18 +53,28 @@ class TypedObject(object):
             if new_name not in type_map:
                 renamings[self.name] = new_name
                 type_map[new_name] = self.type
-                return TypedObject(new_name, self.type)
+                return TypedObject(new_name, self.type, self.is_private)
     def to_untyped_strips(self):
         # TODO: Try to resolve the cyclic import differently.
         # Avoid cyclic import.
         from . import conditions
         return conditions.Atom(self.type, [self.name])
 
+    def set_private(self, private):
+        self.is_private = private
+
 
 def parse_typed_list(alist, only_variables=False, constructor=TypedObject,
-                     default_type="object"):
+                     default_type="object", private = False):
     result = []
     while alist:
+        if type(alist[0]) is list and alist[0][0] == ':private':
+            res = parse_typed_list(alist[0][1:], only_variables,
+                                   constructor, default_type, True)
+            result += res
+            alist = alist[1:]
+            continue
+
         try:
             separator_position = alist.index("-")
         except ValueError:
@@ -77,5 +90,7 @@ def parse_typed_list(alist, only_variables=False, constructor=TypedObject,
                    "Expected item to be a variable: %s in (%s)" % (
                 item, " ".join(items))
             entry = constructor(item, _type)
+            if 'set_private' in dir(entry):
+                entry.set_private(private)
             result.append(entry)
     return result

@@ -307,7 +307,7 @@ static void initFakeOp(plan_heur_ma_dtg_t *hdtg,
         planOpInit(hdtg->fake_op + i, 1);
         hdtg->fake_op[i].owner = i;
         sprintf(name, "agent-%d", i);
-        hdtg->fake_op[i].name = strdup(name);
+        hdtg->fake_op[i].name = BOR_STRDUP(name);
     }
 }
 

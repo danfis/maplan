@@ -66,6 +66,7 @@ static void cutApply(cut_t *cut, plan_heur_relax_t *relax,
 
 
 struct _private_t {
+    plan_ma_state_t *ma_state;
     plan_heur_relax_t relax;
     plan_op_id_tr_t op_id_tr;
     plan_oparr_t public_op; /*!< List of public operators */
@@ -78,7 +79,9 @@ struct _private_t {
 typedef struct _private_t private_t;
 
 /** Initialize private_t structure */
-static void privateInit(private_t *private, const plan_problem_t *prob);
+static void privateInit(private_t *private,
+                        plan_ma_state_t *ma_state,
+                        const plan_problem_t *prob);
 /** Free allocated resources */
 static void privateFree(private_t *private);
 
@@ -416,12 +419,15 @@ static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 
 
 /**** Private ****/
-static void privateInit(private_t *private, const plan_problem_t *prob)
+static void privateInit(private_t *private,
+                        plan_ma_state_t *ma_state,
+                        const plan_problem_t *prob)
 {
     plan_op_t *op;
     int op_size;
     int i;
 
+    private->ma_state = ma_state;
     planProblemCreatePrivateProjOps(prob->op, prob->op_size,
                                     prob->var, prob->var_size,
                                     &op, &op_size);
@@ -483,7 +489,7 @@ static void sendInitRequest(plan_heur_ma_lm_cut_t *heur,
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_INIT_REQUEST,
                        planMACommId(comm));
-    planMAMsgSetStateFull2(msg, heur->init_state);
+    planMAStateSetMAMsg2(heur->heur.ma_state, heur->init_state, msg);
     planMACommSendToNode(comm, agent_id, msg);
     planMAMsgDel(msg);
 }
@@ -550,7 +556,7 @@ static void privateInitStep(private_t *private, plan_ma_comm_t *comm,
         return;
 
     // Run full relaxation heuristic
-    planMAMsgStateFull(msg, &state);
+    planMAStateGetFromMAMsg(private->ma_state, msg, &state);
     hmaxFull(&private->relax, &state);
 }
 /**** INIT STEP END ****/
@@ -962,7 +968,8 @@ static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm
             continue;
 
         if (add_state){
-            planMAMsgSetStateFull2(msg[agent_id], heur->init_state);
+            planMAStateSetMAMsg2(heur->heur.ma_state, heur->init_state,
+                                 msg[agent_id]);
             heur->agent_changed[agent_id] = 1;
         }
     }
@@ -996,7 +1003,8 @@ static int stepFindCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     for (i = 0; i < heur->init_state->size; ++i){
         fact_id = planFactId(&heur->relax.cref.fact_id, i,
                              planStateGet(heur->init_state, i));
-        cutFind(&heur->cut, &heur->relax, fact_id, 1);
+        if (fact_id >= 0)
+            cutFind(&heur->cut, &heur->relax, fact_id, 1);
     }
     for (i = 0; i < heur->relax.cref.fake_pre_size; ++i){
         cutFind(&heur->cut, &heur->relax,
@@ -1083,14 +1091,18 @@ static void privateFindCut(private_t *private, plan_ma_comm_t *comm,
                            const plan_ma_msg_t *msg)
 {
     int i, size, fact_id, op_id;
+    PLAN_STATE_STACK(state, private->relax.cref.fact_id.var_size);
 
     // If also state was received start exploring start-zone from that state
     // and all fake preconditions.
-    if (planMAMsgHasStateFull(msg)){
+    if (planMAStateMAMsgIsSet(private->ma_state, msg)){
+        planMAStateGetFromMAMsg(private->ma_state, msg, &state);
+
         for (i = 0; i < private->relax.cref.fact_id.var_size; ++i){
-            fact_id = planMAMsgStateFullVal(msg, i);
+            fact_id = planStateGet(&state, i);
             fact_id = planFactId(&private->relax.cref.fact_id, i, fact_id);
-            cutFind(&private->cut, &private->relax, fact_id, 1);
+            if (fact_id >= 0)
+                cutFind(&private->cut, &private->relax, fact_id, 1);
         }
         for (i = 0; i < private->relax.cref.fake_pre_size; ++i){
             fact_id = private->relax.cref.fake_pre[i].fact_id;
@@ -1505,7 +1517,7 @@ static void privateAlloc(plan_heur_ma_lm_cut_t *heur, int agent_id)
 
     heur->private = BOR_REALLOC_ARR(heur->private, private_t, agent_id + 1);
     for (i = heur->private_size; i < agent_id + 1; ++i)
-        privateInit(heur->private + i, heur->prob);
+        privateInit(heur->private + i, heur->heur.ma_state, heur->prob);
     heur->private_size = agent_id + 1;
 }
 

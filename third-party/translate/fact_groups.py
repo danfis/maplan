@@ -26,6 +26,7 @@ def expand_group(group, task, reachable_facts):
                 atom = pddl.Atom(fact.predicate, newargs)
                 if atom in reachable_facts:
                     result.append(atom)
+    task.mark_private_atoms(result)
     return result
 
 def instantiate_groups(groups, task, reachable_facts):
@@ -106,14 +107,157 @@ def collect_all_mutex_groups(groups, atoms):
 def sort_groups(groups):
     return sorted(sorted(group) for group in groups)
 
-def compute_groups(task, atoms, reachable_action_params, partial_encoding=True):
-    groups = invariant_finder.get_groups(task, reachable_action_params)
+def public_groups(groups):
+    groups = [[(x.predicate, x.args) for x in g if not x.is_private] for g in groups]
+    groups = [x for x in groups if len(x) > 0]
+    return groups
+
+def ma_instantiate_groups(comm, groups, invariants, task, atoms):
+    # Send public mutex groups to all other agents
+    task.mark_private_atoms(groups)
+    comm.sendToAll(public_groups(groups))
+
+    # Extend set of initial atoms by mutex groups received from other
+    # agents
+    init_atoms = set(task.init)
+    for other_groups in comm.recvFromAll():
+        for group in other_groups:
+            if len(group) <= 1:
+                continue
+
+            group = [pddl.Atom(x[0], x[1]) for x in group]
+            if all([x not in init_atoms for x in group]):
+                init_atoms.add(group[0])
+
+    # If we haven't received any additional atom, exit with the old mutex
+    # groups
+    if len(init_atoms) == len(task.init):
+        return groups
+
+    # Try to instantiate mutex groups from a newly constructed initial
+    # state
+    invariant_groups = invariant_finder.useful_groups(invariants, init_atoms)
+    invariant_groups = list(invariant_groups)
+    new_groups = instantiate_groups(invariant_groups, task, atoms)
+    if len(new_groups) > len(groups):
+        return new_groups
+    return groups
+
+def split_groups_by_private_atoms(groups):
+    result = []
+    for group in groups:
+        public = [x for x in group if not x.is_private]
+        private = [x for x in group if x.is_private]
+        if len(public) > 0:
+            result += [public]
+        if len(private) > 0:
+            result += [private]
+    return result
+
+class MutexDict(object):
+    def __init__(self):
+        self.d = {}
+        self.counter = 0
+        self.col = 0
+
+    def update(self, groups):
+        for group in groups:
+            self.updateGroup(group)
+        self.col += 1
+
+    def updateGroup(self, group):
+        idx = self.counter
+        self.counter += 1
+        for atom in group:
+            if atom not in self.d:
+                self.d[atom] = []
+            for _ in range(len(self.d[atom]), self.col):
+                self.d[atom].append(self.counter)
+                self.counter += 1
+            self.d[atom].append(idx)
+
+    def empty(self):
+        return len(self.d.keys()) == 0
+
+    def groups(self):
+        # Fix dict -- maybe not necessary
+        for key, value in self.d.iteritems():
+            if len(value) != self.col:
+                value.append(self.counter)
+                self.counter += 1
+
+        # Atoms are sorted so that the mutexes are a consecutive subsets of
+        # the array
+        mutex_groups = zip(self.d.values(), self.d.keys())
+        mutex_groups = sorted(mutex_groups)
+        groups = []
+        group = [mutex_groups[0]]
+        for atom in mutex_groups[1:]:
+            if atom[0] == group[0][0]:
+                group += [atom]
+            else:
+                groups += [group]
+                group = [atom]
+        groups += [group]
+
+        # Cherry-pick atoms
+        groups = [[x[1] for x in g] for g in groups]
+        return groups
+
+
+def ma_split_groups(comm, groups):
+    private_groups = [x for x in groups if x[0].is_private]
+    pub_groups = [x for x in groups if not x[0].is_private]
+
+    if comm.is_master:
+        # Fill dictionary with all atoms and mark corresponding mutexes
+        mutex_dict = MutexDict()
+        mutex_dict.update(pub_groups)
+        for i, grps in enumerate(comm.recvFromAll()):
+            grps = [[pddl.Atom(x[0], x[1]) for x in g] for g in grps]
+            mutex_dict.update(grps)
+
+        if mutex_dict.empty():
+            comm.sendToAll([])
+            return []
+
+        # Read out mutex groups and send them to all agents
+        pub_groups = mutex_dict.groups()
+        comm.sendToAll(public_groups(pub_groups))
+
+    else:
+        # Slave just sends its public groups to the master and waits for
+        # the splitted groups
+        comm.sendToMaster(public_groups(pub_groups))
+        pub_groups = comm.recvFromMaster()
+        pub_groups = [[pddl.Atom(x[0], x[1]) for x in g] for g in pub_groups]
+
+    # Finally append private groups and return it
+    groups = pub_groups + private_groups
+    return groups
+
+def compute_groups(task, atoms, reachable_action_params, partial_encoding=True,
+                   comm = None):
+    invariants, groups = invariant_finder.get_groups(task, reachable_action_params)
 
     with timers.timing("Instantiating groups"):
         groups = instantiate_groups(groups, task, atoms)
 
+    if comm is not None:
+        # Try to instantiate another mutex groups that are based on initial
+        # states of other agents
+        groups = ma_instantiate_groups(comm, groups, invariants, task, atoms)
+
+        # Separate private atoms to a separate groups
+        groups = split_groups_by_private_atoms(groups)
+
+        # Split mutex groups so that all agents have the same mutex groups
+        # -- this should ensure that no agent have invalid mutexes.
+        groups = ma_split_groups(comm, groups)
+
     # Sort here already to get deterministic mutex groups.
     groups = sort_groups(groups)
+
     # TODO: I think that collect_all_mutex_groups should do the same thing
     #       as choose_groups with partial_encoding=False, so these two should
     #       be unified.
@@ -122,6 +266,7 @@ def compute_groups(task, atoms, reachable_action_params, partial_encoding=True):
     with timers.timing("Choosing groups", block=True):
         groups = choose_groups(groups, atoms, partial_encoding=partial_encoding)
     groups = sort_groups(groups)
+
     with timers.timing("Building translation key"):
         translation_key = build_translation_key(groups)
 

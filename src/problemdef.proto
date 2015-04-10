@@ -31,6 +31,7 @@ message PlanProblemVar {
     required string name = 1;
     required int32 range = 2;
     repeated string fact_name = 3;
+    optional bool is_private = 4;
 }
 
 /**
@@ -57,6 +58,9 @@ message PlanProblemOperator {
     required PlanProblemPartState pre = 3;
     required PlanProblemPartState eff = 4;
     repeated PlanProblemCondEff cond_eff = 5;
+    optional int32 owner = 6;
+    optional int32 global_id = 7;
+    optional bool is_private = 8;
 }
 
 message PlanProblem {
@@ -67,4 +71,6 @@ message PlanProblem {
     required PlanProblemPartState goal = 5;
     repeated PlanProblemOperator operator = 6;
     repeated string agent_name = 7;
+    repeated PlanProblemOperator projected_operator = 8;
+    optional int32 agent_id = 9;
 }

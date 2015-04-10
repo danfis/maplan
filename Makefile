@@ -73,6 +73,8 @@ OBJS += heur_ma_lm_cut
 OBJS += ma_comm_nanomsg
 OBJS += ma_search
 OBJS += ma_snapshot
+OBJS += ma_private_state
+OBJS += ma_state
 
 CXX_OBJS  = ma_msg.pb
 CXX_OBJS += ma_msg
@@ -170,6 +172,12 @@ third-party: submodule
 		&& if test ! -f build/lib/google/__init__.py; then \
 				$(PYTHON2) setup.py build; \
 				$(PYTHON2) setup.py bdist_egg --dist-dir build; \
+		fi;
+	cd third-party/nanomsg4py \
+		&& if test ! -f nanomsg2module.so; then \
+				make third-party; \
+				make; \
+				ln -s ../nanomsg4py/nanomsg2module.so ../translate/nanomsg2module.so; \
 		fi;
 	$(MAKE) -C third-party/translate
 	$(MAKE) -C third-party/VAL

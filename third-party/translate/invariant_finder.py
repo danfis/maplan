@@ -134,7 +134,7 @@ def get_groups(task, reachable_action_params=None):
         invariants = sorted(find_invariants(task, reachable_action_params))
     with timers.timing("Checking invariant weight"):
         result = list(useful_groups(invariants, task.init))
-    return result
+    return invariants, result
 
 if __name__ == "__main__":
     import normalize

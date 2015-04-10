@@ -51,7 +51,8 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
     }
 
     if (res == PLAN_SEARCH_FOUND){
-        extractPath(search->state_space, search->goal_state, path);
+        if (search->goal_state != PLAN_NO_STATE)
+            extractPath(search->state_space, search->goal_state, path);
         planSearchStatSetFound(&search->stat);
     }else{
         planSearchStatSetNotFound(&search->stat);
@@ -242,8 +243,8 @@ static plan_state_id_t extractPath(plan_state_space_t *state_space,
 
     node = planStateSpaceNode(state_space, goal_state);
     while (node && node->op){
-        planPathPrepend(path, node->op,
-                        node->parent_state_id, node->state_id);
+        planPathPrependOp(path, node->op,
+                          node->parent_state_id, node->state_id);
         node = planStateSpaceNode(state_space, node->parent_state_id);
     }
 

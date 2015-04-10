@@ -66,7 +66,10 @@ class PrimitiveNumericExpression(FunctionalExpression):
     def dump(self, indent="  "):
         print("%s%s" % (indent, self._dump()))
         for arg in self.args:
-            arg.dump(indent + "  ")
+            if isinstance(arg, str):
+                print(indent + "  " + arg)
+            else:
+                arg.dump(indent + "  ")
     def _dump(self):
         return str(self)
     def instantiate(self, var_mapping, init_facts):

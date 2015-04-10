@@ -53,6 +53,158 @@ simplified_effect_condition_counter = 0
 added_implied_precondition_counter = 0
 
 
+class AgentComm(object):
+    def __init__(self, agent_id, agent_url):
+        import nanomsg2
+        self.recv = nanomsg2.Socket(nanomsg2.AF_SP, nanomsg2.NN_PULL)
+        self.recv.bind(agent_url[agent_id])
+        self.send = []
+        for i, url in enumerate(agent_url):
+            if i != agent_id:
+                sock = nanomsg2.Socket(nanomsg2.AF_SP, nanomsg2.NN_PUSH)
+                sock.connect(url)
+                sock.setLinger(-1)
+                self.send += [sock]
+            else:
+                self.send += [None]
+
+        self.is_master = (agent_id == 0)
+        self.agent_id = agent_id
+        self.agent_size = len(agent_url)
+
+        self.msgs = []
+
+    def sendToAll(self, data):
+        import marshal as pickle
+        buf = pickle.dumps((self.agent_id, data), -1)
+        buf = buffer(buf)
+        for sock in self.send:
+            if sock is not None:
+                sock.send(buf)
+
+    def _sendTo(self, data, agent_id):
+        import marshal as pickle
+        buf = pickle.dumps((self.agent_id, data), -1)
+        buf = buffer(buf)
+        self.send[agent_id].send(buf)
+
+    def sendInRing(self, data):
+        ai = (self.agent_id + 1) % self.agent_size
+        return self._sendTo(data, ai)
+
+    def sendToMaster(self, data):
+        return self._sendTo(data, 0)
+
+    def _recv(self):
+        import marshal as pickle
+        buf = self.recv.recv()
+        return pickle.loads(buf)
+
+    def recvFromMaster(self):
+        return self.recvFrom(0)
+
+    def recvFrom(self, src_id):
+        for i, d in enumerate(self.msgs):
+            if d[0] == src_id:
+                self.msgs.pop(i)
+                return d[1]
+        d = self._recv()
+        while d[0] != src_id:
+            self.msgs.append(d)
+            d = self._recv()
+        return d[1]
+
+    def recvFromAll(self):
+        res = []
+        for i in range(self.agent_size):
+            if i == self.agent_id:
+                continue
+            res += [self.recvFrom(i)]
+        return res
+
+    def recvInRing(self):
+        src_id = self.agent_id - 1
+        if src_id < 0:
+            src_id = self.agent_size - 1
+        return self.recvFrom(src_id)
+
+    def close(self):
+        if self.is_master:
+            self.sendToAll(None)
+            self.recvFromAll()
+        else:
+            self.recvFromMaster()
+            self.sendToMaster(None)
+
+        self.recv.shutdown()
+        self.recv.close()
+        for sock in self.send:
+            if sock is not None:
+                sock.shutdown()
+                sock.close()
+
+def sort_operators(ops):
+    def key_action(x):
+        return (x.owner, x.name, x.prevail, x.pre_post)
+    return sorted(ops, key = key_action)
+
+def ma_assign_owner_global_id(comm, ops):
+    idx = 0
+    if not comm.is_master:
+        idx = comm.recvInRing()
+
+    for i, op in enumerate(ops):
+        op.global_id = idx + i
+        op.owner = comm.agent_id
+    comm.sendInRing(idx + len(ops))
+
+    if comm.is_master:
+        comm.recvInRing()
+
+def project_operator(op, is_private):
+    op.prevail = [x for x in op.prevail if not is_private[x[0]]]
+    op.pre_post = [x for x in op.pre_post if not is_private[x[0]]]
+    # TODO: detect conditional effects
+
+def project_operators(ops, private_vars):
+    ops = deepcopy(ops)
+    for op in ops:
+        project_operator(op, private_vars)
+
+    # Remove private operators
+    ops = [x for x in ops if len(x.prevail) > 0 or len(x.pre_post) > 0]
+    return ops
+
+def set_private_operators(ops, projected_ops):
+    private_ids  = set([o.global_id for o in ops])
+    private_ids -= set([o.global_id for o in projected_ops])
+    for op in ops:
+        op.is_private = False
+        if op.global_id in private_ids:
+            op.is_private = True
+
+def op_to_comm(op):
+    d = [op.name, op.prevail, op.pre_post, op.cost, op.owner, op.global_id]
+    return d
+
+def op_from_comm(d):
+    op = sas_tasks.SASOperator(d[0], d[1], d[2], d[3])
+    op.owner = d[4]
+    op.global_id = d[5]
+    return op
+
+def ma_exchange_projected_operators(comm, projected_ops):
+    send_actions = [op_to_comm(op) for op in projected_ops]
+    comm.sendToAll(send_actions)
+    ops = comm.recvFromAll()
+    ops = reduce(lambda x, y: x + y, ops)
+    ops = [op_from_comm(x) for x in ops]
+    ops = sorted(ops, key = lambda x: x.global_id)
+    for op in ops:
+        op.is_private = False
+    return ops
+
+
 def strips_to_sas_dictionary(groups, assert_partial):
     dictionary = {}
     for var_no, group in enumerate(groups):
@@ -413,11 +565,11 @@ def dump_task(init, goals, actions, axioms, axiom_layer_dict):
     sys.stdout = old_stdout
 
 
-def translate_task(strips_to_sas, ranges, translation_key,
+def translate_task(strips_to_sas, ranges, translation_key, private_vars,
                    mutex_dict, mutex_ranges, mutex_key,
                    init, goals,
                    actions, axioms, metric, implied_facts,
-                   agents):
+                   agents, comm):
     with timers.timing("Processing axioms", block=True):
         axioms, axiom_init, axiom_layer_dict = axiom_rules.handle_axioms(
             actions, axioms, goals)
@@ -465,15 +617,29 @@ def translate_task(strips_to_sas, ranges, translation_key,
     axioms = translate_strips_axioms(axioms, strips_to_sas, ranges, mutex_dict,
                                      mutex_ranges)
 
+    projected_ops = []
+    if comm is not None:
+        operators = sort_operators(operators)
+        ma_assign_owner_global_id(comm, operators)
+        projected_ops = project_operators(operators, private_vars)
+        set_private_operators(operators, projected_ops)
+        projected_ops = ma_exchange_projected_operators(comm, projected_ops)
+
+        # Add local operators to the projected operators from other agents
+        projected_ops += deepcopy(operators)
+        projected_ops = sorted(projected_ops, key = lambda x: x.global_id)
+
     axiom_layers = [-1] * len(ranges)
     for atom, layer in axiom_layer_dict.items():
         assert layer >= 0
         [(var, val)] = strips_to_sas[atom]
         axiom_layers[var] = layer
-    variables = sas_tasks.SASVariables(ranges, axiom_layers, translation_key)
+    variables = sas_tasks.SASVariables(ranges, axiom_layers,
+                                       translation_key, private_vars)
     mutexes = [sas_tasks.SASMutexGroup(group) for group in mutex_key]
     return sas_tasks.SASTask(variables, mutexes, init, goal,
-                             operators, axioms, metric, agents)
+                             operators, axioms, metric, agents,
+                             projected_ops, comm)
 
 
 def unsolvable_sas_task(msg):
@@ -491,13 +657,18 @@ def unsolvable_sas_task(msg):
     axioms = []
     metric = True
     return sas_tasks.SASTask(variables, mutexes, init, goal,
-                             operators, axioms, metric)
+                             operators, axioms, metric, [])
 
 
-def pddl_to_sas(task):
+
+def pddl_to_sas(task, agent_id, agent_url):
+    comm = None
+    if agent_id >= 0 and len(agent_url) > 1:
+        comm = AgentComm(agent_id, agent_url)
+
     with timers.timing("Instantiating", block=True):
         (relaxed_reachable, atoms, actions, axioms,
-         reachable_action_params) = instantiate.explore(task)
+         reachable_action_params) = instantiate.explore(task, comm)
 
     if not relaxed_reachable:
         return unsolvable_sas_task("No relaxed solution")
@@ -513,11 +684,18 @@ def pddl_to_sas(task):
     with timers.timing("Computing fact groups", block=True):
         groups, mutex_groups, translation_key = fact_groups.compute_groups(
             task, atoms, reachable_action_params,
-            partial_encoding=USE_PARTIAL_ENCODING)
+            partial_encoding=USE_PARTIAL_ENCODING,
+            comm = comm)
 
     with timers.timing("Building STRIPS to SAS dictionary"):
         ranges, strips_to_sas = strips_to_sas_dictionary(
             groups, assert_partial=USE_PARTIAL_ENCODING)
+
+    if comm is not None:
+        # Each group contains either all public or all private values
+        private_vars = [x[0].is_private for x in groups]
+    else:
+        private_vars = [None for _ in groups]
 
     with timers.timing("Building dictionary for full mutex groups"):
         mutex_ranges, mutex_dict = strips_to_sas_dictionary(
@@ -535,17 +713,20 @@ def pddl_to_sas(task):
 
     with timers.timing("Translating task", block=True):
         sas_task = translate_task(
-            strips_to_sas, ranges, translation_key,
+            strips_to_sas, ranges, translation_key, private_vars,
             mutex_dict, mutex_ranges, mutex_key,
             task.init, goal_list, actions, axioms, task.use_min_cost_metric,
-            implied_facts, task.agents)
+            implied_facts, task.agents, comm)
 
     print("%d effect conditions simplified" %
           simplified_effect_condition_counter)
     print("%d implied preconditions added" %
           added_implied_precondition_counter)
 
-    if DETECT_UNREACHABLE:
+    if comm is not None:
+        comm.close()
+
+    if DETECT_UNREACHABLE and comm is None:
         with timers.timing("Detecting unreachable propositions", block=True):
             try:
                 simplify.filter_unreachable_propositions(sas_task)
@@ -651,6 +832,10 @@ def parse_args():
                            default="output.sas", nargs="?")
     argparser.add_argument("--proto", "-p", dest="use_proto",
                            action="store_true")
+    argparser.add_argument("--agent-id", dest="agent_id", type=int,
+                           default=-1)
+    argparser.add_argument("--agent-url", dest="agent_url",
+                           action="append", default=[])
     return argparser.parse_args()
 
 
@@ -677,7 +862,7 @@ def main():
     use_proto = args.use_proto
     print('Use Proto:', use_proto)
 
-    sas_task = pddl_to_sas(task)
+    sas_task = pddl_to_sas(task, args.agent_id, args.agent_url)
     dump_statistics(sas_task)
 
     with timers.timing("Writing output"):

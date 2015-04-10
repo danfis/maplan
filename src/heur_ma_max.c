@@ -23,7 +23,7 @@ struct _plan_heur_ma_max_t {
     int cur_agent_id;          /*!< ID of the agent from which a response
                                     is expected. */
     plan_oparr_t *agent_op;    /*!< Operators owned by a corresponding agent */
-    plan_factarr_t init_state; /*!< Stored actual state for which the
+    plan_state_t *init_state;  /*!< Stored actual state for which the
                                     heuristic is computed */
     plan_oparr_t *op_by_owner; /*!< List of operators divided by an owner */
     plan_heur_relax_op_t *old_op;
@@ -151,8 +151,7 @@ plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob)
     heur->old_op = BOR_ALLOC_ARR(plan_heur_relax_op_t,
                                  heur->relax.cref.op_size);
 
-    heur->init_state.size = prob->var_size;
-    heur->init_state.fact = BOR_ALLOC_ARR(int, heur->init_state.size);
+    heur->init_state = planStateNew(prob->var_size);
 
     privateInit(&heur->private, prob);
 
@@ -172,7 +171,7 @@ static void heurDel(plan_heur_t *_heur)
     BOR_FREE(heur->agent_op);
     BOR_FREE(heur->old_op);
 
-    BOR_FREE(heur->init_state.fact);
+    planStateDel(heur->init_state);
     for (i = 0; i < heur->agent_size; ++i){
         if (heur->op_by_owner[i].op)
             BOR_FREE(heur->op_by_owner[i].op);
@@ -190,11 +189,7 @@ static void heurDel(plan_heur_t *_heur)
 
 static void setInitState(plan_heur_ma_max_t *heur, const plan_state_t *state)
 {
-    int i;
-
-    for (i = 0; i < heur->init_state.size; ++i){
-        heur->init_state.fact[i] = state->val[i];
-    }
+    planStateCopy(heur->init_state, state);
 }
 
 static void sendRequest(plan_heur_ma_max_t *heur, plan_ma_comm_t *comm,
@@ -206,7 +201,7 @@ static void sendRequest(plan_heur_ma_max_t *heur, plan_ma_comm_t *comm,
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_MAX_REQUEST,
                        planMACommId(comm));
-    planMAMsgSetStateFull(msg, heur->init_state.fact, heur->init_state.size);
+    planMAStateSetMAMsg2(heur->heur.ma_state, heur->init_state, msg);
 
     oparr = heur->agent_op + agent_id;
     for (i = 0; i < oparr->size; ++i){
@@ -448,7 +443,7 @@ static void heurMAMaxRequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
     }
 
     // Run full relaxation heuristic
-    planMAMsgStateFull(msg, &state);
+    planMAStateGetFromMAMsg(heur->heur.ma_state, msg, &state);
     planHeurRelaxFull(&private->relax, &state);
 
     // Send operator's new values back as response

@@ -11,3 +11,6 @@
 	path = third-party/protobuf
 	url = https://github.com/google/protobuf
     ignore = dirty
+[submodule "third-party/nanomsg4py"]
+	path = third-party/nanomsg4py
+	url = https://github.com/danfis/nanomsg4py

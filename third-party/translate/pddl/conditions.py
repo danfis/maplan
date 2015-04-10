@@ -279,6 +279,7 @@ class Literal(Condition):
         self.predicate = predicate
         self.args = tuple(args)
         self.hash = hash((self.__class__, self.predicate, self.args))
+        self.is_private = False
     def __eq__(self, other):
         # Compare hash first for speed reasons.
         return (self.hash == other.hash and
@@ -289,14 +290,15 @@ class Literal(Condition):
         return not self == other
     @property
     def key(self):
-        return str(self.predicate), self.args
+        return self.is_private, str(self.predicate), self.args
     def __lt__(self, other):
         return self.key < other.key
     def __le__(self, other):
         return self.key <= other.key
     def __str__(self):
-        return "%s %s(%s)" % (self.__class__.__name__, self.predicate,
-                              ", ".join(map(str, self.args)))
+        return "%s%s %s(%s)" % (('', '(P)')[int(self.is_private)],
+                                self.__class__.__name__, self.predicate,
+                                ", ".join(map(str, self.args)))
     def __repr__(self):
         return '<%s>' % self
     def _dump(self):
@@ -314,6 +316,8 @@ class Literal(Condition):
         return self.__class__(self.predicate, new_args)
     def free_variables(self):
         return set(arg for arg in self.args if arg[0] == "?")
+    def set_private(self, private):
+        self.is_private = private
 
 class Atom(Literal):
     negated = False

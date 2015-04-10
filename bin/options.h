@@ -3,9 +3,14 @@
 
 struct _options_t {
     int help;
-    int ma;
+    int ma_unfactor;
+    int ma_factor;
+    int ma_factor_dir;
     char *proto;
     char *output;
+    char **tcp;
+    int tcp_size;
+    int tcp_id;
     int max_time;
     int max_mem;
     int progress_freq;
@@ -24,8 +29,8 @@ struct _options_t {
 };
 typedef struct _options_t options_t;
 
-int options(options_t *o, int argc, char *argv[]);
-void optionsFree(options_t *o);
+options_t *options(int argc, char *argv[]);
+void optionsFree(void);
 int optionsSearchOpt(const options_t *o, const char *optname);
 int optionsHeurOpt(const options_t *o, const char *optname);
 

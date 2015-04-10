@@ -30,6 +30,35 @@ class Task(object):
         self.use_min_cost_metric = use_metric
         self.agents = agents
 
+        private_predicates = list(filter(lambda x: x.is_private, predicates))
+        self.private_predicate_names = set([x.name for x in private_predicates])
+        private_objects = list(filter(lambda x: x.is_private, objects))
+        self.private_object_names = set([x.name for x in private_objects])
+
+        self.mark_private_atoms(self.init)
+        self.mark_private_atoms(self.goal)
+
+    def mark_private_atoms(self, obj):
+        if isinstance(obj, conditions.Literal):
+            if obj.predicate in self.private_predicate_names:
+                obj.set_private(True)
+            elif len(set(obj.args) & self.private_object_names) > 0:
+                obj.set_private(True)
+
+        elif isinstance(obj, conditions.Condition):
+            for o in obj.parts:
+                self.mark_private_atoms(o)
+
+        elif isinstance(obj, list) or isinstance(obj, set):
+            for o in obj:
+                self.mark_private_atoms(o)
+
+        elif isinstance(obj, f_expression.FunctionAssignment):
+            pass
+
+        else:
+            raise Exception('Uknown object!:' + str(type(obj)))
+
     def add_axiom(self, parameters, condition):
         name = "new-axiom@%d" % self.axiom_counter
         self.axiom_counter += 1
@@ -100,7 +129,8 @@ class Requirements(object):
               ":negative-preconditions", ":disjunctive-preconditions",
               ":existential-preconditions", ":universal-preconditions",
               ":quantified-preconditions", ":conditional-effects",
-              ":derived-predicates", ":action-costs"), req
+              ":derived-predicates", ":action-costs",
+              ":factored-privacy"), req
     def __str__(self):
         return ", ".join(self.requirements)
 
@@ -143,11 +173,19 @@ def parse_domain(domain_pddl):
         elif field == ":constants":
             constants = pddl_types.parse_typed_list(opt[1:])
         elif field == ":predicates":
-            the_predicates = [predicates.Predicate.parse(entry)
-                              for entry in opt[1:]]
+            the_predicates = []
+            for entry in opt[1:]:
+                if entry[0] == ':private':
+                    for private_entry in entry[1:]:
+                        pred = predicates.Predicate.parse(private_entry, True)
+                        the_predicates += [pred]
+                    continue
+                the_predicates += [predicates.Predicate.parse(entry)]
+
             the_predicates += [predicates.Predicate("=",
                                  [pddl_types.TypedObject("?x", "object"),
                                   pddl_types.TypedObject("?y", "object")])]
+
         elif field == ":functions":
             the_functions = pddl_types.parse_typed_list(
                 opt[1:],

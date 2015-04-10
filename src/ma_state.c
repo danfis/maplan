@@ -106,7 +106,7 @@ void planMAStateDel(plan_ma_state_t *ma_state)
     BOR_FREE(ma_state);
 }
 
-static void setPrivacyMAMsg(const plan_ma_state_t *ma_state,
+static void setPrivacyMAMsg(plan_ma_state_t *ma_state,
                             plan_state_id_t state_id, const void *buf,
                             plan_ma_msg_t *ma_msg)
 {
@@ -125,7 +125,7 @@ static void setPrivacyMAMsg(const plan_ma_state_t *ma_state,
     // Recover private IDs and set the corresponding local ID
     planMAPrivateStateGet(&ma_state->private_state, private_id,
                           ma_state->private_ids);
-    priv_id = privID((plan_ma_state_t *)ma_state, buf);
+    priv_id = privID(ma_state, buf);
     ma_state->private_ids[ma_state->agent_id] = priv_id;
 
     // Get packed public part
@@ -137,7 +137,7 @@ static void setPrivacyMAMsg(const plan_ma_state_t *ma_state,
                                 ma_state->num_agents);
 }
 
-int planMAStateSetMAMsg(const plan_ma_state_t *ma_state,
+int planMAStateSetMAMsg(plan_ma_state_t *ma_state,
                         plan_state_id_t state_id,
                         plan_ma_msg_t *ma_msg)
 {
@@ -157,7 +157,7 @@ int planMAStateSetMAMsg(const plan_ma_state_t *ma_state,
     return 0;
 }
 
-int planMAStateSetMAMsg2(const plan_ma_state_t *ma_state,
+int planMAStateSetMAMsg2(plan_ma_state_t *ma_state,
                          const plan_state_t *state,
                          plan_ma_msg_t *ma_msg)
 {
@@ -237,16 +237,14 @@ plan_state_id_t planMAStateInsertFromMAMsg(plan_ma_state_t *ma_state,
     return planStatePoolInsertPacked(ma_state->state_pool, buf);
 }
 
-void planMAStateGetFromMAMsg(const plan_ma_state_t *ma_state,
+void planMAStateGetFromMAMsg(plan_ma_state_t *ma_state,
                              const plan_ma_msg_t *ma_msg,
                              plan_state_t *state)
 {
     const void *buf;
 
     if (ma_state->ma_privacy){
-        // The retyping to non-const is ok in this case because the last
-        // argument, in fact, makes sure that nothing is really changed.
-        recoverPrivacyStateBuf((plan_ma_state_t *)ma_state, ma_msg, 0);
+        recoverPrivacyStateBuf(ma_state, ma_msg, 0);
         buf = ma_state->buf;
     }else{
         buf = planMAMsgStateBuf(ma_msg);

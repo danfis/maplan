@@ -66,7 +66,7 @@ static void cutApply(cut_t *cut, plan_heur_relax_t *relax,
 
 
 struct _private_t {
-    const plan_ma_state_t *ma_state;
+    plan_ma_state_t *ma_state;
     plan_heur_relax_t relax;
     plan_op_id_tr_t op_id_tr;
     plan_oparr_t public_op; /*!< List of public operators */
@@ -80,7 +80,7 @@ typedef struct _private_t private_t;
 
 /** Initialize private_t structure */
 static void privateInit(private_t *private,
-                        const plan_ma_state_t *ma_state,
+                        plan_ma_state_t *ma_state,
                         const plan_problem_t *prob);
 /** Free allocated resources */
 static void privateFree(private_t *private);
@@ -420,7 +420,7 @@ static int mainLoop(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 
 /**** Private ****/
 static void privateInit(private_t *private,
-                        const plan_ma_state_t *ma_state,
+                        plan_ma_state_t *ma_state,
                         const plan_problem_t *prob)
 {
     plan_op_t *op;

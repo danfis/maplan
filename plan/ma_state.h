@@ -49,14 +49,14 @@ void planMAStateDel(plan_ma_state_t *ma_state);
  * Sets state to ma-msg object.
  * Returns 0 on success.
  */
-int planMAStateSetMAMsg(const plan_ma_state_t *ma_state,
+int planMAStateSetMAMsg(plan_ma_state_t *ma_state,
                         plan_state_id_t state_id,
                         plan_ma_msg_t *ma_msg);
 
 /**
  * Same as planMAStateSetMAMsg() but state is set from the unrolled state.
  */
-int planMAStateSetMAMsg2(const plan_ma_state_t *ma_state,
+int planMAStateSetMAMsg2(plan_ma_state_t *ma_state,
                          const plan_state_t *state,
                          plan_ma_msg_t *ma_msg);
 
@@ -73,7 +73,7 @@ plan_state_id_t planMAStateInsertFromMAMsg(plan_ma_state_t *ma_state,
  * value. Make sure that you never resend state unpacked this way from a
  * message!
  */
-void planMAStateGetFromMAMsg(const plan_ma_state_t *ma_state,
+void planMAStateGetFromMAMsg(plan_ma_state_t *ma_state,
                              const plan_ma_msg_t *ma_msg,
                              plan_state_t *state);
 

@@ -14,7 +14,7 @@ for domain in $(ls domain-*.pddl); do
     agent_name=${domain##domain-}
     agent_name=${agent_name%%.pddl}
     problem=
-    for p in $(ls *-${agent_name}.pddl); do
+    for p in $(ls problem-${agent_name}.pddl); do
         if [ "$p" != "$domain" ]; then
             problem="$p"
             break

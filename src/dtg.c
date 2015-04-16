@@ -63,10 +63,16 @@ static void _planDTGInit(plan_dtg_t *dtg, const plan_var_t *var, int var_size,
     dtg->var_size = var_size;
     dtg->dtg = BOR_ALLOC_ARR(plan_dtg_var_t, var_size);
     for (i = 0; i < var_size; ++i){
-        dtg->dtg[i].var = i;
-        dtg->dtg[i].val_size = var[i].range + range_add;
-        size = dtg->dtg[i].val_size * dtg->dtg[i].val_size;
-        dtg->dtg[i].trans = BOR_CALLOC_ARR(plan_dtg_trans_t, size);
+        if (var[i].ma_privacy){
+            dtg->dtg[i].var = i;
+            dtg->dtg[i].val_size = 0;
+            dtg->dtg[i].trans = NULL;
+        }else{
+            dtg->dtg[i].var = i;
+            dtg->dtg[i].val_size = var[i].range + range_add;
+            size = dtg->dtg[i].val_size * dtg->dtg[i].val_size;
+            dtg->dtg[i].trans = BOR_CALLOC_ARR(plan_dtg_trans_t, size);
+        }
     }
 
     for (i = 0; i < op_size; ++i){
@@ -117,6 +123,9 @@ int planDTGHasTrans(const plan_dtg_t *dtg, plan_var_id_t var,
     plan_dtg_trans_t *trans;
     int i;
 
+    if (dtg->dtg[var].trans == NULL)
+        return 0;
+
     trans = dtg->dtg[var].trans + (from * dtg->dtg[var].val_size) + to;
     for (i = 0; i < trans->ops_size; ++i){
         if (trans->ops[i] == op)
@@ -135,7 +144,7 @@ int planDTGPath(const plan_dtg_t *_dtg, plan_var_id_t var,
     bor_fifo_t fifo;
     int i, *pre, val, found = 0;
 
-    if (from == to)
+    if (from == to || dtg->trans == NULL)
         return 0;
 
     // Initialize array for predecessors
@@ -203,6 +212,9 @@ static void dtgVarPrint(const plan_dtg_var_t *dtg, FILE *fout)
 
     for (i = 0; i < dtg->val_size; ++i){
         for (j = 0; j < dtg->val_size; ++j){
+            if (dtg->trans == NULL)
+                continue;
+
             trans = dtg->trans + (i * dtg->val_size) + j;
             for (k = 0; k < trans->ops_size; ++k){
                 fprintf(fout, "  (%d) -- ", i);

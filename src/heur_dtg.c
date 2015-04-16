@@ -240,6 +240,9 @@ static void dtgPathExplore(const plan_dtg_t *_dtg, plan_var_id_t var,
     plan_val_t v;
     int i;
 
+    if (dtg->trans == NULL)
+        return;
+
     path->pre = BOR_ALLOC_ARR(plan_heur_dtg_path_pre_t, dtg->val_size);
     for (i = 0; i < dtg->val_size; ++i){
         path->pre[i].val = -1;
@@ -348,6 +351,9 @@ static void valuesZeroize(plan_heur_dtg_values_t *v)
 static int valuesSet(plan_heur_dtg_values_t *v,
                      plan_var_id_t var, plan_val_t val)
 {
+    if (val >= v->val_range[var])
+        return -1;
+
     if (v->val[var][val] != 0)
         return -1;
     v->val[var][val] = 1;
@@ -472,6 +478,8 @@ static const plan_op_t *ctxMinCostOp(plan_heur_dtg_ctx_t *dtg_ctx,
     plan_val_t opval;
 
 
+    if (dtg->trans == NULL)
+        return NULL;
     trans = dtg->trans + (from * dtg->val_size) + to;
     if (trans->ops_size == 0)
         return NULL;

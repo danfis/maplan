@@ -147,49 +147,11 @@ analyze: clean
 	$(SCAN_BUILD) $(MAKE)
 
 submodule:
-	git submodule init
-	git submodule update
-
-third-party: submodule
-	$(MAKE) -C third-party/boruvka
-	$(MAKE) -C third-party/opts
-	cd third-party/nanomsg \
-		&& if test ! -f build/lib/libnanomsg.a; then \
-				./autogen.sh \
-					&& ./configure --enable-static --disable-shared --prefix=`pwd`/build \
-					&& make \
-					&& make install; \
-		fi;
-	cd third-party/protobuf \
-		&& if test ! -f build/lib/libprotobuf.a; then \
-				./autogen.sh \
-					&& ./configure --enable-static --disable-shared --prefix=`pwd`/build \
-					&& make \
-					&& make install; \
-		fi;
-	cd third-party/protobuf/python \
-		&& if test ! -f build/lib/google/__init__.py; then \
-				$(PYTHON2) setup.py build; \
-				$(PYTHON2) setup.py bdist_egg --dist-dir build; \
-		fi;
-	cd third-party/nanomsg4py \
-		&& if test ! -f nanomsg2module.so; then \
-				make third-party; \
-				make; \
-				ln -s ../nanomsg4py/nanomsg2module.so ../translate/nanomsg2module.so; \
-		fi;
-	$(MAKE) -C third-party/translate
-	$(MAKE) -C third-party/VAL
-
+	$(MAKE) -C third-party submodule
+third-party:
+	$(MAKE) -C third-party
 third-party-clean:
-	$(MAKE) -C third-party/translate clean
-	$(MAKE) -C third-party/boruvka clean
-	$(MAKE) -C third-party/opts clean
-	$(MAKE) -C third-party/nanomsg clean
-	rm -rf third-party/nanomsg/build
-	$(MAKE) -C third-party/protobuf clean
-	rm -rf third-party/protobuf/build
-	$(MAKE) -C third-party/VAL clean
+	$(MAKE) -C third-party clean
 
 help:
 	@echo "Targets:"

@@ -265,6 +265,7 @@ static void factsInitOp(fact_t *facts, const plan_fact_id_t *fact_id,
     // Process the rest of produced values the same way as in
     // (eff_var < pre_var) branch above.
     for (; effi < eff->vals_size; ++effi){
+        eff_var = eff->vals[effi].var;
         eff_val = eff->vals[effi].val;
         fid = planFactId(fact_id, eff_var, eff_val);
         factAddProduce(facts + fid, op_id);

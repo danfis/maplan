@@ -4,8 +4,8 @@
 all: boruvka opts nanomsg protobuf translate val
 
 submodule:
-	git submodule init
-	git submodule update
+	cd .. && git submodule init
+	cd .. && git submodule update
 
 boruvka: submodule
 	$(MAKE) -C boruvka

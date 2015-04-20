@@ -17,6 +17,7 @@
  * See the License for more information.
  */
 
+#include <glpk.h>
 #include <boruvka/alloc.h>
 #include <plan/heur.h>
 
@@ -69,6 +70,7 @@ static double lower_bound_table[2][2][2] = {
 
 struct _fact_t {
     // Precomputed data that does not ever change:
+    int var;                /*!< Variable ID */
     int is_mutex_with_goal; /*!< True if the fact is mutex with the goal */
     int is_goal;            /*!< True if the fact is in goal */
     int is_goal_var;        /*!< True if it is one value of a goal variable */
@@ -113,6 +115,9 @@ static void factsInit(fact_t *facts, const plan_fact_id_t *fact_id,
  * lower/upper bounds) */
 static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
                           const plan_state_t *state);
+/** Transforms facts to A matrix needed for LP-solver */
+static int factsToGLPKAMatrix(const fact_t *facts, int facts_size,
+                              int **A_row, int **A_col, double **A_coef);
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
@@ -159,8 +164,85 @@ static void heurFlow(plan_heur_t *_heur, const plan_state_t *state,
                      plan_heur_res_t *res)
 {
     plan_heur_flow_t *hflow = HEUR(_heur);
+    glp_prob *lp;
+    int *A_row, *A_col, i, size;
+    double *A_coef;
 
     factsSetState(hflow->facts, &hflow->fact_id, state);
+
+    lp = glp_create_prob();
+    glp_set_obj_dir(lp, GLP_MIN);
+
+    // Add column for each operator
+    glp_add_cols(lp, hflow->op_size);
+    for (i = 0; i < hflow->op_size; ++i){
+          glp_set_col_bnds(lp, i + 1, GLP_LO, 0., 0.);
+          glp_set_obj_coef(lp, i + 1, hflow->op_cost[i]);
+          glp_set_col_kind(lp, i + 1, GLP_IV);
+    }
+
+    // Add row for each fact
+    glp_add_rows(lp, hflow->fact_id.fact_size);
+    for (i = 0; i < hflow->fact_id.fact_size; ++i){
+        double upper, lower;
+        lower = hflow->facts[i].lower_bound;
+        upper = hflow->facts[i].upper_bound;
+
+        if (lower == upper){
+            glp_set_row_bnds(lp, i + 1, GLP_FX, lower, upper);
+
+        }else if (upper == BOUND_INF){
+            glp_set_row_bnds(lp, i + 1, GLP_LO, lower, 0.);
+
+        }else{
+            glp_set_row_bnds(lp, i + 1, GLP_DB, lower, upper);
+        }
+    }
+
+    size = factsToGLPKAMatrix(hflow->facts, hflow->fact_id.fact_size,
+                              &A_row, &A_col, &A_coef);
+    glp_load_matrix(lp, size, A_row, A_col, A_coef);
+    BOR_FREE(A_row);
+    BOR_FREE(A_col);
+    BOR_FREE(A_coef);
+
+    glp_smcp params;
+    glp_init_smcp(&params);
+    params.msg_lev = GLP_MSG_DBG;
+    params.msg_lev = GLP_MSG_OFF;
+    //params.meth = GLP_PRIMAL;
+    //params.meth = GLP_DUALP;
+    //params.presolve = GLP_ON;
+    int ret = glp_simplex(lp, &params);
+    //fprintf(stderr, "RET: %d\n", ret);
+    if (ret == 0){
+        double z = glp_get_obj_val(lp);
+        //fprintf(stderr, "z: %f\n", z);
+        res->heur = z;
+    }else{
+        res->heur = PLAN_HEUR_DEAD_END;
+    }
+
+    /*
+    {
+         glp_iocp params;
+         glp_init_iocp(&params);
+         //params.msg_lev = GLP_MSG_ALL;
+         params.msg_lev = GLP_MSG_OFF;
+         //parm.presolve = GLP_ON;
+         int err = glp_intopt(lp, &params);
+         //fprintf(stderr, "RET: %d\n", err);
+         if (err == 0){
+             double z = glp_get_obj_val(lp);
+             //fprintf(stderr, "z: %f\n", z);
+             res->heur = z;
+         }else{
+             res->heur = PLAN_HEUR_DEAD_END;
+         }
+    }
+    */
+
+    glp_delete_prob(lp);
 }
 
 static void factsInitGoal(fact_t *facts, const plan_fact_id_t *fact_id,
@@ -213,7 +295,8 @@ static void factAddConsume(fact_t *fact, int op_id)
 }
 
 static void factsInitOp(fact_t *facts, const plan_fact_id_t *fact_id,
-                        const plan_op_t *op, int op_id)
+                        const plan_op_t *op, int op_id,
+                        int *cause_incomplete_op)
 {
     int prei, effi, fid;
     const plan_part_state_t *pre, *eff;
@@ -256,7 +339,7 @@ static void factsInitOp(fact_t *facts, const plan_fact_id_t *fact_id,
 
             // Also set the fact as causing incompletness because this
             // operator only produces and does not consume.
-            facts[fid].cause_incomplete_op = 1;
+            cause_incomplete_op[facts[fid].var] = 1;
 
             ++effi;
         }
@@ -269,17 +352,25 @@ static void factsInitOp(fact_t *facts, const plan_fact_id_t *fact_id,
         eff_val = eff->vals[effi].val;
         fid = planFactId(fact_id, eff_var, eff_val);
         factAddProduce(facts + fid, op_id);
-        facts[fid].cause_incomplete_op = 1;
+        cause_incomplete_op[facts[fid].var] = 1;
     }
 }
 
 static void factsInitOps(fact_t *facts, const plan_fact_id_t *fact_id,
                          const plan_op_t *op, int op_size)
 {
-    int opi;
+    int *cause_incomplete_op;
+    int i, opi;
 
+    cause_incomplete_op = BOR_CALLOC_ARR(int, fact_id->var_size);
     for (opi = 0; opi < op_size; ++opi)
-        factsInitOp(facts, fact_id, op + opi, opi);
+        factsInitOp(facts, fact_id, op + opi, opi, cause_incomplete_op);
+
+    for (i = 0; i < fact_id->fact_size; ++i){
+        if (cause_incomplete_op[facts[i].var])
+            facts[i].cause_incomplete_op = 1;
+    }
+    BOR_FREE(cause_incomplete_op);
 }
 
 static void factsInit(fact_t *facts, const plan_fact_id_t *fact_id,
@@ -287,6 +378,18 @@ static void factsInit(fact_t *facts, const plan_fact_id_t *fact_id,
                       const plan_part_state_t *goal,
                       const plan_op_t *op, int op_size)
 {
+    int vi, ri, fid;
+
+    for (vi = 0; vi < var_size; ++vi){
+        if (var[vi].ma_privacy)
+            continue;
+        for (ri = 0; ri < var[vi].range; ++ri){
+            fid = planFactId(fact_id, vi, ri);
+            if (fid >= 0)
+                facts[fid].var = vi;
+        }
+    }
+
     factsInitGoal(facts, fact_id, goal, var);
     factsInitOps(facts, fact_id, op, op_size);
 }
@@ -307,14 +410,44 @@ static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
 
     // Now set upper and lower bounds
     for (i = 0; i < fact_id->fact_size; ++i){
-        if (facts[i].cause_incomplete_op){
-            facts[i].lower_bound = lower_bound_table[facts[i].is_goal_var]
-                                                    [facts[i].is_mutex_with_goal]
-                                                    [facts[i].is_init];
-            facts[i].upper_bound = upper_bound_table[facts[i].is_goal_var]
-                                                    [facts[i].is_mutex_with_goal]
-                                                    [facts[i].is_init]
-                                                    [facts[i].cause_incomplete_op];
+        facts[i].lower_bound = lower_bound_table[facts[i].is_goal_var]
+                                                [facts[i].is_mutex_with_goal]
+                                                [facts[i].is_init];
+        facts[i].upper_bound = upper_bound_table[facts[i].is_goal_var]
+                                                [facts[i].is_mutex_with_goal]
+                                                [facts[i].is_init]
+                                                [facts[i].cause_incomplete_op];
+    }
+}
+
+static int factsToGLPKAMatrix(const fact_t *facts, int facts_size,
+                              int **A_row, int **A_col, double **A_coef)
+{
+    int i, j, cur, size;
+    int *ai, *aj;
+    double *ac;
+
+    size = 1;
+    for (i = 0; i < facts_size; ++i)
+        size += facts[i].constr_len;
+
+    ai = BOR_ALLOC_ARR(int, size);
+    aj = BOR_ALLOC_ARR(int, size);
+    ac = BOR_ALLOC_ARR(double, size);
+
+    cur = 1;
+    for (i = 0; i < facts_size; ++i){
+        for (j = 0; j < facts[i].constr_len; ++j){
+            ai[cur] = i + 1;
+            aj[cur] = facts[i].constr_idx[j] + 1;
+            ac[cur] = facts[i].constr_coef[j];
+            ++cur;
         }
     }
+
+
+    *A_row = ai;
+    *A_col = aj;
+    *A_coef = ac;
+    return size - 1;
 }

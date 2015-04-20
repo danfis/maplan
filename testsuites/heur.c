@@ -339,6 +339,8 @@ TEST(testHeurDTG)
 
 TEST(testHeurFlow)
 {
+    runTest("Flow", "proto/simple.proto",
+            "states/simple.txt", flowNew, 0);
     runTest("Flow", "proto/depot-pfile1.proto",
             "states/depot-pfile1.txt", flowNew, 0);
     runTest("Flow", "proto/depot-pfile5.proto",

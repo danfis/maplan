@@ -43,6 +43,12 @@ static plan_heur_t *dtgNew(plan_problem_t *p)
                           p->op, p->op_size);
 }
 
+static plan_heur_t *flowNew(plan_problem_t *p)
+{
+    return planHeurFlowNew(p->var, p->var_size, p->goal,
+                           p->op, p->op_size);
+}
+
 typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);
 
 static void runTest(const char *name,
@@ -329,4 +335,18 @@ TEST(testHeurDTG)
             "states/rovers-p15.txt", dtgNew, 0);
     runTest("DTG", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", dtgNew, 0);
+}
+
+TEST(testHeurFlow)
+{
+    runTest("Flow", "proto/depot-pfile1.proto",
+            "states/depot-pfile1.txt", flowNew, 0);
+    runTest("Flow", "proto/depot-pfile5.proto",
+            "states/depot-pfile5.txt", flowNew, 1);
+    runTest("Flow", "proto/rovers-p03.proto",
+            "states/rovers-p03.txt", flowNew, 0);
+    runTest("Flow", "proto/rovers-p15.proto",
+            "states/rovers-p15.txt", flowNew, 0);
+    runTest("Flow", "proto/CityCar-p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", flowNew, 0);
 }

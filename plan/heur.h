@@ -34,6 +34,11 @@ extern "C" {
  * =======================
  */
 
+/**
+ * Use integer linear programming instead of LP for solving flow heuristic.
+ */
+#define PLAN_HEUR_FLOW_ILP 0x1u
+
 /** Forward declaration */
 typedef struct _plan_heur_t plan_heur_t;
 
@@ -167,10 +172,12 @@ plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,
 
 /**
  * Flow based heuristics.
+ * For flags see PLAN_HEUR_FLOW_* macros above.
  */
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
-                             const plan_op_t *op, int op_size);
+                             const plan_op_t *op, int op_size,
+                             unsigned flags);
 
 /**
  * Creates an multi-agent version of max heuristic.

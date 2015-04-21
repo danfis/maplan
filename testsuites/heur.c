@@ -46,7 +46,13 @@ static plan_heur_t *dtgNew(plan_problem_t *p)
 static plan_heur_t *flowNew(plan_problem_t *p)
 {
     return planHeurFlowNew(p->var, p->var_size, p->goal,
-                           p->op, p->op_size);
+                           p->op, p->op_size, 0);
+}
+
+static plan_heur_t *flowILPNew(plan_problem_t *p)
+{
+    return planHeurFlowNew(p->var, p->var_size, p->goal,
+                           p->op, p->op_size, PLAN_HEUR_FLOW_ILP);
 }
 
 typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);
@@ -351,4 +357,20 @@ TEST(testHeurFlow)
             "states/rovers-p15.txt", flowNew, 0);
     runTest("Flow", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", flowNew, 0);
+}
+
+TEST(testHeurFlowILP)
+{
+    runTest("Flow ILP", "proto/simple.proto",
+            "states/simple.txt", flowILPNew, 0);
+    runTest("Flow ILP", "proto/depot-pfile1.proto",
+            "states/depot-pfile1.txt", flowILPNew, 0);
+    runTest("Flow ILP", "proto/depot-pfile5.proto",
+            "states/depot-pfile5.txt", flowILPNew, 1);
+    runTest("Flow ILP", "proto/rovers-p03.proto",
+            "states/rovers-p03.txt", flowILPNew, 0);
+    runTest("Flow ILP", "proto/rovers-p15.proto",
+            "states/rovers-p15.txt", flowILPNew, 0);
+    runTest("Flow ILP", "proto/CityCar-p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", flowILPNew, 0);
 }

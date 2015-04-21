@@ -17,7 +17,8 @@ static plan_heur_t *heurMax(const plan_problem_t *p)
 
 static plan_heur_t *heurFlow(const plan_problem_t *p)
 {
-    return planHeurFlowNew(p->var, p->var_size, p->goal, p->op, p->op_size);
+    return planHeurFlowNew(p->var, p->var_size, p->goal,
+                           p->op, p->op_size, 0);
 }
 
 static void checkOptimalCost(new_heur_fn new_heur, const char *proto)

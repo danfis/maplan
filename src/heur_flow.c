@@ -93,6 +93,7 @@ typedef struct _fact_t fact_t;
  */
 struct _plan_heur_flow_t {
     plan_heur_t heur;
+    int use_ilp;            /*!< True if ILP instead of LP should be used */
     plan_fact_id_t fact_id; /*!< Translation from var-val pair to fact ID */
     fact_t *facts;          /*!< Array of fact related structures */
     glp_prob *lp;           /*!< Pre-initialized (I)LP solver */
@@ -120,7 +121,8 @@ static int factsToGLPKAMatrix(const fact_t *facts, int facts_size,
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
-                             const plan_op_t *op, int op_size)
+                             const plan_op_t *op, int op_size,
+                             unsigned flags)
 {
     plan_heur_flow_t *hflow;
     int i, size, *A_row, *A_col;
@@ -128,6 +130,7 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
 
     hflow = BOR_ALLOC(plan_heur_flow_t);
     _planHeurInit(&hflow->heur, heurFlowDel, heurFlow);
+    hflow->use_ilp = (flags & PLAN_HEUR_FLOW_ILP);
 
     planFactIdInit(&hflow->fact_id, var, var_size);
     hflow->facts = BOR_CALLOC_ARR(fact_t, hflow->fact_id.fact_size);
@@ -185,7 +188,10 @@ static void heurFlow(plan_heur_t *_heur, const plan_state_t *state,
                      plan_heur_res_t *res)
 {
     plan_heur_flow_t *hflow = HEUR(_heur);
-    int i;
+    glp_smcp lp_params;
+    glp_iocp ilp_params;
+    int i, ret;
+    double z;
 
     factsSetState(hflow->facts, &hflow->fact_id, state);
 
@@ -206,41 +212,28 @@ static void heurFlow(plan_heur_t *_heur, const plan_state_t *state,
         }
     }
 
-    glp_smcp params;
-    glp_init_smcp(&params);
-    //params.msg_lev = GLP_MSG_ALL;
-    params.msg_lev = GLP_MSG_OFF;
-    //params.meth = GLP_PRIMAL;
-    //params.meth = GLP_DUALP;
-    //params.presolve = GLP_ON;
-    int ret = glp_simplex(hflow->lp, &params);
-    //fprintf(stderr, "RET: %d\n", ret);
+    if (hflow->use_ilp){
+        glp_init_iocp(&ilp_params);
+        ilp_params.msg_lev = GLP_MSG_OFF;
+        ilp_params.presolve = GLP_ON;
+        ret = glp_intopt(hflow->lp, &ilp_params);
+        if (ret == 0)
+             z = glp_mip_obj_val(hflow->lp);
+
+    }else{
+        glp_init_smcp(&lp_params);
+        lp_params.msg_lev = GLP_MSG_OFF;
+        lp_params.meth = GLP_PRIMAL;
+        ret = glp_simplex(hflow->lp, &lp_params);
+        if (ret == 0)
+            z = glp_get_obj_val(hflow->lp);
+    }
+
     if (ret == 0){
-        double z = glp_get_obj_val(hflow->lp);
-        //fprintf(stderr, "z: %f\n", z);
         res->heur = z;
     }else{
         res->heur = PLAN_HEUR_DEAD_END;
     }
-
-    /*
-    {
-         glp_iocp params;
-         glp_init_iocp(&params);
-         //params.msg_lev = GLP_MSG_ALL;
-         params.msg_lev = GLP_MSG_OFF;
-         //parm.presolve = GLP_ON;
-         int err = glp_intopt(hflow->lp, &params);
-         //fprintf(stderr, "RET: %d\n", err);
-         if (err == 0){
-             double z = glp_get_obj_val(hflow->lp);
-             //fprintf(stderr, "z: %f\n", z);
-             res->heur = z;
-         }else{
-             res->heur = PLAN_HEUR_DEAD_END;
-         }
-    }
-    */
 }
 
 static void factsInitGoal(fact_t *facts, const plan_fact_id_t *fact_id,

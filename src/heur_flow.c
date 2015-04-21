@@ -68,6 +68,12 @@ static double lower_bound_table[2][2][2] = {
                     { { 1., 0. }, { 0., -1. } },
 };
 
+
+#define LP_STRUCT glp_prob *
+#define LP_INIT lpGLPKInit
+#define LP_FREE lpGLPKFree
+#define LP_SOLVE lpGLPKSolve
+
 struct _fact_t {
     // Precomputed data that does not ever change:
     int var;                /*!< Variable ID */
@@ -96,7 +102,7 @@ struct _plan_heur_flow_t {
     int use_ilp;            /*!< True if ILP instead of LP should be used */
     plan_fact_id_t fact_id; /*!< Translation from var-val pair to fact ID */
     fact_t *facts;          /*!< Array of fact related structures */
-    glp_prob *lp;           /*!< Pre-initialized (I)LP solver */
+    LP_STRUCT lp;           /*!< Pre-initialized (I)LP solver */
 };
 typedef struct _plan_heur_flow_t plan_heur_flow_t;
 #define HEUR(parent) \
@@ -119,14 +125,19 @@ static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
 static int factsToGLPKAMatrix(const fact_t *facts, int facts_size,
                               int **A_row, int **A_col, double **A_coef);
 
+/* GLPK solver functions */
+static void lpGLPKInit(glp_prob **lp, const fact_t *facts, int facts_size,
+                       const plan_op_t *op, int op_size);
+static void lpGLPKFree(glp_prob **lp);
+static plan_cost_t lpGLPKSolve(glp_prob **lp, const fact_t *facts,
+                               int facts_size, int use_ilp);
+
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
                              const plan_op_t *op, int op_size,
                              unsigned flags)
 {
     plan_heur_flow_t *hflow;
-    int i, size, *A_row, *A_col;
-    double *A_coef;
 
     hflow = BOR_ALLOC(plan_heur_flow_t);
     _planHeurInit(&hflow->heur, heurFlowDel, heurFlow);
@@ -136,29 +147,8 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
     hflow->facts = BOR_CALLOC_ARR(fact_t, hflow->fact_id.fact_size);
     factsInit(hflow->facts, &hflow->fact_id, var, var_size, goal, op, op_size);
 
-    // Initialize (I)LP solver
-    hflow->lp = glp_create_prob();
-    glp_set_obj_dir(hflow->lp, GLP_MIN);
-
-    // Add column for each operator
-    glp_add_cols(hflow->lp, op_size);
-    for (i = 0; i < op_size; ++i){
-          glp_set_col_bnds(hflow->lp, i + 1, GLP_LO, 0., 0.);
-          glp_set_obj_coef(hflow->lp, i + 1, op[i].cost);
-          glp_set_col_kind(hflow->lp, i + 1, GLP_IV);
-    }
-
-    // Add row for each fact
-    glp_add_rows(hflow->lp, hflow->fact_id.fact_size);
-
-    // and set up coeficient matrix because it does not depend on the
-    // initial state.
-    size = factsToGLPKAMatrix(hflow->facts, hflow->fact_id.fact_size,
-                              &A_row, &A_col, &A_coef);
-    glp_load_matrix(hflow->lp, size, A_row, A_col, A_coef);
-    BOR_FREE(A_row);
-    BOR_FREE(A_col);
-    BOR_FREE(A_coef);
+    // Initialize LP solver
+    LP_INIT(&hflow->lp, hflow->facts, hflow->fact_id.fact_size, op, op_size);
 
     return &hflow->heur;
 }
@@ -168,8 +158,7 @@ static void heurFlowDel(plan_heur_t *_heur)
     plan_heur_flow_t *hflow = HEUR(_heur);
     int i;
 
-    if (hflow->lp)
-        glp_delete_prob(hflow->lp);
+    LP_FREE(&hflow->lp);
 
     for (i = 0; hflow->facts && i < hflow->fact_id.fact_size; ++i){
         if (hflow->facts[i].constr_idx)
@@ -188,52 +177,10 @@ static void heurFlow(plan_heur_t *_heur, const plan_state_t *state,
                      plan_heur_res_t *res)
 {
     plan_heur_flow_t *hflow = HEUR(_heur);
-    glp_smcp lp_params;
-    glp_iocp ilp_params;
-    int i, ret;
-    double z;
 
     factsSetState(hflow->facts, &hflow->fact_id, state);
-
-    // Add row for each fact
-    for (i = 0; i < hflow->fact_id.fact_size; ++i){
-        double upper, lower;
-        lower = hflow->facts[i].lower_bound;
-        upper = hflow->facts[i].upper_bound;
-
-        if (lower == upper){
-            glp_set_row_bnds(hflow->lp, i + 1, GLP_FX, lower, upper);
-
-        }else if (upper == BOUND_INF){
-            glp_set_row_bnds(hflow->lp, i + 1, GLP_LO, lower, 0.);
-
-        }else{
-            glp_set_row_bnds(hflow->lp, i + 1, GLP_DB, lower, upper);
-        }
-    }
-
-    if (hflow->use_ilp){
-        glp_init_iocp(&ilp_params);
-        ilp_params.msg_lev = GLP_MSG_OFF;
-        ilp_params.presolve = GLP_ON;
-        ret = glp_intopt(hflow->lp, &ilp_params);
-        if (ret == 0)
-             z = glp_mip_obj_val(hflow->lp);
-
-    }else{
-        glp_init_smcp(&lp_params);
-        lp_params.msg_lev = GLP_MSG_OFF;
-        lp_params.meth = GLP_PRIMAL;
-        ret = glp_simplex(hflow->lp, &lp_params);
-        if (ret == 0)
-            z = glp_get_obj_val(hflow->lp);
-    }
-
-    if (ret == 0){
-        res->heur = z;
-    }else{
-        res->heur = PLAN_HEUR_DEAD_END;
-    }
+    res->heur = LP_SOLVE(&hflow->lp, hflow->facts, hflow->fact_id.fact_size,
+                         hflow->use_ilp);
 }
 
 static void factsInitGoal(fact_t *facts, const plan_fact_id_t *fact_id,
@@ -441,4 +388,93 @@ static int factsToGLPKAMatrix(const fact_t *facts, int facts_size,
     *A_col = aj;
     *A_coef = ac;
     return size - 1;
+}
+
+static void lpGLPKInit(glp_prob **_lp, const fact_t *facts, int facts_size,
+                       const plan_op_t *op, int op_size)
+{
+    glp_prob *lp;
+    int i, size, *A_row, *A_col;
+    double *A_coef;
+
+    // Initialize (I)LP solver
+    lp = glp_create_prob();
+    glp_set_obj_dir(lp, GLP_MIN);
+
+    // Add column for each operator
+    glp_add_cols(lp, op_size);
+    for (i = 0; i < op_size; ++i){
+          glp_set_col_bnds(lp, i + 1, GLP_LO, 0., 0.);
+          glp_set_obj_coef(lp, i + 1, op[i].cost);
+          glp_set_col_kind(lp, i + 1, GLP_IV);
+    }
+
+    // Add row for each fact
+    glp_add_rows(lp, facts_size);
+
+    // and set up coeficient matrix because it does not depend on the
+    // initial state.
+    size = factsToGLPKAMatrix(facts, facts_size, &A_row, &A_col, &A_coef);
+    glp_load_matrix(lp, size, A_row, A_col, A_coef);
+    BOR_FREE(A_row);
+    BOR_FREE(A_col);
+    BOR_FREE(A_coef);
+
+    *_lp = lp;
+}
+
+static void lpGLPKFree(glp_prob **lp)
+{
+    if (*lp)
+        glp_delete_prob(*lp);
+}
+
+static plan_cost_t lpGLPKSolve(glp_prob **_lp, const fact_t *facts,
+                               int facts_size, int use_ilp)
+{
+    glp_prob *lp = *_lp;
+    glp_smcp lp_params;
+    glp_iocp ilp_params;
+    int i, ret;
+    double z;
+
+    // Add row for each fact
+    for (i = 0; i < facts_size; ++i){
+        double upper, lower;
+        lower = facts[i].lower_bound;
+        upper = facts[i].upper_bound;
+
+        if (lower == upper){
+            glp_set_row_bnds(lp, i + 1, GLP_FX, lower, upper);
+
+        }else if (upper == BOUND_INF){
+            glp_set_row_bnds(lp, i + 1, GLP_LO, lower, 0.);
+
+        }else{
+            glp_set_row_bnds(lp, i + 1, GLP_DB, lower, upper);
+        }
+    }
+
+    if (use_ilp){
+        glp_init_iocp(&ilp_params);
+        ilp_params.msg_lev = GLP_MSG_OFF;
+        ilp_params.presolve = GLP_ON;
+        ret = glp_intopt(lp, &ilp_params);
+        if (ret == 0)
+             z = glp_mip_obj_val(lp);
+
+    }else{
+        glp_init_smcp(&lp_params);
+        lp_params.msg_lev = GLP_MSG_OFF;
+        lp_params.meth = GLP_PRIMAL;
+        ret = glp_simplex(lp, &lp_params);
+        if (ret == 0)
+            z = glp_get_obj_val(lp);
+    }
+
+    if (ret == 0){
+        return z;
+    }else{
+        return PLAN_HEUR_DEAD_END;
+    }
 }

@@ -3,11 +3,13 @@
 
 TEST(testHeurAdmissibleLMCut);
 TEST(testHeurAdmissibleMax);
+TEST(testHeurAdmissibleFlow);
 TEST(protobufTearDown);
 
 TEST_SUITE(TSHeurAdmissible){
     TEST_ADD(testHeurAdmissibleLMCut),
     TEST_ADD(testHeurAdmissibleMax),
+    TEST_ADD(testHeurAdmissibleFlow),
     TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE
 };

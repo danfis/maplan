@@ -15,6 +15,11 @@ static plan_heur_t *heurMax(const plan_problem_t *p)
     return planHeurRelaxMaxNew(p->var, p->var_size, p->goal, p->op, p->op_size);
 }
 
+static plan_heur_t *heurFlow(const plan_problem_t *p)
+{
+    return planHeurFlowNew(p->var, p->var_size, p->goal, p->op, p->op_size);
+}
+
 static void checkOptimalCost(new_heur_fn new_heur, const char *proto)
 {
     plan_search_astar_params_t params;
@@ -120,6 +125,28 @@ TEST(testHeurAdmissibleMax)
                       "states/driverlog-pfile1.txt",
                       "states/driverlog-pfile1.cost.txt");
     checkOptimalCost2(heurMax,
+                      "proto/rovers-p03.proto",
+                      "states/rovers-p03.txt",
+                      "states/rovers-p03.cost.txt");
+}
+
+TEST(testHeurAdmissibleFlow)
+{
+    checkOptimalCost(heurFlow, "proto/depot-pfile1.proto");
+    checkOptimalCost(heurFlow, "proto/depot-pfile2.proto");
+    checkOptimalCost(heurFlow, "proto/rovers-p01.proto");
+    checkOptimalCost(heurFlow, "proto/rovers-p02.proto");
+    checkOptimalCost(heurFlow, "proto/rovers-p03.proto");
+
+    checkOptimalCost2(heurFlow,
+                      "proto/depot-pfile1.proto",
+                      "states/depot-pfile1.txt",
+                      "states/depot-pfile1.cost.txt");
+    checkOptimalCost2(heurFlow,
+                      "proto/driverlog-pfile1.proto",
+                      "states/driverlog-pfile1.txt",
+                      "states/driverlog-pfile1.cost.txt");
+    checkOptimalCost2(heurFlow,
                       "proto/rovers-p03.proto",
                       "states/rovers-p03.txt",
                       "states/rovers-p03.cost.txt");

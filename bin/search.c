@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <dirent.h>
+#include <signal.h>
 #include <boruvka/tasks.h>
 #include <boruvka/alloc.h>
 #include <plan/ma_msg.h>
@@ -125,8 +126,17 @@ static void *limitMonitorTh(void *_)
     return NULL;
 }
 
+
+static void limitMonitorSignalKill(int signum)
+{
+    fprintf(stderr, "Caught %s signal.\n", strsignal(signum));
+    limitMonitorAbort();
+}
+
 static void limitMonitorStart(int sleeptime, int max_time, int max_mem)
 {
+    struct sigaction s;
+
     limit_monitor.initialized = 1;
     pthread_mutex_init(&limit_monitor.lock, NULL);
 
@@ -138,6 +148,11 @@ static void limitMonitorStart(int sleeptime, int max_time, int max_mem)
 
     limit_monitor.search = NULL;
     limit_monitor.ma_search_size = 0;
+
+    bzero(&s, sizeof(s));
+    s.sa_handler = limitMonitorSignalKill;
+    sigaction(SIGTERM, &s, NULL);
+    sigaction(SIGINT, &s, NULL);
 
     pthread_create(&limit_monitor.th, NULL, limitMonitorTh, NULL);
 }
@@ -168,7 +183,6 @@ static void limitMonitorAddMASearch(plan_ma_search_t *ma_search)
     limit_monitor.ma_search[limit_monitor.ma_search_size++] = ma_search;
     pthread_mutex_unlock(&limit_monitor.lock);
 }
-
 
 static int progress(const plan_search_stat_t *stat, void *data)
 {

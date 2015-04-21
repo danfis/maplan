@@ -18,10 +18,14 @@
  */
 
 #include <glpk.h>
+#include <lpsolve/lp_lib.h>
 #include <boruvka/alloc.h>
 #include <plan/heur.h>
 
 #include "fact_id.h"
+
+//#define PLAN_USE_GLPK
+#define PLAN_USE_LP_SOLVE
 
 #define BOUND_INF 1E30
 
@@ -69,10 +73,23 @@ static double lower_bound_table[2][2][2] = {
 };
 
 
-#define LP_STRUCT glp_prob *
-#define LP_INIT lpGLPKInit
-#define LP_FREE lpGLPKFree
-#define LP_SOLVE lpGLPKSolve
+#ifdef PLAN_USE_GLPK
+# define LP_STRUCT glp_prob *
+# define LP_INIT lpGLPKInit
+# define LP_FREE lpGLPKFree
+# define LP_SOLVE lpGLPKSolve
+#else /* PLAN_USE_GLPK */
+
+# ifdef PLAN_USE_LP_SOLVE
+#  define LP_STRUCT lprec *
+#  define LP_INIT lpLPSolveInit
+#  define LP_FREE lpLPSolveFree
+#  define LP_SOLVE lpLPSolveSolve
+# else /* PLAN_USE_LP_SOLVE */
+#  error "No (I)LP solver -- cannot compile Flow heuristic"
+# endif /* PLAN_USE_LP_SOLVE */
+
+#endif /* PLAN_USE_GLPK */
 
 struct _fact_t {
     // Precomputed data that does not ever change:
@@ -121,16 +138,28 @@ static void factsInit(fact_t *facts, const plan_fact_id_t *fact_id,
  * lower/upper bounds) */
 static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
                           const plan_state_t *state);
+
+/* GLPK solver functions */
+#ifdef PLAN_USE_GLPK
 /** Transforms facts to A matrix needed for LP-solver */
 static int factsToGLPKAMatrix(const fact_t *facts, int facts_size,
                               int **A_row, int **A_col, double **A_coef);
-
-/* GLPK solver functions */
 static void lpGLPKInit(glp_prob **lp, const fact_t *facts, int facts_size,
-                       const plan_op_t *op, int op_size);
+                       const plan_op_t *op, int op_size, int use_ilp);
 static void lpGLPKFree(glp_prob **lp);
 static plan_cost_t lpGLPKSolve(glp_prob **lp, const fact_t *facts,
                                int facts_size, int use_ilp);
+#endif /* PLAN_USE_GLPK */
+
+
+/* lp_solve solver functions */
+#ifdef PLAN_USE_LP_SOLVE
+static void lpLPSolveInit(lprec **lp, const fact_t *facts, int facts_size,
+                          const plan_op_t *op, int op_size, int use_ilp);
+static void lpLPSolveFree(lprec **lp);
+static plan_cost_t lpLPSolveSolve(lprec **lp, const fact_t *facts,
+                                  int facts_size, int use_ilp);
+#endif /* PLAN_USE_LP_SOLVE */
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
@@ -148,7 +177,8 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
     factsInit(hflow->facts, &hflow->fact_id, var, var_size, goal, op, op_size);
 
     // Initialize LP solver
-    LP_INIT(&hflow->lp, hflow->facts, hflow->fact_id.fact_size, op, op_size);
+    LP_INIT(&hflow->lp, hflow->facts, hflow->fact_id.fact_size, op, op_size,
+            hflow->use_ilp);
 
     return &hflow->heur;
 }
@@ -358,6 +388,7 @@ static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
     }
 }
 
+#ifdef PLAN_USE_GLPK
 static int factsToGLPKAMatrix(const fact_t *facts, int facts_size,
                               int **A_row, int **A_col, double **A_coef)
 {
@@ -391,7 +422,7 @@ static int factsToGLPKAMatrix(const fact_t *facts, int facts_size,
 }
 
 static void lpGLPKInit(glp_prob **_lp, const fact_t *facts, int facts_size,
-                       const plan_op_t *op, int op_size)
+                       const plan_op_t *op, int op_size, int use_ilp)
 {
     glp_prob *lp;
     int i, size, *A_row, *A_col;
@@ -406,7 +437,8 @@ static void lpGLPKInit(glp_prob **_lp, const fact_t *facts, int facts_size,
     for (i = 0; i < op_size; ++i){
           glp_set_col_bnds(lp, i + 1, GLP_LO, 0., 0.);
           glp_set_obj_coef(lp, i + 1, op[i].cost);
-          glp_set_col_kind(lp, i + 1, GLP_IV);
+          if (use_ilp)
+              glp_set_col_kind(lp, i + 1, GLP_IV);
     }
 
     // Add row for each fact
@@ -478,3 +510,80 @@ static plan_cost_t lpGLPKSolve(glp_prob **_lp, const fact_t *facts,
         return PLAN_HEUR_DEAD_END;
     }
 }
+#endif /* PLAN_USE_GLPK */
+
+#ifdef PLAN_USE_LP_SOLVE
+static void lpLPSolveInit(lprec **_lp, const fact_t *facts, int facts_size,
+                          const plan_op_t *op, int op_size, int use_ilp)
+{
+    lprec *lp;
+    int i, r, c;
+    double coef;
+
+    lp = make_lp(2 * facts_size, op_size);
+    set_minim(lp);
+
+    // Set up columns
+    for (i = 0; i < op_size; ++i){
+        if (use_ilp)
+            set_int(lp, i + 1, 1);
+        set_obj(lp, i + 1, op[i].cost);
+    }
+
+    // Set up rows
+    for (r = 0; r < facts_size; ++r){
+        for (i = 0; i < facts[r].constr_len; ++i){
+            c = facts[r].constr_idx[i] + 1;
+            coef = facts[r].constr_coef[i];
+            set_mat(lp, 2 * r + 1, c, coef);
+            set_mat(lp, 2 * r + 2, c, coef);
+        }
+    }
+
+    *_lp = lp;
+}
+
+static void lpLPSolveFree(lprec **lp)
+{
+    if (*lp)
+        delete_lp(*lp);
+}
+
+static plan_cost_t lpLPSolveSolve(lprec **_lp, const fact_t *facts,
+                                  int facts_size, int use_ilp)
+{
+    lprec *lp = *_lp;
+    int i, ret;
+
+    // Add row for each fact
+    for (i = 0; i < facts_size; ++i){
+        double upper, lower;
+        lower = facts[i].lower_bound;
+        upper = facts[i].upper_bound;
+
+        if (lower == upper){
+            set_rh(lp, 2 * i + 1, lower);
+            set_rh(lp, 2 * i + 2, upper);
+            set_constr_type(lp, 2 * i + 1, EQ);
+            set_constr_type(lp, 2 * i + 2, EQ);
+
+        }else if (upper == BOUND_INF){
+            set_rh(lp, 2 * i + 1, lower);
+            set_constr_type(lp, 2 * i + 1, GE);
+            set_constr_type(lp, 2 * i + 2, FR);
+
+        }else{
+            set_rh(lp, 2 * i + 1, lower);
+            set_rh(lp, 2 * i + 2, upper);
+            set_constr_type(lp, 2 * i + 1, GE);
+            set_constr_type(lp, 2 * i + 2, LE);
+        }
+    }
+
+    set_verbose(lp, NEUTRAL);
+    ret = solve(lp);
+    if (ret == OPTIMAL || ret == SUBOPTIMAL)
+        return get_objective(lp);
+    return PLAN_HEUR_DEAD_END;
+}
+#endif /* PLAN_USE_LP_SOLVE */

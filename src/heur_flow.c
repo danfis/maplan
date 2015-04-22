@@ -17,15 +17,59 @@
  * See the License for more information.
  */
 
-#include <glpk.h>
-#include <lpsolve/lp_lib.h>
 #include <boruvka/alloc.h>
 #include <plan/heur.h>
 
 #include "fact_id.h"
 
 //#define PLAN_USE_GLPK
-#define PLAN_USE_LP_SOLVE
+//#define PLAN_USE_LP_SOLVE
+#define PLAN_USE_GUROBI
+
+#ifdef PLAN_USE_GLPK
+# include <glpk.h>
+# define LP_STRUCT glp_prob *
+# define LP_INIT lpGLPKInit
+# define LP_FREE lpGLPKFree
+# define LP_SOLVE lpGLPKSolve
+#else /* PLAN_USE_GLPK */
+
+# ifdef PLAN_USE_LP_SOLVE
+#  include <lpsolve/lp_lib.h>
+#  define LP_STRUCT lprec *
+#  define LP_INIT lpLPSolveInit
+#  define LP_FREE lpLPSolveFree
+#  define LP_SOLVE lpLPSolveSolve
+# else /* PLAN_USE_LP_SOLVE */
+
+#  ifdef PLAN_USE_GUROBI
+#  include <gurobi_c.h>
+struct _lp_gurobi_t {
+    GRBenv *env;
+    int num_vars;
+    double *obj;
+    char *vtype;
+    int num_constrs;
+    int num_nz;
+    int *cbeg;
+    int *cind;
+    double *cval;
+    double *clower;
+    double *cupper;
+};
+typedef struct _lp_gurobi_t lp_gurobi_t;
+#   define LP_STRUCT lp_gurobi_t
+#   define LP_INIT lpGurobiInit
+#   define LP_FREE lpGurobiFree
+#   define LP_SOLVE lpGurobiSolve
+
+#  else /* PLAN_USE_GUROBI */
+#   error "No (I)LP solver -- cannot compile Flow heuristic"
+#  endif /* PLAN_USE_GUROBI */
+# endif /* PLAN_USE_LP_SOLVE */
+
+#endif /* PLAN_USE_GLPK */
+
 
 #define BOUND_INF 1E30
 
@@ -71,25 +115,6 @@ static double lower_bound_table[2][2][2] = {
 // .is_init:            0    1   |   0    1
                     { { 1., 0. }, { 0., -1. } },
 };
-
-
-#ifdef PLAN_USE_GLPK
-# define LP_STRUCT glp_prob *
-# define LP_INIT lpGLPKInit
-# define LP_FREE lpGLPKFree
-# define LP_SOLVE lpGLPKSolve
-#else /* PLAN_USE_GLPK */
-
-# ifdef PLAN_USE_LP_SOLVE
-#  define LP_STRUCT lprec *
-#  define LP_INIT lpLPSolveInit
-#  define LP_FREE lpLPSolveFree
-#  define LP_SOLVE lpLPSolveSolve
-# else /* PLAN_USE_LP_SOLVE */
-#  error "No (I)LP solver -- cannot compile Flow heuristic"
-# endif /* PLAN_USE_LP_SOLVE */
-
-#endif /* PLAN_USE_GLPK */
 
 struct _fact_t {
     // Precomputed data that does not ever change:
@@ -160,6 +185,14 @@ static void lpLPSolveFree(lprec **lp);
 static plan_cost_t lpLPSolveSolve(lprec **lp, const fact_t *facts,
                                   int facts_size, int use_ilp);
 #endif /* PLAN_USE_LP_SOLVE */
+
+#ifdef PLAN_USE_GUROBI
+static void lpGurobiInit(lp_gurobi_t *lp, const fact_t *facts, int facts_size,
+                         const plan_op_t *op, int op_size, int use_ilp);
+static void lpGurobiFree(lp_gurobi_t *lp);
+static plan_cost_t lpGurobiSolve(lp_gurobi_t *lp, const fact_t *facts,
+                                 int facts_size, int use_ilp);
+#endif /* PLAN_USE_GUROBI */
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
@@ -587,3 +620,130 @@ static plan_cost_t lpLPSolveSolve(lprec **_lp, const fact_t *facts,
     return PLAN_HEUR_DEAD_END;
 }
 #endif /* PLAN_USE_LP_SOLVE */
+
+
+#ifdef PLAN_USE_GUROBI
+static void lpGurobiInit(lp_gurobi_t *lp, const fact_t *facts, int facts_size,
+                         const plan_op_t *op, int op_size, int use_ilp)
+{
+    int i, j, cur;
+
+    if (GRBloadenv(&lp->env, NULL) != 0 || lp->env == NULL){
+        fprintf(stderr, "Error: Could not create Gurobi environment!"
+                        " Exiting...\n");
+        exit(-1);
+    }
+
+    // Set verbosity to 0
+    GRBsetintparam(lp->env, GRB_INT_PAR_OUTPUTFLAG, 0);
+
+    // Prepare objective coeficients
+    lp->num_vars = op_size;
+    lp->obj = BOR_ALLOC_ARR(double, op_size);
+    for (i = 0; i < op_size; ++i)
+        lp->obj[i] = op[i].cost;
+
+    // Prepare variable types
+    if (use_ilp){
+        lp->vtype = BOR_ALLOC_ARR(char, op_size);
+        for (i = 0; i < op_size; ++i)
+            lp->vtype[i] = GRB_INTEGER;
+    }else{
+        lp->vtype = NULL;
+    }
+
+    // Prepare data for constraints matrix
+    lp->num_constrs = facts_size;
+    lp->num_nz = 0;
+    for (i = 0; i < facts_size; ++i)
+        lp->num_nz += facts[i].constr_len;
+
+    lp->cbeg = BOR_ALLOC_ARR(int, facts_size);
+    lp->cind = BOR_ALLOC_ARR(int, lp->num_nz);
+    lp->cval = BOR_ALLOC_ARR(double, lp->num_nz);
+    lp->clower = BOR_ALLOC_ARR(double, facts_size);
+    lp->cupper = BOR_ALLOC_ARR(double, facts_size);
+
+    for (cur = 0, i = 0; i < facts_size; ++i){
+        lp->cbeg[i] = cur;
+        for (j = 0; j < facts[i].constr_len; ++j){
+            lp->cind[cur] = facts[i].constr_idx[j];
+            lp->cval[cur] = facts[i].constr_coef[j];
+            ++cur;
+        }
+    }
+}
+
+static void lpGurobiFree(lp_gurobi_t *lp)
+{
+    if (lp->env)
+        GRBfreeenv(lp->env);
+    if (lp->obj)
+        BOR_FREE(lp->obj);
+    if (lp->vtype)
+        BOR_FREE(lp->vtype);
+    if (lp->cbeg)
+        BOR_FREE(lp->cbeg);
+    if (lp->cind)
+        BOR_FREE(lp->cind);
+    if (lp->cval)
+        BOR_FREE(lp->cval);
+    if (lp->clower)
+        BOR_FREE(lp->clower);
+    if (lp->cupper)
+        BOR_FREE(lp->cupper);
+}
+
+static plan_cost_t lpGurobiSolve(lp_gurobi_t *lp, const fact_t *facts,
+                                 int facts_size, int use_ilp)
+{
+    GRBmodel *model = NULL;
+    int i, err, status;
+    double z;
+
+    // Create a new model
+    err = GRBnewmodel(lp->env, &model, NULL, lp->num_vars, lp->obj, NULL,
+                      NULL, lp->vtype, NULL);
+    if (err != 0)
+        goto lp_gurobi_solve_err;
+
+    // Set up minimization
+    err = GRBsetintattr(model, GRB_INT_ATTR_MODELSENSE, GRB_MINIMIZE);
+    if (err != 0)
+        goto lp_gurobi_solve_err;
+
+    // Set up constraints
+    for (i = 0; i < facts_size; ++i){
+        lp->clower[i] = facts[i].lower_bound;
+        lp->cupper[i] = facts[i].upper_bound;
+    }
+    err = GRBaddrangeconstrs(model, lp->num_constrs, lp->num_nz, lp->cbeg,
+                             lp->cind, lp->cval, lp->clower, lp->cupper, NULL);
+    if (err != 0)
+        goto lp_gurobi_solve_err;
+
+    err = GRBoptimize(model);
+    if (err != 0)
+        goto lp_gurobi_solve_err;
+
+    err = GRBgetintattr(model, GRB_INT_ATTR_STATUS, &status);
+    if (err != 0)
+        goto lp_gurobi_solve_err;
+
+    err = GRBgetdblattr(model, GRB_DBL_ATTR_OBJVAL, &z);
+    if (err != 0)
+        goto lp_gurobi_solve_err;
+
+    GRBfreemodel(model);
+
+    if (status == GRB_OPTIMAL || status == GRB_SUBOPTIMAL)
+        return z;
+    return PLAN_HEUR_DEAD_END;
+
+lp_gurobi_solve_err:
+    GRBfreemodel(model);
+    fprintf(stderr, "Error: Gurobi error: %s\n", GRBgeterrormsg(lp->env));
+    exit(-1);
+}
+
+#endif /* PLAN_USE_GUROBI */

@@ -24,7 +24,8 @@
 
 //#define PLAN_USE_GLPK
 //#define PLAN_USE_LP_SOLVE
-#define PLAN_USE_GUROBI
+//#define PLAN_USE_GUROBI
+#define PLAN_USE_CPLEX
 
 #ifdef PLAN_USE_GLPK
 # include <glpk.h>
@@ -43,7 +44,7 @@
 # else /* PLAN_USE_LP_SOLVE */
 
 #  ifdef PLAN_USE_GUROBI
-#  include <gurobi_c.h>
+#   include <gurobi_c.h>
 struct _lp_gurobi_t {
     GRBenv *env;
     int num_vars;
@@ -64,7 +65,23 @@ typedef struct _lp_gurobi_t lp_gurobi_t;
 #   define LP_SOLVE lpGurobiSolve
 
 #  else /* PLAN_USE_GUROBI */
-#   error "No (I)LP solver -- cannot compile Flow heuristic"
+#   ifdef PLAN_USE_CPLEX
+ #   include <ilcplex/cplex.h>
+struct _lp_cplex_t {
+    CPXENVptr env;
+    CPXLPptr lp;
+    int num_constrs;
+    int *idx;
+    double *rhs;
+};
+typedef struct _lp_cplex_t lp_cplex_t;
+#    define LP_STRUCT lp_cplex_t
+#    define LP_INIT lpCplexInit
+#    define LP_FREE lpCplexFree
+#    define LP_SOLVE lpCplexSolve
+#   else /* PLAN_USE_CPLEX */
+#    error "No (I)LP solver -- cannot compile Flow heuristic"
+#   endif /* PLAN_USE_CPLEX */
 #  endif /* PLAN_USE_GUROBI */
 # endif /* PLAN_USE_LP_SOLVE */
 
@@ -193,6 +210,14 @@ static void lpGurobiFree(lp_gurobi_t *lp);
 static plan_cost_t lpGurobiSolve(lp_gurobi_t *lp, const fact_t *facts,
                                  int facts_size, int use_ilp);
 #endif /* PLAN_USE_GUROBI */
+
+#ifdef PLAN_USE_CPLEX
+static void lpCplexInit(lp_cplex_t *lp, const fact_t *facts, int facts_size,
+                        const plan_op_t *op, int op_size, int use_ilp);
+static void lpCplexFree(lp_cplex_t *lp);
+static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
+                                int facts_size, int use_ilp);
+#endif /* PLAN_USE_CPLEX */
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
@@ -747,3 +772,149 @@ lp_gurobi_solve_err:
 }
 
 #endif /* PLAN_USE_GUROBI */
+
+
+#ifdef PLAN_USE_CPLEX
+static void cplexErr(lp_cplex_t *lp, int status, const char *s)
+{
+    char errmsg[1024];
+    CPXgeterrorstring(lp->env, status, errmsg);
+    fprintf(stderr, "Error: CPLEX: %s: %s\n", s, errmsg);
+    exit(-1);
+}
+
+static void lpCplexInit(lp_cplex_t *lp, const fact_t *facts, int facts_size,
+                        const plan_op_t *op, int op_size, int use_ilp)
+{
+    int st, *cbeg, *cind, num_constrs, num_nz, cur, i, j;
+    double *obj, *lb, *cval;
+    char *sense, *ctype = NULL;
+
+    // Initialize CPLEX structures
+    lp->env = CPXopenCPLEX(&st);
+    if (lp->env == NULL)
+        cplexErr(lp, st, "Could not open CPLEX environment");
+
+    lp->lp = CPXcreateprob(lp->env, &st, "heurflow");
+    if (lp->lp == NULL)
+        cplexErr(lp, st, "Could not create CPLEX problem");
+
+    // Set up minimaztion
+    CPXchgobjsen(lp->env, lp->lp, CPX_MIN);
+
+    // Set up variables
+    obj = BOR_ALLOC_ARR(double, op_size);
+    lb = BOR_CALLOC_ARR(double, op_size);
+    for (i = 0; i < op_size; ++i)
+        obj[i] = op[i].cost;
+
+    if (use_ilp){
+        ctype = BOR_ALLOC_ARR(char, op_size);
+        for (i = 0; i < op_size; ++i)
+            ctype[i] = 'I';
+    }
+
+    st = CPXnewcols(lp->env, lp->lp, op_size, obj, lb, NULL, ctype, NULL);
+    if (st != 0)
+        cplexErr(lp, st, "Could not initialize variables");
+    BOR_FREE(obj);
+    BOR_FREE(lb);
+    if (ctype)
+        BOR_FREE(ctype);
+
+    // Prepare data for constraints matrix
+    num_constrs = 2 * facts_size;
+    num_nz = 0;
+    for (i = 0; i < facts_size; ++i)
+        num_nz += facts[i].constr_len;
+    num_nz *= 2;
+
+    cbeg = BOR_ALLOC_ARR(int, num_constrs);
+    cind = BOR_ALLOC_ARR(int, num_nz);
+    cval = BOR_ALLOC_ARR(double, num_nz);
+    sense = BOR_ALLOC_ARR(char, num_constrs);
+
+    for (cur = 0, i = 0; i < facts_size; ++i){
+        cbeg[2 * i] = cur;
+        for (j = 0; j < facts[i].constr_len; ++j){
+            cind[cur] = facts[i].constr_idx[j];
+            cval[cur] = facts[i].constr_coef[j];
+            ++cur;
+        }
+
+        cbeg[2 * i + 1] = cur;
+        for (j = 0; j < facts[i].constr_len; ++j){
+            cind[cur] = facts[i].constr_idx[j];
+            cval[cur] = facts[i].constr_coef[j];
+            ++cur;
+        }
+
+        sense[2 * i] = 'G';
+        sense[2 * i + 1] = 'L';
+    }
+
+    st = CPXaddrows(lp->env, lp->lp, 0, num_constrs, num_nz, NULL, sense,
+                    cbeg, cind, cval, NULL, NULL);
+    if (st != 0)
+        cplexErr(lp, st, "Could not initialize constriant matrix");
+
+    BOR_FREE(cbeg);
+    BOR_FREE(cind);
+    BOR_FREE(cval);
+    BOR_FREE(sense);
+
+    lp->num_constrs = num_constrs;
+    lp->idx = BOR_ALLOC_ARR(int, num_constrs);
+    lp->rhs = BOR_ALLOC_ARR(double, num_constrs);
+    for (i = 0; i < num_constrs; ++i)
+        lp->idx[i] = i;
+}
+
+static void lpCplexFree(lp_cplex_t *lp)
+{
+    if (lp->lp)
+        CPXfreeprob(lp->env, &lp->lp);
+    if (lp->env)
+        CPXcloseCPLEX(&lp->env);
+    if (lp->idx)
+        BOR_FREE(lp->idx);
+    if (lp->rhs)
+        BOR_FREE(lp->rhs);
+}
+
+static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
+                                int facts_size, int use_ilp)
+{
+    int i, st, solst;
+    double z;
+
+    // Change lower and upper bounds
+    for (i = 0; i < facts_size; ++i){
+        lp->rhs[2 * i] = facts[i].lower_bound;
+        lp->rhs[2 * i + 1] = facts[i].upper_bound;
+    }
+
+    st = CPXchgrhs(lp->env, lp->lp, lp->num_constrs, lp->idx, lp->rhs);
+    if (st != 0)
+        cplexErr(lp, st, "Could not update constraint matrix");
+
+    // Optimize
+    if (use_ilp){
+        st = CPXmipopt(lp->env, lp->lp);
+    }else{
+        st = CPXlpopt(lp->env, lp->lp);
+    }
+    if (st != 0)
+        cplexErr(lp, st, "Failed to optimize LP");
+
+    // Read out solution
+    solst = CPXgetstat(lp->env, lp->lp);
+    if (solst == 0)
+        return PLAN_HEUR_DEAD_END;
+
+    st = CPXgetobjval(lp->env, lp->lp, &z);
+    if (st != 0)
+        return PLAN_HEUR_DEAD_END;
+    return z;
+}
+#endif /* PLAN_USE_CPLEX */

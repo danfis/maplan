@@ -34,8 +34,36 @@ extern "C" {
  * =======================
  */
 
+/**
+ * Use integer linear programming instead of LP for solving flow heuristic.
+ */
+#define PLAN_HEUR_FLOW_ILP 0x1u
+
+/**
+ * Use landmarks from lm-cut heuristic for constraints in the flow heuristic.
+ */
+#define PLAN_HEUR_FLOW_LANDMARKS_LM_CUT 0x2u
+
 /** Forward declaration */
 typedef struct _plan_heur_t plan_heur_t;
+
+/**
+ * Structure holding one landmark.
+ */
+struct _plan_heur_res_landmark_t {
+    int size;    /*!< Number of operators in the landmark */
+    int *op_id;  /*!< Array of operators' IDs */
+};
+typedef struct _plan_heur_res_landmark_t plan_heur_res_landmark_t;
+
+/**
+ * Structure holding all landmarks
+ */
+struct _plan_heur_res_landmarks_t {
+    int num_landmarks;              /*!< Number of landmarks */
+    plan_heur_res_landmark_t *landmark; /*!< Array of landmarks */
+};
+typedef struct _plan_heur_res_landmarks_t plan_heur_res_landmarks_t;
 
 /**
  * Structure for results.
@@ -59,6 +87,13 @@ struct _plan_heur_res_t {
     plan_op_t **pref_op; /*!< Input/Output list of operators */
     int pref_op_size;    /*!< Size of .pref_op[] */
     int pref_size;       /*!< Number of preferred operators */
+
+    int save_landmarks; /*!< Set to true if landmarks should be returned.
+                             Don't forget to use planHeurResLandmarksFree()
+                             to free all memory allocated within .landmarks
+                             member. */
+    plan_heur_res_landmarks_t landmarks; /*!< Struct containing landmarks */
+
 };
 typedef struct _plan_heur_res_t plan_heur_res_t;
 
@@ -66,6 +101,11 @@ typedef struct _plan_heur_res_t plan_heur_res_t;
  * Initializes plan_heur_res_t structure.
  */
 _bor_inline void planHeurResInit(plan_heur_res_t *res);
+
+/**
+ * Free memory allocated withing plan_heur_res_landmarks_t structure.
+ */
+void planHeurResLandmarksFree(plan_heur_res_landmarks_t *ldms);
 
 /**
  * Destructor of the heuristic object.
@@ -164,6 +204,15 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
 plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,
                             const plan_part_state_t *goal,
                             const plan_op_t *op, int op_size);
+
+/**
+ * Flow based heuristics.
+ * For flags see PLAN_HEUR_FLOW_* macros above.
+ */
+plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
+                             const plan_part_state_t *goal,
+                             const plan_op_t *op, int op_size,
+                             unsigned flags);
 
 /**
  * Creates an multi-agent version of max heuristic.

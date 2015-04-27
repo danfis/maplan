@@ -8,6 +8,7 @@
 //#include "search_lazy.h"
 #include "search_astar.h"
 #include "heur.h"
+#include "heur_flow.h"
 #include "heur_ma.h"
 #include "list_lazy.h"
 #include "list.h"
@@ -32,6 +33,7 @@ TEST_SUITES {
     //TEST_SUITE_ADD(TSSearchLazy),
     TEST_SUITE_ADD(TSSearchAStar),
     TEST_SUITE_ADD(TSHeur),
+    TEST_SUITE_ADD(TSHeurFlow),
     TEST_SUITE_ADD(TSHeurMA),
     TEST_SUITE_ADD(TSListLazy),
     TEST_SUITE_ADD(TSList),

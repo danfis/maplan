@@ -93,4 +93,25 @@ else
   PROTOBUF_LDFLAGS ?= $(shell pkg-config --libs protobuf)
 endif
 
+
+LP_SOLVE_CFLAGS ?=
+LP_SOLVE_LDFLAGS ?=
+ifneq '$(LP_SOLVE_CFLAGS)$(LP_SOLVE_LDFLAGS)' ''
+  USE_LP_SOLVE := yes
+endif
+ifeq '$(USE_LP_SOLVE)' ''
+  ifeq '$(shell if test -f /usr/lib/liblpsolve55.so; then echo "yes"; fi;)' 'yes'
+    LP_SOLVE_LDFLAGS = -llpsolve55
+    USE_LP_SOLVE := yes
+    CONFIG_FLAGS += -DUSE_LP_SOLVE
+  endif
+endif
+
+CPLEX_CFLAGS ?=
+CPLEX_LDFLAGS ?=
+ifneq '$(CPLEX_CFLAGS)$(CPLEX_LDFLAGS)' ''
+  USE_CPLEX := yes
+  CONFIG_FLAGS += -DUSE_CPLEX
+endif
+
 .DEFAULT_GOAL := all

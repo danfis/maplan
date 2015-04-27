@@ -64,6 +64,7 @@ static optdef_t opt_heur[] = {
     { "ff", opt_heur_all },
     { "dtg", opt_heur_all },
     { "lm-cut", opt_heur_all },
+    { "flow", opt_heur_all },
     { "ma-max", opt_empty },
     { "ma-ff", opt_empty },
     { "ma-lm-cut", opt_empty },
@@ -195,7 +196,7 @@ static void usage(const char *progname)
     fprintf(stderr, "\n");
     fprintf(stderr,
 "  HEUR OPTIONS:\n"
-"    The available heur algorithms are: goalcount, add, max, ff, dtg, lm-cut.\n"
+"    The available heur algorithms are: goalcount, add, max, ff, dtg, lm-cut, flow.\n"
 "    Additionally for the multi-agent mode: ma-max, ma-ff, ma-lm-cut, ma-dtg\n"
 "\n"
 "    Options allowed for all (non ma-) heuristics in multi-agent mode:\n"

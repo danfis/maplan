@@ -553,6 +553,9 @@ static plan_heur_t *_heurNew(const char *name,
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
                                 prob->goal, op, op_size);
+    }else if (strcmp(name, "flow") == 0){
+        heur = planHeurFlowNew(prob->var, prob->var_size,
+                               prob->goal, op, op_size, 0);
     }else if (strcmp(name, "ma-max") == 0){
         heur = planHeurMARelaxMaxNew(prob);
     }else if (strcmp(name, "ma-ff") == 0){

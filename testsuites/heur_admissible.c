@@ -21,6 +21,13 @@ static plan_heur_t *heurFlow(const plan_problem_t *p)
                            p->op, p->op_size, 0);
 }
 
+static plan_heur_t *heurFlowLandmarks(const plan_problem_t *p)
+{
+    return planHeurFlowNew(p->var, p->var_size, p->goal,
+                           p->op, p->op_size,
+                           PLAN_HEUR_FLOW_LANDMARKS_LM_CUT);
+}
+
 static void checkOptimalCost(new_heur_fn new_heur, const char *proto)
 {
     plan_search_astar_params_t params;
@@ -148,6 +155,28 @@ TEST(testHeurAdmissibleFlow)
                       "states/driverlog-pfile1.txt",
                       "states/driverlog-pfile1.cost.txt");
     checkOptimalCost2(heurFlow,
+                      "proto/rovers-p03.proto",
+                      "states/rovers-p03.txt",
+                      "states/rovers-p03.cost.txt");
+}
+
+TEST(testHeurAdmissibleFlowLandmarks)
+{
+    checkOptimalCost(heurFlowLandmarks, "proto/depot-pfile1.proto");
+    checkOptimalCost(heurFlowLandmarks, "proto/depot-pfile2.proto");
+    checkOptimalCost(heurFlowLandmarks, "proto/rovers-p01.proto");
+    checkOptimalCost(heurFlowLandmarks, "proto/rovers-p02.proto");
+    checkOptimalCost(heurFlowLandmarks, "proto/rovers-p03.proto");
+
+    checkOptimalCost2(heurFlowLandmarks,
+                      "proto/depot-pfile1.proto",
+                      "states/depot-pfile1.txt",
+                      "states/depot-pfile1.cost.txt");
+    checkOptimalCost2(heurFlowLandmarks,
+                      "proto/driverlog-pfile1.proto",
+                      "states/driverlog-pfile1.txt",
+                      "states/driverlog-pfile1.cost.txt");
+    checkOptimalCost2(heurFlowLandmarks,
                       "proto/rovers-p03.proto",
                       "states/rovers-p03.txt",
                       "states/rovers-p03.cost.txt");

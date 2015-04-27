@@ -3,14 +3,29 @@
 #include "plan/heur.h"
 #include "state_pool.h"
 
-static void runTest(const char *name, const char *proto,
-                    const char *states, int flags)
+typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);
+
+static plan_heur_t *lmCutNew(plan_problem_t *p)
+{
+    return planHeurLMCutNew(p->var, p->var_size, p->goal,
+                            p->op, p->op_size);
+}
+
+static plan_heur_t *flowBaseNew(plan_problem_t *p)
+{
+    return planHeurFlowNew(p->var, p->var_size, p->goal,
+                           p->op, p->op_size, 0);
+}
+
+static void _runTest(const char *name, const char *proto,
+                     const char *states, int flags,
+                     new_heur_fn check_min_heur_fn)
 {
     plan_problem_t *p;
     state_pool_t state_pool;
     plan_state_t *state;
-    plan_heur_t *heur;
-    plan_heur_res_t res;
+    plan_heur_t *heur, *heur_check_min = NULL;
+    plan_heur_res_t res, res_check_min;
     int i, si;
 
     printf("-----\n%s\n%s\n", name, proto);
@@ -25,28 +40,59 @@ static void runTest(const char *name, const char *proto,
         goto run_test_end;
     }
 
-    for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
-        //if (si != 4)
-        //    continue;
-        planHeurResInit(&res);
+    if (check_min_heur_fn != NULL)
+        heur_check_min = check_min_heur_fn(p);
 
+    for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
+        //if (si != 7689)
+        //    continue;
+
+        planHeurResInit(&res);
         planHeur(heur, state, &res);
-        printf("[%d] %d ::", si, res.heur);
-        for (i = 0; i < planStateSize(state); ++i){
-            printf(" %d", planStateGet(state, i));
+
+        if (heur_check_min){
+            planHeurResInit(&res_check_min);
+            planHeur(heur_check_min, state, &res_check_min);
+
+            assertTrue(res_check_min.heur <= res.heur);
+            if (!(res_check_min.heur <= res.heur)){
+                printf("%d: %d > %d!\n", si, res_check_min.heur, res.heur);
+            }
+
+        }else{
+            printf("[%d] %d ::", si, res.heur);
+            for (i = 0; i < planStateSize(state); ++i){
+                printf(" %d", planStateGet(state, i));
+            }
+            printf("\n");
+            fflush(stdout);
         }
-        printf("\n");
-        fflush(stdout);
     }
 
 run_test_end:
     if (heur)
         planHeurDel(heur);
+    if (heur_check_min)
+        planHeurDel(heur_check_min);
     statePoolFree(&state_pool);
     planStateDel(state);
     planProblemDel(p);
     printf("-----\n");
 }
+
+static void runTest(const char *name, const char *proto,
+                    const char *states, int flags)
+{
+    _runTest(name, proto, states, flags, NULL);
+}
+
+static void runTestCheckMin(const char *name, const char *proto,
+                            const char *states, int flags,
+                            new_heur_fn fn)
+{
+    _runTest(name, proto, states, flags, fn);
+}
+
 
 
 TEST(testHeurFlow)
@@ -63,6 +109,52 @@ TEST(testHeurFlow)
             "states/rovers-p15.txt", 0);
     runTest("Flow", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", 0);
+}
+
+TEST(testHeurFlowLandmarks)
+{
+    int flags;
+    
+    flags = PLAN_HEUR_FLOW_LANDMARKS_LM_CUT;
+    runTest("Flow Landmarks", "proto/simple.proto",
+            "states/simple.txt", flags);
+    runTest("Flow Landmarks", "proto/depot-pfile1.proto",
+            "states/depot-pfile1.txt", flags);
+    runTest("Flow Landmarks", "proto/depot-pfile5.proto",
+            "states/depot-pfile5.txt", flags);
+    runTest("Flow Landmarks", "proto/rovers-p03.proto",
+            "states/rovers-p03.txt", flags);
+    runTest("Flow Landmarks", "proto/rovers-p15.proto",
+            "states/rovers-p15.txt", flags);
+    runTest("Flow Landmarks", "proto/CityCar-p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", flags);
+
+    runTestCheckMin("Flow Landmarks Check Flow-Base", "proto/simple.proto",
+                    "states/simple.txt", flags, flowBaseNew);
+    runTestCheckMin("Flow Landmarks Check Flow-Base", "proto/depot-pfile1.proto",
+                    "states/depot-pfile1.txt", flags, flowBaseNew);
+    runTestCheckMin("Flow Landmarks Check Flow-Base", "proto/depot-pfile5.proto",
+                    "states/depot-pfile5.txt", flags, flowBaseNew);
+    runTestCheckMin("Flow Landmarks Check Flow-Base", "proto/rovers-p03.proto",
+                    "states/rovers-p03.txt", flags, flowBaseNew);
+    runTestCheckMin("Flow Landmarks Check Flow-Base", "proto/rovers-p15.proto",
+                    "states/rovers-p15.txt", flags, flowBaseNew);
+    runTestCheckMin("Flow Landmarks Check Flow-Base", "proto/CityCar-p3-2-2-0-1.proto",
+                    "states/citycar-p3-2-2-0-1.txt", flags, flowBaseNew);
+
+    flags = PLAN_HEUR_FLOW_LANDMARKS_LM_CUT;// | PLAN_HEUR_FLOW_ILP;
+    runTestCheckMin("Flow Landmarks Check LM-Cut", "proto/simple.proto",
+                    "states/simple.txt", flags, lmCutNew);
+    runTestCheckMin("Flow Landmarks Check LM-Cut", "proto/depot-pfile1.proto",
+                    "states/depot-pfile1.txt", flags, lmCutNew);
+    runTestCheckMin("Flow Landmarks Check LM-Cut", "proto/depot-pfile5.proto",
+                    "states/depot-pfile5.txt", flags, lmCutNew);
+    runTestCheckMin("Flow Landmarks Check LM-Cut", "proto/rovers-p03.proto",
+                    "states/rovers-p03.txt", flags, lmCutNew);
+    runTestCheckMin("Flow Landmarks Check LM-Cut", "proto/rovers-p15.proto",
+                    "states/rovers-p15.txt", flags, lmCutNew);
+    runTestCheckMin("Flow Landmarks Check LM-Cut", "proto/CityCar-p3-2-2-0-1.proto",
+                    "states/citycar-p3-2-2-0-1.txt", flags, lmCutNew);
 }
 
 TEST(testHeurFlowILP)

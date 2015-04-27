@@ -127,6 +127,7 @@ struct _plan_heur_flow_t {
     plan_fact_id_t fact_id; /*!< Translation from var-val pair to fact ID */
     fact_t *facts;          /*!< Array of fact related structures */
     LP_STRUCT lp;           /*!< Pre-initialized (I)LP solver */
+    plan_heur_t *lm_cut;    /*!< LM-Cut heuristic used for landmarks */
 };
 typedef struct _plan_heur_flow_t plan_heur_flow_t;
 #define HEUR(parent) \
@@ -153,7 +154,8 @@ static void lpLPSolveInit(lprec **lp, const fact_t *facts, int facts_size,
                           const plan_op_t *op, int op_size, int use_ilp);
 static void lpLPSolveFree(lprec **lp);
 static plan_cost_t lpLPSolveSolve(lprec **lp, const fact_t *facts,
-                                  int facts_size, int use_ilp);
+                                  int facts_size, int use_ilp,
+                                  const plan_heur_res_landmarks_t *ldms);
 #endif /* PLAN_HEUR_FLOW_LP_SOLVE */
 
 #ifdef PLAN_HEUR_FLOW_CPLEX
@@ -183,6 +185,10 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
     LP_INIT(&hflow->lp, hflow->facts, hflow->fact_id.fact_size, op, op_size,
             hflow->use_ilp);
 
+    hflow->lm_cut = NULL;
+    if (flags & PLAN_HEUR_FLOW_LANDMARKS_LM_CUT)
+        hflow->lm_cut = planHeurLMCutNew(var, var_size, goal, op, op_size);
+
     return &hflow->heur;
 }
 
@@ -191,6 +197,8 @@ static void heurFlowDel(plan_heur_t *_heur)
     plan_heur_flow_t *hflow = HEUR(_heur);
     int i;
 
+    if (hflow->lm_cut != NULL)
+        planHeurDel(hflow->lm_cut);
     LP_FREE(&hflow->lp);
 
     for (i = 0; hflow->facts && i < hflow->fact_id.fact_size; ++i){
@@ -210,10 +218,24 @@ static void heurFlow(plan_heur_t *_heur, const plan_state_t *state,
                      plan_heur_res_t *res)
 {
     plan_heur_flow_t *hflow = HEUR(_heur);
+    plan_heur_res_t ldms_res;
+    plan_heur_res_landmarks_t *ldms = NULL;
+
+    // Compute landmark heuristic to get landmarks.
+    if (hflow->lm_cut){
+        planHeurResInit(&ldms_res);
+        ldms_res.save_landmarks = 1;
+        planHeur(hflow->lm_cut, state, &ldms_res);
+        ldms = &ldms_res.landmarks;
+    }
 
     factsSetState(hflow->facts, &hflow->fact_id, state);
     res->heur = LP_SOLVE(&hflow->lp, hflow->facts, hflow->fact_id.fact_size,
-                         hflow->use_ilp);
+                         hflow->use_ilp, ldms);
+
+    // Free allocated landmarks
+    if (hflow->lm_cut)
+        planHeurResLandmarksFree(ldms);
 }
 
 static void factsInitGoal(fact_t *facts, const plan_fact_id_t *fact_id,
@@ -428,10 +450,55 @@ static void lpLPSolveFree(lprec **lp)
         delete_lp(*lp);
 }
 
+static void lpSolveAddLandmarks(lprec *lp,
+                                const plan_heur_res_landmarks_t *ldms)
+{
+    plan_heur_res_landmark_t *ldm;
+    REAL *row = NULL;
+    int *colno = NULL;
+    int rowsize = 0, i, j;
+
+    if (ldms == NULL)
+        return;
+
+    for (i = 0; i < ldms->num_landmarks; ++i){
+        ldm = ldms->landmark + i;
+        if (rowsize < ldm->size){
+            row = BOR_REALLOC_ARR(row, REAL, ldm->size);
+            colno = BOR_REALLOC_ARR(colno, int, ldm->size);
+            for (; rowsize < ldm->size; ++rowsize)
+                row[rowsize] = 1.;
+        }
+        for (j = 0; j < ldm->size; ++j)
+            colno[j] = ldm->op_id[j] + 1;
+        add_constraintex(lp, ldm->size, row, colno, GE, 1.);
+    }
+
+    if (row != NULL)
+        BOR_FREE(row);
+    if (colno != NULL)
+        BOR_FREE(colno);
+}
+
+static void lpSolveDelLandmarks(lprec *lp,
+                                const plan_heur_res_landmarks_t *ldms)
+{
+    int i;
+
+    if (ldms == NULL)
+        return;
+
+    for (i = 0; i < ldms->num_landmarks; ++i){
+        del_constraint(lp, get_Nrows(lp));
+    }
+}
+
 static plan_cost_t lpLPSolveSolve(lprec **_lp, const fact_t *facts,
-                                  int facts_size, int use_ilp)
+                                  int facts_size, int use_ilp,
+                                  const plan_heur_res_landmarks_t *ldms)
 {
     lprec *lp = *_lp;
+    plan_cost_t h = PLAN_HEUR_DEAD_END;
     int i, ret;
 
     // Add row for each fact
@@ -459,11 +526,16 @@ static plan_cost_t lpLPSolveSolve(lprec **_lp, const fact_t *facts,
         }
     }
 
+    // Add landmarks if provided
+    lpSolveAddLandmarks(lp, ldms);
+
     set_verbose(lp, NEUTRAL);
     ret = solve(lp);
     if (ret == OPTIMAL || ret == SUBOPTIMAL)
-        return get_objective(lp);
-    return PLAN_HEUR_DEAD_END;
+        h = ceil(get_objective(lp));
+
+    lpSolveDelLandmarks(lp, ldms);
+    return h;
 }
 #endif /* PLAN_HEUR_FLOW_LP_SOLVE */
 
@@ -609,7 +681,7 @@ static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
     st = CPXgetobjval(lp->env, lp->lp, &z);
     if (st != 0)
         return PLAN_HEUR_DEAD_END;
-    return z;
+    return ceil(z);
 }
 #endif /* PLAN_HEUR_FLOW_CPLEX */
 

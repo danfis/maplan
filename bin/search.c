@@ -530,11 +530,13 @@ static plan_list_lazy_t *listLazyCreate(const options_t *o)
     return list;
 }
 
-static plan_heur_t *_heurNew(const char *name,
+static plan_heur_t *_heurNew(const options_t *o,
+                             const char *name,
                              const plan_problem_t *prob,
                              const plan_op_t *op, int op_size)
 {
     plan_heur_t *heur = NULL;
+    int flags = 0;
 
     if (strcmp(name, "goalcount") == 0){
         heur = planHeurGoalCountNew(prob->goal);
@@ -554,8 +556,12 @@ static plan_heur_t *_heurNew(const char *name,
         heur = planHeurLMCutNew(prob->var, prob->var_size,
                                 prob->goal, op, op_size);
     }else if (strcmp(name, "flow") == 0){
+        if (optionsHeurOpt(o, "ilp"))
+            flags |= PLAN_HEUR_FLOW_ILP;
+        if (optionsHeurOpt(o, "lm-cut"))
+            flags |= PLAN_HEUR_FLOW_LANDMARKS_LM_CUT;
         heur = planHeurFlowNew(prob->var, prob->var_size,
-                               prob->goal, op, op_size, 0);
+                               prob->goal, op, op_size, flags);
     }else if (strcmp(name, "ma-max") == 0){
         heur = planHeurMARelaxMaxNew(prob);
     }else if (strcmp(name, "ma-ff") == 0){
@@ -576,7 +582,7 @@ static plan_heur_t *heurNew(const options_t *o,
 {
     plan_heur_t *heur;
 
-    heur = _heurNew(o->heur, prob, prob->op, prob->op_size);
+    heur = _heurNew(o, o->heur, prob, prob->op, prob->op_size);
     return heur;
 }
 
@@ -606,7 +612,7 @@ static plan_heur_t *heurNewMA(const options_t *o,
         op_size = prob->proj_op_size;
     }
 
-    heur = _heurNew(o->heur, prob, op, op_size);
+    heur = _heurNew(o, o->heur, prob, op, op_size);
     return heur;
 }
 

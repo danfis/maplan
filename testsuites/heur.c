@@ -43,18 +43,6 @@ static plan_heur_t *dtgNew(plan_problem_t *p)
                           p->op, p->op_size);
 }
 
-static plan_heur_t *flowNew(plan_problem_t *p)
-{
-    return planHeurFlowNew(p->var, p->var_size, p->goal,
-                           p->op, p->op_size, 0);
-}
-
-static plan_heur_t *flowILPNew(plan_problem_t *p)
-{
-    return planHeurFlowNew(p->var, p->var_size, p->goal,
-                           p->op, p->op_size, PLAN_HEUR_FLOW_ILP);
-}
-
 typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);
 
 static void runTest(const char *name,
@@ -360,36 +348,4 @@ TEST(testHeurDTG)
             "states/rovers-p15.txt", dtgNew, 0, 0);
     runTest("DTG", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", dtgNew, 0, 0);
-}
-
-TEST(testHeurFlow)
-{
-    runTest("Flow", "proto/simple.proto",
-            "states/simple.txt", flowNew, 0, 0);
-    runTest("Flow", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", flowNew, 0, 0);
-    runTest("Flow", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", flowNew, 1, 0);
-    runTest("Flow", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", flowNew, 0, 0);
-    runTest("Flow", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", flowNew, 0, 0);
-    runTest("Flow", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", flowNew, 0, 0);
-}
-
-TEST(testHeurFlowILP)
-{
-    runTest("Flow ILP", "proto/simple.proto",
-            "states/simple.txt", flowILPNew, 0, 0);
-    runTest("Flow ILP", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", flowILPNew, 0, 0);
-    runTest("Flow ILP", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", flowILPNew, 1, 0);
-    runTest("Flow ILP", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", flowILPNew, 0, 0);
-    runTest("Flow ILP", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", flowILPNew, 0, 0);
-    runTest("Flow ILP", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", flowILPNew, 0, 0);
 }

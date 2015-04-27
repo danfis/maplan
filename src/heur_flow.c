@@ -18,55 +18,15 @@
  */
 
 #include <boruvka/alloc.h>
+#include <plan/config.h>
 #include <plan/heur.h>
 
 #include "fact_id.h"
 
-//#define PLAN_USE_GLPK
-//#define PLAN_USE_LP_SOLVE
-//#define PLAN_USE_GUROBI
-#define PLAN_USE_CPLEX
+#if defined(PLAN_USE_LP_SOLVE) || defined(PLAN_USE_CPLEX)
 
-#ifdef PLAN_USE_GLPK
-# include <glpk.h>
-# define LP_STRUCT glp_prob *
-# define LP_INIT lpGLPKInit
-# define LP_FREE lpGLPKFree
-# define LP_SOLVE lpGLPKSolve
-#else /* PLAN_USE_GLPK */
-
-# ifdef PLAN_USE_LP_SOLVE
-#  include <lpsolve/lp_lib.h>
-#  define LP_STRUCT lprec *
-#  define LP_INIT lpLPSolveInit
-#  define LP_FREE lpLPSolveFree
-#  define LP_SOLVE lpLPSolveSolve
-# else /* PLAN_USE_LP_SOLVE */
-
-#  ifdef PLAN_USE_GUROBI
-#   include <gurobi_c.h>
-struct _lp_gurobi_t {
-    GRBenv *env;
-    int num_vars;
-    double *obj;
-    char *vtype;
-    int num_constrs;
-    int num_nz;
-    int *cbeg;
-    int *cind;
-    double *cval;
-    double *clower;
-    double *cupper;
-};
-typedef struct _lp_gurobi_t lp_gurobi_t;
-#   define LP_STRUCT lp_gurobi_t
-#   define LP_INIT lpGurobiInit
-#   define LP_FREE lpGurobiFree
-#   define LP_SOLVE lpGurobiSolve
-
-#  else /* PLAN_USE_GUROBI */
-#   ifdef PLAN_USE_CPLEX
- #   include <ilcplex/cplex.h>
+#ifdef PLAN_USE_CPLEX
+# include <ilcplex/cplex.h>
 struct _lp_cplex_t {
     CPXENVptr env;
     CPXLPptr lp;
@@ -75,17 +35,22 @@ struct _lp_cplex_t {
     double *rhs;
 };
 typedef struct _lp_cplex_t lp_cplex_t;
-#    define LP_STRUCT lp_cplex_t
-#    define LP_INIT lpCplexInit
-#    define LP_FREE lpCplexFree
-#    define LP_SOLVE lpCplexSolve
-#   else /* PLAN_USE_CPLEX */
-#    error "No (I)LP solver -- cannot compile Flow heuristic"
-#   endif /* PLAN_USE_CPLEX */
-#  endif /* PLAN_USE_GUROBI */
-# endif /* PLAN_USE_LP_SOLVE */
+# define LP_STRUCT lp_cplex_t
+# define LP_INIT lpCplexInit
+# define LP_FREE lpCplexFree
+# define LP_SOLVE lpCplexSolve
+# define PLAN_HEUR_FLOW_CPLEX
+#endif /* PLAN_USE_CPLEX */
 
-#endif /* PLAN_USE_GLPK */
+// Prefer CPLEX over LP_SOVE
+#if !defined(PLAN_USE_CPLEX) && defined(PLAN_USE_LP_SOLVE)
+# include <lpsolve/lp_lib.h>
+# define LP_STRUCT lprec *
+# define LP_INIT lpLPSolveInit
+# define LP_FREE lpLPSolveFree
+# define LP_SOLVE lpLPSolveSolve
+# define PLAN_HEUR_FLOW_LP_SOLVE
+#endif /* PLAN_USE_LP_SOLVE */
 
 
 #define BOUND_INF 1E30
@@ -181,43 +146,23 @@ static void factsInit(fact_t *facts, const plan_fact_id_t *fact_id,
 static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
                           const plan_state_t *state);
 
-/* GLPK solver functions */
-#ifdef PLAN_USE_GLPK
-/** Transforms facts to A matrix needed for LP-solver */
-static int factsToGLPKAMatrix(const fact_t *facts, int facts_size,
-                              int **A_row, int **A_col, double **A_coef);
-static void lpGLPKInit(glp_prob **lp, const fact_t *facts, int facts_size,
-                       const plan_op_t *op, int op_size, int use_ilp);
-static void lpGLPKFree(glp_prob **lp);
-static plan_cost_t lpGLPKSolve(glp_prob **lp, const fact_t *facts,
-                               int facts_size, int use_ilp);
-#endif /* PLAN_USE_GLPK */
-
 
 /* lp_solve solver functions */
-#ifdef PLAN_USE_LP_SOLVE
+#ifdef PLAN_HEUR_FLOW_LP_SOLVE
 static void lpLPSolveInit(lprec **lp, const fact_t *facts, int facts_size,
                           const plan_op_t *op, int op_size, int use_ilp);
 static void lpLPSolveFree(lprec **lp);
 static plan_cost_t lpLPSolveSolve(lprec **lp, const fact_t *facts,
                                   int facts_size, int use_ilp);
-#endif /* PLAN_USE_LP_SOLVE */
+#endif /* PLAN_HEUR_FLOW_LP_SOLVE */
 
-#ifdef PLAN_USE_GUROBI
-static void lpGurobiInit(lp_gurobi_t *lp, const fact_t *facts, int facts_size,
-                         const plan_op_t *op, int op_size, int use_ilp);
-static void lpGurobiFree(lp_gurobi_t *lp);
-static plan_cost_t lpGurobiSolve(lp_gurobi_t *lp, const fact_t *facts,
-                                 int facts_size, int use_ilp);
-#endif /* PLAN_USE_GUROBI */
-
-#ifdef PLAN_USE_CPLEX
+#ifdef PLAN_HEUR_FLOW_CPLEX
 static void lpCplexInit(lp_cplex_t *lp, const fact_t *facts, int facts_size,
                         const plan_op_t *op, int op_size, int use_ilp);
 static void lpCplexFree(lp_cplex_t *lp);
 static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
                                 int facts_size, int use_ilp);
-#endif /* PLAN_USE_CPLEX */
+#endif /* PLAN_HEUR_FLOW_CPLEX */
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
@@ -446,131 +391,7 @@ static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
     }
 }
 
-#ifdef PLAN_USE_GLPK
-static int factsToGLPKAMatrix(const fact_t *facts, int facts_size,
-                              int **A_row, int **A_col, double **A_coef)
-{
-    int i, j, cur, size;
-    int *ai, *aj;
-    double *ac;
-
-    size = 1;
-    for (i = 0; i < facts_size; ++i)
-        size += facts[i].constr_len;
-
-    ai = BOR_ALLOC_ARR(int, size);
-    aj = BOR_ALLOC_ARR(int, size);
-    ac = BOR_ALLOC_ARR(double, size);
-
-    cur = 1;
-    for (i = 0; i < facts_size; ++i){
-        for (j = 0; j < facts[i].constr_len; ++j){
-            ai[cur] = i + 1;
-            aj[cur] = facts[i].constr_idx[j] + 1;
-            ac[cur] = facts[i].constr_coef[j];
-            ++cur;
-        }
-    }
-
-
-    *A_row = ai;
-    *A_col = aj;
-    *A_coef = ac;
-    return size - 1;
-}
-
-static void lpGLPKInit(glp_prob **_lp, const fact_t *facts, int facts_size,
-                       const plan_op_t *op, int op_size, int use_ilp)
-{
-    glp_prob *lp;
-    int i, size, *A_row, *A_col;
-    double *A_coef;
-
-    // Initialize (I)LP solver
-    lp = glp_create_prob();
-    glp_set_obj_dir(lp, GLP_MIN);
-
-    // Add column for each operator
-    glp_add_cols(lp, op_size);
-    for (i = 0; i < op_size; ++i){
-          glp_set_col_bnds(lp, i + 1, GLP_LO, 0., 0.);
-          glp_set_obj_coef(lp, i + 1, op[i].cost);
-          if (use_ilp)
-              glp_set_col_kind(lp, i + 1, GLP_IV);
-    }
-
-    // Add row for each fact
-    glp_add_rows(lp, facts_size);
-
-    // and set up coeficient matrix because it does not depend on the
-    // initial state.
-    size = factsToGLPKAMatrix(facts, facts_size, &A_row, &A_col, &A_coef);
-    glp_load_matrix(lp, size, A_row, A_col, A_coef);
-    BOR_FREE(A_row);
-    BOR_FREE(A_col);
-    BOR_FREE(A_coef);
-
-    *_lp = lp;
-}
-
-static void lpGLPKFree(glp_prob **lp)
-{
-    if (*lp)
-        glp_delete_prob(*lp);
-}
-
-static plan_cost_t lpGLPKSolve(glp_prob **_lp, const fact_t *facts,
-                               int facts_size, int use_ilp)
-{
-    glp_prob *lp = *_lp;
-    glp_smcp lp_params;
-    glp_iocp ilp_params;
-    int i, ret;
-    double z;
-
-    // Add row for each fact
-    for (i = 0; i < facts_size; ++i){
-        double upper, lower;
-        lower = facts[i].lower_bound;
-        upper = facts[i].upper_bound;
-
-        if (lower == upper){
-            glp_set_row_bnds(lp, i + 1, GLP_FX, lower, upper);
-
-        }else if (upper == BOUND_INF){
-            glp_set_row_bnds(lp, i + 1, GLP_LO, lower, 0.);
-
-        }else{
-            glp_set_row_bnds(lp, i + 1, GLP_DB, lower, upper);
-        }
-    }
-
-    if (use_ilp){
-        glp_init_iocp(&ilp_params);
-        ilp_params.msg_lev = GLP_MSG_OFF;
-        ilp_params.presolve = GLP_ON;
-        ret = glp_intopt(lp, &ilp_params);
-        if (ret == 0)
-             z = glp_mip_obj_val(lp);
-
-    }else{
-        glp_init_smcp(&lp_params);
-        lp_params.msg_lev = GLP_MSG_OFF;
-        lp_params.meth = GLP_PRIMAL;
-        ret = glp_simplex(lp, &lp_params);
-        if (ret == 0)
-            z = glp_get_obj_val(lp);
-    }
-
-    if (ret == 0){
-        return z;
-    }else{
-        return PLAN_HEUR_DEAD_END;
-    }
-}
-#endif /* PLAN_USE_GLPK */
-
-#ifdef PLAN_USE_LP_SOLVE
+#ifdef PLAN_HEUR_FLOW_LP_SOLVE
 static void lpLPSolveInit(lprec **_lp, const fact_t *facts, int facts_size,
                           const plan_op_t *op, int op_size, int use_ilp)
 {
@@ -644,137 +465,10 @@ static plan_cost_t lpLPSolveSolve(lprec **_lp, const fact_t *facts,
         return get_objective(lp);
     return PLAN_HEUR_DEAD_END;
 }
-#endif /* PLAN_USE_LP_SOLVE */
+#endif /* PLAN_HEUR_FLOW_LP_SOLVE */
 
 
-#ifdef PLAN_USE_GUROBI
-static void lpGurobiInit(lp_gurobi_t *lp, const fact_t *facts, int facts_size,
-                         const plan_op_t *op, int op_size, int use_ilp)
-{
-    int i, j, cur;
-
-    if (GRBloadenv(&lp->env, NULL) != 0 || lp->env == NULL){
-        fprintf(stderr, "Error: Could not create Gurobi environment!"
-                        " Exiting...\n");
-        exit(-1);
-    }
-
-    // Set verbosity to 0
-    GRBsetintparam(lp->env, GRB_INT_PAR_OUTPUTFLAG, 0);
-
-    // Prepare objective coeficients
-    lp->num_vars = op_size;
-    lp->obj = BOR_ALLOC_ARR(double, op_size);
-    for (i = 0; i < op_size; ++i)
-        lp->obj[i] = op[i].cost;
-
-    // Prepare variable types
-    if (use_ilp){
-        lp->vtype = BOR_ALLOC_ARR(char, op_size);
-        for (i = 0; i < op_size; ++i)
-            lp->vtype[i] = GRB_INTEGER;
-    }else{
-        lp->vtype = NULL;
-    }
-
-    // Prepare data for constraints matrix
-    lp->num_constrs = facts_size;
-    lp->num_nz = 0;
-    for (i = 0; i < facts_size; ++i)
-        lp->num_nz += facts[i].constr_len;
-
-    lp->cbeg = BOR_ALLOC_ARR(int, facts_size);
-    lp->cind = BOR_ALLOC_ARR(int, lp->num_nz);
-    lp->cval = BOR_ALLOC_ARR(double, lp->num_nz);
-    lp->clower = BOR_ALLOC_ARR(double, facts_size);
-    lp->cupper = BOR_ALLOC_ARR(double, facts_size);
-
-    for (cur = 0, i = 0; i < facts_size; ++i){
-        lp->cbeg[i] = cur;
-        for (j = 0; j < facts[i].constr_len; ++j){
-            lp->cind[cur] = facts[i].constr_idx[j];
-            lp->cval[cur] = facts[i].constr_coef[j];
-            ++cur;
-        }
-    }
-}
-
-static void lpGurobiFree(lp_gurobi_t *lp)
-{
-    if (lp->env)
-        GRBfreeenv(lp->env);
-    if (lp->obj)
-        BOR_FREE(lp->obj);
-    if (lp->vtype)
-        BOR_FREE(lp->vtype);
-    if (lp->cbeg)
-        BOR_FREE(lp->cbeg);
-    if (lp->cind)
-        BOR_FREE(lp->cind);
-    if (lp->cval)
-        BOR_FREE(lp->cval);
-    if (lp->clower)
-        BOR_FREE(lp->clower);
-    if (lp->cupper)
-        BOR_FREE(lp->cupper);
-}
-
-static plan_cost_t lpGurobiSolve(lp_gurobi_t *lp, const fact_t *facts,
-                                 int facts_size, int use_ilp)
-{
-    GRBmodel *model = NULL;
-    int i, err, status;
-    double z;
-
-    // Create a new model
-    err = GRBnewmodel(lp->env, &model, NULL, lp->num_vars, lp->obj, NULL,
-                      NULL, lp->vtype, NULL);
-    if (err != 0)
-        goto lp_gurobi_solve_err;
-
-    // Set up minimization
-    err = GRBsetintattr(model, GRB_INT_ATTR_MODELSENSE, GRB_MINIMIZE);
-    if (err != 0)
-        goto lp_gurobi_solve_err;
-
-    // Set up constraints
-    for (i = 0; i < facts_size; ++i){
-        lp->clower[i] = facts[i].lower_bound;
-        lp->cupper[i] = facts[i].upper_bound;
-    }
-    err = GRBaddrangeconstrs(model, lp->num_constrs, lp->num_nz, lp->cbeg,
-                             lp->cind, lp->cval, lp->clower, lp->cupper, NULL);
-    if (err != 0)
-        goto lp_gurobi_solve_err;
-
-    err = GRBoptimize(model);
-    if (err != 0)
-        goto lp_gurobi_solve_err;
-
-    err = GRBgetintattr(model, GRB_INT_ATTR_STATUS, &status);
-    if (err != 0)
-        goto lp_gurobi_solve_err;
-
-    err = GRBgetdblattr(model, GRB_DBL_ATTR_OBJVAL, &z);
-    if (err != 0)
-        goto lp_gurobi_solve_err;
-
-    GRBfreemodel(model);
-
-    if (status == GRB_OPTIMAL || status == GRB_SUBOPTIMAL)
-        return z;
-    return PLAN_HEUR_DEAD_END;
-
-lp_gurobi_solve_err:
-    GRBfreemodel(model);
-    fprintf(stderr, "Error: Gurobi error: %s\n", GRBgeterrormsg(lp->env));
-    exit(-1);
-}
-
-#endif /* PLAN_USE_GUROBI */
-
-
-#ifdef PLAN_USE_CPLEX
+#ifdef PLAN_HEUR_FLOW_CPLEX
 static void cplexErr(lp_cplex_t *lp, int status, const char *s)
 {
     char errmsg[1024];
@@ -917,4 +611,18 @@ static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
         return PLAN_HEUR_DEAD_END;
     return z;
 }
-#endif /* PLAN_USE_CPLEX */
+#endif /* PLAN_HEUR_FLOW_CPLEX */
+
+#else /* defined(PLAN_USE_LP_SOLVE) || defined(PLAN_USE_CPLEX) */
+
+plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
+                             const plan_part_state_t *goal,
+                             const plan_op_t *op, int op_size,
+                             unsigned flags)
+{
+    fprintf(stderr, "Error: Cannot create Flow heuristic object because no"
+                    " LP-solver was available during compilation!\n");
+    fflush(stderr);
+    return NULL;
+}
+#endif /* defined(PLAN_USE_LP_SOLVE) || defined(PLAN_USE_CPLEX) */

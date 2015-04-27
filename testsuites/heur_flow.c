@@ -44,7 +44,7 @@ static void _runTest(const char *name, const char *proto,
         heur_check_min = check_min_heur_fn(p);
 
     for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
-        //if (si != 7689)
+        //if (si != 7644)
         //    continue;
 
         planHeurResInit(&res);

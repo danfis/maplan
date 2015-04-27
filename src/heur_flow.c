@@ -54,6 +54,7 @@ typedef struct _lp_cplex_t lp_cplex_t;
 
 
 #define BOUND_INF 1E30
+#define ROUND_EPS 1E-6
 
 /** Upper bound table:
  * [is_goal_var][is_mutex_with_goal][is_init][cause_incomplete_op] */
@@ -163,7 +164,8 @@ static void lpCplexInit(lp_cplex_t *lp, const fact_t *facts, int facts_size,
                         const plan_op_t *op, int op_size, int use_ilp);
 static void lpCplexFree(lp_cplex_t *lp);
 static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
-                                int facts_size, int use_ilp);
+                                int facts_size, int use_ilp,
+                                const plan_heur_res_landmarks_t *ldms);
 #endif /* PLAN_HEUR_FLOW_CPLEX */
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
@@ -413,6 +415,14 @@ static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
     }
 }
 
+static plan_cost_t roundOff(double z)
+{
+    plan_cost_t v = z;
+    if (fabs(z - (double)v) > ROUND_EPS)
+        return ceil(z);
+    return v;
+}
+
 #ifdef PLAN_HEUR_FLOW_LP_SOLVE
 static void lpLPSolveInit(lprec **_lp, const fact_t *facts, int facts_size,
                           const plan_op_t *op, int op_size, int use_ilp)
@@ -532,7 +542,7 @@ static plan_cost_t lpLPSolveSolve(lprec **_lp, const fact_t *facts,
     set_verbose(lp, NEUTRAL);
     ret = solve(lp);
     if (ret == OPTIMAL || ret == SUBOPTIMAL)
-        h = ceil(get_objective(lp));
+        h = roundOff(get_objective(lp));
 
     lpSolveDelLandmarks(lp, ldms);
     return h;
@@ -648,9 +658,76 @@ static void lpCplexFree(lp_cplex_t *lp)
         BOR_FREE(lp->rhs);
 }
 
-static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
-                                int facts_size, int use_ilp)
+
+static void lpCplexAddLandmarks(lp_cplex_t *lp,
+                                const plan_heur_res_landmarks_t *ldms)
 {
+    plan_heur_res_landmark_t *ldm;
+    int num_constrs, num_nz, i, row, ins, st;
+    double *rhs;
+    char *sense;
+    int *rbeg, *rind;
+    double *val;
+
+    if (ldms == NULL || ldms->num_landmarks == 0)
+        return;
+
+    num_constrs = ldms->num_landmarks;
+    for (num_nz = 0, i = 0; i < num_constrs; ++i)
+        num_nz += ldms->landmark[i].size;
+
+    rhs = BOR_ALLOC_ARR(double, num_constrs);
+    sense = BOR_ALLOC_ARR(char, num_constrs);
+    rbeg = BOR_ALLOC_ARR(int, num_constrs);
+    rind = BOR_ALLOC_ARR(int, num_nz);
+    val = BOR_ALLOC_ARR(double, num_nz);
+
+    for (ins = 0, row = 0; row < num_constrs; ++row){
+        ldm = ldms->landmark + row;
+
+        rbeg[row] = ins;
+        rhs[row] = 1.;
+        sense[row] = 'G';
+        for (i = 0; i < ldm->size; ++i){
+            rind[ins] = ldm->op_id[i];
+            val[ins] = 1.;
+            ++ins;
+        }
+    }
+
+    st = CPXaddrows(lp->env, lp->lp, 0, num_constrs, num_nz, rhs, sense,
+                    rbeg, rind, val, NULL, NULL);
+    if (st != 0){
+        fprintf(stderr, "Error: Could not add constraints to the CPLEX.\n");
+        exit(-1);
+    }
+
+    BOR_FREE(rhs);
+    BOR_FREE(sense);
+    BOR_FREE(rbeg);
+    BOR_FREE(rind);
+    BOR_FREE(val);
+}
+
+static void lpCplexDelLandmarks(lp_cplex_t *lp,
+                                const plan_heur_res_landmarks_t *ldms)
+{
+    int from, to;
+
+    if (ldms == NULL || ldms->num_landmarks == 0)
+        return;
+
+    from = lp->num_constrs;
+    to = from + ldms->num_landmarks - 1;
+    if (CPXdelrows(lp->env, lp->lp, from, to) != 0)
+        fprintf(stderr, "ERR\n");
+}
+
+static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
+                                int facts_size, int use_ilp,
+                                const plan_heur_res_landmarks_t *ldms)
+{
+    plan_cost_t h = PLAN_HEUR_DEAD_END;
     int i, st, solst;
     double z;
 
@@ -664,6 +741,9 @@ static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
     if (st != 0)
         cplexErr(lp, st, "Could not update constraint matrix");
 
+    // Add landmark constraints if requested
+    lpCplexAddLandmarks(lp, ldms);
+
     // Optimize
     if (use_ilp){
         st = CPXmipopt(lp->env, lp->lp);
@@ -675,13 +755,16 @@ static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
 
     // Read out solution
     solst = CPXgetstat(lp->env, lp->lp);
-    if (solst == 0)
-        return PLAN_HEUR_DEAD_END;
+    if (solst != 0){
+        st = CPXgetobjval(lp->env, lp->lp, &z);
+        if (st == 0)
+            h = roundOff(z);
+    }
 
-    st = CPXgetobjval(lp->env, lp->lp, &z);
-    if (st != 0)
-        return PLAN_HEUR_DEAD_END;
-    return ceil(z);
+    // Remove landmark constraints if they were added
+    lpCplexDelLandmarks(lp, ldms);
+    //CPXwriteprob(lp->env, lp->lp, "cplex", "LP");
+    return h;
 }
 #endif /* PLAN_HEUR_FLOW_CPLEX */
 

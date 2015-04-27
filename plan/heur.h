@@ -39,6 +39,11 @@ extern "C" {
  */
 #define PLAN_HEUR_FLOW_ILP 0x1u
 
+/**
+ * Use landmarks from lm-cut heuristic for constraints in the flow heuristic.
+ */
+#define PLAN_HEUR_FLOW_LANDMARKS_LM_CUT 0x2u
+
 /** Forward declaration */
 typedef struct _plan_heur_t plan_heur_t;
 

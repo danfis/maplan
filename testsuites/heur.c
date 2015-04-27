@@ -80,6 +80,10 @@ static void runTest(const char *name,
         pref_ops[i] = p->op + i;
 
     heur = new_heur(p);
+    if (heur == NULL){
+        fprintf(stderr, "Test Error: Cannot create a heuristic object!\n");
+        goto run_test_end;
+    }
 
     for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
         //if (si != 4)
@@ -106,9 +110,11 @@ static void runTest(const char *name,
         fflush(stdout);
     }
 
+run_test_end:
     BOR_FREE(pref_ops);
 
-    planHeurDel(heur);
+    if (heur)
+        planHeurDel(heur);
     statePoolFree(&state_pool);
     planStateDel(state);
     planProblemDel(p);

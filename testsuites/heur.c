@@ -60,14 +60,14 @@ typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);
 static void runTest(const char *name,
                     const char *proto, const char *states,
                     new_heur_fn new_heur,
-                    int pref)
+                    int pref, int landmarks)
 {
     plan_problem_t *p;
     state_pool_t state_pool;
     plan_state_t *state;
     plan_heur_t *heur;
     plan_heur_res_t res;
-    int i, si;
+    int i, j, si;
     plan_op_t **pref_ops;
 
     printf("-----\n%s\n%s\n", name, proto);
@@ -93,6 +93,8 @@ static void runTest(const char *name,
             res.pref_op = pref_ops;
             res.pref_op_size = p->op_size;
         }
+        if (landmarks)
+            res.save_landmarks = 1;
 
         planHeur(heur, state, &res);
         printf("[%d] %d ::", si, res.heur);
@@ -106,6 +108,17 @@ static void runTest(const char *name,
             for (i = 0; i < res.pref_size; ++i){
                 printf("%s\n", res.pref_op[i]->name);
             }
+        }
+
+        if (landmarks){
+            for (i = 0; i < res.landmarks.num_landmarks; ++i){
+                printf("Landmark [%d]:", i);
+                for (j = 0; j < res.landmarks.landmark[i].size; ++j){
+                    printf(" %d", res.landmarks.landmark[i].op_id[j]);
+                }
+                printf("\n");
+            }
+            planHeurResLandmarksFree(&res.landmarks);
         }
         fflush(stdout);
     }
@@ -268,115 +281,115 @@ TEST(testHeurRelax)
 TEST(testHeurGoalCount)
 {
     runTest("goal-count", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", goalCountNew, 0);
+            "states/depot-pfile1.txt", goalCountNew, 0, 0);
     runTest("goal-count", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", goalCountNew, 1);
+            "states/depot-pfile5.txt", goalCountNew, 1, 0);
     runTest("goal-count", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", goalCountNew, 0);
+            "states/rovers-p03.txt", goalCountNew, 0, 0);
     runTest("goal-count", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", goalCountNew, 0);
+            "states/rovers-p15.txt", goalCountNew, 0, 0);
     runTest("goal-count", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", goalCountNew, 0);
+            "states/citycar-p3-2-2-0-1.txt", goalCountNew, 0, 0);
 }
 
 TEST(testHeurRelaxAdd)
 {
     runTest("add", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", addNew, 1);
+            "states/depot-pfile1.txt", addNew, 1, 0);
     runTest("add", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", addNew, 0);
+            "states/depot-pfile5.txt", addNew, 0, 0);
     runTest("add", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", addNew, 0);
+            "states/rovers-p03.txt", addNew, 0, 0);
     runTest("add", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", addNew, 0);
+            "states/rovers-p15.txt", addNew, 0, 0);
     runTest("add", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", addNew, 0);
+            "states/citycar-p3-2-2-0-1.txt", addNew, 0, 0);
 }
 
 TEST(testHeurRelaxMax)
 {
     runTest("max", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", maxNew, 0);
+            "states/depot-pfile1.txt", maxNew, 0, 0);
     runTest("max", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", maxNew, 0);
+            "states/depot-pfile5.txt", maxNew, 0, 0);
     runTest("max", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", maxNew, 1);
+            "states/rovers-p03.txt", maxNew, 1, 0);
     runTest("max", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", maxNew, 0);
+            "states/rovers-p15.txt", maxNew, 0, 0);
     runTest("max", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", maxNew, 0);
+            "states/citycar-p3-2-2-0-1.txt", maxNew, 0, 0);
 }
 
 TEST(testHeurRelaxFF)
 {
     runTest("ff", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", ffNew, 1);
+            "states/depot-pfile1.txt", ffNew, 1, 0);
     runTest("ff", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", ffNew, 0);
+            "states/depot-pfile5.txt", ffNew, 0, 0);
     runTest("ff", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", ffNew, 0);
+            "states/rovers-p03.txt", ffNew, 0, 0);
     runTest("ff", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", ffNew, 0);
+            "states/rovers-p15.txt", ffNew, 0, 0);
     runTest("ff", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", ffNew, 0);
+            "states/citycar-p3-2-2-0-1.txt", ffNew, 0, 0);
 }
 
 TEST(testHeurRelaxLMCut)
 {
     runTest("LM-CUT", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", lmCutNew, 0);
+            "states/depot-pfile1.txt", lmCutNew, 0, 1);
     runTest("LM-CUT", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", lmCutNew, 1);
+            "states/depot-pfile5.txt", lmCutNew, 1, 0);
     runTest("LM-CUT", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", lmCutNew, 0);
+            "states/rovers-p03.txt", lmCutNew, 0, 0);
     runTest("LM-CUT", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", lmCutNew, 0);
+            "states/rovers-p15.txt", lmCutNew, 0, 0);
     runTest("LM-CUT", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", lmCutNew, 0);
+            "states/citycar-p3-2-2-0-1.txt", lmCutNew, 0, 0);
 }
 
 TEST(testHeurDTG)
 {
     runTest("DTG", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", dtgNew, 0);
+            "states/depot-pfile1.txt", dtgNew, 0, 0);
     runTest("DTG", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", dtgNew, 1);
+            "states/depot-pfile5.txt", dtgNew, 1, 0);
     runTest("DTG", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", dtgNew, 0);
+            "states/rovers-p03.txt", dtgNew, 0, 0);
     runTest("DTG", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", dtgNew, 0);
+            "states/rovers-p15.txt", dtgNew, 0, 0);
     runTest("DTG", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", dtgNew, 0);
+            "states/citycar-p3-2-2-0-1.txt", dtgNew, 0, 0);
 }
 
 TEST(testHeurFlow)
 {
     runTest("Flow", "proto/simple.proto",
-            "states/simple.txt", flowNew, 0);
+            "states/simple.txt", flowNew, 0, 0);
     runTest("Flow", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", flowNew, 0);
+            "states/depot-pfile1.txt", flowNew, 0, 0);
     runTest("Flow", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", flowNew, 1);
+            "states/depot-pfile5.txt", flowNew, 1, 0);
     runTest("Flow", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", flowNew, 0);
+            "states/rovers-p03.txt", flowNew, 0, 0);
     runTest("Flow", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", flowNew, 0);
+            "states/rovers-p15.txt", flowNew, 0, 0);
     runTest("Flow", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", flowNew, 0);
+            "states/citycar-p3-2-2-0-1.txt", flowNew, 0, 0);
 }
 
 TEST(testHeurFlowILP)
 {
     runTest("Flow ILP", "proto/simple.proto",
-            "states/simple.txt", flowILPNew, 0);
+            "states/simple.txt", flowILPNew, 0, 0);
     runTest("Flow ILP", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", flowILPNew, 0);
+            "states/depot-pfile1.txt", flowILPNew, 0, 0);
     runTest("Flow ILP", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", flowILPNew, 1);
+            "states/depot-pfile5.txt", flowILPNew, 1, 0);
     runTest("Flow ILP", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", flowILPNew, 0);
+            "states/rovers-p03.txt", flowILPNew, 0, 0);
     runTest("Flow ILP", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", flowILPNew, 0);
+            "states/rovers-p15.txt", flowILPNew, 0, 0);
     runTest("Flow ILP", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", flowILPNew, 0);
+            "states/citycar-p3-2-2-0-1.txt", flowILPNew, 0, 0);
 }

@@ -42,10 +42,10 @@ protobuf: submodule
 				$(PYTHON2) setup.py bdist_egg --dist-dir build; \
 		fi;
 
-translate: submodule
+translate:
 	$(MAKE) -C translate
 
-val: submodule
+val:
 	$(MAKE) -C VAL
 
 clean:

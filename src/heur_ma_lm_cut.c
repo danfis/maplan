@@ -1190,8 +1190,11 @@ static int stepCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     // Finding no cut means that there is serious error in the
     // implementation, so leave it here.
     if (heur->cut.min_cut == PLAN_COST_MAX){
-        fprintf(stderr, "[%d] Error: Could not find cut!\n", planMACommId(comm));
-        exit(-1);
+        //fprintf(stderr, "[%d] Error: Could not find cut!\n", planMACommId(comm));
+        //exit(-1);
+        heur->heur_value = PLAN_HEUR_DEAD_END;
+        heur->state = STATE_FINISH;
+        return 0;
     }
 
     sendCutRequests(heur, comm);

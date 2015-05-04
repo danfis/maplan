@@ -648,3 +648,54 @@ void planHeurRelaxSetFakePreValue(plan_heur_relax_t *relax,
 {
     planFactOpCrossRefSetFakePreValue(&relax->cref, fact_id, value);
 }
+
+
+void planHeurRelaxDumpJustificationDotGraph(const plan_heur_relax_t *relax,
+                                            const plan_state_t *_state,
+                                            const char *fn)
+{
+    FILE *fout;
+    int i, j, supp;
+    int state[planStateSize(_state)];
+
+    fout = fopen(fn, "w");
+    if (fout == NULL){
+        fprintf(stderr, "Error: Could not open `%s'\n", fn);
+        return;
+    }
+
+    fprintf(fout, "digraph JustificationGraph {\n");
+
+    for (j = 0; j < planStateSize(_state); ++j){
+        state[j] = planFactId(&relax->cref.fact_id, j, planStateGet(_state, j));
+    }
+
+    for (i = 0; i < relax->cref.fact_size; ++i){
+        fprintf(fout, "%d [label=\"%d;value:%d\"", i, i, relax->fact[i].value);
+        for (j = 0; j < planStateSize(_state); ++j){
+            if (state[j] == i){
+                fprintf(fout, ",color=red,style=bold,rank=\"same\"");
+                break;
+            }
+        }
+        if (i == relax->cref.goal_id)
+            fprintf(fout, ",color=blue,style=bold");
+
+        fprintf(fout, "];\n");
+    }
+
+    for (i = 0; i < relax->cref.op_size; ++i){
+        supp = relax->op[i].supp;
+        if (supp == -1)
+            continue;
+
+        for (j = 0; j < relax->cref.op_eff[i].size; ++j){
+            fprintf(fout, "%d -> %d [label=\"op:%d, v:%d\"];\n", supp,
+                    relax->cref.op_eff[i].fact[j],
+                    i, relax->op[i].value);
+        }
+    }
+
+    fprintf(fout, "}\n");
+    fclose(fout);
+}

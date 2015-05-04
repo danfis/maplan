@@ -243,9 +243,15 @@ static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
     // Compute initial h^max
     planHeurRelax(&heur->relax, state);
 
-    // Check whether the goal was reached, if so prepare output variable
-    if (heur->relax.fact[heur->relax.cref.goal_id].value >= 0)
+    // Check whether the goal is reachable.
+    if (heur->relax.fact[heur->relax.cref.goal_id].supp == -1){
+        // Goal is not reachable, return dead-end
+        heur->relax.fact[heur->relax.cref.goal_id].value = 0;
+        h = PLAN_HEUR_DEAD_END;
+    }else{
+        // Goal is reachable, init output heur value
         h = 0;
+    }
 
     while (heur->relax.fact[heur->relax.cref.goal_id].value > 0){
         // Mark facts connected with a goal by zero-cost operators in
@@ -258,9 +264,9 @@ static void planHeurLMCut(plan_heur_t *_heur, const plan_state_t *state,
 
         // If no cut was found we have reached dead-end
         if (heur->cut.size == 0){
-            // TODO: This is error, isn't it?
-            h = PLAN_HEUR_DEAD_END;
-            break;
+            fprintf(stderr, "Error: LM-Cut: Empty cut! Something is"
+                            " seriously wrong!\n");
+            exit(-1);
         }
 
         // Store landmarks into output structure if requested.

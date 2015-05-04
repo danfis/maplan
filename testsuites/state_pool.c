@@ -41,7 +41,7 @@ int statePoolNext(state_pool_t *pool, plan_state_t *state)
     int state_size = planStateSize(state);
     int i;
 
-    if (pool->cur + state_size >= pool->val_size)
+    if (pool->cur + state_size > pool->val_size)
         return -1;
 
     for (i = 0; i < state_size; ++i)

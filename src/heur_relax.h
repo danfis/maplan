@@ -137,6 +137,12 @@ int planHeurRelaxAddFakePre(plan_heur_relax_t *relax, int op_id);
 void planHeurRelaxSetFakePreValue(plan_heur_relax_t *relax,
                                   int fact_id, plan_cost_t value);
 
+/**
+ * Dumps justification graph in the speficied file.
+ */
+void planHeurRelaxDumpJustificationDotGraph(const plan_heur_relax_t *relax,
+                                            const plan_state_t *state,
+                                            const char *fn);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -85,7 +85,13 @@ static void runTest(const char *name,
             res.save_landmarks = 1;
 
         planHeur(heur, state, &res);
-        printf("[%d] %d ::", si, res.heur);
+        printf("[%d] ", si);
+        if (res.heur == PLAN_HEUR_DEAD_END){
+            printf("DEAD END");
+        }else{
+            printf("%d", res.heur);
+        }
+        printf(" ::");
         for (i = 0; i < planStateSize(state); ++i){
             printf(" %d", planStateGet(state, i));
         }
@@ -324,6 +330,8 @@ TEST(testHeurRelaxFF)
 
 TEST(testHeurRelaxLMCut)
 {
+    runTest("LM-CUT", "proto/sokoban-p01.proto",
+            "states/sokoban-p01.txt", lmCutNew, 0, 0);
     runTest("LM-CUT", "proto/depot-pfile1.proto",
             "states/depot-pfile1.txt", lmCutNew, 0, 1);
     runTest("LM-CUT", "proto/depot-pfile5.proto",

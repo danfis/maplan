@@ -40,6 +40,9 @@ typedef struct _lp_cplex_t lp_cplex_t;
 # define LP_FREE lpCplexFree
 # define LP_SOLVE lpCplexSolve
 # define PLAN_HEUR_FLOW_CPLEX
+
+# define CPLEX_NUM_THREADS(flags) (((flags) >> 8u) & 0x3fu)
+# define CPLEX_NUM_THREADS_AUTO 0x3fu
 #endif /* PLAN_USE_CPLEX */
 
 // Prefer CPLEX over LP_SOVE
@@ -152,7 +155,8 @@ static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
 /* lp_solve solver functions */
 #ifdef PLAN_HEUR_FLOW_LP_SOLVE
 static void lpLPSolveInit(lprec **lp, const fact_t *facts, int facts_size,
-                          const plan_op_t *op, int op_size, int use_ilp);
+                          const plan_op_t *op, int op_size, int use_ilp,
+                          unsigned flags);
 static void lpLPSolveFree(lprec **lp);
 static plan_cost_t lpLPSolveSolve(lprec **lp, const fact_t *facts,
                                   int facts_size, int use_ilp,
@@ -161,7 +165,8 @@ static plan_cost_t lpLPSolveSolve(lprec **lp, const fact_t *facts,
 
 #ifdef PLAN_HEUR_FLOW_CPLEX
 static void lpCplexInit(lp_cplex_t *lp, const fact_t *facts, int facts_size,
-                        const plan_op_t *op, int op_size, int use_ilp);
+                        const plan_op_t *op, int op_size, int use_ilp,
+                        unsigned flags);
 static void lpCplexFree(lp_cplex_t *lp);
 static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
                                 int facts_size, int use_ilp,
@@ -185,7 +190,7 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
 
     // Initialize LP solver
     LP_INIT(&hflow->lp, hflow->facts, hflow->fact_id.fact_size, op, op_size,
-            hflow->use_ilp);
+            hflow->use_ilp, flags);
 
     hflow->lm_cut = NULL;
     if (flags & PLAN_HEUR_FLOW_LANDMARKS_LM_CUT)
@@ -425,7 +430,8 @@ static plan_cost_t roundOff(double z)
 
 #ifdef PLAN_HEUR_FLOW_LP_SOLVE
 static void lpLPSolveInit(lprec **_lp, const fact_t *facts, int facts_size,
-                          const plan_op_t *op, int op_size, int use_ilp)
+                          const plan_op_t *op, int op_size, int use_ilp,
+                          unsigned flags)
 {
     lprec *lp;
     int i, r, c;
@@ -560,16 +566,29 @@ static void cplexErr(lp_cplex_t *lp, int status, const char *s)
 }
 
 static void lpCplexInit(lp_cplex_t *lp, const fact_t *facts, int facts_size,
-                        const plan_op_t *op, int op_size, int use_ilp)
+                        const plan_op_t *op, int op_size, int use_ilp,
+                        unsigned flags)
 {
     int st, *cbeg, *cind, num_constrs, num_nz, cur, i, j;
     double *obj, *lb, *cval;
     char *sense, *ctype = NULL;
+    int num_threads;
 
     // Initialize CPLEX structures
     lp->env = CPXopenCPLEX(&st);
     if (lp->env == NULL)
         cplexErr(lp, st, "Could not open CPLEX environment");
+
+    // Set number of processing threads
+    num_threads = CPLEX_NUM_THREADS(flags);
+    if (num_threads == CPLEX_NUM_THREADS_AUTO){
+        num_threads = 0;
+    }else if (num_threads == 0){
+        num_threads = 1;
+    }
+    st = CPXsetintparam(lp->env, CPX_PARAM_THREADS, num_threads);
+    if (st != 0)
+        cplexErr(lp, st, "Could not set number of threads");
 
     lp->lp = CPXcreateprob(lp->env, &st, "heurflow");
     if (lp->lp == NULL)

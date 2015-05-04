@@ -44,6 +44,15 @@ extern "C" {
  */
 #define PLAN_HEUR_FLOW_LANDMARKS_LM_CUT 0x2u
 
+/**
+ * Sets the number of parallel threads that will be invoked by any CPLEX
+ * parallel optimizer.
+ * By default one thread is used.
+ * Set num threads to -1 to switch to auto mode.
+ */
+#define PLAN_HEUR_FLOW_CPLEX_NUM_THREADS(num) \
+    ((((unsigned)(num)) & 0x3fu) << 8u)
+
 /** Forward declaration */
 typedef struct _plan_heur_t plan_heur_t;
 

@@ -81,7 +81,11 @@ static plan_cost_t testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
         planMAMsgDel(msg);
     }
 
-    printf("%d", (int)res.heur);
+    if (res.heur == PLAN_HEUR_DEAD_END){
+        printf("DEAD END");
+    }else{
+        printf("%d", (int)res.heur);
+    }
     for (i = 0; i < planStateSize(state); ++i){
         printf(" %d", planStateGet(state, i));
     }
@@ -228,6 +232,8 @@ TEST(testHeurMALMCut)
                   planHeurMALMCutNew, -1, NULL);
     runTestHeurMA("ma-lm-cut", "proto/rovers-p15.proto",
                   "states/rovers-p15.txt", NULL, planHeurMALMCutNew, -1, NULL);
+    runTestHeurMA("ma-lm-cut", "proto/sokoban-p01.proto",
+                  "states/sokoban-p01.txt", NULL, planHeurMALMCutNew, -1, NULL);
 }
 
 TEST(testHeurMADTG)

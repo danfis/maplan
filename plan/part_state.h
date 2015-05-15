@@ -38,7 +38,6 @@ typedef struct _plan_part_state_pair_t plan_part_state_pair_t;
  * Struct representing partial state.
  */
 struct _plan_part_state_t {
-    plan_val_t *val; /*!< Array of unpacked values */
     int size;
 
     void *valbuf;  /*!< Buffer of packed values */
@@ -186,13 +185,23 @@ _bor_inline int planPartStateSize(const plan_part_state_t *state)
 _bor_inline plan_val_t planPartStateGet(const plan_part_state_t *state,
                                         plan_var_id_t var)
 {
-    return state->val[var];
+    int i;
+    for (i = 0; i < state->vals_size; ++i){
+        if (state->vals[i].var == var)
+            return state->vals[i].val;
+    }
+    return PLAN_VAL_UNDEFINED;
 }
 
 _bor_inline int planPartStateIsSet(const plan_part_state_t *state,
                                    plan_var_id_t var)
 {
-    return state->val[var] != PLAN_VAL_UNDEFINED;
+    int i;
+    for (i = 0; i < state->vals_size; ++i){
+        if (state->vals[i].var == var)
+            return 1;
+    }
+    return 0;
 }
 
 #ifdef __cplusplus

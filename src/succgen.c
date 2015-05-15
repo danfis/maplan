@@ -159,7 +159,12 @@ int planSuccGenFindPart(const plan_succ_gen_t *sg,
 {
     int size = planPartStateSize(part_state);
     plan_val_t vals[size];
-    memcpy(vals, part_state->val, sizeof(plan_val_t) * size);
+    int i;
+
+    for (i = 0; i < size; ++i)
+        vals[i] = PLAN_VAL_UNDEFINED;
+    for (i = 0; i < part_state->vals_size; ++i)
+        vals[part_state->vals[i].var] = part_state->vals[i].val;
     return treeFind(sg->root, vals, op, op_size);
 }
 

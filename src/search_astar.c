@@ -97,7 +97,7 @@ static int astarInsertState(plan_search_astar_t *astar,
 
         // TODO: handle re-computing heuristic and max() of heuristics
         // etc...
-        res = _planSearchHeuristic(search, node->state_id, &heur, NULL);
+        res = _planSearchHeur(search, node, &heur, NULL);
         if (res != PLAN_SEARCH_CONT)
             return res;
 

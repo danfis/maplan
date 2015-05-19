@@ -60,7 +60,7 @@ int planSearchLazyBaseInitStep(plan_search_t *search)
     node->op = NULL;
     node->cost = 0;
 
-    res = _planSearchHeuristic(search, init_state, &node->heuristic, NULL);
+    res = _planSearchHeur(search, node, &node->heuristic, NULL);
     if (res != PLAN_SEARCH_CONT)
         return res;
 
@@ -103,7 +103,7 @@ int planSearchLazyBaseNext(plan_search_lazy_base_t *lb,
         _planSearchFindApplicableOps(&lb->search, cur_node->state_id);
         if (lb->use_preferred_ops){
            pref_ops = &lb->search.app_ops;
-           _planSearchHeuristic(&lb->search, cur_node->state_id, &h, pref_ops);
+           _planSearchHeur(&lb->search, cur_node, &h, pref_ops);
         }
     }
 
@@ -170,7 +170,7 @@ static plan_state_space_node_t *createNode(plan_search_lazy_base_t *lb,
     // compute heuristic value for the current node
     if (lb->use_preferred_ops)
         pref_ops = &search->app_ops;
-    res = _planSearchHeuristic(search, cur_state_id, &cur_heur, pref_ops);
+    res = _planSearchHeur(search, cur_node, &cur_heur, pref_ops);
     if (res != PLAN_SEARCH_CONT){
         *ret = res;
         return NULL;

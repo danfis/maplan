@@ -374,10 +374,10 @@ int _planSearchFindApplicableOps(plan_search_t *search,
  * If preferred_ops is non-NULL, the function will find preferred
  * operators and set up the given struct accordingly.
  */
-int _planSearchHeuristic(plan_search_t *search,
-                         plan_state_id_t state_id,
-                         plan_cost_t *heur_val,
-                         plan_search_applicable_ops_t *preferred_ops);
+int _planSearchHeur(plan_search_t *search,
+                    plan_state_space_node_t *node,
+                    plan_cost_t *heur_val,
+                    plan_search_applicable_ops_t *preferred_ops);
 
 /**
  * Returns true if the given state is the goal state.

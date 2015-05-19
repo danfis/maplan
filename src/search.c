@@ -199,15 +199,15 @@ int _planSearchFindApplicableOps(plan_search_t *search,
                                        state_id, search->succ_gen);
 }
 
-int _planSearchHeuristic(plan_search_t *search,
-                         plan_state_id_t state_id,
-                         plan_cost_t *heur_val,
-                         plan_search_applicable_ops_t *preferred_ops)
+int _planSearchHeur(plan_search_t *search,
+                    plan_state_space_node_t *node,
+                    plan_cost_t *heur_val,
+                    plan_search_applicable_ops_t *preferred_ops)
 {
     plan_heur_res_t res;
     int fres = PLAN_SEARCH_CONT;
 
-    _planSearchLoadState(search, state_id);
+    _planSearchLoadState(search, node->state_id);
 
     planHeurResInit(&res);
     if (preferred_ops){

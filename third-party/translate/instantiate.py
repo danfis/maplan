@@ -117,6 +117,9 @@ def exploreMA(task, comm):
         res, pub_fluents = _exploreMA(task, add_atoms)
         comm.sendInRing(pub_fluents)
 
+    if not res[0]:
+        not_reach = set(task.goal.parts) - res[1]
+        print('Not reachable atoms: {0}'.format(' '.join([str(x) for x in not_reach])))
     return res
 
 def explore(task, comm = None):

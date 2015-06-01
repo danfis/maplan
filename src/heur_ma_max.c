@@ -156,8 +156,8 @@ plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob)
     plan_heur_ma_max_t *heur;
 
     heur = BOR_ALLOC(plan_heur_ma_max_t);
-    _planHeurInit(&heur->heur, heurDel, NULL);
-    _planHeurMAInit(&heur->heur, heurMAMax, heurMAMaxUpdate, heurMAMaxRequest);
+    _planHeurInit(&heur->heur, heurDel, NULL, NULL);
+    _planHeurMAInit(&heur->heur, heurMAMax, NULL, heurMAMaxUpdate, heurMAMaxRequest);
     planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_MAX,
                       prob->var, prob->var_size, prob->goal,
                       prob->proj_op, prob->proj_op_size);

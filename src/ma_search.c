@@ -62,7 +62,7 @@ static void searchExpandedNode(plan_search_t *search,
 static void searchReachedGoal(plan_search_t *search,
                               plan_state_space_node_t *node, void *ud);
 static void searchMAHeur(plan_search_t *search, plan_heur_t *heur,
-                         const plan_state_t *state, plan_heur_res_t *res,
+                         plan_state_id_t state_id, plan_heur_res_t *res,
                          void *userdata);
 static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg);
 static void publicStateSend(plan_ma_search_t *ma,
@@ -319,7 +319,7 @@ static void searchReachedGoal(plan_search_t *search,
 
 
 static void searchMAHeur(plan_search_t *search, plan_heur_t *heur,
-                         const plan_state_t *state, plan_heur_res_t *res,
+                         plan_state_id_t state_id, plan_heur_res_t *res,
                          void *userdata)
 {
     plan_ma_search_t *ma = (plan_ma_search_t *)userdata;
@@ -333,7 +333,7 @@ static void searchMAHeur(plan_search_t *search, plan_heur_t *heur,
         return;
     }
 
-    ret = planHeurMA(heur, ma->comm, state, res);
+    ret = planHeurMANode(heur, ma->comm, state_id, search, res);
     while (ret == -1
             && !ma->terminate
             && (msg = planMACommRecvBlock(ma->comm, 0)) != NULL){

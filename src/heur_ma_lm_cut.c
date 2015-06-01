@@ -271,8 +271,8 @@ plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
     }
 
     heur = BOR_ALLOC(plan_heur_ma_lm_cut_t);
-    _planHeurInit(&heur->heur, heurDel, NULL);
-    _planHeurMAInit(&heur->heur, heurMA, heurMAUpdate, heurMARequest);
+    _planHeurInit(&heur->heur, heurDel, NULL, NULL);
+    _planHeurMAInit(&heur->heur, heurMA, NULL, heurMAUpdate, heurMARequest);
     planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_MAX,
                       prob->var, prob->var_size, prob->goal,
                       prob->proj_op, prob->proj_op_size);

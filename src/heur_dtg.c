@@ -49,7 +49,7 @@ plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,
     plan_heur_dtg_t *hdtg;
 
     hdtg = BOR_ALLOC(plan_heur_dtg_t);
-    _planHeurInit(&hdtg->heur, heurDTGDel, heurDTG);
+    _planHeurInit(&hdtg->heur, heurDTGDel, heurDTG, NULL);
     planHeurDTGDataInit(&hdtg->data, var, var_size, op, op_size);
     planHeurDTGCtxInit(&hdtg->ctx, &hdtg->data);
 

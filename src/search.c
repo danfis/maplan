@@ -141,6 +141,13 @@ void planSearchSetMAHeur(plan_search_t *search,
     search->ma_heur_data = userdata;
 }
 
+const plan_state_t *planSearchLoadState(plan_search_t *search,
+                                        plan_state_id_t state_id)
+{
+    _planSearchLoadState(search, state_id);
+    return search->state;
+}
+
 void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,
@@ -207,8 +214,6 @@ int _planSearchHeur(plan_search_t *search,
     plan_heur_res_t res;
     int fres = PLAN_SEARCH_CONT;
 
-    _planSearchLoadState(search, node->state_id);
-
     planHeurResInit(&res);
     if (preferred_ops){
         res.pref_op = preferred_ops->op;
@@ -217,7 +222,7 @@ int _planSearchHeur(plan_search_t *search,
 
     if (search->heur->ma){
         if (search->ma_heur_fn){
-            search->ma_heur_fn(search, search->heur, search->state, &res,
+            search->ma_heur_fn(search, search->heur, node->state_id, &res,
                                search->ma_heur_data);
         }else{
             fprintf(stderr, "Search Error: ma_heur_fn callback is not set."
@@ -225,7 +230,7 @@ int _planSearchHeur(plan_search_t *search,
             res.heur = PLAN_HEUR_DEAD_END;
         }
     }else{
-        planHeur(search->heur, search->state, &res);
+        planHeurNode(search->heur, node->state_id, search, &res);
     }
     planSearchStatIncEvaluatedStates(&search->stat);
 

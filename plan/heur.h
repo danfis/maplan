@@ -228,12 +228,17 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
 
 /**
  * Creates an LM-Cut heuristics.
- * If succ_gen is NULL, a new successor generator is created internally
- * from the given operators.
  */
 plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
                               const plan_part_state_t *goal,
                               const plan_op_t *op, int op_size);
+
+/**
+ * Incremental LM-Cut, the local version.
+ */
+plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
+                                      const plan_part_state_t *goal,
+                                      const plan_op_t *op, int op_size);
 
 /**
  * Domain transition graph based heuristic.

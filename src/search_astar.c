@@ -91,6 +91,18 @@ static int astarInsertState(plan_search_astar_t *astar,
     plan_search_t *search = &astar->search;
     int res;
 
+    if (parent_node){
+        g_cost += parent_node->cost;
+        parent_state_id = parent_node->state_id;
+    }
+
+    if (op)
+        g_cost += op->cost;
+
+    node->parent_state_id = parent_state_id;
+    node->op              = op;
+    node->cost            = g_cost;
+
     // Force to open the node and compute heuristic if necessary
     if (planStateSpaceNodeIsNew(node)){
         planStateSpaceOpen(search->state_space, node);
@@ -119,24 +131,12 @@ static int astarInsertState(plan_search_astar_t *astar,
     if (heur == PLAN_HEUR_DEAD_END)
         return PLAN_SEARCH_CONT;
 
-    if (parent_node){
-        g_cost += parent_node->cost;
-        parent_state_id = parent_node->state_id;
-    }
-
-    if (op){
-        g_cost += op->cost;
-    }
-
     // Set up costs for open-list -- ties are broken by heuristic value
     cost[0] = g_cost + heur; // f-value: f() = g() + h()
     cost[1] = heur; // tie-breaking value
 
-    // Set correct values
-    node->parent_state_id = parent_state_id;
-    node->op              = op;
-    node->cost            = g_cost;
-    node->heuristic       = heur;
+    // Set heuristic value to the node
+    node->heuristic = heur;
 
     // Insert into open-list
     planListPush(astar->list, cost, node->state_id);

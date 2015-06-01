@@ -84,7 +84,7 @@ static void runTest(const char *name,
         if (landmarks)
             res.save_landmarks = 1;
 
-        planHeur(heur, state, &res);
+        planHeurState(heur, state, &res);
         printf("[%d] ", si);
         if (res.heur == PLAN_HEUR_DEAD_END){
             printf("DEAD END");

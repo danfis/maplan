@@ -225,7 +225,7 @@ int _planSearchHeur(plan_search_t *search,
             res.heur = PLAN_HEUR_DEAD_END;
         }
     }else{
-        planHeur(search->heur, search->state, &res);
+        planHeurState(search->heur, search->state, &res);
     }
     planSearchStatIncEvaluatedStates(&search->stat);
 

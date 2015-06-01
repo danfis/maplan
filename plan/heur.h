@@ -122,18 +122,18 @@ void planHeurResLandmarksFree(plan_heur_res_landmarks_t *ldms);
 typedef void (*plan_heur_del_fn)(plan_heur_t *heur);
 
 /**
- * Function that returns heuristic value (see planHeur() function below).
+ * Function that returns heuristic value (see planHeurState() function below).
  */
-typedef void (*plan_heur_fn)(plan_heur_t *heur, const plan_state_t *state,
-                             plan_heur_res_t *res);
+typedef void (*plan_heur_state_fn)(plan_heur_t *heur, const plan_state_t *state,
+                                   plan_heur_res_t *res);
 
 /**
- * Multi-agent version of plan_heur_fn
+ * Multi-agent version of plan_heur_state_fn
  */
-typedef int (*plan_heur_ma_fn)(plan_heur_t *heur,
-                               plan_ma_comm_t *comm,
-                               const plan_state_t *state,
-                               plan_heur_res_t *res);
+typedef int (*plan_heur_ma_state_fn)(plan_heur_t *heur,
+                                     plan_ma_comm_t *comm,
+                                     const plan_state_t *state,
+                                     plan_heur_res_t *res);
 
 /**
  * Update function for multi-agent version of heuristic
@@ -152,8 +152,8 @@ typedef void (*plan_heur_ma_request_fn)(plan_heur_t *heur,
 
 struct _plan_heur_t {
     plan_heur_del_fn del_fn;
-    plan_heur_fn heur_fn;
-    plan_heur_ma_fn heur_ma_fn;
+    plan_heur_state_fn heur_state_fn;
+    plan_heur_ma_state_fn heur_ma_state_fn;
     plan_heur_ma_update_fn heur_ma_update_fn;
     plan_heur_ma_request_fn heur_ma_request_fn;
 
@@ -253,8 +253,8 @@ void planHeurDel(plan_heur_t *heur);
  * See documentation to the plan_heur_res_t how the result structure is
  * filled.
  */
-void planHeur(plan_heur_t *heur, const plan_state_t *state,
-              plan_heur_res_t *res);
+void planHeurState(plan_heur_t *heur, const plan_state_t *state,
+                   plan_heur_res_t *res);
 
 /**
  * Initialization of heuristic in ma mode.
@@ -265,15 +265,15 @@ void planHeurMAInit(plan_heur_t *heur, int agent_size, int agent_id,
                     plan_ma_state_t *ma_state);
 
 /**
- * Multi-agent version of planHeur(), this function can send some messages
+ * Multi-agent version of planHeurState(), this function can send some messages
  * to other peers. Returns 0 if heuristic value was found or -1 if
  * planHeurMAUpdate() should be consecutively called on all heur-response
  * messages.
  */
-int planHeurMA(plan_heur_t *heur,
-               plan_ma_comm_t *comm,
-               const plan_state_t *state,
-               plan_heur_res_t *res);
+int planHeurMAState(plan_heur_t *heur,
+                    plan_ma_comm_t *comm,
+                    const plan_state_t *state,
+                    plan_heur_res_t *res);
 
 /**
  * If planHeurMA() returned non-zero value (reference ID), all receiving
@@ -299,7 +299,7 @@ void planHeurMARequest(plan_heur_t *heur,
  */
 void _planHeurInit(plan_heur_t *heur,
                    plan_heur_del_fn del_fn,
-                   plan_heur_fn heur_fn);
+                   plan_heur_state_fn heur_state_fn);
 
 /**
  * Initializes multi-agent part of the heuristics.
@@ -307,7 +307,7 @@ void _planHeurInit(plan_heur_t *heur,
  * For internal use.
  */
 void _planHeurMAInit(plan_heur_t *heur,
-                     plan_heur_ma_fn heur_ma_fn,
+                     plan_heur_ma_state_fn heur_ma_state_fn,
                      plan_heur_ma_update_fn heur_ma_update_fn,
                      plan_heur_ma_request_fn heur_ma_request_fn);
 

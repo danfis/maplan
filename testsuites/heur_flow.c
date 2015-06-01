@@ -48,11 +48,11 @@ static void _runTest(const char *name, const char *proto,
         //    continue;
 
         planHeurResInit(&res);
-        planHeur(heur, state, &res);
+        planHeurState(heur, state, &res);
 
         if (heur_check_min){
             planHeurResInit(&res_check_min);
-            planHeur(heur_check_min, state, &res_check_min);
+            planHeurState(heur_check_min, state, &res_check_min);
 
             assertTrue(res_check_min.heur <= res.heur);
             if (!(res_check_min.heur <= res.heur)){

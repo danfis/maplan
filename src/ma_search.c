@@ -333,7 +333,7 @@ static void searchMAHeur(plan_search_t *search, plan_heur_t *heur,
         return;
     }
 
-    ret = planHeurMA(heur, ma->comm, state, res);
+    ret = planHeurMAState(heur, ma->comm, state, res);
     while (ret == -1
             && !ma->terminate
             && (msg = planMACommRecvBlock(ma->comm, 0)) != NULL){

@@ -82,7 +82,7 @@ static void checkOptimalCost2(new_heur_fn new_heur, const char *proto,
 
     for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
         planHeurResInit(&res);
-        planHeur(heur, state, &res);
+        planHeurState(heur, state, &res);
         fscanf(fcosts, "%d", &cost);
         assertTrue((int)res.heur <= cost);
     }

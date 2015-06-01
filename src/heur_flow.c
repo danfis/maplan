@@ -232,7 +232,7 @@ static void heurFlow(plan_heur_t *_heur, const plan_state_t *state,
     if (hflow->lm_cut){
         planHeurResInit(&ldms_res);
         ldms_res.save_landmarks = 1;
-        planHeur(hflow->lm_cut, state, &ldms_res);
+        planHeurState(hflow->lm_cut, state, &ldms_res);
         ldms = &ldms_res.landmarks;
     }
 

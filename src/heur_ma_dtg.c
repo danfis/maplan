@@ -112,8 +112,8 @@ plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def)
     plan_heur_ma_dtg_t *hdtg;
 
     hdtg = BOR_ALLOC(plan_heur_ma_dtg_t);
-    _planHeurInit(&hdtg->heur, hdtgDel, NULL);
-    _planHeurMAInit(&hdtg->heur, hdtgHeur, hdtgUpdate, hdtgRequest);
+    _planHeurInit(&hdtg->heur, hdtgDel, NULL, NULL);
+    _planHeurMAInit(&hdtg->heur, hdtgHeur, NULL, hdtgUpdate, hdtgRequest);
     initFakeOp(hdtg, agent_def);
     initDTGData(hdtg, agent_def);
     planHeurDTGCtxInit(&hdtg->ctx, &hdtg->data);

@@ -181,7 +181,7 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
     plan_heur_flow_t *hflow;
 
     hflow = BOR_ALLOC(plan_heur_flow_t);
-    _planHeurInit(&hflow->heur, heurFlowDel, heurFlow);
+    _planHeurInit(&hflow->heur, heurFlowDel, heurFlow, NULL);
     hflow->use_ilp = (flags & PLAN_HEUR_FLOW_ILP);
 
     planFactIdInit(&hflow->fact_id, var, var_size);

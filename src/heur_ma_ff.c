@@ -100,8 +100,8 @@ plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
     plan_heur_ma_ff_t *heur;
 
     heur = BOR_ALLOC(plan_heur_ma_ff_t);
-    _planHeurInit(&heur->heur, heurDel, NULL);
-    _planHeurMAInit(&heur->heur, planHeurRelaxFFMA,
+    _planHeurInit(&heur->heur, heurDel, NULL, NULL);
+    _planHeurMAInit(&heur->heur, planHeurRelaxFFMA, NULL,
                     planHeurRelaxFFMAUpdate, planHeurRelaxFFMARequest);
 
     planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_ADD,

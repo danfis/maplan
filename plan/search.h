@@ -245,7 +245,7 @@ void planSearchSetReachedGoal(plan_search_t *search,
  */
 typedef void (*plan_search_ma_heur_fn)(plan_search_t *search,
                                        plan_heur_t *heur,
-                                       const plan_state_t *state,
+                                       plan_state_id_t state_id,
                                        plan_heur_res_t *res,
                                        void *userdata);
 
@@ -255,6 +255,14 @@ typedef void (*plan_search_ma_heur_fn)(plan_search_t *search,
  */
 void planSearchSetMAHeur(plan_search_t *search,
                          plan_search_ma_heur_fn cb, void *userdata);
+
+
+/**
+ * Returns a state corresponding to the provided state ID.
+ * The return pointer references an internal storage of search object.
+ */
+const plan_state_t *planSearchLoadState(plan_search_t *search,
+                                        plan_state_id_t state_id);
 
 /**
  * Internals

@@ -50,7 +50,7 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
 
     heur = BOR_ALLOC(plan_heur_lm_cut_t);
     _planHeurInit(&heur->heur, planHeurLMCutDel,
-                  planHeurLMCut);
+                  planHeurLMCut, NULL);
     planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_MAX,
                       var, var_size, goal, op, op_size);
 

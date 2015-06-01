@@ -40,7 +40,7 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal)
     h = BOR_ALLOC(plan_heur_goalcount_t);
     _planHeurInit(&h->heur,
                   planHeurGoalCountDel,
-                  planHeurGoalCount);
+                  planHeurGoalCount, NULL);
     h->goal = goal;
     return &h->heur;
 }

@@ -148,6 +148,12 @@ const plan_state_t *planSearchLoadState(plan_search_t *search,
     return search->state;
 }
 
+plan_state_space_node_t *planSearchLoadNode(plan_search_t *search,
+                                            plan_state_id_t state_id)
+{
+    return planStateSpaceNode(search->state_space, state_id);
+}
+
 void _planSearchInit(plan_search_t *search,
                      const plan_search_params_t *params,
                      plan_search_del_fn del_fn,

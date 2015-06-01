@@ -265,6 +265,12 @@ const plan_state_t *planSearchLoadState(plan_search_t *search,
                                         plan_state_id_t state_id);
 
 /**
+ * Returns state space node.
+ */
+plan_state_space_node_t *planSearchLoadNode(plan_search_t *search,
+                                            plan_state_id_t state_id);
+
+/**
  * Internals
  * ----------
  */

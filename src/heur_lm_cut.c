@@ -264,13 +264,14 @@ static plan_cost_t updateCutCost(const plan_oparr_t *cut, plan_heur_relax_op_t *
     return cut_cost;
 }
 
-static void storeLandmarks(plan_heur_lm_cut_t *heur, plan_heur_res_t *res)
+static void storeLandmarks(plan_heur_lm_cut_t *heur, int *op_ids, int size,
+                           plan_heur_res_t *res)
 {
     plan_heur_res_landmarks_t *ldms;
     plan_heur_res_landmark_t *ldm;
     int i;
 
-    if (heur->cut.size == 0)
+    if (size == 0)
         return;
 
     ldms = &res->landmarks;
@@ -279,10 +280,10 @@ static void storeLandmarks(plan_heur_lm_cut_t *heur, plan_heur_res_t *res)
                                      ldms->num_landmarks);
     ldm = ldms->landmark + ldms->num_landmarks - 1;
 
-    ldm->size = heur->cut.size;
+    ldm->size = size;
     ldm->op_id = BOR_ALLOC_ARR(int, ldm->size);
     for (i = 0; i < ldm->size; ++i){
-        ldm->op_id[i] = heur->relax.cref.op_id[heur->cut.op[i]];
+        ldm->op_id[i] = heur->relax.cref.op_id[op_ids[i]];
     }
 }
 
@@ -341,9 +342,8 @@ static plan_cost_t applyInitLandmarks(plan_heur_lm_cut_t *heur,
             heur->relax.op[op_id].cost  -= cost;
         }
 
-        // TODO
-        //if (res->save_landmarks)
-        //    storeLandmarks(heur, res);
+        if (res->save_landmarks)
+            storeLandmarks(heur, ldm->op_id, ldm->size, res);
     }
 
     // Reorganize array of changed operators
@@ -397,7 +397,7 @@ static void lmCutState(plan_heur_lm_cut_t *heur, const plan_state_t *state,
 
         // Store landmarks into output structure if requested.
         if (res->save_landmarks)
-            storeLandmarks(heur, res);
+            storeLandmarks(heur, heur->cut.op, heur->cut.size, res);
 
         // Determine the minimal cost from all cut-operators. Substract
         // this cost from their cost and add it to the final heuristic

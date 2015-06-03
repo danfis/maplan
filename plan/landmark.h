@@ -83,6 +83,9 @@ void planLandmarkSetAdd(plan_landmark_set_t *ldms, int size, int *op_id);
 struct _plan_landmark_cache_t {
     bor_htable_t *ldm_table; /*!< Hash table of landmarks */
     bor_list_t ldms; /*!< Landmark sets */
+
+    plan_landmark_set_t ldms_out; /*!< Set used for *Get() method */
+    int ldms_alloc; /*!< Size of allocated space in .ldms_out */
 };
 typedef struct _plan_landmark_cache_t plan_landmark_cache_t;
 
@@ -109,7 +112,7 @@ plan_landmark_set_id_t planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
 /**
  * Returns a landmark set that corresponds to the given ID or NULL of not
  * such landmark set is stored in the cache.
- * The returned landmark set points to the internal structure of the cache
+ * The returned landmark set points to an internal structure of the cache
  * so it should not be changed in any way.
  */
 const plan_landmark_set_t *planLandmarkCacheGet(plan_landmark_cache_t *ldmc,

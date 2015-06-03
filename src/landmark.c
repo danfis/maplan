@@ -32,7 +32,7 @@ typedef struct _ldm_t ldm_t;
 
 /** Landmark set */
 struct _ldm_set_t {
-    plan_landmark_set_t ldms;
+    int size;
     ldm_t **ldm_pts;
     bor_list_t list; /*!< Connection to the list of landmarks */
 };
@@ -120,6 +120,9 @@ plan_landmark_cache_t *planLandmarkCacheNew(void)
     ldmc->ldm_table = borHTableNew(ldmHash, ldmEq, NULL);
     borListInit(&ldmc->ldms);
 
+    planLandmarkSetInit(&ldmc->ldms_out);
+    ldmc->ldms_alloc = 0;
+
     return ldmc;
 }
 
@@ -134,6 +137,8 @@ void planLandmarkCacheDel(plan_landmark_cache_t *ldmc)
     }
 
     borHTableDel(ldmc->ldm_table);
+    if (ldmc->ldms_out.landmark)
+        BOR_FREE(ldmc->ldms_out.landmark);
     BOR_FREE(ldmc);
 }
 
@@ -145,14 +150,14 @@ plan_landmark_set_id_t planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
     int i;
 
     ldms = ldmSetNew(ldms_in);
-    bzero(ldms_in, sizeof(*ldms_in));
-    for (i = 0; i < ldms->ldms.size; ++i){
-        ldm = ldmInsert(ldmc, ldms->ldms.landmark + i);
-        ldms->ldms.landmark[i] = ldm->ldm;
+    for (i = 0; i < ldms->size; ++i){
+        ldm = ldmInsert(ldmc, ldms_in->landmark + i);
         ldms->ldm_pts[i] = ldm;
     }
-
     borListAppend(&ldmc->ldms, &ldms->list);
+
+    BOR_FREE(ldms_in->landmark);
+    bzero(ldms_in, sizeof(*ldms_in));
     return ldms;
 }
 
@@ -160,7 +165,19 @@ const plan_landmark_set_t *planLandmarkCacheGet(plan_landmark_cache_t *ldmc,
                                                 plan_landmark_set_id_t ldmid)
 {
     ldm_set_t *ldms = (ldm_set_t *)ldmid;
-    return &ldms->ldms;
+    plan_landmark_set_t *out = &ldmc->ldms_out;
+    int i;
+
+    if (ldms->size > ldmc->ldms_alloc){
+        ldmc->ldms_alloc = ldms->size;
+        out->landmark = BOR_REALLOC_ARR(out->landmark, plan_landmark_t,
+                                        ldmc->ldms_alloc);
+    }
+
+    out->size = ldms->size;
+    for (i = 0; i < ldms->size; ++i)
+        out->landmark[i] = ldms->ldm_pts[i]->ldm;
+    return out;
 }
 
 static bor_htable_key_t ldmHash(const bor_list_t *k, void *ud)
@@ -184,8 +201,8 @@ static ldm_set_t *ldmSetNew(plan_landmark_set_t *l)
     ldm_set_t *ldms;
 
     ldms = BOR_ALLOC(ldm_set_t);
-    ldms->ldms = *l;
-    ldms->ldm_pts = BOR_ALLOC_ARR(ldm_t *, ldms->ldms.size);
+    ldms->size = l->size;
+    ldms->ldm_pts = BOR_ALLOC_ARR(ldm_t *, ldms->size);
     borListInit(&ldms->list);
     return ldms;
 }
@@ -194,13 +211,12 @@ static void ldmSetDel(plan_landmark_cache_t *ldmc, ldm_set_t *ldms)
 {
     int i;
 
-    for (i = 0; i < ldms->ldms.size; ++i){
+    for (i = 0; i < ldms->size; ++i){
         if (--ldms->ldm_pts[i]->refcount == 0){
             borHTableErase(ldmc->ldm_table, &ldms->ldm_pts[i]->htable);
             ldmDel(ldms->ldm_pts[i]);
         }
     }
-    BOR_FREE(ldms->ldms.landmark);
     BOR_FREE(ldms->ldm_pts);
     BOR_FREE(ldms);
 }

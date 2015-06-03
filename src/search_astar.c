@@ -127,6 +127,9 @@ static int astarInsertState(plan_search_astar_t *astar,
         heur = node->heuristic;
     }
 
+    // Set heuristic value to the node
+    node->heuristic = heur;
+
     // Skip dead-end states
     if (heur == PLAN_HEUR_DEAD_END)
         return PLAN_SEARCH_CONT;
@@ -134,9 +137,6 @@ static int astarInsertState(plan_search_astar_t *astar,
     // Set up costs for open-list -- ties are broken by heuristic value
     cost[0] = g_cost + heur; // f-value: f() = g() + h()
     cost[1] = heur; // tie-breaking value
-
-    // Set heuristic value to the node
-    node->heuristic = heur;
 
     // Insert into open-list
     planListPush(astar->list, cost, node->state_id);

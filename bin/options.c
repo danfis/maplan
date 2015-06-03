@@ -50,7 +50,7 @@ static const char *opt_heur_all[] = {
     "proj", "loc", "glob", NULL
 };
 static const char *opt_heur_flow[] = {
-    "proj", "loc", "glob", "ilp", "lm-cut", NULL
+    "proj", "loc", "glob", "ilp", "lm-cut", "lm-cut-inc-local", NULL
 };
 
 static optdef_t opt_search[] = {
@@ -67,6 +67,7 @@ static optdef_t opt_heur[] = {
     { "ff", opt_heur_all },
     { "dtg", opt_heur_all },
     { "lm-cut", opt_heur_all },
+    { "lm-cut-inc-local", opt_heur_all },
     { "flow", opt_heur_flow },
     { "ma-max", opt_empty },
     { "ma-ff", opt_empty },
@@ -199,7 +200,8 @@ static void usage(const char *progname)
     fprintf(stderr, "\n");
     fprintf(stderr,
 "  HEUR OPTIONS:\n"
-"    The available heur algorithms are: goalcount, add, max, ff, dtg, lm-cut, flow.\n"
+"    The available heur algorithms are:\n"
+"        goalcount, add, max, ff, dtg, lm-cut, lm-cut-inc-local, flow.\n"
 "    Additionally for the multi-agent mode: ma-max, ma-ff, ma-lm-cut, ma-dtg\n"
 "\n"
 "    Options allowed for flow heuristic:\n"

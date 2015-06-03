@@ -164,6 +164,9 @@ static plan_state_space_node_t *createNode(plan_search_lazy_base_t *lb,
         return NULL;
     }
 
+    cur_node->parent_state_id = parent_state_id;
+    cur_node->op = parent_op;
+
     // find applicable operators in the current state
     _planSearchFindApplicableOps(search, cur_state_id);
 
@@ -175,6 +178,8 @@ static plan_state_space_node_t *createNode(plan_search_lazy_base_t *lb,
         *ret = res;
         return NULL;
     }
+
+    cur_node->heuristic = cur_heur;
 
     // Skip dead-end
     if (cur_heur == PLAN_HEUR_DEAD_END){
@@ -188,10 +193,7 @@ static plan_state_space_node_t *createNode(plan_search_lazy_base_t *lb,
     // Update current node's data
     planStateSpaceOpen(search->state_space, cur_node);
     planStateSpaceClose(search->state_space, cur_node);
-    cur_node->parent_state_id = parent_state_id;
-    cur_node->op = parent_op;
     cur_node->cost = parent_node->cost + parent_op->cost;
-    cur_node->heuristic = cur_heur;
     planSearchStatIncExpandedStates(&lb->search.stat);
 
     return cur_node;

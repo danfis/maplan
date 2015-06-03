@@ -29,6 +29,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/** Forward declaration */
+struct _plan_search_t;
+
 /**
  * Heuristic Function API
  * =======================
@@ -122,18 +125,41 @@ void planHeurResLandmarksFree(plan_heur_res_landmarks_t *ldms);
 typedef void (*plan_heur_del_fn)(plan_heur_t *heur);
 
 /**
- * Function that returns heuristic value (see planHeur() function below).
+ * Function that returns heuristic value (see planHeurState() function below).
+ * This can be set to NULL if plan_heur_node_fn is set. This callback is
+ * here primarly for a convenience in case the heuristic is based solely on
+ * the state itself (probably most heuristics are).
  */
-typedef void (*plan_heur_fn)(plan_heur_t *heur, const plan_state_t *state,
-                             plan_heur_res_t *res);
+typedef void (*plan_heur_state_fn)(plan_heur_t *heur, const plan_state_t *state,
+                                   plan_heur_res_t *res);
 
 /**
- * Multi-agent version of plan_heur_fn
+ * Function that returns heuristic estimate based on ID of state node
+ * (see planHeurNode() function below).
+ * This method can be set to NULL if plan_search_state_fn is filled. In
+ * that case, plan_heur_state_fn is automatically called instead.
  */
-typedef int (*plan_heur_ma_fn)(plan_heur_t *heur,
-                               plan_ma_comm_t *comm,
-                               const plan_state_t *state,
-                               plan_heur_res_t *res);
+typedef void (*plan_heur_node_fn)(plan_heur_t *heur,
+                                  plan_state_id_t state_id,
+                                  struct _plan_search_t *search,
+                                  plan_heur_res_t *res);
+
+/**
+ * Multi-agent version of plan_heur_state_fn
+ */
+typedef int (*plan_heur_ma_state_fn)(plan_heur_t *heur,
+                                     plan_ma_comm_t *comm,
+                                     const plan_state_t *state,
+                                     plan_heur_res_t *res);
+
+/**
+ * Multi-agent version of plan_heur_node_fn
+ */
+typedef int (*plan_heur_ma_node_fn)(plan_heur_t *heur,
+                                    plan_ma_comm_t *comm,
+                                    plan_state_id_t state_id,
+                                    struct _plan_search_t *search,
+                                    plan_heur_res_t *res);
 
 /**
  * Update function for multi-agent version of heuristic
@@ -152,8 +178,10 @@ typedef void (*plan_heur_ma_request_fn)(plan_heur_t *heur,
 
 struct _plan_heur_t {
     plan_heur_del_fn del_fn;
-    plan_heur_fn heur_fn;
-    plan_heur_ma_fn heur_ma_fn;
+    plan_heur_state_fn heur_state_fn;
+    plan_heur_node_fn heur_node_fn;
+    plan_heur_ma_state_fn heur_ma_state_fn;
+    plan_heur_ma_node_fn heur_ma_node_fn;
     plan_heur_ma_update_fn heur_ma_update_fn;
     plan_heur_ma_request_fn heur_ma_request_fn;
 
@@ -200,12 +228,17 @@ plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
 
 /**
  * Creates an LM-Cut heuristics.
- * If succ_gen is NULL, a new successor generator is created internally
- * from the given operators.
  */
 plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
                               const plan_part_state_t *goal,
                               const plan_op_t *op, int op_size);
+
+/**
+ * Incremental LM-Cut, the local version.
+ */
+plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
+                                      const plan_part_state_t *goal,
+                                      const plan_op_t *op, int op_size);
 
 /**
  * Domain transition graph based heuristic.
@@ -249,12 +282,21 @@ plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def);
 void planHeurDel(plan_heur_t *heur);
 
 /**
- * Compute heuristic from the specified state to the goal state.
+ * Compute heuristic estimate for from the specified state node.
  * See documentation to the plan_heur_res_t how the result structure is
  * filled.
  */
-void planHeur(plan_heur_t *heur, const plan_state_t *state,
-              plan_heur_res_t *res);
+void planHeurNode(plan_heur_t *heur, plan_state_id_t state_id,
+                  struct _plan_search_t *search, plan_heur_res_t *res);
+
+/**
+ * Similar to planHeurNode() but only for the cases when the heuristic is
+ * based solely on the state itself.
+ * This function is here primarly for testing purposes, from within search
+ * procedures planHeurNode() is called instead.
+ */
+void planHeurState(plan_heur_t *heur, const plan_state_t *state,
+                   plan_heur_res_t *res);
 
 /**
  * Initialization of heuristic in ma mode.
@@ -265,15 +307,27 @@ void planHeurMAInit(plan_heur_t *heur, int agent_size, int agent_id,
                     plan_ma_state_t *ma_state);
 
 /**
- * Multi-agent version of planHeur(), this function can send some messages
+ * Multi-agent version of planHeurNode(), this function can send some messages
  * to other peers. Returns 0 if heuristic value was found or -1 if
  * planHeurMAUpdate() should be consecutively called on all heur-response
  * messages.
  */
-int planHeurMA(plan_heur_t *heur,
-               plan_ma_comm_t *comm,
-               const plan_state_t *state,
-               plan_heur_res_t *res);
+int planHeurMANode(plan_heur_t *heur,
+                   plan_ma_comm_t *comm,
+                   plan_state_id_t state_id,
+                   struct _plan_search_t *search,
+                   plan_heur_res_t *res);
+
+/**
+ * Similar to planHeurMANode() but only for the cases when the heuristic is
+ * based solely on the state itself.
+ * This function is here primarly for testing purposes, from within
+ * search procedures planHeurMANode() is called.
+ */
+int planHeurMAState(plan_heur_t *heur,
+                    plan_ma_comm_t *comm,
+                    const plan_state_t *state,
+                    plan_heur_res_t *res);
 
 /**
  * If planHeurMA() returned non-zero value (reference ID), all receiving
@@ -299,7 +353,8 @@ void planHeurMARequest(plan_heur_t *heur,
  */
 void _planHeurInit(plan_heur_t *heur,
                    plan_heur_del_fn del_fn,
-                   plan_heur_fn heur_fn);
+                   plan_heur_state_fn heur_state_fn,
+                   plan_heur_node_fn heur_node_fn);
 
 /**
  * Initializes multi-agent part of the heuristics.
@@ -307,7 +362,8 @@ void _planHeurInit(plan_heur_t *heur,
  * For internal use.
  */
 void _planHeurMAInit(plan_heur_t *heur,
-                     plan_heur_ma_fn heur_ma_fn,
+                     plan_heur_ma_state_fn heur_ma_state_fn,
+                     plan_heur_ma_node_fn heur_ma_node_fn,
                      plan_heur_ma_update_fn heur_ma_update_fn,
                      plan_heur_ma_request_fn heur_ma_request_fn);
 

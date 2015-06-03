@@ -19,6 +19,7 @@
 
 #include <boruvka/alloc.h>
 #include "plan/heur.h"
+#include "plan/search.h"
 
 void planHeurResLandmarksFree(plan_heur_res_landmarks_t *ldms)
 {
@@ -34,21 +35,25 @@ void planHeurResLandmarksFree(plan_heur_res_landmarks_t *ldms)
 
 void _planHeurInit(plan_heur_t *heur,
                    plan_heur_del_fn del_fn,
-                   plan_heur_fn heur_fn)
+                   plan_heur_state_fn heur_state_fn,
+                   plan_heur_node_fn heur_node_fn)
 {
     bzero(heur, sizeof(*heur));
 
-    heur->del_fn  = del_fn;
-    heur->heur_fn = heur_fn;
+    heur->del_fn = del_fn;
+    heur->heur_state_fn = heur_state_fn;
+    heur->heur_node_fn = heur_node_fn;
     heur->ma = 0;
 }
 
 void _planHeurMAInit(plan_heur_t *heur,
-                     plan_heur_ma_fn heur_ma_fn,
+                     plan_heur_ma_state_fn heur_ma_state_fn,
+                     plan_heur_ma_node_fn heur_ma_node_fn,
                      plan_heur_ma_update_fn heur_ma_update_fn,
                      plan_heur_ma_request_fn heur_ma_request_fn)
 {
-    heur->heur_ma_fn         = heur_ma_fn;
+    heur->heur_ma_state_fn   = heur_ma_state_fn;
+    heur->heur_ma_node_fn    = heur_ma_node_fn;
     heur->heur_ma_update_fn  = heur_ma_update_fn;
     heur->heur_ma_request_fn = heur_ma_request_fn;
     heur->ma = 1;
@@ -63,11 +68,22 @@ void planHeurDel(plan_heur_t *heur)
     heur->del_fn(heur);
 }
 
-void planHeur(plan_heur_t *heur, const plan_state_t *state,
-              plan_heur_res_t *res)
+void planHeurNode(plan_heur_t *heur, plan_state_id_t state_id,
+                  plan_search_t *search, plan_heur_res_t *res)
 {
     res->pref_size = 0;
-    heur->heur_fn(heur, state, res);
+    if (heur->heur_node_fn){
+        heur->heur_node_fn(heur, state_id, search, res);
+    }else{
+        planHeurState(heur, planSearchLoadState(search, state_id), res);
+    }
+}
+
+void planHeurState(plan_heur_t *heur, const plan_state_t *state,
+                   plan_heur_res_t *res)
+{
+    res->pref_size = 0;
+    heur->heur_state_fn(heur, state, res);
 }
 
 void planHeurMAInit(plan_heur_t *heur, int agent_size, int agent_id,
@@ -78,18 +94,32 @@ void planHeurMAInit(plan_heur_t *heur, int agent_size, int agent_id,
     heur->ma_state = ma_state;
 }
 
-int planHeurMA(plan_heur_t *heur,
-               plan_ma_comm_t *comm,
-               const plan_state_t *state,
-               plan_heur_res_t *res)
+int planHeurMANode(plan_heur_t *heur,
+                   plan_ma_comm_t *comm,
+                   plan_state_id_t state_id,
+                   plan_search_t *search,
+                   plan_heur_res_t *res)
 {
-    if (heur->heur_ma_fn == NULL){
-        fprintf(stderr, "Heur Error: planHeurMA() is not defined for"
+    if (heur->heur_ma_node_fn != NULL){
+        return heur->heur_ma_node_fn(heur, comm, state_id, search, res);
+    }else{
+        return planHeurMAState(heur, comm,
+                               planSearchLoadState(search, state_id), res);
+    }
+}
+
+int planHeurMAState(plan_heur_t *heur,
+                    plan_ma_comm_t *comm,
+                    const plan_state_t *state,
+                    plan_heur_res_t *res)
+{
+    if (heur->heur_ma_state_fn == NULL){
+        fprintf(stderr, "Heur Error: planHeurMAState() is not defined for"
                         " this heuristic!\n");
         exit(-1);
     }
 
-    return heur->heur_ma_fn(heur, comm, state, res);
+    return heur->heur_ma_state_fn(heur, comm, state, res);
 }
 
 int planHeurMAUpdate(plan_heur_t *heur,

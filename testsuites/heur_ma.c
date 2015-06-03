@@ -61,7 +61,7 @@ static plan_cost_t testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
 
 
     planHeurResInit(&res);
-    status = planHeurMA(heur[agent_id], comm[agent_id], state, &res);
+    status = planHeurMAState(heur[agent_id], comm[agent_id], state, &res);
     while (status != 0){
         msg = nextMsg(comm, agent_size, &msg_agent_id);
         if (planMAMsgHeurType(msg) == PLAN_MA_MSG_HEUR_REQUEST){
@@ -93,7 +93,7 @@ static plan_cost_t testMAHeur(plan_heur_t **heur, plan_ma_comm_t **comm,
 
     if (seq_heur){
         planHeurResInit(&seq_res);
-        planHeur(seq_heur, state, &seq_res);
+        planHeurState(seq_heur, state, &seq_res);
         assertEquals(res.heur, seq_res.heur);
         if (res.heur != seq_res.heur){
             fprintf(stderr, "%d: ma: %d, seq: %d\n", cnt, res.heur, seq_res.heur);

@@ -569,6 +569,9 @@ static plan_heur_t *_heurNew(const options_t *o,
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
                                 prob->goal, op, op_size);
+    }else if (strcmp(name, "lm-cut-inc-local") == 0){
+        heur = planHeurLMCutIncLocalNew(prob->var, prob->var_size,
+                                        prob->goal, op, op_size);
     }else if (strcmp(name, "flow") == 0){
         if (optionsHeurOpt(o, "ilp"))
             flags |= PLAN_HEUR_FLOW_ILP;

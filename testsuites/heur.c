@@ -4,6 +4,7 @@
 #include <boruvka/alloc.h>
 #include "plan/problem.h"
 #include "plan/heur.h"
+#include "plan/search.h"
 #include "state_pool.h"
 #include "../src/heur_relax.h"
 
@@ -35,6 +36,12 @@ static plan_heur_t *lmCutNew(plan_problem_t *p)
 {
     return planHeurLMCutNew(p->var, p->var_size, p->goal,
                             p->op, p->op_size);
+}
+
+static plan_heur_t *lmCutIncLocalNew(plan_problem_t *p)
+{
+    return planHeurLMCutIncLocalNew(p->var, p->var_size, p->goal,
+                                    p->op, p->op_size);
 }
 
 static plan_heur_t *dtgNew(plan_problem_t *p)
@@ -84,7 +91,7 @@ static void runTest(const char *name,
         if (landmarks)
             res.save_landmarks = 1;
 
-        planHeur(heur, state, &res);
+        planHeurState(heur, state, &res);
         printf("[%d] ", si);
         if (res.heur == PLAN_HEUR_DEAD_END){
             printf("DEAD END");
@@ -125,6 +132,59 @@ run_test_end:
     statePoolFree(&state_pool);
     planStateDel(state);
     planProblemDel(p);
+    printf("-----\n");
+}
+
+static int stopSearch(const plan_search_stat_t *state, void *_)
+{
+    return PLAN_SEARCH_ABORT;
+}
+
+static void runAStarTest(const char *name, const char *proto,
+                         new_heur_fn new_heur, int max_steps)
+{
+    plan_search_astar_params_t params;
+    plan_search_t *search;
+    plan_problem_t *prob;
+    plan_path_t path;
+    const plan_state_t *state;
+    const plan_state_space_node_t *node;
+    int si, i;
+
+    printf("----- A* test -----\n%s\n%s\n", name, proto);
+    prob = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
+
+    planSearchAStarParamsInit(&params);
+    params.search.heur = new_heur(prob);
+    params.search.heur_del = 1;
+    params.search.prob = prob;
+    params.search.progress.fn = stopSearch;
+    params.search.progress.freq = max_steps;
+    search = planSearchAStarNew(&params);
+
+    planPathInit(&path);
+    planSearchRun(search, &path);
+    planPathFree(&path);
+
+    for (si = 0; si < prob->state_pool->num_states; ++si){
+        state = planSearchLoadState(search, si);
+        node = planSearchLoadNode(search, si);
+
+        printf("[%d] ", si);
+        if (node->heuristic == PLAN_HEUR_DEAD_END){
+            printf("DEAD END");
+        }else{
+            printf("%d", (int)node->heuristic);
+        }
+        printf(" ::");
+        for (i = 0; i < planStateSize(state); ++i){
+            printf(" %d", planStateGet(state, i));
+        }
+        printf("\n");
+    }
+
+    planSearchDel(search);
+    planProblemDel(prob);
     printf("-----\n");
 }
 
@@ -328,7 +388,7 @@ TEST(testHeurRelaxFF)
             "states/citycar-p3-2-2-0-1.txt", ffNew, 0, 0);
 }
 
-TEST(testHeurRelaxLMCut)
+TEST(testHeurLMCut)
 {
     runTest("LM-CUT", "proto/sokoban-p01.proto",
             "states/sokoban-p01.txt", lmCutNew, 0, 0);
@@ -342,6 +402,22 @@ TEST(testHeurRelaxLMCut)
             "states/rovers-p15.txt", lmCutNew, 0, 0);
     runTest("LM-CUT", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", lmCutNew, 0, 0);
+}
+
+TEST(testHeurLMCutIncLocal)
+{
+    runAStarTest("LM-Cut-inc-local", "proto/depot-pfile1.proto",
+                 lmCutIncLocalNew, 100);
+    runAStarTest("LM-Cut-inc-local", "proto/depot-pfile5.proto",
+                 lmCutIncLocalNew, 100);
+    runAStarTest("LM-Cut-inc-local", "proto/rovers-p03.proto",
+                 lmCutIncLocalNew, 100);
+    runAStarTest("LM-Cut-inc-local", "proto/rovers-p15.proto",
+                 lmCutIncLocalNew, 100);
+    runAStarTest("LM-Cut-inc-local", "proto/CityCar-p3-2-2-0-1.proto",
+                 lmCutIncLocalNew, 100);
+    runAStarTest("LM-Cut-inc-local", "proto/sokoban-p01.proto",
+                 lmCutIncLocalNew, 100);
 }
 
 TEST(testHeurDTG)

@@ -44,6 +44,7 @@ OBJS += ma_search.o
 OBJS += heur_admissible.o
 OBJS += dtg.o
 OBJS += ma_private_state.o
+OBJS += landmark.o
 
 all: $(TARGETS)
 

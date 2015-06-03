@@ -18,6 +18,7 @@
 #include "heur_admissible.h"
 #include "dtg.h"
 #include "ma_private_state.h"
+#include "landmark.h"
 
 TEST(protobufTearDown)
 {
@@ -43,6 +44,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSHeurAdmissible),
     TEST_SUITE_ADD(TSDTG),
     TEST_SUITE_ADD(TSMAPrivateState),
+    TEST_SUITE_ADD(TSLandmark),
     TEST_SUITES_CLOSURE
 };
 

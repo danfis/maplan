@@ -75,7 +75,7 @@ void planLandmarkSetFree(plan_landmark_set_t *ldms);
 /**
  * Adds one landmark to the set.
  */
-void planLandmarkSetAdd(plan_landmark_set_t *ldms, plan_landmark_t *ldm);
+void planLandmarkSetAdd(plan_landmark_set_t *ldms, int size, int *op_id);
 
 /**
  * Cache for landmark sets.
@@ -100,8 +100,8 @@ void planLandmarkCacheDel(plan_landmark_cache_t *);
 
 /**
  * Adds a landmark set to the cache.
- * The cache "steals" the pointer to the landmark so the user should not
- * use the landmark set again.
+ * The cache "consumes" the content of the given landmark set, so the
+ * caller should not use the landmark set again (it is zeroized anyway).
  */
 plan_landmark_set_id_t planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
                                             plan_landmark_set_t *ldms);

@@ -80,6 +80,7 @@ void planLandmarkUnify(plan_landmark_t *ldm)
             ldm->op_id[ins++] = ldm->op_id[i];
         }
     }
+    ldm->size = ins;
 }
 
 void planLandmarkSetInit(plan_landmark_set_t *ldms)
@@ -98,12 +99,15 @@ void planLandmarkSetFree(plan_landmark_set_t *ldms)
     }
 }
 
-void planLandmarkSetAdd(plan_landmark_set_t *ldms, plan_landmark_t *ldm)
+void planLandmarkSetAdd(plan_landmark_set_t *ldms, int size, int *op_id)
 {
+    plan_landmark_t *ldm;
+
     ++ldms->size;
     ldms->landmark = BOR_REALLOC_ARR(ldms->landmark, plan_landmark_t,
                                      ldms->size);
-    ldms->landmark[ldms->size - 1] = *ldm;
+    ldm = ldms->landmark + ldms->size - 1;
+    planLandmarkInit(ldm, size, op_id);
 }
 
 
@@ -141,6 +145,7 @@ plan_landmark_set_id_t planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
     int i;
 
     ldms = ldmSetNew(ldms_in);
+    bzero(ldms_in, sizeof(*ldms_in));
     for (i = 0; i < ldms->ldms.size; ++i){
         ldm = ldmInsert(ldmc, ldms->ldms.landmark + i);
         ldms->ldms.landmark[i] = ldm->ldm;

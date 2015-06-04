@@ -112,14 +112,14 @@ static void runTest(const char *name,
         }
 
         if (landmarks){
-            for (i = 0; i < res.landmarks.num_landmarks; ++i){
+            for (i = 0; i < res.landmarks.size; ++i){
                 printf("Landmark [%d]:", i);
                 for (j = 0; j < res.landmarks.landmark[i].size; ++j){
                     printf(" %d", res.landmarks.landmark[i].op_id[j]);
                 }
                 printf("\n");
             }
-            planHeurResLandmarksFree(&res.landmarks);
+            planLandmarkSetFree(&res.landmarks);
         }
         fflush(stdout);
     }

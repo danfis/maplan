@@ -160,7 +160,7 @@ static void lpLPSolveInit(lprec **lp, const fact_t *facts, int facts_size,
 static void lpLPSolveFree(lprec **lp);
 static plan_cost_t lpLPSolveSolve(lprec **lp, const fact_t *facts,
                                   int facts_size, int use_ilp,
-                                  const plan_heur_res_landmarks_t *ldms);
+                                  const plan_landmark_set_t *ldms);
 #endif /* PLAN_HEUR_FLOW_LP_SOLVE */
 
 #ifdef PLAN_HEUR_FLOW_CPLEX
@@ -170,7 +170,7 @@ static void lpCplexInit(lp_cplex_t *lp, const fact_t *facts, int facts_size,
 static void lpCplexFree(lp_cplex_t *lp);
 static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
                                 int facts_size, int use_ilp,
-                                const plan_heur_res_landmarks_t *ldms);
+                                const plan_landmark_set_t *ldms);
 #endif /* PLAN_HEUR_FLOW_CPLEX */
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
@@ -226,7 +226,7 @@ static void heurFlow(plan_heur_t *_heur, const plan_state_t *state,
 {
     plan_heur_flow_t *hflow = HEUR(_heur);
     plan_heur_res_t ldms_res;
-    plan_heur_res_landmarks_t *ldms = NULL;
+    plan_landmark_set_t *ldms = NULL;
 
     // Compute landmark heuristic to get landmarks.
     if (hflow->lm_cut){
@@ -242,7 +242,7 @@ static void heurFlow(plan_heur_t *_heur, const plan_state_t *state,
 
     // Free allocated landmarks
     if (hflow->lm_cut)
-        planHeurResLandmarksFree(ldms);
+        planLandmarkSetFree(ldms);
 }
 
 static void factsInitGoal(fact_t *facts, const plan_fact_id_t *fact_id,
@@ -466,10 +466,9 @@ static void lpLPSolveFree(lprec **lp)
         delete_lp(*lp);
 }
 
-static void lpSolveAddLandmarks(lprec *lp,
-                                const plan_heur_res_landmarks_t *ldms)
+static void lpSolveAddLandmarks(lprec *lp, const plan_landmark_set_t *ldms)
 {
-    plan_heur_res_landmark_t *ldm;
+    plan_landmark_t *ldm;
     REAL *row = NULL;
     int *colno = NULL;
     int rowsize = 0, i, j;
@@ -477,7 +476,7 @@ static void lpSolveAddLandmarks(lprec *lp,
     if (ldms == NULL)
         return;
 
-    for (i = 0; i < ldms->num_landmarks; ++i){
+    for (i = 0; i < ldms->size; ++i){
         ldm = ldms->landmark + i;
         if (rowsize < ldm->size){
             row = BOR_REALLOC_ARR(row, REAL, ldm->size);
@@ -496,22 +495,21 @@ static void lpSolveAddLandmarks(lprec *lp,
         BOR_FREE(colno);
 }
 
-static void lpSolveDelLandmarks(lprec *lp,
-                                const plan_heur_res_landmarks_t *ldms)
+static void lpSolveDelLandmarks(lprec *lp, const plan_landmark_set_t *ldms)
 {
     int i;
 
     if (ldms == NULL)
         return;
 
-    for (i = 0; i < ldms->num_landmarks; ++i){
+    for (i = 0; i < ldms->size; ++i){
         del_constraint(lp, get_Nrows(lp));
     }
 }
 
 static plan_cost_t lpLPSolveSolve(lprec **_lp, const fact_t *facts,
                                   int facts_size, int use_ilp,
-                                  const plan_heur_res_landmarks_t *ldms)
+                                  const plan_landmark_set_t *ldms)
 {
     lprec *lp = *_lp;
     plan_cost_t h = PLAN_HEUR_DEAD_END;
@@ -678,20 +676,19 @@ static void lpCplexFree(lp_cplex_t *lp)
 }
 
 
-static void lpCplexAddLandmarks(lp_cplex_t *lp,
-                                const plan_heur_res_landmarks_t *ldms)
+static void lpCplexAddLandmarks(lp_cplex_t *lp, const plan_landmark_set_t *ldms)
 {
-    plan_heur_res_landmark_t *ldm;
+    plan_landmark_t *ldm;
     int num_constrs, num_nz, i, row, ins, st;
     double *rhs;
     char *sense;
     int *rbeg, *rind;
     double *val;
 
-    if (ldms == NULL || ldms->num_landmarks == 0)
+    if (ldms == NULL || ldms->size == 0)
         return;
 
-    num_constrs = ldms->num_landmarks;
+    num_constrs = ldms->size;
     for (num_nz = 0, i = 0; i < num_constrs; ++i)
         num_nz += ldms->landmark[i].size;
 
@@ -728,23 +725,22 @@ static void lpCplexAddLandmarks(lp_cplex_t *lp,
     BOR_FREE(val);
 }
 
-static void lpCplexDelLandmarks(lp_cplex_t *lp,
-                                const plan_heur_res_landmarks_t *ldms)
+static void lpCplexDelLandmarks(lp_cplex_t *lp, const plan_landmark_set_t *ldms)
 {
     int from, to;
 
-    if (ldms == NULL || ldms->num_landmarks == 0)
+    if (ldms == NULL || ldms->size == 0)
         return;
 
     from = lp->num_constrs;
-    to = from + ldms->num_landmarks - 1;
+    to = from + ldms->size - 1;
     if (CPXdelrows(lp->env, lp->lp, from, to) != 0)
         fprintf(stderr, "ERR\n");
 }
 
 static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
                                 int facts_size, int use_ilp,
-                                const plan_heur_res_landmarks_t *ldms)
+                                const plan_landmark_set_t *ldms)
 {
     plan_cost_t h = PLAN_HEUR_DEAD_END;
     int i, st, solst;

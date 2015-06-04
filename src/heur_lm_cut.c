@@ -27,9 +27,9 @@
 
 struct _inc_local_t {
     int enabled;
-    plan_heur_res_landmarks_t ldms; /*!< Cached landmarks */
-    plan_state_id_t ldms_id;        /*!< ID of the state for which the
-                                         landmarks are cached */
+    plan_landmark_set_t ldms; /*!< Cached landmarks */
+    plan_state_id_t ldms_id;  /*!< ID of the state for which the landmarks
+                                   are cached */
     plan_op_id_tr_t op_id_tr; /*!< Translation from global ID to local ID */
 };
 typedef struct _inc_local_t inc_local_t;
@@ -118,7 +118,7 @@ static void planHeurLMCutDel(plan_heur_t *_heur)
     BOR_FREE(heur->fact_goal_zone);
     BOR_FREE(heur->fact_in_queue);
     if (heur->inc_local.enabled){
-        planHeurResLandmarksFree(&heur->inc_local.ldms);
+        planLandmarkSetFree(&heur->inc_local.ldms);
         planOpIdTrFree(&heur->inc_local.op_id_tr);
     }
     planHeurRelaxFree(&heur->relax);
@@ -267,24 +267,16 @@ static plan_cost_t updateCutCost(const plan_oparr_t *cut, plan_heur_relax_op_t *
 static void storeLandmarks(plan_heur_lm_cut_t *heur, int *op_ids, int size,
                            plan_heur_res_t *res)
 {
-    plan_heur_res_landmarks_t *ldms;
-    plan_heur_res_landmark_t *ldm;
-    int i;
+    int i, *ops;
 
     if (size == 0)
         return;
 
-    ldms = &res->landmarks;
-    ++ldms->num_landmarks;
-    ldms->landmark = BOR_REALLOC_ARR(ldms->landmark, plan_heur_res_landmark_t,
-                                     ldms->num_landmarks);
-    ldm = ldms->landmark + ldms->num_landmarks - 1;
-
-    ldm->size = size;
-    ldm->op_id = BOR_ALLOC_ARR(int, ldm->size);
-    for (i = 0; i < ldm->size; ++i){
-        ldm->op_id[i] = heur->relax.cref.op_id[op_ids[i]];
-    }
+    ops = BOR_ALLOC_ARR(int, size);
+    for (i = 0; i < size; ++i)
+        ops[i] = heur->relax.cref.op_id[op_ids[i]];
+    planLandmarkSetAdd(&res->landmarks, size, ops);
+    BOR_FREE(ops);
 }
 
 static int landmarkCost(const plan_heur_relax_op_t *op, int *ldm,
@@ -306,12 +298,12 @@ static int landmarkCost(const plan_heur_relax_op_t *op, int *ldm,
 }
 
 static plan_cost_t applyInitLandmarks(plan_heur_lm_cut_t *heur,
-                                      const plan_heur_res_landmarks_t *ldms,
+                                      const plan_landmark_set_t *ldms,
                                       int inc_op_id,
                                       plan_heur_res_t *res)
 {
     plan_cost_t h = 0;
-    const plan_heur_res_landmark_t *ldm;
+    const plan_landmark_t *ldm;
     int cost, *op_changed, i, j, size, op_id;
 
     // Reuse structure for cut
@@ -320,7 +312,7 @@ static plan_cost_t applyInitLandmarks(plan_heur_lm_cut_t *heur,
 
     // Record operators that should be changed as well as value that should
     // be substracted from their cost.
-    for (i = 0; i < ldms->num_landmarks; ++i){
+    for (i = 0; i < ldms->size; ++i){
         ldm = ldms->landmark + i;
         if (ldm->size <= 0)
             continue;
@@ -359,7 +351,7 @@ static plan_cost_t applyInitLandmarks(plan_heur_lm_cut_t *heur,
 }
 
 static void lmCutState(plan_heur_lm_cut_t *heur, const plan_state_t *state,
-                       const plan_heur_res_landmarks_t *ldms, int inc_op_id,
+                       const plan_landmark_set_t *ldms, int inc_op_id,
                        plan_heur_res_t *res)
 {
     plan_cost_t h = 0;
@@ -369,7 +361,7 @@ static void lmCutState(plan_heur_lm_cut_t *heur, const plan_state_t *state,
 
     // If landmarks are given, apply them before continuing with LM-Cut and
     // set up initial heuristic value accordingly.
-    if (ldms != NULL && ldms->num_landmarks > 0)
+    if (ldms != NULL && ldms->size > 0)
         h = applyInitLandmarks(heur, ldms, inc_op_id, res);
 
     // Check whether the goal is reachable.
@@ -436,7 +428,7 @@ static void lmCutIncLocalParent(plan_heur_lm_cut_t *heur,
     lmCutState(heur, state, NULL, -1, &res);
 
     // Save landmarks into cache
-    planHeurResLandmarksFree(&heur->inc_local.ldms);
+    planLandmarkSetFree(&heur->inc_local.ldms);
     heur->inc_local.ldms = res.landmarks;
     heur->inc_local.ldms_id = parent_state_id;
 }
@@ -456,7 +448,7 @@ static void planHeurLMCutNodeIncLocal(plan_heur_t *_heur,
     if (node->parent_state_id >= 0){
         lmCutIncLocalParent(heur, search, node->parent_state_id);
     }else{
-        planHeurResLandmarksFree(&heur->inc_local.ldms);
+        planLandmarkSetFree(&heur->inc_local.ldms);
         bzero(&heur->inc_local.ldms, sizeof(heur->inc_local.ldms));
     }
 

@@ -90,6 +90,58 @@ test-optimal codmap-2015/factored/depot/pfile2 15 -s astar -H ma-lm-cut --ma-fac
 test-optimal codmap-2015/factored/satellites/p05-pfile5 15 -s astar -H ma-lm-cut --ma-factor-dir
 
 
+test-optimal benchmarks/depot/pfile1.proto 10 -s astar -H lm-cut-inc-local
+test-optimal benchmarks/depot/pfile2.proto 15 -s astar -H lm-cut-inc-local
+test-optimal benchmarks/rovers/p01.proto 10 -s astar -H lm-cut-inc-local
+test-optimal benchmarks/rovers/p02.proto 8 -s astar -H lm-cut-inc-local
+test-optimal benchmarks/rovers/p03.proto 11 -s astar -H lm-cut-inc-local
+test-optimal benchmarks/rovers/p04.proto 8 -s astar -H lm-cut-inc-local
+test-optimal benchmarks/satellites/p01-pfile1.proto 9 -s astar -H lm-cut-inc-local
+test-optimal benchmarks/satellites/p02-pfile2.proto 13 -s astar -H lm-cut-inc-local
+test-optimal benchmarks/satellites/p03-pfile3.proto 11 -s astar -H lm-cut-inc-local
+test-optimal benchmarks/satellites/p04-pfile4.proto 17 -s astar -H lm-cut-inc-local
+test-optimal benchmarks/mablocks/problem-3-5-3.proto 17 -s astar -H lm-cut-inc-local
+
+test-optimal benchmarks/depot/pfile1.proto 10 -s astar -H lm-cut-inc-local --ma-unfactor
+#test-optimal benchmarks/depot/pfile2.proto 15 -s astar -H ma-lm-cut-inc-local --ma-unfactor
+test-optimal benchmarks/rovers/p03.proto 11 -s astar -H lm-cut-inc-local --ma-unfactor
+#test-optimal benchmarks/rovers/p04.proto 8 -s astar -H ma-lm-cut-inc-local --ma-unfactor
+test-optimal benchmarks/rovers/p05.proto 22 -s astar -H lm-cut-inc-local --ma-unfactor
+#test-optimal benchmarks/satellites/p03-pfile3.proto 11 -s astar -H ma-lm-cut-inc-local --ma-unfactor
+test-optimal benchmarks/satellites/p04-pfile4.proto 17 -s astar -H lm-cut-inc-local --ma-unfactor
+test-optimal benchmarks/mablocks/problem-3-5-3.proto 17 -s astar -H lm-cut-inc-local --ma-unfactor
+
+test-optimal codmap-2015/factored/depot/pfile1 10 -s astar -H lm-cut-inc-local --ma-factor-dir
+#test-optimal codmap-2015/factored/depot/pfile2 15 -s astar -H ma-lm-cut-inc-local --ma-factor-dir
+#test-optimal codmap-2015/factored/satellites/p05-pfile5 15 -s astar -H ma-lm-cut-inc-local --ma-factor-dir
+
+
+test-optimal benchmarks/depot/pfile1.proto 10 -s astar -H lm-cut-inc-cache
+test-optimal benchmarks/depot/pfile2.proto 15 -s astar -H lm-cut-inc-cache
+test-optimal benchmarks/rovers/p01.proto 10 -s astar -H lm-cut-inc-cache
+test-optimal benchmarks/rovers/p02.proto 8 -s astar -H lm-cut-inc-cache
+test-optimal benchmarks/rovers/p03.proto 11 -s astar -H lm-cut-inc-cache
+test-optimal benchmarks/rovers/p04.proto 8 -s astar -H lm-cut-inc-cache
+test-optimal benchmarks/satellites/p01-pfile1.proto 9 -s astar -H lm-cut-inc-cache
+test-optimal benchmarks/satellites/p02-pfile2.proto 13 -s astar -H lm-cut-inc-cache
+test-optimal benchmarks/satellites/p03-pfile3.proto 11 -s astar -H lm-cut-inc-cache
+test-optimal benchmarks/satellites/p04-pfile4.proto 17 -s astar -H lm-cut-inc-cache
+test-optimal benchmarks/mablocks/problem-3-5-3.proto 17 -s astar -H lm-cut-inc-cache
+
+test-optimal benchmarks/depot/pfile1.proto 10 -s astar -H lm-cut-inc-cache --ma-unfactor
+#test-optimal benchmarks/depot/pfile2.proto 15 -s astar -H ma-lm-cut-inc-cache --ma-unfactor
+test-optimal benchmarks/rovers/p03.proto 11 -s astar -H lm-cut-inc-cache --ma-unfactor
+#test-optimal benchmarks/rovers/p04.proto 8 -s astar -H ma-lm-cut-inc-cache --ma-unfactor
+test-optimal benchmarks/rovers/p05.proto 22 -s astar -H lm-cut-inc-cache --ma-unfactor
+#test-optimal benchmarks/satellites/p03-pfile3.proto 11 -s astar -H ma-lm-cut-inc-cache --ma-unfactor
+test-optimal benchmarks/satellites/p04-pfile4.proto 17 -s astar -H lm-cut-inc-cache --ma-unfactor
+test-optimal benchmarks/mablocks/problem-3-5-3.proto 17 -s astar -H lm-cut-inc-cache --ma-unfactor
+
+test-optimal codmap-2015/factored/depot/pfile1 10 -s astar -H lm-cut-inc-cache --ma-factor-dir
+#test-optimal codmap-2015/factored/depot/pfile2 15 -s astar -H ma-lm-cut-inc-cache --ma-factor-dir
+#test-optimal codmap-2015/factored/satellites/p05-pfile5 15 -s astar -H ma-lm-cut-inc-cache --ma-factor-dir
+
+
 test-satisficing benchmarks/depot/pfile1.proto -s lazy -H ff
 test-satisficing benchmarks/depot/pfile2.proto -s lazy -H ff
 test-satisficing benchmarks/rovers/p01.proto -s lazy -H ff

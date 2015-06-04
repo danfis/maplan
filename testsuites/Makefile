@@ -45,6 +45,7 @@ OBJS += heur_admissible.o
 OBJS += dtg.o
 OBJS += ma_private_state.o
 OBJS += landmark.o
+OBJS += msg_schema.o
 
 all: $(TARGETS)
 

@@ -219,6 +219,13 @@ plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
                                       const plan_op_t *op, int op_size);
 
 /**
+ * Incremental LM-Cut, the version with cached landmarks.
+ */
+plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
+                                      const plan_part_state_t *goal,
+                                      const plan_op_t *op, int op_size);
+
+/**
  * Domain transition graph based heuristic.
  */
 plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,

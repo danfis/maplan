@@ -65,12 +65,12 @@ static void planHeurLMCutStateIncLocal(plan_heur_t *_heur,
 static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
                              const plan_op_t *op, int op_size,
-                             int inc_local)
+                             int inc)
 {
     plan_heur_lm_cut_t *heur;
 
     heur = BOR_ALLOC(plan_heur_lm_cut_t);
-    if (inc_local){
+    if (inc == 1){
         _planHeurInit(&heur->heur, planHeurLMCutDel,
                       planHeurLMCutStateIncLocal,
                       planHeurLMCutNodeIncLocal);
@@ -86,7 +86,7 @@ static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
     heur->cut.size = 0;
 
     heur->inc_local.enabled = 0;
-    if (inc_local){
+    if (inc == 1){
         heur->inc_local.enabled = 1;
         bzero(&heur->inc_local.ldms, sizeof(heur->inc_local.ldms));
         heur->inc_local.ldms_id = PLAN_NO_STATE;
@@ -108,6 +108,13 @@ plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
                                       const plan_op_t *op, int op_size)
 {
     return lmCutNew(var, var_size, goal, op, op_size, 1);
+}
+
+plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
+                                      const plan_part_state_t *goal,
+                                      const plan_op_t *op, int op_size)
+{
+    return lmCutNew(var, var_size, goal, op, op_size, 2);
 }
 
 static void planHeurLMCutDel(plan_heur_t *_heur)

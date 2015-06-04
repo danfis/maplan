@@ -21,6 +21,7 @@
 #define __PLAN_LANDMARK_H__
 
 #include <boruvka/htable.h>
+#include <boruvka/splaytree_int.h>
 #include <plan/common.h>
 
 #ifdef __cplusplus
@@ -82,14 +83,12 @@ void planLandmarkSetAdd(plan_landmark_set_t *ldms, int size, int *op_id);
  */
 struct _plan_landmark_cache_t {
     bor_htable_t *ldm_table; /*!< Hash table of landmarks */
-    bor_list_t ldms; /*!< Landmark sets */
+    bor_splaytree_int_t *ldms; /*!< Landmark sets */
 
     plan_landmark_set_t ldms_out; /*!< Set used for *Get() method */
     int ldms_alloc; /*!< Size of allocated space in .ldms_out */
 };
 typedef struct _plan_landmark_cache_t plan_landmark_cache_t;
-
-typedef void * plan_landmark_set_id_t;
 
 /**
  * Creates an empty landmark cache.
@@ -102,12 +101,14 @@ plan_landmark_cache_t *planLandmarkCacheNew(void);
 void planLandmarkCacheDel(plan_landmark_cache_t *);
 
 /**
- * Adds a landmark set to the cache.
+ * Adds a landmark set to the cache under the specified ID.
  * The cache "consumes" the content of the given landmark set, so the
  * caller should not use the landmark set again (it is zeroized anyway).
+ * Returns 0 on success, -1 if ID is already in cache and in that case
+ * {ldms} is not touched.
  */
-plan_landmark_set_id_t planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
-                                            plan_landmark_set_t *ldms);
+int planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
+                         int id, plan_landmark_set_t *ldms);
 
 /**
  * Returns a landmark set that corresponds to the given ID or NULL of not
@@ -116,7 +117,7 @@ plan_landmark_set_id_t planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
  * so it should not be changed in any way.
  */
 const plan_landmark_set_t *planLandmarkCacheGet(plan_landmark_cache_t *ldmc,
-                                                plan_landmark_set_id_t ldmid);
+                                                int ldmid);
 
 #ifdef __cplusplus
 } /* extern "C" */

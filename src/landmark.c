@@ -34,7 +34,7 @@ typedef struct _ldm_t ldm_t;
 struct _ldm_set_t {
     int size;
     ldm_t **ldm_pts;
-    bor_list_t list; /*!< Connection to the list of landmarks */
+    bor_splaytree_int_node_t tree; /*!< Connection to the list of landmarks */
 };
 typedef struct _ldm_set_t ldm_set_t;
 
@@ -42,6 +42,7 @@ static bor_htable_key_t ldmHash(const bor_list_t *k, void *ud);
 static int ldmEq(const bor_list_t *k1, const bor_list_t *k2, void *ud);
 
 static ldm_set_t *ldmSetNew(plan_landmark_set_t *l);
+static void ldmSetSoftDel(ldm_set_t *ldms);
 static void ldmSetDel(plan_landmark_cache_t *ldmc, ldm_set_t *ldms);
 static ldm_t *ldmInsert(plan_landmark_cache_t *ldmc,
                         plan_landmark_t *ldm);
@@ -118,7 +119,7 @@ plan_landmark_cache_t *planLandmarkCacheNew(void)
 
     ldmc = BOR_ALLOC(plan_landmark_cache_t);
     ldmc->ldm_table = borHTableNew(ldmHash, ldmEq, NULL);
-    borListInit(&ldmc->ldms);
+    ldmc->ldms = borSplayTreeIntNew();
 
     planLandmarkSetInit(&ldmc->ldms_out);
     ldmc->ldms_alloc = 0;
@@ -128,46 +129,60 @@ plan_landmark_cache_t *planLandmarkCacheNew(void)
 
 void planLandmarkCacheDel(plan_landmark_cache_t *ldmc)
 {
-    bor_list_t *el, *tmp;
+    bor_splaytree_int_node_t *node, *tmp;
     ldm_set_t *ldms;
 
-    BOR_LIST_FOR_EACH_SAFE(&ldmc->ldms, el, tmp){
-        ldms = BOR_LIST_ENTRY(el, ldm_set_t, list);
+    BOR_SPLAYTREE_INT_FOR_EACH_SAFE(ldmc->ldms, node, tmp){
+        ldms = bor_container_of(node, ldm_set_t, tree);
+        borSplayTreeIntRemove(ldmc->ldms, node);
         ldmSetDel(ldmc, ldms);
     }
 
     borHTableDel(ldmc->ldm_table);
+    borSplayTreeIntDel(ldmc->ldms);
     if (ldmc->ldms_out.landmark)
         BOR_FREE(ldmc->ldms_out.landmark);
     BOR_FREE(ldmc);
 }
 
-plan_landmark_set_id_t planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
-                                            plan_landmark_set_t *ldms_in)
+int planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
+                         int id, plan_landmark_set_t *ldms_in)
 {
+    bor_splaytree_int_node_t *ins;
     ldm_set_t *ldms;
     ldm_t *ldm;
     int i;
 
     ldms = ldmSetNew(ldms_in);
+    ins = borSplayTreeIntInsert(ldmc->ldms, id, &ldms->tree);
+    if (ins != NULL){
+        ldmSetSoftDel(ldms);
+        return -1;
+    }
+
     for (i = 0; i < ldms->size; ++i){
         ldm = ldmInsert(ldmc, ldms_in->landmark + i);
         ldms->ldm_pts[i] = ldm;
     }
-    borListAppend(&ldmc->ldms, &ldms->list);
 
     BOR_FREE(ldms_in->landmark);
     bzero(ldms_in, sizeof(*ldms_in));
-    return ldms;
+    return 0;
 }
 
 const plan_landmark_set_t *planLandmarkCacheGet(plan_landmark_cache_t *ldmc,
-                                                plan_landmark_set_id_t ldmid)
+                                                int ldmid)
 {
-    ldm_set_t *ldms = (ldm_set_t *)ldmid;
+    bor_splaytree_int_node_t *node;
+    ldm_set_t *ldms;
     plan_landmark_set_t *out = &ldmc->ldms_out;
     int i;
 
+    node = borSplayTreeIntFind(ldmc->ldms, ldmid);
+    if (node == NULL)
+        return NULL;
+
+    ldms = bor_container_of(node, ldm_set_t, tree);
     if (ldms->size > ldmc->ldms_alloc){
         ldmc->ldms_alloc = ldms->size;
         out->landmark = BOR_REALLOC_ARR(out->landmark, plan_landmark_t,
@@ -203,8 +218,13 @@ static ldm_set_t *ldmSetNew(plan_landmark_set_t *l)
     ldms = BOR_ALLOC(ldm_set_t);
     ldms->size = l->size;
     ldms->ldm_pts = BOR_ALLOC_ARR(ldm_t *, ldms->size);
-    borListInit(&ldms->list);
     return ldms;
+}
+
+static void ldmSetSoftDel(ldm_set_t *ldms)
+{
+    BOR_FREE(ldms->ldm_pts);
+    BOR_FREE(ldms);
 }
 
 static void ldmSetDel(plan_landmark_cache_t *ldmc, ldm_set_t *ldms)

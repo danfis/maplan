@@ -31,7 +31,6 @@ TEST(testLandmarkCache)
     plan_landmark_cache_t *ldmc;
     plan_landmark_set_t ldms;
     const plan_landmark_set_t *l;
-    plan_landmark_set_id_t ids[10];
 
     ldmc = planLandmarkCacheNew();
 
@@ -39,37 +38,45 @@ TEST(testLandmarkCache)
     planLandmarkSetAdd(&ldms, 4, ldm0);
     planLandmarkSetAdd(&ldms, 5, ldm1);
     planLandmarkSetAdd(&ldms, 1, ldm2);
-    ids[0] = planLandmarkCacheAdd(ldmc, &ldms);
+    assertEquals(planLandmarkCacheAdd(ldmc, 0, &ldms), 0);
 
     planLandmarkSetInit(&ldms);
     planLandmarkSetAdd(&ldms, 3, ldm3);
     planLandmarkSetAdd(&ldms, 5, ldm4);
-    ids[1] = planLandmarkCacheAdd(ldmc, &ldms);
+    assertEquals(planLandmarkCacheAdd(ldmc, 1, &ldms), 0);
 
     planLandmarkSetInit(&ldms);
     planLandmarkSetAdd(&ldms, 4, ldm0);
     planLandmarkSetAdd(&ldms, 4, ldm5);
-    ids[2] = planLandmarkCacheAdd(ldmc, &ldms);
+    assertEquals(planLandmarkCacheAdd(ldmc, 2, &ldms), 0);
 
     planLandmarkSetInit(&ldms);
     planLandmarkSetAdd(&ldms, 5, ldm1);
     planLandmarkSetAdd(&ldms, 4, ldm5);
     planLandmarkSetAdd(&ldms, 5, ldm4);
-    ids[3] = planLandmarkCacheAdd(ldmc, &ldms);
+    assertEquals(planLandmarkCacheAdd(ldmc, 3, &ldms), 0);
+    assertEquals(planLandmarkCacheAdd(ldmc, 3, &ldms), -1);
 
-    l = planLandmarkCacheGet(ldmc, ids[0]);
+    planLandmarkSetInit(&ldms);
+    planLandmarkSetAdd(&ldms, 5, ldm1);
+    planLandmarkSetAdd(&ldms, 4, ldm5);
+    planLandmarkSetAdd(&ldms, 5, ldm4);
+    assertEquals(planLandmarkCacheAdd(ldmc, 3, &ldms), -1);
+    planLandmarkSetFree(&ldms);
+
+    l = planLandmarkCacheGet(ldmc, 0);
     assertEquals(l->size, 3);
     printLandmarkSet(l, "LS 0");
 
-    l = planLandmarkCacheGet(ldmc, ids[1]);
+    l = planLandmarkCacheGet(ldmc, 1);
     assertEquals(l->size, 2);
     printLandmarkSet(l, "LS 1");
 
-    l = planLandmarkCacheGet(ldmc, ids[2]);
+    l = planLandmarkCacheGet(ldmc, 2);
     assertEquals(l->size, 2);
     printLandmarkSet(l, "LS 2");
 
-    l = planLandmarkCacheGet(ldmc, ids[3]);
+    l = planLandmarkCacheGet(ldmc, 3);
     assertEquals(l->size, 3);
     printLandmarkSet(l, "LS 3");
 

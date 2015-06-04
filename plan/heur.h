@@ -24,6 +24,7 @@
 #include <plan/problem.h>
 #include <plan/ma_comm.h>
 #include <plan/ma_state.h>
+#include <plan/landmark.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,24 +61,6 @@ struct _plan_search_t;
 typedef struct _plan_heur_t plan_heur_t;
 
 /**
- * Structure holding one landmark.
- */
-struct _plan_heur_res_landmark_t {
-    int size;    /*!< Number of operators in the landmark */
-    int *op_id;  /*!< Array of operators' IDs */
-};
-typedef struct _plan_heur_res_landmark_t plan_heur_res_landmark_t;
-
-/**
- * Structure holding all landmarks
- */
-struct _plan_heur_res_landmarks_t {
-    int num_landmarks;              /*!< Number of landmarks */
-    plan_heur_res_landmark_t *landmark; /*!< Array of landmarks */
-};
-typedef struct _plan_heur_res_landmarks_t plan_heur_res_landmarks_t;
-
-/**
  * Structure for results.
  */
 struct _plan_heur_res_t {
@@ -101,10 +84,10 @@ struct _plan_heur_res_t {
     int pref_size;       /*!< Number of preferred operators */
 
     int save_landmarks; /*!< Set to true if landmarks should be returned.
-                             Don't forget to use planHeurResLandmarksFree()
+                             Don't forget to use planLandmarkSetFree()
                              to free all memory allocated within .landmarks
                              member. */
-    plan_heur_res_landmarks_t landmarks; /*!< Struct containing landmarks */
+    plan_landmark_set_t landmarks; /*!< Struct containing landmarks */
 
 };
 typedef struct _plan_heur_res_t plan_heur_res_t;
@@ -113,11 +96,6 @@ typedef struct _plan_heur_res_t plan_heur_res_t;
  * Initializes plan_heur_res_t structure.
  */
 _bor_inline void planHeurResInit(plan_heur_res_t *res);
-
-/**
- * Free memory allocated withing plan_heur_res_landmarks_t structure.
- */
-void planHeurResLandmarksFree(plan_heur_res_landmarks_t *ldms);
 
 /**
  * Destructor of the heuristic object.

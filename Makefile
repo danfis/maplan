@@ -26,6 +26,7 @@ OBJS += causalgraph
 OBJS += path
 OBJS += statespace
 OBJS += prioqueue
+OBJS += landmark
 OBJS += fact_id
 OBJS += list_lazy
 OBJS += list_lazy_fifo

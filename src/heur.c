@@ -21,18 +21,6 @@
 #include "plan/heur.h"
 #include "plan/search.h"
 
-void planHeurResLandmarksFree(plan_heur_res_landmarks_t *ldms)
-{
-    int i;
-
-    for (i = 0; i < ldms->num_landmarks; ++i){
-        if (ldms->landmark[i].op_id != NULL)
-            BOR_FREE(ldms->landmark[i].op_id);
-    }
-    if (ldms->landmark != NULL)
-        BOR_FREE(ldms->landmark);
-}
-
 void _planHeurInit(plan_heur_t *heur,
                    plan_heur_del_fn del_fn,
                    plan_heur_state_fn heur_state_fn,

@@ -27,10 +27,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define PLAN_MSG_SCHEMA_INT32 0
-#define PLAN_MSG_SCHEMA_INT64 1
-#define PLAN_MSG_SCHEMA_STR   2
-#define PLAN_MSG_SCHEMA_BYTES 3
+#define PLAN_MSG_SCHEMA_INT8  0
+#define PLAN_MSG_SCHEMA_INT32 1
+#define PLAN_MSG_SCHEMA_INT64 2
+#define PLAN_MSG_SCHEMA_STR   3
+#define PLAN_MSG_SCHEMA_BYTES 4
 
 struct _plan_msg_schema_field_t {
     int type;

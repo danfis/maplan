@@ -12,6 +12,7 @@ struct _msg_t {
     int32_t int32;
     int64_t int64;
     char *str;
+    int8_t int8;
 };
 typedef struct _msg_t msg_t;
 
@@ -32,6 +33,7 @@ PLAN_MSG_SCHEMA_BEGIN(schema_main)
 PLAN_MSG_SCHEMA_ADD(msg_t, int32, INT32)
 PLAN_MSG_SCHEMA_ADD(msg_t, int64, INT64)
 PLAN_MSG_SCHEMA_ADD(msg_t, str, STR)
+PLAN_MSG_SCHEMA_ADD(msg_t, int8, INT8)
 PLAN_MSG_SCHEMA_END(schema_main, msg_t, header)
 
 TEST(testMsgSchema)
@@ -40,13 +42,15 @@ TEST(testMsgSchema)
     unsigned char *buf;
     int i, len, size;
 
-    assertEquals(schema_main.size, 3);
+    assertEquals(schema_main.size, 4);
     assertEquals(schema_main.schema[0].type, PLAN_MSG_SCHEMA_INT32);
     assertEquals(schema_main.schema[0].offset, offsetof(msg_t, int32));
     assertEquals(schema_main.schema[1].type, PLAN_MSG_SCHEMA_INT64);
     assertEquals(schema_main.schema[1].offset, offsetof(msg_t, int64));
     assertEquals(schema_main.schema[2].type, PLAN_MSG_SCHEMA_STR);
     assertEquals(schema_main.schema[2].offset, offsetof(msg_t, str));
+    assertEquals(schema_main.schema[3].type, PLAN_MSG_SCHEMA_INT8);
+    assertEquals(schema_main.schema[3].offset, offsetof(msg_t, int8));
 
     for (i = 0; i < 1000; ++i){
         bzero(&msg, sizeof(msg));
@@ -76,6 +80,27 @@ TEST(testMsgSchema)
         assertEquals(msg.int64, msg2.int64);
         assertEquals(strlen(msg.str), strlen(msg2.str));
         assertEquals(strcmp(msg.str, msg2.str), 0);
+        free(msg.str);
+        BOR_FREE(msg2.str);
+
+        BOR_FREE(buf);
+    }
+
+    for (i = 0; i < 1000; ++i){
+        bzero(&msg, sizeof(msg));
+        bzero(&msg2, sizeof(msg2));
+        msg.int64 = rand();
+        len = rand() % text_size;
+        msg.str = strndup(text, len);
+        msg.int8 = rand();
+        msg.header = 14u;
+        buf = planMsgBufEncode(&msg, &schema_main, &size);
+
+        planMsgBufDecode(&msg2, &schema_main, buf);
+        assertEquals(msg.int64, msg2.int64);
+        assertEquals(strlen(msg.str), strlen(msg2.str));
+        assertEquals(strcmp(msg.str, msg2.str), 0);
+        assertEquals(msg.int8, msg2.int8);
         free(msg.str);
         BOR_FREE(msg2.str);
 

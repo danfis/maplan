@@ -20,7 +20,8 @@
 #include <boruvka/alloc.h>
 #include <plan/msg_schema.h>
 
-static int byte_size[4] = {
+static int byte_size[5] = {
+    /* PLAN_MSG_SCHEMA_INT8 */  1,
     /* PLAN_MSG_SCHEMA_INT32 */ 4,
     /* PLAN_MSG_SCHEMA_INT64 */ 8,
     /* PLAN_MSG_SCHEMA_STR */   2,
@@ -29,10 +30,84 @@ static int byte_size[4] = {
 
 #define HEADER(msg_struct, schema) \
     (*(uint32_t *)(((unsigned char *)(msg_struct)) + (schema)->header_offset))
+#define FIELD_PTR(msg_struct, offset) \
+    (void *)(((unsigned char *)(msg_struct)) + offset)
 #define FIELD(msg_struct, schema, type) \
-    (*(type *)(((unsigned char *)(msg_struct)) + (schema).offset))
+    (*(type *)FIELD_PTR((msg_struct), (schema).offset))
+
+_bor_inline void wField(unsigned char **wbuf, const void *msg, int offset,
+                        size_t size)
+{
+    void *v = FIELD_PTR(msg, offset);
+    memcpy(*wbuf, v, size);
+    *wbuf += size;
+}
+
+_bor_inline void wInt8(unsigned char **wbuf, const void *msg,
+                        const plan_msg_schema_field_t *field)
+{
+    wField(wbuf, msg, field->offset, 1);
+}
+
+_bor_inline void wInt32(unsigned char **wbuf, const void *msg,
+                        const plan_msg_schema_field_t *field)
+{
+    wField(wbuf, msg, field->offset, 4);
+}
+
+_bor_inline void wInt64(unsigned char **wbuf, const void *msg,
+                        const plan_msg_schema_field_t *field)
+{
+    wField(wbuf, msg, field->offset, 8);
+}
+
+_bor_inline void wStr(unsigned char **wbuf, const void *msg,
+                      const plan_msg_schema_field_t *field)
+{
+    char *str = FIELD(msg, *field, char *);
+    int16_t len = strlen(str);
+    memcpy(*wbuf, &len, 2);
+    *wbuf += 2;
+    memcpy(*wbuf, str, len);
+    *wbuf += len;
+}
 
 
+_bor_inline void rInt8(unsigned char **rbuf, void *msg,
+                       const plan_msg_schema_field_t *field)
+{
+    FIELD(msg, *field, int8_t) = *(int8_t *)*rbuf;
+    *rbuf += 1;
+}
+
+_bor_inline void rInt32(unsigned char **rbuf, void *msg,
+                        const plan_msg_schema_field_t *field)
+{
+    FIELD(msg, *field, int32_t) = *(int32_t *)*rbuf;
+    *rbuf += 4;
+}
+
+_bor_inline void rInt64(unsigned char **rbuf, void *msg,
+                        const plan_msg_schema_field_t *field)
+{
+    FIELD(msg, *field, int64_t) = *(int64_t *)*rbuf;
+    *rbuf += 8;
+}
+
+_bor_inline void rStr(unsigned char **rbuf, void *msg,
+                      const plan_msg_schema_field_t *field)
+{
+    char *strbuf;
+    int len;
+
+    len = *(int16_t *)*rbuf;
+    *rbuf += 2;
+    strbuf = BOR_ALLOC_ARR(char, len + 1);
+    memcpy(strbuf, *rbuf, len);
+    *rbuf += len;
+    strbuf[len] = 0;
+    FIELD(msg, *field, char *) = strbuf;
+}
 
 unsigned char *planMsgBufEncode(const void *msg,
                                 const plan_msg_schema_t *_schema,
@@ -44,10 +119,6 @@ unsigned char *planMsgBufEncode(const void *msg,
     uint32_t enable;
     unsigned char *buf, *wbuf;
     int type, i, bufsize;
-    int16_t val_int16;
-    int32_t val_int32;
-    int64_t val_int64;
-    char *val_char;
 
     bufsize = sizeof(uint32_t);
     enable = header;
@@ -75,23 +146,19 @@ unsigned char *planMsgBufEncode(const void *msg,
     for (i = 0; i < schema_size; ++i){
         if (enable & 0x1u){
             type = schema[i].type;
-            if (type == PLAN_MSG_SCHEMA_INT32){
-                val_int32 = FIELD(msg, schema[i], int32_t);
-                memcpy(wbuf, &val_int32, 4);
-                wbuf += 4;
-
-            }else if (type == PLAN_MSG_SCHEMA_INT64){
-                val_int64 = FIELD(msg, schema[i], int64_t);
-                memcpy(wbuf, &val_int64, 8);
-                wbuf += 8;
-
-            }else if (type == PLAN_MSG_SCHEMA_STR){
-                val_char = FIELD(msg, schema[i], char *);
-                val_int16 = strlen(val_char);
-                memcpy(wbuf, &val_int16, 2);
-                wbuf += 2;
-                memcpy(wbuf, val_char, val_int16);
-                wbuf += val_int16;
+            switch (type) {
+                case PLAN_MSG_SCHEMA_INT8:
+                    wInt8(&wbuf, msg, schema + i);
+                    break;
+                case PLAN_MSG_SCHEMA_INT32:
+                    wInt32(&wbuf, msg, schema + i);
+                    break;
+                case PLAN_MSG_SCHEMA_INT64:
+                    wInt64(&wbuf, msg, schema + i);
+                    break;
+                case PLAN_MSG_SCHEMA_STR:
+                    wStr(&wbuf, msg, schema + i);
+                    break;
             }
         }
 
@@ -101,38 +168,34 @@ unsigned char *planMsgBufEncode(const void *msg,
     return buf;
 }
 
-void planMsgBufDecode(void *msg_struct, const plan_msg_schema_t *_schema,
+void planMsgBufDecode(void *msg, const plan_msg_schema_t *_schema,
                       const void *buf)
 {
     int schema_size = _schema->size;
     const plan_msg_schema_field_t *schema = _schema->schema;
     uint32_t header;
-    const unsigned char *rbuf;
-    int type, i, len;
-    char *strbuf;
+    unsigned char *rbuf;
+    int type, i;
 
-    rbuf = buf;
+    rbuf = (unsigned char *)buf;
     header = ((uint32_t *)rbuf)[0];
     rbuf += 4;
     for (i = 0; i < schema_size; ++i){
         if (header & 0x1u){
             type = schema[i].type;
-
-            if (type == PLAN_MSG_SCHEMA_INT32){
-                FIELD(msg_struct, schema[i], int32_t) = *(int32_t *)rbuf;
-                rbuf += 4;
-
-            }else if (type == PLAN_MSG_SCHEMA_INT64){
-                FIELD(msg_struct, schema[i], int64_t) = *(int64_t *)rbuf;
-                rbuf += 8;
-
-            }else if (type == PLAN_MSG_SCHEMA_STR){
-                len = *(int16_t *)rbuf;
-                rbuf += 2;
-                strbuf = BOR_ALLOC_ARR(char, len + 1);
-                memcpy(strbuf, rbuf, len);
-                strbuf[len] = 0;
-                FIELD(msg_struct, schema[i], char *) = strbuf;
+            switch (type) {
+                case PLAN_MSG_SCHEMA_INT8:
+                    rInt8(&rbuf, msg, schema + i);
+                    break;
+                case PLAN_MSG_SCHEMA_INT32:
+                    rInt32(&rbuf, msg, schema + i);
+                    break;
+                case PLAN_MSG_SCHEMA_INT64:
+                    rInt64(&rbuf, msg, schema + i);
+                    break;
+                case PLAN_MSG_SCHEMA_STR:
+                    rStr(&rbuf, msg, schema + i);
+                    break;
             }
         }
 

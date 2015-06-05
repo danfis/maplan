@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <endian.h>
 #include <boruvka/alloc.h>
 #include <plan/msg_schema.h>
 
@@ -57,6 +58,70 @@ static void encode(unsigned char **wbuf, const void *msg,
 static void decode(unsigned char **rbuf, void *msg,
                    const plan_msg_schema_t *_schema);
 
+#ifdef BOR_LITTLE_ENDIAN
+# define SET_ENDIAN(header) (header) |= (0x1u << 31u)
+# define CHECK_ENDIAN(header) ((header) & (0x1u << 31u)) == (0x1u << 31u)
+# define CONV_END_int32_t be32toh
+# define CONV_END_int64_t be64toh
+#endif
+
+#ifdef BOR_BIG_ENDIAN
+# define SET_ENDIAN(header) (header) &= ~(0x1u << 31u)
+# define CHECK_ENDIAN(header) ((header) & (0x1u << 31u)) == 0u
+# define CONV_END_int32_t le32toh
+# define CONV_END_int64_t le64toh
+#endif
+
+#define CONV_ENDIAN(msg, offset, type) \
+    FIELD((msg), (offset), type) = CONV_END_##type(FIELD((msg), (offset), type))
+
+#if !defined(BOR_LITTLE_ENDIAN) && !defined(BOR_BIG_ENDIAN)
+# error "Cannot determie endianness!!"
+#endif
+
+_bor_inline void wHeader(unsigned char **wbuf, uint32_t header)
+{
+    SET_ENDIAN(header);
+#ifdef BOR_BIG_ENDIAN
+    header = htole32(header);
+#endif
+    *((uint32_t *)*wbuf) = header;
+    *wbuf += 4;
+}
+
+_bor_inline uint32_t rHeader(unsigned char **rbuf)
+{
+    uint32_t header;
+    header = *(uint32_t *)*rbuf;
+#ifdef BOR_BIG_ENDIAN
+    header = le32toh(header);
+#endif
+    *rbuf += 4;
+    return header;
+}
+
+_bor_inline void wArrLen(unsigned char **wbuf, int len)
+{
+    uint16_t len16 = len;
+
+#ifdef BOR_BIG_ENDIAN
+    len16 = htole16(len16);
+#endif
+    memcpy(*wbuf, &len16, 2);
+    *wbuf += 2;
+}
+
+_bor_inline int rArrLen(unsigned char **rbuf)
+{
+    int len;
+    len = *(uint16_t *)*rbuf;
+#ifdef BOR_BIG_ENDIAN
+    len = le16toh(len16);
+#endif
+    *rbuf += 2;
+    return len;
+}
+
 _bor_inline void wField(unsigned char **wbuf, const void *msg, int offset,
                         int size)
 {
@@ -69,11 +134,9 @@ _bor_inline void wArr(unsigned char **wbuf, const void *msg, int offset,
                       int size_offset, int size)
 {
     int len;
-    uint16_t len16;
 
-    len16 = len = FIELD(msg, size_offset, int);
-    memcpy(*wbuf, &len16, 2);
-    *wbuf += 2;
+    len = FIELD(msg, size_offset, int);
+    wArrLen(wbuf, len);
     memcpy(*wbuf, FIELD(msg, offset, void *), size * len);
     *wbuf += size * len;
 }
@@ -82,13 +145,11 @@ _bor_inline void wMsgArr(unsigned char **wbuf, const void *msg, int offset,
                          int size_offset, const plan_msg_schema_t *sub_schema)
 {
     int i, len, size;
-    uint16_t len16;
     void *submsg;
 
     size = sub_schema->struct_bytesize;
-    len16 = len = FIELD(msg, size_offset, int);
-    memcpy(*wbuf, &len16, 2);
-    *wbuf += 2;
+    len = FIELD(msg, size_offset, int);
+    wArrLen(wbuf, len);
 
     submsg = FIELD(msg, offset, void *);
     for (i = 0; i < len; ++i){
@@ -96,6 +157,7 @@ _bor_inline void wMsgArr(unsigned char **wbuf, const void *msg, int offset,
         submsg = ((char *)submsg) + size;
     }
 }
+
 
 
 _bor_inline void rField(unsigned char **rbuf, void *msg, int off, int size)
@@ -110,9 +172,7 @@ _bor_inline void rArr(unsigned char **rbuf, void *msg, int off,
     int len;
     void *buf;
 
-    len = *(uint16_t *)*rbuf;
-    *rbuf += 2;
-
+    len = rArrLen(rbuf);
     buf = BOR_ALLOC_ARR(char, size * len);
     memcpy(buf, *rbuf, size * len);
     *rbuf += size * len;
@@ -128,8 +188,7 @@ _bor_inline void rMsgArr(unsigned char **rbuf, void *msg, int off,
     void *buf, *wbuf;
 
     size = sub_schema->struct_bytesize;
-    len = *(uint16_t *)*rbuf;
-    *rbuf += 2;
+    len = rArrLen(rbuf);
 
     buf = BOR_ALLOC_ARR(char, size * len);
     wbuf = buf;
@@ -191,8 +250,7 @@ static void encode(unsigned char **wbuf, const void *msg,
     const void *sub_msg;
     int i, type;
 
-    memcpy(*wbuf, &header, 4);
-    *wbuf += 4;
+    wHeader(wbuf, header);
     for (i = 0; i < schema_size; ++i){
         if (header & 0x1u){
             type = schema[i].type;
@@ -233,6 +291,61 @@ unsigned char *planMsgBufEncode(const void *msg,
     return buf;
 }
 
+_bor_inline void convEndian(int type, void *msg, int offset)
+{
+    switch (type) {
+        case _PLAN_MSG_SCHEMA_INT32:
+            CONV_ENDIAN(msg, offset, int32_t);
+            break;
+        case _PLAN_MSG_SCHEMA_INT64:
+            CONV_ENDIAN(msg, offset, int64_t);
+            break;
+    }
+}
+
+_bor_inline void convEndianArr(int type, void *msg, int off, int size_off)
+{
+    int len, i, size;
+    void *arr;
+
+    type -= _PLAN_MSG_SCHEMA_ARR_BASE;
+    if (type != _PLAN_MSG_SCHEMA_INT32
+            && type != _PLAN_MSG_SCHEMA_INT64)
+        return;
+
+    size = byte_size[type];
+    len = FIELD(msg, size_off, int);
+    arr = FIELD(msg, size, void *);
+    for (i = 0; i < len; ++i){
+        convEndian(type, arr, 0);
+        arr = ((char *)arr) + size;
+    }
+}
+
+static void changeEndianness(void *msg, uint32_t header,
+                             const plan_msg_schema_t *_schema)
+{
+    int schema_size = _schema->size;
+    const plan_msg_schema_field_t *schema = _schema->schema;
+    int i, type;
+
+    for (i = 0; i < schema_size; ++i){
+        if (header & 0x1u){
+            type = schema[i].type;
+
+            if (type < _PLAN_MSG_SCHEMA_ARR_BASE){
+                convEndian(type, msg, schema[i].offset);
+
+            }else{
+                convEndianArr(type, msg, schema[i].offset,
+                              schema[i].size_offset);
+            }
+        }
+
+        header >>= 1;
+    }
+}
+
 static void decode(unsigned char **rbuf, void *msg,
                    const plan_msg_schema_t *_schema)
 {
@@ -242,8 +355,7 @@ static void decode(unsigned char **rbuf, void *msg,
     void *sub_msg;
     int type, i;
 
-    header = ((uint32_t *)*rbuf)[0];
-    *rbuf += 4;
+    header = rHeader(rbuf);
     for (i = 0; i < schema_size; ++i){
         if (header & 0x1u){
             type = schema[i].type;
@@ -266,6 +378,10 @@ static void decode(unsigned char **rbuf, void *msg,
         }
 
         header >>= 1;
+    }
+
+    if (!CHECK_ENDIAN(header)){
+        changeEndianness(msg, header, _schema);
     }
 }
 

@@ -28,6 +28,9 @@ struct _msg_t {
     int8_t *bytes;
     int bytes_size;
 
+    sub_msg_t *subarr;
+    int subarr_size;
+
     int32_t *arr32;
     int arr32_size;
 
@@ -63,6 +66,7 @@ PLAN_MSG_SCHEMA_ADD_ARR(msg_t, bytes, bytes_size, INT8)
 PLAN_MSG_SCHEMA_ADD_ARR(msg_t, arr32, arr32_size, INT32)
 PLAN_MSG_SCHEMA_ADD_MSG(msg_t, sub, &schema_sub)
 PLAN_MSG_SCHEMA_ADD(msg_t, x, INT32)
+PLAN_MSG_SCHEMA_ADD_MSG_ARR(msg_t, subarr, subarr_size, &schema_sub)
 PLAN_MSG_SCHEMA_END(schema_main, msg_t, header)
 
 TEST(testMsgSchema)
@@ -71,7 +75,7 @@ TEST(testMsgSchema)
     unsigned char *buf;
     int i, j, size;
 
-    assertEquals(schema_main.size, 8);
+    assertEquals(schema_main.size, 9);
     assertEquals(schema_main.schema[0].type, _PLAN_MSG_SCHEMA_INT32);
     assertEquals(schema_main.schema[0].offset, offsetof(msg_t, int32));
     assertEquals(schema_main.schema[0].sub, NULL);
@@ -90,6 +94,10 @@ TEST(testMsgSchema)
     assertEquals(schema_main.schema[6].type, _PLAN_MSG_SCHEMA_MSG);
     assertEquals(schema_main.schema[6].offset, offsetof(msg_t, sub));
     assertEquals(schema_main.schema[6].sub, &schema_sub);
+    assertEquals(schema_main.schema[8].type, _PLAN_MSG_SCHEMA_ARR_BASE + _PLAN_MSG_SCHEMA_MSG);
+    assertEquals(schema_main.schema[8].offset, offsetof(msg_t, subarr));
+    assertEquals(schema_main.schema[8].size_offset, offsetof(msg_t, subarr_size));
+    assertEquals(schema_main.schema[8].sub, &schema_sub);
 
     for (i = 0; i < 1000; ++i){
         bzero(&msg, sizeof(msg));
@@ -219,6 +227,59 @@ TEST(testMsgSchema)
         BOR_FREE(msg2.sub.i64);
         BOR_FREE(buf);
     }
+
+    for (i = 0; i < 1000; ++i){
+        bzero(&msg, sizeof(msg));
+        bzero(&msg2, sizeof(msg2));
+        msg.int32 = rand();
+        msg.subarr_size = rand() % 20 + 1;
+        msg.subarr = BOR_ALLOC_ARR(sub_msg_t, msg.subarr_size);
+        for (j = 0; j < msg.subarr_size; ++j){
+            msg.subarr[j].header = 0x1;
+            msg.subarr[j].i32 = rand();
+        }
+        msg.header = 0x1 | (0x1 << 8);
+        buf = planMsgBufEncode(&msg, &schema_main, &size);
+
+        planMsgBufDecode(&msg2, &schema_main, buf);
+        assertEquals(msg.int32, msg2.int32);
+        assertEquals(msg.subarr_size, msg2.subarr_size);
+
+        BOR_FREE(msg.subarr);
+        BOR_FREE(msg2.subarr);
+        BOR_FREE(buf);
+    }
+
+    bzero(&msg, sizeof(msg));
+    bzero(&msg2, sizeof(msg2));
+    msg.int32 = rand();
+    msg.subarr_size = 2;
+    msg.subarr = BOR_ALLOC_ARR(sub_msg_t, msg.subarr_size);
+    msg.subarr[0].header = 0x1;
+    msg.subarr[0].i32 = rand();
+    msg.subarr[1].header = 0x3;
+    msg.subarr[1].i32 = rand();
+    msg.subarr[1].i64_size = 3;
+    msg.subarr[1].i64 = BOR_ALLOC_ARR(int64_t, 3);
+    msg.subarr[1].i64[0] = 1;
+    msg.subarr[1].i64[1] = 1012341553;
+    msg.subarr[1].i64[2] = 1012341553345;
+    msg.header = 0x1 | (0x1 << 8);
+    buf = planMsgBufEncode(&msg, &schema_main, &size);
+
+    planMsgBufDecode(&msg2, &schema_main, buf);
+    assertEquals(msg.int32, msg2.int32);
+    assertEquals(msg.subarr_size, msg2.subarr_size);
+    assertEquals(msg.subarr[0].i32, msg2.subarr[0].i32);
+    assertEquals(msg.subarr[1].i32, msg2.subarr[1].i32);
+    assertEquals(msg.subarr[1].i64_size, msg2.subarr[1].i64_size);
+    assertEquals(memcmp(msg.subarr[1].i64, msg2.subarr[1].i64, 3 * 8), 0);
+
+    BOR_FREE(msg.subarr[1].i64);
+    BOR_FREE(msg.subarr);
+    BOR_FREE(msg2.subarr[1].i64);
+    BOR_FREE(msg2.subarr);
+    BOR_FREE(buf);
 
     /*
     for (int i = 0; i < schema_main.size; ++i){

@@ -32,6 +32,8 @@ extern "C" {
 #define _PLAN_MSG_SCHEMA_INT64 2
 #define _PLAN_MSG_SCHEMA_MSG   9
 #define _PLAN_MSG_SCHEMA_ARR_BASE 10
+#define _PLAN_MSG_SCHEMA_MSG_ARR \
+    (_PLAN_MSG_SCHEMA_ARR_BASE + _PLAN_MSG_SCHEMA_MSG)
 
 struct _plan_msg_schema_t;
 
@@ -45,6 +47,7 @@ typedef struct _plan_msg_schema_field_t plan_msg_schema_field_t;
 
 struct _plan_msg_schema_t {
     int header_offset;
+    int struct_bytesize;
     int size;
     const plan_msg_schema_field_t *schema;
 };
@@ -69,10 +72,17 @@ typedef struct _plan_msg_schema_t plan_msg_schema_t;
     { _PLAN_MSG_SCHEMA_MSG, \
       _PLAN_MSG_SCHEMA_OFFSET(base_struct, member), -1, (schema) },
 
+#define PLAN_MSG_SCHEMA_ADD_MSG_ARR(base_struct, member, member_len, schema) \
+    { _PLAN_MSG_SCHEMA_MSG_ARR, \
+      _PLAN_MSG_SCHEMA_OFFSET(base_struct, member), \
+      _PLAN_MSG_SCHEMA_OFFSET(base_struct, member_len), \
+      (schema) },
+
 #define PLAN_MSG_SCHEMA_END(name, base_struct, header_member) \
     }; \
     static plan_msg_schema_t name = { \
         _PLAN_MSG_SCHEMA_OFFSET(base_struct, header_member), \
+        sizeof(base_struct), \
         sizeof(___##name) / sizeof(plan_msg_schema_field_t), \
         (plan_msg_schema_field_t *)&___##name \
     };

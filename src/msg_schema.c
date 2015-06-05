@@ -27,67 +27,66 @@ static int byte_size[4] = {
     /* PLAN_MSG_SCHEMA_BYTES */ 2,
 };
 
+#define HEADER(msg_struct, schema) \
+    (*(uint32_t *)(((unsigned char *)(msg_struct)) + (schema)->header_offset))
 #define FIELD(msg_struct, schema, type) \
     (*(type *)(((unsigned char *)(msg_struct)) + (schema).offset))
 
 
-void planMsgBufFree(plan_msg_buf_t *buf)
-{
-    if (buf->buf && buf->buf_alloc)
-        BOR_FREE(buf->buf);
-}
 
-void planMsgBufEncode(plan_msg_buf_t *buf, const plan_msg_schema_t *_schema,
-                      uint32_t enable_flags, const void *msg_struct)
+unsigned char *planMsgBufEncode(const void *msg,
+                                const plan_msg_schema_t *_schema,
+                                int *size)
 {
     int schema_size = _schema->size;
     const plan_msg_schema_field_t *schema = _schema->schema;
-    int type, i;
-    unsigned char *wbuf;
+    uint32_t header = HEADER(msg, _schema);
+    uint32_t enable;
+    unsigned char *buf, *wbuf;
+    int type, i, bufsize;
     int16_t val_int16;
     int32_t val_int32;
     int64_t val_int64;
     char *val_char;
 
-    buf->header = 0u;
-    buf->bufsize = sizeof(uint32_t);
+    bufsize = sizeof(uint32_t);
+    enable = header;
     for (i = 0; i < schema_size; ++i){
-        if (enable_flags & 0x1u){
+        if (enable & 0x1u){
             type = schema[i].type;
-            buf->header |= (0x1u << i);
-            buf->bufsize += byte_size[type];
+            bufsize += byte_size[type];
 
             if (type == PLAN_MSG_SCHEMA_STR){
-                buf->bufsize += strlen(FIELD(msg_struct, schema[i], char *));
+                bufsize += strlen(FIELD(msg, schema[i], char *));
                 // TODO: bytes, msg, repeated field ...
             }
         }
 
-        enable_flags >>= 1;
+        enable >>= 1;
     }
 
-    buf->buf = BOR_ALLOC_ARR(unsigned char, buf->bufsize);
-    buf->buf_alloc = 1;
+    buf = BOR_ALLOC_ARR(unsigned char, bufsize);
+    *size = bufsize;
 
-    wbuf = buf->buf;
-    memcpy(wbuf, &buf->header, 4);
+    wbuf = buf;
+    memcpy(wbuf, &header, 4);
     wbuf += 4;
-    enable_flags = buf->header;
+    enable = header;
     for (i = 0; i < schema_size; ++i){
-        if (enable_flags & 0x1u){
+        if (enable & 0x1u){
             type = schema[i].type;
             if (type == PLAN_MSG_SCHEMA_INT32){
-                val_int32 = FIELD(msg_struct, schema[i], int32_t);
+                val_int32 = FIELD(msg, schema[i], int32_t);
                 memcpy(wbuf, &val_int32, 4);
                 wbuf += 4;
 
             }else if (type == PLAN_MSG_SCHEMA_INT64){
-                val_int64 = FIELD(msg_struct, schema[i], int64_t);
+                val_int64 = FIELD(msg, schema[i], int64_t);
                 memcpy(wbuf, &val_int64, 8);
                 wbuf += 8;
 
             }else if (type == PLAN_MSG_SCHEMA_STR){
-                val_char = FIELD(msg_struct, schema[i], char *);
+                val_char = FIELD(msg, schema[i], char *);
                 val_int16 = strlen(val_char);
                 memcpy(wbuf, &val_int16, 2);
                 wbuf += 2;
@@ -96,8 +95,10 @@ void planMsgBufEncode(plan_msg_buf_t *buf, const plan_msg_schema_t *_schema,
             }
         }
 
-        enable_flags >>= 1;
+        enable >>= 1;
     }
+
+    return buf;
 }
 
 void planMsgBufDecode(void *msg_struct, const plan_msg_schema_t *_schema,

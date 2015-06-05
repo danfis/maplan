@@ -39,6 +39,7 @@ struct _plan_msg_schema_field_t {
 typedef struct _plan_msg_schema_field_t plan_msg_schema_field_t;
 
 struct _plan_msg_schema_t {
+    int header_offset;
     int size;
     const plan_msg_schema_field_t *schema;
 };
@@ -48,33 +49,26 @@ typedef struct _plan_msg_schema_t plan_msg_schema_t;
 /*#define _PLAN_MSG_SCHEMA_OFFSET(TYPE, MEMBER) ((size_t) &((TYPE * *)0)->MEMBER)*/
 
 #define PLAN_MSG_SCHEMA_BEGIN(name) \
-    static plan_msg_schema_field_t __xxx_##name[] = {
+    static plan_msg_schema_field_t ___##name[] = {
 
 #define PLAN_MSG_SCHEMA_ADD(base_struct, member, type) \
     { PLAN_MSG_SCHEMA_##type, \
       _PLAN_MSG_SCHEMA_OFFSET(base_struct, member) },
 
-#define PLAN_MSG_SCHEMA_END(name) \
+#define PLAN_MSG_SCHEMA_END(name, base_struct, header_member) \
     }; \
     static plan_msg_schema_t name = { \
-        sizeof(__xxx_##name) / sizeof(plan_msg_schema_field_t), \
-        (plan_msg_schema_field_t *)&__xxx_##name \
+        _PLAN_MSG_SCHEMA_OFFSET(base_struct, header_member), \
+        sizeof(___##name) / sizeof(plan_msg_schema_field_t), \
+        (plan_msg_schema_field_t *)&___##name \
     };
 
 
-struct _plan_msg_buf_t {
-    uint32_t header;
-    int bufsize;
-    unsigned char *buf;
-    int buf_alloc;
-};
-typedef struct _plan_msg_buf_t plan_msg_buf_t;
-
-void planMsgBufEncode(plan_msg_buf_t *buf, const plan_msg_schema_t *schema,
-                      uint32_t enable_flags, const void *msg_struct);
+unsigned char *planMsgBufEncode(const void *msg_struct,
+                                const plan_msg_schema_t *schema,
+                                int *size);
 void planMsgBufDecode(void *msg_struct, const plan_msg_schema_t *schema,
                       const void *buf);
-void planMsgBufFree(plan_msg_buf_t *buf);
 
 #ifdef __cplusplus
 } /* extern "C" */

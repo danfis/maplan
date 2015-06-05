@@ -7,8 +7,18 @@
 #include <boruvka/compiler.h>
 #include <boruvka/alloc.h>
 
+struct _sub_msg_t{
+    uint32_t header;
+
+    int32_t i32;
+    int64_t *i64;
+    int i64_size;
+};
+typedef struct _sub_msg_t sub_msg_t;
+
 struct _msg_t {
     uint32_t header;
+
     int32_t int32;
     int64_t int64;
     char *str;
@@ -20,6 +30,9 @@ struct _msg_t {
 
     int32_t *arr32;
     int arr32_size;
+
+    sub_msg_t sub;
+    int32_t x;
 };
 typedef struct _msg_t msg_t;
 
@@ -36,6 +49,11 @@ static char text[] = "Non eram nescius, Brute, cum, quae summis ingeniis"
 " dignitatis esse negent.";
 static int text_size = sizeof(text) - 1;
 
+PLAN_MSG_SCHEMA_BEGIN(schema_sub)
+PLAN_MSG_SCHEMA_ADD(sub_msg_t, i32, INT32)
+PLAN_MSG_SCHEMA_ADD_ARR(sub_msg_t, i64, i64_size, INT64)
+PLAN_MSG_SCHEMA_END(schema_sub, sub_msg_t, header)
+
 PLAN_MSG_SCHEMA_BEGIN(schema_main)
 PLAN_MSG_SCHEMA_ADD(msg_t, int32, INT32)
 PLAN_MSG_SCHEMA_ADD(msg_t, int64, INT64)
@@ -43,6 +61,8 @@ PLAN_MSG_SCHEMA_ADD_ARR(msg_t, str, str_size, INT8)
 PLAN_MSG_SCHEMA_ADD(msg_t, int8, INT8)
 PLAN_MSG_SCHEMA_ADD_ARR(msg_t, bytes, bytes_size, INT8)
 PLAN_MSG_SCHEMA_ADD_ARR(msg_t, arr32, arr32_size, INT32)
+PLAN_MSG_SCHEMA_ADD_MSG(msg_t, sub, &schema_sub)
+PLAN_MSG_SCHEMA_ADD(msg_t, x, INT32)
 PLAN_MSG_SCHEMA_END(schema_main, msg_t, header)
 
 TEST(testMsgSchema)
@@ -51,9 +71,10 @@ TEST(testMsgSchema)
     unsigned char *buf;
     int i, j, size;
 
-    assertEquals(schema_main.size, 6);
+    assertEquals(schema_main.size, 8);
     assertEquals(schema_main.schema[0].type, _PLAN_MSG_SCHEMA_INT32);
     assertEquals(schema_main.schema[0].offset, offsetof(msg_t, int32));
+    assertEquals(schema_main.schema[0].sub, NULL);
     assertEquals(schema_main.schema[1].type, _PLAN_MSG_SCHEMA_INT64);
     assertEquals(schema_main.schema[1].offset, offsetof(msg_t, int64));
     assertEquals(schema_main.schema[2].type, _PLAN_MSG_SCHEMA_ARR_BASE + _PLAN_MSG_SCHEMA_INT8);
@@ -66,6 +87,9 @@ TEST(testMsgSchema)
     assertEquals(schema_main.schema[5].type, _PLAN_MSG_SCHEMA_ARR_BASE + _PLAN_MSG_SCHEMA_INT32);
     assertEquals(schema_main.schema[5].offset, offsetof(msg_t, arr32));
     assertEquals(schema_main.schema[5].size_offset, offsetof(msg_t, arr32_size));
+    assertEquals(schema_main.schema[6].type, _PLAN_MSG_SCHEMA_MSG);
+    assertEquals(schema_main.schema[6].offset, offsetof(msg_t, sub));
+    assertEquals(schema_main.schema[6].sub, &schema_sub);
 
     for (i = 0; i < 1000; ++i){
         bzero(&msg, sizeof(msg));
@@ -133,7 +157,7 @@ TEST(testMsgSchema)
         msg.str_size = rand() % (text_size - 1);
         msg.str_size += 1;
         msg.str = strndup(text, msg.str_size - 1);
-        msg.arr32_size = rand() % 100;
+        msg.arr32_size = rand() % 100 + 1;
         msg.arr32 = BOR_ALLOC_ARR(int32_t, msg.arr32_size);
         for (j = 0; j < msg.arr32_size; ++j)
             msg.arr32[j] = rand();
@@ -141,7 +165,7 @@ TEST(testMsgSchema)
         buf = planMsgBufEncode(&msg, &schema_main, &size);
 
         planMsgBufDecode(&msg2, &schema_main, buf);
-        assertEquals(msg.int64, msg2.int64);
+        assertEquals(msg.int32, msg2.int32);
         assertEquals(strlen(msg.str), strlen(msg2.str));
         assertEquals(strcmp(msg.str, msg2.str), 0);
         assertEquals(msg.str_size, msg2.str_size);
@@ -153,6 +177,46 @@ TEST(testMsgSchema)
         BOR_FREE(msg.arr32);
         BOR_FREE(msg2.arr32);
 
+        BOR_FREE(buf);
+    }
+
+    for (i = 0; i < 1000; ++i){
+        bzero(&msg, sizeof(msg));
+        bzero(&msg2, sizeof(msg2));
+        msg.int32 = rand();
+        msg.sub.header = 0x1;
+        msg.sub.i32 = rand();
+        msg.header = 0x1 | (0x1 << 6);
+        buf = planMsgBufEncode(&msg, &schema_main, &size);
+
+        planMsgBufDecode(&msg2, &schema_main, buf);
+        assertEquals(msg.int32, msg2.int32);
+        assertEquals(msg.sub.i32, msg2.sub.i32);
+
+        BOR_FREE(buf);
+    }
+
+    for (i = 0; i < 1000; ++i){
+        bzero(&msg, sizeof(msg));
+        bzero(&msg2, sizeof(msg2));
+        msg.x = rand();
+        msg.sub.header = 0x3;
+        msg.sub.i32 = rand();
+        msg.sub.i64_size = rand() % 100 + 1;
+        msg.sub.i64 = BOR_ALLOC_ARR(int64_t, msg.sub.i64_size);
+        for (j = 0; j < msg.sub.i64_size; ++j)
+            msg.sub.i64[j] = rand();
+        msg.header = (0x1 << 6) | (0x1 << 7);
+        buf = planMsgBufEncode(&msg, &schema_main, &size);
+
+        planMsgBufDecode(&msg2, &schema_main, buf);
+        assertEquals(msg.x, msg2.x);
+        assertEquals(msg.sub.i32, msg2.sub.i32);
+        assertEquals(msg.sub.i64_size, msg2.sub.i64_size);
+        assertEquals(memcmp(msg.sub.i64, msg2.sub.i64, 8 * msg.sub.i64_size), 0);
+
+        BOR_FREE(msg.sub.i64);
+        BOR_FREE(msg2.sub.i64);
         BOR_FREE(buf);
     }
 

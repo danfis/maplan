@@ -30,7 +30,8 @@ static int byte_size[20] = {
     /* */ 0,
     /* */ 0,
     /* */ 0,
-    /* */ 0,
+    /* _PLAN_MSG_SCHEMA_MSG */  0,
+/* ARR: */
     /* _PLAN_MSG_SCHEMA_INT8 */  2,
     /* _PLAN_MSG_SCHEMA_INT32 */ 2,
     /* _PLAN_MSG_SCHEMA_INT64 */ 2,
@@ -40,7 +41,7 @@ static int byte_size[20] = {
     /* */ 0,
     /* */ 0,
     /* */ 0,
-    /* */ 0,
+    /* _PLAN_MSG_SCHEMA_MSG */  2,
 };
 
 #define HEADER(msg_struct, schema) \
@@ -96,26 +97,25 @@ _bor_inline void rArr(unsigned char **rbuf, void *msg, int off,
 }
 
 
-
-unsigned char *planMsgBufEncode(const void *msg,
-                                const plan_msg_schema_t *_schema,
-                                int *size)
+static int wBufSize(const void *msg, const plan_msg_schema_t *_schema)
 {
     int schema_size = _schema->size;
     const plan_msg_schema_field_t *schema = _schema->schema;
-    uint32_t header = HEADER(msg, _schema);
-    uint32_t enable;
-    unsigned char *buf, *wbuf;
-    int type, i, bufsize, siz;
+    uint32_t enable = HEADER(msg, _schema);
+    int bufsize, i, siz, type;
+    const void *sub;
 
     bufsize = sizeof(uint32_t);
-    enable = header;
     for (i = 0; i < schema_size; ++i){
         if (enable & 0x1u){
             type = schema[i].type;
             bufsize += byte_size[type];
 
-            if (type >= _PLAN_MSG_SCHEMA_ARR_BASE){
+            if (type == _PLAN_MSG_SCHEMA_MSG){
+                sub = FIELD_PTR(msg, schema[i].offset);
+                bufsize += wBufSize(sub, schema[i].sub);
+
+            }else if (type >= _PLAN_MSG_SCHEMA_ARR_BASE){
                 siz  = FIELD(msg, schema[i].size_offset, int);
                 siz *= byte_size[type - _PLAN_MSG_SCHEMA_ARR_BASE];
                 bufsize += siz;
@@ -125,53 +125,91 @@ unsigned char *planMsgBufEncode(const void *msg,
         enable >>= 1;
     }
 
-    buf = BOR_ALLOC_ARR(unsigned char, bufsize);
-    *size = bufsize;
-
-    wbuf = buf;
-    memcpy(wbuf, &header, 4);
-    wbuf += 4;
-    enable = header;
-    for (i = 0; i < schema_size; ++i){
-        if (enable & 0x1u){
-            type = schema[i].type;
-            if (type < _PLAN_MSG_SCHEMA_ARR_BASE){
-                wField(&wbuf, msg, schema[i].offset, byte_size[type]);
-            }else{
-                wArr(&wbuf, msg, schema[i].offset, schema[i].size_offset,
-                     byte_size[type - _PLAN_MSG_SCHEMA_ARR_BASE]);
-            }
-        }
-
-        enable >>= 1;
-    }
-
-    return buf;
+    return bufsize;
 }
 
-void planMsgBufDecode(void *msg, const plan_msg_schema_t *_schema,
-                      const void *buf)
+static void encode(unsigned char **wbuf, const void *msg,
+                   const plan_msg_schema_t *_schema)
 {
     int schema_size = _schema->size;
     const plan_msg_schema_field_t *schema = _schema->schema;
-    uint32_t header;
-    unsigned char *rbuf;
-    int type, i;
+    uint32_t header = HEADER(msg, _schema);
+    const void *sub_msg;
+    int i, type;
 
-    rbuf = (unsigned char *)buf;
-    header = ((uint32_t *)rbuf)[0];
-    rbuf += 4;
+    memcpy(*wbuf, &header, 4);
+    *wbuf += 4;
     for (i = 0; i < schema_size; ++i){
         if (header & 0x1u){
             type = schema[i].type;
             if (type < _PLAN_MSG_SCHEMA_ARR_BASE){
-                rField(&rbuf, msg, schema[i].offset, byte_size[type]);
+                if (type == _PLAN_MSG_SCHEMA_MSG){
+                    sub_msg = FIELD_PTR(msg, schema[i].offset);
+                    encode(wbuf, sub_msg, schema[i].sub);
+                }else{
+                    wField(wbuf, msg, schema[i].offset, byte_size[type]);
+                }
             }else{
-                rArr(&rbuf, msg, schema[i].offset, schema[i].size_offset,
+                wArr(wbuf, msg, schema[i].offset, schema[i].size_offset,
                      byte_size[type - _PLAN_MSG_SCHEMA_ARR_BASE]);
             }
         }
 
         header >>= 1;
     }
+}
+
+unsigned char *planMsgBufEncode(const void *msg,
+                                const plan_msg_schema_t *_schema,
+                                int *size)
+{
+    unsigned char *buf, *wbuf;
+    int bufsize;
+
+    bufsize = wBufSize(msg, _schema);
+    buf = BOR_ALLOC_ARR(unsigned char, bufsize);
+    *size = bufsize;
+
+    wbuf = buf;
+    encode(&wbuf, msg, _schema);
+    return buf;
+}
+
+static void decode(unsigned char **rbuf, void *msg,
+                   const plan_msg_schema_t *_schema)
+{
+    int schema_size = _schema->size;
+    const plan_msg_schema_field_t *schema = _schema->schema;
+    uint32_t header;
+    void *sub_msg;
+    int type, i;
+
+    header = ((uint32_t *)*rbuf)[0];
+    *rbuf += 4;
+    for (i = 0; i < schema_size; ++i){
+        if (header & 0x1u){
+            type = schema[i].type;
+            if (type < _PLAN_MSG_SCHEMA_ARR_BASE){
+                if (type == _PLAN_MSG_SCHEMA_MSG){
+                    sub_msg = FIELD_PTR(msg, schema[i].offset);
+                    decode(rbuf, sub_msg, schema[i].sub);
+                }else{
+                    rField(rbuf, msg, schema[i].offset, byte_size[type]);
+                }
+            }else{
+                rArr(rbuf, msg, schema[i].offset, schema[i].size_offset,
+                     byte_size[type - _PLAN_MSG_SCHEMA_ARR_BASE]);
+            }
+        }
+
+        header >>= 1;
+    }
+}
+
+void planMsgBufDecode(void *msg, const plan_msg_schema_t *_schema,
+                      const void *buf)
+{
+    unsigned char *rbuf;
+    rbuf = (unsigned char *)buf;
+    decode(&rbuf, msg, _schema);
 }

@@ -20,94 +20,82 @@
 #include <boruvka/alloc.h>
 #include <plan/msg_schema.h>
 
-static int byte_size[5] = {
-    /* PLAN_MSG_SCHEMA_INT8 */  1,
-    /* PLAN_MSG_SCHEMA_INT32 */ 4,
-    /* PLAN_MSG_SCHEMA_INT64 */ 8,
-    /* PLAN_MSG_SCHEMA_STR */   2,
-    /* PLAN_MSG_SCHEMA_BYTES */ 2,
+static int byte_size[20] = {
+    /* _PLAN_MSG_SCHEMA_INT8 */  1,
+    /* _PLAN_MSG_SCHEMA_INT32 */ 4,
+    /* _PLAN_MSG_SCHEMA_INT64 */ 8,
+    /* */ 0,
+    /* */ 0,
+    /* */ 0,
+    /* */ 0,
+    /* */ 0,
+    /* */ 0,
+    /* */ 0,
+    /* _PLAN_MSG_SCHEMA_INT8 */  2,
+    /* _PLAN_MSG_SCHEMA_INT32 */ 2,
+    /* _PLAN_MSG_SCHEMA_INT64 */ 2,
+    /* */ 0,
+    /* */ 0,
+    /* */ 0,
+    /* */ 0,
+    /* */ 0,
+    /* */ 0,
+    /* */ 0,
 };
 
 #define HEADER(msg_struct, schema) \
     (*(uint32_t *)(((unsigned char *)(msg_struct)) + (schema)->header_offset))
 #define FIELD_PTR(msg_struct, offset) \
-    (void *)(((unsigned char *)(msg_struct)) + offset)
-#define FIELD(msg_struct, schema, type) \
-    (*(type *)FIELD_PTR((msg_struct), (schema).offset))
+    (void *)(((unsigned char *)(msg_struct)) + (offset))
+#define FIELD(msg_struct, offset, type) \
+    (*(type *)FIELD_PTR((msg_struct), (offset)))
 
 _bor_inline void wField(unsigned char **wbuf, const void *msg, int offset,
-                        size_t size)
+                        int size)
 {
     void *v = FIELD_PTR(msg, offset);
     memcpy(*wbuf, v, size);
     *wbuf += size;
 }
 
-_bor_inline void wInt8(unsigned char **wbuf, const void *msg,
-                        const plan_msg_schema_field_t *field)
+_bor_inline void wArr(unsigned char **wbuf, const void *msg, int offset,
+                      int size_offset, int size)
 {
-    wField(wbuf, msg, field->offset, 1);
-}
-
-_bor_inline void wInt32(unsigned char **wbuf, const void *msg,
-                        const plan_msg_schema_field_t *field)
-{
-    wField(wbuf, msg, field->offset, 4);
-}
-
-_bor_inline void wInt64(unsigned char **wbuf, const void *msg,
-                        const plan_msg_schema_field_t *field)
-{
-    wField(wbuf, msg, field->offset, 8);
-}
-
-_bor_inline void wStr(unsigned char **wbuf, const void *msg,
-                      const plan_msg_schema_field_t *field)
-{
-    char *str = FIELD(msg, *field, char *);
-    int16_t len = strlen(str);
-    memcpy(*wbuf, &len, 2);
-    *wbuf += 2;
-    memcpy(*wbuf, str, len);
-    *wbuf += len;
-}
-
-
-_bor_inline void rInt8(unsigned char **rbuf, void *msg,
-                       const plan_msg_schema_field_t *field)
-{
-    FIELD(msg, *field, int8_t) = *(int8_t *)*rbuf;
-    *rbuf += 1;
-}
-
-_bor_inline void rInt32(unsigned char **rbuf, void *msg,
-                        const plan_msg_schema_field_t *field)
-{
-    FIELD(msg, *field, int32_t) = *(int32_t *)*rbuf;
-    *rbuf += 4;
-}
-
-_bor_inline void rInt64(unsigned char **rbuf, void *msg,
-                        const plan_msg_schema_field_t *field)
-{
-    FIELD(msg, *field, int64_t) = *(int64_t *)*rbuf;
-    *rbuf += 8;
-}
-
-_bor_inline void rStr(unsigned char **rbuf, void *msg,
-                      const plan_msg_schema_field_t *field)
-{
-    char *strbuf;
     int len;
+    uint16_t len16;
 
-    len = *(int16_t *)*rbuf;
-    *rbuf += 2;
-    strbuf = BOR_ALLOC_ARR(char, len + 1);
-    memcpy(strbuf, *rbuf, len);
-    *rbuf += len;
-    strbuf[len] = 0;
-    FIELD(msg, *field, char *) = strbuf;
+    len16 = len = FIELD(msg, size_offset, int);
+    memcpy(*wbuf, &len16, 2);
+    *wbuf += 2;
+    memcpy(*wbuf, FIELD(msg, offset, void *), size * len);
+    *wbuf += size * len;
 }
+
+
+_bor_inline void rField(unsigned char **rbuf, void *msg, int off, int size)
+{
+    memcpy(FIELD_PTR(msg, off), *rbuf, size);
+    *rbuf += size;
+}
+
+_bor_inline void rArr(unsigned char **rbuf, void *msg, int off,
+                      int size_off, int size)
+{
+    int len;
+    void *buf;
+
+    len = *(uint16_t *)*rbuf;
+    *rbuf += 2;
+
+    buf = BOR_ALLOC_ARR(char, size * len);
+    memcpy(buf, *rbuf, size * len);
+    *rbuf += size * len;
+
+    FIELD(msg, size_off, int) = len;
+    FIELD(msg, off, void *) = buf;
+}
+
+
 
 unsigned char *planMsgBufEncode(const void *msg,
                                 const plan_msg_schema_t *_schema,
@@ -118,7 +106,7 @@ unsigned char *planMsgBufEncode(const void *msg,
     uint32_t header = HEADER(msg, _schema);
     uint32_t enable;
     unsigned char *buf, *wbuf;
-    int type, i, bufsize;
+    int type, i, bufsize, siz;
 
     bufsize = sizeof(uint32_t);
     enable = header;
@@ -127,9 +115,10 @@ unsigned char *planMsgBufEncode(const void *msg,
             type = schema[i].type;
             bufsize += byte_size[type];
 
-            if (type == PLAN_MSG_SCHEMA_STR){
-                bufsize += strlen(FIELD(msg, schema[i], char *));
-                // TODO: bytes, msg, repeated field ...
+            if (type >= _PLAN_MSG_SCHEMA_ARR_BASE){
+                siz  = FIELD(msg, schema[i].size_offset, int);
+                siz *= byte_size[type - _PLAN_MSG_SCHEMA_ARR_BASE];
+                bufsize += siz;
             }
         }
 
@@ -146,19 +135,11 @@ unsigned char *planMsgBufEncode(const void *msg,
     for (i = 0; i < schema_size; ++i){
         if (enable & 0x1u){
             type = schema[i].type;
-            switch (type) {
-                case PLAN_MSG_SCHEMA_INT8:
-                    wInt8(&wbuf, msg, schema + i);
-                    break;
-                case PLAN_MSG_SCHEMA_INT32:
-                    wInt32(&wbuf, msg, schema + i);
-                    break;
-                case PLAN_MSG_SCHEMA_INT64:
-                    wInt64(&wbuf, msg, schema + i);
-                    break;
-                case PLAN_MSG_SCHEMA_STR:
-                    wStr(&wbuf, msg, schema + i);
-                    break;
+            if (type < _PLAN_MSG_SCHEMA_ARR_BASE){
+                wField(&wbuf, msg, schema[i].offset, byte_size[type]);
+            }else{
+                wArr(&wbuf, msg, schema[i].offset, schema[i].size_offset,
+                     byte_size[type - _PLAN_MSG_SCHEMA_ARR_BASE]);
             }
         }
 
@@ -183,19 +164,11 @@ void planMsgBufDecode(void *msg, const plan_msg_schema_t *_schema,
     for (i = 0; i < schema_size; ++i){
         if (header & 0x1u){
             type = schema[i].type;
-            switch (type) {
-                case PLAN_MSG_SCHEMA_INT8:
-                    rInt8(&rbuf, msg, schema + i);
-                    break;
-                case PLAN_MSG_SCHEMA_INT32:
-                    rInt32(&rbuf, msg, schema + i);
-                    break;
-                case PLAN_MSG_SCHEMA_INT64:
-                    rInt64(&rbuf, msg, schema + i);
-                    break;
-                case PLAN_MSG_SCHEMA_STR:
-                    rStr(&rbuf, msg, schema + i);
-                    break;
+            if (type < _PLAN_MSG_SCHEMA_ARR_BASE){
+                rField(&rbuf, msg, schema[i].offset, byte_size[type]);
+            }else{
+                rArr(&rbuf, msg, schema[i].offset, schema[i].size_offset,
+                     byte_size[type - _PLAN_MSG_SCHEMA_ARR_BASE]);
             }
         }
 

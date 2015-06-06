@@ -114,9 +114,10 @@ _bor_inline void wArrLen(unsigned char **wbuf, int len)
 _bor_inline int rArrLen(unsigned char **rbuf)
 {
     int len;
-    len = *(uint16_t *)*rbuf;
 #ifdef BOR_BIG_ENDIAN
-    len = le16toh(len16);
+    len = le16toh(*(uint16_t *)*rbuf);
+#else
+    len = *(uint16_t *)*rbuf;
 #endif
     *rbuf += 2;
     return len;

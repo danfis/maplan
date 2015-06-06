@@ -316,7 +316,7 @@ _bor_inline void convEndianArr(int type, void *msg, int off, int size_off)
 
     size = byte_size[type];
     len = FIELD(msg, size_off, int);
-    arr = FIELD(msg, size, void *);
+    arr = FIELD(msg, off, void *);
     for (i = 0; i < len; ++i){
         convEndian(type, arr, 0);
         arr = ((char *)arr) + size;
@@ -352,14 +352,14 @@ static void decode(unsigned char **rbuf, void *msg,
 {
     int schema_size = _schema->size;
     const plan_msg_schema_field_t *schema = _schema->schema;
-    uint32_t header;
+    uint32_t header, enable;
     void *sub_msg;
     int type, i;
 
-    header = rHeader(rbuf);
+    enable = header = rHeader(rbuf);
     FIELD(msg, _schema->header_offset, uint32_t) = header & ~(0x1 << 31);
     for (i = 0; i < schema_size; ++i){
-        if (header & 0x1u){
+        if (enable & 0x1u){
             type = schema[i].type;
 
             if (type == _PLAN_MSG_SCHEMA_MSG){
@@ -379,7 +379,7 @@ static void decode(unsigned char **rbuf, void *msg,
             }
         }
 
-        header >>= 1;
+        enable >>= 1;
     }
 
     if (!CHECK_ENDIAN(header)){

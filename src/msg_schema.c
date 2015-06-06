@@ -356,6 +356,7 @@ static void decode(unsigned char **rbuf, void *msg,
     int type, i;
 
     header = rHeader(rbuf);
+    FIELD(msg, _schema->header_offset, uint32_t) = header & ~(0x1 << 31);
     for (i = 0; i < schema_size; ++i){
         if (header & 0x1u){
             type = schema[i].type;

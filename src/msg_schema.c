@@ -60,14 +60,14 @@ static void decode(unsigned char **rbuf, void *msg,
 
 #ifdef BOR_LITTLE_ENDIAN
 # define SET_ENDIAN(header) (header) |= (0x1u << 31u)
-# define CHECK_ENDIAN(header) ((header) & (0x1u << 31u)) == (0x1u << 31u)
+# define CHECK_ENDIAN(header) (((header) & (0x1u << 31u)) == (0x1u << 31u))
 # define CONV_END_int32_t be32toh
 # define CONV_END_int64_t be64toh
 #endif
 
 #ifdef BOR_BIG_ENDIAN
 # define SET_ENDIAN(header) (header) &= ~(0x1u << 31u)
-# define CHECK_ENDIAN(header) ((header) & (0x1u << 31u)) == 0u
+# define CHECK_ENDIAN(header) (((header) & (0x1u << 31u)) == 0u)
 # define CONV_END_int32_t le32toh
 # define CONV_END_int64_t le64toh
 #endif

@@ -24,3 +24,5 @@ bench-lazy
 search
 search-ma
 optimal-cost
+msg-schema-gen
+msg-schema-load

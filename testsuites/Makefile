@@ -23,7 +23,7 @@ LDFLAGS += $(CPLEX_LDFLAGS)
 CHECK_REG=cu/check-regressions
 CHECK_TS ?=
 
-TARGETS = test optimal-cost
+TARGETS = test optimal-cost msg-schema-gen msg-schema-load
 
 OBJS  = load-from-file.o
 OBJS += state.o
@@ -54,6 +54,10 @@ test: main.c cu $(OBJS)
 search: search.c ../libplan.a
 	$(CC) $(BENCH_CFLAGS) -o $@ $< $(LDFLAGS) -L../../opts -lopts
 optimal-cost: optimal-cost.c state_pool.c
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+msg-schema-gen: msg-schema-gen.c
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+msg-schema-load: msg-schema-load.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c %.h

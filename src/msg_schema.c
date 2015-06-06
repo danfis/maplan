@@ -57,8 +57,6 @@ static void encode(unsigned char **wbuf, const void *msg,
                    const plan_msg_schema_t *_schema);
 static void decode(unsigned char **rbuf, void *msg,
                    const plan_msg_schema_t *_schema);
-static void changeEndianness(void *msg, uint32_t header,
-                             const plan_msg_schema_t *_schema);
 
 #ifdef BOR_LITTLE_ENDIAN
 # define SET_ENDIAN(header) (header) |= (0x1u << 31u)
@@ -294,12 +292,8 @@ unsigned char *planMsgBufEncode(const void *msg,
     return buf;
 }
 
-_bor_inline void convEndian(int type, void *msg, int offset,
-                            const plan_msg_schema_t *sub_schema)
+_bor_inline void convEndian(int type, void *msg, int offset)
 {
-    void *sub_msg;
-    uint32_t sub_header;
-
     switch (type) {
         case _PLAN_MSG_SCHEMA_INT32:
             CONV_ENDIAN(msg, offset, int32_t);
@@ -307,16 +301,10 @@ _bor_inline void convEndian(int type, void *msg, int offset,
         case _PLAN_MSG_SCHEMA_INT64:
             CONV_ENDIAN(msg, offset, int64_t);
             break;
-        case _PLAN_MSG_SCHEMA_MSG:
-            sub_msg = FIELD_PTR(msg, offset);
-            sub_header = FIELD(sub_msg, sub_schema->header_offset, uint32_t);
-            changeEndianness(sub_msg, sub_header, sub_schema);
-            break;
     }
 }
 
-_bor_inline void convEndianArr(int type, void *msg, int off, int size_off,
-                               const plan_msg_schema_t *sub_schema)
+_bor_inline void convEndianArr(int type, void *msg, int off, int size_off)
 {
     int len, i, size;
     void *arr;
@@ -330,7 +318,7 @@ _bor_inline void convEndianArr(int type, void *msg, int off, int size_off,
     len = FIELD(msg, size_off, int);
     arr = FIELD(msg, off, void *);
     for (i = 0; i < len; ++i){
-        convEndian(type, arr, 0, sub_schema);
+        convEndian(type, arr, 0);
         arr = ((char *)arr) + size;
     }
 }
@@ -347,11 +335,11 @@ static void changeEndianness(void *msg, uint32_t header,
             type = schema[i].type;
 
             if (type < _PLAN_MSG_SCHEMA_ARR_BASE){
-                convEndian(type, msg, schema[i].offset, schema[i].sub);
+                convEndian(type, msg, schema[i].offset);
 
             }else{
                 convEndianArr(type, msg, schema[i].offset,
-                              schema[i].size_offset, schema[i].sub);
+                              schema[i].size_offset);
             }
         }
 

@@ -580,7 +580,7 @@ void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size)
 {
     int siz;
     void *buf;
-    buf = planMsgBufEncode(msg, &schema_msg, &siz);
+    buf = planMsgEncode(msg, &schema_msg, &siz);
     *size = siz;
     return buf;
 }
@@ -590,7 +590,6 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
     plan_ma_msg_t *msg;
 
     msg = BOR_ALLOC(plan_ma_msg_t);
-    bzero(msg, sizeof(plan_ma_msg_t));
-    planMsgBufDecode(msg, &schema_msg, buf);
+    planMsgDecode(msg, &schema_msg, buf);
     return msg;
 }

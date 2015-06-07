@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         msg.int64 = rand();
         msg.header = 3u;
         wr(&msg, fout2);
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
         uint32_t siz = htole32(size);
         fwrite(&siz, 4, 1, fout);
         fwrite(buf, 1, size, fout);
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
         msg.str = strndup(text, msg.str_size - 1);
         msg.header = 6u;
         wr(&msg, fout2);
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
         uint32_t siz = htole32(size);
         fwrite(&siz, 4, 1, fout);
         fwrite(buf, 1, size, fout);
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         msg.int8 = rand();
         msg.header = 14u;
         wr(&msg, fout2);
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
         uint32_t siz = htole32(size);
         fwrite(&siz, 4, 1, fout);
         fwrite(buf, 1, size, fout);
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
             msg.arr32[j] = rand();
         msg.header = 0x1 | 0x4 | 0x20;
         wr(&msg, fout2);
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
         uint32_t siz = htole32(size);
         fwrite(&siz, 4, 1, fout);
         fwrite(buf, 1, size, fout);
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
         msg.sub.i32 = rand();
         msg.header = 0x1 | (0x1 << 6);
         wr(&msg, fout2);
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
         uint32_t siz = htole32(size);
         fwrite(&siz, 4, 1, fout);
         fwrite(buf, 1, size, fout);
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
             msg.sub.i64[j] = rand();
         msg.header = (0x1 << 6) | (0x1 << 7);
         wr(&msg, fout2);
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
         uint32_t siz = htole32(size);
         fwrite(&siz, 4, 1, fout);
         fwrite(buf, 1, size, fout);
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
         }
         msg.header = 0x1 | (0x1 << 8);
         wr(&msg, fout2);
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
         uint32_t siz = htole32(size);
         fwrite(&siz, 4, 1, fout);
         fwrite(buf, 1, size, fout);
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
     msg.subarr[1].i64[2] = 1012341553345;
     msg.header = 0x1 | (0x1 << 8);
     wr(&msg, fout2);
-    buf = planMsgBufEncode(&msg, &schema_main, &size);
+    buf = planMsgEncode(&msg, &schema_main, &size);
     uint32_t siz = htole32(size);
     fwrite(&siz, 4, 1, fout);
     fwrite(buf, 1, size, fout);

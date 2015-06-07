@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         pos += 4;
 
         bzero(&msg, sizeof(msg));
-        planMsgBufDecode(&msg, &schema_main, data);
+        planMsgDecode(&msg, &schema_main, data);
         wr(&msg, stdout);
         data += size;
         pos += size;

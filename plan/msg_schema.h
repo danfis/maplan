@@ -88,11 +88,11 @@ typedef struct _plan_msg_schema_t plan_msg_schema_t;
     };
 
 
-unsigned char *planMsgBufEncode(const void *msg_struct,
-                                const plan_msg_schema_t *schema,
-                                int *size);
-void planMsgBufDecode(void *msg_struct, const plan_msg_schema_t *schema,
-                      const void *buf);
+unsigned char *planMsgEncode(const void *msg_struct,
+                             const plan_msg_schema_t *schema,
+                             int *size);
+void planMsgDecode(void *msg_struct, const plan_msg_schema_t *schema,
+                   const void *buf);
 
 #ifdef __cplusplus
 } /* extern "C" */

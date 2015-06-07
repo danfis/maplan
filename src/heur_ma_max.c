@@ -216,6 +216,7 @@ static void sendRequest(plan_heur_ma_max_t *heur, plan_ma_comm_t *comm,
 {
     plan_ma_msg_t *msg;
     plan_oparr_t *oparr;
+    plan_ma_msg_op_t *msg_op;
     int i, op_id, value;
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_MAX_REQUEST,
@@ -226,7 +227,9 @@ static void sendRequest(plan_heur_ma_max_t *heur, plan_ma_comm_t *comm,
     for (i = 0; i < oparr->size; ++i){
         op_id = planOpIdTrGlob(&heur->op_id_tr, oparr->op[i]);
         value = heur->relax.op[oparr->op[i]].value;
-        planMAMsgAddOpIdValue(msg, op_id, value);
+        msg_op = planMAMsgAddOp(msg);
+        planMAMsgOpSetOpId(msg_op, op_id);
+        planMAMsgOpSetValue(msg_op, value);
     }
     planMACommSendToNode(comm, agent_id, msg);
     planMAMsgDel(msg);
@@ -300,6 +303,7 @@ static void updateRelax(plan_heur_ma_max_t *heur,
 
 static void updateHMax(plan_heur_ma_max_t *heur, const plan_ma_msg_t *msg)
 {
+    const plan_ma_msg_op_t *msg_op;
     int i, *update_op, update_op_size, op_id, value;
     int response_op_size, response_op_id, response_value;
 
@@ -308,7 +312,9 @@ static void updateHMax(plan_heur_ma_max_t *heur, const plan_ma_msg_t *msg)
     update_op_size = 0;
     for (i = 0; i < response_op_size; ++i){
         // Read data for operator
-        response_op_id = planMAMsgOpIdValue(msg, i, &response_value);
+        msg_op = planMAMsgOp(msg, i);
+        response_op_id = planMAMsgOpOpId(msg_op);
+        response_value = planMAMsgOpValue(msg_op);
 
         // Translate operator ID from response to local ID
         op_id = planOpIdTrLoc(&heur->op_id_tr, response_op_id);
@@ -382,6 +388,8 @@ static void requestSendResponse(private_t *private,
                                 const plan_ma_msg_t *req_msg)
 {
     plan_ma_msg_t *msg;
+    const plan_ma_msg_op_t *msg_op;
+    plan_ma_msg_op_t *add_op;
     int target_agent, i, len, op_id, old_value, new_value, loc_op_id;
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_MAX_RESPONSE,
@@ -389,7 +397,9 @@ static void requestSendResponse(private_t *private,
 
     len = planMAMsgOpSize(req_msg);
     for (i = 0; i < len; ++i){
-        op_id = planMAMsgOpIdValue(req_msg, i, &old_value);
+        msg_op = planMAMsgOp(req_msg, i);
+        op_id = planMAMsgOpOpId(msg_op);
+        old_value = planMAMsgOpValue(msg_op);
 
         loc_op_id = planOpIdTrLoc(op_id_tr, op_id);
         if (loc_op_id < 0)
@@ -397,7 +407,9 @@ static void requestSendResponse(private_t *private,
 
         new_value = private->relax.op[loc_op_id].value;
         if (new_value != old_value){
-            planMAMsgAddOpIdValue(msg, op_id, new_value);
+            add_op = planMAMsgAddOp(msg);
+            planMAMsgOpSetOpId(add_op, op_id);
+            planMAMsgOpSetValue(add_op, new_value);
         }
     }
 
@@ -423,6 +435,7 @@ static void heurMAMaxRequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
                              const plan_ma_msg_t *msg)
 {
     plan_heur_ma_max_t *heur = HEUR(_heur);
+    const plan_ma_msg_op_t *msg_op;
     private_t *private = &heur->private;
     int i, op_id, op_len, fact_id;
     plan_cost_t op_value;
@@ -445,7 +458,9 @@ static void heurMAMaxRequest(plan_heur_t *_heur, plan_ma_comm_t *comm,
     // received from the other agent.
     op_len = planMAMsgOpSize(msg);
     for (i = 0; i < op_len; ++i){
-        op_id = planMAMsgOpIdValue(msg, i, &op_value);
+        msg_op = planMAMsgOp(msg, i);
+        op_id = planMAMsgOpOpId(msg_op);
+        op_value = planMAMsgOpValue(msg_op);
         op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
         if (op_id < 0)
             continue;

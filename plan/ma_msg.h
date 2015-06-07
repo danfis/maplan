@@ -95,6 +95,16 @@ typedef struct _plan_ma_msg_dtg_req_t plan_ma_msg_dtg_req_t;
 typedef struct _plan_ma_msg_t plan_ma_msg_t;
 
 /**
+ * Initiaze ma-msg structure
+ */
+void planMAMsgInit(plan_ma_msg_t *msg, int type, int subtype, int agent_id);
+
+/**
+ * Free memory allocated withing ma-msg structure.
+ */
+void planMAMsgFree(plan_ma_msg_t *msg);
+
+/**
  * Creates a new message of specified type and subtype.
  */
 plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id);
@@ -109,6 +119,9 @@ void planMAMsgDel(plan_ma_msg_t *msg);
  */
 plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg);
 
+
+/*** Getters / Setters: ***/
+
 /**
  * Returns type (PLAN_MA_MSG_TYPE_*).
  */
@@ -120,244 +133,70 @@ int planMAMsgType(const plan_ma_msg_t *msg);
 int planMAMsgSubType(const plan_ma_msg_t *msg);
 
 /**
- * Returns the originating agent.
- */
-int planMAMsgAgent(const plan_ma_msg_t *msg);
-
-/**
- * Returns heap-allocated packed message and its size.
- */
-void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
-
-/**
- * Returns a new message unpacked from the given buffer.
- */
-plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
-
-
-/*** STATE ***/
-void planMAMsgSetStateBuf(plan_ma_msg_t *msg, const void *buf, size_t bufsize);
-void planMAMsgSetStatePrivateIds(plan_ma_msg_t *msg, const int *ids, int size);
-void planMAMsgSetStateId(plan_ma_msg_t *msg, plan_state_id_t state_id);
-void planMAMsgSetStateCost(plan_ma_msg_t *msg, int cost);
-void planMAMsgSetStateHeur(plan_ma_msg_t *msg, int heur);
-
-const void *planMAMsgStateBuf(const plan_ma_msg_t *msg);
-int planMAMsgStateBufSize(const plan_ma_msg_t *msg);
-int planMAMsgStatePrivateIdsSize(const plan_ma_msg_t *msg);
-void planMAMsgStatePrivateIds(const plan_ma_msg_t *msg, int *ids);
-int planMAMsgStateId(const plan_ma_msg_t *msg);
-int planMAMsgStateCost(const plan_ma_msg_t *msg);
-int planMAMsgStateHeur(const plan_ma_msg_t *msg);
-
-void planMAMsgSetGoalOpId(plan_ma_msg_t *msg, int goal_op_id);
-int planMAMsgGoalOpId(const plan_ma_msg_t *msg);
-
-
-/*** TERMINATE: ***/
-
-/**
- * Set terminate-agent-id to TERMINATE message.
- */
-void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id);
-
-/**
- * Returns ID of agent that started termination.
- */
-int planMAMsgTerminateAgent(const plan_ma_msg_t *msg);
-
-/**
- * Sets a result code of search.
- */
-void planMAMsgSetSearchRes(plan_ma_msg_t *msg, int res);
-
-/**
- * Returns a result code.
- */
-int planMAMsgSearchRes(const plan_ma_msg_t *msg);
-
-
-/*** TRACE PATH: ***/
-
-/**
- * Sets next state-id to trace-path message.
- */
-void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id);
-
-/**
- * Adds next operator to the path.
- */
-void planMAMsgTracePathAddPath(plan_ma_msg_t *msg, const plan_path_t *path);
-
-/**
- * Returns ID of the last state the path was tracked to.
- */
-int planMAMsgTracePathStateId(const plan_ma_msg_t *msg);
-
-/**
- * Extracts path from the message to path object.
- */
-void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
-                                   plan_path_t *path);
-
-
-/**
- * Returns ID of the initiator.
- */
-int planMAMsgTracePathInitAgent(const plan_ma_msg_t *msg);
-
-
-
-/*** SNAPSHOT: ***/
-
-/**
- * Sets snapshot type, see above for list of types.
- */
-void planMAMsgSnapshotSetType(plan_ma_msg_t *msg, int type);
-
-/**
- * Returns snapshot type
- */
-int planMAMsgSnapshotType(const plan_ma_msg_t *msg);
-
-/**
- * Returns assigned snapshot token.
- */
-long planMAMsgSnapshotToken(const plan_ma_msg_t *msg);
-
-/**
- * Creates a new SNAPSHOT_MARK message from SNAPSHOT_INIT message.
- */
-plan_ma_msg_t *planMAMsgSnapshotNewMark(const plan_ma_msg_t *snapshot_init,
-                                        int agent_id);
-
-/**
- * Creates a new SNAPSHOT_RESPONSE message from a SNAPSHOT_INIT message.
- */
-plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
-                                            int agent_id);
-
-/**
- * Sets ack flag to the specified value.
- */
-void planMAMsgSnapshotSetAck(plan_ma_msg_t *msg, int ack);
-
-/**
- * Returns ack flag.
- */
-int planMAMsgSnapshotAck(const plan_ma_msg_t *msg);
-
-
-
-/*** HEUR: ***/
-
-/**
  * Returns whether the heur message is for planHeurMAUpdate() or for
  * planHeurMARequest().
  */
 int planMAMsgHeurType(const plan_ma_msg_t *msg);
 
+/**
+ * Returns the originating agent.
+ */
+int planMAMsgAgent(const plan_ma_msg_t *msg);
+
+
+int planMAMsgTerminateAgent(const plan_ma_msg_t *msg);
+void planMAMsgSetTerminateAgent(plan_ma_msg_t *msg, int agent_id);
+
+int planMAMsgStateBufSize(const plan_ma_msg_t *msg);
+const void *planMAMsgStateBuf(const plan_ma_msg_t *msg);
+void planMAMsgSetStateBuf(plan_ma_msg_t *msg, const void *buf, size_t bufsize);
+
+int planMAMsgStatePrivateIdsSize(const plan_ma_msg_t *msg);
+void planMAMsgStatePrivateIds(const plan_ma_msg_t *msg, int *ids);
+void planMAMsgSetStatePrivateIds(plan_ma_msg_t *msg, const int *ids, int size);
+
+plan_state_id_t planMAMsgStateId(const plan_ma_msg_t *msg);
+void planMAMsgSetStateId(plan_ma_msg_t *msg, plan_state_id_t state_id);
+
+int planMAMsgStateCost(const plan_ma_msg_t *msg);
+void planMAMsgSetStateCost(plan_ma_msg_t *msg, int cost);
+
+int planMAMsgStateHeur(const plan_ma_msg_t *msg);
+void planMAMsgSetStateHeur(plan_ma_msg_t *msg, int heur);
+
+int planMAMsgInitAgent(const plan_ma_msg_t *msg);
+void planMAMsgSetInitAgent(plan_ma_msg_t *msg, int agent_id);
 
 
 /**
- * Adds operator to the message.
+ * For snapshot type, see above list.
  */
-void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,
-                    int owner, plan_cost_t value);
+int planMAMsgSnapshotType(const plan_ma_msg_t *msg);
+void planMAMsgSetSnapshotType(plan_ma_msg_t *msg, int type);
 
-/**
- * Adds only op_id part of operator.
- */
-#define planMAMsgAddOpId(msg, op_id) \
-    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, PLAN_COST_INVALID)
+long planMAMsgSnapshotToken(const plan_ma_msg_t *msg);
+void planMAMsgSetSnapshotAck(plan_ma_msg_t *msg, int ack);
+int planMAMsgSnapshotAck(const plan_ma_msg_t *msg);
 
-/**
- * Adds op_id and value part of operator.
- */
-#define planMAMsgAddOpIdValue(msg, op_id, value) \
-    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, (value))
+int planMAMsgGoalOpId(const plan_ma_msg_t *msg);
+void planMAMsgSetGoalOpId(plan_ma_msg_t *msg, int goal_op_id);
 
-/**
- * Adds op_id, cost and owner of operator.
- */
-#define planMAMsgAddOpIdCostOwner(msg, op_id, cost, owner) \
-    planMAMsgAddOp((msg), (op_id), (cost), (owner), PLAN_COST_INVALID)
-
-/**
- * Returns number of operators stored in message.
- */
-int planMAMsgOpSize(const plan_ma_msg_t *msg);
-
-/**
- * Returns i'th operator's ID and its corresponding values if argument set
- * to non-NULL.
- */
-int planMAMsgOp(const plan_ma_msg_t *msg, int i,
-                plan_cost_t *cost, int *owner, plan_cost_t *value);
-
-/**
- * Returns i'th op_id.
- */
-#define planMAMsgOpId(msg, i) planMAMsgOp((msg), (i), NULL, NULL, NULL)
-
-/**
- * Returns i'th op_id and value.
- */
-#define planMAMsgOpIdValue(msg, i, value) \
-    planMAMsgOp((msg), (i), NULL, NULL, (value))
-
-/**
- * Returns i'th operator's ID and its cost and owner.
- */
-#define planMAMsgOpIdCostOwner(msg, i, cost, owner) \
-    planMAMsgOp((msg), (i), (cost), (owner), NULL)
-
-
-/**
- * Sets min-cut-cost value.
- */
+plan_cost_t planMAMsgMinCutCost(const plan_ma_msg_t *msg);
 void planMAMsgSetMinCutCost(plan_ma_msg_t *msg, plan_cost_t cost);
 
-/**
- * Returns min-cut-cost value.
- */
-plan_cost_t planMAMsgMinCutCost(const plan_ma_msg_t *msg);
-
-
-/**
- * Sets token for heuristic.
- */
+int planMAMsgHeurToken(const plan_ma_msg_t *msg);
 void planMAMsgSetHeurToken(plan_ma_msg_t *msg, int token);
 
-/**
- * Returns heuristic token.
- */
-int planMAMsgHeurToken(const plan_ma_msg_t *msg);
-
-/**
- * Adds agent-id to the list of agents already requested.
- */
+int planMAMsgHeurRequestedAgentSize(const plan_ma_msg_t *msg);
+int planMAMsgHeurRequestedAgent(const plan_ma_msg_t *msg, int i);
 void planMAMsgAddHeurRequestedAgent(plan_ma_msg_t *msg, int agent_id);
 
-/**
- * Returns number of IDs stored in list of requested agents.
- */
-int planMAMsgHeurRequestedAgentSize(const plan_ma_msg_t *msg);
-
-/**
- * Returns i'th ID from list of requested agents.
- */
-int planMAMsgHeurRequestedAgent(const plan_ma_msg_t *msg, int i);
-
-/**
- * Sets cost of heuristic function.
- */
+int planMAMsgHeurCost(const plan_ma_msg_t *msg);
 void planMAMsgSetHeurCost(plan_ma_msg_t *msg, int cost);
 
-/**
- * Returns cost of heuristic stored in message.
- */
-int planMAMsgHeurCost(const plan_ma_msg_t *msg);
+int planMAMsgSearchRes(const plan_ma_msg_t *msg);
+void planMAMsgSetSearchRes(plan_ma_msg_t *msg, int res);
+
 
 /**
  * Sets request for DTG heuristic.
@@ -389,15 +228,66 @@ int planMAMsgDTGReqReachable(const plan_ma_msg_t *msg, int i);
  */
 void planMAMsgCopyDTGReqReachable(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
 
-/**
- * Sets initiator agent ID
- */
-void planMAMsgSetInitAgent(plan_ma_msg_t *msg, int agent_id);
+
+
+int planMAMsgOpSize(const plan_ma_msg_t *msg);
+const plan_ma_msg_op_t *planMAMsgOp(const plan_ma_msg_t *msg, int idx);
+plan_ma_msg_op_t *planMAMsgAddOp(plan_ma_msg_t *msg);
+
+int planMAMsgOpOpId(const plan_ma_msg_op_t *op);
+void planMAMsgOpSetOpId(plan_ma_msg_op_t *op, int op_id);
+plan_cost_t planMAMsgOpCost(const plan_ma_msg_op_t *op);
+void planMAMsgOpSetCost(plan_ma_msg_op_t *op, plan_cost_t cost);
+int planMAMsgOpOwner(const plan_ma_msg_op_t *op);
+void planMAMsgOpSetOwner(plan_ma_msg_op_t *op, int op_id);
+plan_cost_t planMAMsgOpValue(const plan_ma_msg_op_t *op);
+void planMAMsgOpSetValue(plan_ma_msg_op_t *op, plan_cost_t cost);
+const char *planMAMsgOpName(const plan_ma_msg_op_t *op);
+void planMAMsgOpSetName(plan_ma_msg_op_t *op, const char *name);
+
+
+
+
+
 
 /**
- * Returns initiator agent ID
+ * Append path operators to the message.
  */
-int planMAMsgInitAgent(const plan_ma_msg_t *msg);
+void planMAMsgTracePathAppendPath(plan_ma_msg_t *msg,
+                                  const plan_path_t *path);
+
+/**
+ * Extracts path from the message to path object.
+ */
+void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
+                                   plan_path_t *path);
+
+
+/*** SNAPSHOT: ***/
+
+
+/**
+ * Creates a new SNAPSHOT_MARK message from SNAPSHOT_INIT message.
+ */
+plan_ma_msg_t *planMAMsgSnapshotNewMark(const plan_ma_msg_t *snapshot_init,
+                                        int agent_id);
+
+/**
+ * Creates a new SNAPSHOT_RESPONSE message from a SNAPSHOT_INIT message.
+ */
+plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
+                                            int agent_id);
+
+
+/**
+ * Returns heap-allocated packed message and its size.
+ */
+void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
+
+/**
+ * Returns a new message unpacked from the given buffer.
+ */
+plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -105,9 +105,9 @@ TEST(testMsgSchema)
         msg.int32 = rand();
         msg.int64 = rand();
         msg.header = 3u;
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
 
-        planMsgBufDecode(&msg2, &schema_main, buf);
+        planMsgDecode(&msg2, &schema_main, buf);
         assertEquals(msg.int32, msg2.int32);
         assertEquals(msg.int64, msg2.int64);
 
@@ -122,9 +122,9 @@ TEST(testMsgSchema)
         msg.str_size += 1;
         msg.str = strndup(text, msg.str_size - 1);
         msg.header = 6u;
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
 
-        planMsgBufDecode(&msg2, &schema_main, buf);
+        planMsgDecode(&msg2, &schema_main, buf);
         assertEquals(msg.int64, msg2.int64);
         assertEquals(strlen(msg.str), strlen(msg2.str));
         assertEquals(strcmp(msg.str, msg2.str), 0);
@@ -144,9 +144,9 @@ TEST(testMsgSchema)
         msg.str = strndup(text, msg.str_size - 1);
         msg.int8 = rand();
         msg.header = 14u;
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
 
-        planMsgBufDecode(&msg2, &schema_main, buf);
+        planMsgDecode(&msg2, &schema_main, buf);
         assertEquals(msg.int64, msg2.int64);
         assertEquals(strlen(msg.str), strlen(msg2.str));
         assertEquals(strcmp(msg.str, msg2.str), 0);
@@ -170,9 +170,9 @@ TEST(testMsgSchema)
         for (j = 0; j < msg.arr32_size; ++j)
             msg.arr32[j] = rand();
         msg.header = 0x1 | 0x4 | 0x20;
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
 
-        planMsgBufDecode(&msg2, &schema_main, buf);
+        planMsgDecode(&msg2, &schema_main, buf);
         assertEquals(msg.int32, msg2.int32);
         assertEquals(strlen(msg.str), strlen(msg2.str));
         assertEquals(strcmp(msg.str, msg2.str), 0);
@@ -195,9 +195,9 @@ TEST(testMsgSchema)
         msg.sub.header = 0x1;
         msg.sub.i32 = rand();
         msg.header = 0x1 | (0x1 << 6);
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
 
-        planMsgBufDecode(&msg2, &schema_main, buf);
+        planMsgDecode(&msg2, &schema_main, buf);
         assertEquals(msg.int32, msg2.int32);
         assertEquals(msg.sub.i32, msg2.sub.i32);
 
@@ -215,9 +215,9 @@ TEST(testMsgSchema)
         for (j = 0; j < msg.sub.i64_size; ++j)
             msg.sub.i64[j] = rand();
         msg.header = (0x1 << 6) | (0x1 << 7);
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
 
-        planMsgBufDecode(&msg2, &schema_main, buf);
+        planMsgDecode(&msg2, &schema_main, buf);
         assertEquals(msg.x, msg2.x);
         assertEquals(msg.sub.i32, msg2.sub.i32);
         assertEquals(msg.sub.i64_size, msg2.sub.i64_size);
@@ -239,9 +239,9 @@ TEST(testMsgSchema)
             msg.subarr[j].i32 = rand();
         }
         msg.header = 0x1 | (0x1 << 8);
-        buf = planMsgBufEncode(&msg, &schema_main, &size);
+        buf = planMsgEncode(&msg, &schema_main, &size);
 
-        planMsgBufDecode(&msg2, &schema_main, buf);
+        planMsgDecode(&msg2, &schema_main, buf);
         assertEquals(msg.int32, msg2.int32);
         assertEquals(msg.subarr_size, msg2.subarr_size);
 
@@ -265,9 +265,9 @@ TEST(testMsgSchema)
     msg.subarr[1].i64[1] = 1012341553;
     msg.subarr[1].i64[2] = 1012341553345;
     msg.header = 0x1 | (0x1 << 8);
-    buf = planMsgBufEncode(&msg, &schema_main, &size);
+    buf = planMsgEncode(&msg, &schema_main, &size);
 
-    planMsgBufDecode(&msg2, &schema_main, buf);
+    planMsgDecode(&msg2, &schema_main, buf);
     assertEquals(msg.int32, msg2.int32);
     assertEquals(msg.subarr_size, msg2.subarr_size);
     assertEquals(msg.subarr[0].i32, msg2.subarr[0].i32);

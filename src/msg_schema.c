@@ -276,7 +276,7 @@ static void encode(unsigned char **wbuf, const void *msg,
     }
 }
 
-unsigned char *planMsgBufEncode(const void *msg,
+unsigned char *planMsgEncode(const void *msg,
                                 const plan_msg_schema_t *_schema,
                                 int *size)
 {
@@ -388,7 +388,7 @@ static void decode(unsigned char **rbuf, void *msg,
     }
 }
 
-void planMsgBufDecode(void *msg, const plan_msg_schema_t *_schema,
+void planMsgDecode(void *msg, const plan_msg_schema_t *_schema,
                       const void *buf)
 {
     unsigned char *rbuf;

@@ -171,8 +171,7 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
         if ((msg)->member != NULL){ \
             BOR_FREE((msg)->member); \
         } \
-        int size = sizeof(*((msg)->member)); \
-        (msg)->member = BOR_MALLOC((src_size) * size); \
+        (msg)->member = BOR_ALLOC_ARR(typeof(*((msg)->member)), (src_size)); \
         (msg)->member##_size = (src_size); \
     } while (0)
 
@@ -180,8 +179,7 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
     do { \
         (msg)->header |= M_##member; \
         PREP_ARR(msg, member, src, src_size); \
-        int size = sizeof(*((msg)->member)); \
-        memcpy((msg)->member, (src), (src_size) * size); \
+        memcpy((msg)->member, (src), (src_size) * sizeof(*((msg)->member))); \
     } while (0)
 
 #define CPY_ARR(msg, member, src, src_size) \

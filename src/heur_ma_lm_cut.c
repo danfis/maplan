@@ -517,6 +517,7 @@ static void sendHMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
                             int agent_id)
 {
     plan_ma_msg_t *msg;
+    plan_ma_msg_op_t *add_op;
     int i, op_id, value;
     ma_lm_cut_op_t op;
 
@@ -529,7 +530,9 @@ static void sendHMaxRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
         if (op.owner == agent_id && op.changed){
             value = heur->relax.op[i].value;
             op_id = planOpIdTrGlob(&heur->op_id_tr, i);
-            planMAMsgAddOpIdValue(msg, op_id, value);
+            add_op = planMAMsgAddOp(msg);
+            planMAMsgOpSetOpId(add_op, op_id);
+            planMAMsgOpSetValue(add_op, value);
 
             heur->op[i].changed = 0;
         }
@@ -604,7 +607,7 @@ static void sendSuppRequest(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
         if (agent_id != heur->agent_id && heur->relax.op[i].supp >= 0){
             op_id = planOpIdTrGlob(&heur->op_id_tr, i);
             if (op_id >= 0)
-                planMAMsgAddOpId(msg[agent_id], op_id);
+                planMAMsgOpSetOpId(planMAMsgAddOp(msg[agent_id]), op_id);
         }
     }
 
@@ -698,6 +701,7 @@ static void sendHMaxResponse(private_t *private, plan_ma_comm_t *comm,
     int i, op_id;
     plan_cost_t value;
     plan_ma_msg_t *msg;
+    plan_ma_msg_op_t *add_op;
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_HMAX_RESPONSE,
@@ -713,7 +717,9 @@ static void sendHMaxResponse(private_t *private, plan_ma_comm_t *comm,
 
         value = private->relax.op[op_id].value;
         op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
-        planMAMsgAddOpIdValue(msg, op_id, value);
+        add_op = planMAMsgAddOp(msg);
+        planMAMsgOpSetOpId(add_op, op_id);
+        planMAMsgOpSetValue(add_op, value);
     }
     planMACommSendToNode(comm, agent_id, msg);
     planMAMsgDel(msg);
@@ -761,7 +767,7 @@ static void privateSupp(private_t *private, plan_ma_comm_t *comm,
     // supporter fact is hold by the main agent.
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
-        op_id = planMAMsgOpId(msg, i);
+        op_id = planMAMsgOpOpId(planMAMsgOp(msg, i));
         op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
         if (op_id >= 0)
             private->relax.op[op_id].supp = -1;
@@ -854,7 +860,7 @@ static int sendGoalZoneRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *com
                 continue;
 
             op_id = planOpIdTrGlob(&heur->op_id_tr, i);
-            planMAMsgAddOpId(msg[agent_id], op_id);
+            planMAMsgOpSetOpId(planMAMsgAddOp(msg[agent_id]), op_id);
             heur->agent_changed[agent_id] = 1;
         }
     }
@@ -893,7 +899,7 @@ static int stepGoalZoneUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     // Explore goal-zone from all received operators
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
-        op_id = planMAMsgOpId(msg, i);
+        op_id = planMAMsgOpOpId(planMAMsgOp(msg, i));
         op_id = planOpIdTrLoc(&heur->op_id_tr, op_id);
         if (op_id < 0)
             continue;
@@ -935,7 +941,7 @@ static void sendGoalZoneResponse(private_t *private, plan_ma_comm_t *comm,
             if (op_id < 0)
                 continue;
             op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
-            planMAMsgAddOpId(msg, op_id);
+            planMAMsgOpSetOpId(planMAMsgAddOp(msg), op_id);
         }
     }
 
@@ -951,7 +957,7 @@ static void privateGoalZone(private_t *private, plan_ma_comm_t *comm,
     // Proceed with goal-zone exploration from the received operators
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
-        op_id = planMAMsgOp(msg, i, NULL, NULL, NULL);
+        op_id = planMAMsgOpOpId(planMAMsgOp(msg, i));
         op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
         if (op_id < 0)
             continue;
@@ -1004,7 +1010,7 @@ static int sendFindCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm
                 continue;
 
             op_id = planOpIdTrGlob(&heur->op_id_tr, i);
-            planMAMsgAddOpId(msg[agent_id], op_id);
+            planMAMsgOpSetOpId(planMAMsgAddOp(msg[agent_id]), op_id);
             heur->agent_changed[agent_id] = 1;
         }
     }
@@ -1042,14 +1048,14 @@ static int stepFindCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     int i, size, op_id;
     int from_agent;
     assertMsgType(heur, msg, PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE, 0);
-    
+
     // Update minimal cost of cut from message
     heur->cut.min_cut = BOR_MIN(heur->cut.min_cut, planMAMsgMinCutCost(msg));
 
     // Proceed in exploring justification graph from the received operators
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
-        op_id = planMAMsgOpId(msg, i);
+        op_id = planMAMsgOpOpId(planMAMsgOp(msg, i));
         op_id = planOpIdTrLoc(&heur->op_id_tr, op_id);
         if (op_id < 0)
             continue;
@@ -1095,7 +1101,7 @@ static void sendFindCutResponse(private_t *private, plan_ma_comm_t *comm,
             if (op_id < 0)
                 continue;
             op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
-            planMAMsgAddOpId(msg, op_id);
+            planMAMsgOpSetOpId(planMAMsgAddOp(msg), op_id);
         }
     }
 
@@ -1132,7 +1138,7 @@ static void privateFindCut(private_t *private, plan_ma_comm_t *comm,
     // Proceed with exploring from the received operators
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
-        op_id = planMAMsgOpId(msg, i);
+        op_id = planMAMsgOpOpId(planMAMsgOp(msg, i));
         op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
         if (op_id < 0)
             continue;
@@ -1176,7 +1182,7 @@ static void sendCutRequests(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm)
 
         if (heur->cut.op[i].in_cut){
             op_id = planOpIdTrGlob(&heur->op_id_tr, i);
-            planMAMsgAddOpId(msg[op->owner], op_id);
+            planMAMsgOpSetOpId(planMAMsgAddOp(msg[op->owner]), op_id);
         }
     }
 
@@ -1210,7 +1216,7 @@ static int stepCutUpdate(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
     // Add received operators to the cut
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
-        op_id = planMAMsgOpId(msg, i);
+        op_id = planMAMsgOpOpId(planMAMsgOp(msg, i));
         op_id = planOpIdTrLoc(&heur->op_id_tr, op_id);
         if (op_id < 0)
             continue;
@@ -1244,7 +1250,7 @@ static void sendCutResponse(private_t *private, plan_ma_comm_t *comm,
         op_id = private->public_op.op[i];
         if (private->cut.op[op_id].in_cut){
             op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
-            planMAMsgAddOpId(msg, op_id);
+            planMAMsgOpSetOpId(planMAMsgAddOp(msg), op_id);
         }
     }
     planMACommSendToNode(comm, agent_id, msg);
@@ -1259,7 +1265,7 @@ static void privateCut(private_t *private, plan_ma_comm_t *comm,
     // Add all received operators to the cut
     size = planMAMsgOpSize(msg);
     for (i = 0; i < size; ++i){
-        op_id = planMAMsgOpId(msg, i);
+        op_id = planMAMsgOpOpId(planMAMsgOp(msg, i));
         op_id = planOpIdTrLoc(&private->op_id_tr, op_id);
         if (op_id < 0)
             continue;
@@ -1283,6 +1289,7 @@ static void hmaxUpdateOpValueFromMsg(const plan_ma_msg_t *msg,
                                      plan_heur_relax_op_t *op_all,
                                      int *updated_ops, int *updated_ops_size)
 {
+    const plan_ma_msg_op_t *msg_op;
     int i, op_size, op_id;
     plan_cost_t op_value, value;
 
@@ -1291,7 +1298,9 @@ static void hmaxUpdateOpValueFromMsg(const plan_ma_msg_t *msg,
     op_size = planMAMsgOpSize(msg);
     for (i = 0; i < op_size; ++i){
         // Read operator data from message
-        op_id = planMAMsgOpIdValue(msg, i, &op_value);
+        msg_op = planMAMsgOp(msg, i);
+        op_id = planMAMsgOpOpId(msg_op);
+        op_value = planMAMsgOpValue(msg_op);
 
         // Translate operator ID from global ID to local ID and ignore
         // those which are unknown

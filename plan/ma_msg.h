@@ -168,60 +168,6 @@ int planMAMsgInitAgent(const plan_ma_msg_t *msg);
 void planMAMsgSetInitAgent(plan_ma_msg_t *msg, int agent_id);
 
 
-/*** TODO ***/
-void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,
-                    int owner, plan_cost_t value);
-
-/**
- * Adds only op_id part of operator.
- */
-#define planMAMsgAddOpId(msg, op_id) \
-    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, PLAN_COST_INVALID)
-
-/**
- * Adds op_id and value part of operator.
- */
-#define planMAMsgAddOpIdValue(msg, op_id, value) \
-    planMAMsgAddOp((msg), (op_id), PLAN_COST_INVALID, -1, (value))
-
-/**
- * Adds op_id, cost and owner of operator.
- */
-#define planMAMsgAddOpIdCostOwner(msg, op_id, cost, owner) \
-    planMAMsgAddOp((msg), (op_id), (cost), (owner), PLAN_COST_INVALID)
-
-/**
- * Returns number of operators stored in message.
- */
-int planMAMsgOpSize(const plan_ma_msg_t *msg);
-
-/**
- * Returns i'th operator's ID and its corresponding values if argument set
- * to non-NULL.
- */
-int planMAMsgOp(const plan_ma_msg_t *msg, int i,
-                plan_cost_t *cost, int *owner, plan_cost_t *value);
-
-/**
- * Returns i'th op_id.
- */
-#define planMAMsgOpId(msg, i) planMAMsgOp((msg), (i), NULL, NULL, NULL)
-
-/**
- * Returns i'th op_id and value.
- */
-#define planMAMsgOpIdValue(msg, i, value) \
-    planMAMsgOp((msg), (i), NULL, NULL, (value))
-
-/**
- * Returns i'th operator's ID and its cost and owner.
- */
-#define planMAMsgOpIdCostOwner(msg, i, cost, owner) \
-    planMAMsgOp((msg), (i), (cost), (owner), NULL)
-/*** TODO END ***/
-
-
-
 /**
  * For snapshot type, see above list.
  */
@@ -285,41 +231,38 @@ void planMAMsgCopyDTGReqReachable(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
 /*** TODO END ***/
 
 
-/**
- * Returns heap-allocated packed message and its size.
- */
-void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
+
+int planMAMsgOpSize(const plan_ma_msg_t *msg);
+const plan_ma_msg_op_t *planMAMsgOp(const plan_ma_msg_t *msg, int idx);
+plan_ma_msg_op_t *planMAMsgAddOp(plan_ma_msg_t *msg);
+
+int planMAMsgOpOpId(const plan_ma_msg_op_t *op);
+void planMAMsgOpSetOpId(plan_ma_msg_op_t *op, int op_id);
+plan_cost_t planMAMsgOpCost(const plan_ma_msg_op_t *op);
+void planMAMsgOpSetCost(plan_ma_msg_op_t *op, plan_cost_t cost);
+int planMAMsgOpOwner(const plan_ma_msg_op_t *op);
+void planMAMsgOpSetOwner(plan_ma_msg_op_t *op, int op_id);
+plan_cost_t planMAMsgOpValue(const plan_ma_msg_op_t *op);
+void planMAMsgOpSetValue(plan_ma_msg_op_t *op, plan_cost_t cost);
+const char *planMAMsgOpName(const plan_ma_msg_op_t *op);
+void planMAMsgOpSetName(plan_ma_msg_op_t *op, const char *name);
+
+
+
+
+
 
 /**
- * Returns a new message unpacked from the given buffer.
+ * Append path operators to the message.
  */
-plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
-
-
-
-/*** TODO ***/
-/**
- * Sets next state-id to trace-path message.
- */
-void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id);
-
-/**
- * Adds next operator to the path.
- */
-void planMAMsgTracePathAddPath(plan_ma_msg_t *msg, const plan_path_t *path);
-
-/**
- * Returns ID of the last state the path was tracked to.
- */
-int planMAMsgTracePathStateId(const plan_ma_msg_t *msg);
+void planMAMsgTracePathAppendPath(plan_ma_msg_t *msg,
+                                  const plan_path_t *path);
 
 /**
  * Extracts path from the message to path object.
  */
 void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
                                    plan_path_t *path);
-
-int planMAMsgTracePathInitAgent(const plan_ma_msg_t *msg);
 
 
 /*** SNAPSHOT: ***/
@@ -336,6 +279,17 @@ plan_ma_msg_t *planMAMsgSnapshotNewMark(const plan_ma_msg_t *snapshot_init,
  */
 plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
                                             int agent_id);
+
+
+/**
+ * Returns heap-allocated packed message and its size.
+ */
+void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
+
+/**
+ * Returns a new message unpacked from the given buffer.
+ */
+plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 #ifdef __cplusplus
 } /* extern "C" */

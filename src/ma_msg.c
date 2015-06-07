@@ -191,22 +191,33 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
             (msg)->member[i] = src[i]; \
     } while (0)
 
-
-#define GETTER(Name, member, type) \
-    type planMAMsg##Name(const plan_ma_msg_t *msg) \
+#define _GETTER(Base, msg_type, Name, member, type) \
+    type plan##Base##Name(const msg_type *msg) \
     { \
         return msg->member; \
     }
 
-#define SETTER(Name, member, type) \
-    void planMAMsgSet##Name(plan_ma_msg_t *msg, type val) \
+#define _SETTER(Base, msg_type, Name, member, type) \
+    void plan##Base##Set##Name(msg_type *msg, type val) \
     { \
         SET_VAL(msg, member, val); \
     }
 
+#define GETTER(Name, member, type) \
+    _GETTER(MAMsg, plan_ma_msg_t, Name, member, type)
+#define SETTER(Name, member, type) \
+    _SETTER(MAMsg, plan_ma_msg_t, Name, member, type)
 #define GETTER_SETTER(Name, member, type) \
     GETTER(Name, member, type) \
     SETTER(Name, member, type)
+
+#define GETTER_OP(Name, member, type) \
+    _GETTER(MAMsgOp, plan_ma_msg_op_t, Name, member, type)
+#define SETTER_OP(Name, member, type) \
+    _SETTER(MAMsgOp, plan_ma_msg_op_t, Name, member, type)
+#define GETTER_SETTER_OP(Name, member, type) \
+    GETTER_OP(Name, member, type) \
+    SETTER_OP(Name, member, type)
 
 
 static int snapshot_token_counter = 0;
@@ -391,6 +402,7 @@ GETTER_SETTER(InitAgent, initiator_agent_id, int)
 GETTER_SETTER(SnapshotType, snapshot_type, int)
 GETTER(SnapshotToken, snapshot_token, long)
 GETTER_SETTER(SnapshotAck, snapshot_ack, int)
+GETTER_SETTER(GoalOpId, goal_op_id, int)
 GETTER_SETTER(MinCutCost, min_cut_cost, plan_cost_t)
 GETTER_SETTER(HeurToken, heur_token, int)
 
@@ -414,47 +426,64 @@ GETTER_SETTER(SearchRes, search_res, int)
 
 
 
-
-
-
-void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id)
+GETTER(OpSize, op_size, int)
+const plan_ma_msg_op_t *planMAMsgOp(const plan_ma_msg_t *msg, int idx)
 {
-    SET_VAL(msg, state_id, state_id);
+    return msg->op + idx;
 }
 
-void planMAMsgTracePathAddPath(plan_ma_msg_t *msg, const plan_path_t *path)
+plan_ma_msg_op_t *planMAMsgAddOp(plan_ma_msg_t *msg)
+{
+    plan_ma_msg_op_t *op;
+
+    ++msg->op_size;
+    msg->op = BOR_REALLOC_ARR(msg->op, plan_ma_msg_op_t, msg->op_size);
+    op = msg->op + msg->op_size - 1;
+    bzero(op, sizeof(*op));
+    msg->header |= M_op;
+    return op;
+}
+
+GETTER_SETTER_OP(OpId, op_id, int)
+GETTER_SETTER_OP(Cost, cost, plan_cost_t)
+GETTER_SETTER_OP(Owner, owner, int)
+GETTER_SETTER_OP(Value, value, plan_cost_t)
+
+const char *planMAMsgOpName(const plan_ma_msg_op_t *op)
+{
+    return (const char *)op->name;
+}
+
+void planMAMsgOpSetName(plan_ma_msg_op_t *op, const char *name)
+{
+    if (op->name != NULL)
+        BOR_FREE(op->name);
+    op->name_size = strlen(name) + 1;
+    op->name = (int8_t *)BOR_STRDUP(name);
+    op->header |= M_name;
+}
+
+
+
+
+
+void planMAMsgTracePathAppendPath(plan_ma_msg_t *msg,
+                                  const plan_path_t *path)
 {
     bor_list_t *item;
     const plan_path_op_t *p;
     plan_ma_msg_op_t *op;
-    int i, size;
 
-    for (size = 0, item = path->prev; item != path; item = item->prev, ++size);
-    if (size == 0)
-        return;
-
-    msg->op = BOR_REALLOC_ARR(msg->op, plan_ma_msg_op_t, msg->op_size + size);
-    op = msg->op + msg->op_size;
-    msg->op_size += size;
-    bzero(op, sizeof(plan_ma_msg_op_t) * size);
-
-    for (i = 0, item = path->prev; item != path; item = item->prev, ++i){
+    for (item = path->prev; item != path; item = item->prev){
         p = BOR_LIST_ENTRY(item, plan_path_op_t, path);
 
-        SET_VAL(op + i, op_id, p->global_id);
-        SET_VAL(op + i, cost, p->cost);
-        SET_VAL(op + i, owner, p->owner);
-        op[i].name_size = strlen(p->name) + 1;
-        op[i].name = BOR_ALLOC_ARR(int8_t, op[i].name_size);
-        strcpy((char *)op[i].name, p->name);
+        op = planMAMsgAddOp(msg);
+        planMAMsgOpSetOpId(op, p->global_id);
+        planMAMsgOpSetCost(op, p->cost);
+        planMAMsgOpSetOwner(op, p->owner);
+        if (p->name)
+            planMAMsgOpSetName(op, p->name);
     }
-
-    msg->header |= M_op;
-}
-
-int planMAMsgTracePathStateId(const plan_ma_msg_t *msg)
-{
-    return msg->state_id;
 }
 
 void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
@@ -469,11 +498,6 @@ void planMAMsgTracePathExtractPath(const plan_ma_msg_t *msg,
         planPathPrepend(path, (const char *)op->name, op->cost, op->op_id,
                         op->owner, PLAN_NO_STATE, PLAN_NO_STATE);
     }
-}
-
-int planMAMsgTracePathInitAgent(const plan_ma_msg_t *msg)
-{
-    return msg->initiator_agent_id;
 }
 
 
@@ -506,58 +530,6 @@ void planMAMsgSnapshotSetAck(plan_ma_msg_t *msg, int ack)
 
 
 
-
-void planMAMsgSetGoalOpId(plan_ma_msg_t *msg, int goal_op_id)
-{
-    SET_VAL(msg, goal_op_id, goal_op_id);
-}
-
-int planMAMsgGoalOpId(const plan_ma_msg_t *msg)
-{
-    return msg->goal_op_id;
-}
-
-
-void planMAMsgAddOp(plan_ma_msg_t *msg, int op_id, plan_cost_t cost,
-                    int owner, plan_cost_t value)
-{
-    plan_ma_msg_op_t *op;
-
-    ++msg->op_size;
-    msg->op = BOR_REALLOC_ARR(msg->op, plan_ma_msg_op_t, msg->op_size);
-    op = msg->op + msg->op_size - 1;
-    bzero(op, sizeof(*op));
-
-    SET_VAL(op, op_id, op_id);
-
-    if (cost != PLAN_COST_INVALID)
-        SET_VAL(op, cost, cost);
-    if (owner >= 0)
-        SET_VAL(op, owner, owner);
-    if (value != PLAN_COST_INVALID)
-        SET_VAL(op, value, value);
-
-    msg->header |= M_op;
-}
-
-int planMAMsgOpSize(const plan_ma_msg_t *msg)
-{
-    return msg->op_size;
-}
-
-int planMAMsgOp(const plan_ma_msg_t *msg, int i,
-                plan_cost_t *cost, int *owner, plan_cost_t *value)
-{
-    const plan_ma_msg_op_t *op = msg->op + i;
-
-    if (cost)
-        *cost = op->cost;
-    if (owner)
-        *owner = op->owner;
-    if (value)
-        *value = op->value;
-    return op->op_id;
-}
 
 
 

@@ -366,6 +366,7 @@ static int planHeurRelaxFFMAUpdate(plan_heur_t *_heur,
                                    plan_heur_res_t *res)
 {
     plan_heur_ma_ff_t *heur = HEUR(_heur);
+    const plan_ma_msg_op_t *op;
     int i, len, op_id, cost, owner, from_agent;
 
     from_agent = planMAMsgAgent(msg);
@@ -375,7 +376,10 @@ static int planHeurRelaxFFMAUpdate(plan_heur_t *_heur,
     // Then explore all other peer-operators
     len = planMAMsgOpSize(msg);
     for (i = 0; i < len; ++i){
-        op_id = planMAMsgOpIdCostOwner(msg, i, &cost, &owner);
+        op = planMAMsgOp(msg, i);
+        op_id = planMAMsgOpOpId(op);
+        cost = planMAMsgOpCost(op);
+        owner = planMAMsgOpOwner(op);
 
         if (owner == comm->node_id){
             maUpdateLocalOp(heur, comm, op_id);
@@ -415,6 +419,7 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
     PLAN_STATE_STACK(state, heur->relax.cref.fact_id.var_size);
     plan_ma_msg_t *response;
     const plan_op_t *op;
+    plan_ma_msg_op_t *msg_op;
     int i, op_id, agent_id;
     int global_id, owner;
     plan_cost_t h, cost;
@@ -455,7 +460,10 @@ static void planHeurRelaxFFMARequest(plan_heur_t *_heur,
         owner = op->owner;
         cost = op->cost;
 
-        planMAMsgAddOpIdCostOwner(response, global_id, cost, owner);
+        msg_op = planMAMsgAddOp(response);
+        planMAMsgOpSetOpId(msg_op, global_id);
+        planMAMsgOpSetCost(msg_op, cost);
+        planMAMsgOpSetOwner(msg_op, owner);
     }
     planMACommSendToNode(comm, agent_id, response);
 

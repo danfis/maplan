@@ -227,7 +227,6 @@ int planMAMsgDTGReqReachable(const plan_ma_msg_t *msg, int i);
  * Copies reachable from src to dst.
  */
 void planMAMsgCopyDTGReqReachable(plan_ma_msg_t *dst, const plan_ma_msg_t *src);
-/*** TODO END ***/
 
 
 

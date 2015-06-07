@@ -198,7 +198,6 @@ int planMAMsgSearchRes(const plan_ma_msg_t *msg);
 void planMAMsgSetSearchRes(plan_ma_msg_t *msg, int res);
 
 
-/*** TODO ***/
 /**
  * Sets request for DTG heuristic.
  */

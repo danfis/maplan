@@ -25,11 +25,11 @@
 struct _plan_ma_msg_op_t {
     uint32_t header;
     int32_t op_id;
-    int8_t *name;
-    int name_size;
     int32_t cost;
     int32_t owner;
     int32_t value;
+    int8_t *name;
+    int name_size;
 };
 
 struct _plan_ma_msg_dtg_req_t {
@@ -57,8 +57,6 @@ struct _plan_ma_msg_t {
     int32_t state_heur;
 
     int32_t initiator_agent_id;
-    plan_ma_msg_op_t *op;
-    int op_size;
     int64_t snapshot_token;
     int32_t snapshot_type;
     int32_t snapshot_ack;
@@ -70,21 +68,24 @@ struct _plan_ma_msg_t {
     int32_t heur_cost;
     plan_ma_msg_dtg_req_t dtg_req;
     int32_t search_res;
+
+    plan_ma_msg_op_t *op;
+    int op_size;
 };
 
 
 PLAN_MSG_SCHEMA_BEGIN(schema_op)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_op_t, op_id, INT32)
-PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_op_t, name, name_size, INT8)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_op_t, cost, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_op_t, owner, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_op_t, value, INT32)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_op_t, name, name_size, INT8)
 PLAN_MSG_SCHEMA_END(schema_op, plan_ma_msg_op_t, header)
 #define M_op_id 0x01u
-#define M_name  0x02u
-#define M_cost  0x04u
-#define M_owner 0x08u
-#define M_value 0x10u
+#define M_cost  0x02u
+#define M_owner 0x04u
+#define M_value 0x08u
+#define M_name  0x10u
 
 
 PLAN_MSG_SCHEMA_BEGIN(schema_dtg_req)
@@ -112,7 +113,6 @@ PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, state_cost, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, state_heur, INT32)
 
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, initiator_agent_id, INT32)
-PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_t, op, op_size, &schema_op)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, snapshot_token, INT64)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, snapshot_type, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, snapshot_ack, INT32)
@@ -123,6 +123,7 @@ PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, heur_requested_agent, heur_requested_agen
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, heur_cost, INT32)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, dtg_req, &schema_dtg_req)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, search_res, INT32)
+PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_t, op, op_size, &schema_op)
 PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_type                 0x000001u
 #define M_agent_id             0x000002u
@@ -135,17 +136,18 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_state_heur           0x000080u
 
 #define M_initiator_agent_id   0x000100u
-#define M_op                   0x000200u
-#define M_snapshot_token       0x000400u
-#define M_snapshot_type        0x000800u
-#define M_snapshot_ack         0x001000u
-#define M_goal_op_id           0x002000u
-#define M_min_cut_cost         0x004000u
-#define M_heur_token           0x008000u
-#define M_heur_requested_agent 0x010000u
-#define M_heur_cost            0x020000u
-#define M_dtg_req              0x040000u
-#define M_search_res           0x080000u
+#define M_snapshot_token       0x000200u
+#define M_snapshot_type        0x000400u
+#define M_snapshot_ack         0x000800u
+#define M_goal_op_id           0x001000u
+#define M_min_cut_cost         0x002000u
+#define M_heur_token           0x004000u
+#define M_heur_requested_agent 0x008000u
+#define M_heur_cost            0x010000u
+#define M_dtg_req              0x020000u
+#define M_search_res           0x040000u
+
+#define M_op                   0x080000u
 
 
 #define SET_VAL(msg, member, val) \
@@ -319,23 +321,28 @@ plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg_in)
     *msg = *msg_in;
 
     if (msg_in->state_buf != NULL){
-        msg->state_buf = BOR_ALLOC_ARR(int8_t, msg_in->state_buf_size);
-        memcpy(msg->state_buf, msg_in->state_buf, msg->state_buf_size);
+        msg->state_buf = NULL;
+        MEMCPY_ARR(msg, state_buf, msg_in->state_buf, msg_in->state_buf_size);
     }
 
     if (msg_in->state_private_id != NULL){
-        msg->state_private_id = BOR_ALLOC_ARR(int32_t, msg_in->state_private_id_size);
-        memcpy(msg->state_private_id, msg_in->state_private_id,
-               sizeof(int32_t) * msg->state_private_id_size);
+        msg->state_private_id = NULL;
+        MEMCPY_ARR(msg, state_private_id, msg_in->state_private_id,
+                   msg_in->state_private_id_size);
     }
 
     if (msg_in->op != NULL){
         msg->op = BOR_ALLOC_ARR(plan_ma_msg_op_t, msg_in->op_size);
-        for (i = 0; i < msg->op_size; ++i){
+        for (i = 0; i < msg->op_size; ++i)
             planMAMsgOpCopy(msg->op + i, msg_in->op + i);
-        }
     }
-    // TODO
+
+    if (msg_in->heur_requested_agent != NULL){
+        msg->heur_requested_agent = NULL;
+        MEMCPY_ARR(msg, heur_requested_agent, msg_in->heur_requested_agent,
+                   msg_in->heur_requested_agent_size);
+    }
+
     planMAMsgDTGReqCopy(&msg->dtg_req, &msg_in->dtg_req);
 
     return msg;
@@ -464,6 +471,52 @@ void planMAMsgOpSetName(plan_ma_msg_op_t *op, const char *name)
 }
 
 
+void planMAMsgSetDTGReq(plan_ma_msg_t *msg, int var, int from, int to)
+{
+    plan_ma_msg_dtg_req_t *dr;
+
+    msg->header |= M_dtg_req;
+    dr = &msg->dtg_req;
+    SET_VAL(dr, var, var);
+    SET_VAL(dr, val_from, from);
+    SET_VAL(dr, val_to, to);
+}
+
+void planMAMsgAddDTGReqReachable(plan_ma_msg_t *msg, int val)
+{
+    plan_ma_msg_dtg_req_t *dr;
+    msg->header |= M_dtg_req;
+    dr = &msg->dtg_req;
+    ADD_VAL(dr, reachable, val);
+}
+
+void planMAMsgDTGReq(const plan_ma_msg_t *msg, int *var, int *from, int *to)
+{
+    const plan_ma_msg_dtg_req_t *req;
+    req = &msg->dtg_req;
+    *var = req->var;
+    *from = req->val_from;
+    *to = req->val_to;
+}
+
+int planMAMsgDTGReqReachableSize(const plan_ma_msg_t *msg)
+{
+    return msg->dtg_req.reachable_size;
+}
+
+int planMAMsgDTGReqReachable(const plan_ma_msg_t *msg, int i)
+{
+    return msg->dtg_req.reachable[i];
+}
+
+void planMAMsgCopyDTGReqReachable(plan_ma_msg_t *dst, const plan_ma_msg_t *src)
+{
+    plan_ma_msg_dtg_req_t *dreq = &dst->dtg_req;
+    const plan_ma_msg_dtg_req_t *sreq = &src->dtg_req;
+    MEMCPY_ARR(dreq, reachable, sreq->reachable, sreq->reachable_size);
+}
+
+
 
 
 
@@ -522,63 +575,6 @@ plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
     planMAMsgSetSnapshotType(msg, planMAMsgSnapshotType(sshot_init));
     return msg;
 }
-
-void planMAMsgSnapshotSetAck(plan_ma_msg_t *msg, int ack)
-{
-    SET_VAL(msg, snapshot_ack, ack);
-}
-
-
-
-
-
-
-
-void planMAMsgSetDTGReq(plan_ma_msg_t *msg, int var, int from, int to)
-{
-    plan_ma_msg_dtg_req_t *dr;
-
-    msg->header |= M_dtg_req;
-    dr = &msg->dtg_req;
-    SET_VAL(dr, var, var);
-    SET_VAL(dr, val_from, from);
-    SET_VAL(dr, val_to, to);
-}
-
-void planMAMsgAddDTGReqReachable(plan_ma_msg_t *msg, int val)
-{
-    plan_ma_msg_dtg_req_t *dr;
-    msg->header |= M_dtg_req;
-    dr = &msg->dtg_req;
-    ADD_VAL(dr, reachable, val);
-}
-
-void planMAMsgDTGReq(const plan_ma_msg_t *msg, int *var, int *from, int *to)
-{
-    const plan_ma_msg_dtg_req_t *req;
-    req = &msg->dtg_req;
-    *var = req->var;
-    *from = req->val_from;
-    *to = req->val_to;
-}
-
-int planMAMsgDTGReqReachableSize(const plan_ma_msg_t *msg)
-{
-    return msg->dtg_req.reachable_size;
-}
-
-int planMAMsgDTGReqReachable(const plan_ma_msg_t *msg, int i)
-{
-    return msg->dtg_req.reachable[i];
-}
-
-void planMAMsgCopyDTGReqReachable(plan_ma_msg_t *dst, const plan_ma_msg_t *src)
-{
-    plan_ma_msg_dtg_req_t *dreq = &dst->dtg_req;
-    const plan_ma_msg_dtg_req_t *sreq = &src->dtg_req;
-    MEMCPY_ARR(dreq, reachable, sreq->reachable, sreq->reachable_size);
-}
-
 
 
 

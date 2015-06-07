@@ -90,17 +90,9 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_UPDATE  1
 #define PLAN_MA_MSG_HEUR_REQUEST 2
 
-struct _plan_ma_msg_t {
-    char _; /*!< This is just placeholder */
-};
+typedef struct _plan_ma_msg_op_t plan_ma_msg_op_t;
+typedef struct _plan_ma_msg_dtg_req_t plan_ma_msg_dtg_req_t;
 typedef struct _plan_ma_msg_t plan_ma_msg_t;
-
-/**
- * Frees global memory allocated by google protobuffers.
- * This is just wrapper for
- *      google::protobuf::ShutdownProtobufLibrary().
- */
-void planShutdownProtobuf(void);
 
 /**
  * Creates a new message of specified type and subtype.

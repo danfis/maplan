@@ -1,5 +1,5 @@
 #include <cu/cu.h>
-#include "plan/ma_msg.h"
+#include "plan/problem.h"
 #include "load-from-file.h"
 #include "state.h"
 #include "succgen.h"

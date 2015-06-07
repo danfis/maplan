@@ -29,6 +29,11 @@
 #include "problemdef.pb.h"
 #include "fact_id.h"
 
+void planShutdownProtobuf(void)
+{
+    google::protobuf::ShutdownProtobufLibrary();
+}
+
 /** Forward declaration */
 class AgentVarVals;
 

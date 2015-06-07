@@ -192,15 +192,33 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
     } while (0)
 
 
+#define GETTER(Name, member, type) \
+    type planMAMsg##Name(const plan_ma_msg_t *msg) \
+    { \
+        return msg->member; \
+    }
+
+#define SETTER(Name, member, type) \
+    void planMAMsgSet##Name(plan_ma_msg_t *msg, type val) \
+    { \
+        SET_VAL(msg, member, val); \
+    }
+
+#define GETTER_SETTER(Name, member, type) \
+    GETTER(Name, member, type) \
+    SETTER(Name, member, type)
+
+
 static int snapshot_token_counter = 0;
 
-void planMAMsgOpFree(plan_ma_msg_op_t *op)
+static void planMAMsgOpFree(plan_ma_msg_op_t *op)
 {
     if (op->name != NULL)
         BOR_FREE(op->name);
 }
 
-void planMAMsgOpCopy(plan_ma_msg_op_t *dst, const plan_ma_msg_op_t *src)
+static void planMAMsgOpCopy(plan_ma_msg_op_t *dst,
+                            const plan_ma_msg_op_t *src)
 {
     *dst = *src;
     if (src->name != NULL){
@@ -209,14 +227,14 @@ void planMAMsgOpCopy(plan_ma_msg_op_t *dst, const plan_ma_msg_op_t *src)
     }
 }
 
-void planMAMsgDTGReqFree(plan_ma_msg_dtg_req_t *dr)
+static void planMAMsgDTGReqFree(plan_ma_msg_dtg_req_t *dr)
 {
     if (dr->reachable != NULL)
         BOR_FREE(dr->reachable);
 }
 
-void planMAMsgDTGReqCopy(plan_ma_msg_dtg_req_t *dst,
-                         const plan_ma_msg_dtg_req_t *src)
+static void planMAMsgDTGReqCopy(plan_ma_msg_dtg_req_t *dst,
+                                const plan_ma_msg_dtg_req_t *src)
 {
     *dst = *src;
     if (src->reachable != NULL){
@@ -227,12 +245,10 @@ void planMAMsgDTGReqCopy(plan_ma_msg_dtg_req_t *dst,
 }
 
 
-plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
+void planMAMsgInit(plan_ma_msg_t *msg, int type, int subtype, int agent_id)
 {
-    plan_ma_msg_t *msg;
     int32_t stype;
 
-    msg = BOR_ALLOC(plan_ma_msg_t);
     bzero(msg, sizeof(*msg));
     stype = (subtype << 4) | type;
     SET_VAL(msg, type, stype);
@@ -248,11 +264,10 @@ plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
         token = token | (uint32_t)agent_id;
         SET_VAL(msg, snapshot_token, token);
     }
-
-    return msg;
 }
 
-void planMAMsgDel(plan_ma_msg_t *msg)
+
+void planMAMsgFree(plan_ma_msg_t *msg)
 {
     int i;
 
@@ -268,6 +283,19 @@ void planMAMsgDel(plan_ma_msg_t *msg)
     if (msg->heur_requested_agent != NULL)
         BOR_FREE(msg->heur_requested_agent);
     planMAMsgDTGReqFree(&msg->dtg_req);
+}
+
+plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
+{
+    plan_ma_msg_t *msg;
+    msg = BOR_ALLOC(plan_ma_msg_t);
+    planMAMsgInit(msg, type, subtype, agent_id);
+    return msg;
+}
+
+void planMAMsgDel(plan_ma_msg_t *msg)
+{
+    planMAMsgFree(msg);
     BOR_FREE(msg);
 }
 
@@ -296,6 +324,7 @@ plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg_in)
             planMAMsgOpCopy(msg->op + i, msg_in->op + i);
         }
     }
+    // TODO
     planMAMsgDTGReqCopy(&msg->dtg_req, &msg_in->dtg_req);
 
     return msg;
@@ -311,63 +340,36 @@ int planMAMsgSubType(const plan_ma_msg_t *msg)
     return msg->type >> 4;
 }
 
-int planMAMsgAgent(const plan_ma_msg_t *msg)
+int planMAMsgHeurType(const plan_ma_msg_t *msg)
 {
-    return msg->agent_id;
+    int type = planMAMsgType(msg);
+    int subtype = planMAMsgSubType(msg);
+
+    if (type != PLAN_MA_MSG_HEUR)
+        return PLAN_MA_MSG_HEUR_NONE;
+
+    if ((subtype & 0x00ff) == subtype)
+        return PLAN_MA_MSG_HEUR_REQUEST;
+
+    if ((subtype & 0xff00) == subtype)
+        return PLAN_MA_MSG_HEUR_UPDATE;
+
+    return PLAN_MA_MSG_HEUR_NONE;
 }
 
-void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size)
-{
-    int siz;
-    void *buf;
-    buf = planMsgBufEncode(msg, &schema_msg, &siz);
-    *size = siz;
-    return buf;
-}
-
-plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
-{
-    plan_ma_msg_t *msg;
-
-    msg = BOR_ALLOC(plan_ma_msg_t);
-    bzero(msg, sizeof(plan_ma_msg_t));
-    planMsgBufDecode(msg, &schema_msg, buf);
-    return msg;
-}
+GETTER(Agent, agent_id, int)
+GETTER_SETTER(TerminateAgent, terminate_agent_id, int)
 
 void planMAMsgSetStateBuf(plan_ma_msg_t *msg, const void *buf, size_t bufsize)
 {
     MEMCPY_ARR(msg, state_buf, buf, bufsize);
 }
+GETTER(StateBuf, state_buf, const void *)
+GETTER(StateBufSize, state_buf_size, int)
 
 void planMAMsgSetStatePrivateIds(plan_ma_msg_t *msg, const int *ids, int size)
 {
     CPY_ARR(msg, state_private_id, ids, size);
-}
-
-void planMAMsgSetStateId(plan_ma_msg_t *msg, plan_state_id_t state_id)
-{
-    SET_VAL(msg, state_id, state_id);
-}
-
-void planMAMsgSetStateCost(plan_ma_msg_t *msg, int cost)
-{
-    SET_VAL(msg, state_cost, cost);
-}
-
-void planMAMsgSetStateHeur(plan_ma_msg_t *msg, int heur)
-{
-    SET_VAL(msg, state_heur, heur);
-}
-
-const void *planMAMsgStateBuf(const plan_ma_msg_t *msg)
-{
-    return msg->state_buf;
-}
-
-int planMAMsgStateBufSize(const plan_ma_msg_t *msg)
-{
-    return msg->state_buf_size;
 }
 
 int planMAMsgStatePrivateIdsSize(const plan_ma_msg_t *msg)
@@ -382,41 +384,37 @@ void planMAMsgStatePrivateIds(const plan_ma_msg_t *msg, int *ids)
         ids[i] = msg->state_private_id[i];
 }
 
-int planMAMsgStateId(const plan_ma_msg_t *msg)
+GETTER_SETTER(StateId, state_id, plan_state_id_t)
+GETTER_SETTER(StateCost, state_cost, int)
+GETTER_SETTER(StateHeur, state_heur, int)
+GETTER_SETTER(InitAgent, initiator_agent_id, int)
+GETTER_SETTER(SnapshotType, snapshot_type, int)
+GETTER(SnapshotToken, snapshot_token, long)
+GETTER_SETTER(SnapshotAck, snapshot_ack, int)
+GETTER_SETTER(MinCutCost, min_cut_cost, plan_cost_t)
+GETTER_SETTER(HeurToken, heur_token, int)
+
+void planMAMsgAddHeurRequestedAgent(plan_ma_msg_t *msg, int agent_id)
 {
-    return msg->state_id;
+    ADD_VAL(msg, heur_requested_agent, agent_id);
 }
 
-int planMAMsgStateCost(const plan_ma_msg_t *msg)
+GETTER(HeurRequestedAgentSize, heur_requested_agent_size, int)
+
+int planMAMsgHeurRequestedAgent(const plan_ma_msg_t *msg, int i)
 {
-    return msg->state_cost;
+    return msg->heur_requested_agent[i];
 }
 
-int planMAMsgStateHeur(const plan_ma_msg_t *msg)
-{
-    return msg->state_heur;
-}
+GETTER_SETTER(HeurCost, heur_cost, int)
+GETTER_SETTER(SearchRes, search_res, int)
 
 
-void planMAMsgTerminateSetAgent(plan_ma_msg_t *msg, int agent_id)
-{
-    SET_VAL(msg, terminate_agent_id, agent_id);
-}
 
-int planMAMsgTerminateAgent(const plan_ma_msg_t *msg)
-{
-    return msg->terminate_agent_id;
-}
 
-void planMAMsgSetSearchRes(plan_ma_msg_t *msg, int res)
-{
-    SET_VAL(msg, search_res, res);
-}
 
-int planMAMsgSearchRes(const plan_ma_msg_t *msg)
-{
-    return msg->search_res;
-}
+
+
 
 
 void planMAMsgTracePathSetStateId(plan_ma_msg_t *msg, int state_id)
@@ -479,20 +477,7 @@ int planMAMsgTracePathInitAgent(const plan_ma_msg_t *msg)
 }
 
 
-void planMAMsgSnapshotSetType(plan_ma_msg_t *msg, int type)
-{
-    SET_VAL(msg, snapshot_type, type);
-}
 
-int planMAMsgSnapshotType(const plan_ma_msg_t *msg)
-{
-    return msg->snapshot_type;
-}
-
-long planMAMsgSnapshotToken(const plan_ma_msg_t *msg)
-{
-    return msg->snapshot_token;
-}
 
 plan_ma_msg_t *planMAMsgSnapshotNewMark(const plan_ma_msg_t *snapshot_init,
                                         int agent_id)
@@ -500,7 +485,7 @@ plan_ma_msg_t *planMAMsgSnapshotNewMark(const plan_ma_msg_t *snapshot_init,
     plan_ma_msg_t *msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT,
                                       PLAN_MA_MSG_SNAPSHOT_MARK, agent_id);
     SET_VAL(msg, snapshot_token, planMAMsgSnapshotToken(snapshot_init));
-    planMAMsgSnapshotSetType(msg, planMAMsgSnapshotType(snapshot_init));
+    planMAMsgSetSnapshotType(msg, planMAMsgSnapshotType(snapshot_init));
     return msg;
 }
 
@@ -510,7 +495,7 @@ plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
     plan_ma_msg_t *msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT,
                                       PLAN_MA_MSG_SNAPSHOT_RESPONSE, agent_id);
     SET_VAL(msg, snapshot_token, planMAMsgSnapshotToken(sshot_init));
-    planMAMsgSnapshotSetType(msg, planMAMsgSnapshotType(sshot_init));
+    planMAMsgSetSnapshotType(msg, planMAMsgSnapshotType(sshot_init));
     return msg;
 }
 
@@ -519,28 +504,7 @@ void planMAMsgSnapshotSetAck(plan_ma_msg_t *msg, int ack)
     SET_VAL(msg, snapshot_ack, ack);
 }
 
-int planMAMsgSnapshotAck(const plan_ma_msg_t *msg)
-{
-    return msg->snapshot_ack;
-}
 
-
-int planMAMsgHeurType(const plan_ma_msg_t *msg)
-{
-    int type = planMAMsgType(msg);
-    int subtype = planMAMsgSubType(msg);
-
-    if (type != PLAN_MA_MSG_HEUR)
-        return PLAN_MA_MSG_HEUR_NONE;
-
-    if ((subtype & 0x00ff) == subtype)
-        return PLAN_MA_MSG_HEUR_REQUEST;
-
-    if ((subtype & 0xff00) == subtype)
-        return PLAN_MA_MSG_HEUR_UPDATE;
-
-    return PLAN_MA_MSG_HEUR_NONE;
-}
 
 
 void planMAMsgSetGoalOpId(plan_ma_msg_t *msg, int goal_op_id)
@@ -595,50 +559,8 @@ int planMAMsgOp(const plan_ma_msg_t *msg, int i,
     return op->op_id;
 }
 
-void planMAMsgSetMinCutCost(plan_ma_msg_t *msg, plan_cost_t cost)
-{
-    SET_VAL(msg, min_cut_cost, cost);
-}
 
-plan_cost_t planMAMsgMinCutCost(const plan_ma_msg_t *msg)
-{
-    return msg->min_cut_cost;
-}
 
-void planMAMsgSetHeurToken(plan_ma_msg_t *msg, int token)
-{
-    SET_VAL(msg, heur_token, token);
-}
-
-int planMAMsgHeurToken(const plan_ma_msg_t *msg)
-{
-    return msg->heur_token;
-}
-
-void planMAMsgAddHeurRequestedAgent(plan_ma_msg_t *msg, int agent_id)
-{
-    ADD_VAL(msg, heur_requested_agent, agent_id);
-}
-
-int planMAMsgHeurRequestedAgentSize(const plan_ma_msg_t *msg)
-{
-    return msg->heur_requested_agent_size;
-}
-
-int planMAMsgHeurRequestedAgent(const plan_ma_msg_t *msg, int i)
-{
-    return msg->heur_requested_agent[i];
-}
-
-void planMAMsgSetHeurCost(plan_ma_msg_t *msg, int cost)
-{
-    SET_VAL(msg, heur_cost, cost);
-}
-
-int planMAMsgHeurCost(const plan_ma_msg_t *msg)
-{
-    return msg->heur_cost;
-}
 
 void planMAMsgSetDTGReq(plan_ma_msg_t *msg, int var, int from, int to)
 {
@@ -685,12 +607,24 @@ void planMAMsgCopyDTGReqReachable(plan_ma_msg_t *dst, const plan_ma_msg_t *src)
     MEMCPY_ARR(dreq, reachable, sreq->reachable, sreq->reachable_size);
 }
 
-void planMAMsgSetInitAgent(plan_ma_msg_t *msg, int agent_id)
+
+
+
+void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size)
 {
-    SET_VAL(msg, initiator_agent_id, agent_id);
+    int siz;
+    void *buf;
+    buf = planMsgBufEncode(msg, &schema_msg, &siz);
+    *size = siz;
+    return buf;
 }
 
-int planMAMsgInitAgent(const plan_ma_msg_t *msg)
+plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
 {
-    return msg->initiator_agent_id;
+    plan_ma_msg_t *msg;
+
+    msg = BOR_ALLOC(plan_ma_msg_t);
+    bzero(msg, sizeof(plan_ma_msg_t));
+    planMsgBufDecode(msg, &schema_msg, buf);
+    return msg;
 }

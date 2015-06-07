@@ -524,7 +524,7 @@ static void terminate(plan_ma_search_t *ma)
     msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
                        PLAN_MA_MSG_TERMINATE_REQUEST,
                        ma->comm->node_id);
-    planMAMsgTerminateSetAgent(msg, ma->comm->node_id);
+    planMAMsgSetTerminateAgent(msg, ma->comm->node_id);
     planMAMsgSetSearchRes(msg, ma->res);
     planMAMsgTracePathAddPath(msg, &ma->path);
     planMACommSendInRing(ma->comm, msg);
@@ -711,7 +711,7 @@ static void solutionVerify(plan_ma_search_t *ma, plan_state_id_t goal)
     // Create snapshot-init message
     msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT, PLAN_MA_MSG_SNAPSHOT_INIT,
                        ma->comm->node_id);
-    planMAMsgSnapshotSetType(msg, PLAN_MA_MSG_SOLUTION_VERIFICATION);
+    planMAMsgSetSnapshotType(msg, PLAN_MA_MSG_SOLUTION_VERIFICATION);
     publicStateSet2(ma->ma_state, msg, ma->search->state_space, goal);
 
     // Create snapshot object and register it
@@ -868,7 +868,7 @@ static int solutionVerifyMarkFinalize(plan_ma_snapshot_t *s)
 
     // Construct response message and send it to the initiator
     msg = planMAMsgSnapshotNewResponse(ver->init_msg, ver->ma->comm->node_id);
-    planMAMsgSnapshotSetAck(msg, ack);
+    planMAMsgSetSnapshotAck(msg, ack);
     planMACommSendToNode(ver->ma->comm, planMAMsgAgent(ver->init_msg), msg);
     planMAMsgDel(msg);
 
@@ -916,7 +916,7 @@ static void deadEndVerify(plan_ma_search_t *ma)
     // Create snapshot-init message
     msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT, PLAN_MA_MSG_SNAPSHOT_INIT,
                        ma->comm->node_id);
-    planMAMsgSnapshotSetType(msg, PLAN_MA_MSG_DEAD_END_VERIFICATION);
+    planMAMsgSetSnapshotType(msg, PLAN_MA_MSG_DEAD_END_VERIFICATION);
 
     // Create snapshot object and register it
     ver = deadEndVerifyNew(ma, msg, 1);
@@ -998,7 +998,7 @@ static int deadEndVerifyMarkFinalize(plan_ma_snapshot_t *s)
     plan_ma_msg_t *msg;
 
     msg = planMAMsgSnapshotNewResponse(ver->init_msg, ver->ma->comm->node_id);
-    planMAMsgSnapshotSetAck(msg, ver->ack);
+    planMAMsgSetSnapshotAck(msg, ver->ack);
     planMACommSendToNode(ver->ma->comm, planMAMsgAgent(ver->init_msg), msg);
     planMAMsgDel(msg);
 

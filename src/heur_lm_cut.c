@@ -77,7 +77,7 @@ static void planHeurLMCutStateInc(plan_heur_t *_heur,
 static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
                              const plan_op_t *op, int op_size,
-                             int inc)
+                             int inc, unsigned cache_flags)
 {
     plan_heur_lm_cut_t *heur;
 
@@ -110,7 +110,7 @@ static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
         planOpIdTrInit(&heur->inc_local.op_id_tr, op, op_size);
     }else if (inc == 2){
         heur->inc_cache.enabled = 1;
-        heur->inc_cache.ldm_cache = planLandmarkCacheNew();
+        heur->inc_cache.ldm_cache = planLandmarkCacheNew(cache_flags);
         planOpIdTrInit(&heur->inc_cache.op_id_tr, op, op_size);
     }
 
@@ -121,21 +121,22 @@ plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
                               const plan_part_state_t *goal,
                               const plan_op_t *op, int op_size)
 {
-    return lmCutNew(var, var_size, goal, op, op_size, 0);
+    return lmCutNew(var, var_size, goal, op, op_size, 0, 0);
 }
 
 plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
                                       const plan_part_state_t *goal,
                                       const plan_op_t *op, int op_size)
 {
-    return lmCutNew(var, var_size, goal, op, op_size, 1);
+    return lmCutNew(var, var_size, goal, op, op_size, 1, 0);
 }
 
 plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
                                       const plan_part_state_t *goal,
-                                      const plan_op_t *op, int op_size)
+                                      const plan_op_t *op, int op_size,
+                                      unsigned cache_flags)
 {
-    return lmCutNew(var, var_size, goal, op, op_size, 2);
+    return lmCutNew(var, var_size, goal, op, op_size, 2, cache_flags);
 }
 
 static void planHeurLMCutDel(plan_heur_t *_heur)

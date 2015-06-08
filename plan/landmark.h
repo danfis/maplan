@@ -84,6 +84,8 @@ void planLandmarkSetAdd(plan_landmark_set_t *ldms, int size, int *op_id);
 struct _plan_landmark_cache_t {
     bor_htable_t *ldm_table; /*!< Hash table of landmarks */
     bor_splaytree_int_t *ldms; /*!< Landmark sets */
+    bor_list_t prune; /*!< List of landmarks ready to be pruned */
+    int prune_enable; /*!< True if cache should be pruned */
 
     plan_landmark_set_t ldms_out; /*!< Set used for *Get() method */
     int ldms_alloc; /*!< Size of allocated space in .ldms_out */
@@ -91,9 +93,14 @@ struct _plan_landmark_cache_t {
 typedef struct _plan_landmark_cache_t plan_landmark_cache_t;
 
 /**
+ * Flag that enables pruning of landmark cache.
+ */
+#define PLAN_LANDMARK_CACHE_PRUNE 0x1
+
+/**
  * Creates an empty landmark cache.
  */
-plan_landmark_cache_t *planLandmarkCacheNew(void);
+plan_landmark_cache_t *planLandmarkCacheNew(unsigned flags);
 
 /**
  * Frees allocated resouces.
@@ -118,6 +125,15 @@ int planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
  */
 const plan_landmark_set_t *planLandmarkCacheGet(plan_landmark_cache_t *ldmc,
                                                 int ldmid);
+
+/**
+ * Prune old used landmarks from cache.
+ * Returns number of deleted landmarks.
+ * Note 1: Pruning must be enabled (see PLAN_LANDMARK_CACHE_PRUNE).
+ * Note 2: Landmarks are automatically pruned whenever a new landmark is
+ * added, so usualy there is no need to call this function directly.
+ */
+int planLandmarkPrune(plan_landmark_cache_t *ldmc);
 
 #ifdef __cplusplus
 } /* extern "C" */

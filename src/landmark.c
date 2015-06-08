@@ -35,6 +35,7 @@ struct _ldm_set_t {
     int size;
     ldm_t **ldm_pts;
     bor_splaytree_int_node_t tree; /*!< Connection to the list of landmarks */
+    bor_list_t prune; /*!< Connection to list of prune-ready landmarks */
 };
 typedef struct _ldm_set_t ldm_set_t;
 
@@ -113,13 +114,17 @@ void planLandmarkSetAdd(plan_landmark_set_t *ldms, int size, int *op_id)
 
 
 
-plan_landmark_cache_t *planLandmarkCacheNew(void)
+plan_landmark_cache_t *planLandmarkCacheNew(unsigned flags)
 {
     plan_landmark_cache_t *ldmc;
 
     ldmc = BOR_ALLOC(plan_landmark_cache_t);
     ldmc->ldm_table = borHTableNew(ldmHash, ldmEq, NULL);
     ldmc->ldms = borSplayTreeIntNew();
+    borListInit(&ldmc->prune);
+    ldmc->prune_enable = 0;
+    if (flags & PLAN_LANDMARK_CACHE_PRUNE)
+        ldmc->prune_enable = 1;
 
     planLandmarkSetInit(&ldmc->ldms_out);
     ldmc->ldms_alloc = 0;
@@ -134,7 +139,6 @@ void planLandmarkCacheDel(plan_landmark_cache_t *ldmc)
 
     BOR_SPLAYTREE_INT_FOR_EACH_SAFE(ldmc->ldms, node, tmp){
         ldms = bor_container_of(node, ldm_set_t, tree);
-        borSplayTreeIntRemove(ldmc->ldms, node);
         ldmSetDel(ldmc, ldms);
     }
 
@@ -152,6 +156,11 @@ int planLandmarkCacheAdd(plan_landmark_cache_t *ldmc,
     ldm_set_t *ldms;
     ldm_t *ldm;
     int i;
+
+    // Prune old landmarks if pruning is enable
+    if (ldmc->prune_enable){
+        planLandmarkPrune(ldmc);
+    }
 
     ldms = ldmSetNew(ldms_in);
     ins = borSplayTreeIntInsert(ldmc->ldms, id, &ldms->tree);
@@ -189,10 +198,42 @@ const plan_landmark_set_t *planLandmarkCacheGet(plan_landmark_cache_t *ldmc,
                                         ldmc->ldms_alloc);
     }
 
+    // If prunig is enabled and the landmark was not marked for pruning
+    // yet, add the landmark to the list of prune-ready landmarks.
+    if (ldmc->prune_enable && borListEmpty(&ldms->prune)){
+        borListAppend(&ldmc->prune, &ldms->prune);
+    }
+
     out->size = ldms->size;
     for (i = 0; i < ldms->size; ++i)
         out->landmark[i] = ldms->ldm_pts[i]->ldm;
     return out;
+}
+
+int planLandmarkPrune(plan_landmark_cache_t *ldmc)
+{
+    int cnt = 0;
+    bor_list_t *item;
+    ldm_set_t *ldms;
+
+    while (!borListEmpty(&ldmc->prune)){
+        // Get next landmark in set
+        item = borListNext(&ldmc->prune);
+
+        // Leave one landmark in the list under all circumstances because
+        // the last one will be probably needed in near future.
+        if (borListNext(item) == &ldmc->prune)
+            break;
+
+        // Delete landmark from the list
+        borListDel(item);
+
+        // Delete landmark
+        ldms = BOR_LIST_ENTRY(item, ldm_set_t, prune);
+        ldmSetDel(ldmc, ldms);
+    }
+
+    return cnt;
 }
 
 static bor_htable_key_t ldmHash(const bor_list_t *k, void *ud)
@@ -218,6 +259,7 @@ static ldm_set_t *ldmSetNew(plan_landmark_set_t *l)
     ldms = BOR_ALLOC(ldm_set_t);
     ldms->size = l->size;
     ldms->ldm_pts = BOR_ALLOC_ARR(ldm_t *, ldms->size);
+    borListInit(&ldms->prune);
     return ldms;
 }
 
@@ -231,6 +273,7 @@ static void ldmSetDel(plan_landmark_cache_t *ldmc, ldm_set_t *ldms)
 {
     int i;
 
+    borSplayTreeIntRemove(ldmc->ldms, &ldms->tree);
     for (i = 0; i < ldms->size; ++i){
         if (--ldms->ldm_pts[i]->refcount == 0){
             borHTableErase(ldmc->ldm_table, &ldms->ldm_pts[i]->htable);

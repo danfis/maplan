@@ -550,7 +550,7 @@ static plan_heur_t *_heurNew(const options_t *o,
                              const plan_op_t *op, int op_size)
 {
     plan_heur_t *heur = NULL;
-    int flags = 0;
+    unsigned flags = 0;
 
     if (strcmp(name, "goalcount") == 0){
         heur = planHeurGoalCountNew(prob->goal);
@@ -573,8 +573,10 @@ static plan_heur_t *_heurNew(const options_t *o,
         heur = planHeurLMCutIncLocalNew(prob->var, prob->var_size,
                                         prob->goal, op, op_size);
     }else if (strcmp(name, "lm-cut-inc-cache") == 0){
+        if (optionsHeurOpt(o, "prune"))
+            flags |= PLAN_LANDMARK_CACHE_PRUNE;
         heur = planHeurLMCutIncCacheNew(prob->var, prob->var_size,
-                                        prob->goal, op, op_size);
+                                        prob->goal, op, op_size, flags);
     }else if (strcmp(name, "flow") == 0){
         if (optionsHeurOpt(o, "ilp"))
             flags |= PLAN_HEUR_FLOW_ILP;

@@ -32,7 +32,7 @@ TEST(testLandmarkCache)
     plan_landmark_set_t ldms;
     const plan_landmark_set_t *l;
 
-    ldmc = planLandmarkCacheNew();
+    ldmc = planLandmarkCacheNew(0);
 
     planLandmarkSetInit(&ldms);
     planLandmarkSetAdd(&ldms, 4, ldm0);

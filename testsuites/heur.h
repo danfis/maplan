@@ -9,6 +9,7 @@ TEST(testHeurRelaxFF);
 TEST(testHeurLMCut);
 TEST(testHeurLMCutIncLocal);
 TEST(testHeurLMCutIncCache);
+TEST(testHeurLMCutIncCachePrune);
 TEST(testHeurDTG);
 TEST(protobufTearDown);
 
@@ -21,6 +22,7 @@ TEST_SUITE(TSHeur) {
     TEST_ADD(testHeurLMCut),
     TEST_ADD(testHeurLMCutIncLocal),
     TEST_ADD(testHeurLMCutIncCache),
+    TEST_ADD(testHeurLMCutIncCachePrune),
     TEST_ADD(testHeurDTG),
     TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE

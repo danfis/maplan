@@ -220,10 +220,13 @@ plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
 
 /**
  * Incremental LM-Cut, the version with cached landmarks.
+ * Use PLAN_LANDMARK_CACHE_* flags if you want to change the default
+ * behaviour of the landmark cache.
  */
 plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
                                       const plan_part_state_t *goal,
-                                      const plan_op_t *op, int op_size);
+                                      const plan_op_t *op, int op_size,
+                                      unsigned cache_flags);
 
 /**
  * Domain transition graph based heuristic.

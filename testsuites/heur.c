@@ -47,7 +47,14 @@ static plan_heur_t *lmCutIncLocalNew(plan_problem_t *p)
 static plan_heur_t *lmCutIncCacheNew(plan_problem_t *p)
 {
     return planHeurLMCutIncCacheNew(p->var, p->var_size, p->goal,
-                                    p->op, p->op_size);
+                                    p->op, p->op_size, 0);
+}
+
+static plan_heur_t *lmCutIncCachePruneNew(plan_problem_t *p)
+{
+    return planHeurLMCutIncCacheNew(p->var, p->var_size, p->goal,
+                                    p->op, p->op_size,
+                                    PLAN_LANDMARK_CACHE_PRUNE);
 }
 
 static plan_heur_t *dtgNew(plan_problem_t *p)
@@ -440,6 +447,22 @@ TEST(testHeurLMCutIncCache)
                  lmCutIncCacheNew, 100);
     runAStarTest("LM-Cut-inc-cache", "proto/sokoban-p01.proto",
                  lmCutIncCacheNew, 100);
+}
+
+TEST(testHeurLMCutIncCachePrune)
+{
+    runAStarTest("LM-Cut-inc-cache-prune", "proto/depot-pfile1.proto",
+                 lmCutIncCachePruneNew, 100);
+    runAStarTest("LM-Cut-inc-cache-prune", "proto/depot-pfile5.proto",
+                 lmCutIncCachePruneNew, 100);
+    runAStarTest("LM-Cut-inc-cache-prune", "proto/rovers-p03.proto",
+                 lmCutIncCachePruneNew, 100);
+    runAStarTest("LM-Cut-inc-cache-prune", "proto/rovers-p15.proto",
+                 lmCutIncCachePruneNew, 100);
+    runAStarTest("LM-Cut-inc-cache-prune", "proto/CityCar-p3-2-2-0-1.proto",
+                 lmCutIncCachePruneNew, 100);
+    runAStarTest("LM-Cut-inc-cache-prune", "proto/sokoban-p01.proto",
+                 lmCutIncCachePruneNew, 100);
 }
 
 TEST(testHeurDTG)

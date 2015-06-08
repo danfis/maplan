@@ -524,9 +524,9 @@ static void terminate(plan_ma_search_t *ma)
     msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
                        PLAN_MA_MSG_TERMINATE_REQUEST,
                        ma->comm->node_id);
-    planMAMsgTerminateSetAgent(msg, ma->comm->node_id);
+    planMAMsgSetTerminateAgent(msg, ma->comm->node_id);
     planMAMsgSetSearchRes(msg, ma->res);
-    planMAMsgTracePathAddPath(msg, &ma->path);
+    planMAMsgTracePathAppendPath(msg, &ma->path);
     planMACommSendInRing(ma->comm, msg);
     planMAMsgDel(msg);
 
@@ -566,7 +566,7 @@ static int terminateMsg(plan_ma_search_t *ma_search,
                                     PLAN_MA_MSG_TERMINATE_FINAL,
                                     ma_search->comm->node_id);
             planMAMsgSetSearchRes(term_msg, ma_search->res);
-            planMAMsgTracePathAddPath(term_msg, &ma_search->path);
+            planMAMsgTracePathAppendPath(term_msg, &ma_search->path);
             planMACommSendToAll(ma_search->comm, term_msg);
             planMAMsgDel(term_msg);
             return -1;
@@ -629,8 +629,8 @@ static int tracePathInit(const plan_search_t *search,
     }
 
     msg = planMAMsgNew(PLAN_MA_MSG_TRACE_PATH, 0, comm->node_id);
-    planMAMsgTracePathAddPath(msg, &path);
-    planMAMsgTracePathSetStateId(msg, pub_state->state_id);
+    planMAMsgTracePathAppendPath(msg, &path);
+    planMAMsgSetStateId(msg, pub_state->state_id);
     planMACommSendToNode(comm, pub_state->agent_id, msg);
     planMAMsgDel(msg);
 
@@ -651,7 +651,7 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
 
     // Get state id from which to trace path. If this agent was the
     // initiator (thus state_id == -1) return extracted path.
-    state_id = planMAMsgTracePathStateId(msg);
+    state_id = planMAMsgStateId(msg);
     if (state_id == -1){
         planMAMsgTracePathExtractPath(msg, path_out);
         return 0;
@@ -666,13 +666,13 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
     }
 
     // Add the partial path to the message
-    planMAMsgTracePathAddPath(msg, &path);
+    planMAMsgTracePathAppendPath(msg, &path);
     planPathFree(&path);
 
     // If the path was traced to the initial state check whether this agent
     // is the initiator.
     if (state_id == search->initial_state){
-        init_agent = planMAMsgTracePathInitAgent(msg);
+        init_agent = planMAMsgInitAgent(msg);
 
         if (init_agent == comm->node_id){
             // If the current agent is the initiator, extract path and
@@ -682,7 +682,7 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
 
         }else{
             // Send the message to the initiator
-            planMAMsgTracePathSetStateId(msg, -1);
+            planMAMsgSetStateId(msg, -1);
             planMACommSendToNode(comm, init_agent, msg);
             return 1;
         }
@@ -696,7 +696,7 @@ static int tracePathProcessMsg(plan_ma_msg_t *msg,
     }
 
     // Send the message to the owner of the public state
-    planMAMsgTracePathSetStateId(msg, pub_state->state_id);
+    planMAMsgSetStateId(msg, pub_state->state_id);
     planMACommSendToNode(comm, pub_state->agent_id, msg);
     return 1;
 }
@@ -711,7 +711,7 @@ static void solutionVerify(plan_ma_search_t *ma, plan_state_id_t goal)
     // Create snapshot-init message
     msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT, PLAN_MA_MSG_SNAPSHOT_INIT,
                        ma->comm->node_id);
-    planMAMsgSnapshotSetType(msg, PLAN_MA_MSG_SOLUTION_VERIFICATION);
+    planMAMsgSetSnapshotType(msg, PLAN_MA_MSG_SOLUTION_VERIFICATION);
     publicStateSet2(ma->ma_state, msg, ma->search->state_space, goal);
 
     // Create snapshot object and register it
@@ -868,7 +868,7 @@ static int solutionVerifyMarkFinalize(plan_ma_snapshot_t *s)
 
     // Construct response message and send it to the initiator
     msg = planMAMsgSnapshotNewResponse(ver->init_msg, ver->ma->comm->node_id);
-    planMAMsgSnapshotSetAck(msg, ack);
+    planMAMsgSetSnapshotAck(msg, ack);
     planMACommSendToNode(ver->ma->comm, planMAMsgAgent(ver->init_msg), msg);
     planMAMsgDel(msg);
 
@@ -916,7 +916,7 @@ static void deadEndVerify(plan_ma_search_t *ma)
     // Create snapshot-init message
     msg = planMAMsgNew(PLAN_MA_MSG_SNAPSHOT, PLAN_MA_MSG_SNAPSHOT_INIT,
                        ma->comm->node_id);
-    planMAMsgSnapshotSetType(msg, PLAN_MA_MSG_DEAD_END_VERIFICATION);
+    planMAMsgSetSnapshotType(msg, PLAN_MA_MSG_DEAD_END_VERIFICATION);
 
     // Create snapshot object and register it
     ver = deadEndVerifyNew(ma, msg, 1);
@@ -998,7 +998,7 @@ static int deadEndVerifyMarkFinalize(plan_ma_snapshot_t *s)
     plan_ma_msg_t *msg;
 
     msg = planMAMsgSnapshotNewResponse(ver->init_msg, ver->ma->comm->node_id);
-    planMAMsgSnapshotSetAck(msg, ver->ack);
+    planMAMsgSetSnapshotAck(msg, ver->ack);
     planMACommSendToNode(ver->ma->comm, planMAMsgAgent(ver->init_msg), msg);
     planMAMsgDel(msg);
 

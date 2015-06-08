@@ -58,14 +58,15 @@ OBJS += heur_ma_ff
 OBJS += heur_ma_dtg
 OBJS += heur_ma_max
 OBJS += heur_ma_lm_cut
+OBJS += msg_schema
+OBJS += ma_msg
 OBJS += ma_comm_nanomsg
 OBJS += ma_search
 OBJS += ma_snapshot
 OBJS += ma_private_state
 OBJS += ma_state
 
-CXX_OBJS  = ma_msg.pb
-CXX_OBJS += ma_msg
+CXX_OBJS  =
 CXX_OBJS += problem
 CXX_OBJS += problemdef.pb
 

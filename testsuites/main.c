@@ -1,5 +1,5 @@
 #include <cu/cu.h>
-#include "plan/ma_msg.h"
+#include "plan/problem.h"
 #include "load-from-file.h"
 #include "state.h"
 #include "succgen.h"
@@ -19,6 +19,7 @@
 #include "dtg.h"
 #include "ma_private_state.h"
 #include "landmark.h"
+#include "msg_schema.h"
 
 TEST(protobufTearDown)
 {
@@ -45,6 +46,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSDTG),
     TEST_SUITE_ADD(TSMAPrivateState),
     TEST_SUITE_ADD(TSLandmark),
+    TEST_SUITE_ADD(TSMsgSchema),
     TEST_SUITES_CLOSURE
 };
 

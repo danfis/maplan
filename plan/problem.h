@@ -177,6 +177,13 @@ void planProblemCreatePrivateProjOps(const plan_op_t *op, int op_size,
 void planProblemDestroyOps(plan_op_t *op, int op_size);
 
 
+/**
+ * Frees global memory allocated by google protobuffers.
+ * This is just wrapper for
+ *      google::protobuf::ShutdownProtobufLibrary().
+ */
+void planShutdownProtobuf(void);
+
 /**** INLINES ****/
 _bor_inline int planProblemCheckGoal(plan_problem_t *p,
                                      plan_state_id_t state_id)

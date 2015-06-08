@@ -53,6 +53,9 @@ static const char *opt_heur_flow[] = {
     "proj", "loc", "glob", "ilp", "lm-cut", "lm-cut-inc-local",
     "lm-cut-inc-cache", NULL
 };
+static const char *opt_heur_lm_cut_inc_cache[] = {
+    "proj", "loc", "glob", "prune", NULL
+};
 
 static optdef_t opt_search[] = {
     { "ehc", opt_search_ehc },
@@ -69,7 +72,7 @@ static optdef_t opt_heur[] = {
     { "dtg", opt_heur_all },
     { "lm-cut", opt_heur_all },
     { "lm-cut-inc-local", opt_heur_all },
-    { "lm-cut-inc-cache", opt_heur_all },
+    { "lm-cut-inc-cache", opt_heur_lm_cut_inc_cache },
     { "flow", opt_heur_flow },
     { "ma-max", opt_empty },
     { "ma-ff", opt_empty },
@@ -210,6 +213,9 @@ static void usage(const char *progname)
 "    Options allowed for flow heuristic:\n"
 "           ilp    -- Integer linear programming instead of LP is used\n"
 "           lm-cut -- Landmarks from lm-cut heuristic are used\n"
+"\n"
+"    Options allowed for lm-cut-inc-cache heuristic:\n"
+"           prune -- Pruning of cache is enabled\n"
 "\n"
 "    Options allowed for all (non ma-) heuristics in multi-agent mode:\n"
 "           proj -- heur is computed on projected operators\n"

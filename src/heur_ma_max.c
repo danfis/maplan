@@ -62,7 +62,8 @@ static int heurMAMaxUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 static void heurMAMaxRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
                              const plan_ma_msg_t *msg);
 
-static void privateInit(private_t *private, const plan_problem_t *prob)
+static void privateInit(private_t *private, const plan_problem_t *prob,
+                        unsigned flags)
 {
     plan_op_t *op;
     int op_size;
@@ -72,7 +73,8 @@ static void privateInit(private_t *private, const plan_problem_t *prob)
                                     prob->var, prob->var_size,
                                     &op, &op_size);
     planHeurRelaxInit(&private->relax, PLAN_HEUR_RELAX_TYPE_MAX,
-                      prob->var, prob->var_size, prob->goal, op, op_size);
+                      prob->var, prob->var_size, prob->goal, op, op_size,
+                      flags);
 
     // Add fake precondition to public operators.
     // The fake precondition will be used for received values.
@@ -151,7 +153,8 @@ static void initOpByOwner(plan_heur_ma_max_t *heur,
     }
 }
 
-plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob)
+plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob,
+                                   unsigned flags)
 {
     plan_heur_ma_max_t *heur;
 
@@ -160,7 +163,7 @@ plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob)
     _planHeurMAInit(&heur->heur, heurMAMax, NULL, heurMAMaxUpdate, heurMAMaxRequest);
     planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_MAX,
                       prob->var, prob->var_size, prob->goal,
-                      prob->proj_op, prob->proj_op_size);
+                      prob->proj_op, prob->proj_op_size, flags);
     planOpIdTrInit(&heur->op_id_tr, prob->proj_op, prob->proj_op_size);
 
     heur->agent_size = agentSize(prob->proj_op, prob->proj_op_size);
@@ -172,7 +175,7 @@ plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *prob)
 
     heur->init_state = planStateNew(prob->var_size);
 
-    privateInit(&heur->private, prob);
+    privateInit(&heur->private, prob, flags);
 
     return &heur->heur;
 }

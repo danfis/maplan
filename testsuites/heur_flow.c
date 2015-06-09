@@ -8,7 +8,7 @@ typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);
 static plan_heur_t *lmCutNew(plan_problem_t *p)
 {
     return planHeurLMCutNew(p->var, p->var_size, p->goal,
-                            p->op, p->op_size);
+                            p->op, p->op_size, 0);
 }
 
 static plan_heur_t *flowBaseNew(plan_problem_t *p)

@@ -77,7 +77,7 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
 static plan_heur_t *heurNew(const plan_var_t *var, int var_size,
                             const plan_part_state_t *goal,
                             const plan_op_t *op, int op_size,
-                            int relax_op)
+                            int relax_op, unsigned flags)
 {
     plan_heur_relax_add_max_t *heur;
 
@@ -86,23 +86,25 @@ static plan_heur_t *heurNew(const plan_var_t *var, int var_size,
 
     _planHeurInit(&heur->heur, heurDel, heurVal, NULL);
     planHeurRelaxInit(&heur->relax, relax_op,
-                      var, var_size, goal, op, op_size);
+                      var, var_size, goal, op, op_size, flags);
 
     return &heur->heur;
 }
 
 plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size)
+                                 const plan_op_t *op, int op_size,
+                                 unsigned flags)
 {
     return heurNew(var, var_size, goal, op, op_size,
-                   PLAN_HEUR_RELAX_TYPE_ADD);
+                   PLAN_HEUR_RELAX_TYPE_ADD, flags);
 }
 
 plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size)
+                                 const plan_op_t *op, int op_size,
+                                 unsigned flags)
 {
     return heurNew(var, var_size, goal, op, op_size,
-                   PLAN_HEUR_RELAX_TYPE_MAX);
+                   PLAN_HEUR_RELAX_TYPE_MAX, flags);
 }

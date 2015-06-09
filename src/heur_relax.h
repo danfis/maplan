@@ -61,11 +61,13 @@ typedef struct _plan_heur_relax_t plan_heur_relax_t;
 
 /**
  * Initialize relaxation heuristic.
+ * As flags can be used PLAN_HEUR_OP_UNIT_COST, PLAN_HEUR_OP_COST_PLUS_ONE.
  */
 void planHeurRelaxInit(plan_heur_relax_t *relax, int type,
                        const plan_var_t *var, int var_size,
                        const plan_part_state_t *goal,
-                       const plan_op_t *op, int op_size);
+                       const plan_op_t *op, int op_size,
+                       unsigned flags);
 
 /**
  * Frees allocated resources.

@@ -7,12 +7,12 @@ typedef plan_heur_t *(*new_heur_fn)(const plan_problem_t *prob);
 
 static plan_heur_t *heurLMCut(const plan_problem_t *p)
 {
-    return planHeurLMCutNew(p->var, p->var_size, p->goal, p->op, p->op_size);
+    return planHeurLMCutNew(p->var, p->var_size, p->goal, p->op, p->op_size, 0);
 }
 
 static plan_heur_t *heurMax(const plan_problem_t *p)
 {
-    return planHeurRelaxMaxNew(p->var, p->var_size, p->goal, p->op, p->op_size);
+    return planHeurRelaxMaxNew(p->var, p->var_size, p->goal, p->op, p->op_size, 0);
 }
 
 static plan_heur_t *heurFlow(const plan_problem_t *p)

@@ -19,12 +19,23 @@
 
 #include <boruvka/alloc.h>
 #include "plan/prioqueue.h"
+#include "plan/heur.h"
 #include "heur_relax.h"
+
+_bor_inline plan_cost_t _cost(plan_cost_t cost, unsigned flags)
+{
+    if (flags & PLAN_HEUR_OP_UNIT_COST)
+        return 1;
+    if (flags & PLAN_HEUR_OP_COST_PLUS_ONE)
+        return cost + 1;
+    return cost;
+}
 
 void planHeurRelaxInit(plan_heur_relax_t *relax, int type,
                        const plan_var_t *var, int var_size,
                        const plan_part_state_t *goal,
-                       const plan_op_t *op, int op_size)
+                       const plan_op_t *op, int op_size,
+                       unsigned flags)
 {
     int i, op_id;
 
@@ -53,7 +64,7 @@ void planHeurRelaxInit(plan_heur_relax_t *relax, int type,
 
         op_id = relax->cref.op_id[i];
         if (op_id >= 0){
-            relax->op_init[i].cost = op[op_id].cost;
+            relax->op_init[i].cost = _cost(op[op_id].cost, flags);
         }
     }
 

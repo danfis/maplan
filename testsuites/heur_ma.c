@@ -6,16 +6,21 @@
 
 typedef plan_heur_t *(*heur_new_fn)(const plan_problem_t *prob);
 
+plan_heur_t *maHeurMax(const plan_problem_t *prob)
+{
+    return planHeurMARelaxMaxNew(prob, 0);
+}
+
 plan_heur_t *seqHeurMaxNew(const plan_problem_t *prob)
 {
     return planHeurRelaxMaxNew(prob->var, prob->var_size, prob->goal,
-                               prob->op, prob->op_size);
+                               prob->op, prob->op_size, 0);
 }
 
 plan_heur_t *seqHeurLMCutNew(const plan_problem_t *prob)
 {
     return planHeurLMCutNew(prob->var, prob->var_size, prob->goal,
-                            prob->op, prob->op_size);
+                            prob->op, prob->op_size, 0);
 }
 
 static plan_ma_msg_t *nextMsg(plan_ma_comm_t **comm,
@@ -202,19 +207,19 @@ TEST(testHeurMAFF)
 TEST(testHeurMAMax)
 {
     runTestHeurMA("ma-max", "proto/simple.proto",
-                  "states/simple.txt", NULL, planHeurMARelaxMaxNew, -1,
+                  "states/simple.txt", NULL, maHeurMax, -1,
                   seqHeurMaxNew);
     runTestHeurMA("ma-max", "proto/depot-pfile1.proto",
-                  "states/depot-pfile1.txt", NULL, planHeurMARelaxMaxNew, -1,
+                  "states/depot-pfile1.txt", NULL, maHeurMax, -1,
                   seqHeurMaxNew);
     runTestHeurMA("ma-max", "proto/depot-pfile5.proto",
-                  "states/depot-pfile5.txt", NULL, planHeurMARelaxMaxNew, 200,
+                  "states/depot-pfile5.txt", NULL, maHeurMax, 200,
                   seqHeurMaxNew);
     runTestHeurMA("ma-max", "proto/rovers-p03.proto",
-                  "states/rovers-p03.txt", NULL, planHeurMARelaxMaxNew, -1,
+                  "states/rovers-p03.txt", NULL, maHeurMax, -1,
                   seqHeurMaxNew);
     runTestHeurMA("ma-max", "proto/rovers-p15.proto",
-                  "states/rovers-p15.txt", NULL, planHeurMARelaxMaxNew, -1,
+                  "states/rovers-p15.txt", NULL, maHeurMax, -1,
                   seqHeurMaxNew);
 }
 

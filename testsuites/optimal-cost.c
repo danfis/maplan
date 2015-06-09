@@ -15,7 +15,7 @@ void run(plan_problem_t *p, plan_state_t *init_state)
     planSearchAStarParamsInit(&params);
     params.search.prob = p;
     params.search.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
-                                          p->op, p->op_size);
+                                          p->op, p->op_size, 0);
     params.search.heur_del = 1;
     search = planSearchAStarNew(&params);
 

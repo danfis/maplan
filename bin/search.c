@@ -367,8 +367,6 @@ static int loadProblemMAFactorDir(const options_t *o)
 
     flags  = PLAN_PROBLEM_MA_STATE_PRIVACY;
     flags |= PLAN_PROBLEM_NUM_AGENTS(files_size);
-    if (o->op_unit_cost)
-        flags |= PLAN_PROBLEM_OP_UNIT_COST;
 
     problems_size = files_size;
     problems = BOR_ALLOC_ARR(plan_problem_t *, problems_size);
@@ -397,9 +395,6 @@ static int loadProblemAgents(const options_t *o)
     int flags;
 
     flags = PLAN_PROBLEM_USE_CG;
-    if (o->op_unit_cost)
-        flags |= PLAN_PROBLEM_OP_UNIT_COST;
-
     agent_problem = planProblemAgentsFromProto(o->proto, flags);
     if (agent_problem->agent_size <= 1){
         // TODO: Maybe only warning and switch to single-agent mode.
@@ -422,9 +417,6 @@ static int loadProblemSeq(const options_t *o)
     int flags;
 
     flags = PLAN_PROBLEM_USE_CG;
-    if (o->op_unit_cost)
-        flags |= PLAN_PROBLEM_OP_UNIT_COST;
-
     problem = planProblemFromProto(o->proto, flags);
     if (problem == NULL){
         fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
@@ -441,8 +433,6 @@ static int loadProblemMAFactor(const options_t *o)
 
     flags  = PLAN_PROBLEM_MA_STATE_PRIVACY;
     flags |= PLAN_PROBLEM_NUM_AGENTS(o->tcp_size);
-    if (o->op_unit_cost)
-        flags |= PLAN_PROBLEM_OP_UNIT_COST;
 
     problem = planProblemFromProto(o->proto, flags);
     if (problem == NULL){
@@ -551,32 +541,38 @@ static plan_heur_t *_heurNew(const options_t *o,
 {
     plan_heur_t *heur = NULL;
     unsigned flags = 0;
+    unsigned flags2 = 0;
+
+    if (optionsHeurOpt(o, "op-cost1"))
+        flags |= PLAN_HEUR_OP_UNIT_COST;
+    if (optionsHeurOpt(o, "op-cost+1"))
+        flags |= PLAN_HEUR_OP_COST_PLUS_ONE;
 
     if (strcmp(name, "goalcount") == 0){
         heur = planHeurGoalCountNew(prob->goal);
     }else if (strcmp(name, "add") == 0){
         heur = planHeurRelaxAddNew(prob->var, prob->var_size,
-                                   prob->goal, op, op_size);
+                                   prob->goal, op, op_size, flags);
     }else if (strcmp(name, "max") == 0){
         heur = planHeurRelaxMaxNew(prob->var, prob->var_size,
-                                   prob->goal, op, op_size);
+                                   prob->goal, op, op_size, flags);
     }else if (strcmp(name, "ff") == 0){
         heur = planHeurRelaxFFNew(prob->var, prob->var_size,
-                                  prob->goal, op, op_size);
+                                  prob->goal, op, op_size, flags);
     }else if (strcmp(name, "dtg") == 0){
         heur = planHeurDTGNew(prob->var, prob->var_size,
                               prob->goal, op, op_size);
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
-                                prob->goal, op, op_size);
+                                prob->goal, op, op_size, flags);
     }else if (strcmp(name, "lm-cut-inc-local") == 0){
         heur = planHeurLMCutIncLocalNew(prob->var, prob->var_size,
-                                        prob->goal, op, op_size);
+                                        prob->goal, op, op_size, flags);
     }else if (strcmp(name, "lm-cut-inc-cache") == 0){
         if (optionsHeurOpt(o, "prune"))
-            flags |= PLAN_LANDMARK_CACHE_PRUNE;
+            flags2 |= PLAN_LANDMARK_CACHE_PRUNE;
         heur = planHeurLMCutIncCacheNew(prob->var, prob->var_size,
-                                        prob->goal, op, op_size, flags);
+                                        prob->goal, op, op_size, flags, flags2);
     }else if (strcmp(name, "flow") == 0){
         if (optionsHeurOpt(o, "ilp"))
             flags |= PLAN_HEUR_FLOW_ILP;
@@ -585,7 +581,7 @@ static plan_heur_t *_heurNew(const options_t *o,
         heur = planHeurFlowNew(prob->var, prob->var_size,
                                prob->goal, op, op_size, flags);
     }else if (strcmp(name, "ma-max") == 0){
-        heur = planHeurMARelaxMaxNew(prob);
+        heur = planHeurMARelaxMaxNew(prob, flags);
     }else if (strcmp(name, "ma-ff") == 0){
         heur = planHeurMARelaxFFNew(prob);
     }else if (strcmp(name, "ma-lm-cut") == 0){

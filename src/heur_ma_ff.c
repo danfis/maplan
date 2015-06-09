@@ -107,7 +107,7 @@ plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
     planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_ADD,
                       prob->var, prob->var_size,
                       prob->goal,
-                      prob->proj_op, prob->proj_op_size);
+                      prob->proj_op, prob->proj_op_size, 0);
 
     heur->state = planStateNew(prob->var_size);
 

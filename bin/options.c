@@ -47,14 +47,15 @@ static const char *opt_search_astar[] = {
 };
 static const char *opt_empty[] = { NULL };
 static const char *opt_heur_all[] = {
-    "proj", "loc", "glob", NULL
+    "proj", "loc", "glob", "op-cost1", "op-cost+1", NULL
 };
 static const char *opt_heur_flow[] = {
-    "proj", "loc", "glob", "ilp", "lm-cut", "lm-cut-inc-local",
+    "proj", "loc", "glob", "op-cost1", "op-cost+1",
+    "ilp", "lm-cut", "lm-cut-inc-local",
     "lm-cut-inc-cache", NULL
 };
 static const char *opt_heur_lm_cut_inc_cache[] = {
-    "proj", "loc", "glob", "prune", NULL
+    "proj", "loc", "glob", "op-cost1", "op-cost+1", "prune", NULL
 };
 
 static optdef_t opt_search[] = {
@@ -139,8 +140,6 @@ static int readOpts(int argc, char *argv[])
     optsAddDesc("hard-limit-sleeptime", 0x0, OPTS_INT, &o->hard_limit_sleeptime,
                 NULL, "Sleeptime in seconds for hard limit monitor."
                 " Set to -1 to disable hard limit monitor. (default: 5)");
-    optsAddDesc("op-unit-cost", 0x0, OPTS_NONE, &o->op_unit_cost, NULL,
-                "Force costs of all operators to one. (default: off)");
 
     if (opts(&argc, argv) != 0){
         return -1;
@@ -222,6 +221,8 @@ static void usage(const char *progname)
 "           loc  -- local operators (i.e., operators visible to an agent)\n"
 "           glob -- global operators (i.e., all operators regardless which\n"
 "                   agent own them)\n"
+"           op-cost1  -- cost of all operators is set to one\n"
+"           op-cost+1  -- cost of all operators is increased by one\n"
 );
     fprintf(stderr, "\n");
 }
@@ -324,7 +325,6 @@ static void printOpts(void)
     printf("Progress freq: %d\n", o->progress_freq);
     printf("Print heur init: %d\n", o->print_heur_init);
     printf("Dot graph: %s\n", o->dot_graph);
-    printf("Op unit cost: %d\n", o->op_unit_cost);
     printf("Heur: %s [", o->heur);
     for (i = 0; i < o->heur_opts_len; ++i){
         if (i > 0)
@@ -358,7 +358,6 @@ options_t *options(int argc, char *argv[])
     o->search_opts = NULL;
     o->search_opts_len = 0;
     o->hard_limit_sleeptime = 5;
-    o->op_unit_cost = 0;
 
     if (readOpts(argc, argv) != 0 || o->help){
         usage(argv[0]);

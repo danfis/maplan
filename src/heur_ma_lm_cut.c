@@ -275,7 +275,7 @@ plan_heur_t *planHeurMALMCutNew(const plan_problem_t *prob)
     _planHeurMAInit(&heur->heur, heurMA, NULL, heurMAUpdate, heurMARequest);
     planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_MAX,
                       prob->var, prob->var_size, prob->goal,
-                      prob->proj_op, prob->proj_op_size);
+                      prob->proj_op, prob->proj_op_size, 0);
     planOpIdTrInit(&heur->op_id_tr, prob->proj_op, prob->proj_op_size);
 
     heur->state = STATE_INIT;
@@ -451,7 +451,7 @@ static void privateInit(private_t *private,
                                     prob->var, prob->var_size,
                                     &op, &op_size);
     planHeurRelaxInit(&private->relax, PLAN_HEUR_RELAX_TYPE_MAX,
-                      prob->var, prob->var_size, prob->goal, op, op_size);
+                      prob->var, prob->var_size, prob->goal, op, op_size, 0);
 
     // Get IDs of all public operators
     private->public_op.op = BOR_ALLOC_ARR(int, op_size);

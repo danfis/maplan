@@ -36,7 +36,6 @@ struct _options_t {
     int print_heur_init;
     char *dot_graph;
     int hard_limit_sleeptime;
-    int op_unit_cost;
 
     char *heur;
     char **heur_opts;

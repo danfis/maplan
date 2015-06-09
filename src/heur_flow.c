@@ -79,7 +79,6 @@ static double upper_bound_table[2][2][2][2] = {
 // .is_init:                 0                  1
 // .cause_incomplete_op   0     1            0     1
                     { { { 1., BOUND_INF }, { 0., BOUND_INF } },
-                          
 
 // .is_goal_var                      1
 // .is_mutex_with_goal               1
@@ -194,7 +193,8 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
 
     hflow->lm_cut = NULL;
     if (flags & PLAN_HEUR_FLOW_LANDMARKS_LM_CUT)
-        hflow->lm_cut = planHeurLMCutNew(var, var_size, goal, op, op_size);
+        hflow->lm_cut = planHeurLMCutNew(var, var_size, goal, op, op_size,
+                                         flags);
 
     return &hflow->heur;
 }
@@ -428,6 +428,15 @@ static plan_cost_t roundOff(double z)
     return v;
 }
 
+_bor_inline plan_cost_t _cost(plan_cost_t cost, unsigned flags)
+{
+    if (flags & PLAN_HEUR_OP_UNIT_COST)
+        return 1;
+    if (flags & PLAN_HEUR_OP_COST_PLUS_ONE)
+        return cost + 1;
+    return cost;
+}
+
 #ifdef PLAN_HEUR_FLOW_LP_SOLVE
 static void lpLPSolveInit(lprec **_lp, const fact_t *facts, int facts_size,
                           const plan_op_t *op, int op_size, int use_ilp,
@@ -444,7 +453,7 @@ static void lpLPSolveInit(lprec **_lp, const fact_t *facts, int facts_size,
     for (i = 0; i < op_size; ++i){
         if (use_ilp)
             set_int(lp, i + 1, 1);
-        set_obj(lp, i + 1, op[i].cost);
+        set_obj(lp, i + 1, _cost(op[i].cost, flags));
     }
 
     // Set up rows
@@ -599,7 +608,7 @@ static void lpCplexInit(lp_cplex_t *lp, const fact_t *facts, int facts_size,
     obj = BOR_ALLOC_ARR(double, op_size);
     lb = BOR_CALLOC_ARR(double, op_size);
     for (i = 0; i < op_size; ++i)
-        obj[i] = op[i].cost;
+        obj[i] = _cost(op[i].cost, flags);
 
     if (use_ilp){
         ctype = BOR_ALLOC_ARR(char, op_size);

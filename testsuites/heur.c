@@ -17,43 +17,43 @@ static plan_heur_t *goalCountNew(plan_problem_t *p)
 static plan_heur_t *addNew(plan_problem_t *p)
 {
     return planHeurRelaxAddNew(p->var, p->var_size, p->goal,
-                               p->op, p->op_size);
+                               p->op, p->op_size, 0);
 }
 
 static plan_heur_t *maxNew(plan_problem_t *p)
 {
     return planHeurRelaxMaxNew(p->var, p->var_size, p->goal,
-                               p->op, p->op_size);
+                               p->op, p->op_size, 0);
 }
 
 static plan_heur_t *ffNew(plan_problem_t *p)
 {
     return planHeurRelaxFFNew(p->var, p->var_size, p->goal,
-                              p->op, p->op_size);
+                              p->op, p->op_size, 0);
 }
 
 static plan_heur_t *lmCutNew(plan_problem_t *p)
 {
     return planHeurLMCutNew(p->var, p->var_size, p->goal,
-                            p->op, p->op_size);
+                            p->op, p->op_size, 0);
 }
 
 static plan_heur_t *lmCutIncLocalNew(plan_problem_t *p)
 {
     return planHeurLMCutIncLocalNew(p->var, p->var_size, p->goal,
-                                    p->op, p->op_size);
+                                    p->op, p->op_size, 0);
 }
 
 static plan_heur_t *lmCutIncCacheNew(plan_problem_t *p)
 {
     return planHeurLMCutIncCacheNew(p->var, p->var_size, p->goal,
-                                    p->op, p->op_size, 0);
+                                    p->op, p->op_size, 0, 0);
 }
 
 static plan_heur_t *lmCutIncCachePruneNew(plan_problem_t *p)
 {
     return planHeurLMCutIncCacheNew(p->var, p->var_size, p->goal,
-                                    p->op, p->op_size,
+                                    p->op, p->op_size, 0,
                                     PLAN_LANDMARK_CACHE_PRUNE);
 }
 
@@ -216,7 +216,7 @@ static void heurRelaxIdentity(const char *proto, const char *states,
     statePoolInit(&state_pool, states);
 
     planHeurRelaxInit(&relax, type, p->var, p->var_size, p->goal,
-                      p->op, p->op_size);
+                      p->op, p->op_size, 0);
 
     for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
         planHeurRelax(&relax, state);
@@ -275,13 +275,13 @@ static void heurRelaxIdentity2(const char *proto, const char *states,
     statePoolNext(&state_pool, init_state);
 
     planHeurRelaxInit(&relax2, type, p->var, p->var_size, p->goal,
-                      p->op, p->op_size);
+                      p->op, p->op_size, 0);
 
     for (si = 0; statePoolNext(&state_pool, state) == 0 && si < 2000; ++si){
         goal = relaxStateToPartState(state, p->state_pool);
 
         planHeurRelaxInit(&relax, type, p->var, p->var_size, goal,
-                          p->op, p->op_size);
+                          p->op, p->op_size, 0);
         planHeurRelax(&relax, init_state);
         h = relax.fact[relax.cref.goal_id].value;
         planHeurRelaxFree(&relax);

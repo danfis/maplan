@@ -39,14 +39,24 @@ struct _plan_search_t;
  */
 
 /**
+ * Set cost of all operators to one.
+ */
+#define PLAN_HEUR_OP_UNIT_COST 0x1u
+
+/**
+ * Add one to all operators' costs.
+ */
+#define PLAN_HEUR_OP_COST_PLUS_ONE 0x2u
+
+/**
  * Use integer linear programming instead of LP for solving flow heuristic.
  */
-#define PLAN_HEUR_FLOW_ILP 0x1u
+#define PLAN_HEUR_FLOW_ILP 0x10u
 
 /**
  * Use landmarks from lm-cut heuristic for constraints in the flow heuristic.
  */
-#define PLAN_HEUR_FLOW_LANDMARKS_LM_CUT 0x2u
+#define PLAN_HEUR_FLOW_LANDMARKS_LM_CUT 0x20u
 
 /**
  * Sets the number of parallel threads that will be invoked by any CPLEX
@@ -184,7 +194,8 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal);
  */
 plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size);
+                                 const plan_op_t *op, int op_size,
+                                 unsigned flags);
 
 /**
  * Creates an MAX version of relaxation heuristics.
@@ -193,7 +204,8 @@ plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
  */
 plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size);
+                                 const plan_op_t *op, int op_size,
+                                 unsigned flags);
 
 /**
  * Creates an FF version of relaxation heuristics.
@@ -202,21 +214,24 @@ plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
  */
 plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
                                 const plan_part_state_t *goal,
-                                const plan_op_t *op, int op_size);
+                                const plan_op_t *op, int op_size,
+                                unsigned flags);
 
 /**
  * Creates an LM-Cut heuristics.
  */
 plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
                               const plan_part_state_t *goal,
-                              const plan_op_t *op, int op_size);
+                              const plan_op_t *op, int op_size,
+                              unsigned flags);
 
 /**
  * Incremental LM-Cut, the local version.
  */
 plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
                                       const plan_part_state_t *goal,
-                                      const plan_op_t *op, int op_size);
+                                      const plan_op_t *op, int op_size,
+                                      unsigned flags);
 
 /**
  * Incremental LM-Cut, the version with cached landmarks.
@@ -226,6 +241,7 @@ plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
 plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
                                       const plan_part_state_t *goal,
                                       const plan_op_t *op, int op_size,
+                                      unsigned flags,
                                       unsigned cache_flags);
 
 /**
@@ -247,7 +263,8 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
 /**
  * Creates an multi-agent version of max heuristic.
  */
-plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *agent_def);
+plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *agent_def,
+                                   unsigned flags);
 
 /**
  * Creates an multi-agent version of FF heuristic.

@@ -77,7 +77,7 @@ static void planHeurLMCutStateInc(plan_heur_t *_heur,
 static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
                              const plan_op_t *op, int op_size,
-                             int inc, unsigned cache_flags)
+                             int inc, unsigned flags, unsigned cache_flags)
 {
     plan_heur_lm_cut_t *heur;
 
@@ -94,7 +94,7 @@ static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
         _planHeurInit(&heur->heur, planHeurLMCutDel, planHeurLMCutState, NULL);
     }
     planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_MAX,
-                      var, var_size, goal, op, op_size);
+                      var, var_size, goal, op, op_size, flags);
 
     heur->fact_goal_zone = BOR_ALLOC_ARR(int, heur->relax.cref.fact_size);
     heur->fact_in_queue  = BOR_ALLOC_ARR(int, heur->relax.cref.fact_size);
@@ -119,24 +119,26 @@ static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
 
 plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
                               const plan_part_state_t *goal,
-                              const plan_op_t *op, int op_size)
+                              const plan_op_t *op, int op_size,
+                              unsigned flags)
 {
-    return lmCutNew(var, var_size, goal, op, op_size, 0, 0);
+    return lmCutNew(var, var_size, goal, op, op_size, 0, flags, 0);
 }
 
 plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
                                       const plan_part_state_t *goal,
-                                      const plan_op_t *op, int op_size)
+                                      const plan_op_t *op, int op_size,
+                                      unsigned flags)
 {
-    return lmCutNew(var, var_size, goal, op, op_size, 1, 0);
+    return lmCutNew(var, var_size, goal, op, op_size, 1, flags, 0);
 }
 
 plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
                                       const plan_part_state_t *goal,
                                       const plan_op_t *op, int op_size,
-                                      unsigned cache_flags)
+                                      unsigned flags, unsigned cache_flags)
 {
-    return lmCutNew(var, var_size, goal, op, op_size, 2, cache_flags);
+    return lmCutNew(var, var_size, goal, op, op_size, 2, flags, cache_flags);
 }
 
 static void planHeurLMCutDel(plan_heur_t *_heur)

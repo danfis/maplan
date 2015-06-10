@@ -63,6 +63,18 @@ static int initSockAddr(struct sockaddr_in *a, int port, const char *addr)
     return 0;
 }
 
+static void sockSetLinger(int sock, int time_in_s)
+{
+    struct linger lin;
+
+    lin.l_onoff = 1;
+    lin.l_linger = time_in_s;
+    if (setsockopt(sock, SOL_SOCKET, SO_LINGER, &lin, sizeof(lin)) != 0){
+        fprintf(stderr, "Error TCP: Could not set SO_LINGER %s\n",
+                strerror(errno));
+    }
+}
+
 static int recvMainSocket(int agent_id, int agent_size, const char **addr_in)
 {
     int sock, port, yes;
@@ -195,6 +207,7 @@ static int sendSocketConnect(plan_ma_comm_tcp_t *tcp, int id,
                 strerror(errno));
         return -1;
     }
+    sockSetLinger(sock, 100000);
 
     // Set the socket to non-blocking mode
     if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0){
@@ -422,6 +435,7 @@ static int shutdownNetwork(plan_ma_comm_tcp_t *tcp)
     int i, ret, remain;
     char buf[128];
 
+    //sleep(1);
     // First shutdown outgoing connections
     for (i = 0; i < tcp->comm.node_size; ++i){
         if (tcp->sock[i] == -1)
@@ -527,6 +541,7 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
     }
     */
 
+    /*
     fprintf(stderr, "END\n");
     fflush(stderr);
     if (tcp->comm.node_id > 0)
@@ -535,6 +550,7 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
     tcpDel(&tcp->comm);
     fprintf(stderr, "Deleted\n");
     exit(-1);
+    */
     return &tcp->comm;
 }
 
@@ -555,36 +571,111 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
                          const plan_ma_msg_t *msg)
 {
     plan_ma_comm_tcp_t *tcp = TCP(comm);
-    void *buf;
+    void *buf, *buf2;
     size_t size;
-    //int send_count;
+    ssize_t send_ret;
     int ret = 0;
 
     if (node_id == tcp->comm.node_id)
         return -1;
 
-    buf = planMAMsgPacked(msg, &size);
     // TODO
-    /*
-    send_count = nn_send(comm->send_sock[node_id], buf, size, 0);
-    if (send_count != (int)size){
-        fprintf(stderr, "Error Nanomsg[%d]: Could not send message to %d: %s\n",
-                comm->comm.node_id, node_id, nn_strerror(errno));
+    buf = planMAMsgPacked(msg, &size);
+
+    buf2 = BOR_ALLOC_ARR(char, size + 4);
+#ifdef BOR_BIG_ENDIAN
+    *(uint32_t *)buf2 = htole32(size):
+#else
+    *(uint32_t *)buf2 = (uint32_t)size;
+#endif /* BOR_BIG_ENDIAN */
+    memcpy((char *)buf2 + 4, buf, size);
+
+    send_ret = send(tcp->sock[node_id], buf2, size + 4, 0);
+    if (send_ret < 0){
+        fprintf(stderr, "Error TCP[%d]: Could not send message to %d: %s\n",
+                tcp->comm.node_id, node_id, strerror(errno));
+        ret = -1;
+    }else if (send_ret != size + 4){
+        fprintf(stderr, "Error TCP[%d]: Could not send WHOLE message to %d"
+                        " (%d, %d).\n", tcp->comm.node_id, node_id,
+                        (int)(size + 4), (int)send_ret);
         ret = -1;
     }
-    */
+    fprintf(stderr, "Send to %d, type: %d\n", node_id, planMAMsgType(msg));
 
     if (buf)
         BOR_FREE(buf);
+    if (buf2)
+        BOR_FREE(buf2);
     return ret;
+}
+
+static plan_ma_msg_t *_tcpRecv(plan_ma_comm_tcp_t *tcp, int timeout_in_ms)
+{
+    struct pollfd pfd[tcp->comm.node_size];
+    plan_ma_msg_t *msg = NULL;
+    int i, ret;
+    ssize_t rsize;
+    uint32_t bufsize;
+    char buf[16000];
+
+    for (i = 0; i < tcp->comm.node_size; ++i){
+        pfd[i].fd = tcp->sock[i];
+        pfd[i].events = POLLIN;
+    }
+
+    while (1) {
+        fprintf(stderr, "POLL: %d\n", timeout_in_ms);
+        ret = poll(pfd, tcp->comm.node_size, timeout_in_ms);
+        if (ret == 0){
+            // Timeout
+            return NULL;
+
+        }else if (ret < 0){
+            fprintf(stderr, "Error TCP[%d]: Poll error: %s\n",
+                    tcp->comm.node_id, strerror(errno));
+            return NULL;
+        }
+
+        for (i = 0; i < tcp->comm.node_size; ++i){
+            if (pfd[i].revents & POLLIN){
+                fprintf(stderr, "recv POLLIN %d\n", i);
+                rsize = recv(tcp->sock[i], &bufsize, 4, MSG_WAITALL);
+                if (rsize != 4){
+                    fprintf(stderr, "Error: rsize != 4 (%d)\n", (int)rsize);
+                    exit(-1);
+                }
+
+#ifdef BOR_BIG_ENDIAN
+                bufsize = le32toh(bufsize);
+#endif /* BOR_BIG_ENDIAN */
+                rsize = recv(tcp->sock[i], buf, bufsize, MSG_WAITALL);
+                if (rsize != bufsize){
+                    fprintf(stderr, "Error: rsize != bufsize\n");
+                    exit(-1);
+                }
+
+                msg = planMAMsgUnpacked(buf, bufsize);
+                fprintf(stderr, "RECV from %d, type: %d\n", i, planMAMsgType(msg));
+                break;
+            }
+        }
+        break;
+    }
+
+    return msg;
 }
 
 static plan_ma_msg_t *tcpRecv(plan_ma_comm_t *comm)
 {
-    return NULL;
+    plan_ma_comm_tcp_t *tcp = TCP(comm);
+    return _tcpRecv(tcp, 0);
 }
 
 static plan_ma_msg_t *tcpRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms)
 {
-    return NULL;
+    plan_ma_comm_tcp_t *tcp = TCP(comm);
+    if (timeout_in_ms <= 0)
+        return _tcpRecv(tcp, -1);
+    return _tcpRecv(tcp, timeout_in_ms);
 }

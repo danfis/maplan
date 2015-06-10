@@ -11,6 +11,7 @@
 #include "plan/ma_comm.h"
 
 #define ESTABLISH_TIMEOUT 10000
+#define SHUTDOWN_TIMEOUT 10000
 
 struct _plan_ma_comm_tcp_t {
     plan_ma_comm_t comm;
@@ -415,6 +416,75 @@ static int establishNetwork(plan_ma_comm_tcp_t *tcp, const char **addr)
     return processGreetingMsgs(tcp);
 }
 
+static int shutdownNetwork(plan_ma_comm_tcp_t *tcp)
+{
+    struct pollfd pfd[tcp->comm.node_size];
+    int i, ret, remain;
+    char buf[128];
+
+    // First shutdown outgoing connections
+    for (i = 0; i < tcp->comm.node_size; ++i){
+        if (tcp->sock[i] == -1)
+            continue;
+        if (shutdown(tcp->sock[i], SHUT_WR) != 0){
+            fprintf(stderr, "Error TCP: Could not shutdown socket: %d: %s\n",
+                    i, strerror(errno));
+        }
+    }
+
+    // Then wait for EOFs from all agents
+    remain = 0;
+    for (i = 0; i < tcp->comm.node_size; ++i){
+        pfd[i].fd = tcp->sock[i];
+        pfd[i].events = POLLIN;
+        if (pfd[i].fd != -1)
+            ++remain;
+    }
+
+    while (remain > 0){
+        ret = poll(pfd, tcp->comm.node_size, SHUTDOWN_TIMEOUT);
+        if (ret == 0){
+            fprintf(stderr, "Error TCP: Could not shut-down in defined"
+                            " timeout (%d).\n", SHUTDOWN_TIMEOUT);
+            return -1;
+
+        }else if (ret < 0){
+            fprintf(stderr, "Error TCP: Poll error: %s\n",
+                    strerror(errno));
+            return -1;
+        }
+
+        for (i = 0; i < tcp->comm.node_size; ++i){
+            if (pfd[i].revents & POLLIN){
+                fprintf(stderr, "shutdown-POLLIN\n");
+                ret = read(tcp->sock[i], buf, 128);
+                fprintf(stderr, "shut-ret: %d\n", ret);
+                if (ret < 0){
+                    fprintf(stderr, "ERROR: %d %s\n", ret, strerror(errno));
+                    return -1;
+
+                }else if (ret == 0){
+                    pfd[i].fd = -1;
+                    --remain;
+                }
+            }
+        }
+    }
+
+    // Close all sockets
+    for (i = 0; i < tcp->comm.node_size; ++i){
+        if (tcp->sock[i] == -1)
+            continue;
+        if (close(tcp->sock[i]) != 0){
+            fprintf(stderr, "Error TCP: Could not close socket: %d: %s\n",
+                    i, strerror(errno));
+        }
+    }
+    close(tcp->recv_main_sock);
+
+    return 0;
+}
+
 plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
                                  const char **addr)
 {
@@ -459,8 +529,11 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
 
     fprintf(stderr, "END\n");
     fflush(stderr);
-    sleep(10);
+    if (tcp->comm.node_id > 0)
+        write(tcp->sock[tcp->comm.node_id - 1], &i, 4);
+    //sleep(10);
     tcpDel(&tcp->comm);
+    fprintf(stderr, "Deleted\n");
     exit(-1);
     return &tcp->comm;
 }
@@ -468,18 +541,11 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
 static void tcpDel(plan_ma_comm_t *comm)
 {
     plan_ma_comm_tcp_t *tcp = TCP(comm);
-    int i;
 
-    for (i = 0; i < tcp->comm.node_size; ++i){
-        if (tcp->sock[i] != -1)
-            close(tcp->sock[i]);
-    }
+    shutdownNetwork(tcp);
+
     if (tcp->sock != NULL)
         BOR_FREE(tcp->sock);
-
-    if (tcp->recv_main_sock != -1)
-        close(tcp->recv_main_sock);
-
     if (tcp->poll_fds)
         BOR_FREE(tcp->poll_fds);
     BOR_FREE(tcp);

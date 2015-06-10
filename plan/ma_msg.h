@@ -45,6 +45,7 @@ extern "C" {
 #define PLAN_MA_MSG_TERMINATE_REQUEST   0x0
 #define PLAN_MA_MSG_TERMINATE_FINAL     0x1
 #define PLAN_MA_MSG_TERMINATE_FINAL_ACK 0x2
+#define PLAN_MA_MSG_TERMINATE_FINAL_FIN 0x3
 
 /**
  * Snapshot sub-types

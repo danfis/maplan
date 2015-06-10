@@ -547,6 +547,17 @@ static void terminate(plan_ma_search_t *ma)
     ma->term.is_initiator = 1;
 }
 
+static void terminateSendFinalFin(plan_ma_search_t *ma_search)
+{
+    plan_ma_msg_t *term_msg;
+
+    term_msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
+                            PLAN_MA_MSG_TERMINATE_FINAL_FIN,
+                            ma_search->comm->node_id);
+    planMACommSendToAll(ma_search->comm, term_msg);
+    planMAMsgDel(term_msg);
+}
+
 static void terminateSendFinal(plan_ma_search_t *ma_search, int send_plan)
 {
     plan_ma_msg_t *term_msg;
@@ -630,7 +641,10 @@ static int terminateMsg(plan_ma_search_t *ma_search,
     int subtype = planMAMsgSubType(msg);
     int agent_id;
 
-    if (subtype == PLAN_MA_MSG_TERMINATE_FINAL){
+    if (subtype == PLAN_MA_MSG_TERMINATE_FINAL_FIN){
+        return -1;
+
+    }else if (subtype == PLAN_MA_MSG_TERMINATE_FINAL){
         if (planMAMsgAgent(msg) == ma_search->term.initiator_id){
             ma_search->res = planMAMsgSearchRes(msg);
             if (!planPathEmpty(&ma_search->path)){
@@ -683,7 +697,9 @@ static int terminateMsg(plan_ma_search_t *ma_search,
     }
 
     if (ma_search->term.final_ack_counter == -1
-            && ma_search->term.final_counter == -1){
+            && ma_search->term.final_counter == -1
+            && ma_search->term.is_first){
+        terminateSendFinalFin(ma_search);
         return -1;
     }
 

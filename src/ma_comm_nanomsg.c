@@ -22,14 +22,29 @@
 #include <boruvka/alloc.h>
 #include "plan/ma_comm.h"
 
+struct _plan_ma_comm_nanomsg_t {
+    plan_ma_comm_t comm;
+    int recv_sock;
+    int *send_sock;
+};
+typedef struct _plan_ma_comm_nanomsg_t plan_ma_comm_nanomsg_t;
+#define COMM(cm) bor_container_of(cm, plan_ma_comm_nanomsg_t, comm)
+
+static void nanomsgDel(plan_ma_comm_t *comm);
+static int nanomsgSendToNode(plan_ma_comm_t *comm, int node_id,
+                             const plan_ma_msg_t *msg);
+static plan_ma_msg_t *nanomsgRecv(plan_ma_comm_t *comm);
+static plan_ma_msg_t *nanomsgRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms);
+
 static plan_ma_comm_t *nanomsgNew(int agent_id, int agent_size, char **urls)
 {
-    plan_ma_comm_t *comm;
+    plan_ma_comm_nanomsg_t *comm;
     int i;
 
-    comm = BOR_ALLOC(plan_ma_comm_t);
-    comm->node_id = agent_id;
-    comm->node_size = agent_size;
+    comm = BOR_ALLOC(plan_ma_comm_nanomsg_t);
+    _planMACommInit(&comm->comm, agent_id, agent_size,
+                    nanomsgDel, nanomsgSendToNode,
+                    nanomsgRecv, nanomsgRecvBlock);
 
     comm->recv_sock = nn_socket(AF_SP, NN_PULL);
     if (comm->recv_sock < 0){
@@ -68,7 +83,7 @@ static plan_ma_comm_t *nanomsgNew(int agent_id, int agent_size, char **urls)
         }
     }
 
-    return comm;
+    return &comm->comm;
 }
 
 static plan_ma_comm_t *inprocIPCNew(int agent_id, int agent_size,
@@ -121,16 +136,22 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
         BOR_FREE(urls[i]);
     }
 
+    fprintf(stderr, "NN-opened\n");
+    fflush(stderr);
+
     return comm;
 }
 
-void planMACommDel(plan_ma_comm_t *comm)
+static void nanomsgDel(plan_ma_comm_t *_comm)
 {
+    plan_ma_comm_nanomsg_t *comm = COMM(_comm);
     int i;
 
+    fprintf(stderr, "NN-Close\n");
+    fflush(stderr);
     nn_shutdown(comm->recv_sock, 0);
     nn_close(comm->recv_sock);
-    for (i = 0; i < comm->node_size; ++i){
+    for (i = 0; i < comm->comm.node_size; ++i){
         if (comm->send_sock[i] > 0){
             nn_shutdown(comm->send_sock[i], 0);
             nn_close(comm->send_sock[i]);
@@ -140,22 +161,23 @@ void planMACommDel(plan_ma_comm_t *comm)
     BOR_FREE(comm);
 }
 
-int planMACommSendToNode(plan_ma_comm_t *comm, int node_id,
-                         const plan_ma_msg_t *msg)
+static int nanomsgSendToNode(plan_ma_comm_t *_comm, int node_id,
+                             const plan_ma_msg_t *msg)
 {
+    plan_ma_comm_nanomsg_t *comm = COMM(_comm);
     void *buf;
     size_t size;
     int send_count;
     int ret = 0;
 
-    if (node_id == comm->node_id)
+    if (node_id == comm->comm.node_id)
         return -1;
 
     buf = planMAMsgPacked(msg, &size);
     send_count = nn_send(comm->send_sock[node_id], buf, size, 0);
     if (send_count != (int)size){
-        fprintf(stderr, "Error Nanomsg[%d]: Could not setnd message to %d: %s\n",
-                comm->node_id, node_id, nn_strerror(errno));
+        fprintf(stderr, "Error Nanomsg[%d]: Could not send message to %d: %s\n",
+                comm->comm.node_id, node_id, nn_strerror(errno));
         ret = -1;
     }
 
@@ -164,7 +186,7 @@ int planMACommSendToNode(plan_ma_comm_t *comm, int node_id,
     return ret;
 }
 
-static plan_ma_msg_t *recv(plan_ma_comm_t *comm, int flag)
+static plan_ma_msg_t *recv(plan_ma_comm_nanomsg_t *comm, int flag)
 {
     void *buf;
     int recv_count;
@@ -177,27 +199,28 @@ static plan_ma_msg_t *recv(plan_ma_comm_t *comm, int flag)
 
     }else if (recv_count == 0){
         fprintf(stderr, "Error Nanomsg[%d]: Received zero-sized message.",
-                comm->node_id);
+                comm->comm.node_id);
     }
 
     return msg;
 }
 
-plan_ma_msg_t *planMACommRecv(plan_ma_comm_t *comm)
+static plan_ma_msg_t *nanomsgRecv(plan_ma_comm_t *_comm)
 {
+    plan_ma_comm_nanomsg_t *comm = COMM(_comm);
     plan_ma_msg_t *msg;
 
     msg = recv(comm, NN_DONTWAIT);
     if (msg == NULL && errno != EAGAIN){
         fprintf(stderr, "Error Nanomsg[%d]: Error while receiving"
                 " message in non-blocking mode (errno: %d): %s\n",
-                comm->node_id, errno, nn_strerror(errno));
+                comm->comm.node_id, errno, nn_strerror(errno));
     }
 
     return msg;
 }
 
-static plan_ma_msg_t *recvBlock(plan_ma_comm_t *comm)
+static plan_ma_msg_t *recvBlock(plan_ma_comm_nanomsg_t *comm)
 {
     plan_ma_msg_t *msg;
 
@@ -205,13 +228,13 @@ static plan_ma_msg_t *recvBlock(plan_ma_comm_t *comm)
     if (msg == NULL){
         fprintf(stderr, "Error Nanomsg[%d]: Error while receiving"
                 " message in blocking mode (errno: %d): %s\n",
-                comm->node_id, errno, nn_strerror(errno));
+                comm->comm.node_id, errno, nn_strerror(errno));
     }
 
     return msg;
 }
 
-static plan_ma_msg_t *recvTimeout(plan_ma_comm_t *comm, int timeout)
+static plan_ma_msg_t *recvTimeout(plan_ma_comm_nanomsg_t *comm, int timeout)
 {
     plan_ma_msg_t *msg;
 
@@ -221,7 +244,7 @@ static plan_ma_msg_t *recvTimeout(plan_ma_comm_t *comm, int timeout)
     if (msg == NULL && errno != EAGAIN){
         fprintf(stderr, "Error Nanomsg[%d]: Error while receiving"
                 " message in timeout mode (errno: %d): %s\n",
-                comm->node_id, errno, nn_strerror(errno));
+                comm->comm.node_id, errno, nn_strerror(errno));
     }
 
     // Reset socket to the blocking mode
@@ -232,8 +255,9 @@ static plan_ma_msg_t *recvTimeout(plan_ma_comm_t *comm, int timeout)
     return msg;
 }
 
-plan_ma_msg_t *planMACommRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms)
+static plan_ma_msg_t *nanomsgRecvBlock(plan_ma_comm_t *_comm, int timeout_in_ms)
 {
+    plan_ma_comm_nanomsg_t *comm = COMM(_comm);
     if (timeout_in_ms <= 0)
         return recvBlock(comm);
     return recvTimeout(comm, timeout_in_ms);

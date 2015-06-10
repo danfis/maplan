@@ -26,13 +26,23 @@
 extern "C" {
 #endif /* __cplusplus */
 
+typedef struct _plan_ma_comm_t plan_ma_comm_t;
+
+typedef void (*plan_ma_comm_del_fn)(plan_ma_comm_t *comm);
+typedef int (*plan_ma_comm_send_to_node_fn)(plan_ma_comm_t *comm, int node_id,
+                                            const plan_ma_msg_t *msg);
+typedef plan_ma_msg_t *(*plan_ma_comm_recv_fn)(plan_ma_comm_t *comm);
+typedef plan_ma_msg_t *(*plan_ma_comm_recv_block_fn)(plan_ma_comm_t *comm,
+                                                     int timeout_in_ms);
 struct _plan_ma_comm_t {
     int node_id;
     int node_size;
-    int recv_sock;
-    int *send_sock;
+
+    plan_ma_comm_del_fn del_fn;
+    plan_ma_comm_send_to_node_fn send_to_node_fn;
+    plan_ma_comm_recv_fn recv_fn;
+    plan_ma_comm_recv_block_fn recv_block_fn;
 };
-typedef struct _plan_ma_comm_t plan_ma_comm_t;
 
 
 /**
@@ -67,7 +77,7 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
 /**
  * Destroys a communication channel.
  */
-void planMACommDel(plan_ma_comm_t *comm);
+_bor_inline void planMACommDel(plan_ma_comm_t *comm);
 
 /**
  * Returns ID of the node.
@@ -90,8 +100,8 @@ _bor_inline int planMACommSendToAll(plan_ma_comm_t *comm,
  * Sends the message to the specified node.
  * Returns 0 on success.
  */
-int planMACommSendToNode(plan_ma_comm_t *comm, int node_id,
-                         const plan_ma_msg_t *msg);
+_bor_inline int planMACommSendToNode(plan_ma_comm_t *comm, int node_id,
+                                     const plan_ma_msg_t *msg);
 
 /**
  * Sends the message to the next node in ring.
@@ -104,7 +114,7 @@ _bor_inline int planMACommSendInRing(plan_ma_comm_t *comm,
  * Receives a next message in non-blocking mode.
  * It is caller's responsibility to destroy the returned message.
  */
-plan_ma_msg_t *planMACommRecv(plan_ma_comm_t *comm);
+_bor_inline plan_ma_msg_t *planMACommRecv(plan_ma_comm_t *comm);
 
 /**
  * Receives a next message in blocking mode.
@@ -112,10 +122,22 @@ plan_ma_msg_t *planMACommRecv(plan_ma_comm_t *comm);
  * If timeout_in_ms is set to non-zero value, the function blocks only for
  * the specified amount of time.
  */
-plan_ma_msg_t *planMACommRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms);
+_bor_inline plan_ma_msg_t *planMACommRecvBlock(plan_ma_comm_t *comm,
+                                               int timeout_in_ms);
 
+
+void _planMACommInit(plan_ma_comm_t *comm, int agent_id, int agent_size,
+                     plan_ma_comm_del_fn del_fn,
+                     plan_ma_comm_send_to_node_fn send_to_node_fn,
+                     plan_ma_comm_recv_fn recv_fn,
+                     plan_ma_comm_recv_block_fn recv_block_fn);
 
 /**** INLINES: ****/
+_bor_inline void planMACommDel(plan_ma_comm_t *comm)
+{
+    comm->del_fn(comm);
+}
+
 _bor_inline int planMACommId(const plan_ma_comm_t *comm)
 {
     return comm->node_id;
@@ -140,12 +162,31 @@ _bor_inline int planMACommSendToAll(plan_ma_comm_t *comm,
     return 0;
 }
 
+_bor_inline int planMACommSendToNode(plan_ma_comm_t *comm, int node_id,
+                                     const plan_ma_msg_t *msg)
+{
+    return comm->send_to_node_fn(comm, node_id, msg);
+}
+
 _bor_inline int planMACommSendInRing(plan_ma_comm_t *comm,
                                      const plan_ma_msg_t *msg)
 {
     int node_id;
     node_id = (comm->node_id + 1) % comm->node_size;
     return planMACommSendToNode(comm, node_id, msg);
+}
+
+_bor_inline plan_ma_msg_t *planMACommRecv(plan_ma_comm_t *comm)
+{
+    if (comm->recv_fn)
+        return comm->recv_fn(comm);
+    return comm->recv_block_fn(comm, 0);
+}
+
+_bor_inline plan_ma_msg_t *planMACommRecvBlock(plan_ma_comm_t *comm,
+                                               int timeout_in_ms)
+{
+    return comm->recv_block_fn(comm, timeout_in_ms);
 }
 
 #ifdef __cplusplus

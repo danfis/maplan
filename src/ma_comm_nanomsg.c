@@ -117,7 +117,7 @@ plan_ma_comm_t *planMACommIPCNew(int agent_id, int agent_size,
     return inprocIPCNew(agent_id, agent_size, "ipc", prefix);
 }
 
-plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
+plan_ma_comm_t *_planMACommTCPNew(int agent_id, int agent_size,
                                  const char **addr)
 {
     plan_ma_comm_t *comm;

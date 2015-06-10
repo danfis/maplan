@@ -69,6 +69,7 @@ OBJS += msg_schema
 OBJS += ma_msg
 OBJS += ma_comm
 OBJS += ma_comm_nanomsg
+OBJS += ma_comm_tcp
 OBJS += ma_search
 OBJS += ma_snapshot
 OBJS += ma_private_state

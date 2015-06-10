@@ -1,6 +1,4 @@
-/***
- * maplan
- * -------
+/*** * maplan * -------
  * Copyright (c)2015 Daniel Fiser <danfis@danfis.cz>,
  * Agent Technology Center, Department of Computer Science,
  * Faculty of Electrical Engineering, Czech Technical University in Prague.
@@ -44,6 +42,7 @@ struct _plan_ma_search_t {
     plan_cost_t goal_cost;
     int blocked;
     int terminate;
+    int is_terminate_initiator;
 
     plan_heur_t *heur;
 };
@@ -191,6 +190,7 @@ plan_ma_search_t *planMASearchNew(plan_ma_search_params_t *params)
     ma_search->goal_cost = PLAN_COST_MAX;
     ma_search->blocked = 0;
     ma_search->terminate = 0;
+    ma_search->is_terminate_initiator = 0;
 
     ma_search->heur = NULL;
     if (ma_search->search->heur->ma){
@@ -248,7 +248,6 @@ static int searchPostStep(plan_search_t *search, int res, void *ud)
     }else if (res == PLAN_SEARCH_ABORT){
         // Initialize termination of a whole cluster
         terminate(ma);
-        ma->terminate = 1;
 
     }else if (res == PLAN_SEARCH_NOT_FOUND){
         // Block until some message unblocks the process
@@ -531,6 +530,7 @@ static void terminate(plan_ma_search_t *ma)
     planMAMsgDel(msg);
 
     ma->terminate = 1;
+    ma->is_terminate_initiator = 1;
 }
 
 static int terminateMsg(plan_ma_search_t *ma_search,
@@ -572,6 +572,10 @@ static int terminateMsg(plan_ma_search_t *ma_search,
             return -1;
 
         }else{
+            if (ma_search->is_terminate_initiator
+                    && agent_id < ma_search->comm->node_id)
+                return 0;
+
             // The request is from some other agent, just is send it to
             // the next agent in ring
             planMACommSendInRing(ma_search->comm, msg);

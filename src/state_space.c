@@ -19,7 +19,7 @@
 
 #include <boruvka/alloc.h>
 
-#include "plan/statespace.h"
+#include "plan/state_space.h"
 
 void planStateSpaceNodeInit(plan_state_space_node_t *n)
 {

@@ -19,7 +19,7 @@
 
 #include <boruvka/alloc.h>
 #include "plan/heur.h"
-#include "plan/prioqueue.h"
+#include "plan/prio_queue.h"
 #include "heur_relax.h"
 #include "op_id_tr.h"
 

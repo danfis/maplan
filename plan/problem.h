@@ -23,7 +23,7 @@
 #include <plan/var.h>
 #include <plan/state.h>
 #include <plan/op.h>
-#include <plan/succgen.h>
+#include <plan/succ_gen.h>
 
 #ifdef __cplusplus
 extern "C" {

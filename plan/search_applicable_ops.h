@@ -21,7 +21,7 @@
 #define __PLAN_SEARCH_APPLICABLE_OPS_H__
 
 #include <plan/op.h>
-#include <plan/succgen.h>
+#include <plan/succ_gen.h>
 
 #ifdef __cplusplus
 extern "C" {

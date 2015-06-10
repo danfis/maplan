@@ -25,7 +25,7 @@
 #include <boruvka/alloc.h>
 
 #include "plan/problem.h"
-#include "plan/causalgraph.h"
+#include "plan/causal_graph.h"
 #include "problemdef.pb.h"
 #include "fact_id.h"
 

@@ -21,7 +21,7 @@
 #include <boruvka/rbtree_int.h>
 #include <boruvka/pairheap.h>
 
-#include "plan/causalgraph.h"
+#include "plan/causal_graph.h"
 
 /** One strongly connected component */
 struct _scc_comp_t {

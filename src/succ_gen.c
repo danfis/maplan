@@ -18,7 +18,7 @@
  */
 
 #include <boruvka/alloc.h>
-#include "plan/succgen.h"
+#include "plan/succ_gen.h"
 
 #ifndef _GNU_SOURCE
 /** Declaration of qsort_r() function that should be available in libc */

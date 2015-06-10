@@ -20,7 +20,7 @@
 #include <strings.h>
 #include <stdio.h>
 #include <boruvka/alloc.h>
-#include "plan/prioqueue.h"
+#include "plan/prio_queue.h"
 
 struct _heap_node_t {
     int key;

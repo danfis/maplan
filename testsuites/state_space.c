@@ -1,5 +1,5 @@
 #include <cu/cu.h>
-#include "plan/statespace.h"
+#include "plan/state_space.h"
 
 TEST(testStateSpace)
 {

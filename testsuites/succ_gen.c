@@ -1,7 +1,7 @@
 #include <cu/cu.h>
 #include <boruvka/alloc.h>
 #include "plan/problem.h"
-#include "plan/succgen.h"
+#include "plan/succ_gen.h"
 #include "state_pool.h"
 
 static int sortOpsCmp(const void *a, const void *b)

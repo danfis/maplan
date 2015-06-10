@@ -24,7 +24,7 @@
 #include <boruvka/fifo.h>
 
 #include <plan/problem.h>
-#include <plan/statespace.h>
+#include <plan/state_space.h>
 #include <plan/heur.h>
 #include <plan/list_lazy.h>
 #include <plan/path.h>

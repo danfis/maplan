@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <cu/cu.h>
 #include "plan/problem.h"
-#include "plan/causalgraph.h"
+#include "plan/causal_graph.h"
 
 TEST(testCausalGraphImportantVar)
 {

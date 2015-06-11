@@ -13,13 +13,50 @@
 #define ESTABLISH_TIMEOUT 10000
 #define SHUTDOWN_TIMEOUT 10000
 
+#define BUF_INIT_SIZE 1024
+#define MSG_RING_BUF_SIZE 1024
+
+struct _buf_t {
+    char *buf; /*!< Buffer for input data */
+    int size;  /*!< Allocated size */
+    char *beg; /*!< Beginning of the filled part of the buffer */
+    char *end; /*!< Beggining of the empty part of the buffer */
+    int remain; /*!< How many bytes remain in buffer (after .end) */
+    int read_size;
+
+    int msg_size;
+};
+typedef struct _buf_t buf_t;
+
+static void bufInit(buf_t *buf);
+static void bufFree(buf_t *buf);
+static void bufExtend(buf_t *buf, int size);
+static void bufShiftData(buf_t *buf);
+
+struct _msg_ring_buf_t {
+    plan_ma_msg_t **buf; /*!< Ring buffer */
+    int size;            /*!< Size of the buffer */
+    int head;            /*!< Head pointer */
+    int tail;            /*!< Tail pointer */
+};
+typedef struct _msg_ring_buf_t msg_ring_buf_t;
+
+static void msgRingBufInit(msg_ring_buf_t *b);
+static void msgRingBufFree(msg_ring_buf_t *b);
+static void msgRingBufExtend(msg_ring_buf_t *b);
+static void msgRingBufPush(msg_ring_buf_t *b, plan_ma_msg_t *msg);
+static plan_ma_msg_t *msgRingBufPop(msg_ring_buf_t *b);
+_bor_inline int msgRingBufNext(int c, int size);
+_bor_inline int msgRingBufFull(const msg_ring_buf_t *b);
+_bor_inline int msgRingBufEmpty(const msg_ring_buf_t *b);
+
 struct _plan_ma_comm_tcp_t {
     plan_ma_comm_t comm;
 
-    int recv_main_sock; /*!< Main listening socket */
-    int *sock;          /*!< In/Out sockets */
-
-    struct pollfd *poll_fds; /*!< Pre-filled array for poll(2) */
+    int recv_main_sock;    /*!< Main listening socket */
+    int *sock;             /*!< In/Out sockets */
+    buf_t *buf;            /*!< Buffer for each socket */
+    msg_ring_buf_t msgbuf; /*!< Buffer for parsed messages */
 };
 typedef struct _plan_ma_comm_tcp_t plan_ma_comm_tcp_t;
 
@@ -31,38 +68,12 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
 static plan_ma_msg_t *tcpRecv(plan_ma_comm_t *comm);
 static plan_ma_msg_t *tcpRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms);
 
-static int parseAddr(const char *addr, char *addr_out)
-{
-    const char *a;
-    int i;
+/** Parse address in format x.x.x.x:port */
+static int parseAddr(const char *addr, char *addr_out);
+/** Initializes address structure using port and string address */
+static int initSockAddr(struct sockaddr_in *a, int port, const char *addr);
 
-    for (i = 0, a = addr; *a != 0x0 && *a != ':'; ++a)
-        addr_out[i++] = *a;
-    addr_out[i] = 0;
-    if (*a == ':')
-        return atoi(a + 1);
-    return -1;
-}
-
-static int initSockAddr(struct sockaddr_in *a, int port, const char *addr)
-{
-    int ret;
-
-    bzero(a, sizeof(*a));
-    ret = inet_pton(AF_INET, addr, &a->sin_addr);
-    if (ret == 0){
-        fprintf(stderr, "Error TCP: Invalid address: `%s'\n", addr);
-        return -1;
-    }else if (ret < 0){
-        fprintf(stderr, "Error TCP: Could not convert address `%s': %s\n",
-                addr, strerror(errno));
-        return -1;
-    }
-    a->sin_family = AF_INET;
-    a->sin_port = htons(port);
-    return 0;
-}
-
+// TODO
 static void sockSetLinger(int sock, int time_in_s)
 {
     struct linger lin;
@@ -435,7 +446,6 @@ static int shutdownNetwork(plan_ma_comm_tcp_t *tcp)
     int i, ret, remain;
     char buf[128];
 
-    //sleep(1);
     // First shutdown outgoing connections
     for (i = 0; i < tcp->comm.node_size; ++i){
         if (tcp->sock[i] == -1)
@@ -510,7 +520,6 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
                     tcpDel, tcpSendToNode, tcpRecv, tcpRecvBlock);
     tcp->recv_main_sock = -1;
     tcp->sock = BOR_ALLOC_ARR(int, agent_size);
-    tcp->poll_fds = BOR_ALLOC_ARR(struct pollfd, agent_size);
     for (i = 0; i < agent_size; ++i){
         tcp->sock[i] = -1;
     }
@@ -528,42 +537,31 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
         return NULL;
     }
 
-    // Prepare poll descriptors
-    /*
+    // Allocate and initialize buffers
+    tcp->buf = BOR_CALLOC_ARR(buf_t, agent_size);
     for (i = 0; i < agent_size; ++i){
-        if (i == agent_id){
-            tcp->poll_fds[i].fd = tcp->recv_main_sock;
-            tcp->poll_fds[i].events = POLLIN | POLLPRI;
-        }else{
-            tcp->poll_fds[i].fd = tcp->recv_sock[i];
-            tcp->poll_fds[i].events = POLLIN | POLLPRI;
-        }
+        if (tcp->sock[i] != -1)
+            bufInit(tcp->buf + i);
     }
-    */
 
-    /*
-    fprintf(stderr, "END\n");
-    fflush(stderr);
-    if (tcp->comm.node_id > 0)
-        write(tcp->sock[tcp->comm.node_id - 1], &i, 4);
-    //sleep(10);
-    tcpDel(&tcp->comm);
-    fprintf(stderr, "Deleted\n");
-    exit(-1);
-    */
+    // Initialize buffer for unpacked messages
+    msgRingBufInit(&tcp->msgbuf);
+
     return &tcp->comm;
 }
 
 static void tcpDel(plan_ma_comm_t *comm)
 {
     plan_ma_comm_tcp_t *tcp = TCP(comm);
+    int i;
 
     shutdownNetwork(tcp);
 
     if (tcp->sock != NULL)
         BOR_FREE(tcp->sock);
-    if (tcp->poll_fds)
-        BOR_FREE(tcp->poll_fds);
+    for (i = 0; i < tcp->comm.node_size; ++i)
+        bufFree(tcp->buf + i);
+    msgRingBufFree(&tcp->msgbuf);
     BOR_FREE(tcp);
 }
 
@@ -610,21 +608,73 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
     return ret;
 }
 
+static int recvToBuf(int sock, buf_t *buf)
+{
+    ssize_t rsize;
+
+    fprintf(stderr, "%lx remain: %d\n", (long)buf, buf->remain);
+    rsize = recv(sock, buf->end, buf->remain, 0);
+    if (rsize <= 0)
+        return rsize;
+
+    fprintf(stderr, "%lx recvToBuf: %d\n", (long)buf, (int)rsize);
+    buf->end += rsize;
+    buf->remain -= rsize;
+    buf->read_size += rsize;
+    return 1;
+}
+
+static plan_ma_msg_t *msgFromBuf(buf_t *buf)
+{
+    plan_ma_msg_t *msg = NULL;
+
+    fprintf(stderr, "msgFromBuf: %d\n", buf->msg_size);
+    if (buf->msg_size <= 0 && buf->read_size >= 4){
+#ifdef BOR_BIG_ENDIAN
+        buf->msg_size = le32toh(*(uint32_t *)buf->beg);
+#else /* BOR_BIG_ENDIAN */
+        buf->msg_size = *(uint32_t *)buf->beg;
+#endif /* BOR_BIG_ENDIAN */
+        buf->beg += 4;
+        buf->read_size -= 4;
+
+        if (2 * buf->msg_size + 8 > buf->size)
+            bufExtend(buf, 2 * buf->msg_size + 8);
+        if (buf->msg_size > buf->read_size + buf->remain)
+            bufShiftData(buf);
+    }
+
+    fprintf(stderr, "msgFromBuf2: %d (%d)\n", buf->msg_size, buf->read_size);
+    if (buf->msg_size > 0 && buf->read_size >= buf->msg_size){
+        msg = planMAMsgUnpacked(buf->beg, buf->msg_size);
+        buf->beg += buf->msg_size;
+        buf->read_size -= buf->msg_size;
+        buf->msg_size = -1;
+    }
+
+    if (buf->read_size == 0
+            || (buf->msg_size <= 0 && buf->read_size + buf->remain < 4)){
+        bufShiftData(buf);
+    }
+
+    return msg;
+}
+
 static plan_ma_msg_t *_tcpRecv(plan_ma_comm_tcp_t *tcp, int timeout_in_ms)
 {
     struct pollfd pfd[tcp->comm.node_size];
     plan_ma_msg_t *msg = NULL;
-    int i, ret;
-    ssize_t rsize;
-    uint32_t bufsize;
-    char buf[16000];
+    int i, ret, rsize;
+
+    if ((msg = msgRingBufPop(&tcp->msgbuf)) != NULL)
+        return msg;
 
     for (i = 0; i < tcp->comm.node_size; ++i){
         pfd[i].fd = tcp->sock[i];
         pfd[i].events = POLLIN;
     }
 
-    while (1) {
+    while ((msg = msgRingBufPop(&tcp->msgbuf)) == NULL) {
         fprintf(stderr, "POLL: %d\n", timeout_in_ms);
         ret = poll(pfd, tcp->comm.node_size, timeout_in_ms);
         if (ret == 0){
@@ -640,27 +690,25 @@ static plan_ma_msg_t *_tcpRecv(plan_ma_comm_tcp_t *tcp, int timeout_in_ms)
         for (i = 0; i < tcp->comm.node_size; ++i){
             if (pfd[i].revents & POLLIN){
                 fprintf(stderr, "recv POLLIN %d\n", i);
-                rsize = recv(tcp->sock[i], &bufsize, 4, MSG_WAITALL);
-                if (rsize != 4){
-                    fprintf(stderr, "Error: rsize != 4 (%d)\n", (int)rsize);
-                    exit(-1);
-                }
+                rsize = recvToBuf(tcp->sock[i], tcp->buf + i);
+                if (rsize < 0){
+                    fprintf(stderr, "Error TCP[%d]: Recv error: %s\n",
+                            tcp->comm.node_id, strerror(errno));
+                    continue;
 
-#ifdef BOR_BIG_ENDIAN
-                bufsize = le32toh(bufsize);
-#endif /* BOR_BIG_ENDIAN */
-                rsize = recv(tcp->sock[i], buf, bufsize, MSG_WAITALL);
-                if (rsize != bufsize){
-                    fprintf(stderr, "Error: rsize != bufsize\n");
-                    exit(-1);
-                }
+                }else if (rsize == 0){
+                    // TODO: This means that the remote was closed...
+                    fprintf(stderr, "HUP from %d\n", i);
+                    pfd[i].fd = -1;
+                    continue;
 
-                msg = planMAMsgUnpacked(buf, bufsize);
-                fprintf(stderr, "RECV from %d, type: %d\n", i, planMAMsgType(msg));
-                break;
+                }else{
+                    while ((msg = msgFromBuf(tcp->buf + i)) != NULL){
+                        msgRingBufPush(&tcp->msgbuf, msg);
+                    }
+                }
             }
         }
-        break;
     }
 
     return msg;
@@ -678,4 +726,154 @@ static plan_ma_msg_t *tcpRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms)
     if (timeout_in_ms <= 0)
         return _tcpRecv(tcp, -1);
     return _tcpRecv(tcp, timeout_in_ms);
+}
+
+
+static int parseAddr(const char *addr, char *addr_out)
+{
+    const char *a;
+    int i;
+
+    for (i = 0, a = addr; *a != 0x0 && *a != ':'; ++a)
+        addr_out[i++] = *a;
+    addr_out[i] = 0;
+    if (*a == ':')
+        return atoi(a + 1);
+    return -1;
+}
+
+static int initSockAddr(struct sockaddr_in *a, int port, const char *addr)
+{
+    int ret;
+
+    bzero(a, sizeof(*a));
+    ret = inet_pton(AF_INET, addr, &a->sin_addr);
+    if (ret == 0){
+        fprintf(stderr, "Error TCP: Invalid address: `%s'\n", addr);
+        return -1;
+    }else if (ret < 0){
+        fprintf(stderr, "Error TCP: Could not convert address `%s': %s\n",
+                addr, strerror(errno));
+        return -1;
+    }
+    a->sin_family = AF_INET;
+    a->sin_port = htons(port);
+    return 0;
+}
+
+
+/*** msg_ring_buf_t ***/
+static void msgRingBufInit(msg_ring_buf_t *b)
+{
+    b->buf = BOR_ALLOC_ARR(plan_ma_msg_t *, MSG_RING_BUF_SIZE);
+    b->size = MSG_RING_BUF_SIZE;
+    b->head = b->tail = 0;
+}
+
+static void msgRingBufFree(msg_ring_buf_t *b)
+{
+    int i;
+
+    for (i = b->head; i != b->tail; i = msgRingBufNext(i, b->size)){
+        planMAMsgDel(b->buf[i]);
+    }
+    BOR_FREE(b->buf);
+}
+
+static void msgRingBufExtend(msg_ring_buf_t *b)
+{
+    int oldsize, i, j;
+    plan_ma_msg_t **newbuf;
+
+    oldsize = b->size;
+    b->size *= 2;
+    newbuf = BOR_ALLOC_ARR(plan_ma_msg_t *, b->size);
+    for (j = 0, i = b->head; i != b->tail; i = msgRingBufNext(i, oldsize), ++j){
+        newbuf[j] = b->buf[i];
+    }
+
+    BOR_FREE(b->buf);
+    b->buf = newbuf;
+    b->head = 0;
+    b->tail = j;
+}
+
+static void msgRingBufPush(msg_ring_buf_t *b, plan_ma_msg_t *msg)
+{
+    if (msgRingBufFull(b))
+        msgRingBufExtend(b);
+    b->buf[b->tail] = msg;
+    b->tail = msgRingBufNext(b->tail, b->size);
+}
+
+static plan_ma_msg_t *msgRingBufPop(msg_ring_buf_t *b)
+{
+    plan_ma_msg_t *msg;
+
+    if (msgRingBufEmpty(b))
+        return NULL;
+
+    msg = b->buf[b->head];
+    b->head = msgRingBufNext(b->head, b->size);
+    return msg;
+}
+
+_bor_inline int msgRingBufNext(int c, int size)
+{
+    return (c + 1) % size;
+}
+
+_bor_inline int msgRingBufFull(const msg_ring_buf_t *b)
+{
+    return msgRingBufNext(b->tail, b->size) == b->head;
+}
+
+_bor_inline int msgRingBufEmpty(const msg_ring_buf_t *b)
+{
+    return b->head == b->tail;
+}
+
+
+/*** buf_t ***/
+static void bufInit(buf_t *buf)
+{
+    buf->buf = BOR_ALLOC_ARR(char, BUF_INIT_SIZE);
+    buf->size = BUF_INIT_SIZE;
+    buf->beg = buf->end = buf->buf;
+    buf->remain = buf->size;
+    buf->read_size = 0;
+    buf->msg_size = -1;
+}
+
+static void bufFree(buf_t *buf)
+{
+    if (buf->buf)
+        BOR_FREE(buf->buf);
+}
+
+static void bufExtend(buf_t *buf, int size)
+{
+    int ext, pagesize;
+
+    pagesize = sysconf(_SC_PAGESIZE);
+    size = ((size / pagesize) + 1) * pagesize;
+    ext = size - buf->size;
+
+    buf->size = size;
+    buf->buf = BOR_REALLOC_ARR(buf->buf, char, buf->size);
+    buf->remain += ext;
+    buf->end = buf->buf + buf->size - buf->remain;
+    buf->beg = buf->end - buf->read_size;
+}
+
+static void bufShiftData(buf_t *buf)
+{
+    int i;
+
+    for (i = 0; i < buf->read_size; ++i)
+        buf->buf[i] = buf->beg[i];
+
+    buf->beg = buf->buf;
+    buf->end = buf->beg + buf->read_size;
+    buf->remain = buf->size - buf->read_size;
 }

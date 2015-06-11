@@ -178,6 +178,8 @@ static void tcpDel(plan_ma_comm_t *comm)
         BOR_FREE(tcp->sock);
     for (i = 0; i < tcp->comm.node_size; ++i)
         bufFree(tcp->buf + i);
+    if (tcp->buf != NULL)
+        BOR_FREE(tcp->buf);
     msgRingBufFree(&tcp->msgbuf);
     BOR_FREE(tcp);
 }

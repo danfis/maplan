@@ -84,8 +84,9 @@ struct _plan_ma_comm_tcp_t {
     int *sock;             /*!< In/Out sockets */
     buf_t *buf;            /*!< Buffer for each socket */
     msg_ring_buf_t msgbuf; /*!< Buffer for parsed messages */
-    char *sendbuf;
-    int sendbuf_size;
+    char *sendbuf;         /*!< Preallocated send buffer */
+    int sendbuf_size;      /*!< Size of .sendbuf */
+    struct pollfd *recv_pfd; /*!< Poll structures for receiving msgs */
 };
 typedef struct _plan_ma_comm_tcp_t plan_ma_comm_tcp_t;
 #define TCP(comm) bor_container_of(comm, plan_ma_comm_tcp_t, comm)
@@ -172,6 +173,12 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
     tcp->sendbuf = BOR_ALLOC_ARR(char, SENDBUF_SIZE);
     tcp->sendbuf_size = SENDBUF_SIZE;
 
+    tcp->recv_pfd = BOR_ALLOC_ARR(struct pollfd, agent_size);
+    for (i = 0; i < agent_size; ++i){
+        tcp->recv_pfd[i].fd = tcp->sock[i];
+        tcp->recv_pfd[i].events = POLLIN;
+    }
+
     return &tcp->comm;
 }
 
@@ -191,6 +198,8 @@ static void tcpDel(plan_ma_comm_t *comm)
     msgRingBufFree(&tcp->msgbuf);
     if (tcp->sendbuf)
         BOR_FREE(tcp->sendbuf);
+    if (tcp->recv_pfd)
+        BOR_FREE(tcp->recv_pfd);
     BOR_FREE(tcp);
 }
 
@@ -237,18 +246,13 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
 
 static plan_ma_msg_t *_tcpRecv(plan_ma_comm_tcp_t *tcp, int timeout_in_ms)
 {
-    struct pollfd pfd[tcp->comm.node_size];
+    struct pollfd *pfd = tcp->recv_pfd;
     plan_ma_msg_t *msg = NULL;
     int i, ret, rsize;
 
     // If we have buffered a message, return it immediately
     if ((msg = msgRingBufPop(&tcp->msgbuf)) != NULL)
         return msg;
-
-    for (i = 0; i < tcp->comm.node_size; ++i){
-        pfd[i].fd = tcp->sock[i];
-        pfd[i].events = POLLIN;
-    }
 
     while ((msg = msgRingBufPop(&tcp->msgbuf)) == NULL) {
         ret = poll(pfd, tcp->comm.node_size, timeout_in_ms);

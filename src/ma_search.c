@@ -25,6 +25,19 @@
 /** Timeout before dead-end verification is started */
 #define DEAD_END_BLOCK_TIME 1000 // 1 second
 
+struct _term_t {
+    int is_initiator;
+    int initiator_id;
+
+    int final_target;
+    int final_counter;
+
+    int final_ack_target;
+    int final_ack_counter;
+    int is_first;
+    int is_last;
+};
+typedef struct _term_t term_t;
 
 /** Main mutli-agent search structure. */
 struct _plan_ma_search_t {
@@ -42,7 +55,7 @@ struct _plan_ma_search_t {
     plan_cost_t goal_cost;
     int blocked;
     int terminate;
-    int is_terminate_initiator;
+    term_t term;
 
     plan_heur_t *heur;
 };
@@ -190,7 +203,8 @@ plan_ma_search_t *planMASearchNew(plan_ma_search_params_t *params)
     ma_search->goal_cost = PLAN_COST_MAX;
     ma_search->blocked = 0;
     ma_search->terminate = 0;
-    ma_search->is_terminate_initiator = 0;
+    ma_search->term.is_initiator = 0;
+    ma_search->term.initiator_id = INT_MAX;
 
     ma_search->heur = NULL;
     if (ma_search->search->heur->ma){
@@ -530,7 +544,95 @@ static void terminate(plan_ma_search_t *ma)
     planMAMsgDel(msg);
 
     ma->terminate = 1;
-    ma->is_terminate_initiator = 1;
+    ma->term.is_initiator = 1;
+}
+
+static void terminateSendFinalFin(plan_ma_search_t *ma_search)
+{
+    plan_ma_msg_t *term_msg;
+
+    term_msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
+                            PLAN_MA_MSG_TERMINATE_FINAL_FIN,
+                            ma_search->comm->node_id);
+    planMACommSendToAll(ma_search->comm, term_msg);
+    planMAMsgDel(term_msg);
+}
+
+static void terminateSendFinal(plan_ma_search_t *ma_search, int send_plan)
+{
+    plan_ma_msg_t *term_msg;
+    int i, to;
+
+    if (ma_search->term.final_ack_target == 0)
+        return;
+
+    term_msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
+                            PLAN_MA_MSG_TERMINATE_FINAL,
+                            ma_search->comm->node_id);
+    if (send_plan){
+        planMAMsgSetSearchRes(term_msg, ma_search->res);
+        planMAMsgTracePathAppendPath(term_msg, &ma_search->path);
+    }
+
+    to = ma_search->comm->node_id + 1;
+    to = to % ma_search->comm->node_size;
+    for (i = 0; i < ma_search->term.final_ack_target; ++i){
+        planMACommSendToNode(ma_search->comm, to, term_msg);
+        to = (to + 1) % ma_search->comm->node_size;
+    }
+    planMAMsgDel(term_msg);
+}
+
+static void terminateSendFinalAck(plan_ma_search_t *ma_search)
+{
+    plan_ma_msg_t *term_msg;
+    int i, to, node_size;
+
+    if (ma_search->term.final_target == 0)
+        return;
+
+    term_msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
+                            PLAN_MA_MSG_TERMINATE_FINAL_ACK,
+                            ma_search->comm->node_id);
+
+    node_size = ma_search->comm->node_size;
+    to = ma_search->comm->node_id - 1;
+    to = (to + node_size) % node_size;
+    for (i = 0; i < ma_search->term.final_target; ++i){
+        planMACommSendToNode(ma_search->comm, to, term_msg);
+        to = (to + node_size - 1) % node_size;
+    }
+    planMAMsgDel(term_msg);
+}
+
+static void terminatePrepareTargets(plan_ma_search_t *ma_search,
+                                    int initiator_id)
+{
+    int target;
+
+    if (initiator_id == -1){
+        ma_search->term.is_first = 1;
+        ma_search->term.is_last = 0;
+        ma_search->term.final_counter = 0;
+        ma_search->term.final_target = 0;
+        ma_search->term.final_ack_counter = 0;
+        ma_search->term.final_ack_target = ma_search->comm->node_size - 1;
+
+    }else{
+        ma_search->term.is_first = 0;
+        ma_search->term.is_last = 0;
+        ma_search->term.final_counter = 0;
+        ma_search->term.final_ack_counter = 0;
+
+        target = ma_search->comm->node_id - initiator_id;
+        target = target + ma_search->comm->node_size;
+        target = target % ma_search->comm->node_size;
+        ma_search->term.final_target = target;
+        target = ma_search->comm->node_size - 1 - target;
+        ma_search->term.final_ack_target = target;
+        if (ma_search->term.final_ack_target == 0)
+            ma_search->term.is_last = 1;
+    }
 }
 
 static int terminateMsg(plan_ma_search_t *ma_search,
@@ -538,48 +640,67 @@ static int terminateMsg(plan_ma_search_t *ma_search,
 {
     int subtype = planMAMsgSubType(msg);
     int agent_id;
-    plan_ma_msg_t *term_msg;
 
-    if (subtype == PLAN_MA_MSG_TERMINATE_FINAL){
-        // When the final TERMINATE signal is received, accept the results
-        // stored there and terminate
-        ma_search->res = planMAMsgSearchRes(msg);
-        if (!planPathEmpty(&ma_search->path)){
-            planPathFree(&ma_search->path);
-            planPathInit(&ma_search->path);
-        }
-        planMAMsgTracePathExtractPath(msg, &ma_search->path);
+    if (subtype == PLAN_MA_MSG_TERMINATE_FINAL_FIN){
         return -1;
 
-    }else{ // PLAN_MA_MSG_TERMINATE_REQUEST
+    }else if (subtype == PLAN_MA_MSG_TERMINATE_FINAL){
+        if (planMAMsgAgent(msg) == ma_search->term.initiator_id){
+            ma_search->res = planMAMsgSearchRes(msg);
+            if (!planPathEmpty(&ma_search->path)){
+                planPathFree(&ma_search->path);
+                planPathInit(&ma_search->path);
+            }
+            planMAMsgTracePathExtractPath(msg, &ma_search->path);
+        }
+        ++ma_search->term.final_counter;
 
-        // If the TERMINATE_REQUEST is received it can be either the
-        // original TERMINATE_REQUEST from this agent or it can be
-        // request from some other agent that want to terminate in the
-        // same time.
+    }else if (subtype == PLAN_MA_MSG_TERMINATE_FINAL_ACK){
+        ++ma_search->term.final_ack_counter;
+
+    }else{ // PLAN_MA_MSG_TERMINATE_REQUEST
         agent_id = planMAMsgTerminateAgent(msg);
         if (agent_id == ma_search->comm->node_id){
-            // If our terminate-request circled in the whole ring and
-            // came back, we can safely send TERMINATE signal to all
-            // other agents and terminate.
-            term_msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
-                                    PLAN_MA_MSG_TERMINATE_FINAL,
-                                    ma_search->comm->node_id);
-            planMAMsgSetSearchRes(term_msg, ma_search->res);
-            planMAMsgTracePathAppendPath(term_msg, &ma_search->path);
-            planMACommSendToAll(ma_search->comm, term_msg);
-            planMAMsgDel(term_msg);
-            return -1;
+            // The REQ message circled and arrived back to the initiator.
+            // Initialize flushing message queues.
+            ma_search->term.initiator_id = agent_id;
+            terminatePrepareTargets(ma_search, -1);
+            terminateSendFinal(ma_search, 1);
 
         }else{
-            if (ma_search->is_terminate_initiator
-                    && agent_id < ma_search->comm->node_id)
+            if (ma_search->term.is_initiator
+                    && agent_id > ma_search->comm->node_id)
                 return 0;
 
-            // The request is from some other agent, just is send it to
-            // the next agent in ring
+            if (agent_id < ma_search->term.initiator_id){
+                ma_search->term.initiator_id = agent_id;
+                terminatePrepareTargets(ma_search, agent_id);
+            }
             planMACommSendInRing(ma_search->comm, msg);
         }
+    }
+
+    if (ma_search->term.final_counter == ma_search->term.final_target){
+        if (ma_search->term.is_last){
+            terminateSendFinalAck(ma_search);
+        }else if (!ma_search->term.is_first){
+            terminateSendFinal(ma_search, 0);
+        }
+        ma_search->term.final_counter = -1;
+    }
+
+    if (ma_search->term.final_ack_counter == ma_search->term.final_ack_target){
+        if (!ma_search->term.is_first && !ma_search->term.is_last){
+            terminateSendFinalAck(ma_search);
+        }
+        ma_search->term.final_ack_counter = -1;
+    }
+
+    if (ma_search->term.final_ack_counter == -1
+            && ma_search->term.final_counter == -1
+            && ma_search->term.is_first){
+        terminateSendFinalFin(ma_search);
+        return -1;
     }
 
     return 0;

@@ -18,11 +18,11 @@
 #define SENDBUF_SIZE 4096
 
 #define ERRM(tcp, text) do { \
-    fprintf(stderr, "[%d] Error TCP:" text "\n", (tcp)->comm.node_id); \
+    fprintf(stderr, "[%d] Error TCP: " text "\n", (tcp)->comm.node_id); \
     fflush(stderr); \
     } while (0)
 #define ERR(tcp, format, ...) do { \
-    fprintf(stderr, "[%d] Error TCP:" format "\n", \
+    fprintf(stderr, "[%d] Error TCP: " format "\n", \
             (tcp)->comm.node_id, __VA_ARGS__); \
     fflush(stderr); \
     } while (0)
@@ -31,7 +31,7 @@
     ERR((tcp), text " %s", strerror(errno))
 
 #define ERR2(agent_id, format, ...) do { \
-    fprintf(stderr, "[%d] Error TCP:" format "\n", \
+    fprintf(stderr, "[%d] Error TCP: " format "\n", \
             (agent_id), __VA_ARGS__); \
     fflush(stderr); \
     } while (0)
@@ -81,7 +81,8 @@ struct _plan_ma_comm_tcp_t {
     plan_ma_comm_t comm;
 
     int listen_sock;       /*!< Main listening socket */
-    int *sock;             /*!< In/Out sockets */
+    int *send_sock;             /*!< In/Out sockets */
+    int *recv_sock;             /*!< In/Out sockets */
     buf_t *buf;            /*!< Buffer for each socket */
     msg_ring_buf_t msgbuf; /*!< Buffer for parsed messages */
     char *sendbuf;         /*!< Preallocated send buffer */
@@ -142,9 +143,11 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
     _planMACommInit(&tcp->comm, agent_id, agent_size,
                     tcpDel, tcpSendToNode, tcpRecv, tcpRecvBlock);
     tcp->listen_sock = -1;
-    tcp->sock = BOR_ALLOC_ARR(int, agent_size);
+    tcp->send_sock = BOR_ALLOC_ARR(int, agent_size);
+    tcp->recv_sock = BOR_ALLOC_ARR(int, agent_size);
     for (i = 0; i < agent_size; ++i){
-        tcp->sock[i] = -1;
+        tcp->send_sock[i] = -1;
+        tcp->recv_sock[i] = -1;
     }
 
     // Create receiving socket but without accepting incomming connections
@@ -163,7 +166,7 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
     // Allocate and initialize buffers
     tcp->buf = BOR_CALLOC_ARR(buf_t, agent_size);
     for (i = 0; i < agent_size; ++i){
-        if (tcp->sock[i] != -1)
+        if (tcp->recv_sock[i] != -1)
             bufInit(tcp->buf + i);
     }
 
@@ -175,7 +178,7 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
 
     tcp->recv_pfd = BOR_ALLOC_ARR(struct pollfd, agent_size);
     for (i = 0; i < agent_size; ++i){
-        tcp->recv_pfd[i].fd = tcp->sock[i];
+        tcp->recv_pfd[i].fd = tcp->recv_sock[i];
         tcp->recv_pfd[i].events = POLLIN;
     }
 
@@ -189,8 +192,10 @@ static void tcpDel(plan_ma_comm_t *comm)
 
     shutdownNetwork(tcp);
 
-    if (tcp->sock != NULL)
-        BOR_FREE(tcp->sock);
+    if (tcp->send_sock != NULL)
+        BOR_FREE(tcp->send_sock);
+    if (tcp->recv_sock != NULL)
+        BOR_FREE(tcp->recv_sock);
     for (i = 0; i < tcp->comm.node_size; ++i)
         bufFree(tcp->buf + i);
     if (tcp->buf != NULL)
@@ -230,7 +235,7 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
     size += 4;
     sent = 0;
     while (sent != size){
-        send_ret = send(tcp->sock[node_id], tcp->sendbuf + sent, size - sent, 0);
+        send_ret = send(tcp->send_sock[node_id], tcp->sendbuf + sent, size - sent, 0);
         if (send_ret < 0){
             ERR(tcp, "Could not send message to %d: %s", node_id, strerror(errno));
             ret = -1;
@@ -268,7 +273,7 @@ static plan_ma_msg_t *_tcpRecv(plan_ma_comm_tcp_t *tcp, int timeout_in_ms)
         for (i = 0; i < tcp->comm.node_size; ++i){
             if (pfd[i].revents & POLLIN){
                 // Data are available, so read them into buffer
-                rsize = bufFillFromSock(tcp->buf + i, tcp->sock[i]);
+                rsize = bufFillFromSock(tcp->buf + i, tcp->recv_sock[i]);
                 if (rsize < 0){
                     ERRNO(tcp, "Recv error:");
                     continue;
@@ -420,7 +425,7 @@ static int sendGreetingMsg(plan_ma_comm_tcp_t *tcp, int id)
     msg = htole16(msg):
 #endif /* BOR_BIG_ENDIAN */
     errno = 0;
-    ret = send(tcp->sock[id], &msg, 2, 0);
+    ret = send(tcp->send_sock[id], &msg, 2, 0);
 
     if (ret != 2){
         ERRNO(tcp, "Could not send greeting message:");
@@ -486,12 +491,12 @@ static int createAndConnectSock(plan_ma_comm_tcp_t *tcp, int id,
         // The connection was successful
         if (sendGreetingMsg(tcp, id) != 0)
             return -1;
-        tcp->sock[id] = sock;
+        tcp->send_sock[id] = sock;
         return 0;
 
     }else if (errno == EINPROGRESS){
         // In non-blocking mode in-progress is also ok
-        tcp->sock[id] = sock;
+        tcp->send_sock[id] = sock;
         return 1;
 
     }else{
@@ -508,7 +513,7 @@ static int connectSockCheck(plan_ma_comm_tcp_t *tcp, int id)
 
     len = sizeof(error);
     error = 0;
-    if (getsockopt(tcp->sock[id], SOL_SOCKET, SO_ERROR, &error, &len) != 0){
+    if (getsockopt(tcp->send_sock[id], SOL_SOCKET, SO_ERROR, &error, &len) != 0){
         ERRNO(tcp, "Could not get sock error:");
         return -1;
     }
@@ -519,8 +524,8 @@ static int connectSockCheck(plan_ma_comm_tcp_t *tcp, int id)
         return 0;
     }
 
-    close(tcp->sock[id]);
-    tcp->sock[id] = -1;
+    close(tcp->send_sock[id]);
+    tcp->send_sock[id] = -1;
     if (error == ECONNREFUSED
             || error == EINPROGRESS
             || error == EALREADY)
@@ -548,11 +553,11 @@ static int acceptConnection(plan_ma_comm_tcp_t *tcp)
     }
 
     // Save connected socket and send greeting message
-    for (id = tcp->comm.node_id; id < tcp->comm.node_size; ++id){
-        if (tcp->sock[id] == -1){
-            tcp->sock[id] = sock;
-            if (sendGreetingMsg(tcp, id) == -1)
-                return -1;
+    for (id = 0; id < tcp->comm.node_size; ++id){
+        if (tcp->recv_sock[id] == -1){
+            tcp->recv_sock[id] = sock;
+            //if (sendGreetingMsg(tcp, id) == -1)
+            //    return -1;
             return 0;
         }
     }
@@ -569,7 +574,7 @@ static int processGreetingMsgs(plan_ma_comm_tcp_t *tcp)
     int i, received = 0, ret;
 
     for (i = 0; i < tcp->comm.node_size; ++i){
-        pfd[i].fd = tcp->sock[i];
+        pfd[i].fd = tcp->recv_sock[i];
         pfd[i].events = POLLIN;
     }
 
@@ -588,7 +593,7 @@ static int processGreetingMsgs(plan_ma_comm_tcp_t *tcp)
         for (i = 0; i < tcp->comm.node_size; ++i){
             if (pfd[i].revents & POLLIN){
                 pfd[i].fd = -1;
-                id = recvGreetingMsg(tcp->comm.node_id, tcp->sock[i]);
+                id = recvGreetingMsg(tcp->comm.node_id, tcp->recv_sock[i]);
                 if (id < 0)
                     return -1;
                 ids[i] = id;
@@ -598,12 +603,12 @@ static int processGreetingMsgs(plan_ma_comm_tcp_t *tcp)
     }
 
     // Reorder sockets according to their IDs
-    memcpy(tmp, tcp->sock, sizeof(int) * tcp->comm.node_size);
+    memcpy(tmp, tcp->recv_sock, sizeof(int) * tcp->comm.node_size);
     for (i = 0; i < tcp->comm.node_size; ++i)
-        tcp->sock[i] = -1;
+        tcp->recv_sock[i] = -1;
     for (i = 0; i < tcp->comm.node_size; ++i){
         if (tmp[i] != -1)
-            tcp->sock[ids[i]] = tmp[i];
+            tcp->recv_sock[ids[i]] = tmp[i];
     }
 
     return 0;
@@ -621,11 +626,13 @@ static int establishNetwork(plan_ma_comm_tcp_t *tcp, const char **addr)
     pfd[tcp->comm.node_id].fd = tcp->listen_sock;
     pfd[tcp->comm.node_id].events = POLLIN | POLLPRI;
 
-    while (num_connected != tcp->comm.node_size - 1){
+    while (num_connected != 2 * (tcp->comm.node_size - 1)){
         // Try to connect all remaining sockets but initialize connection
         // only to the nodes with lower ID
-        for (i = 0; i < tcp->comm.node_id; ++i){
-            if (tcp->sock[i] == -1){
+        for (i = 0; i < tcp->comm.node_size; ++i){
+            if (i == tcp->comm.node_id)
+                continue;
+            if (tcp->send_sock[i] == -1){
                 ret = createAndConnectSock(tcp, i, addr[i]);
                 if (ret == 0){
                     // Socket connected
@@ -633,7 +640,7 @@ static int establishNetwork(plan_ma_comm_tcp_t *tcp, const char **addr)
 
                 }else if (ret == 1){
                     // Socket is pending, add it to poll descritors
-                    pfd[i].fd = tcp->sock[i];
+                    pfd[i].fd = tcp->send_sock[i];
 
                 }else if (ret < 0){
                     return -1;
@@ -686,9 +693,9 @@ static int shutdownNetwork(plan_ma_comm_tcp_t *tcp)
 
     // First shutdown all outgoing connections (send EOF)
     for (i = 0; i < tcp->comm.node_size; ++i){
-        if (tcp->sock[i] == -1)
+        if (tcp->send_sock[i] == -1)
             continue;
-        if (shutdown(tcp->sock[i], SHUT_WR) != 0){
+        if (shutdown(tcp->send_sock[i], SHUT_WR) != 0){
             ERR(tcp, "Could not shutdown socket connected to %d: %s",
                 i, strerror(errno));
         }
@@ -697,7 +704,7 @@ static int shutdownNetwork(plan_ma_comm_tcp_t *tcp)
     // Then wait for EOFs from all agents using poll method
     remain = 0;
     for (i = 0; i < tcp->comm.node_size; ++i){
-        pfd[i].fd = tcp->sock[i];
+        pfd[i].fd = tcp->recv_sock[i];
         pfd[i].events = POLLIN;
         if (pfd[i].fd != -1)
             ++remain;
@@ -717,7 +724,7 @@ static int shutdownNetwork(plan_ma_comm_tcp_t *tcp)
 
         for (i = 0; i < tcp->comm.node_size; ++i){
             if (pfd[i].revents & POLLIN){
-                ret = read(tcp->sock[i], buf, 128);
+                ret = read(tcp->recv_sock[i], buf, 128);
                 pfd[i].fd = -1;
                 if (ret < 0){
                     ERR(tcp, "Error while receiving EOF from %d: %s",
@@ -732,9 +739,16 @@ static int shutdownNetwork(plan_ma_comm_tcp_t *tcp)
 
     // Close all sockets
     for (i = 0; i < tcp->comm.node_size; ++i){
-        if (tcp->sock[i] == -1)
+        if (tcp->send_sock[i] == -1)
             continue;
-        if (close(tcp->sock[i]) != 0){
+        if (close(tcp->send_sock[i]) != 0){
+            ERR(tcp, "Error while closing socket %d: %s", i, strerror(errno));
+        }
+    }
+    for (i = 0; i < tcp->comm.node_size; ++i){
+        if (tcp->recv_sock[i] == -1)
+            continue;
+        if (close(tcp->recv_sock[i]) != 0){
             ERR(tcp, "Error while closing socket %d: %s", i, strerror(errno));
         }
     }

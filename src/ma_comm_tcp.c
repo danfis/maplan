@@ -15,6 +15,7 @@
 
 #define BUF_INIT_SIZE 1024
 #define MSG_RING_BUF_SIZE 1024
+#define SENDBUF_SIZE 4096
 
 #define ERRM(tcp, text) do { \
     fprintf(stderr, "[%d] Error TCP:" text "\n", (tcp)->comm.node_id); \
@@ -83,6 +84,8 @@ struct _plan_ma_comm_tcp_t {
     int *sock;             /*!< In/Out sockets */
     buf_t *buf;            /*!< Buffer for each socket */
     msg_ring_buf_t msgbuf; /*!< Buffer for parsed messages */
+    char *sendbuf;
+    int sendbuf_size;
 };
 typedef struct _plan_ma_comm_tcp_t plan_ma_comm_tcp_t;
 #define TCP(comm) bor_container_of(comm, plan_ma_comm_tcp_t, comm)
@@ -94,6 +97,8 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
 static plan_ma_msg_t *tcpRecv(plan_ma_comm_t *comm);
 static plan_ma_msg_t *tcpRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms);
 
+/** Extend memory allocated for the send buffer */
+static void sendbufExtend(plan_ma_comm_tcp_t *tcp, int size);
 /** Parse address in format x.x.x.x:port */
 static int parseAddr(const char *addr, char *addr_out);
 /** Initializes address structure using port and string address */
@@ -164,6 +169,9 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
     // Initialize buffer for unpacked messages
     msgRingBufInit(&tcp->msgbuf);
 
+    tcp->sendbuf = BOR_ALLOC_ARR(char, SENDBUF_SIZE);
+    tcp->sendbuf_size = SENDBUF_SIZE;
+
     return &tcp->comm;
 }
 
@@ -181,6 +189,8 @@ static void tcpDel(plan_ma_comm_t *comm)
     if (tcp->buf != NULL)
         BOR_FREE(tcp->buf);
     msgRingBufFree(&tcp->msgbuf);
+    if (tcp->sendbuf)
+        BOR_FREE(tcp->sendbuf);
     BOR_FREE(tcp);
 }
 
@@ -188,29 +198,30 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
                          const plan_ma_msg_t *msg)
 {
     plan_ma_comm_tcp_t *tcp = TCP(comm);
-    char *buf, *buf2;
-    size_t size, sent;
+    int size, sent;
     ssize_t send_ret;
     int ret = 0;
 
     if (node_id == tcp->comm.node_id)
         return -1;
 
-    // TODO
-    buf = planMAMsgPacked(msg, &size);
+    do {
+        size = tcp->sendbuf_size - 4;
+        ret = planMAMsgPackToBuf(msg, tcp->sendbuf + 4, &size);
+        if (ret != 0)
+            sendbufExtend(tcp, size);
+    } while (ret != 0);
 
-    buf2 = BOR_ALLOC_ARR(char, size + 4);
 #ifdef BOR_BIG_ENDIAN
-    *(uint32_t *)buf2 = htole32(size):
+    *(uint32_t *)tcp->sendbuf = htole32(size):
 #else
-    *(uint32_t *)buf2 = (uint32_t)size;
+    *(uint32_t *)tcp->sendbuf = (uint32_t)size;
 #endif /* BOR_BIG_ENDIAN */
-    memcpy((char *)buf2 + 4, buf, size);
 
     size += 4;
     sent = 0;
     while (sent != size){
-        send_ret = send(tcp->sock[node_id], buf2 + sent, size - sent, 0);
+        send_ret = send(tcp->sock[node_id], tcp->sendbuf + sent, size - sent, 0);
         if (send_ret < 0){
             ERR(tcp, "Could not send message to %d: %s", node_id, strerror(errno));
             ret = -1;
@@ -220,10 +231,6 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
         sent += send_ret;
     }
 
-    if (buf)
-        BOR_FREE(buf);
-    if (buf2)
-        BOR_FREE(buf2);
     return ret;
 }
 
@@ -296,6 +303,17 @@ static plan_ma_msg_t *tcpRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms)
     return _tcpRecv(tcp, timeout_in_ms);
 }
 
+
+static void sendbufExtend(plan_ma_comm_tcp_t *tcp, int size)
+{
+    int pagesize;
+
+    pagesize = sysconf(_SC_PAGESIZE);
+    size = ((size / pagesize) + 1) * pagesize;
+    tcp->sendbuf_size = size;
+    BOR_FREE(tcp->sendbuf);
+    tcp->sendbuf = BOR_ALLOC_ARR(char, tcp->sendbuf_size);
+}
 
 static int parseAddr(const char *addr, char *addr_out)
 {

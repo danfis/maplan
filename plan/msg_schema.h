@@ -88,9 +88,12 @@ typedef struct _plan_msg_schema_t plan_msg_schema_t;
     };
 
 
-unsigned char *planMsgEncode(const void *msg_struct,
-                             const plan_msg_schema_t *schema,
-                             int *size);
+void *planMsgEncode(const void *msg_struct,
+                    const plan_msg_schema_t *schema,
+                    int *size);
+int planMsgEncode2(const void *msg_struct,
+                   const plan_msg_schema_t *schema,
+                   void *buf, int *size);
 void planMsgDecode(void *msg_struct, const plan_msg_schema_t *schema,
                    const void *buf);
 

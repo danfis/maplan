@@ -296,7 +296,16 @@ plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
 /**
  * Returns heap-allocated packed message and its size.
  */
-void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
+void *planMAMsgPacked(const plan_ma_msg_t *msg, int *size);
+
+/**
+ * Pack message to the buffer.
+ * Returns 0 on success and size is filled with the size of actually used
+ * memory.
+ * Returns -1 if there is not enough space and size is thus filled with
+ * needed memory size.
+ */
+int planMAMsgPackToBuf(const plan_ma_msg_t *msg, void *buf, int *size);
 
 /**
  * Returns a new message unpacked from the given buffer.

@@ -683,13 +683,14 @@ plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
 
 
 
-void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size)
+void *planMAMsgPacked(const plan_ma_msg_t *msg, int *size)
 {
-    int siz;
-    void *buf;
-    buf = planMsgEncode(msg, &schema_msg, &siz);
-    *size = siz;
-    return buf;
+    return planMsgEncode(msg, &schema_msg, size);
+}
+
+int planMAMsgPackToBuf(const plan_ma_msg_t *msg, void *buf, int *size)
+{
+    return planMsgEncode2(msg, &schema_msg, buf, size);
 }
 
 plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)

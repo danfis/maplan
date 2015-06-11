@@ -166,8 +166,7 @@ static int nanomsgSendToNode(plan_ma_comm_t *_comm, int node_id,
 {
     plan_ma_comm_nanomsg_t *comm = COMM(_comm);
     void *buf;
-    size_t size;
-    int send_count;
+    int size, send_count;
     int ret = 0;
 
     if (node_id == comm->comm.node_id)
@@ -175,7 +174,7 @@ static int nanomsgSendToNode(plan_ma_comm_t *_comm, int node_id,
 
     buf = planMAMsgPacked(msg, &size);
     send_count = nn_send(comm->send_sock[node_id], buf, size, 0);
-    if (send_count != (int)size){
+    if (send_count != size){
         fprintf(stderr, "Error Nanomsg[%d]: Could not send message to %d: %s\n",
                 comm->comm.node_id, node_id, nn_strerror(errno));
         ret = -1;

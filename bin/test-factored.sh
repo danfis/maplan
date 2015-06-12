@@ -7,13 +7,14 @@ SEARCH_OPTS1="--max-time 840 --max-mem 7168 -s lazy -H potential"
 CURDIR=$(dirname $0)
 SEARCH="$CURDIR/search"
 VAL="$CURDIR/../third-party/VAL/validate"
-OUTDIR=/home/danfis/tmp/test-factor
 DOMAIN=depot
 PROBLEM=pfile1
-PROTO=~/dev/plan-data/proto/codmap-2015-factor/$DOMAIN/$PROBLEM/
-VAL_DOMAIN=~/dev/plan-data/bench/codmap-2015/$DOMAIN/$PROBLEM/unfactor/domain.pddl
-VAL_PROBLEM=~/dev/plan-data/bench/codmap-2015/$DOMAIN/$PROBLEM/unfactor/problem.pddl
-MAX_CYCLES=1
+#DOMAIN=depot
+#PROBLEM=pfile9
+PROTO=~/dev/plan-data/codmap-2015/factored/$DOMAIN/$PROBLEM/
+VAL_DOMAIN=~/dev/plan-data/codmap-2015/seq/$DOMAIN/domain.pddl
+VAL_PROBLEM=~/dev/plan-data/codmap-2015/seq/$DOMAIN/${PROBLEM}.pddl
+MAX_CYCLES=1000
 
 AGENT_URLS=""
 idx=0
@@ -23,26 +24,30 @@ for proto in $(ls $PROTO/*.proto); do
     idx=$(($idx + 1))
 done
 
-rm -rf $OUTDIR
-mkdir $OUTDIR
+rm -rf /tmp/test-factored
+mkdir /tmp/test-factored
 
 cycle=0
 while [ $cycle != $MAX_CYCLES ]; do
-    mkdir $OUTDIR/$cycle
-    OUT=$OUTDIR/$cycle/out
-    ERR=$OUTDIR/$cycle/err
-    PLAN=$OUTDIR/$cycle/plan
+    D=/tmp/test-factored/$cycle
+    OUT=$D/out
+    ERR=$D/err
+    PLAN=$D/plan
 
+    mkdir $D
     pids=""
     idx=0
     for proto in $(ls $PROTO/*.proto); do
         agent_id="--tcp-id $idx"
         opts="-p $proto --ma-factor -o $PLAN.$idx $SEARCH_OPTS1 $AGENT_URLS $agent_id"
+        #valgrind --leak-check=full --show-reachable=yes $SEARCH $opts >$OUT.$idx 2>$ERR.$idx &
         $SEARCH $opts >$OUT.$idx 2>$ERR.$idx &
         pid=$!
         pids="$pids $pid"
         idx=$(($idx + 1))
+#echo $SEARCH $opts
     done
+#exit
 
     for pid in $pids; do
         if ! wait $pid; then

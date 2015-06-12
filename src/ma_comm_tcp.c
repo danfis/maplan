@@ -10,12 +10,31 @@
 #include <boruvka/alloc.h>
 #include "plan/ma_comm.h"
 
-#define ESTABLISH_TIMEOUT 10000
-#define SHUTDOWN_TIMEOUT 10000
+/**
+ * Maximal allowed time for network of nodes to be established.
+ */
+#define ESTABLISH_TIMEOUT 10000 // 10 s
 
+/**
+ * Maximal time for shutdown of network.\
+ */
+#define SHUTDOWN_TIMEOUT 10000 // 10 s
+
+/**
+ * Initial buffer size for incoming data
+ */
 #define BUF_INIT_SIZE 1024
+
+/**
+ * Initial size of buffer (queue) of messages.
+ */
 #define MSG_RING_BUF_SIZE 1024
+
+/**
+ * Initial size of the pre-allocated buffer for packed messages.
+ */
 #define SENDBUF_SIZE 4096
+
 
 #define ERRM(tcp, text) do { \
     fprintf(stderr, "[%d] Error TCP: " text "\n", (tcp)->comm.node_id); \

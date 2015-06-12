@@ -118,6 +118,10 @@ static int parseAddr(const char *addr, char *addr_out);
 /** Initializes address structure using port and string address */
 static int initSockAddr(int agent_id, struct sockaddr_in *a,
                         int port, const char *addr);
+/** Sets socket as non-blocking */
+static int sockSetNonblock(int agent_id, int sock);
+/** Sets SO_REUSEADDR on socket */
+static int sockSetReuseaddr(int agent_id, int sock);
 /** Creates a new listening socket corresponding to the agent_id */
 static int createListenSock(int agent_id, int agent_size, const char **addr_in);
 /** Send greeting message over id'th socket. Greeting message is just ID
@@ -374,9 +378,28 @@ static int initSockAddr(int agent_id, struct sockaddr_in *a,
     return 0;
 }
 
+static int sockSetNonblock(int agent_id, int sock)
+{
+    if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0){
+        ERR2NO(agent_id, "Could not set socket as non-blocking:");
+        return -1;
+    }
+    return 0;
+}
+
+static int sockSetReuseaddr(int agent_id, int sock)
+{
+    int yes = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) != 0){
+        ERR2NO(agent_id, "Could not set SO_REUSEADDR:");
+        return -1;
+    }
+    return 0;
+}
+
 static int createListenSock(int agent_id, int agent_size, const char **addr_in)
 {
-    int sock, port, yes;
+    int sock, port;
     char addr[30];
     struct sockaddr_in recv_addr;
 
@@ -397,16 +420,13 @@ static int createListenSock(int agent_id, int agent_size, const char **addr_in)
         return sock;
 
     // Set the socket to non-blocking mode
-    if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0){
-        ERR2NO(agent_id, "Could not set socket non-blocking:");
+    if (sockSetNonblock(agent_id, sock) != 0){
         close(sock);
         return -1;
     }
 
     // Set socket to reuse time-wait address
-    yes = 1;
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) != 0){
-        ERR2NO(agent_id, "Could not set SO_REUSEADDR:");
+    if (sockSetReuseaddr(agent_id, sock) != 0){
         close(sock);
         return -1;
     }
@@ -414,7 +434,7 @@ static int createListenSock(int agent_id, int agent_size, const char **addr_in)
     // Bind socket to the specified address
     if (bind(sock, (struct sockaddr *)&recv_addr, sizeof(recv_addr)) < 0){
         ERR2(agent_id, "Could not bind to address `%s:%d': %s",
-             addr_in[agent_id], port, strerror(errno));
+             addr, port, strerror(errno));
         close(sock);
         return -1;
     }
@@ -488,8 +508,7 @@ static int createAndConnectSock(plan_ma_comm_tcp_t *tcp, int id,
     }
 
     // Set the socket to non-blocking mode
-    if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0){
-        ERRNO(tcp, "Could not set socket as non-blocking:");
+    if (sockSetNonblock(tcp->comm.node_id, sock) != 0){
         close(sock);
         return -1;
     }
@@ -555,8 +574,7 @@ static int acceptConnection(plan_ma_comm_tcp_t *tcp)
     }
 
     // Set the socket to non-blocking mode
-    if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0){
-        ERRNO(tcp, "Could not set socket non-blocking:");
+    if (sockSetNonblock(tcp->comm.node_id, sock) != 0){
         close(sock);
         return -1;
     }

@@ -39,12 +39,14 @@ static void *thPingPong(void *arg)
 
 TEST(testMACommNanomsgPingPong)
 {
+    plan_ma_comm_inproc_pool_t *inproc_pool;
     plan_ma_comm_t *comm[2];
     pthread_t th[2];
 
     fprintf(stdout, "---- PingPong Inproc ----\n");
-    comm[0] = planMACommInprocNew(0, 2);
-    comm[1] = planMACommInprocNew(1, 2);
+    inproc_pool = planMACommInprocPoolNew(2);
+    comm[0] = planMACommInprocNew(inproc_pool, 0);
+    comm[1] = planMACommInprocNew(inproc_pool, 1);
 
     assertEquals(planMACommId(comm[0]), 0);
     assertEquals(planMACommId(comm[1]), 1);
@@ -58,6 +60,7 @@ TEST(testMACommNanomsgPingPong)
 
     planMACommDel(comm[0]);
     planMACommDel(comm[1]);
+    planMACommInprocPoolDel(inproc_pool);
 
     fprintf(stdout, "---- PingPong Inproc END ----\n");
 

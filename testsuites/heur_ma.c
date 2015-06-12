@@ -119,17 +119,19 @@ static void testHeurMAProb(const plan_problem_agents_t *p,
     plan_heur_t *ma_heur[agent_size];
     plan_heur_t *seq_heur = NULL;
     plan_state_t *seq_state;
+    plan_ma_comm_inproc_pool_t *comm_pool;
     plan_ma_comm_t *comm[agent_size];
     plan_ma_state_t *ma_state[agent_size];
     FILE *fcosts;
     int i, cost, cost_optimal;
     unsigned int line;
 
+    comm_pool = planMACommInprocPoolNew(agent_size);
     for (i = 0; i < agent_size; ++i){
         ma_state[i] = planMAStateNew(p->agent[i].state_pool, agent_size, i);
         ma_heur[i] = heur_new(p->agent + i);
         planHeurMAInit(ma_heur[i], agent_size, i, ma_state[i]);
-        comm[i] = planMACommInprocNew(i, agent_size);
+        comm[i] = planMACommInprocNew(comm_pool, i);
     }
     if (seq_heur_new)
         seq_heur = seq_heur_new(&p->glob);
@@ -161,6 +163,7 @@ static void testHeurMAProb(const plan_problem_agents_t *p,
         planMACommDel(comm[i]);
         planMAStateDel(ma_state[i]);
     }
+    planMACommInprocPoolDel(comm_pool);
 
     if (seq_heur)
         planHeurDel(seq_heur);

@@ -106,7 +106,7 @@ static plan_ma_comm_t *inprocIPCNew(int agent_id, int agent_size,
     return nanomsgNew(agent_id, agent_size, urls);
 }
 
-plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size)
+plan_ma_comm_t *planMACommNanoInprocNew(int agent_id, int agent_size)
 {
     return inprocIPCNew(agent_id, agent_size, "inproc", "a");
 }

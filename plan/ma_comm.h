@@ -26,6 +26,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
+typedef struct _plan_ma_comm_inproc_pool_t plan_ma_comm_inproc_pool_t;
+
 typedef struct _plan_ma_comm_t plan_ma_comm_t;
 
 typedef void (*plan_ma_comm_del_fn)(plan_ma_comm_t *comm);
@@ -46,11 +48,23 @@ struct _plan_ma_comm_t {
 
 
 /**
+ * Creates a pool of inproc communication channels.
+ */
+plan_ma_comm_inproc_pool_t *planMACommInprocPoolNew(int agent_size);
+
+/**
+ * Deletes an inproc pool.
+ */
+void planMACommInprocPoolDel(plan_ma_comm_inproc_pool_t *pool);
+
+/**
  * Creates an intra-process communication channel between specified agent
  * and all other agents. The channel is local to the process, i.e., the
  * agents must run in separate threads.
  */
-plan_ma_comm_t *planMACommInprocNew(int agent_id, int agent_size);
+plan_ma_comm_t *planMACommInprocNew(plan_ma_comm_inproc_pool_t *pool,
+                                    int agent_id);
+plan_ma_comm_t *planMACommNanoInprocNew(int agent_id, int agent_size);
 
 /**
  * Creates an inter-process communication channel between specified agent

@@ -35,6 +35,7 @@ static plan_problem_t *problem = NULL;
 static plan_problem_agents_t *agent_problem = NULL;
 static plan_problem_t **problems = NULL;
 static int problems_size = 0;
+static plan_ma_comm_inproc_pool_t *comm_pool = NULL;
 
 struct _progress_t {
     int max_time;
@@ -774,6 +775,13 @@ static void maRun(int agent_id, ma_t *ma)
     planMASearchDel(ma_search);
 }
 
+static plan_ma_comm_t *maInproc(int agent_id, int agent_size)
+{
+    if (comm_pool == NULL)
+        comm_pool = planMACommInprocPoolNew(agent_size);
+    return planMACommInprocNew(comm_pool, agent_id);
+}
+
 static int maInit(ma_t *ma, int agent_id, const options_t *o,
                   plan_problem_t *prob, plan_problem_t *globprob)
 {
@@ -796,9 +804,9 @@ static int maInit(ma_t *ma, int agent_id, const options_t *o,
     if (o->tcp_id >= 0){
         ma->comm = planMACommTCPNew(agent_id, o->tcp_size, (const char **)o->tcp);
     }else if (agent_problem){
-        ma->comm = planMACommInprocNew(agent_id, agent_problem->agent_size);
+        ma->comm = maInproc(agent_id, agent_problem->agent_size);
     }else if (problems_size > 0){
-        ma->comm = planMACommInprocNew(agent_id, problems_size);
+        ma->comm = maInproc(agent_id, problems_size);
     }else{
         fprintf(stderr, "Error: Cannot create communication channel.\n");
         return -1;
@@ -992,6 +1000,8 @@ int main(int argc, char *argv[])
     if (opts->hard_limit_sleeptime > 0)
         limitMonitorJoin();
 
+    if (comm_pool != NULL)
+        planMACommInprocPoolDel(comm_pool);
     delProblem();
     optionsFree();
     planShutdownProtobuf();

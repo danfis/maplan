@@ -39,6 +39,18 @@
 #define ERR2NO(agent_id, text) \
     ERR2((agent_id), text " %s", strerror(errno))
 
+#ifdef BOR_BIG_ENDIAN
+# define TO_LE32(x) htole32(x)
+# define FROM_LE32(x) htole32(x)
+# define TO_LE16(x) htole16(x)
+# define FROM_LE16(x) htole16(x)
+#else /* BOR_BIG_ENDIAN */
+# define TO_LE32(x) (uint32_t)(x)
+# define FROM_LE32(x) (uint32_t)(x)
+# define TO_LE16(x) (uint16_t)(x)
+# define FROM_LE16(x) (uint16_t)(x)
+#endif /* BOR_BIG_ENDIAN */
+
 struct _buf_t {
     char *buf;     /*!< Buffer for input data */
     int size;      /*!< Allocated size */
@@ -81,9 +93,9 @@ struct _plan_ma_comm_tcp_t {
     plan_ma_comm_t comm;
 
     int listen_sock;       /*!< Main listening socket */
-    int *send_sock;             /*!< In/Out sockets */
-    int *recv_sock;             /*!< In/Out sockets */
-    buf_t *buf;            /*!< Buffer for each socket */
+    int *send_sock;        /*!< Out sockets */
+    int *recv_sock;        /*!< In sockets */
+    buf_t *buf;            /*!< Buffer for each recv_sock socket */
     msg_ring_buf_t msgbuf; /*!< Buffer for parsed messages */
     char *sendbuf;         /*!< Preallocated send buffer */
     int sendbuf_size;      /*!< Size of .sendbuf */
@@ -173,9 +185,11 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
     // Initialize buffer for unpacked messages
     msgRingBufInit(&tcp->msgbuf);
 
+    // Allocate buffer used for packed messages
     tcp->sendbuf = BOR_ALLOC_ARR(char, SENDBUF_SIZE);
     tcp->sendbuf_size = SENDBUF_SIZE;
 
+    // Prepare descriptors for polling incoming messages
     tcp->recv_pfd = BOR_ALLOC_ARR(struct pollfd, agent_size);
     for (i = 0; i < agent_size; ++i){
         tcp->recv_pfd[i].fd = tcp->recv_sock[i];
@@ -212,30 +226,31 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
                          const plan_ma_msg_t *msg)
 {
     plan_ma_comm_tcp_t *tcp = TCP(comm);
+    char *outbuf = tcp->sendbuf;
     int size, sent;
     ssize_t send_ret;
     int ret = 0;
 
+    // Never send to itself
     if (node_id == tcp->comm.node_id)
         return -1;
 
+    // Pack the message into prepared buffer. Extend the buffer if needed.
     do {
         size = tcp->sendbuf_size - 4;
-        ret = planMAMsgPackToBuf(msg, tcp->sendbuf + 4, &size);
+        ret = planMAMsgPackToBuf(msg, outbuf + 4, &size);
         if (ret != 0)
             sendbufExtend(tcp, size);
     } while (ret != 0);
 
-#ifdef BOR_BIG_ENDIAN
-    *(uint32_t *)tcp->sendbuf = htole32(size):
-#else
-    *(uint32_t *)tcp->sendbuf = (uint32_t)size;
-#endif /* BOR_BIG_ENDIAN */
+    // Write size of the message at the beggining of the buffer
+    *(uint32_t *)outbuf = TO_LE32(size);
 
+    // Send the buffer over network
     size += 4;
     sent = 0;
     while (sent != size){
-        send_ret = send(tcp->send_sock[node_id], tcp->sendbuf + sent, size - sent, 0);
+        send_ret = write(tcp->send_sock[node_id], outbuf + sent, size - sent);
         if (send_ret < 0){
             ERR(tcp, "Could not send message to %d: %s", node_id, strerror(errno));
             ret = -1;
@@ -420,10 +435,7 @@ static int sendGreetingMsg(plan_ma_comm_tcp_t *tcp, int id)
     uint16_t msg;
 
     // Send the greeting message which is ID of the current node
-    msg = tcp->comm.node_id;
-#ifdef BOR_BIG_ENDIAN
-    msg = htole16(msg):
-#endif /* BOR_BIG_ENDIAN */
+    msg = TO_LE16(tcp->comm.node_id);
     errno = 0;
     ret = send(tcp->send_sock[id], &msg, 2, 0);
 
@@ -448,10 +460,7 @@ static int recvGreetingMsg(int node_id, int sock)
         return -1;
     }
 
-#ifdef BOR_BIG_ENDIAN
-    msg = le16toh(msg):
-#endif /* BOR_BIG_ENDIAN */
-    return msg;
+    return FROM_LE16(msg);
 }
 
 static int createAndConnectSock(plan_ma_comm_tcp_t *tcp, int id,
@@ -894,11 +903,7 @@ static plan_ma_msg_t *bufExtractMsg(buf_t *buf)
     // If msg_size is not pre-parsed and there is enough data to read the
     // size of the next message, do it.
     if (buf->msg_size <= 0 && buf->read_size >= 4){
-#ifdef BOR_BIG_ENDIAN
-        buf->msg_size = le32toh(*(uint32_t *)buf->beg);
-#else /* BOR_BIG_ENDIAN */
-        buf->msg_size = *(uint32_t *)buf->beg;
-#endif /* BOR_BIG_ENDIAN */
+        buf->msg_size = FROM_LE32(*(uint32_t *)buf->beg);
         buf->beg += 4;
         buf->read_size -= 4;
 

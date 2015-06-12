@@ -1,20 +1,22 @@
 #include <limits.h>
 #include <stdio.h>
 #include <boruvka/alloc.h>
-#include <boruvka/fifo-sem.h>
+#include <boruvka/ring_queue.h>
 
 #include "plan/ma_comm.h"
 
+#define QUEUE_SIZE 1024
+
 struct _plan_ma_comm_inproc_t {
     plan_ma_comm_t comm;
-    bor_fifo_sem_t *write;
-    bor_fifo_sem_t *read;
+    bor_ring_queue_t *write;
+    bor_ring_queue_t *read;
 };
 typedef struct _plan_ma_comm_inproc_t plan_ma_comm_inproc_t;
 #define INPROC(comm) bor_container_of((comm), plan_ma_comm_inproc_t, comm)
 
 struct _plan_ma_comm_inproc_pool_t {
-    bor_fifo_sem_t *queue; /*!< Array of communication queues */
+    bor_ring_queue_t *queue; /*!< Array of communication queues */
     int size;
 };
 
@@ -31,13 +33,11 @@ plan_ma_comm_inproc_pool_t *planMACommInprocPoolNew(int agent_size)
     int i;
 
     pool = BOR_ALLOC(plan_ma_comm_inproc_pool_t);
-    pool->queue = BOR_ALLOC_ARR(bor_fifo_sem_t, agent_size);
+    pool->queue = BOR_ALLOC_ARR(bor_ring_queue_t, agent_size);
     pool->size = agent_size;
 
-    for (i = 0; i < pool->size; ++i){
-        if (borFifoSemInit(pool->queue + i, sizeof(plan_ma_msg_t *)) != 0)
-            return NULL;
-    }
+    for (i = 0; i < pool->size; ++i)
+        borRingQueueInit(pool->queue + i, QUEUE_SIZE);
     return pool;
 }
 
@@ -47,11 +47,9 @@ void planMACommInprocPoolDel(plan_ma_comm_inproc_pool_t *pool)
     plan_ma_msg_t *msg;
 
     for (i = 0; i < pool->size; ++i){
-        while (!borFifoSemEmpty(pool->queue + i)){
-            borFifoSemPop(pool->queue + i, &msg);
+        while ((msg = borRingQueuePop(pool->queue + i)) != NULL)
             planMAMsgDel(msg);
-        }
-        borFifoSemFree(pool->queue + i);
+        borRingQueueFree(pool->queue + i);
     }
     if (pool->queue)
         BOR_FREE(pool->queue);
@@ -86,32 +84,22 @@ static int inprocSendToNode(plan_ma_comm_t *comm, int node_id,
     plan_ma_msg_t *msgout;
 
     msgout = planMAMsgClone(msg);
-    borFifoSemPush(inproc->write + node_id, &msgout);
+    borRingQueuePush(inproc->write + node_id, msgout);
     return 0;
 }
 
 static plan_ma_msg_t *inprocRecv(plan_ma_comm_t *comm)
 {
     plan_ma_comm_inproc_t *inproc = INPROC(comm);
-    plan_ma_msg_t *msg;
-
-    if (borFifoSemPop(inproc->read, &msg) == 0)
-        return msg;
-    return NULL;
+    return borRingQueuePop(inproc->read);
 }
 
 static plan_ma_msg_t *inprocRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms)
 {
     plan_ma_comm_inproc_t *inproc = INPROC(comm);
-    plan_ma_msg_t *msg;
-
     if (timeout_in_ms <= 0){
-        if (borFifoSemPopBlock(inproc->read, &msg) == 0)
-            return msg;
-        return NULL;
+        return borRingQueuePopBlock(inproc->read);
     }else{
-        if (borFifoSemPopBlockTimeout(inproc->read, timeout_in_ms, &msg) == 0)
-            return msg;
-        return NULL;
+        return borRingQueuePopBlockTimeout(inproc->read, timeout_in_ms);
     }
 }

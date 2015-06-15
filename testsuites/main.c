@@ -21,6 +21,7 @@
 #include "landmark.h"
 #include "msg_schema.h"
 #include "lisp_file.h"
+#include "pddl.h"
 
 TEST(protobufTearDown)
 {
@@ -49,6 +50,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSLandmark),
     TEST_SUITE_ADD(TSMsgSchema),
     TEST_SUITE_ADD(TSLispFile),
+    TEST_SUITE_ADD(TSPDDL),
     TEST_SUITES_CLOSURE
 };
 

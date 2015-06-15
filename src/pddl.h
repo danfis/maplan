@@ -20,6 +20,8 @@
 #ifndef __PLAN_PDDL_H__
 #define __PLAN_PDDL_H__
 
+#include "lisp_file.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -48,6 +50,34 @@ extern "C" {
 #define PLAN_PDDL_REQUIRE_MULTI_AGENT           0x040000u
 #define PLAN_PDDL_REQUIRE_UNFACTORED_PRIVACY    0x080000u
 #define PLAN_PDDL_REQUIRE_FACTORED_PRIVACY      0x100000u
+
+
+struct _plan_pddl_type_t {
+    const char *name;
+    int parent;
+};
+typedef struct _plan_pddl_type_t plan_pddl_type_t;
+
+struct _plan_pddl_obj_t {
+    const char *name;
+    int type;
+};
+typedef struct _plan_pddl_obj_t plan_pddl_obj_t;
+
+struct _plan_pddl_domain_t {
+    plan_lisp_file_t *lisp;
+    const char *name;
+    unsigned require;
+    plan_pddl_type_t *type;
+    int type_size;
+    plan_pddl_obj_t *constant;
+    int constant_size;
+};
+typedef struct _plan_pddl_domain_t plan_pddl_domain_t;
+
+plan_pddl_domain_t *planPDDLDomainNew(const char *fn);
+void planPDDLDomainDel(plan_pddl_domain_t *domain);
+void planPDDLDomainDump(const plan_pddl_domain_t *domain, FILE *fout);
 
 #ifdef __cplusplus
 } /* extern "C" */

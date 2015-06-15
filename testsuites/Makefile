@@ -53,6 +53,7 @@ OBJS += ma_private_state.o
 OBJS += landmark.o
 OBJS += msg_schema.o
 OBJS += lisp_file.o
+OBJS += pddl.o
 
 all: $(TARGETS)
 

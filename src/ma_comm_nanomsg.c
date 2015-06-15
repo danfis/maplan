@@ -136,9 +136,6 @@ plan_ma_comm_t *planMACommNanoTCPNew(int agent_id, int agent_size,
         BOR_FREE(urls[i]);
     }
 
-    fprintf(stderr, "NN-opened\n");
-    fflush(stderr);
-
     return comm;
 }
 
@@ -147,8 +144,6 @@ static void nanomsgDel(plan_ma_comm_t *_comm)
     plan_ma_comm_nanomsg_t *comm = COMM(_comm);
     int i;
 
-    fprintf(stderr, "NN-Close\n");
-    fflush(stderr);
     nn_shutdown(comm->recv_sock, 0);
     nn_close(comm->recv_sock);
     for (i = 0; i < comm->comm.node_size; ++i){

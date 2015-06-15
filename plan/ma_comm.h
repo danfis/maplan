@@ -69,18 +69,6 @@ void planMACommInprocPoolDel(plan_ma_comm_inproc_pool_t *pool);
  */
 plan_ma_comm_t *planMACommInprocNew(plan_ma_comm_inproc_pool_t *pool,
                                     int agent_id);
-plan_ma_comm_t *planMACommNanoInprocNew(int agent_id, int agent_size);
-
-/**
- * Creates an inter-process communication channel between specified agent
- * and all other agents. The channel is base on IPC, i.e., agents must run
- * on the same machine. Moreover an unique path prefix must be specified --
- * this prefix is used both for distinguish between agent clusters on the
- * same machine and as a path to a writable place on disk (for named
- * sockets or pipelines).
- */
-plan_ma_comm_t *planMACommIPCNew(int agent_id, int agent_size,
-                                 const char *prefix);
 
 /**
  * Creates an inter-process communication channel between specified agent
@@ -91,8 +79,6 @@ plan_ma_comm_t *planMACommIPCNew(int agent_id, int agent_size,
  */
 plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
                                  const char **addr, unsigned flags);
-plan_ma_comm_t *planMACommNanoTCPNew(int agent_id, int agent_size,
-                                     const char **addr);
 
 
 /**

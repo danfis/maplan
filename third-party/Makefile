@@ -14,13 +14,6 @@ opts: submodule
 	$(MAKE) -C opts
 
 nanomsg: submodule
-	cd nanomsg \
-		&& if test ! -f build/lib/libnanomsg.a; then \
-				./autogen.sh \
-					&& ./configure --enable-static --disable-shared --prefix=`pwd`/build \
-					&& make \
-					&& make install; \
-		fi;
 	cd nanomsg4py \
 		&& if test ! -f nanomsg2module.so; then \
 				make third-party; \

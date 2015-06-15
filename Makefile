@@ -3,7 +3,6 @@
 
 CFLAGS += -I.
 CFLAGS += $(BORUVKA_CFLAGS)
-CFLAGS += $(NANOMSG_CFLAGS)
 CFLAGS += $(LP_SOLVE_CFLAGS)
 CFLAGS += $(CPLEX_CFLAGS)
 CXXFLAGS += -I.
@@ -68,7 +67,6 @@ OBJS += heur_ma_pot_proj
 OBJS += msg_schema
 OBJS += ma_msg
 OBJS += ma_comm
-OBJS += ma_comm_nanomsg
 OBJS += ma_comm_tcp
 OBJS += ma_comm_inproc
 OBJS += ma_search
@@ -179,8 +177,6 @@ help:
 	@echo "    DEBUG      'yes'/'no' - Turn on/off debugging   (=$(DEBUG))"
 	@echo "    PROFIL     'yes'/'no' - Compiles profiling info (=$(PROFIL))"
 	@echo ""
-	@echo "    USE_NANOMSG 'yes'/'no'  - Use libnanomsg library (=$(USE_NANOMSG))"
-	@echo ""
 	@echo "Variables:"
 	@echo "  Note that most of can be preset or changed by user"
 	@echo "    SYSTEM            = $(SYSTEM)"
@@ -197,9 +193,6 @@ help:
 	@echo "    USE_LOCAL_PROTOBUF = $(USE_LOCAL_PROTOBUF)"
 	@echo "    PROTOBUF_CFLAGS   = $(PROTOBUF_CFLAGS)"
 	@echo "    PROTOBUF_LDFLAGS  = $(PROTOBUF_LDFLAGS)"
-	@echo "    USE_LOCAL_NANOMSG = $(USE_LOCAL_NANOMSG)"
-	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"
-	@echo "    NANOMSG_LDFLAGS   = $(NANOMSG_LDFLAGS)"
 	@echo ""
 	@echo "    LP                 = $(LP)"
 	@echo "    LP_CFLAGS          = $(LP_CFLAGS)"

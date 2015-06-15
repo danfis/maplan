@@ -26,6 +26,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/**
+ * Disable usage of an extra thread for receiving messages.
+ */
+#define PLAN_MA_COMM_TCP_NO_THREAD 0x1u
+
 typedef struct _plan_ma_comm_inproc_pool_t plan_ma_comm_inproc_pool_t;
 
 typedef struct _plan_ma_comm_t plan_ma_comm_t;
@@ -85,7 +90,7 @@ plan_ma_comm_t *planMACommIPCNew(int agent_id, int agent_size,
  * at least agent_size items).
  */
 plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
-                                 const char **addr);
+                                 const char **addr, unsigned flags);
 plan_ma_comm_t *planMACommNanoTCPNew(int agent_id, int agent_size,
                                      const char **addr);
 

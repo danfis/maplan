@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 
 #include <boruvka/alloc.h>
+#include <boruvka/ring_queue.h>
 #include "plan/ma_comm.h"
 
 /**
@@ -119,6 +120,12 @@ struct _plan_ma_comm_tcp_t {
     char *sendbuf;         /*!< Preallocated send buffer */
     int sendbuf_size;      /*!< Size of .sendbuf */
     struct pollfd *recv_pfd; /*!< Poll structures for receiving msgs */
+
+    int use_th;                 /*!< True if threaded implementation is used */
+    bor_ring_queue_t th_msgbuf; /*!< Message buffer with lock */
+    pthread_t th_recv;          /*!< Thread for recvining messages */
+    int th_pipe[2];             /*!< Pipe for communication between main
+                                     thread and the recv thread */
 };
 typedef struct _plan_ma_comm_tcp_t plan_ma_comm_tcp_t;
 #define TCP(comm) bor_container_of(comm, plan_ma_comm_tcp_t, comm)
@@ -129,6 +136,10 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
                          const plan_ma_msg_t *msg);
 static plan_ma_msg_t *tcpRecv(plan_ma_comm_t *comm);
 static plan_ma_msg_t *tcpRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms);
+
+static void *thRecv(void *);
+static plan_ma_msg_t *tcpRecvTh(plan_ma_comm_t *comm);
+static plan_ma_msg_t *tcpRecvBlockTh(plan_ma_comm_t *comm, int timeout_in_ms);
 
 /** Extend memory allocated for the send buffer */
 static void sendbufExtend(plan_ma_comm_tcp_t *tcp, int size);
@@ -167,16 +178,22 @@ static int establishNetwork(plan_ma_comm_tcp_t *tcp, const char **addr);
 /** Shutdown already established network. */
 static int shutdownNetwork(plan_ma_comm_tcp_t *tcp);
 
-
 plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
-                                 const char **addr)
+                                 const char **addr, unsigned flags)
 {
     plan_ma_comm_tcp_t *tcp;
     int i;
 
     tcp = BOR_ALLOC(plan_ma_comm_tcp_t);
-    _planMACommInit(&tcp->comm, agent_id, agent_size,
-                    tcpDel, tcpSendToNode, tcpRecv, tcpRecvBlock);
+    if (flags & PLAN_MA_COMM_TCP_NO_THREAD){
+        tcp->use_th = 0;
+        _planMACommInit(&tcp->comm, agent_id, agent_size,
+                        tcpDel, tcpSendToNode, tcpRecv, tcpRecvBlock);
+    }else{
+        tcp->use_th = 1;
+        _planMACommInit(&tcp->comm, agent_id, agent_size,
+                        tcpDel, tcpSendToNode, tcpRecvTh, tcpRecvBlockTh);
+    }
     tcp->listen_sock = -1;
     tcp->send_sock = BOR_ALLOC_ARR(int, agent_size);
     tcp->recv_sock = BOR_ALLOC_ARR(int, agent_size);
@@ -205,18 +222,35 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
             bufInit(tcp->buf + i);
     }
 
-    // Initialize buffer for unpacked messages
-    msgRingBufInit(&tcp->msgbuf);
-
     // Allocate buffer used for packed messages
     tcp->sendbuf = BOR_ALLOC_ARR(char, SENDBUF_SIZE);
     tcp->sendbuf_size = SENDBUF_SIZE;
 
-    // Prepare descriptors for polling incoming messages
-    tcp->recv_pfd = BOR_ALLOC_ARR(struct pollfd, agent_size);
-    for (i = 0; i < agent_size; ++i){
-        tcp->recv_pfd[i].fd = tcp->recv_sock[i];
-        tcp->recv_pfd[i].events = POLLIN;
+    if (tcp->use_th){
+        // Initialize queue for incoming messages
+        borRingQueueInit(&tcp->th_msgbuf, MSG_RING_BUF_SIZE);
+
+        // Initialize pipe for communication between main thread and recv
+        // thread
+        if (pipe(tcp->th_pipe) != 0){
+            ERRNO(tcp, "Could not create pipe:");
+            tcpDel(&tcp->comm);
+            return NULL;
+        }
+
+        // Start recv thread
+        pthread_create(&tcp->th_recv, NULL, thRecv, tcp);
+
+    }else{
+        // Initialize buffer for unpacked messages
+        msgRingBufInit(&tcp->msgbuf);
+
+        // Prepare descriptors for polling incoming messages
+        tcp->recv_pfd = BOR_ALLOC_ARR(struct pollfd, agent_size);
+        for (i = 0; i < agent_size; ++i){
+            tcp->recv_pfd[i].fd = tcp->recv_sock[i];
+            tcp->recv_pfd[i].events = POLLIN;
+        }
     }
 
     return &tcp->comm;
@@ -225,7 +259,7 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
 static void tcpDel(plan_ma_comm_t *comm)
 {
     plan_ma_comm_tcp_t *tcp = TCP(comm);
-    int i;
+    int i, tcp_end = 0;
 
     shutdownNetwork(tcp);
 
@@ -237,11 +271,23 @@ static void tcpDel(plan_ma_comm_t *comm)
         bufFree(tcp->buf + i);
     if (tcp->buf != NULL)
         BOR_FREE(tcp->buf);
-    msgRingBufFree(&tcp->msgbuf);
     if (tcp->sendbuf)
         BOR_FREE(tcp->sendbuf);
-    if (tcp->recv_pfd)
-        BOR_FREE(tcp->recv_pfd);
+
+    if (tcp->use_th){
+        if (write(tcp->th_pipe[1], &tcp_end, sizeof(int)) < 0){
+            ERRNO(tcp, "Could not write to recv pipe:");
+        }
+        pthread_join(tcp->th_recv, NULL);
+        borRingQueueFree(&tcp->th_msgbuf);
+        close(tcp->th_pipe[1]);
+        close(tcp->th_pipe[0]);
+    }else{
+        msgRingBufFree(&tcp->msgbuf);
+        if (tcp->recv_pfd)
+            BOR_FREE(tcp->recv_pfd);
+    }
+
     BOR_FREE(tcp);
 }
 
@@ -285,7 +331,6 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
 
     return ret;
 }
-
 
 static plan_ma_msg_t *_tcpRecv(plan_ma_comm_tcp_t *tcp, int timeout_in_ms)
 {
@@ -348,6 +393,76 @@ static plan_ma_msg_t *tcpRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms)
     if (timeout_in_ms <= 0)
         return _tcpRecv(tcp, -1);
     return _tcpRecv(tcp, timeout_in_ms);
+}
+
+static void *thRecv(void *_tcp)
+{
+    plan_ma_comm_tcp_t *tcp = _tcp;
+    struct pollfd pfd[tcp->comm.node_size];
+    plan_ma_msg_t *msg = NULL;
+    int i, ret, rsize, terminate;
+
+    for (i = 0; i < tcp->comm.node_size; ++i){
+        if (i == tcp->comm.node_id){
+            pfd[i].fd = tcp->th_pipe[0];
+        }else{
+            pfd[i].fd = tcp->recv_sock[i];
+        }
+        pfd[i].events = POLLIN;
+    }
+
+    terminate = 0;
+    while (!terminate){
+        ret = poll(pfd, tcp->comm.node_size, -1);
+        if (ret < 0){
+            ERRNO(tcp, "Poll error:");
+            continue;
+        }
+
+        for (i = 0; i < tcp->comm.node_size; ++i){
+            if ((pfd[i].revents & POLLIN) && i == tcp->comm.node_id){
+                terminate = 1;
+                break;
+
+            }else if (pfd[i].revents & POLLIN){
+                // Data are available, so read them into buffer
+                rsize = bufFillFromSock(tcp->buf + i, tcp->recv_sock[i]);
+                if (rsize < 0){
+                    ERRNO(tcp, "Recv error:");
+                    continue;
+
+                }else if (rsize == 0){
+                    // The remote hung-up on us, so just remove the socket
+                    // from the receiving sockets.
+                    pfd[i].fd = -1;
+                    continue;
+
+                }else{
+                    // Parse as many as possible messages from the buffer
+                    // and push the messages to the queue.
+                    while ((msg = bufExtractMsg(tcp->buf + i)) != NULL){
+                        borRingQueuePush(&tcp->th_msgbuf, msg);
+                    }
+                }
+            }
+        }
+    }
+
+    return NULL;
+}
+
+static plan_ma_msg_t *tcpRecvTh(plan_ma_comm_t *comm)
+{
+    plan_ma_comm_tcp_t *tcp = TCP(comm);
+    return borRingQueuePop(&tcp->th_msgbuf);
+}
+
+static plan_ma_msg_t *tcpRecvBlockTh(plan_ma_comm_t *comm, int timeout_in_ms)
+{
+    plan_ma_comm_tcp_t *tcp = TCP(comm);
+    if (timeout_in_ms <= 0)
+        return borRingQueuePopBlock(&tcp->th_msgbuf);
+    return borRingQueuePopBlockTimeout(&tcp->th_msgbuf, timeout_in_ms);
 }
 
 

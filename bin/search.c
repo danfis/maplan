@@ -802,7 +802,8 @@ static int maInit(ma_t *ma, int agent_id, const options_t *o,
     planPathInit(&ma->path);
 
     if (o->tcp_id >= 0){
-        ma->comm = planMACommTCPNew(agent_id, o->tcp_size, (const char **)o->tcp);
+        ma->comm = planMACommTCPNew(agent_id, o->tcp_size,
+                                    (const char **)o->tcp, 0);
     }else if (agent_problem){
         ma->comm = maInproc(agent_id, agent_problem->agent_size);
     }else if (problems_size > 0){

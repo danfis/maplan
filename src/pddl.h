@@ -64,6 +64,13 @@ struct _plan_pddl_obj_t {
 };
 typedef struct _plan_pddl_obj_t plan_pddl_obj_t;
 
+struct _plan_pddl_predicate_t {
+    const char *name;
+    int *param;
+    int param_size;
+};
+typedef struct _plan_pddl_predicate_t plan_pddl_predicate_t;
+
 struct _plan_pddl_domain_t {
     plan_lisp_file_t *lisp;
     const char *name;
@@ -72,6 +79,8 @@ struct _plan_pddl_domain_t {
     int type_size;
     plan_pddl_obj_t *constant;
     int constant_size;
+    plan_pddl_predicate_t *predicate;
+    int predicate_size;
 };
 typedef struct _plan_pddl_domain_t plan_pddl_domain_t;
 

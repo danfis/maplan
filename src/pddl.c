@@ -310,6 +310,115 @@ static int parseConstant(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
     return 0;
 }
 
+static int addPredicate(plan_pddl_domain_t *domain, const char *name)
+{
+    int i, id;
+
+    for (i = 0; i < domain->predicate_size; ++i){
+        if (strcmp(domain->predicate[i].name, name) == 0){
+            fprintf(stderr, "Error PDDL: Duplicate predicate `%s'\n", name);
+            return -1;
+        }
+    }
+
+    ++domain->predicate_size;
+    domain->predicate = BOR_REALLOC_ARR(domain->predicate,
+                                        plan_pddl_predicate_t,
+                                        domain->predicate_size);
+    id = domain->predicate_size - 1;
+    domain->predicate[id].name = name;
+    domain->predicate[id].param = NULL;
+    domain->predicate[id].param_size = 0;
+    return id;
+}
+
+static void predicateAddParams(plan_pddl_domain_t *domain, int pred_id,
+                               int type, int count)
+{
+    plan_pddl_predicate_t *pred;
+    int i;
+
+    pred = domain->predicate + pred_id;
+    i = pred->param_size;
+    pred->param_size += count;
+    pred->param = BOR_REALLOC_ARR(pred->param, int, pred->param_size);
+    for (; i < pred->param_size; ++i){
+        pred->param[i] = type;
+    }
+}
+
+static int parsePredicate1(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
+{
+    plan_lisp_node_t *n;
+    bor_list_t *it, *it_end, *next;
+    const char *name;
+    int id, tid, count;
+
+    it = borListNext(&root->children);
+    if (it == &root->children){
+        fprintf(stderr, "Error PDDL: Invalid predicate definition.\n");
+        return -1;
+    }
+
+    n = BOR_LIST_ENTRY(it, plan_lisp_node_t, list);
+    if (n->value == NULL){
+        fprintf(stderr, "Error PDDL: Invalid predicate definition.\n");
+        return -1;
+    }
+
+    id = addPredicate(domain, n->value);
+    if (id < 0)
+        return -1;
+
+    it = borListNext(it);
+    while (1){
+        if (findTypedList(it, &root->children, &it_end, &next, &name) != 0){
+            fprintf(stderr, "Error PDDL: Invalid definition of predicate `%s'\n",
+                    domain->predicate[id].name);
+            return -1;
+        }
+
+        if (it == &root->children)
+            break;
+
+        tid = 0;
+        if (name != NULL)
+            tid = getType(domain, name);
+        if (tid < 0){
+            fprintf(stderr, "Error PDDL: Invalid type `%s' in predicate"
+                            " `%s' definition.\n",
+                            name, domain->predicate[id].name);
+            return -1;
+        }
+
+        for (count = 0; it != it_end; it = borListNext(it), ++count);
+        predicateAddParams(domain, id, tid, count);
+
+        it = next;
+    }
+
+    return 0;
+}
+
+static int parsePredicate(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
+{
+    plan_lisp_node_t *n;
+    bor_list_t *it;
+
+    root = findExp(root, ":predicates");
+    if (root == NULL)
+        return 0;
+
+    it = borListNext(&root->children);
+    it = borListNext(it);
+    for (; it != &root->children; it = borListNext(it)){
+        n = BOR_LIST_ENTRY(it, plan_lisp_node_t, list);
+        if (parsePredicate1(domain, n) != 0)
+            return -1;
+    }
+    return 0;
+}
+
 plan_pddl_domain_t *planPDDLDomainNew(const char *fn)
 {
     plan_pddl_domain_t *domain;
@@ -353,23 +462,37 @@ plan_pddl_domain_t *planPDDLDomainNew(const char *fn)
         return NULL;
     }
 
+    if (parsePredicate(domain, lisp->root) != 0){
+        planPDDLDomainDel(domain);
+        return NULL;
+    }
+
     return domain;
 }
 
 void planPDDLDomainDel(plan_pddl_domain_t *domain)
 {
+    int i;
+
     if (domain->lisp)
         planLispFileDel(domain->lisp);
     if (domain->type)
         BOR_FREE(domain->type);
     if (domain->constant)
         BOR_FREE(domain->constant);
+
+    for (i = 0; i < domain->predicate_size; ++i){
+        if (domain->predicate[i].param != NULL)
+            BOR_FREE(domain->predicate[i].param);
+    }
+    if (domain->predicate)
+        BOR_FREE(domain->predicate);
     BOR_FREE(domain);
 }
 
 void planPDDLDomainDump(const plan_pddl_domain_t *domain, FILE *fout)
 {
-    int i;
+    int i, j;
 
     fprintf(fout, "Domain: %s\n", domain->name);
     fprintf(fout, "Require: %x\n", domain->require);
@@ -382,5 +505,14 @@ void planPDDLDomainDump(const plan_pddl_domain_t *domain, FILE *fout)
     for (i = 0; i < domain->constant_size; ++i){
         fprintf(fout, "    [%d]: %s, type: %d\n", i,
                 domain->constant[i].name, domain->constant[i].type);
+    }
+
+    fprintf(fout, "Predicate[%d]:\n", domain->predicate_size);
+    for (i = 0; i < domain->predicate_size; ++i){
+        fprintf(fout, "    %s:", domain->predicate[i].name);
+        for (j = 0; j < domain->predicate[i].param_size; ++j){
+            fprintf(fout, " %d", domain->predicate[i].param[j]);
+        }
+        fprintf(fout, "\n");
     }
 }

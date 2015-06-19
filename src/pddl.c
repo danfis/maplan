@@ -97,6 +97,45 @@ static plan_lisp_node_t *findExp(plan_lisp_node_t *node, const char *cdr)
     return NULL;
 }
 
+typedef int (*parse_typed_list_add_fn)(plan_pddl_domain_t *dom, const char *name);
+typedef int (*parse_typed_list_set_type_fn)(plan_pddl_domain_t *dom,
+                                            int from, int to, const char *type);
+static int parseTypedList(plan_pddl_domain_t *dom,
+                          bor_list_t *list, bor_list_t *from,
+                          parse_typed_list_add_fn add_fn,
+                          parse_typed_list_set_type_fn set_type_fn)
+{
+    plan_lisp_node_t *n;
+    bor_list_t *item = from;
+    int itfrom, it, found_type;
+
+    itfrom = 0;
+    found_type = 0;
+    for (it = 0; item != list; ++it, item = borListNext(item)){
+        n = BOR_LIST_ENTRY(item, plan_lisp_node_t, list);
+        if (n->value == NULL){
+            fprintf(stderr, "Error PDDL: Invalid definition of typed-list.\n");
+            return -1;
+        }
+
+        if (found_type){
+            if (set_type_fn(dom, itfrom, it - 1, n->value) != 0)
+                return -1;
+            found_type = 0;
+            itfrom = it + 1;
+
+        }else if (strcmp(n->value, "-") == 0){
+            found_type = 1;
+
+        }else{
+            if (add_fn(dom, n->value) != 0)
+                return -1;
+        }
+    }
+
+    return 0;
+}
+
 static int findTypedList(bor_list_t *from, bor_list_t *end,
                          bor_list_t **it_end, bor_list_t **next,
                          const char **type_name)
@@ -211,12 +250,28 @@ static int addType(plan_pddl_domain_t *domain, const char *name)
     return domain->type_size - 1;
 }
 
+static int parseTypeAdd(plan_pddl_domain_t *dom, const char *name)
+{
+    addType(dom, name);
+    return 0;
+}
+
+static int parseTypeSetType(plan_pddl_domain_t *dom, int from, int to,
+                            const char *name)
+{
+    int i, pid;
+
+    pid = addType(dom, name);
+    from++;
+    to++;
+    for (i = from; i < to; ++i)
+        dom->type[i].parent = pid;
+    return 0;
+}
+
 static int parseType(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
 {
-    plan_lisp_node_t *n;
-    bor_list_t *it, *it_end, *next;
-    const char *name;
-    int tid, pid;
+    bor_list_t *it;
 
     root = findExp(root, ":types");
     if (root == NULL)
@@ -224,34 +279,12 @@ static int parseType(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
 
     it = borListNext(&root->children);
     it = borListNext(it);
-    while (1){
-        if (findTypedList(it, &root->children, &it_end, &next, &name) != 0){
-            fprintf(stderr, "Error PDDL: Invalid definition of :types\n");
-            return -1;
-        }
-
-        if (it == it_end)
-            break;
-
-        pid = 0;
-        if (name != NULL)
-            pid = addType(domain, name);
-
-        while (it != it_end){
-            n = BOR_LIST_ENTRY(it, plan_lisp_node_t, list);
-            if (n->value == NULL){
-                fprintf(stderr, "Error PDDL: Invalid definition of :types\n");
-                return -1;
-            }
-
-            tid = addType(domain, n->value);
-            domain->type[tid].parent = pid;
-            it = borListNext(it);
-        }
-
-        it = next;
+    // TODO: Check circular dependency on types
+    if (parseTypedList(domain, &root->children, it,
+                       parseTypeAdd, parseTypeSetType) == 0){
+        fprintf(stderr, "Error PDDL: Invalid definition of :types\n");
+        return -1;
     }
-
     return 0;
 }
 

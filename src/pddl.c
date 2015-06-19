@@ -111,7 +111,7 @@ static int parseTypedList(plan_pddl_domain_t *dom,
 
     itfrom = 0;
     found_type = 0;
-    for (it = 0; item != list; ++it, item = borListNext(item)){
+    for (it = 0; item != list; item = borListNext(item)){
         n = BOR_LIST_ENTRY(item, plan_lisp_node_t, list);
         if (n->value == NULL){
             fprintf(stderr, "Error PDDL: Invalid definition of typed-list.\n");
@@ -119,10 +119,10 @@ static int parseTypedList(plan_pddl_domain_t *dom,
         }
 
         if (found_type){
-            if (set_type_fn(dom, itfrom, it - 1, n->value) != 0)
+            if (set_type_fn(dom, itfrom, it, n->value) != 0)
                 return -1;
             found_type = 0;
-            itfrom = it + 1;
+            itfrom = it;
 
         }else if (strcmp(n->value, "-") == 0){
             found_type = 1;
@@ -130,6 +130,7 @@ static int parseTypedList(plan_pddl_domain_t *dom,
         }else{
             if (add_fn(dom, n->value) != 0)
                 return -1;
+            ++it;
         }
     }
 
@@ -281,7 +282,7 @@ static int parseType(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
     it = borListNext(it);
     // TODO: Check circular dependency on types
     if (parseTypedList(domain, &root->children, it,
-                       parseTypeAdd, parseTypeSetType) == 0){
+                       parseTypeAdd, parseTypeSetType) != 0){
         fprintf(stderr, "Error PDDL: Invalid definition of :types\n");
         return -1;
     }
@@ -300,6 +301,31 @@ static void addConstant(plan_pddl_domain_t *dom, const char *name, int type)
     c->type = type;
 }
 
+static int parseConstantAdd(plan_pddl_domain_t *dom, const char *name)
+{
+    addConstant(dom, name, 0);
+    return 0;
+}
+
+static int parseConstantSet(plan_pddl_domain_t *dom, int from, int to,
+                            const char *name)
+{
+    int i, tid;
+
+    tid = getType(dom, name);
+    if (tid < 0){
+        fprintf(stderr, "Error PDDL: Invalid type `%s'\n", name);
+        return -1;
+    }
+
+    fprintf(stderr, "%d %d %d\n", from, to, dom->constant_size);
+    fflush(stderr);
+    for (i = from; i < to; ++i)
+        dom->constant[i].type = tid;
+
+    return 0;
+}
+
 static int parseConstant(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
 {
     plan_lisp_node_t *n;
@@ -313,33 +339,11 @@ static int parseConstant(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
 
     it = borListNext(&root->children);
     it = borListNext(it);
-    while (1){
-        if (findTypedList(it, &root->children, &it_end, &next, &name) != 0){
-            fprintf(stderr, "Error PDDL: Invalid definition of :constants\n");
-            return -1;
-        }
-
-        if (it == &root->children)
-            break;
-
-        pid = 0;
-        if (name != NULL)
-            pid = getType(domain, name);
-
-        while (it != it_end){
-            n = BOR_LIST_ENTRY(it, plan_lisp_node_t, list);
-            if (n->value == NULL){
-                fprintf(stderr, "Error PDDL: Invalid definition of :constants\n");
-                return -1;
-            }
-
-            addConstant(domain, n->value, pid);
-            it = borListNext(it);
-        }
-
-        it = next;
+    if (parseTypedList(domain, &root->children, it,
+                       parseConstantAdd, parseConstantSet) != 0){
+        fprintf(stderr, "Error PDDL: Invalid definition of :constants\n");
+        return -1;
     }
-
     return 0;
 }
 

@@ -318,8 +318,6 @@ static int parseConstantSet(plan_pddl_domain_t *dom, int from, int to,
         return -1;
     }
 
-    fprintf(stderr, "%d %d %d\n", from, to, dom->constant_size);
-    fflush(stderr);
     for (i = from; i < to; ++i)
         dom->constant[i].type = tid;
 
@@ -328,10 +326,7 @@ static int parseConstantSet(plan_pddl_domain_t *dom, int from, int to,
 
 static int parseConstant(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
 {
-    plan_lisp_node_t *n;
-    bor_list_t *it, *it_end, *next;
-    const char *name;
-    int pid;
+    bor_list_t *it;
 
     root = findExp(root, ":constants");
     if (root == NULL)
@@ -369,27 +364,39 @@ static int addPredicate(plan_pddl_domain_t *domain, const char *name)
     return id;
 }
 
-static void predicateAddParams(plan_pddl_domain_t *domain, int pred_id,
-                               int type, int count)
+static int parsePredicateAdd(plan_pddl_domain_t *dom, const char *name)
 {
     plan_pddl_predicate_t *pred;
-    int i;
-
-    pred = domain->predicate + pred_id;
-    i = pred->param_size;
-    pred->param_size += count;
+    pred = dom->predicate + dom->predicate_size - 1;
+    ++pred->param_size;
     pred->param = BOR_REALLOC_ARR(pred->param, int, pred->param_size);
-    for (; i < pred->param_size; ++i){
-        pred->param[i] = type;
+    pred->param[pred->param_size - 1] = 0;
+    return 0;
+}
+
+static int parsePredicateSet(plan_pddl_domain_t *dom, int from, int to,
+                             const char *name)
+{
+    plan_pddl_predicate_t *pred;
+    int i, tid;
+
+    tid = getType(dom, name);
+    if (tid < 0){
+        fprintf(stderr, "Error PDDL: Invalid type `%s'\n", name);
+        return -1;
     }
+
+    pred = dom->predicate + dom->predicate_size - 1;
+    for (i = from; i < to; ++i)
+        pred->param[i] = tid;
+    return 0;
 }
 
 static int parsePredicate1(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
 {
     plan_lisp_node_t *n;
-    bor_list_t *it, *it_end, *next;
-    const char *name;
-    int id, tid, count;
+    bor_list_t *it;
+    int id;
 
     it = borListNext(&root->children);
     if (it == &root->children){
@@ -408,32 +415,12 @@ static int parsePredicate1(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
         return -1;
 
     it = borListNext(it);
-    while (1){
-        if (findTypedList(it, &root->children, &it_end, &next, &name) != 0){
-            fprintf(stderr, "Error PDDL: Invalid definition of predicate `%s'\n",
-                    domain->predicate[id].name);
-            return -1;
-        }
-
-        if (it == &root->children)
-            break;
-
-        tid = 0;
-        if (name != NULL)
-            tid = getType(domain, name);
-        if (tid < 0){
-            fprintf(stderr, "Error PDDL: Invalid type `%s' in predicate"
-                            " `%s' definition.\n",
-                            name, domain->predicate[id].name);
-            return -1;
-        }
-
-        for (count = 0; it != it_end; it = borListNext(it), ++count);
-        predicateAddParams(domain, id, tid, count);
-
-        it = next;
+    if (parseTypedList(domain, &root->children, it,
+                       parsePredicateAdd, parsePredicateSet) != 0){
+        fprintf(stderr, "Error PDDL: Invalid definition of predicate `%s'\n",
+                        domain->predicate[id].name);
+        return -1;
     }
-
     return 0;
 }
 

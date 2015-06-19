@@ -137,42 +137,6 @@ static int parseTypedList(plan_pddl_domain_t *dom,
     return 0;
 }
 
-static int findTypedList(bor_list_t *from, bor_list_t *end,
-                         bor_list_t **it_end, bor_list_t **next,
-                         const char **type_name)
-{
-    plan_lisp_node_t *n;
-    bor_list_t *item = from;
-    int found = 0;
-
-    *it_end = end;
-    *type_name = NULL;
-
-    while (item != end){
-        n = BOR_LIST_ENTRY(item, plan_lisp_node_t, list);
-        if (n->value == NULL){
-            fprintf(stderr, "Error PDDL: Invalid definition of typed-list.\n");
-            return -1;
-        }
-
-        if (found){
-            *type_name = n->value;
-            *next = borListNext(item);
-            return 0;
-        }
-
-        if (strcmp(n->value, "-") == 0){
-            *it_end = item;
-            found = 1;
-        }
-
-        item = borListNext(item);
-    }
-
-    *next = *it_end;
-    return 0;
-}
-
 static const char *parseName(plan_lisp_node_t *root)
 {
     plan_lisp_node_t *n;

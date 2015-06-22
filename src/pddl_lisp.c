@@ -25,6 +25,7 @@ static kw_t kw[] = {
     { ":requirements", PLAN_PDDL_KW_REQUIREMENTS },
     { ":types", PLAN_PDDL_KW_TYPES },
     { ":predicates", PLAN_PDDL_KW_PREDICATES },
+    { ":constants", PLAN_PDDL_KW_CONSTANTS },
     { ":action", PLAN_PDDL_KW_ACTION },
     { ":parameters", PLAN_PDDL_KW_PARAMETERS },
     { ":precondition", PLAN_PDDL_KW_PRE },

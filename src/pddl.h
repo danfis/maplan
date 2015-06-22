@@ -20,7 +20,7 @@
 #ifndef __PLAN_PDDL_H__
 #define __PLAN_PDDL_H__
 
-#include "lisp_file.h"
+#include "pddl_lisp.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,7 +72,7 @@ struct _plan_pddl_predicate_t {
 typedef struct _plan_pddl_predicate_t plan_pddl_predicate_t;
 
 struct _plan_pddl_domain_t {
-    plan_lisp_file_t *lisp;
+    plan_pddl_lisp_t *lisp;
     const char *name;
     unsigned require;
     plan_pddl_type_t *type;

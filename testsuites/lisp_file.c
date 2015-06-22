@@ -1,14 +1,14 @@
 #include <cu/cu.h>
-#include "src/lisp_file.h"
+#include "src/pddl_lisp.h"
 
 static void testLisp(const char *fn)
 {
-    plan_lisp_file_t *lisp;
+    plan_pddl_lisp_t *lisp;
 
     printf("---- %s ----\n", fn);
-    lisp = planLispFileParse(fn);
-    planLispFileDump(lisp, stdout);
-    planLispFileDel(lisp);
+    lisp = planPDDLLispParse(fn);
+    planPDDLLispDump(lisp, stdout);
+    planPDDLLispDel(lisp);
     printf("---- %s END ----\n", fn);
 }
 

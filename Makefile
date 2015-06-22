@@ -14,7 +14,7 @@ TARGETS  = libplan.a
 
 OBJS  = problem
 OBJS += problem_pddl
-OBJS += lisp_file
+OBJS += pddl_lisp
 OBJS += pddl
 OBJS += pddl_type
 OBJS += pddl_atom

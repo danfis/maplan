@@ -410,11 +410,11 @@ static int parsePredicate(plan_pddl_domain_t *domain, plan_lisp_node_t *root)
 plan_pddl_domain_t *planPDDLDomainNew(const char *fn)
 {
     plan_pddl_domain_t *domain;
-    plan_lisp_file_t *lisp;
+    plan_pddl_lisp_t *lisp;
 
-    lisp = planLispFileParse(fn);
+    lisp = planPDDLLispParse(fn);
     if (lisp == NULL){
-        planLispFileDel(lisp);
+        planPDDLLispDel(lisp);
         return NULL;
     }
 
@@ -463,7 +463,7 @@ void planPDDLDomainDel(plan_pddl_domain_t *domain)
     int i;
 
     if (domain->lisp)
-        planLispFileDel(domain->lisp);
+        planPDDLLispDel(domain->lisp);
     if (domain->type)
         BOR_FREE(domain->type);
     if (domain->constant)

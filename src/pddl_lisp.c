@@ -7,7 +7,7 @@
 
 #include <boruvka/alloc.h>
 
-#include "lisp_file.h"
+#include "pddl_lisp.h"
 
 #define IS_WS(c) ((c) == ' ' || (c) == '\n' || (c) == '\r' || (c) == '\t')
 #define IS_ALPHA(c) (!IS_WS(c) && (c) != ')' && (c) != '(' && (c) != ';')
@@ -97,12 +97,12 @@ static plan_lisp_node_t *parseExp(char *data, int from, int size, int *cont)
     return NULL;
 }
 
-plan_lisp_file_t *planLispFileParse(const char *fn)
+plan_pddl_lisp_t *planPDDLLispParse(const char *fn)
 {
     int fd, i;
     struct stat st;
     char *data;
-    plan_lisp_file_t *lisp;
+    plan_pddl_lisp_t *lisp;
     plan_lisp_node_t *root = NULL;
 
     fd = open(fn, O_RDONLY);
@@ -137,7 +137,7 @@ plan_lisp_file_t *planLispFileParse(const char *fn)
         return NULL;
     }
 
-    lisp = BOR_ALLOC(plan_lisp_file_t);
+    lisp = BOR_ALLOC(plan_pddl_lisp_t);
     lisp->fd = fd;
     lisp->data = data;
     lisp->size = st.st_size;
@@ -146,7 +146,7 @@ plan_lisp_file_t *planLispFileParse(const char *fn)
     return lisp;
 }
 
-void planLispFileDel(plan_lisp_file_t *lisp)
+void planPDDLLispDel(plan_pddl_lisp_t *lisp)
 {
     if (lisp->data)
         munmap((void *)lisp->data, lisp->size);
@@ -183,7 +183,7 @@ static void nodeDump(const plan_lisp_node_t *node, FILE *fout, int prefix)
     }
 }
 
-void planLispFileDump(const plan_lisp_file_t *lisp, FILE *fout)
+void planPDDLLispDump(const plan_pddl_lisp_t *lisp, FILE *fout)
 {
     nodeDump(lisp->root, fout, 0);
 }

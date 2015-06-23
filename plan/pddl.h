@@ -128,6 +128,7 @@ struct _plan_pddl_t {
     plan_pddl_action_t *action;
     int action_size;
     plan_pddl_cond_t goal;
+    int metric;
 
     plan_pddl_obj_arr_t *type_obj_map;
 

@@ -1241,6 +1241,28 @@ static int parseGoal(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return parseActionCond(pddl, n->child + 1, -1, &pddl->goal);
 }
 
+static int parseMetric(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+{
+    plan_pddl_lisp_node_t *n;
+
+    n = findNode(root, PLAN_PDDL_KW_METRIC);
+    if (n == NULL)
+        return 0;
+
+    if (n->child_size != 3
+            || n->child[1].value == NULL
+            || n->child[1].kw != PLAN_PDDL_KW_MINIMIZE
+            || n->child[2].value != NULL
+            || n->child[2].child_size != 1
+            || strcmp(n->child[2].child[0].value, "total-cost") != 0){
+        ERRN2(n, "Only (:metric minimize (total-cost)) is supported.");
+        return -1;
+    }
+
+    pddl->metric = 1;
+    return 0;
+}
+
 plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
 {
     plan_pddl_t *pddl;
@@ -1293,7 +1315,8 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
             || parsePredicate(pddl, &domain_lisp->root) != 0
             || parseFunction(pddl, &domain_lisp->root) != 0
             || parseAction(pddl, &domain_lisp->root) != 0
-            || parseGoal(pddl, &problem_lisp->root) != 0){
+            || parseGoal(pddl, &problem_lisp->root) != 0
+            || parseMetric(pddl, &problem_lisp->root) != 0){
         goto pddl_fail;
     }
 
@@ -1502,4 +1525,5 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
     fprintf(fout, "Goal: ");
     dumpCond(pddl, NULL, &pddl->goal, fout);
     fprintf(fout, "\n");
+    fprintf(fout, "Metric: %d\n", pddl->metric);
 }

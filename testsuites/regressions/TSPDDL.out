@@ -54,6 +54,7 @@ Action[5]:
         pre: (and (hoist ?x) (crate ?y) (truck ?z) (place ?p) (at ?x ?p) (at ?z ?p) (available ?x) (in ?y ?z))
         eff: (and (lifting ?x ?y) (not (in ?y ?z)) (not (available ?x)))
 Goal: (and (on crate0 pallet2) (on crate1 pallet1))
+Metric: 0
 ---- Domain: pddl/depot-domain.pddl | pddl/depot-pfile1.pddl END ----
 ---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl ----
 Domain: driverlog
@@ -107,6 +108,7 @@ Action[6]:
         pre: (and (driver ?driver) (location ?loc-from) (location ?loc-to) (at ?driver ?loc-from) (path ?loc-from ?loc-to))
         eff: (and (not (at ?driver ?loc-from)) (at ?driver ?loc-to))
 Goal: (and (at driver1 s1) (at truck1 s1) (at package1 s0) (at package2 s0))
+Metric: 0
 ---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl END ----
 ---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl ----
 Domain: openstacks-sequencedstrips-nonadl-nonnegated
@@ -194,6 +196,7 @@ Action[12]:
         pre: (and (started o5) (made p5) (stacks-avail ?avail) (next-count ?avail ?new-avail))
         eff: (and (not (started o5)) (shipped o5) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
 Goal: (and (shipped o1) (shipped o2) (shipped o3) (shipped o4) (shipped o5))
+Metric: 1
 ---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl END ----
 ---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl ----
 Domain: rover
@@ -287,6 +290,7 @@ Action[9]:
         pre: (and (at ?r ?x) (at_lander ?l ?y) (have_image ?r ?o ?m) (visible ?x ?y) (available ?r) (channel_free ?l))
         eff: (and (not (available ?r)) (not (channel_free ?l)) (channel_free ?l) (communicated_image_data ?o ?m) (available ?r))
 Goal: (and (communicated_soil_data waypoint2) (communicated_rock_data waypoint3) (communicated_image_data objective1 high_res))
+Metric: 0
 ---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl END ----
 ---- Domain: pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl ----
 Domain: citycar
@@ -360,6 +364,7 @@ Action[7]:
         pre: (and (road_connect ?r1 ?xy_initial ?xy_final) (not (= ?xy_initial ?xy_final)) (in_place ?r1))
         eff: (and (not (in_place ?r1)) (not (road_connect ?r1 ?xy_initial ?xy_final)) (COST 10) (and (when (at_car_road car0 ?r1) (and (not (at_car_road car0 ?r1)) (at_car_jun car0 ?xy_initial))) (when (at_car_road car1 ?r1) (and (not (at_car_road car1 ?r1)) (at_car_jun car1 ?xy_initial)))))
 Goal: (and (arrived car0 junction2-0) (arrived car1 junction2-1))
+Metric: 1
 ---- Domain: pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl END ----
 ---- Domain: pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl ----
 Domain: elevators-sequencedstrips
@@ -430,4 +435,5 @@ Action[6]:
         pre: (and (lift-at ?lift ?f) (boarded ?p ?lift) (passengers ?lift ?n1) (next ?n2 ?n1))
         eff: (and (passenger-at ?p ?f) (not (boarded ?p ?lift)) (not (passengers ?lift ?n1)) (passengers ?lift ?n2))
 Goal: (and (passenger-at p0 n4) (passenger-at p1 n5) (passenger-at p2 n6) (passenger-at p3 n2))
+Metric: 1
 ---- Domain: pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl END ----

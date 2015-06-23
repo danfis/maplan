@@ -4,7 +4,20 @@ Problem: depotprob1818
 Require: 1
 Type[1]:
     [0]: object, parent: -1
-Constant[0]:
+Obj[13]:
+    [0]: depot0, type: 0, is-constant: 0
+    [1]: distributor0, type: 0, is-constant: 0
+    [2]: distributor1, type: 0, is-constant: 0
+    [3]: truck0, type: 0, is-constant: 0
+    [4]: truck1, type: 0, is-constant: 0
+    [5]: pallet0, type: 0, is-constant: 0
+    [6]: pallet1, type: 0, is-constant: 0
+    [7]: pallet2, type: 0, is-constant: 0
+    [8]: crate0, type: 0, is-constant: 0
+    [9]: crate1, type: 0, is-constant: 0
+    [10]: hoist0, type: 0, is-constant: 0
+    [11]: hoist1, type: 0, is-constant: 0
+    [12]: hoist2, type: 0, is-constant: 0
 Predicate[15]:
     at: 0 0
     on: 0 0
@@ -34,7 +47,18 @@ Problem: dlog-2-2-2
 Require: 1
 Type[1]:
     [0]: object, parent: -1
-Constant[0]:
+Obj[11]:
+    [0]: driver1, type: 0, is-constant: 0
+    [1]: driver2, type: 0, is-constant: 0
+    [2]: truck1, type: 0, is-constant: 0
+    [3]: truck2, type: 0, is-constant: 0
+    [4]: package1, type: 0, is-constant: 0
+    [5]: package2, type: 0, is-constant: 0
+    [6]: s0, type: 0, is-constant: 0
+    [7]: s1, type: 0, is-constant: 0
+    [8]: s2, type: 0, is-constant: 0
+    [9]: p1-0, type: 0, is-constant: 0
+    [10]: p1-2, type: 0, is-constant: 0
 Predicate[10]:
     obj: 0
     truck: 0
@@ -65,19 +89,25 @@ Type[6]:
     [3]: count, parent: 0
     [4]: manager-agent, parent: 0
     [5]: manufacturer-agent, parent: 0
-Constant[12]:
-    [0]: p1, type: 2
-    [1]: p2, type: 2
-    [2]: p3, type: 2
-    [3]: p4, type: 2
-    [4]: p5, type: 2
-    [5]: o1, type: 1
-    [6]: o2, type: 1
-    [7]: o3, type: 1
-    [8]: o4, type: 1
-    [9]: o5, type: 1
-    [10]: manager, type: 4
-    [11]: manufacturer, type: 5
+Obj[18]:
+    [0]: p1, type: 2, is-constant: 1
+    [1]: p2, type: 2, is-constant: 1
+    [2]: p3, type: 2, is-constant: 1
+    [3]: p4, type: 2, is-constant: 1
+    [4]: p5, type: 2, is-constant: 1
+    [5]: o1, type: 1, is-constant: 1
+    [6]: o2, type: 1, is-constant: 1
+    [7]: o3, type: 1, is-constant: 1
+    [8]: o4, type: 1, is-constant: 1
+    [9]: o5, type: 1, is-constant: 1
+    [10]: manager, type: 4, is-constant: 1
+    [11]: manufacturer, type: 5, is-constant: 1
+    [12]: n0, type: 3, is-constant: 0
+    [13]: n1, type: 3, is-constant: 0
+    [14]: n2, type: 3, is-constant: 0
+    [15]: n3, type: 3, is-constant: 0
+    [16]: n4, type: 3, is-constant: 0
+    [17]: n5, type: 3, is-constant: 0
 Predicate[8]:
     includes: 1 2
     waiting: 1
@@ -114,7 +144,20 @@ Type[8]:
     [5]: mode, parent: 0
     [6]: lander, parent: 0
     [7]: objective, parent: 0
-Constant[0]:
+Obj[13]:
+    [0]: general, type: 6, is-constant: 0
+    [1]: colour, type: 5, is-constant: 0
+    [2]: high_res, type: 5, is-constant: 0
+    [3]: low_res, type: 5, is-constant: 0
+    [4]: rover0, type: 1, is-constant: 0
+    [5]: rover0store, type: 3, is-constant: 0
+    [6]: waypoint0, type: 2, is-constant: 0
+    [7]: waypoint1, type: 2, is-constant: 0
+    [8]: waypoint2, type: 2, is-constant: 0
+    [9]: waypoint3, type: 2, is-constant: 0
+    [10]: camera0, type: 4, is-constant: 0
+    [11]: objective0, type: 7, is-constant: 0
+    [12]: objective1, type: 7, is-constant: 0
 Predicate[25]:
     at: 1 2
     at_lander: 6 2
@@ -162,7 +205,25 @@ Type[5]:
     [2]: junction, parent: 0
     [3]: garage, parent: 0
     [4]: road, parent: 0
-Constant[0]:
+Obj[18]:
+    [0]: junction0-0, type: 2, is-constant: 0
+    [1]: junction0-1, type: 2, is-constant: 0
+    [2]: junction0-2, type: 2, is-constant: 0
+    [3]: junction1-0, type: 2, is-constant: 0
+    [4]: junction1-1, type: 2, is-constant: 0
+    [5]: junction1-2, type: 2, is-constant: 0
+    [6]: junction2-0, type: 2, is-constant: 0
+    [7]: junction2-1, type: 2, is-constant: 0
+    [8]: junction2-2, type: 2, is-constant: 0
+    [9]: car0, type: 1, is-constant: 0
+    [10]: car1, type: 1, is-constant: 0
+    [11]: garage0, type: 3, is-constant: 0
+    [12]: garage1, type: 3, is-constant: 0
+    [13]: road0, type: 4, is-constant: 0
+    [14]: road1, type: 4, is-constant: 0
+    [15]: road2, type: 4, is-constant: 0
+    [16]: road3, type: 4, is-constant: 0
+    [17]: road4, type: 4, is-constant: 0
 Predicate[11]:
     =: 0 0
     same_line: 2 2

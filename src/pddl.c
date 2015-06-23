@@ -1142,6 +1142,12 @@ static int parseActionCond(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
             return -1;
         }
 
+        if (getFunction(pddl, "total-cost") < 0){
+            ERRN2(root, "(total-cost) function must be defined in"
+                        " :functions section if used in effect.");
+            return -1;
+        }
+
         cond->arg_size = 1;
         cond->arg = BOR_ALLOC(plan_pddl_cond_t);
         condInit(cond->arg);

@@ -52,6 +52,21 @@ extern "C" {
 #define PLAN_PDDL_REQUIRE_FACTORED_PRIVACY      0x100000u
 
 
+#define PLAN_PDDL_COND_NONE     0
+#define PLAN_PDDL_COND_AND      1
+#define PLAN_PDDL_COND_OR       2
+#define PLAN_PDDL_COND_NOT      3
+#define PLAN_PDDL_COND_IMPLY    4
+#define PLAN_PDDL_COND_EXISTS   5
+#define PLAN_PDDL_COND_FORALL   6
+#define PLAN_PDDL_COND_WHEN     7
+#define PLAN_PDDL_COND_INCREASE 50
+#define PLAN_PDDL_COND_PRED     100
+#define PLAN_PDDL_COND_CONST    101
+#define PLAN_PDDL_COND_VAR      102
+#define PLAN_PDDL_COND_INT      103
+
+
 struct _plan_pddl_type_t {
     const char *name;
     int parent;
@@ -75,18 +90,17 @@ typedef struct _plan_pddl_predicate_t plan_pddl_predicate_t;
 typedef struct _plan_pddl_cond_t plan_pddl_cond_t;
 struct _plan_pddl_cond_t {
     int type;
+    int val;
     plan_pddl_cond_t *arg;
     int arg_size;
-
-    int pred_id;
-    int *pred_arg;
-    int pred_arg_size;
 };
 
 struct _plan_pddl_action_t {
     const char *name;
     plan_pddl_obj_t *param;
     int param_size;
+    plan_pddl_cond_t pre;
+    plan_pddl_cond_t eff;
 };
 typedef struct _plan_pddl_action_t plan_pddl_action_t;
 

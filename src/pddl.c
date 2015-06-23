@@ -91,9 +91,29 @@ static require_mask_t require_mask[] = {
 };
 static int require_mask_size = sizeof(require_mask) / sizeof(require_mask_t);
 
+struct _cond_type_t {
+    int kw;
+    int cond;
+};
+typedef struct _cond_type_t cond_type_t;
+
+static cond_type_t cond_type[] = {
+    { PLAN_PDDL_KW_INCREASE, PLAN_PDDL_COND_INCREASE },
+
+    { PLAN_PDDL_KW_AND, PLAN_PDDL_COND_AND },
+    { PLAN_PDDL_KW_OR, PLAN_PDDL_COND_OR },
+    { PLAN_PDDL_KW_NOT, PLAN_PDDL_COND_NOT },
+    { PLAN_PDDL_KW_IMPLY, PLAN_PDDL_COND_IMPLY },
+    { PLAN_PDDL_KW_EXISTS, PLAN_PDDL_COND_EXISTS },
+    { PLAN_PDDL_KW_FORALL, PLAN_PDDL_COND_FORALL },
+    { PLAN_PDDL_KW_WHEN, PLAN_PDDL_COND_WHEN },
+};
+static int cond_type_size = sizeof(cond_type) / sizeof(cond_type_t);
+
+
 static char _object_type_name[] = "object";
 
-unsigned requireMask(int kw)
+static unsigned requireMask(int kw)
 {
     int i;
 
@@ -104,11 +124,45 @@ unsigned requireMask(int kw)
     return 0u;
 }
 
+static int condType(int kw)
+{
+    int i;
+
+    for (i = 0; i < cond_type_size; ++i){
+        if (cond_type[i].kw == kw)
+            return cond_type[i].cond;
+    }
+    return -1;
+}
+
+
+static void condInit(plan_pddl_cond_t *c)
+{
+    bzero(c, sizeof(*c));
+}
+
+static void condFree(plan_pddl_cond_t *c)
+{
+    int i;
+
+    for (i = 0; i < c->arg_size; ++i)
+        condFree(c->arg + i);
+    if (c->arg != NULL)
+        BOR_FREE(c->arg);
+}
+
 static int nodeHeadKw(const plan_pddl_lisp_node_t *n)
 {
     if (n->child_size == 0)
         return -1;
     return n->child[0].kw;
+}
+
+static const char *nodeHead(const plan_pddl_lisp_node_t *n)
+{
+    if (n->child_size == 0)
+        return NULL;
+    return n->child[0].value;
 }
 
 static plan_pddl_lisp_node_t *findNode(plan_pddl_lisp_node_t *node, int kw)
@@ -323,6 +377,18 @@ static plan_pddl_obj_t *addObj(plan_pddl_t *pddl, const char *name, int type)
     return o;
 }
 
+static int getConst(const plan_pddl_t *pddl, const char *name)
+{
+    int i;
+
+    for (i = 0; i < pddl->obj_size; ++i){
+        if (pddl->obj[i].is_constant
+                && strcmp(pddl->obj[i].name, name) == 0)
+            return i;
+    }
+    return -1;
+}
+
 static int parseConstantSet(plan_pddl_t *pddl,
                             plan_pddl_lisp_node_t *root,
                             int child_from, int child_to, int child_type)
@@ -424,6 +490,18 @@ static int addPredicate(plan_pddl_t *pddl, const char *name)
     return id;
 }
 
+static int getPredicate(plan_pddl_t *pddl, const char *name)
+{
+    int i;
+
+    for (i = 0; i < pddl->predicate_size; ++i){
+        if (strcmp(name, pddl->predicate[i].name) == 0)
+            return i;
+    }
+
+    return -1;
+}
+
 static void addEqPredicate(plan_pddl_t *pddl)
 {
     int id;
@@ -511,8 +589,23 @@ static int addAction(plan_pddl_t *pddl, const char *name)
     pddl->action[id].name = name;
     pddl->action[id].param = NULL;
     pddl->action[id].param_size = 0;
+    condInit(&pddl->action[id].pre);
+    condInit(&pddl->action[id].eff);
 
     return id;
+}
+
+static int getActionParam(const plan_pddl_t *pddl, int action_id,
+                          const char *param_name)
+{
+    plan_pddl_action_t *a = pddl->action + action_id;
+    int i;
+
+    for (i = 0; i < a->param_size; ++i){
+        if (strcmp(a->param[i].name, param_name) == 0)
+            return i;
+    }
+    return -1;
 }
 
 static int parseActionParamSet(plan_pddl_t *pddl,
@@ -557,8 +650,175 @@ static int parseActionParamSet(plan_pddl_t *pddl,
     return 0;
 }
 
+static int _parseVarConst(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+                           int action_id, plan_pddl_cond_t *cond)
+{
+    if (root->value[0] == '?'){
+        cond->type = PLAN_PDDL_COND_VAR;
+        cond->val = getActionParam(pddl, action_id, root->value);
+        if (cond->val == -1){
+            ERRN(root, "Invalid paramenter name `%s'", root->value);
+            return -1;
+        }
+
+    }else{
+        cond->type = PLAN_PDDL_COND_CONST;
+        cond->val = getConst(pddl, root->value);
+        if (cond->val == -1){
+            ERRN(root, "Invalid constant `%s'", root->value);
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+static int _parseCondPred(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+                          int action_id, plan_pddl_cond_t *cond)
+{
+    const char *name;
+    int i;
+
+    name = nodeHead(root);
+    if (name == NULL){
+        ERRN2(root, "Invalid definition of conditional, missing head of"
+                    " expression.");
+        return -1;
+    }
+
+    cond->type = PLAN_PDDL_COND_PRED;
+    cond->val = getPredicate(pddl, name);
+    if (cond->val == -1){
+        ERRN(root, "Unkown predicate `%s'", name);
+        return -1;
+    }
+
+    // Check that all children are terminals
+    for (i = 1; i < root->child_size; ++i){
+        if (root->child[i].value == NULL){
+            ERRN(root, "Invalid instantiation of predicate `%s'", name);
+            return -1;
+        }
+    }
+
+    cond->arg_size = root->child_size - 1;
+    cond->arg = BOR_ALLOC_ARR(plan_pddl_cond_t, cond->arg_size);
+    for (i = 0; i < cond->arg_size; ++i)
+        condInit(cond->arg + i);
+    for (i = 0; i < cond->arg_size; ++i){
+        if (_parseVarConst(pddl, root->child + i + 1, action_id,
+                           cond->arg + i) != 0)
+            return -1;
+    }
+
+    return 0;
+}
+
+static int parseActionCond(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+                           int action_id, plan_pddl_cond_t *cond)
+{
+    int i;
+
+    if (root->value != NULL)
+        return _parseVarConst(pddl, root, action_id, cond);
+
+    cond->type = condType(nodeHeadKw(root));
+    if (cond->type == -1)
+        return _parseCondPred(pddl, root, action_id, cond);
+
+
+    if (cond->type == PLAN_PDDL_COND_NOT){
+        if (root->child_size != 2
+                || root->child[1].value != NULL){
+            ERRN2(root, "Invalid (not ...) condition.");
+            return -1;
+        }
+
+        cond->arg_size = 1;
+        cond->arg = BOR_ALLOC(plan_pddl_cond_t);
+        condInit(cond->arg);
+        return parseActionCond(pddl, root->child + 1, action_id, cond->arg);
+
+    }else if (cond->type == PLAN_PDDL_COND_AND){
+        if (root->child_size < 2){
+            ERRN2(root, "Invalid (and/or ...) condition.");
+            return -1;
+        }
+        for (i = 1; i < root->child_size; ++i){
+            if (root->child[i].value != NULL){
+                ERRN(root, "Invalid (and/or ...) condition -- %d'th argument.", i);
+                return -1;
+            }
+        }
+
+        cond->arg_size = root->child_size - 1;
+        cond->arg = BOR_ALLOC_ARR(plan_pddl_cond_t, cond->arg_size);
+        for (i = 0; i < cond->arg_size; ++i)
+            condInit(cond->arg + i);
+        for (i = 0; i < cond->arg_size; ++i){
+            if (parseActionCond(pddl, root->child + i + 1, action_id,
+                                cond->arg + i) != 0)
+                return -1;
+        }
+
+    }else if (cond->type == PLAN_PDDL_COND_OR){
+        ERRN2(root, "(or ...) is not supported yet.");
+        return -1;
+
+    }else if (cond->type == PLAN_PDDL_COND_IMPLY){
+        ERRN2(root, "(imply ...) is not supported yet.");
+        return -1;
+
+    }else if (cond->type == PLAN_PDDL_COND_EXISTS){
+        ERRN2(root, "(exists ...) is not supported yet.");
+        return -1;
+
+    }else if (cond->type == PLAN_PDDL_COND_FORALL){
+        // TODO
+
+    }else if (cond->type == PLAN_PDDL_COND_WHEN){
+        // TODO
+
+    }else if (cond->type == PLAN_PDDL_COND_INCREASE){
+        if (!(pddl->require & PLAN_PDDL_REQUIRE_ACTION_COST)){
+            ERRN2(root, "(increase ...) is supported only under"
+                        " :action-costs requirement.");
+            return -1;
+        }
+
+        if (root->child_size != 3){
+            ERRN2(root, "Invalid (increase ...) specification.");
+            return -1;
+        }
+
+        if (root->child[1].value != NULL
+                || root->child[1].child_size != 1
+                || root->child[1].child[0].value == NULL
+                || strcmp(root->child[1].child[0].value, "total-cost") != 0){
+            ERRN2(root, "Invalid (increase ...) specification -- the first"
+                        " argument must be (total-cost).");
+            return -1;
+        }
+
+        cond->arg_size = 1;
+        cond->arg = BOR_ALLOC(plan_pddl_cond_t);
+        condInit(cond->arg);
+
+        if (root->child[2].value != NULL){
+            cond->arg[0].type = PLAN_PDDL_COND_INT;
+            cond->arg[0].val = atoi(root->child[2].value);
+        }else{
+            ERRN2(root, "(increase ...) with functions not supported yet.");
+            return -1;
+        }
+    }
+    return 0;
+}
+
 static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
+    int action_id;
+
     if (root->child_size < 4
             || root->child[1].value == NULL
             || root->child[2].kw != PLAN_PDDL_KW_PARAMETERS
@@ -567,14 +827,21 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
         return -1;
     }
 
-    addAction(pddl, root->child[1].value);
+    action_id = addAction(pddl, root->child[1].value);
     if (parseTypedList(pddl, root->child + 3, 0,
                        root->child[3].child_size, parseActionParamSet) != 0)
         return -1;
 
     if (root->child_size >= 6){
-        if (root->child[4].kw != PLAN_PDDL_KW_PRE){
-        }else if (root->child[4].kw != PLAN_PDDL_KW_EFF){
+        if (root->child[4].kw == PLAN_PDDL_KW_PRE){
+            if (parseActionCond(pddl, root->child + 5, action_id,
+                                &pddl->action[action_id].pre) != 0)
+                return -1;
+
+        }else if (root->child[4].kw == PLAN_PDDL_KW_EFF){
+            if (parseActionCond(pddl, root->child + 5, action_id,
+                                &pddl->action[action_id].eff) != 0)
+                return -1;
         }else{
             ERRN2(root->child + 4, "Invalid definition of :action");
             return -1;
@@ -586,6 +853,9 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
             ERRN2(root->child + 4, "Invalid definition of :action");
             return -1;
         }
+        if (parseActionCond(pddl, root->child + 7, action_id,
+                            &pddl->action[action_id].eff) != 0)
+            return -1;
     }
 
     return 0;
@@ -686,11 +956,81 @@ void planPDDLDel(plan_pddl_t *pddl)
     for (i = 0; i < pddl->action_size; ++i){
         if (pddl->action[i].param != NULL)
             BOR_FREE(pddl->action[i].param);
+        condFree(&pddl->action[i].pre);
+        condFree(&pddl->action[i].eff);
     }
     if (pddl->action)
         BOR_FREE(pddl->action);
 
     BOR_FREE(pddl);
+}
+
+static const char *_condToStr(int cond_type)
+{
+    switch (cond_type){
+        case PLAN_PDDL_COND_NONE:
+            return "none";
+        case PLAN_PDDL_COND_AND:
+            return "and";
+        case PLAN_PDDL_COND_OR:
+            return "or";
+        case PLAN_PDDL_COND_NOT:
+            return "not";
+        case PLAN_PDDL_COND_IMPLY:
+            return "imply";
+        case PLAN_PDDL_COND_EXISTS:
+            return "exists";
+        case PLAN_PDDL_COND_FORALL:
+            return "forall";
+        case PLAN_PDDL_COND_WHEN:
+            return "when";
+        case PLAN_PDDL_COND_INCREASE:
+            return "COST";
+        case PLAN_PDDL_COND_PRED:
+            return "pred";
+        case PLAN_PDDL_COND_VAR:
+            return "var";
+        case PLAN_PDDL_COND_CONST:
+            return "const";
+    }
+    return "";
+}
+
+static void dumpCond(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
+                     const plan_pddl_cond_t *cond, FILE *fout)
+{
+    const plan_pddl_predicate_t *pred;
+    int i;
+
+    if (cond->type == PLAN_PDDL_COND_AND
+            || cond->type == PLAN_PDDL_COND_OR
+            || cond->type == PLAN_PDDL_COND_NOT
+            || cond->type == PLAN_PDDL_COND_INCREASE){
+        fprintf(fout, "(%s", _condToStr(cond->type));
+        for (i = 0; i < cond->arg_size; ++i){
+            fprintf(fout, " ");
+            dumpCond(pddl, a, cond->arg + i, fout);
+        }
+        fprintf(fout, ")");
+
+    }else if (cond->type == PLAN_PDDL_COND_PRED){
+        pred = pddl->predicate + cond->val;
+        fprintf(fout, "(%s", pred->name);
+        for (i = 0; i < cond->arg_size; ++i){
+            fprintf(fout, " ");
+            dumpCond(pddl, a, cond->arg + i, fout);
+        }
+        fprintf(fout, ")");
+
+    }else if (cond->type == PLAN_PDDL_COND_VAR){
+        fprintf(fout, "%s", a->param[cond->val].name);
+
+    }else if (cond->type == PLAN_PDDL_COND_CONST){
+        fprintf(fout, "%s", pddl->obj[cond->val].name);
+
+    }else if (cond->type == PLAN_PDDL_COND_INT){
+        fprintf(fout, "%d", cond->val);
+    }
 }
 
 void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
@@ -729,6 +1069,14 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
             fprintf(fout, " %s:%d", pddl->action[i].param[j].name,
                     pddl->action[i].param[j].type);
         }
+        fprintf(fout, "\n");
+
+        fprintf(fout, "        pre: ");
+        dumpCond(pddl, pddl->action + i, &pddl->action[i].pre, fout);
+        fprintf(fout, "\n");
+
+        fprintf(fout, "        eff: ");
+        dumpCond(pddl, pddl->action + i, &pddl->action[i].eff, fout);
         fprintf(fout, "\n");
     }
 }

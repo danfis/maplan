@@ -36,10 +36,20 @@ Predicate[15]:
     crate: 0
 Action[5]:
     drive: ?x:0 ?y:0 ?z:0
+        pre: (and (truck ?x) (place ?y) (place ?z) (at ?x ?y))
+        eff: (and (at ?x ?z) (not (at ?x ?y)))
     lift: ?x:0 ?y:0 ?z:0 ?p:0
+        pre: (and (hoist ?x) (crate ?y) (surface ?z) (place ?p) (at ?x ?p) (available ?x) (at ?y ?p) (on ?y ?z) (clear ?y))
+        eff: (and (lifting ?x ?y) (clear ?z) (not (at ?y ?p)) (not (clear ?y)) (not (available ?x)) (not (on ?y ?z)))
     drop: ?x:0 ?y:0 ?z:0 ?p:0
+        pre: (and (hoist ?x) (crate ?y) (surface ?z) (place ?p) (at ?x ?p) (at ?z ?p) (clear ?z) (lifting ?x ?y))
+        eff: (and (available ?x) (at ?y ?p) (clear ?y) (on ?y ?z) (not (lifting ?x ?y)) (not (clear ?z)))
     load: ?x:0 ?y:0 ?z:0 ?p:0
+        pre: (and (hoist ?x) (crate ?y) (truck ?z) (place ?p) (at ?x ?p) (at ?z ?p) (lifting ?x ?y))
+        eff: (and (in ?y ?z) (available ?x) (not (lifting ?x ?y)))
     unload: ?x:0 ?y:0 ?z:0 ?p:0
+        pre: (and (hoist ?x) (crate ?y) (truck ?z) (place ?p) (at ?x ?p) (at ?z ?p) (available ?x) (in ?y ?z))
+        eff: (and (lifting ?x ?y) (not (in ?y ?z)) (not (available ?x)))
 ---- Domain: pddl/depot-domain.pddl | pddl/depot-pfile1.pddl END ----
 ---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl ----
 Domain: driverlog
@@ -72,11 +82,23 @@ Predicate[10]:
     empty: 0
 Action[6]:
     load-truck: ?obj:0 ?truck:0 ?driver:0 ?loc:0
+        pre: (and (obj ?obj) (truck ?truck) (location ?loc) (driver ?driver) (at ?truck ?loc) (at ?obj ?loc) (driving ?driver ?truck))
+        eff: (and (not (at ?obj ?loc)) (in ?obj ?truck))
     unload-truck: ?obj:0 ?truck:0 ?driver:0 ?loc:0
+        pre: (and (obj ?obj) (truck ?truck) (location ?loc) (driver ?driver) (at ?truck ?loc) (in ?obj ?truck) (driving ?driver ?truck))
+        eff: (and (not (in ?obj ?truck)) (at ?obj ?loc))
     board-truck: ?driver:0 ?truck:0 ?loc:0
+        pre: (and (driver ?driver) (truck ?truck) (location ?loc) (at ?truck ?loc) (at ?driver ?loc) (empty ?truck))
+        eff: (and (not (at ?driver ?loc)) (driving ?driver ?truck) (not (empty ?truck)))
     disembark-truck: ?driver:0 ?truck:0 ?loc:0
+        pre: (and (driver ?driver) (truck ?truck) (location ?loc) (at ?truck ?loc) (driving ?driver ?truck))
+        eff: (and (not (driving ?driver ?truck)) (at ?driver ?loc) (empty ?truck))
     drive-truck: ?truck:0 ?loc-from:0 ?loc-to:0 ?driver:0
+        pre: (and (truck ?truck) (location ?loc-from) (location ?loc-to) (driver ?driver) (at ?truck ?loc-from) (driving ?driver ?truck) (link ?loc-from ?loc-to))
+        eff: (and (not (at ?truck ?loc-from)) (at ?truck ?loc-to))
     walk: ?driver:0 ?loc-from:0 ?loc-to:0
+        pre: (and (driver ?driver) (location ?loc-from) (location ?loc-to) (at ?driver ?loc-from) (path ?loc-from ?loc-to))
+        eff: (and (not (at ?driver ?loc-from)) (at ?driver ?loc-to))
 ---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl END ----
 ---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl ----
 Domain: openstacks-sequencedstrips-nonadl-nonnegated
@@ -119,17 +141,41 @@ Predicate[8]:
     next-count: 3 3
 Action[12]:
     open-new-stack: ?man:5 ?open:3 ?new-open:3
+        pre: (and (stacks-avail ?open) (next-count ?open ?new-open))
+        eff: (and (not (stacks-avail ?open)) (stacks-avail ?new-open) (COST 1))
     start-order: ?man:4 ?o:1 ?avail:3 ?new-avail:3
+        pre: (and (waiting ?o) (stacks-avail ?avail) (next-count ?new-avail ?avail))
+        eff: (and (not (waiting ?o)) (started ?o) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
     make-product-p1: ?man:5
+        pre: (and (not-made p1) (started o2))
+        eff: (and (not (not-made p1)) (made p1))
     make-product-p2: ?man:5
+        pre: (and (not-made p2) (started o1) (started o2))
+        eff: (and (not (not-made p2)) (made p2))
     make-product-p3: ?man:5
+        pre: (and (not-made p3) (started o3) (started o4))
+        eff: (and (not (not-made p3)) (made p3))
     make-product-p4: ?man:5
+        pre: (and (not-made p4) (started o4))
+        eff: (and (not (not-made p4)) (made p4))
     make-product-p5: ?man:5
+        pre: (and (not-made p5) (started o5))
+        eff: (and (not (not-made p5)) (made p5))
     ship-order-o1: ?man:4 ?avail:3 ?new-avail:3
+        pre: (and (started o1) (made p2) (stacks-avail ?avail) (next-count ?avail ?new-avail))
+        eff: (and (not (started o1)) (shipped o1) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
     ship-order-o2: ?man:4 ?avail:3 ?new-avail:3
+        pre: (and (started o2) (made p1) (made p2) (stacks-avail ?avail) (next-count ?avail ?new-avail))
+        eff: (and (not (started o2)) (shipped o2) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
     ship-order-o3: ?man:4 ?avail:3 ?new-avail:3
+        pre: (and (started o3) (made p3) (stacks-avail ?avail) (next-count ?avail ?new-avail))
+        eff: (and (not (started o3)) (shipped o3) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
     ship-order-o4: ?man:4 ?avail:3 ?new-avail:3
+        pre: (and (started o4) (made p3) (made p4) (stacks-avail ?avail) (next-count ?avail ?new-avail))
+        eff: (and (not (started o4)) (shipped o4) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
     ship-order-o5: ?man:4 ?avail:3 ?new-avail:3
+        pre: (and (started o5) (made p5) (stacks-avail ?avail) (next-count ?avail ?new-avail))
+        eff: (and (not (started o5)) (shipped o5) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
 ---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl END ----
 ---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl ----
 Domain: rover
@@ -186,14 +232,32 @@ Predicate[25]:
     channel_free: 6
 Action[9]:
     navigate: ?x:1 ?y:2 ?z:2
+        pre: (and (can_traverse ?x ?y ?z) (available ?x) (at ?x ?y) (visible ?y ?z))
+        eff: (and (not (at ?x ?y)) (at ?x ?z))
     sample_soil: ?x:1 ?s:3 ?p:2
+        pre: (and (at ?x ?p) (at_soil_sample ?p) (equipped_for_soil_analysis ?x) (store_of ?s ?x) (empty ?s))
+        eff: (and (not (empty ?s)) (full ?s) (have_soil_analysis ?x ?p) (not (at_soil_sample ?p)))
     sample_rock: ?x:1 ?s:3 ?p:2
+        pre: (and (at ?x ?p) (at_rock_sample ?p) (equipped_for_rock_analysis ?x) (store_of ?s ?x) (empty ?s))
+        eff: (and (not (empty ?s)) (full ?s) (have_rock_analysis ?x ?p) (not (at_rock_sample ?p)))
     drop: ?x:1 ?y:3
+        pre: (and (store_of ?y ?x) (full ?y))
+        eff: (and (not (full ?y)) (empty ?y))
     calibrate: ?r:1 ?i:4 ?t:7 ?w:2
+        pre: (and (equipped_for_imaging ?r) (calibration_target ?i ?t) (at ?r ?w) (visible_from ?t ?w) (on_board ?i ?r))
+        eff: (calibrated ?i ?r)
     take_image: ?r:1 ?p:2 ?o:7 ?i:4 ?m:5
+        pre: (and (calibrated ?i ?r) (on_board ?i ?r) (equipped_for_imaging ?r) (supports ?i ?m) (visible_from ?o ?p) (at ?r ?p))
+        eff: (and (have_image ?r ?o ?m) (not (calibrated ?i ?r)))
     communicate_soil_data: ?r:1 ?l:6 ?p:2 ?x:2 ?y:2
+        pre: (and (at ?r ?x) (at_lander ?l ?y) (have_soil_analysis ?r ?p) (visible ?x ?y) (available ?r) (channel_free ?l))
+        eff: (and (not (available ?r)) (not (channel_free ?l)) (channel_free ?l) (communicated_soil_data ?p) (available ?r))
     communicate_rock_data: ?r:1 ?l:6 ?p:2 ?x:2 ?y:2
+        pre: (and (at ?r ?x) (at_lander ?l ?y) (have_rock_analysis ?r ?p) (visible ?x ?y) (available ?r) (channel_free ?l))
+        eff: (and (not (available ?r)) (not (channel_free ?l)) (channel_free ?l) (communicated_rock_data ?p) (available ?r))
     communicate_image_data: ?r:1 ?l:6 ?o:7 ?m:5 ?x:2 ?y:2
+        pre: (and (at ?r ?x) (at_lander ?l ?y) (have_image ?r ?o ?m) (visible ?x ?y) (available ?r) (channel_free ?l))
+        eff: (and (not (available ?r)) (not (channel_free ?l)) (channel_free ?l) (communicated_image_data ?o ?m) (available ?r))
 ---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl END ----
 ---- Domain: pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl ----
 Domain: citycar
@@ -238,10 +302,24 @@ Predicate[11]:
     at_garage: 3 2
 Action[7]:
     move_car_in_road: ?xy_initial:2 ?xy_final:2 ?machine:1 ?r1:4
+        pre: (and (at_car_jun ?machine ?xy_initial) (not (= ?xy_initial ?xy_final)) (road_connect ?r1 ?xy_initial ?xy_final) (in_place ?r1))
+        eff: (and (clear ?xy_initial) (at_car_road ?machine ?r1) (not (at_car_jun ?machine ?xy_initial)) (COST 1))
     move_car_out_road: ?xy_initial:2 ?xy_final:2 ?machine:1 ?r1:4
+        pre: (and (at_car_road ?machine ?r1) (clear ?xy_final) (not (= ?xy_initial ?xy_final)) (road_connect ?r1 ?xy_initial ?xy_final) (in_place ?r1))
+        eff: (and (at_car_jun ?machine ?xy_final) (not (clear ?xy_final)) (not (at_car_road ?machine ?r1)) (COST 1))
     car_arrived: ?xy_final:2 ?machine:1
+        pre: (and (at_car_jun ?machine ?xy_final))
+        eff: (and (clear ?xy_final) (arrived ?machine ?xy_final) (not (at_car_jun ?machine ?xy_final)))
     car_start: ?xy_final:2 ?machine:1 ?g:3
+        pre: (and (at_garage ?g ?xy_final) (starting ?machine ?g) (clear ?xy_final))
+        eff: (and (not (clear ?xy_final)) (at_car_jun ?machine ?xy_final) (not (starting ?machine ?g)))
     build_diagonal_oneway: ?xy_initial:2 ?xy_final:2 ?r1:4
+        pre: (and (clear ?xy_final) (not (= ?xy_initial ?xy_final)) (not (in_place ?r1)) (diagonal ?xy_initial ?xy_final))
+        eff: (and (road_connect ?r1 ?xy_initial ?xy_final) (in_place ?r1) (COST 30))
     build_straight_oneway: ?xy_initial:2 ?xy_final:2 ?r1:4
+        pre: (and (clear ?xy_final) (not (= ?xy_initial ?xy_final)) (same_line ?xy_initial ?xy_final) (not (in_place ?r1)))
+        eff: (and (road_connect ?r1 ?xy_initial ?xy_final) (in_place ?r1) (COST 20))
     destroy_road: ?xy_initial:2 ?xy_final:2 ?r1:4
+        pre: (and (road_connect ?r1 ?xy_initial ?xy_final) (not (= ?xy_initial ?xy_final)) (in_place ?r1))
+        eff: (and (not (in_place ?r1)) (not (road_connect ?r1 ?xy_initial ?xy_final)) (COST 10) )
 ---- Domain: pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl END ----

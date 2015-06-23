@@ -93,45 +93,56 @@ static int recongnizeKeyword(const char *text)
     return -1;
 }
 
-static plan_pddl_lisp_node_t *lispNodeNew(void)
+static plan_pddl_lisp_node_t *lispNodeInit(plan_pddl_lisp_node_t *n)
 {
-    plan_pddl_lisp_node_t *n;
-
-    n = BOR_ALLOC(plan_pddl_lisp_node_t);
     n->value = NULL;
     n->kw = -1;
-    borListInit(&n->children);
-    borListInit(&n->list);
+    n->lineno = -1;
+    n->child = NULL;
+    n->child_size = 0;
     return n;
 }
 
-static void lispNodeDel(plan_pddl_lisp_node_t *n)
+static void lispNodeFree(plan_pddl_lisp_node_t *n)
 {
-    bor_list_t *item, *tmp;
-    plan_pddl_lisp_node_t *m;
+    int i;
 
-    BOR_LIST_FOR_EACH_SAFE(&n->children, item, tmp){
-        m = BOR_LIST_ENTRY(item, plan_pddl_lisp_node_t, list);
-        lispNodeDel(m);
-    }
-
-    BOR_FREE(n);
+    for (i = 0; i < n->child_size; ++i)
+        lispNodeFree(n->child + i);
+    if (n->child != NULL)
+        BOR_FREE(n->child);
 }
 
-static plan_pddl_lisp_node_t *parseExp(char *data, int from, int size, int *cont)
+static plan_pddl_lisp_node_t *lispNodeAddChild(plan_pddl_lisp_node_t *r)
 {
-    plan_pddl_lisp_node_t *exp, *sub;
+    plan_pddl_lisp_node_t *n;
+
+    ++r->child_size;
+    r->child = BOR_REALLOC_ARR(r->child, plan_pddl_lisp_node_t,
+                               r->child_size);
+    n = r->child + r->child_size - 1;
+    lispNodeInit(n);
+    return n;
+}
+
+static int parseExp(plan_pddl_lisp_node_t *root, int *lineno,
+                    char *data, int from, int size, int *cont)
+{
+    plan_pddl_lisp_node_t *sub;
     int i = from;
     char c;
 
-    if (i >= size)
-        return NULL;
+    if (i >= size){
+        fprintf(stderr, "Error PDDL: Error on line %d\n", *lineno);
+        return -1;
+    }
 
-    exp = lispNodeNew();
     c = data[i];
     while (i < size){
         if (IS_WS(c)){
             // Skip whitespace
+            if (c == '\n')
+                *lineno += 1;
             c = data[++i];
             continue;
 
@@ -144,13 +155,13 @@ static plan_pddl_lisp_node_t *parseExp(char *data, int from, int size, int *cont
 
         }else if (c == '('){
             // Parse subexpression
-            sub = parseExp(data, i + 1, size, &i);
-            if (sub == NULL){
-                lispNodeDel(exp);
-                return NULL;
+            sub = lispNodeAddChild(root);
+            sub->lineno = *lineno;
+            if (parseExp(sub, lineno, data, i + 1, size, &i) != 0){
+                fprintf(stderr, "Error PDDL: Error on line %d\n", *lineno);
+                return -1;
             }
 
-            borListAppend(&exp->children, &sub->list);
             c = data[i];
             continue;
 
@@ -158,16 +169,16 @@ static plan_pddl_lisp_node_t *parseExp(char *data, int from, int size, int *cont
             // Finalize expression
             if (cont != NULL)
                 *cont = i + 1;
-            return exp;
+            return 0;
 
         }else{
-            sub = lispNodeNew();
-            borListAppend(&exp->children, &sub->list);
+            sub = lispNodeAddChild(root);
             sub->value = data + i;
+            sub->lineno = *lineno;
             for (; i < size && IS_ALPHA(data[i]); ++i);
             if (i == size){
-                lispNodeDel(exp);
-                return NULL;
+                fprintf(stderr, "Error PDDL: Error on line %d\n", *lineno);
+                return -1;
             }
 
             c = data[i];
@@ -176,17 +187,16 @@ static plan_pddl_lisp_node_t *parseExp(char *data, int from, int size, int *cont
         }
     }
 
-    lispNodeDel(exp);
-    return NULL;
+    return 0;
 }
 
 plan_pddl_lisp_t *planPDDLLispParse(const char *fn)
 {
-    int fd, i;
+    int fd, i, lineno;
     struct stat st;
     char *data;
     plan_pddl_lisp_t *lisp;
-    plan_pddl_lisp_node_t *root = NULL;
+    plan_pddl_lisp_node_t root;
 
     fd = open(fn, O_RDONLY);
     if (fd == -1){
@@ -210,12 +220,17 @@ plan_pddl_lisp_t *planPDDLLispParse(const char *fn)
         return NULL;
     }
 
-    for (i = 0; i < (int)st.st_size && data[i] != '('; ++i);
-    root = parseExp(data, i + 1, st.st_size, NULL);
-    if (root == NULL){
+    lineno = 1;
+    for (i = 0; i < (int)st.st_size && data[i] != '('; ++i){
+        if (data[i] == '\n')
+            ++lineno;
+    }
+    lispNodeInit(&root);
+    if (parseExp(&root, &lineno, data, i + 1, st.st_size, NULL) != 0){
         fprintf(stderr, "Error: Could not parse file `%s'.\n", fn);
         fflush(stderr);
         munmap((void *)data, st.st_size);
+        lispNodeFree(&root);
         close(fd);
         return NULL;
     }
@@ -235,15 +250,12 @@ void planPDDLLispDel(plan_pddl_lisp_t *lisp)
         munmap((void *)lisp->data, lisp->size);
     if (lisp->fd >= 0)
         close(lisp->fd);
-    if (lisp->root)
-        lispNodeDel(lisp->root);
+    lispNodeFree(&lisp->root);
     BOR_FREE(lisp);
 }
 
 static void nodeDump(const plan_pddl_lisp_node_t *node, FILE *fout, int prefix)
 {
-    bor_list_t *item;
-    const plan_pddl_lisp_node_t *m;
     int i;
 
     if (node->value != NULL){
@@ -255,9 +267,8 @@ static void nodeDump(const plan_pddl_lisp_node_t *node, FILE *fout, int prefix)
             fprintf(fout, " ");
         fprintf(fout, "(\n");
 
-        BOR_LIST_FOR_EACH(&node->children, item){
-            m = BOR_LIST_ENTRY(item, plan_pddl_lisp_node_t, list);
-            nodeDump(m, fout, prefix + 4);
+        for (i = 0; i < node->child_size; ++i){
+            nodeDump(node->child + i, fout, prefix + 4);
         }
 
         for (i = 0; i < prefix; ++i)
@@ -268,5 +279,5 @@ static void nodeDump(const plan_pddl_lisp_node_t *node, FILE *fout, int prefix)
 
 void planPDDLLispDump(const plan_pddl_lisp_t *lisp, FILE *fout)
 {
-    nodeDump(lisp->root, fout, 0);
+    nodeDump(&lisp->root, fout, 0);
 }

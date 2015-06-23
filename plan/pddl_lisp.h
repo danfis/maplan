@@ -2,7 +2,6 @@
 #define __PLAN_PDDL_LISP_H__
 
 #include <stdio.h>
-#include <boruvka/list.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,16 +64,17 @@ typedef enum {
     PLAN_PDDL_KW_WHEN,
 } plan_pddl_kw_t;
 
+typedef struct _plan_pddl_lisp_node_t plan_pddl_lisp_node_t;
 struct _plan_pddl_lisp_node_t {
     const char *value;
     int kw;
-    bor_list_t children;
-    bor_list_t list;
+    int lineno;
+    plan_pddl_lisp_node_t *child;
+    int child_size;
 };
-typedef struct _plan_pddl_lisp_node_t plan_pddl_lisp_node_t;
 
 struct _plan_pddl_lisp_t {
-    plan_pddl_lisp_node_t *root;
+    plan_pddl_lisp_node_t root;
     int fd;
     char *data;
     size_t size;

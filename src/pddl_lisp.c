@@ -7,7 +7,7 @@
 
 #include <boruvka/alloc.h>
 
-#include "pddl_lisp.h"
+#include "plan/pddl_lisp.h"
 
 #define IS_WS(c) ((c) == ' ' || (c) == '\n' || (c) == '\r' || (c) == '\t')
 #define IS_ALPHA(c) (!IS_WS(c) && (c) != ')' && (c) != '(' && (c) != ';')

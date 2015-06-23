@@ -20,7 +20,7 @@
 #ifndef __PLAN_PDDL_H__
 #define __PLAN_PDDL_H__
 
-#include "pddl_lisp.h"
+#include <plan/pddl_lisp.h>
 
 #ifdef __cplusplus
 extern "C" {

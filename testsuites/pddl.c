@@ -1,5 +1,5 @@
 #include <cu/cu.h>
-#include "../src/pddl.h"
+#include "plan/pddl.h"
 
 static void dumpDomain(const char *fn)
 {

@@ -19,8 +19,7 @@
 
 
 #include <boruvka/alloc.h>
-
-#include "pddl.h"
+#include <plan/pddl.h>
 
 struct _require_mask_t {
     int kw;

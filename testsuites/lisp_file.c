@@ -1,5 +1,5 @@
 #include <cu/cu.h>
-#include "src/pddl_lisp.h"
+#include "plan/pddl_lisp.h"
 
 static void testLisp(const char *fn)
 {

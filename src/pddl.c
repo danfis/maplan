@@ -382,6 +382,15 @@ static int addPredicate(plan_pddl_t *pddl, const char *name)
     return id;
 }
 
+static void addEqPredicate(plan_pddl_t *pddl)
+{
+    int id;
+
+    id = addPredicate(pddl, "=");
+    pddl->predicate[id].param_size = 2;
+    pddl->predicate[id].param = BOR_CALLOC_ARR(int, 2);
+}
+
 static int parsePredicateAdd(plan_pddl_t *pddl, const char *name)
 {
     plan_pddl_predicate_t *pred;
@@ -570,10 +579,16 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
     if (pddl->require == 0u)
         goto pddl_fail;
 
+    // Add 'object' type
     pddl->type_size = 1;
     pddl->type = BOR_ALLOC_ARR(plan_pddl_type_t, 1);
     pddl->type[0].name = _object_type_name;
     pddl->type[0].parent = -1;
+
+    // Add (= ?x ?y - object) predicate if set in requirements
+    if (pddl->require & PLAN_PDDL_REQUIRE_EQUALITY)
+        addEqPredicate(pddl);
+
     if (parseType(pddl, &domain_lisp->root) != 0
             || parseConstant(pddl, &domain_lisp->root) != 0
             || parsePredicate(pddl, &domain_lisp->root) != 0

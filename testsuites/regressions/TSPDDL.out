@@ -163,7 +163,8 @@ Type[5]:
     [3]: garage, parent: 0
     [4]: road, parent: 0
 Constant[0]:
-Predicate[10]:
+Predicate[11]:
+    =: 0 0
     same_line: 2 2
     diagonal: 2 2
     at_car_jun: 1 2

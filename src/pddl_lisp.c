@@ -226,6 +226,7 @@ plan_pddl_lisp_t *planPDDLLispParse(const char *fn)
             ++lineno;
     }
     lispNodeInit(&root);
+    root.lineno = lineno;
     if (parseExp(&root, &lineno, data, i + 1, st.st_size, NULL) != 0){
         fprintf(stderr, "Error: Could not parse file `%s'.\n", fn);
         fflush(stderr);
@@ -258,14 +259,14 @@ static void nodeDump(const plan_pddl_lisp_node_t *node, FILE *fout, int prefix)
 {
     int i;
 
+    for (i = 0; i < prefix; ++i)
+        fprintf(fout, " ");
+
     if (node->value != NULL){
-        for (i = 0; i < prefix; ++i)
-            fprintf(fout, " ");
-        fprintf(fout, "%s [%d]\n", node->value, node->kw);
+        fprintf(fout, "%s [%d] :: %d\n", node->value, node->kw,
+                node->lineno);
     }else{
-        for (i = 0; i < prefix; ++i)
-            fprintf(fout, " ");
-        fprintf(fout, "(\n");
+        fprintf(fout, "( :: %d\n", node->lineno);
 
         for (i = 0; i < node->child_size; ++i){
             nodeDump(node->child + i, fout, prefix + 4);

@@ -711,6 +711,11 @@ static int _parseVarConst(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
                            int action_id, plan_pddl_cond_t *cond)
 {
     if (root->value[0] == '?'){
+        if (action_id < 0){
+            ERRN(root, "Unexpected variable: `%s'", root->value);
+            return -1;
+        }
+
         cond->type = PLAN_PDDL_COND_VAR;
         cond->val = getActionParam(pddl, action_id, root->value);
         if (cond->val == -1){
@@ -912,9 +917,6 @@ static int parseActionCond(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
 {
     int i;
 
-    if (root->value != NULL)
-        return _parseVarConst(pddl, root, action_id, cond);
-
     cond->type = condType(nodeHeadKw(root));
     if (cond->type == -1)
         return _parseCondPred(pddl, root, action_id, cond);
@@ -1083,6 +1085,24 @@ static int parseAction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return 0;
 }
 
+static int parseGoal(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+{
+    plan_pddl_lisp_node_t *n;
+
+    n = findNode(root, PLAN_PDDL_KW_GOAL);
+    if (n == NULL){
+        ERR2("Could not find :goal.");
+        return -1;
+    }
+    if (n->child_size != 2
+            || n->child[1].value != NULL){
+        ERRN2(n, "Invalid definition of :goal.");
+        return -1;
+    }
+
+    return parseActionCond(pddl, n->child + 1, -1, &pddl->goal);
+}
+
 plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
 {
     plan_pddl_t *pddl;
@@ -1100,6 +1120,7 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
 
     pddl = BOR_ALLOC(plan_pddl_t);
     bzero(pddl, sizeof(*pddl));
+    condInit(&pddl->goal);
     pddl->domain_lisp = domain_lisp;
     pddl->problem_lisp = problem_lisp;
     pddl->domain_name = parseDomainName(&domain_lisp->root);
@@ -1132,8 +1153,10 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
             || parseObj(pddl, &problem_lisp->root) != 0
             || makeTypeObjMap(pddl) != 0
             || parsePredicate(pddl, &domain_lisp->root) != 0
-            || parseAction(pddl, &domain_lisp->root) != 0)
+            || parseAction(pddl, &domain_lisp->root) != 0
+            || parseGoal(pddl, &problem_lisp->root) != 0){
         goto pddl_fail;
+    }
 
     return pddl;
 
@@ -1179,6 +1202,8 @@ void planPDDLDel(plan_pddl_t *pddl)
         }
         BOR_FREE(pddl->type_obj_map);
     }
+
+    condFree(&pddl->goal);
     BOR_FREE(pddl);
 }
 
@@ -1241,7 +1266,11 @@ static void dumpCond(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
         fprintf(fout, ")");
 
     }else if (cond->type == PLAN_PDDL_COND_VAR){
-        fprintf(fout, "%s", a->param[cond->val].name);
+        if (a != NULL){
+            fprintf(fout, "%s", a->param[cond->val].name);
+        }else{
+            fprintf(fout, "???var");
+        }
 
     }else if (cond->type == PLAN_PDDL_COND_CONST){
         fprintf(fout, "%s", pddl->obj[cond->val].name);
@@ -1305,4 +1334,8 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
         dumpCond(pddl, pddl->action + i, &pddl->action[i].eff, fout);
         fprintf(fout, "\n");
     }
+
+    fprintf(fout, "Goal: ");
+    dumpCond(pddl, NULL, &pddl->goal, fout);
+    fprintf(fout, "\n");
 }

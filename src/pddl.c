@@ -783,7 +783,6 @@ static void _parseForallReplace(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n)
     if (n->kw == -1 && n->value != NULL){
         for (i = 0; i < pddl->forall.param_size; ++i){
             if (strcmp(n->value, pddl->forall.param[i].name) == 0){
-                fprintf(stderr, "XXX\n");
                 n->value = pddl->obj[pddl->forall.param_bind[i]].name;
             }
         }
@@ -802,14 +801,6 @@ static int _parseForallEval(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
 {
     plan_pddl_lisp_node_t arg;
     int i, id, ret;
-
-    for (i = 0; i < pddl->forall.param_size; ++i){
-        fprintf(stderr, "forall[%d]: %s %d | b: %d\n",
-                i,
-                pddl->forall.param[i].name,
-                pddl->forall.param[i].type,
-                pddl->forall.param_bind[i]);
-    }
 
     planPDDLLispNodeCopy(&arg, root->child + 2);
     _parseForallReplace(pddl, &arg);

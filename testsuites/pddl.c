@@ -3,16 +3,16 @@
 
 static void dumpDomain(const char *fn)
 {
-    plan_pddl_domain_t *d;
+    plan_pddl_t *d;
 
-    d = planPDDLDomainNew(fn);
+    d = planPDDLNew(fn);
     if (d == NULL)
         return;
 
     printf("---- Domain: %s ----\n", fn);
-    planPDDLDomainDump(d, stdout);
+    planPDDLDump(d, stdout);
     printf("---- Domain: %s END ----\n", fn);
-    planPDDLDomainDel(d);
+    planPDDLDel(d);
 }
 
 TEST(testPDDL)

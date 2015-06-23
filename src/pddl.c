@@ -117,11 +117,11 @@ static plan_pddl_lisp_node_t *findNode(plan_pddl_lisp_node_t *node, int kw)
     return NULL;
 }
 
-typedef int (*parse_typed_list_set_fn)(plan_pddl_domain_t *dom,
+typedef int (*parse_typed_list_set_fn)(plan_pddl_t *pddl,
                                        plan_pddl_lisp_node_t *root,
                                        int child_from, int child_to,
                                        int child_type);
-static int parseTypedList(plan_pddl_domain_t *dom,
+static int parseTypedList(plan_pddl_t *pddl,
                           plan_pddl_lisp_node_t *root,
                           int from, int to,
                           parse_typed_list_set_fn set_fn)
@@ -142,7 +142,7 @@ static int parseTypedList(plan_pddl_domain_t *dom,
                 ERRN2(root, "Invalid typed list.");
                 return -1;
             }
-            if (set_fn(dom, root, itfrom, itto, ittype) != 0)
+            if (set_fn(pddl, root, itfrom, itto, ittype) != 0)
                 return -1;
             itfrom = i + 1;
             itto = i + 1;
@@ -154,7 +154,7 @@ static int parseTypedList(plan_pddl_domain_t *dom,
     }
 
     if (itfrom < itto){
-        if (set_fn(dom, root, itfrom, itto, -1) != 0)
+        if (set_fn(pddl, root, itfrom, itto, -1) != 0)
             return -1;
     }
 
@@ -208,34 +208,34 @@ static unsigned parseRequire(plan_pddl_lisp_node_t *root)
     return mask;
 }
 
-static int getType(plan_pddl_domain_t *domain, const char *name)
+static int getType(plan_pddl_t *pddl, const char *name)
 {
     int i;
 
-    for (i = 0; i < domain->type_size; ++i){
-        if (strcmp(domain->type[i].name, name) == 0)
+    for (i = 0; i < pddl->type_size; ++i){
+        if (strcmp(pddl->type[i].name, name) == 0)
             return i;
     }
 
     return -1;
 }
 
-static int addType(plan_pddl_domain_t *domain, const char *name)
+static int addType(plan_pddl_t *pddl, const char *name)
 {
     int id;
 
-    if ((id = getType(domain, name)) != -1)
+    if ((id = getType(pddl, name)) != -1)
         return id;
 
-    ++domain->type_size;
-    domain->type = BOR_REALLOC_ARR(domain->type, plan_pddl_type_t,
-                                   domain->type_size);
-    domain->type[domain->type_size - 1].name = name;
-    domain->type[domain->type_size - 1].parent = 0;
-    return domain->type_size - 1;
+    ++pddl->type_size;
+    pddl->type = BOR_REALLOC_ARR(pddl->type, plan_pddl_type_t,
+                                 pddl->type_size);
+    pddl->type[pddl->type_size - 1].name = name;
+    pddl->type[pddl->type_size - 1].parent = 0;
+    return pddl->type_size - 1;
 }
 
-static int parseTypeSet(plan_pddl_domain_t *dom,
+static int parseTypeSet(plan_pddl_t *pddl,
                         plan_pddl_lisp_node_t *root,
                         int child_from, int child_to, int child_type)
 {
@@ -247,7 +247,7 @@ static int parseTypeSet(plan_pddl_domain_t *dom,
             ERRN2(root->child + child_type, "Invalid type definition.");
             return -1;
         }
-        pid = addType(dom, root->child[child_type].value);
+        pid = addType(pddl, root->child[child_type].value);
     }
 
     for (i = child_from; i < child_to; ++i){
@@ -256,14 +256,14 @@ static int parseTypeSet(plan_pddl_domain_t *dom,
             return -1;
         }
 
-        tid = addType(dom, root->child[i].value);
-        dom->type[tid].parent = pid;
+        tid = addType(pddl, root->child[i].value);
+        pddl->type[tid].parent = pid;
     }
 
     return 0;
 }
 
-static int parseType(plan_pddl_domain_t *dom, plan_pddl_lisp_node_t *root)
+static int parseType(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
     plan_pddl_lisp_node_t *types;
 
@@ -272,26 +272,26 @@ static int parseType(plan_pddl_domain_t *dom, plan_pddl_lisp_node_t *root)
         return 0;
 
     // TODO: Check circular dependency on types
-    if (parseTypedList(dom, types, 1, types->child_size, parseTypeSet) != 0){
+    if (parseTypedList(pddl, types, 1, types->child_size, parseTypeSet) != 0){
         ERRN2(root, "Invalid definition of :types");
         return -1;
     }
     return 0;
 }
 
-static void addConstant(plan_pddl_domain_t *dom, const char *name, int type)
+static void addConstant(plan_pddl_t *pddl, const char *name, int type)
 {
     plan_pddl_obj_t *c;
 
-    ++dom->constant_size;
-    dom->constant = BOR_REALLOC_ARR(dom->constant, plan_pddl_obj_t,
-                                    dom->constant_size);
-    c = dom->constant + dom->constant_size - 1;
+    ++pddl->constant_size;
+    pddl->constant = BOR_REALLOC_ARR(pddl->constant, plan_pddl_obj_t,
+                                     pddl->constant_size);
+    c = pddl->constant + pddl->constant_size - 1;
     c->name = name;
     c->type = type;
 }
 
-static int parseConstantSet(plan_pddl_domain_t *dom,
+static int parseConstantSet(plan_pddl_t *pddl,
                             plan_pddl_lisp_node_t *root,
                             int child_from, int child_to, int child_type)
 {
@@ -299,7 +299,7 @@ static int parseConstantSet(plan_pddl_domain_t *dom,
 
     tid = 0;
     if (child_type >= 0){
-        tid = getType(dom, root->child[child_type].value);
+        tid = getType(pddl, root->child[child_type].value);
         if (tid < 0){
             ERRN(root->child + child_type, "Invalid type `%s'",
                  root->child[child_type].value);
@@ -308,12 +308,12 @@ static int parseConstantSet(plan_pddl_domain_t *dom,
     }
 
     for (i = child_from; i < child_to; ++i)
-        addConstant(dom, root->child[i].value, tid);
+        addConstant(pddl, root->child[i].value, tid);
 
     return 0;
 }
 
-static int parseConstant(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
+static int parseConstant(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
     plan_pddl_lisp_node_t *n;
 
@@ -321,7 +321,7 @@ static int parseConstant(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root
     if (n == NULL)
         return 0;
 
-    if (parseTypedList(domain, n, 1, n->child_size, parseConstantSet) != 0){
+    if (parseTypedList(pddl, n, 1, n->child_size, parseConstantSet) != 0){
         ERRN2(n, "Invalid definition of :constants.");
         return -1;
     }
@@ -329,39 +329,39 @@ static int parseConstant(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root
     return 0;
 }
 
-static int addPredicate(plan_pddl_domain_t *domain, const char *name)
+static int addPredicate(plan_pddl_t *pddl, const char *name)
 {
     int i, id;
 
-    for (i = 0; i < domain->predicate_size; ++i){
-        if (strcmp(domain->predicate[i].name, name) == 0){
+    for (i = 0; i < pddl->predicate_size; ++i){
+        if (strcmp(pddl->predicate[i].name, name) == 0){
             ERR("Duplicate predicate `%s'", name);
             return -1;
         }
     }
 
-    ++domain->predicate_size;
-    domain->predicate = BOR_REALLOC_ARR(domain->predicate,
-                                        plan_pddl_predicate_t,
-                                        domain->predicate_size);
-    id = domain->predicate_size - 1;
-    domain->predicate[id].name = name;
-    domain->predicate[id].param = NULL;
-    domain->predicate[id].param_size = 0;
+    ++pddl->predicate_size;
+    pddl->predicate = BOR_REALLOC_ARR(pddl->predicate,
+                                      plan_pddl_predicate_t,
+                                      pddl->predicate_size);
+    id = pddl->predicate_size - 1;
+    pddl->predicate[id].name = name;
+    pddl->predicate[id].param = NULL;
+    pddl->predicate[id].param_size = 0;
     return id;
 }
 
-static int parsePredicateAdd(plan_pddl_domain_t *dom, const char *name)
+static int parsePredicateAdd(plan_pddl_t *pddl, const char *name)
 {
     plan_pddl_predicate_t *pred;
-    pred = dom->predicate + dom->predicate_size - 1;
+    pred = pddl->predicate + pddl->predicate_size - 1;
     ++pred->param_size;
     pred->param = BOR_REALLOC_ARR(pred->param, int, pred->param_size);
     pred->param[pred->param_size - 1] = 0;
     return 0;
 }
 
-static int parsePredicateSet(plan_pddl_domain_t *dom,
+static int parsePredicateSet(plan_pddl_t *pddl,
                              plan_pddl_lisp_node_t *root,
                              int child_from, int child_to, int child_type)
 {
@@ -370,7 +370,7 @@ static int parsePredicateSet(plan_pddl_domain_t *dom,
 
     tid = 0;
     if (child_type >= 0){
-        tid = getType(dom, root->child[child_type].value);
+        tid = getType(pddl, root->child[child_type].value);
         if (tid < 0){
             ERRN(root->child + child_type, "Invalid type `%s'",
                  root->child[child_type].value);
@@ -378,7 +378,7 @@ static int parsePredicateSet(plan_pddl_domain_t *dom,
         }
     }
 
-    pred = dom->predicate + dom->predicate_size - 1;
+    pred = pddl->predicate + pddl->predicate_size - 1;
     j = pred->param_size;
     pred->param_size += child_to - child_from;
     pred->param = BOR_REALLOC_ARR(pred->param, int, pred->param_size);
@@ -387,22 +387,22 @@ static int parsePredicateSet(plan_pddl_domain_t *dom,
     return 0;
 }
 
-static int parsePredicate1(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
+static int parsePredicate1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
     if (root->child_size < 1 || root->child[0].value == NULL){
         ERRN2(root, "Invalid definition of predicate.");
         return -1;
     }
 
-    if (addPredicate(domain, root->child[0].value) < 0)
+    if (addPredicate(pddl, root->child[0].value) < 0)
         return -1;
 
-    if (parseTypedList(domain, root, 1, root->child_size, parsePredicateSet) != 0)
+    if (parseTypedList(pddl, root, 1, root->child_size, parsePredicateSet) != 0)
         return -1;
     return 0;
 }
 
-static int parsePredicate(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
+static int parsePredicate(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
     plan_pddl_lisp_node_t *n;
     int i;
@@ -412,38 +412,38 @@ static int parsePredicate(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *roo
         return 0;
 
     for (i = 1; i < n->child_size; ++i){
-        if (parsePredicate1(domain, n->child + i) != 0)
+        if (parsePredicate1(pddl, n->child + i) != 0)
             return -1;
     }
     return 0;
 }
 
-static int addAction(plan_pddl_domain_t *dom, const char *name)
+static int addAction(plan_pddl_t *pddl, const char *name)
 {
     int id;
 
-    id = dom->action_size;
-    ++dom->action_size;
-    dom->action = BOR_REALLOC_ARR(dom->action, plan_pddl_action_t,
-                                  dom->action_size);
-    dom->action[id].name = name;
-    dom->action[id].param = NULL;
-    dom->action[id].param_size = 0;
+    id = pddl->action_size;
+    ++pddl->action_size;
+    pddl->action = BOR_REALLOC_ARR(pddl->action, plan_pddl_action_t,
+                                   pddl->action_size);
+    pddl->action[id].name = name;
+    pddl->action[id].param = NULL;
+    pddl->action[id].param_size = 0;
 
     return id;
 }
 
-static int parseActionParamSet(plan_pddl_domain_t *dom,
+static int parseActionParamSet(plan_pddl_t *pddl,
                                plan_pddl_lisp_node_t *root,
                                int child_from, int child_to, int child_type)
 {
-    int id = dom->action_size - 1;
-    plan_pddl_action_t *a = dom->action + id;
+    int id = pddl->action_size - 1;
+    plan_pddl_action_t *a = pddl->action + id;
     int i, j, tid;
 
     tid = 0;
     if (child_type >= 0){
-        tid = getType(dom, root->child[child_type].value);
+        tid = getType(pddl, root->child[child_type].value);
         if (tid < 0){
             ERRN(root->child + child_type, "Unkown type `%s'",
                  root->child[child_type].value);
@@ -475,7 +475,7 @@ static int parseActionParamSet(plan_pddl_domain_t *dom,
     return 0;
 }
 
-static int parseAction1(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
+static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
     if (root->child_size < 4
             || root->child[1].value == NULL
@@ -485,29 +485,29 @@ static int parseAction1(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
         return -1;
     }
 
-    addAction(domain, root->child[1].value);
-    if (parseTypedList(domain, root->child + 3, 0,
+    addAction(pddl, root->child[1].value);
+    if (parseTypedList(pddl, root->child + 3, 0,
                        root->child[3].child_size, parseActionParamSet) != 0)
         return -1;
     return 0;
 }
 
-static int parseAction(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
+static int parseAction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
     int i;
 
     for (i = 0; i < root->child_size; ++i){
         if (nodeHeadKw(root->child + i) == PLAN_PDDL_KW_ACTION){
-            if (parseAction1(domain, root->child + i) != 0)
+            if (parseAction1(pddl, root->child + i) != 0)
                 return -1;
         }
     }
     return 0;
 }
 
-plan_pddl_domain_t *planPDDLDomainNew(const char *fn)
+plan_pddl_t *planPDDLNew(const char *fn)
 {
-    plan_pddl_domain_t *domain;
+    plan_pddl_t *pddl;
     plan_pddl_lisp_t *lisp;
 
     lisp = planPDDLLispParse(fn);
@@ -516,109 +516,108 @@ plan_pddl_domain_t *planPDDLDomainNew(const char *fn)
         return NULL;
     }
 
-    domain = BOR_ALLOC(plan_pddl_domain_t);
-    bzero(domain, sizeof(*domain));
-    domain->lisp = lisp;
-    domain->name = parseName(&lisp->root);
-    if (domain->name == NULL){
-        fprintf(stderr, "Error PDDL: Could not find name of the domain.\n");
-        planPDDLDomainDel(domain);
+    pddl = BOR_ALLOC(plan_pddl_t);
+    bzero(pddl, sizeof(*pddl));
+    pddl->lisp = lisp;
+    pddl->name = parseName(&lisp->root);
+    if (pddl->name == NULL){
+        planPDDLDel(pddl);
         return NULL;
     }
 
-    domain->require = parseRequire(&lisp->root);
-    if (domain->require == 0u){
-        planPDDLDomainDel(domain);
+    pddl->require = parseRequire(&lisp->root);
+    if (pddl->require == 0u){
+        planPDDLDel(pddl);
         return NULL;
     }
 
-    domain->type_size = 1;
-    domain->type = BOR_ALLOC_ARR(plan_pddl_type_t, 1);
-    domain->type[0].name = _object_type_name;
-    domain->type[0].parent = -1;
-    if (parseType(domain, &lisp->root) != 0){
-        planPDDLDomainDel(domain);
+    pddl->type_size = 1;
+    pddl->type = BOR_ALLOC_ARR(plan_pddl_type_t, 1);
+    pddl->type[0].name = _object_type_name;
+    pddl->type[0].parent = -1;
+    if (parseType(pddl, &lisp->root) != 0){
+        planPDDLDel(pddl);
         return NULL;
     }
 
-    if (parseConstant(domain, &lisp->root) != 0){
-        planPDDLDomainDel(domain);
+    if (parseConstant(pddl, &lisp->root) != 0){
+        planPDDLDel(pddl);
         return NULL;
     }
 
-    if (parsePredicate(domain, &lisp->root) != 0){
-        planPDDLDomainDel(domain);
+    if (parsePredicate(pddl, &lisp->root) != 0){
+        planPDDLDel(pddl);
         return NULL;
     }
 
-    if (parseAction(domain, &lisp->root) != 0){
-        planPDDLDomainDel(domain);
+    if (parseAction(pddl, &lisp->root) != 0){
+        planPDDLDel(pddl);
         return NULL;
     }
 
-    return domain;
+    return pddl;
 }
 
-void planPDDLDomainDel(plan_pddl_domain_t *domain)
+void planPDDLDel(plan_pddl_t *pddl)
 {
     int i;
 
-    if (domain->lisp)
-        planPDDLLispDel(domain->lisp);
-    if (domain->type)
-        BOR_FREE(domain->type);
-    if (domain->constant)
-        BOR_FREE(domain->constant);
+    if (pddl->lisp)
+        planPDDLLispDel(pddl->lisp);
+    if (pddl->type)
+        BOR_FREE(pddl->type);
+    if (pddl->constant)
+        BOR_FREE(pddl->constant);
 
-    for (i = 0; i < domain->predicate_size; ++i){
-        if (domain->predicate[i].param != NULL)
-            BOR_FREE(domain->predicate[i].param);
+    for (i = 0; i < pddl->predicate_size; ++i){
+        if (pddl->predicate[i].param != NULL)
+            BOR_FREE(pddl->predicate[i].param);
     }
-    if (domain->predicate)
-        BOR_FREE(domain->predicate);
+    if (pddl->predicate)
+        BOR_FREE(pddl->predicate);
 
-    for (i = 0; i < domain->action_size; ++i){
-        if (domain->action[i].param != NULL)
-            BOR_FREE(domain->action[i].param);
+    for (i = 0; i < pddl->action_size; ++i){
+        if (pddl->action[i].param != NULL)
+            BOR_FREE(pddl->action[i].param);
     }
-    if (domain->action)
-        BOR_FREE(domain->action);
+    if (pddl->action)
+        BOR_FREE(pddl->action);
 
-    BOR_FREE(domain);
+    BOR_FREE(pddl);
 }
 
-void planPDDLDomainDump(const plan_pddl_domain_t *domain, FILE *fout)
+void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
 {
     int i, j;
 
-    fprintf(fout, "Domain: %s\n", domain->name);
-    fprintf(fout, "Require: %x\n", domain->require);
-    fprintf(fout, "Type[%d]:\n", domain->type_size);
-    for (i = 0; i < domain->type_size; ++i){
+    fprintf(fout, "Domain: %s\n", pddl->name);
+    fprintf(fout, "Require: %x\n", pddl->require);
+    fprintf(fout, "Type[%d]:\n", pddl->type_size);
+    for (i = 0; i < pddl->type_size; ++i){
         fprintf(fout, "    [%d]: %s, parent: %d\n", i,
-                domain->type[i].name, domain->type[i].parent);
+                pddl->type[i].name, pddl->type[i].parent);
     }
-    fprintf(fout, "Constant[%d]:\n", domain->constant_size);
-    for (i = 0; i < domain->constant_size; ++i){
+    fprintf(fout, "Constant[%d]:\n", pddl->constant_size);
+    for (i = 0; i < pddl->constant_size; ++i){
         fprintf(fout, "    [%d]: %s, type: %d\n", i,
-                domain->constant[i].name, domain->constant[i].type);
+                pddl->constant[i].name, pddl->constant[i].type);
     }
 
-    fprintf(fout, "Predicate[%d]:\n", domain->predicate_size);
-    for (i = 0; i < domain->predicate_size; ++i){
-        fprintf(fout, "    %s:", domain->predicate[i].name);
-        for (j = 0; j < domain->predicate[i].param_size; ++j){
-            fprintf(fout, " %d", domain->predicate[i].param[j]);
+    fprintf(fout, "Predicate[%d]:\n", pddl->predicate_size);
+    for (i = 0; i < pddl->predicate_size; ++i){
+        fprintf(fout, "    %s:", pddl->predicate[i].name);
+        for (j = 0; j < pddl->predicate[i].param_size; ++j){
+            fprintf(fout, " %d", pddl->predicate[i].param[j]);
         }
         fprintf(fout, "\n");
     }
 
-    fprintf(fout, "Action[%d]:\n", domain->action_size);
-    for (i = 0; i < domain->action_size; ++i){
-        fprintf(fout, "    %s:", domain->action[i].name);
-        for (j = 0; j < domain->action[i].param_size; ++j){
-            fprintf(fout, " %s:%d", domain->action[i].param[j].name,
-                    domain->action[i].param[j].type);
+    fprintf(fout, "Action[%d]:\n", pddl->action_size);
+    for (i = 0; i < pddl->action_size; ++i){
+        fprintf(fout, "    %s:", pddl->action[i].name);
+        for (j = 0; j < pddl->action[i].param_size; ++j){
+            fprintf(fout, " %s:%d", pddl->action[i].param[j].name,
+                    pddl->action[i].param[j].type);
         }
         fprintf(fout, "\n");
     }

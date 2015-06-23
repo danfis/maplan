@@ -971,7 +971,22 @@ static int parseActionCond(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
             return -1;
 
     }else if (cond->type == PLAN_PDDL_COND_WHEN){
-        // TODO
+        if (root->child_size != 3
+                || root->child[1].value != NULL
+                || root->child[2].value != NULL){
+            ERRN2(root, "Invalid (when ...) condition.");
+            return -1;
+        }
+
+        cond->arg_size = 2;
+        cond->arg = BOR_ALLOC_ARR(plan_pddl_cond_t, 2);
+        condInit(cond->arg + 0);
+        condInit(cond->arg + 1);
+        for (i = 0; i < 2; ++i){
+            if (parseActionCond(pddl, root->child + i + 1, action_id,
+                                cond->arg + i) != 0)
+                return -1;
+        }
 
     }else if (cond->type == PLAN_PDDL_COND_INCREASE){
         if (!(pddl->require & PLAN_PDDL_REQUIRE_ACTION_COST)){
@@ -1207,6 +1222,7 @@ static void dumpCond(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
     if (cond->type == PLAN_PDDL_COND_AND
             || cond->type == PLAN_PDDL_COND_OR
             || cond->type == PLAN_PDDL_COND_NOT
+            || cond->type == PLAN_PDDL_COND_WHEN
             || cond->type == PLAN_PDDL_COND_INCREASE){
         fprintf(fout, "(%s", _condToStr(cond->type));
         for (i = 0; i < cond->arg_size; ++i){

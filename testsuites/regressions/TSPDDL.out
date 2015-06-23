@@ -20,6 +20,12 @@ Predicate[15]:
     surface: 0
     pallet: 0
     crate: 0
+Action[5]:
+    drive: ?x:0 ?y:0 ?z:0
+    lift: ?x:0 ?y:0 ?z:0 ?p:0
+    drop: ?x:0 ?y:0 ?z:0 ?p:0
+    load: ?x:0 ?y:0 ?z:0 ?p:0
+    unload: ?x:0 ?y:0 ?z:0 ?p:0
 ---- Domain: pddl/depot-domain.pddl END ----
 ---- Domain: pddl/driverlog-domain.pddl ----
 Domain: driverlog
@@ -38,6 +44,13 @@ Predicate[10]:
     link: 0 0
     path: 0 0
     empty: 0
+Action[6]:
+    LOAD-TRUCK: ?obj:0 ?truck:0 ?driver:0 ?loc:0
+    UNLOAD-TRUCK: ?obj:0 ?truck:0 ?driver:0 ?loc:0
+    BOARD-TRUCK: ?driver:0 ?truck:0 ?loc:0
+    DISEMBARK-TRUCK: ?driver:0 ?truck:0 ?loc:0
+    DRIVE-TRUCK: ?truck:0 ?loc-from:0 ?loc-to:0 ?driver:0
+    WALK: ?driver:0 ?loc-from:0 ?loc-to:0
 ---- Domain: pddl/driverlog-domain.pddl END ----
 ---- Domain: pddl/openstacks-p03-domain.pddl ----
 Domain: openstacks-sequencedstrips-nonADL-nonNegated
@@ -71,6 +84,19 @@ Predicate[8]:
     not-made: 2
     stacks-avail: 3
     next-count: 3 3
+Action[12]:
+    open-new-stack: ?man:5 ?open:3 ?new-open:3
+    start-order: ?man:4 ?o:1 ?avail:3 ?new-avail:3
+    make-product-p1: ?man:5
+    make-product-p2: ?man:5
+    make-product-p3: ?man:5
+    make-product-p4: ?man:5
+    make-product-p5: ?man:5
+    ship-order-o1: ?man:4 ?avail:3 ?new-avail:3
+    ship-order-o2: ?man:4 ?avail:3 ?new-avail:3
+    ship-order-o3: ?man:4 ?avail:3 ?new-avail:3
+    ship-order-o4: ?man:4 ?avail:3 ?new-avail:3
+    ship-order-o5: ?man:4 ?avail:3 ?new-avail:3
 ---- Domain: pddl/openstacks-p03-domain.pddl END ----
 ---- Domain: pddl/rovers-domain.pddl ----
 Domain: Rover
@@ -111,6 +137,16 @@ Predicate[25]:
     calibration_target: 4 7
     on_board: 4 1
     channel_free: 6
+Action[9]:
+    navigate: ?x:1 ?y:2 ?z:2
+    sample_soil: ?x:1 ?s:3 ?p:2
+    sample_rock: ?x:1 ?s:3 ?p:2
+    drop: ?x:1 ?y:3
+    calibrate: ?r:1 ?i:4 ?t:7 ?w:2
+    take_image: ?r:1 ?p:2 ?o:7 ?i:4 ?m:5
+    communicate_soil_data: ?r:1 ?l:6 ?p:2 ?x:2 ?y:2
+    communicate_rock_data: ?r:1 ?l:6 ?p:2 ?x:2 ?y:2
+    communicate_image_data: ?r:1 ?l:6 ?o:7 ?m:5 ?x:2 ?y:2
 ---- Domain: pddl/rovers-domain.pddl END ----
 ---- Domain: pddl/CityCar-domain.pddl ----
 Domain: citycar
@@ -133,4 +169,12 @@ Predicate[10]:
     clear: 2
     in_place: 4
     at_garage: 3 2
+Action[7]:
+    move_car_in_road: ?xy_initial:2 ?xy_final:2 ?machine:1 ?r1:4
+    move_car_out_road: ?xy_initial:2 ?xy_final:2 ?machine:1 ?r1:4
+    car_arrived: ?xy_final:2 ?machine:1
+    car_start: ?xy_final:2 ?machine:1 ?g:3
+    build_diagonal_oneway: ?xy_initial:2 ?xy_final:2 ?r1:4
+    build_straight_oneway: ?xy_initial:2 ?xy_final:2 ?r1:4
+    destroy_road: ?xy_initial:2 ?xy_final:2 ?r1:4
 ---- Domain: pddl/CityCar-domain.pddl END ----

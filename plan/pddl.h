@@ -61,6 +61,7 @@ extern "C" {
 #define PLAN_PDDL_COND_FORALL   6
 #define PLAN_PDDL_COND_WHEN     7
 #define PLAN_PDDL_COND_INCREASE 50
+#define PLAN_PDDL_COND_FUNC     51
 #define PLAN_PDDL_COND_PRED     100
 #define PLAN_PDDL_COND_CONST    101
 #define PLAN_PDDL_COND_VAR      102
@@ -122,6 +123,8 @@ struct _plan_pddl_t {
     int obj_size;
     plan_pddl_predicate_t *predicate;
     int predicate_size;
+    plan_pddl_predicate_t *function;
+    int function_size;
     plan_pddl_action_t *action;
     int action_size;
     plan_pddl_cond_t goal;

@@ -635,6 +635,108 @@ static int parsePredicate(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return 0;
 }
 
+static int addFunction(plan_pddl_t *pddl, const char *name)
+{
+    int i, id;
+
+    for (i = 0; i < pddl->function_size; ++i){
+        if (strcmp(pddl->function[i].name, name) == 0){
+            ERR("Duplicate function `%s'", name);
+            return -1;
+        }
+    }
+
+    ++pddl->function_size;
+    pddl->function = BOR_REALLOC_ARR(pddl->function,
+                                     plan_pddl_predicate_t,
+                                     pddl->function_size);
+    id = pddl->function_size - 1;
+    pddl->function[id].name = name;
+    pddl->function[id].param = NULL;
+    pddl->function[id].param_size = 0;
+    return id;
+}
+
+static int getFunction(plan_pddl_t *pddl, const char *name)
+{
+    int i;
+
+    for (i = 0; i < pddl->function_size; ++i){
+        if (strcmp(name, pddl->function[i].name) == 0)
+            return i;
+    }
+
+    return -1;
+}
+
+static int parseFunctionSet(plan_pddl_t *pddl,
+                            plan_pddl_lisp_node_t *root,
+                            int child_from, int child_to, int child_type)
+{
+    plan_pddl_predicate_t *pred;
+    int i, j, tid;
+
+    tid = 0;
+    if (child_type >= 0){
+        tid = getType(pddl, root->child[child_type].value);
+        if (tid < 0){
+            ERRN(root->child + child_type, "Invalid type `%s'",
+                 root->child[child_type].value);
+            return -1;
+        }
+    }
+
+    pred = pddl->function + pddl->function_size - 1;
+    j = pred->param_size;
+    pred->param_size += child_to - child_from;
+    pred->param = BOR_REALLOC_ARR(pred->param, int, pred->param_size);
+    for (i = child_from; i < child_to; ++i, ++j)
+        pred->param[j] = tid;
+    return 0;
+}
+
+static int parseFunction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+{
+    if (root->child_size < 1 || root->child[0].value == NULL){
+        ERRN2(root, "Invalid definition of predicate.");
+        return -1;
+    }
+
+    if (addFunction(pddl, root->child[0].value) < 0)
+        return -1;
+
+    if (parseTypedList(pddl, root, 1, root->child_size, parseFunctionSet) != 0)
+        return -1;
+    return 0;
+}
+
+static int parseFunction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+{
+    plan_pddl_lisp_node_t *n;
+    int i;
+
+    n = findNode(root, PLAN_PDDL_KW_FUNCTIONS);
+    if (n == NULL)
+        return 0;
+
+    for (i = 1; i < n->child_size; ++i){
+        if (parseFunction1(pddl, n->child + i) != 0)
+            return -1;
+
+        if (i + 2 < n->child_size
+                && n->child[i + 1].value != NULL
+                && strcmp(n->child[i + 1].value, "-") == 0){
+            if (n->child[i + 2].value == NULL
+                    || strcmp(n->child[i + 2].value, "number") != 0){
+                ERRN2(n->child + i + 2, "Only number functions are supported.");
+                return -1;
+            }
+            i += 2;
+        }
+    }
+    return 0;
+}
+
 static int addAction(plan_pddl_t *pddl, const char *name)
 {
     int id;
@@ -800,7 +902,7 @@ static int _parseForallEval(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
                             int action_id, plan_pddl_cond_t *cond)
 {
     plan_pddl_lisp_node_t arg;
-    int i, id, ret;
+    int id, ret;
 
     planPDDLLispNodeCopy(&arg, root->child + 2);
     _parseForallReplace(pddl, &arg);
@@ -900,6 +1002,44 @@ static int _parseForall(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
         BOR_FREE(pddl->forall.param);
     if (pddl->forall.param_bind != NULL)
         BOR_FREE(pddl->forall.param_bind);
+    return 0;
+}
+
+static int _parseFunction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+                          int action_id, plan_pddl_cond_t *cond)
+{
+    int i;
+
+    if (root->child_size < 1
+            || root->child[0].value == NULL){
+        ERRN2(root, "Invalid function definition.");
+        return -1;
+    }
+
+    for (i = 1; i < root->child_size; ++i){
+        if (root->child[i].value == NULL){
+            ERRN(root->child + i, "Invalid %d'th argument in function"
+                 " definition.", i);
+            return -1;
+        }
+    }
+
+    cond->type = PLAN_PDDL_COND_FUNC;
+    cond->val = getFunction(pddl, root->child[0].value);
+    if (cond->val < 0)
+        return -1;
+
+    cond->arg_size = root->child_size - 1;
+    cond->arg = BOR_ALLOC_ARR(plan_pddl_cond_t, cond->arg_size);
+    for (i = 0; i < cond->arg_size; ++i)
+        condInit(cond->arg + i);
+
+    for (i = 0; i < cond->arg_size; ++i){
+        if (_parseVarConst(pddl, root->child + i + 1, action_id,
+                           cond->arg + i) != 0)
+            return -1;
+    }
+
     return 0;
 }
 
@@ -1009,9 +1149,10 @@ static int parseActionCond(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
         if (root->child[2].value != NULL){
             cond->arg[0].type = PLAN_PDDL_COND_INT;
             cond->arg[0].val = atoi(root->child[2].value);
+
         }else{
-            ERRN2(root, "(increase ...) with functions not supported yet.");
-            return -1;
+            if (_parseFunction(pddl, root->child + 2, action_id, cond->arg) != 0)
+                return -1;
         }
     }
     return 0;
@@ -1144,6 +1285,7 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
             || parseObj(pddl, &problem_lisp->root) != 0
             || makeTypeObjMap(pddl) != 0
             || parsePredicate(pddl, &domain_lisp->root) != 0
+            || parseFunction(pddl, &domain_lisp->root) != 0
             || parseAction(pddl, &domain_lisp->root) != 0
             || parseGoal(pddl, &problem_lisp->root) != 0){
         goto pddl_fail;
@@ -1176,6 +1318,13 @@ void planPDDLDel(plan_pddl_t *pddl)
     }
     if (pddl->predicate)
         BOR_FREE(pddl->predicate);
+
+    for (i = 0; i < pddl->function_size; ++i){
+        if (pddl->function[i].param != NULL)
+            BOR_FREE(pddl->function[i].param);
+    }
+    if (pddl->function)
+        BOR_FREE(pddl->function);
 
     for (i = 0; i < pddl->action_size; ++i){
         if (pddl->action[i].param != NULL)
@@ -1256,6 +1405,15 @@ static void dumpCond(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
         }
         fprintf(fout, ")");
 
+    }else if (cond->type == PLAN_PDDL_COND_FUNC){
+        pred = pddl->function + cond->val;
+        fprintf(fout, "(%s", pred->name);
+        for (i = 0; i < cond->arg_size; ++i){
+            fprintf(fout, " ");
+            dumpCond(pddl, a, cond->arg + i, fout);
+        }
+        fprintf(fout, ")");
+
     }else if (cond->type == PLAN_PDDL_COND_VAR){
         if (a != NULL){
             fprintf(fout, "%s", a->param[cond->val].name);
@@ -1304,6 +1462,15 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
         fprintf(fout, "    %s:", pddl->predicate[i].name);
         for (j = 0; j < pddl->predicate[i].param_size; ++j){
             fprintf(fout, " %d", pddl->predicate[i].param[j]);
+        }
+        fprintf(fout, "\n");
+    }
+
+    fprintf(fout, "Function[%d]:\n", pddl->function_size);
+    for (i = 0; i < pddl->function_size; ++i){
+        fprintf(fout, "    %s:", pddl->function[i].name);
+        for (j = 0; j < pddl->function[i].param_size; ++j){
+            fprintf(fout, " %d", pddl->function[i].param[j]);
         }
         fprintf(fout, "\n");
     }

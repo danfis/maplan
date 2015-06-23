@@ -505,27 +505,32 @@ static int parseAction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return 0;
 }
 
-plan_pddl_t *planPDDLNew(const char *fn)
+plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
 {
     plan_pddl_t *pddl;
-    plan_pddl_lisp_t *lisp;
+    plan_pddl_lisp_t *domain_lisp, *problem_lisp;
 
-    lisp = planPDDLLispParse(fn);
-    if (lisp == NULL){
-        planPDDLLispDel(lisp);
+    domain_lisp = planPDDLLispParse(domain_fn);
+    problem_lisp = planPDDLLispParse(problem_fn);
+    if (domain_lisp == NULL || problem_lisp == NULL){
+        if (domain_lisp)
+            planPDDLLispDel(domain_lisp);
+        if (problem_lisp)
+            planPDDLLispDel(problem_lisp);
         return NULL;
     }
 
     pddl = BOR_ALLOC(plan_pddl_t);
     bzero(pddl, sizeof(*pddl));
-    pddl->lisp = lisp;
-    pddl->name = parseName(&lisp->root);
+    pddl->domain_lisp = domain_lisp;
+    pddl->problem_lisp = problem_lisp;
+    pddl->name = parseName(&domain_lisp->root);
     if (pddl->name == NULL){
         planPDDLDel(pddl);
         return NULL;
     }
 
-    pddl->require = parseRequire(&lisp->root);
+    pddl->require = parseRequire(&domain_lisp->root);
     if (pddl->require == 0u){
         planPDDLDel(pddl);
         return NULL;
@@ -535,22 +540,22 @@ plan_pddl_t *planPDDLNew(const char *fn)
     pddl->type = BOR_ALLOC_ARR(plan_pddl_type_t, 1);
     pddl->type[0].name = _object_type_name;
     pddl->type[0].parent = -1;
-    if (parseType(pddl, &lisp->root) != 0){
+    if (parseType(pddl, &domain_lisp->root) != 0){
         planPDDLDel(pddl);
         return NULL;
     }
 
-    if (parseConstant(pddl, &lisp->root) != 0){
+    if (parseConstant(pddl, &domain_lisp->root) != 0){
         planPDDLDel(pddl);
         return NULL;
     }
 
-    if (parsePredicate(pddl, &lisp->root) != 0){
+    if (parsePredicate(pddl, &domain_lisp->root) != 0){
         planPDDLDel(pddl);
         return NULL;
     }
 
-    if (parseAction(pddl, &lisp->root) != 0){
+    if (parseAction(pddl, &domain_lisp->root) != 0){
         planPDDLDel(pddl);
         return NULL;
     }
@@ -562,8 +567,10 @@ void planPDDLDel(plan_pddl_t *pddl)
 {
     int i;
 
-    if (pddl->lisp)
-        planPDDLLispDel(pddl->lisp);
+    if (pddl->domain_lisp)
+        planPDDLLispDel(pddl->domain_lisp);
+    if (pddl->problem_lisp)
+        planPDDLLispDel(pddl->problem_lisp);
     if (pddl->type)
         BOR_FREE(pddl->type);
     if (pddl->constant)

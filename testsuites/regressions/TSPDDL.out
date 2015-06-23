@@ -1,4 +1,4 @@
----- Domain: pddl/depot-domain.pddl ----
+---- Domain: pddl/depot-domain.pddl | pddl/depot-pfile1.pddl ----
 Domain: depot
 Require: 1
 Type[1]:
@@ -26,8 +26,8 @@ Action[5]:
     drop: ?x:0 ?y:0 ?z:0 ?p:0
     load: ?x:0 ?y:0 ?z:0 ?p:0
     unload: ?x:0 ?y:0 ?z:0 ?p:0
----- Domain: pddl/depot-domain.pddl END ----
----- Domain: pddl/driverlog-domain.pddl ----
+---- Domain: pddl/depot-domain.pddl | pddl/depot-pfile1.pddl END ----
+---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl ----
 Domain: driverlog
 Require: 1
 Type[1]:
@@ -51,8 +51,8 @@ Action[6]:
     DISEMBARK-TRUCK: ?driver:0 ?truck:0 ?loc:0
     DRIVE-TRUCK: ?truck:0 ?loc-from:0 ?loc-to:0 ?driver:0
     WALK: ?driver:0 ?loc-from:0 ?loc-to:0
----- Domain: pddl/driverlog-domain.pddl END ----
----- Domain: pddl/openstacks-p03-domain.pddl ----
+---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl END ----
+---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl ----
 Domain: openstacks-sequencedstrips-nonADL-nonNegated
 Require: 20002
 Type[6]:
@@ -97,8 +97,8 @@ Action[12]:
     ship-order-o3: ?man:4 ?avail:3 ?new-avail:3
     ship-order-o4: ?man:4 ?avail:3 ?new-avail:3
     ship-order-o5: ?man:4 ?avail:3 ?new-avail:3
----- Domain: pddl/openstacks-p03-domain.pddl END ----
----- Domain: pddl/rovers-domain.pddl ----
+---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl END ----
+---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl ----
 Domain: Rover
 Require: 2
 Type[8]:
@@ -147,8 +147,8 @@ Action[9]:
     communicate_soil_data: ?r:1 ?l:6 ?p:2 ?x:2 ?y:2
     communicate_rock_data: ?r:1 ?l:6 ?p:2 ?x:2 ?y:2
     communicate_image_data: ?r:1 ?l:6 ?o:7 ?m:5 ?x:2 ?y:2
----- Domain: pddl/rovers-domain.pddl END ----
----- Domain: pddl/CityCar-domain.pddl ----
+---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl END ----
+---- Domain: pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl ----
 Domain: citycar
 Require: 20096
 Type[5]:
@@ -177,4 +177,4 @@ Action[7]:
     build_diagonal_oneway: ?xy_initial:2 ?xy_final:2 ?r1:4
     build_straight_oneway: ?xy_initial:2 ?xy_final:2 ?r1:4
     destroy_road: ?xy_initial:2 ?xy_final:2 ?r1:4
----- Domain: pddl/CityCar-domain.pddl END ----
+---- Domain: pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl END ----

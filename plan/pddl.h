@@ -79,7 +79,8 @@ struct _plan_pddl_action_t {
 typedef struct _plan_pddl_action_t plan_pddl_action_t;
 
 struct _plan_pddl_t {
-    plan_pddl_lisp_t *lisp;
+    plan_pddl_lisp_t *domain_lisp;
+    plan_pddl_lisp_t *problem_lisp;
     const char *name;
     unsigned require;
     plan_pddl_type_t *type;
@@ -93,7 +94,7 @@ struct _plan_pddl_t {
 };
 typedef struct _plan_pddl_t plan_pddl_t;
 
-plan_pddl_t *planPDDLNew(const char *fn);
+plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn);
 void planPDDLDel(plan_pddl_t *pddl);
 void planPDDLDump(const plan_pddl_t *pddl, FILE *fout);
 

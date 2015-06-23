@@ -30,15 +30,15 @@ Action[5]:
 ---- Domain: pddl/depot-domain.pddl | pddl/depot-pfile1.pddl END ----
 ---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl ----
 Domain: driverlog
-Problem: DLOG-2-2-2
+Problem: dlog-2-2-2
 Require: 1
 Type[1]:
     [0]: object, parent: -1
 Constant[0]:
 Predicate[10]:
-    OBJ: 0
-    TRUCK: 0
-    LOCATION: 0
+    obj: 0
+    truck: 0
+    location: 0
     driver: 0
     at: 0 0
     in: 0 0
@@ -47,15 +47,15 @@ Predicate[10]:
     path: 0 0
     empty: 0
 Action[6]:
-    LOAD-TRUCK: ?obj:0 ?truck:0 ?driver:0 ?loc:0
-    UNLOAD-TRUCK: ?obj:0 ?truck:0 ?driver:0 ?loc:0
-    BOARD-TRUCK: ?driver:0 ?truck:0 ?loc:0
-    DISEMBARK-TRUCK: ?driver:0 ?truck:0 ?loc:0
-    DRIVE-TRUCK: ?truck:0 ?loc-from:0 ?loc-to:0 ?driver:0
-    WALK: ?driver:0 ?loc-from:0 ?loc-to:0
+    load-truck: ?obj:0 ?truck:0 ?driver:0 ?loc:0
+    unload-truck: ?obj:0 ?truck:0 ?driver:0 ?loc:0
+    board-truck: ?driver:0 ?truck:0 ?loc:0
+    disembark-truck: ?driver:0 ?truck:0 ?loc:0
+    drive-truck: ?truck:0 ?loc-from:0 ?loc-to:0 ?driver:0
+    walk: ?driver:0 ?loc-from:0 ?loc-to:0
 ---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl END ----
 ---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl ----
-Domain: openstacks-sequencedstrips-nonADL-nonNegated
+Domain: openstacks-sequencedstrips-nonadl-nonnegated
 Problem: os-sequencedstrips-p5_3
 Require: 20002
 Type[6]:
@@ -102,7 +102,7 @@ Action[12]:
     ship-order-o5: ?man:4 ?avail:3 ?new-avail:3
 ---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl END ----
 ---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl ----
-Domain: Rover
+Domain: rover
 Problem: roverprob1234
 Require: 2
 Type[8]:

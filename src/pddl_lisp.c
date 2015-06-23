@@ -175,7 +175,10 @@ static int parseExp(plan_pddl_lisp_node_t *root, int *lineno,
             sub = lispNodeAddChild(root);
             sub->value = data + i;
             sub->lineno = *lineno;
-            for (; i < size && IS_ALPHA(data[i]); ++i);
+            for (; i < size && IS_ALPHA(data[i]); ++i){
+                if (data[i] >= 'A' && data[i] <= 'Z')
+                    data[i] = data[i] - 'A' + 'a';
+            }
             if (i == size){
                 fprintf(stderr, "Error PDDL: Error on line %d\n", *lineno);
                 return -1;

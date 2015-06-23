@@ -126,6 +126,12 @@ struct _plan_pddl_t {
     int action_size;
 
     plan_pddl_obj_arr_t *type_obj_map;
+
+    struct {
+        plan_pddl_obj_t *param;
+        int *param_bind;
+        int param_size;
+    } forall;
 };
 typedef struct _plan_pddl_t plan_pddl_t;
 

@@ -85,6 +85,10 @@ plan_pddl_lisp_t *planPDDLLispParse(const char *fn);
 void planPDDLLispDel(plan_pddl_lisp_t *lisp);
 void planPDDLLispDump(const plan_pddl_lisp_t *lisp, FILE *fout);
 
+void planPDDLLispNodeCopy(plan_pddl_lisp_node_t *dst,
+                          const plan_pddl_lisp_node_t *src);
+void planPDDLLispNodeFree(plan_pddl_lisp_node_t *node);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -389,6 +389,17 @@ static int getConst(const plan_pddl_t *pddl, const char *name)
     return -1;
 }
 
+static int getObj(const plan_pddl_t *pddl, const char *name)
+{
+    int i;
+
+    for (i = 0; i < pddl->obj_size; ++i){
+        if (strcmp(pddl->obj[i].name, name) == 0)
+            return i;
+    }
+    return -1;
+}
+
 static int parseConstantSet(plan_pddl_t *pddl,
                             plan_pddl_lisp_node_t *root,
                             int child_from, int child_to, int child_type)
@@ -709,9 +720,9 @@ static int _parseVarConst(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
 
     }else{
         cond->type = PLAN_PDDL_COND_CONST;
-        cond->val = getConst(pddl, root->value);
+        cond->val = getObj(pddl, root->value);
         if (cond->val == -1){
-            ERRN(root, "Invalid constant `%s'", root->value);
+            ERRN(root, "Invalid object `%s'", root->value);
             return -1;
         }
     }
@@ -757,6 +768,142 @@ static int _parseCondPred(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
             return -1;
     }
 
+    return 0;
+}
+
+static void _parseForallReplace(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n)
+{
+    int i;
+
+    if (n->kw == -1 && n->value != NULL){
+        for (i = 0; i < pddl->forall.param_size; ++i){
+            if (strcmp(n->value, pddl->forall.param[i].name) == 0){
+                fprintf(stderr, "XXX\n");
+                n->value = pddl->obj[pddl->forall.param_bind[i]].name;
+            }
+        }
+    }
+
+    for (i = 0; i < n->child_size; ++i){
+        _parseForallReplace(pddl, n->child + i);
+    }
+}
+
+static int parseActionCond(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+                           int action_id, plan_pddl_cond_t *cond);
+
+static int _parseForallEval(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+                            int action_id, plan_pddl_cond_t *cond)
+{
+    plan_pddl_lisp_node_t arg;
+    int i, id, ret;
+
+    for (i = 0; i < pddl->forall.param_size; ++i){
+        fprintf(stderr, "forall[%d]: %s %d | b: %d\n",
+                i,
+                pddl->forall.param[i].name,
+                pddl->forall.param[i].type,
+                pddl->forall.param_bind[i]);
+    }
+
+    planPDDLLispNodeCopy(&arg, root->child + 2);
+    _parseForallReplace(pddl, &arg);
+
+    cond->arg_size += 1;
+    cond->arg = BOR_REALLOC_ARR(cond->arg, plan_pddl_cond_t, cond->arg_size);
+    id = cond->arg_size - 1;
+    condInit(cond->arg + id);
+    ret = parseActionCond(pddl, &arg, action_id, cond->arg + id);
+    planPDDLLispNodeFree(&arg);
+    return ret;
+}
+
+static int _parseForallRec(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+                           int action_id, plan_pddl_cond_t *cond, int param)
+{
+    plan_pddl_obj_arr_t *m;
+    int i;
+
+    m = pddl->type_obj_map + pddl->forall.param[param].type;
+    for (i = 0; i < m->size; ++i){
+        pddl->forall.param_bind[param] = m->obj[i];
+        if (param == pddl->forall.param_size - 1){
+            if (_parseForallEval(pddl, root, action_id, cond) != 0)
+                return -1;
+        }else{
+            if (_parseForallRec(pddl, root, action_id, cond, param + 1) != 0)
+                return -1;
+        }
+    }
+
+    return 0;
+}
+
+static int _parseForallSet(plan_pddl_t *pddl,
+                           plan_pddl_lisp_node_t *root,
+                           int child_from, int child_to,
+                           int child_type)
+{
+    int i, j, tid;
+
+    tid = 0;
+    if (child_type >= 0){
+        tid = getType(pddl, root->child[child_type].value);
+        if (tid < 0){
+            ERRN(root->child + child_type, "Invalid type `%s'",
+                 root->child[child_type].value);
+            return -1;
+        }
+    }
+
+    j = pddl->forall.param_size;
+    pddl->forall.param_size += child_to - child_from;
+    pddl->forall.param = BOR_REALLOC_ARR(pddl->forall.param,
+                                         plan_pddl_obj_t,
+                                         pddl->forall.param_size);
+    for (i = child_from; i < child_to; ++i, ++j){
+        pddl->forall.param[j].name = root->child[i].value;
+        pddl->forall.param[j].type = tid;
+    }
+
+    return 0;
+}
+
+static int _parseForall(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+                        int action_id, plan_pddl_cond_t *cond)
+{
+    if (root->child_size != 3
+            || root->child[1].value != NULL
+            || root->child[2].value != NULL){
+        ERRN2(root, "Invalid (forall ...) condition.");
+        return -1;
+    }
+
+    cond->type = PLAN_PDDL_COND_AND;
+
+    pddl->forall.param = NULL;
+    pddl->forall.param_bind = NULL;
+    pddl->forall.param_size = 0;
+    if (parseTypedList(pddl, root->child + 1, 0, root->child[1].child_size,
+                       _parseForallSet) != 0){
+        if (pddl->forall.param != NULL)
+            BOR_FREE(pddl->forall.param);
+        return -1;
+    }
+
+    pddl->forall.param_bind = BOR_CALLOC_ARR(int, pddl->forall.param_size);
+    if (_parseForallRec(pddl, root, action_id, cond, 0) != 0){
+        if (pddl->forall.param != NULL)
+            BOR_FREE(pddl->forall.param);
+        if (pddl->forall.param_bind != NULL)
+            BOR_FREE(pddl->forall.param_bind);
+        return -1;
+    }
+
+    if (pddl->forall.param != NULL)
+        BOR_FREE(pddl->forall.param);
+    if (pddl->forall.param_bind != NULL)
+        BOR_FREE(pddl->forall.param_bind);
     return 0;
 }
 
@@ -820,7 +967,8 @@ static int parseActionCond(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
         return -1;
 
     }else if (cond->type == PLAN_PDDL_COND_FORALL){
-        // TODO
+        if (_parseForall(pddl, root, action_id, cond) != 0)
+            return -1;
 
     }else if (cond->type == PLAN_PDDL_COND_WHEN){
         // TODO

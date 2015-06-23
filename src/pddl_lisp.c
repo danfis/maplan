@@ -285,3 +285,26 @@ void planPDDLLispDump(const plan_pddl_lisp_t *lisp, FILE *fout)
 {
     nodeDump(&lisp->root, fout, 0);
 }
+
+void planPDDLLispNodeCopy(plan_pddl_lisp_node_t *dst,
+                          const plan_pddl_lisp_node_t *src)
+{
+    int i;
+
+    lispNodeInit(dst);
+    dst->value = src->value;
+    dst->kw = src->kw;
+    dst->lineno = src->lineno;
+
+    dst->child_size = src->child_size;
+    dst->child = BOR_ALLOC_ARR(plan_pddl_lisp_node_t, dst->child_size);
+    for (i = 0; i < dst->child_size; ++i){
+        lispNodeInit(dst->child + i);
+        planPDDLLispNodeCopy(dst->child + i, src->child + i);
+    }
+}
+
+void planPDDLLispNodeFree(plan_pddl_lisp_node_t *node)
+{
+    lispNodeFree(node);
+}

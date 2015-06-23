@@ -61,6 +61,7 @@ typedef struct _plan_pddl_type_t plan_pddl_type_t;
 struct _plan_pddl_obj_t {
     const char *name;
     int type;
+    int is_constant;
 };
 typedef struct _plan_pddl_obj_t plan_pddl_obj_t;
 
@@ -70,6 +71,17 @@ struct _plan_pddl_predicate_t {
     int param_size;
 };
 typedef struct _plan_pddl_predicate_t plan_pddl_predicate_t;
+
+typedef struct _plan_pddl_cond_t plan_pddl_cond_t;
+struct _plan_pddl_cond_t {
+    int type;
+    plan_pddl_cond_t *arg;
+    int arg_size;
+
+    int pred_id;
+    int *pred_arg;
+    int pred_arg_size;
+};
 
 struct _plan_pddl_action_t {
     const char *name;
@@ -86,8 +98,8 @@ struct _plan_pddl_t {
     unsigned require;
     plan_pddl_type_t *type;
     int type_size;
-    plan_pddl_obj_t *constant;
-    int constant_size;
+    plan_pddl_obj_t *obj;
+    int obj_size;
     plan_pddl_predicate_t *predicate;
     int predicate_size;
     plan_pddl_action_t *action;

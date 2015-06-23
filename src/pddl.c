@@ -310,22 +310,24 @@ static int parseType(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return 0;
 }
 
-static void addConstant(plan_pddl_t *pddl, const char *name, int type)
+static plan_pddl_obj_t *addObj(plan_pddl_t *pddl, const char *name, int type)
 {
-    plan_pddl_obj_t *c;
+    plan_pddl_obj_t *o;
 
-    ++pddl->constant_size;
-    pddl->constant = BOR_REALLOC_ARR(pddl->constant, plan_pddl_obj_t,
-                                     pddl->constant_size);
-    c = pddl->constant + pddl->constant_size - 1;
-    c->name = name;
-    c->type = type;
+    ++pddl->obj_size;
+    pddl->obj = BOR_REALLOC_ARR(pddl->obj, plan_pddl_obj_t, pddl->obj_size);
+    o = pddl->obj + pddl->obj_size - 1;
+    o->name = name;
+    o->type = type;
+    o->is_constant = 0;
+    return o;
 }
 
 static int parseConstantSet(plan_pddl_t *pddl,
                             plan_pddl_lisp_node_t *root,
                             int child_from, int child_to, int child_type)
 {
+    plan_pddl_obj_t *o;
     int i, tid;
 
     tid = 0;
@@ -338,8 +340,10 @@ static int parseConstantSet(plan_pddl_t *pddl,
         }
     }
 
-    for (i = child_from; i < child_to; ++i)
-        addConstant(pddl, root->child[i].value, tid);
+    for (i = child_from; i < child_to; ++i){
+        o = addObj(pddl, root->child[i].value, tid);
+        o->is_constant = 1;
+    }
 
     return 0;
 }
@@ -354,6 +358,44 @@ static int parseConstant(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 
     if (parseTypedList(pddl, n, 1, n->child_size, parseConstantSet) != 0){
         ERRN2(n, "Invalid definition of :constants.");
+        return -1;
+    }
+
+    return 0;
+}
+
+static int parseObjSet(plan_pddl_t *pddl,
+                       plan_pddl_lisp_node_t *root,
+                       int child_from, int child_to, int child_type)
+{
+    int i, tid;
+
+    tid = 0;
+    if (child_type >= 0){
+        tid = getType(pddl, root->child[child_type].value);
+        if (tid < 0){
+            ERRN(root->child + child_type, "Invalid type `%s'",
+                 root->child[child_type].value);
+            return -1;
+        }
+    }
+
+    for (i = child_from; i < child_to; ++i)
+        addObj(pddl, root->child[i].value, tid);
+
+    return 0;
+}
+
+static int parseObj(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+{
+    plan_pddl_lisp_node_t *n;
+
+    n = findNode(root, PLAN_PDDL_KW_OBJECTS);
+    if (n == NULL)
+        return 0;
+
+    if (parseTypedList(pddl, n, 1, n->child_size, parseObjSet) != 0){
+        ERRN2(n, "Invalid definition of :objects.");
         return -1;
     }
 
@@ -529,6 +571,23 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     if (parseTypedList(pddl, root->child + 3, 0,
                        root->child[3].child_size, parseActionParamSet) != 0)
         return -1;
+
+    if (root->child_size >= 6){
+        if (root->child[4].kw != PLAN_PDDL_KW_PRE){
+        }else if (root->child[4].kw != PLAN_PDDL_KW_EFF){
+        }else{
+            ERRN2(root->child + 4, "Invalid definition of :action");
+            return -1;
+        }
+    }
+
+    if (root->child_size == 8){
+        if (root->child[6].kw != PLAN_PDDL_KW_EFF){
+            ERRN2(root->child + 4, "Invalid definition of :action");
+            return -1;
+        }
+    }
+
     return 0;
 }
 
@@ -591,6 +650,7 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
 
     if (parseType(pddl, &domain_lisp->root) != 0
             || parseConstant(pddl, &domain_lisp->root) != 0
+            || parseObj(pddl, &problem_lisp->root) != 0
             || parsePredicate(pddl, &domain_lisp->root) != 0
             || parseAction(pddl, &domain_lisp->root) != 0)
         goto pddl_fail;
@@ -613,8 +673,8 @@ void planPDDLDel(plan_pddl_t *pddl)
         planPDDLLispDel(pddl->problem_lisp);
     if (pddl->type)
         BOR_FREE(pddl->type);
-    if (pddl->constant)
-        BOR_FREE(pddl->constant);
+    if (pddl->obj)
+        BOR_FREE(pddl->obj);
 
     for (i = 0; i < pddl->predicate_size; ++i){
         if (pddl->predicate[i].param != NULL)
@@ -645,10 +705,12 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
         fprintf(fout, "    [%d]: %s, parent: %d\n", i,
                 pddl->type[i].name, pddl->type[i].parent);
     }
-    fprintf(fout, "Constant[%d]:\n", pddl->constant_size);
-    for (i = 0; i < pddl->constant_size; ++i){
-        fprintf(fout, "    [%d]: %s, type: %d\n", i,
-                pddl->constant[i].name, pddl->constant[i].type);
+
+    fprintf(fout, "Obj[%d]:\n", pddl->obj_size);
+    for (i = 0; i < pddl->obj_size; ++i){
+        fprintf(fout, "    [%d]: %s, type: %d, is-constant: %d\n", i,
+                pddl->obj[i].name, pddl->obj[i].type,
+                pddl->obj[i].is_constant);
     }
 
     fprintf(fout, "Predicate[%d]:\n", pddl->predicate_size);

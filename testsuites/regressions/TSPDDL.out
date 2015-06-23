@@ -1,5 +1,6 @@
 ---- Domain: pddl/depot-domain.pddl | pddl/depot-pfile1.pddl ----
 Domain: depot
+Problem: depotprob1818
 Require: 1
 Type[1]:
     [0]: object, parent: -1
@@ -29,6 +30,7 @@ Action[5]:
 ---- Domain: pddl/depot-domain.pddl | pddl/depot-pfile1.pddl END ----
 ---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl ----
 Domain: driverlog
+Problem: DLOG-2-2-2
 Require: 1
 Type[1]:
     [0]: object, parent: -1
@@ -54,6 +56,7 @@ Action[6]:
 ---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl END ----
 ---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl ----
 Domain: openstacks-sequencedstrips-nonADL-nonNegated
+Problem: os-sequencedstrips-p5_3
 Require: 20002
 Type[6]:
     [0]: object, parent: -1
@@ -100,6 +103,7 @@ Action[12]:
 ---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl END ----
 ---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl ----
 Domain: Rover
+Problem: roverprob1234
 Require: 2
 Type[8]:
     [0]: object, parent: -1
@@ -150,6 +154,7 @@ Action[9]:
 ---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl END ----
 ---- Domain: pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl ----
 Domain: citycar
+Problem: citycar-3-3-2
 Require: 20096
 Type[5]:
     [0]: object, parent: -1

@@ -41,6 +41,11 @@
     fflush(stderr); \
     } while (0)
 
+#define WARN(format, ...) do { \
+    fprintf(stderr, "Warning PDDL: " format "\n", __VA_ARGS__); \
+    fflush(stderr); \
+    } while (0)
+
 struct _require_mask_t {
     int kw;
     unsigned mask;
@@ -161,22 +166,48 @@ static int parseTypedList(plan_pddl_t *pddl,
     return 0;
 }
 
-static const char *parseName(plan_pddl_lisp_node_t *root)
+static const char *parseName(plan_pddl_lisp_node_t *root, int kw,
+                             const char *err_name)
 {
     plan_pddl_lisp_node_t *n;
 
-    n = findNode(root, PLAN_PDDL_KW_DOMAIN);
+    n = findNode(root, kw);
     if (n == NULL){
-        ERR2("Could not find domain name definition");
+        ERR("Could not find %s name definition.", err_name);
         return NULL;
     }
 
     if (n->child_size != 2 || n->child[1].value == NULL){
-        ERRN2(n, "Invalid domain name definition");
+        ERRN(n, "Invalid %s name definition", err_name);
         return NULL;
     }
 
     return n->child[1].value;
+}
+
+static const char *parseDomainName(plan_pddl_lisp_node_t *root)
+{
+    return parseName(root, PLAN_PDDL_KW_DOMAIN, "domain");
+}
+
+static const char *parseProblemName(plan_pddl_lisp_node_t *root)
+{
+    return parseName(root, PLAN_PDDL_KW_PROBLEM, "problem");
+}
+
+static int checkDomainName(plan_pddl_t *pddl)
+{
+    const char *problem_domain_name;
+
+    problem_domain_name = parseName(&pddl->problem_lisp->root,
+                                    PLAN_PDDL_KW_DOMAIN, ":domain");
+    if (problem_domain_name == NULL
+            || strcmp(problem_domain_name, pddl->domain_name) != 0){
+        WARN("Domain names does not match: `%s' x `%s'",
+             pddl->domain_name, problem_domain_name);
+        return 0;
+    }
+    return 0;
 }
 
 static unsigned parseRequire(plan_pddl_lisp_node_t *root)
@@ -524,43 +555,37 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
     bzero(pddl, sizeof(*pddl));
     pddl->domain_lisp = domain_lisp;
     pddl->problem_lisp = problem_lisp;
-    pddl->name = parseName(&domain_lisp->root);
-    if (pddl->name == NULL){
-        planPDDLDel(pddl);
-        return NULL;
-    }
+    pddl->domain_name = parseDomainName(&domain_lisp->root);
+    if (pddl->domain_name == NULL)
+        goto pddl_fail;
+
+    pddl->problem_name = parseProblemName(&problem_lisp->root);
+    if (pddl->domain_name == NULL)
+        goto pddl_fail;
+
+    if (checkDomainName(pddl) != 0)
+        goto pddl_fail;
 
     pddl->require = parseRequire(&domain_lisp->root);
-    if (pddl->require == 0u){
-        planPDDLDel(pddl);
-        return NULL;
-    }
+    if (pddl->require == 0u)
+        goto pddl_fail;
 
     pddl->type_size = 1;
     pddl->type = BOR_ALLOC_ARR(plan_pddl_type_t, 1);
     pddl->type[0].name = _object_type_name;
     pddl->type[0].parent = -1;
-    if (parseType(pddl, &domain_lisp->root) != 0){
-        planPDDLDel(pddl);
-        return NULL;
-    }
-
-    if (parseConstant(pddl, &domain_lisp->root) != 0){
-        planPDDLDel(pddl);
-        return NULL;
-    }
-
-    if (parsePredicate(pddl, &domain_lisp->root) != 0){
-        planPDDLDel(pddl);
-        return NULL;
-    }
-
-    if (parseAction(pddl, &domain_lisp->root) != 0){
-        planPDDLDel(pddl);
-        return NULL;
-    }
+    if (parseType(pddl, &domain_lisp->root) != 0
+            || parseConstant(pddl, &domain_lisp->root) != 0
+            || parsePredicate(pddl, &domain_lisp->root) != 0
+            || parseAction(pddl, &domain_lisp->root) != 0)
+        goto pddl_fail;
 
     return pddl;
+
+pddl_fail:
+    if (pddl != NULL)
+        planPDDLDel(pddl);
+    return NULL;
 }
 
 void planPDDLDel(plan_pddl_t *pddl)
@@ -597,7 +622,8 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
 {
     int i, j;
 
-    fprintf(fout, "Domain: %s\n", pddl->name);
+    fprintf(fout, "Domain: %s\n", pddl->domain_name);
+    fprintf(fout, "Problem: %s\n", pddl->problem_name);
     fprintf(fout, "Require: %x\n", pddl->require);
     fprintf(fout, "Type[%d]:\n", pddl->type_size);
     for (i = 0; i < pddl->type_size; ++i){

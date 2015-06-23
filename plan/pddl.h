@@ -81,7 +81,8 @@ typedef struct _plan_pddl_action_t plan_pddl_action_t;
 struct _plan_pddl_t {
     plan_pddl_lisp_t *domain_lisp;
     plan_pddl_lisp_t *problem_lisp;
-    const char *name;
+    const char *domain_name;
+    const char *problem_name;
     unsigned require;
     plan_pddl_type_t *type;
     int type_size;

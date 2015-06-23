@@ -21,6 +21,26 @@
 #include <boruvka/alloc.h>
 #include <plan/pddl.h>
 
+#define ERR(format, ...) do { \
+    fprintf(stderr, "Error PDDL: " format "\n", __VA_ARGS__); \
+    fflush(stderr); \
+    } while (0)
+#define ERR2(text) do { \
+    fprintf(stderr, "Error PDDL: " text "\n"); \
+    fflush(stderr); \
+    } while (0)
+
+#define ERRN(NODE, format, ...) do { \
+    fprintf(stderr, "Error PDDL: Line %d: " format "\n", \
+            (NODE)->lineno, __VA_ARGS__); \
+    fflush(stderr); \
+    } while (0)
+#define ERRN2(NODE, text) do { \
+    fprintf(stderr, "Error PDDL: Line %d: " text "\n", \
+            (NODE)->lineno); \
+    fflush(stderr); \
+    } while (0)
+
 struct _require_mask_t {
     int kw;
     unsigned mask;
@@ -79,58 +99,63 @@ unsigned requireMask(int kw)
     return 0u;
 }
 
-static plan_pddl_lisp_node_t *findExp(plan_pddl_lisp_node_t *node, int kw)
+static int nodeHeadKw(const plan_pddl_lisp_node_t *n)
 {
-    bor_list_t *item, *it;
-    plan_pddl_lisp_node_t *n, *m;
+    if (n->child_size == 0)
+        return -1;
+    return n->child[0].kw;
+}
 
-    BOR_LIST_FOR_EACH(&node->children, item){
-        n = BOR_LIST_ENTRY(item, plan_pddl_lisp_node_t, list);
-        if (n->value == NULL){
-            it = borListNext(&n->children);
-            m = BOR_LIST_ENTRY(it, plan_pddl_lisp_node_t, list);
-            if (m->kw == kw)
-                return n;
-        }
+static plan_pddl_lisp_node_t *findNode(plan_pddl_lisp_node_t *node, int kw)
+{
+    int i;
+
+    for (i = 0; i < node->child_size; ++i){
+        if (nodeHeadKw(node->child + i) == kw)
+            return node->child + i;
     }
     return NULL;
 }
 
-typedef int (*parse_typed_list_add_fn)(plan_pddl_domain_t *dom, const char *name);
-typedef int (*parse_typed_list_set_type_fn)(plan_pddl_domain_t *dom,
-                                            int from, int to, const char *type);
+typedef int (*parse_typed_list_set_fn)(plan_pddl_domain_t *dom,
+                                       plan_pddl_lisp_node_t *root,
+                                       int child_from, int child_to,
+                                       int child_type);
 static int parseTypedList(plan_pddl_domain_t *dom,
-                          bor_list_t *list, bor_list_t *from,
-                          parse_typed_list_add_fn add_fn,
-                          parse_typed_list_set_type_fn set_type_fn)
+                          plan_pddl_lisp_node_t *root,
+                          int from, int to,
+                          parse_typed_list_set_fn set_fn)
 {
     plan_pddl_lisp_node_t *n;
-    bor_list_t *item = from;
-    int itfrom, it, found_type;
+    int i, itfrom, itto, ittype;
 
-    itfrom = 0;
-    found_type = 0;
-    for (it = 0; item != list; item = borListNext(item)){
-        n = BOR_LIST_ENTRY(item, plan_pddl_lisp_node_t, list);
-        if (n->value == NULL){
-            fprintf(stderr, "Error PDDL: Invalid definition of typed-list.\n");
-            return -1;
-        }
+    ittype = -1;
+    itfrom = from;
+    itto = from;
+    for (i = from; i < to; ++i){
+        n = root->child + i;
 
-        if (found_type){
-            if (set_type_fn(dom, itfrom, it, n->value) != 0)
+        if (strcmp(n->value, "-") == 0){
+            itto = i;
+            ittype = ++i;
+            if (ittype >= to){
+                ERRN2(root, "Invalid typed list.");
                 return -1;
-            found_type = 0;
-            itfrom = it;
-
-        }else if (strcmp(n->value, "-") == 0){
-            found_type = 1;
+            }
+            if (set_fn(dom, root, itfrom, itto, ittype) != 0)
+                return -1;
+            itfrom = i + 1;
+            itto = i + 1;
+            ittype = -1;
 
         }else{
-            if (add_fn(dom, n->value) != 0)
-                return -1;
-            ++it;
+            ++itto;
         }
+    }
+
+    if (itfrom < itto){
+        if (set_fn(dom, root, itfrom, itto, -1) != 0)
+            return -1;
     }
 
     return 0;
@@ -139,49 +164,45 @@ static int parseTypedList(plan_pddl_domain_t *dom,
 static const char *parseName(plan_pddl_lisp_node_t *root)
 {
     plan_pddl_lisp_node_t *n;
-    bor_list_t *l;
 
-    n = findExp(root, PLAN_PDDL_KW_DOMAIN);
-    if (n == NULL)
+    n = findNode(root, PLAN_PDDL_KW_DOMAIN);
+    if (n == NULL){
+        ERR2("Could not find domain name definition");
         return NULL;
+    }
 
-    l = borListNext(&n->children);
-    l = borListNext(l);
-    if (l == &n->children)
+    if (n->child_size != 2 || n->child[1].value == NULL){
+        ERRN2(n, "Invalid domain name definition");
         return NULL;
+    }
 
-    n = BOR_LIST_ENTRY(l, plan_pddl_lisp_node_t, list);
-    return n->value;
+    return n->child[1].value;
 }
 
 static unsigned parseRequire(plan_pddl_lisp_node_t *root)
 {
     plan_pddl_lisp_node_t *rnode, *n;
-    bor_list_t *item;
+    int i;
     unsigned mask = 0u, m;
 
-    rnode = findExp(root, PLAN_PDDL_KW_REQUIREMENTS);
+    rnode = findNode(root, PLAN_PDDL_KW_REQUIREMENTS);
     // No :requirements implies :strips
     if (rnode == NULL)
         return PLAN_PDDL_REQUIRE_STRIPS;
 
-    item = borListNext(&rnode->children);
-    item = borListNext(item);
-    while (item != &rnode->children){
-        n = BOR_LIST_ENTRY(item, plan_pddl_lisp_node_t, list);
-
+    for (i = 1; i < rnode->child_size; ++i){
+        n = rnode->child + i;
         if (n->value == NULL){
-            fprintf(stderr, "Error PDDL: Invalid :requirements definition.\n");
+            ERRN2(n, "Invalid :requirements definition.");
             return 0u;
         }
         if ((m = requireMask(n->kw)) == 0u){
-            fprintf(stderr, "Error PDDL: Invalid :requirements definition:"
-                            " Unknown keyword `%s'\n", n->value);
+            ERRN(n, "Invalid :requirements definition: Unkown keyword `%s'.",
+                 n->value);
             return 0u;
         }
 
         mask |= m;
-        item = borListNext(item);
     }
 
     return mask;
@@ -214,39 +235,45 @@ static int addType(plan_pddl_domain_t *domain, const char *name)
     return domain->type_size - 1;
 }
 
-static int parseTypeAdd(plan_pddl_domain_t *dom, const char *name)
+static int parseTypeSet(plan_pddl_domain_t *dom,
+                        plan_pddl_lisp_node_t *root,
+                        int child_from, int child_to, int child_type)
 {
-    addType(dom, name);
+    int i, tid, pid;
+
+    pid = 0;
+    if (child_type >= 0){
+        if (root->child[child_type].value == NULL){
+            ERRN2(root->child + child_type, "Invalid type definition.");
+            return -1;
+        }
+        pid = addType(dom, root->child[child_type].value);
+    }
+
+    for (i = child_from; i < child_to; ++i){
+        if (root->child[i].value == NULL){
+            ERRN2(root->child + i, "Invalid type definition.");
+            return -1;
+        }
+
+        tid = addType(dom, root->child[i].value);
+        dom->type[tid].parent = pid;
+    }
+
     return 0;
 }
 
-static int parseTypeSetType(plan_pddl_domain_t *dom, int from, int to,
-                            const char *name)
+static int parseType(plan_pddl_domain_t *dom, plan_pddl_lisp_node_t *root)
 {
-    int i, pid;
+    plan_pddl_lisp_node_t *types;
 
-    pid = addType(dom, name);
-    from++;
-    to++;
-    for (i = from; i < to; ++i)
-        dom->type[i].parent = pid;
-    return 0;
-}
+    types = findNode(root, PLAN_PDDL_KW_TYPES);
+    if (types == NULL)
+        return 0;
 
-static int parseType(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
-{
-    bor_list_t *it;
-
-    root = findExp(root, PLAN_PDDL_KW_TYPES);
-    if (root == NULL)
-        return -1;
-
-    it = borListNext(&root->children);
-    it = borListNext(it);
     // TODO: Check circular dependency on types
-    if (parseTypedList(domain, &root->children, it,
-                       parseTypeAdd, parseTypeSetType) != 0){
-        fprintf(stderr, "Error PDDL: Invalid definition of :types\n");
+    if (parseTypedList(dom, types, 1, types->child_size, parseTypeSet) != 0){
+        ERRN2(root, "Invalid definition of :types");
         return -1;
     }
     return 0;
@@ -264,44 +291,41 @@ static void addConstant(plan_pddl_domain_t *dom, const char *name, int type)
     c->type = type;
 }
 
-static int parseConstantAdd(plan_pddl_domain_t *dom, const char *name)
-{
-    addConstant(dom, name, 0);
-    return 0;
-}
-
-static int parseConstantSet(plan_pddl_domain_t *dom, int from, int to,
-                            const char *name)
+static int parseConstantSet(plan_pddl_domain_t *dom,
+                            plan_pddl_lisp_node_t *root,
+                            int child_from, int child_to, int child_type)
 {
     int i, tid;
 
-    tid = getType(dom, name);
-    if (tid < 0){
-        fprintf(stderr, "Error PDDL: Invalid type `%s'\n", name);
-        return -1;
+    tid = 0;
+    if (child_type >= 0){
+        tid = getType(dom, root->child[child_type].value);
+        if (tid < 0){
+            ERRN(root->child + child_type, "Invalid type `%s'",
+                 root->child[child_type].value);
+            return -1;
+        }
     }
 
-    for (i = from; i < to; ++i)
-        dom->constant[i].type = tid;
+    for (i = child_from; i < child_to; ++i)
+        addConstant(dom, root->child[i].value, tid);
 
     return 0;
 }
 
 static int parseConstant(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
 {
-    bor_list_t *it;
+    plan_pddl_lisp_node_t *n;
 
-    root = findExp(root, PLAN_PDDL_KW_CONSTANTS);
-    if (root == NULL)
+    n = findNode(root, PLAN_PDDL_KW_CONSTANTS);
+    if (n == NULL)
         return 0;
 
-    it = borListNext(&root->children);
-    it = borListNext(it);
-    if (parseTypedList(domain, &root->children, it,
-                       parseConstantAdd, parseConstantSet) != 0){
-        fprintf(stderr, "Error PDDL: Invalid definition of :constants\n");
+    if (parseTypedList(domain, n, 1, n->child_size, parseConstantSet) != 0){
+        ERRN2(n, "Invalid definition of :constants.");
         return -1;
     }
+
     return 0;
 }
 
@@ -311,7 +335,7 @@ static int addPredicate(plan_pddl_domain_t *domain, const char *name)
 
     for (i = 0; i < domain->predicate_size; ++i){
         if (strcmp(domain->predicate[i].name, name) == 0){
-            fprintf(stderr, "Error PDDL: Duplicate predicate `%s'\n", name);
+            ERR("Duplicate predicate `%s'", name);
             return -1;
         }
     }
@@ -337,70 +361,58 @@ static int parsePredicateAdd(plan_pddl_domain_t *dom, const char *name)
     return 0;
 }
 
-static int parsePredicateSet(plan_pddl_domain_t *dom, int from, int to,
-                             const char *name)
+static int parsePredicateSet(plan_pddl_domain_t *dom,
+                             plan_pddl_lisp_node_t *root,
+                             int child_from, int child_to, int child_type)
 {
     plan_pddl_predicate_t *pred;
-    int i, tid;
+    int i, j, tid;
 
-    tid = getType(dom, name);
-    if (tid < 0){
-        fprintf(stderr, "Error PDDL: Invalid type `%s'\n", name);
-        return -1;
+    tid = 0;
+    if (child_type >= 0){
+        tid = getType(dom, root->child[child_type].value);
+        if (tid < 0){
+            ERRN(root->child + child_type, "Invalid type `%s'",
+                 root->child[child_type].value);
+            return -1;
+        }
     }
 
     pred = dom->predicate + dom->predicate_size - 1;
-    for (i = from; i < to; ++i)
-        pred->param[i] = tid;
+    j = pred->param_size;
+    pred->param_size += child_to - child_from;
+    pred->param = BOR_REALLOC_ARR(pred->param, int, pred->param_size);
+    for (i = child_from; i < child_to; ++i, ++j)
+        pred->param[j] = tid;
     return 0;
 }
 
 static int parsePredicate1(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *n;
-    bor_list_t *it;
-    int id;
-
-    it = borListNext(&root->children);
-    if (it == &root->children){
-        fprintf(stderr, "Error PDDL: Invalid predicate definition.\n");
+    if (root->child_size < 1 || root->child[0].value == NULL){
+        ERRN2(root, "Invalid definition of predicate.");
         return -1;
     }
 
-    n = BOR_LIST_ENTRY(it, plan_pddl_lisp_node_t, list);
-    if (n->value == NULL){
-        fprintf(stderr, "Error PDDL: Invalid predicate definition.\n");
-        return -1;
-    }
-
-    id = addPredicate(domain, n->value);
-    if (id < 0)
+    if (addPredicate(domain, root->child[0].value) < 0)
         return -1;
 
-    it = borListNext(it);
-    if (parseTypedList(domain, &root->children, it,
-                       parsePredicateAdd, parsePredicateSet) != 0){
-        fprintf(stderr, "Error PDDL: Invalid definition of predicate `%s'\n",
-                        domain->predicate[id].name);
+    if (parseTypedList(domain, root, 1, root->child_size, parsePredicateSet) != 0)
         return -1;
-    }
     return 0;
 }
 
 static int parsePredicate(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
 {
     plan_pddl_lisp_node_t *n;
-    bor_list_t *it;
+    int i;
 
-    root = findExp(root, PLAN_PDDL_KW_PREDICATES);
-    if (root == NULL)
+    n = findNode(root, PLAN_PDDL_KW_PREDICATES);
+    if (n == NULL)
         return 0;
 
-    it = borListNext(&root->children);
-    it = borListNext(it);
-    for (; it != &root->children; it = borListNext(it)){
-        n = BOR_LIST_ENTRY(it, plan_pddl_lisp_node_t, list);
-        if (parsePredicate1(domain, n) != 0)
+    for (i = 1; i < n->child_size; ++i){
+        if (parsePredicate1(domain, n->child + i) != 0)
             return -1;
     }
     return 0;
@@ -421,120 +433,75 @@ static int addAction(plan_pddl_domain_t *dom, const char *name)
     return id;
 }
 
-int parseAddActionParam(plan_pddl_domain_t *dom, const char *name)
+static int parseActionParamSet(plan_pddl_domain_t *dom,
+                               plan_pddl_lisp_node_t *root,
+                               int child_from, int child_to, int child_type)
 {
     int id = dom->action_size - 1;
     plan_pddl_action_t *a = dom->action + id;
+    int i, j, tid;
 
-    if (name[0] != '?'){
-        fprintf(stderr, "Error PDDL: Invalid definition of action --"
-                        " all parameters must be variables.\n");
-        return -1;
+    tid = 0;
+    if (child_type >= 0){
+        tid = getType(dom, root->child[child_type].value);
+        if (tid < 0){
+            ERRN(root->child + child_type, "Unkown type `%s'",
+                 root->child[child_type].value);
+            return -1;
+        }
     }
 
-    ++a->param_size;
+    j = a->param_size;
+    a->param_size += child_to - child_from;
     a->param = BOR_REALLOC_ARR(a->param, plan_pddl_obj_t, a->param_size);
-    a->param[a->param_size - 1].name = name;
-    a->param[a->param_size - 1].type = 0;
-    return 0;
-}
+    for (i = child_from; i < child_to; ++i, ++j){
+        if (root->child[i].value == NULL){
+            ERRN2(root->child + i, "Invalid parameter definition:"
+                                   " Unexpected expression.");
+            return -1;
+        }
 
-int parseSetActionParam(plan_pddl_domain_t *dom,
-                        int from, int to, const char *type)
-{
-    int id = dom->action_size - 1;
-    plan_pddl_action_t *a = dom->action + id;
-    int i, tid;
+        if (root->child[i].value[0] != '?'){
+            ERRN(root->child + i, "Invalid parameter definition:"
+                                  " Expected variable, got %s.",
+                 root->child[i].value);
+            return -1;
+        }
 
-    tid = getType(dom, type);
-    if (tid < 0){
-        fprintf(stderr, "Error PDDL: Invalid type `%s' in action"
-                        " definition.\n", type);
-        return -1;
+        a->param[j].name = root->child[i].value;
+        a->param[j].type = tid;
     }
 
-    for (i = from; i < to; ++i)
-        a->param[i].type = tid;
-    return 0;
-}
-
-static int parseActionParam(plan_pddl_domain_t *dom,
-                            plan_pddl_lisp_node_t *param)
-{
-    bor_list_t *it;
-
-    it = borListNext(&param->children);
-    if (parseTypedList(dom, &param->children, it, parseAddActionParam,
-                       parseSetActionParam) != 0){
-        fprintf(stderr, "Error PDDL: Invalid parameter definition.\n");
-        return -1;
-    }
     return 0;
 }
 
 static int parseAction1(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *name, *param, *n;
-    bor_list_t *it;
-
-    it = borListNext(&root->children);
-    it = borListNext(it);
-    if (it == &root->children){
-        fprintf(stderr, "Error PDDL: Invalid definition of :action\n");
+    if (root->child_size < 4
+            || root->child[1].value == NULL
+            || root->child[2].kw != PLAN_PDDL_KW_PARAMETERS
+            || root->child[3].value != NULL){
+        ERRN2(root, "Invalid definition of :action");
         return -1;
     }
 
-    name = BOR_LIST_ENTRY(it, plan_pddl_lisp_node_t, list);
-    if (name->value == NULL){
-        fprintf(stderr, "Error PDDL: Invalid definition of :action --"
-                        " missing action name.\n");
+    addAction(domain, root->child[1].value);
+    if (parseTypedList(domain, root->child + 3, 0,
+                       root->child[3].child_size, parseActionParamSet) != 0)
         return -1;
-    }
-
-    it = borListNext(it);
-    if (it == &root->children){
-        fprintf(stderr, "Error PDDL: Invalid definition of :action\n");
-        return -1;
-    }
-    n = BOR_LIST_ENTRY(it, plan_pddl_lisp_node_t, list);
-    if (n->kw != PLAN_PDDL_KW_PARAMETERS){
-        fprintf(stderr, "Error PDDL: Invalid definition of :action --"
-                        " missing :parameters.\n");
-        return -1;
-    }
-
-    it = borListNext(it);
-    if (it == &root->children){
-        fprintf(stderr, "Error PDDL: Invalid definition of :action\n");
-        return -1;
-    }
-    param = BOR_LIST_ENTRY(it, plan_pddl_lisp_node_t, list);
-
-    addAction(domain, name->value);
-    if (parseActionParam(domain, param) != 0)
-        return -1;
-
     return 0;
 }
 
 static int parseAction(plan_pddl_domain_t *domain, plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *n, *head;
-    bor_list_t *it;
+    int i;
 
-    BOR_LIST_FOR_EACH(&root->children, it){
-        n = BOR_LIST_ENTRY(it, plan_pddl_lisp_node_t, list);
-        if (borListEmpty(&n->children))
-            continue;
-
-        head = BOR_LIST_ENTRY(borListNext(&n->children),
-                              plan_pddl_lisp_node_t, list);
-        if (head->kw != PLAN_PDDL_KW_ACTION)
-            continue;
-        if (parseAction1(domain, n) != 0)
-            return -1;
+    for (i = 0; i < root->child_size; ++i){
+        if (nodeHeadKw(root->child + i) == PLAN_PDDL_KW_ACTION){
+            if (parseAction1(domain, root->child + i) != 0)
+                return -1;
+        }
     }
-
     return 0;
 }
 
@@ -552,14 +519,14 @@ plan_pddl_domain_t *planPDDLDomainNew(const char *fn)
     domain = BOR_ALLOC(plan_pddl_domain_t);
     bzero(domain, sizeof(*domain));
     domain->lisp = lisp;
-    domain->name = parseName(lisp->root);
+    domain->name = parseName(&lisp->root);
     if (domain->name == NULL){
         fprintf(stderr, "Error PDDL: Could not find name of the domain.\n");
         planPDDLDomainDel(domain);
         return NULL;
     }
 
-    domain->require = parseRequire(lisp->root);
+    domain->require = parseRequire(&lisp->root);
     if (domain->require == 0u){
         planPDDLDomainDel(domain);
         return NULL;
@@ -569,24 +536,22 @@ plan_pddl_domain_t *planPDDLDomainNew(const char *fn)
     domain->type = BOR_ALLOC_ARR(plan_pddl_type_t, 1);
     domain->type[0].name = _object_type_name;
     domain->type[0].parent = -1;
-    if (domain->require & PLAN_PDDL_REQUIRE_TYPING){
-        if (parseType(domain, lisp->root) != 0){
-            planPDDLDomainDel(domain);
-            return NULL;
-        }
-    }
-
-    if (parseConstant(domain, lisp->root) != 0){
+    if (parseType(domain, &lisp->root) != 0){
         planPDDLDomainDel(domain);
         return NULL;
     }
 
-    if (parsePredicate(domain, lisp->root) != 0){
+    if (parseConstant(domain, &lisp->root) != 0){
         planPDDLDomainDel(domain);
         return NULL;
     }
 
-    if (parseAction(domain, lisp->root) != 0){
+    if (parsePredicate(domain, &lisp->root) != 0){
+        planPDDLDomainDel(domain);
+        return NULL;
+    }
+
+    if (parseAction(domain, &lisp->root) != 0){
         planPDDLDomainDel(domain);
         return NULL;
     }
@@ -611,8 +576,14 @@ void planPDDLDomainDel(plan_pddl_domain_t *domain)
     }
     if (domain->predicate)
         BOR_FREE(domain->predicate);
+
+    for (i = 0; i < domain->action_size; ++i){
+        if (domain->action[i].param != NULL)
+            BOR_FREE(domain->action[i].param);
+    }
     if (domain->action)
         BOR_FREE(domain->action);
+
     BOR_FREE(domain);
 }
 

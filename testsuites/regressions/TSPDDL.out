@@ -18,6 +18,8 @@ Obj[13]:
     [10]: hoist0, type: 0, is-constant: 0
     [11]: hoist1, type: 0, is-constant: 0
     [12]: hoist2, type: 0, is-constant: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12
 Predicate[15]:
     at: 0 0
     on: 0 0
@@ -69,6 +71,8 @@ Obj[11]:
     [8]: s2, type: 0, is-constant: 0
     [9]: p1-0, type: 0, is-constant: 0
     [10]: p1-2, type: 0, is-constant: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10
 Predicate[10]:
     obj: 0
     truck: 0
@@ -130,6 +134,13 @@ Obj[18]:
     [15]: n3, type: 3, is-constant: 0
     [16]: n4, type: 3, is-constant: 0
     [17]: n5, type: 3, is-constant: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
+    [1]: 5 6 7 8 9
+    [2]: 0 1 2 3 4
+    [3]: 12 13 14 15 16 17
+    [4]: 10
+    [5]: 11
 Predicate[8]:
     includes: 1 2
     waiting: 1
@@ -204,6 +215,15 @@ Obj[13]:
     [10]: camera0, type: 4, is-constant: 0
     [11]: objective0, type: 7, is-constant: 0
     [12]: objective1, type: 7, is-constant: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12
+    [1]: 4
+    [2]: 6 7 8 9
+    [3]: 5
+    [4]: 10
+    [5]: 1 2 3
+    [6]: 0
+    [7]: 11 12
 Predicate[25]:
     at: 1 2
     at_lander: 6 2
@@ -288,6 +308,12 @@ Obj[18]:
     [15]: road2, type: 4, is-constant: 0
     [16]: road3, type: 4, is-constant: 0
     [17]: road4, type: 4, is-constant: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
+    [1]: 9 10
+    [2]: 0 1 2 3 4 5 6 7 8
+    [3]: 11 12
+    [4]: 13 14 15 16 17
 Predicate[11]:
     =: 0 0
     same_line: 2 2

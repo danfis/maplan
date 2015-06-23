@@ -104,6 +104,12 @@ struct _plan_pddl_action_t {
 };
 typedef struct _plan_pddl_action_t plan_pddl_action_t;
 
+struct _plan_pddl_obj_arr_t {
+    int *obj;
+    int size;
+};
+typedef struct _plan_pddl_obj_arr_t plan_pddl_obj_arr_t;
+
 struct _plan_pddl_t {
     plan_pddl_lisp_t *domain_lisp;
     plan_pddl_lisp_t *problem_lisp;
@@ -118,6 +124,8 @@ struct _plan_pddl_t {
     int predicate_size;
     plan_pddl_action_t *action;
     int action_size;
+
+    plan_pddl_obj_arr_t *type_obj_map;
 };
 typedef struct _plan_pddl_t plan_pddl_t;
 

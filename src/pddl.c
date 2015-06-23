@@ -468,6 +468,52 @@ static int parseObj(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return 0;
 }
 
+static void _makeTypeObjMapRec(plan_pddl_t *pddl, int arr_id, int type_id)
+{
+    plan_pddl_obj_arr_t *m = pddl->type_obj_map + arr_id;
+    int i;
+
+    for (i = 0; i < pddl->obj_size; ++i){
+        if (pddl->obj[i].type == type_id)
+            m->obj[i] = 1;
+    }
+
+    for (i = 0; i < pddl->type_size; ++i){
+        if (pddl->type[i].parent == type_id)
+            _makeTypeObjMapRec(pddl, arr_id, i);
+    }
+}
+
+static void _makeTypeObjMap(plan_pddl_t *pddl, int type_id)
+{
+    plan_pddl_obj_arr_t *m = pddl->type_obj_map + type_id;
+    int i, ins;
+
+    m->size = 0;
+    m->obj = BOR_CALLOC_ARR(int, pddl->obj_size);
+    _makeTypeObjMapRec(pddl, type_id, type_id);
+
+    for (ins = 0, i = 0; i < pddl->obj_size; ++i){
+        if (m->obj[i])
+            m->obj[ins++] = i;
+    }
+    m->size = ins;
+    if (m->size != pddl->obj_size)
+        m->obj = BOR_REALLOC_ARR(m->obj, int, m->size);
+}
+
+static int makeTypeObjMap(plan_pddl_t *pddl)
+{
+    int i;
+
+    pddl->type_obj_map = BOR_CALLOC_ARR(plan_pddl_obj_arr_t,
+                                        pddl->type_size);
+    for (i = 0; i < pddl->type_size; ++i){
+        _makeTypeObjMap(pddl, i);
+    }
+    return 0;
+}
+
 static int addPredicate(plan_pddl_t *pddl, const char *name)
 {
     int i, id;
@@ -921,6 +967,7 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
     if (parseType(pddl, &domain_lisp->root) != 0
             || parseConstant(pddl, &domain_lisp->root) != 0
             || parseObj(pddl, &problem_lisp->root) != 0
+            || makeTypeObjMap(pddl) != 0
             || parsePredicate(pddl, &domain_lisp->root) != 0
             || parseAction(pddl, &domain_lisp->root) != 0)
         goto pddl_fail;
@@ -962,6 +1009,13 @@ void planPDDLDel(plan_pddl_t *pddl)
     if (pddl->action)
         BOR_FREE(pddl->action);
 
+    if (pddl->type_obj_map != NULL){
+        for (i = 0; i < pddl->type_size; ++i){
+            if (pddl->type_obj_map[i].obj != NULL)
+                BOR_FREE(pddl->type_obj_map[i].obj);
+        }
+        BOR_FREE(pddl->type_obj_map);
+    }
     BOR_FREE(pddl);
 }
 
@@ -1051,6 +1105,14 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
         fprintf(fout, "    [%d]: %s, type: %d, is-constant: %d\n", i,
                 pddl->obj[i].name, pddl->obj[i].type,
                 pddl->obj[i].is_constant);
+    }
+
+    fprintf(fout, "Type-Obj:\n");
+    for (i = 0; i < pddl->type_size; ++i){
+        fprintf(fout, "    [%d]:", i);
+        for (j = 0; j < pddl->type_obj_map[i].size; ++j)
+            fprintf(fout, " %d", pddl->type_obj_map[i].obj[j]);
+        fprintf(fout, "\n");
     }
 
     fprintf(fout, "Predicate[%d]:\n", pddl->predicate_size);

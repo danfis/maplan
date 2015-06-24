@@ -54,6 +54,44 @@ Action[5]:
         pre: (and (hoist ?x) (crate ?y) (truck ?z) (place ?p) (at ?x ?p) (at ?z ?p) (available ?x) (in ?y ?z))
         eff: (and (lifting ?x ?y) (not (in ?y ?z)) (not (available ?x)))
 Goal: (and (on crate0 pallet2) (on crate1 pallet1))
+Init[36]:
+    pallet: pallet0
+    surface: pallet0
+    at: pallet0 depot0
+    clear: crate1
+    pallet: pallet1
+    surface: pallet1
+    at: pallet1 distributor0
+    clear: crate0
+    pallet: pallet2
+    surface: pallet2
+    at: pallet2 distributor1
+    clear: pallet2
+    truck: truck0
+    at: truck0 distributor1
+    truck: truck1
+    at: truck1 depot0
+    hoist: hoist0
+    at: hoist0 depot0
+    available: hoist0
+    hoist: hoist1
+    at: hoist1 distributor0
+    available: hoist1
+    hoist: hoist2
+    at: hoist2 distributor1
+    available: hoist2
+    crate: crate0
+    surface: crate0
+    at: crate0 distributor0
+    on: crate0 pallet1
+    crate: crate1
+    surface: crate1
+    at: crate1 depot0
+    on: crate1 pallet0
+    place: depot0
+    place: distributor0
+    place: distributor1
+Init Func[0]:
 Metric: 0
 ---- Domain: pddl/depot-domain.pddl | pddl/depot-pfile1.pddl END ----
 ---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl ----
@@ -108,6 +146,41 @@ Action[6]:
         pre: (and (driver ?driver) (location ?loc-from) (location ?loc-to) (at ?driver ?loc-from) (path ?loc-from ?loc-to))
         eff: (and (not (at ?driver ?loc-from)) (at ?driver ?loc-to))
 Goal: (and (at driver1 s1) (at truck1 s1) (at package1 s0) (at package2 s0))
+Init[33]:
+    at: driver1 s2
+    driver: driver1
+    at: driver2 s2
+    driver: driver2
+    at: truck1 s0
+    empty: truck1
+    truck: truck1
+    at: truck2 s0
+    empty: truck2
+    truck: truck2
+    at: package1 s0
+    obj: package1
+    at: package2 s0
+    obj: package2
+    location: s0
+    location: s1
+    location: s2
+    location: p1-0
+    location: p1-2
+    path: s1 p1-0
+    path: p1-0 s1
+    path: s0 p1-0
+    path: p1-0 s0
+    path: s1 p1-2
+    path: p1-2 s1
+    path: s2 p1-2
+    path: p1-2 s2
+    link: s0 s1
+    link: s1 s0
+    link: s0 s2
+    link: s2 s0
+    link: s2 s1
+    link: s1 s2
+Init Func[0]:
 Metric: 0
 ---- Domain: pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl END ----
 ---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl ----
@@ -196,6 +269,31 @@ Action[12]:
         pre: (and (started o5) (made p5) (stacks-avail ?avail) (next-count ?avail ?new-avail))
         eff: (and (not (started o5)) (shipped o5) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
 Goal: (and (shipped o1) (shipped o2) (shipped o3) (shipped o4) (shipped o5))
+Init[22]:
+    next-count: n0 n1
+    next-count: n1 n2
+    next-count: n2 n3
+    next-count: n3 n4
+    next-count: n4 n5
+    stacks-avail: n0
+    waiting: o1
+    includes: o1 p3
+    waiting: o2
+    includes: o2 p4
+    waiting: o3
+    includes: o3 p4
+    waiting: o4
+    includes: o4 p2
+    includes: o4 p5
+    waiting: o5
+    includes: o5 p1
+    not-made: p1
+    not-made: p2
+    not-made: p3
+    not-made: p4
+    not-made: p5
+Init Func[1]:
+    total-cost: --> 0
 Metric: 1
 ---- Domain: pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl END ----
 ---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl ----
@@ -290,6 +388,53 @@ Action[9]:
         pre: (and (at ?r ?x) (at_lander ?l ?y) (have_image ?r ?o ?m) (visible ?x ?y) (available ?r) (channel_free ?l))
         eff: (and (not (available ?r)) (not (channel_free ?l)) (channel_free ?l) (communicated_image_data ?o ?m) (available ?r))
 Goal: (and (communicated_soil_data waypoint2) (communicated_rock_data waypoint3) (communicated_image_data objective1 high_res))
+Init[45]:
+    visible: waypoint1 waypoint0
+    visible: waypoint0 waypoint1
+    visible: waypoint2 waypoint0
+    visible: waypoint0 waypoint2
+    visible: waypoint2 waypoint1
+    visible: waypoint1 waypoint2
+    visible: waypoint3 waypoint0
+    visible: waypoint0 waypoint3
+    visible: waypoint3 waypoint1
+    visible: waypoint1 waypoint3
+    visible: waypoint3 waypoint2
+    visible: waypoint2 waypoint3
+    at_soil_sample: waypoint0
+    at_rock_sample: waypoint1
+    at_soil_sample: waypoint2
+    at_rock_sample: waypoint2
+    at_soil_sample: waypoint3
+    at_rock_sample: waypoint3
+    at_lander: general waypoint0
+    channel_free: general
+    at: rover0 waypoint3
+    available: rover0
+    store_of: rover0store rover0
+    empty: rover0store
+    equipped_for_soil_analysis: rover0
+    equipped_for_rock_analysis: rover0
+    equipped_for_imaging: rover0
+    can_traverse: rover0 waypoint3 waypoint0
+    can_traverse: rover0 waypoint0 waypoint3
+    can_traverse: rover0 waypoint3 waypoint1
+    can_traverse: rover0 waypoint1 waypoint3
+    can_traverse: rover0 waypoint1 waypoint2
+    can_traverse: rover0 waypoint2 waypoint1
+    on_board: camera0 rover0
+    calibration_target: camera0 objective1
+    supports: camera0 colour
+    supports: camera0 high_res
+    visible_from: objective0 waypoint0
+    visible_from: objective0 waypoint1
+    visible_from: objective0 waypoint2
+    visible_from: objective0 waypoint3
+    visible_from: objective1 waypoint0
+    visible_from: objective1 waypoint1
+    visible_from: objective1 waypoint2
+    visible_from: objective1 waypoint3
+Init Func[0]:
 Metric: 0
 ---- Domain: pddl/rovers-domain.pddl | pddl/rovers-p01.pddl END ----
 ---- Domain: pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl ----
@@ -364,6 +509,62 @@ Action[7]:
         pre: (and (road_connect ?r1 ?xy_initial ?xy_final) (not (= ?xy_initial ?xy_final)) (in_place ?r1))
         eff: (and (not (in_place ?r1)) (not (road_connect ?r1 ?xy_initial ?xy_final)) (COST 10) (and (when (at_car_road car0 ?r1) (and (not (at_car_road car0 ?r1)) (at_car_jun car0 ?xy_initial))) (when (at_car_road car1 ?r1) (and (not (at_car_road car1 ?r1)) (at_car_jun car1 ?xy_initial)))))
 Goal: (and (arrived car0 junction2-0) (arrived car1 junction2-1))
+Init[53]:
+    same_line: junction0-0 junction0-1
+    same_line: junction0-1 junction0-0
+    same_line: junction0-1 junction0-2
+    same_line: junction0-2 junction0-1
+    same_line: junction1-0 junction1-1
+    same_line: junction1-1 junction1-0
+    same_line: junction1-1 junction1-2
+    same_line: junction1-2 junction1-1
+    same_line: junction2-0 junction2-1
+    same_line: junction2-1 junction2-0
+    same_line: junction2-1 junction2-2
+    same_line: junction2-2 junction2-1
+    same_line: junction0-0 junction1-0
+    same_line: junction1-0 junction0-0
+    same_line: junction1-0 junction2-0
+    same_line: junction2-0 junction1-0
+    same_line: junction0-1 junction1-1
+    same_line: junction1-1 junction0-1
+    same_line: junction1-1 junction2-1
+    same_line: junction2-1 junction1-1
+    same_line: junction0-2 junction1-2
+    same_line: junction1-2 junction0-2
+    same_line: junction1-2 junction2-2
+    same_line: junction2-2 junction1-2
+    diagonal: junction0-0 junction1-1
+    diagonal: junction1-1 junction0-0
+    diagonal: junction0-1 junction1-0
+    diagonal: junction1-0 junction0-1
+    diagonal: junction0-1 junction1-2
+    diagonal: junction1-2 junction0-1
+    diagonal: junction0-2 junction1-1
+    diagonal: junction1-1 junction0-2
+    diagonal: junction1-0 junction2-1
+    diagonal: junction2-1 junction1-0
+    diagonal: junction1-1 junction2-0
+    diagonal: junction2-0 junction1-1
+    diagonal: junction1-1 junction2-2
+    diagonal: junction2-2 junction1-1
+    diagonal: junction1-2 junction2-1
+    diagonal: junction2-1 junction1-2
+    clear: junction0-0
+    clear: junction0-1
+    clear: junction0-2
+    clear: junction1-0
+    clear: junction1-1
+    clear: junction1-2
+    clear: junction2-0
+    clear: junction2-1
+    clear: junction2-2
+    at_garage: garage0 junction0-0
+    at_garage: garage1 junction0-0
+    starting: car0 garage0
+    starting: car1 garage1
+Init Func[1]:
+    total-cost: --> 0
 Metric: 1
 ---- Domain: pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl END ----
 ---- Domain: pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl ----
@@ -435,5 +636,124 @@ Action[6]:
         pre: (and (lift-at ?lift ?f) (boarded ?p ?lift) (passengers ?lift ?n1) (next ?n2 ?n1))
         eff: (and (passenger-at ?p ?f) (not (boarded ?p ?lift)) (not (passengers ?lift ?n1)) (passengers ?lift ?n2))
 Goal: (and (passenger-at p0 n4) (passenger-at p1 n5) (passenger-at p2 n6) (passenger-at p3 n2))
+Init[86]:
+    next: n0 n1
+    next: n1 n2
+    next: n2 n3
+    next: n3 n4
+    next: n4 n5
+    next: n5 n6
+    next: n6 n7
+    next: n7 n8
+    above: n0 n1
+    above: n0 n2
+    above: n0 n3
+    above: n0 n4
+    above: n0 n5
+    above: n0 n6
+    above: n0 n7
+    above: n0 n8
+    above: n1 n2
+    above: n1 n3
+    above: n1 n4
+    above: n1 n5
+    above: n1 n6
+    above: n1 n7
+    above: n1 n8
+    above: n2 n3
+    above: n2 n4
+    above: n2 n5
+    above: n2 n6
+    above: n2 n7
+    above: n2 n8
+    above: n3 n4
+    above: n3 n5
+    above: n3 n6
+    above: n3 n7
+    above: n3 n8
+    above: n4 n5
+    above: n4 n6
+    above: n4 n7
+    above: n4 n8
+    above: n5 n6
+    above: n5 n7
+    above: n5 n8
+    above: n6 n7
+    above: n6 n8
+    above: n7 n8
+    lift-at: fast0 n8
+    passengers: fast0 n0
+    can-hold: fast0 n1
+    can-hold: fast0 n2
+    can-hold: fast0 n3
+    reachable-floor: fast0 n0
+    reachable-floor: fast0 n2
+    reachable-floor: fast0 n4
+    reachable-floor: fast0 n6
+    reachable-floor: fast0 n8
+    lift-at: fast1 n6
+    passengers: fast1 n0
+    can-hold: fast1 n1
+    can-hold: fast1 n2
+    can-hold: fast1 n3
+    reachable-floor: fast1 n0
+    reachable-floor: fast1 n2
+    reachable-floor: fast1 n4
+    reachable-floor: fast1 n6
+    reachable-floor: fast1 n8
+    lift-at: slow0-0 n4
+    passengers: slow0-0 n0
+    can-hold: slow0-0 n1
+    can-hold: slow0-0 n2
+    reachable-floor: slow0-0 n0
+    reachable-floor: slow0-0 n1
+    reachable-floor: slow0-0 n2
+    reachable-floor: slow0-0 n3
+    reachable-floor: slow0-0 n4
+    lift-at: slow1-0 n4
+    passengers: slow1-0 n0
+    can-hold: slow1-0 n1
+    can-hold: slow1-0 n2
+    reachable-floor: slow1-0 n4
+    reachable-floor: slow1-0 n5
+    reachable-floor: slow1-0 n6
+    reachable-floor: slow1-0 n7
+    reachable-floor: slow1-0 n8
+    passenger-at: p0 n3
+    passenger-at: p1 n1
+    passenger-at: p2 n7
+    passenger-at: p3 n0
+Init Func[31]:
+    travel-slow: n0 n1 --> 6
+    travel-slow: n0 n2 --> 7
+    travel-slow: n0 n3 --> 8
+    travel-slow: n0 n4 --> 9
+    travel-slow: n1 n2 --> 6
+    travel-slow: n1 n3 --> 7
+    travel-slow: n1 n4 --> 8
+    travel-slow: n2 n3 --> 6
+    travel-slow: n2 n4 --> 7
+    travel-slow: n3 n4 --> 6
+    travel-slow: n4 n5 --> 6
+    travel-slow: n4 n6 --> 7
+    travel-slow: n4 n7 --> 8
+    travel-slow: n4 n8 --> 9
+    travel-slow: n5 n6 --> 6
+    travel-slow: n5 n7 --> 7
+    travel-slow: n5 n8 --> 8
+    travel-slow: n6 n7 --> 6
+    travel-slow: n6 n8 --> 7
+    travel-slow: n7 n8 --> 6
+    travel-fast: n0 n2 --> 7
+    travel-fast: n0 n4 --> 13
+    travel-fast: n0 n6 --> 19
+    travel-fast: n0 n8 --> 25
+    travel-fast: n2 n4 --> 7
+    travel-fast: n2 n6 --> 13
+    travel-fast: n2 n8 --> 19
+    travel-fast: n4 n6 --> 7
+    travel-fast: n4 n8 --> 13
+    travel-fast: n6 n8 --> 7
+    total-cost: --> 0
 Metric: 1
 ---- Domain: pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl END ----

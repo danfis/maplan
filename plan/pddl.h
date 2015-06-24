@@ -111,6 +111,21 @@ struct _plan_pddl_obj_arr_t {
 };
 typedef struct _plan_pddl_obj_arr_t plan_pddl_obj_arr_t;
 
+struct _plan_pddl_fact_t {
+    int pred; /*!< Predicate ID */
+    int *arg; /*!< Object IDs are arguments */
+    int arg_size;
+};
+typedef struct _plan_pddl_fact_t plan_pddl_fact_t;
+
+struct _plan_pddl_inst_func_t {
+    int func; /*!< Function ID */
+    int val;  /*!< Assigned value */
+    int *arg; /*!< Object IDs are arguments */
+    int arg_size;
+};
+typedef struct _plan_pddl_inst_func_t plan_pddl_inst_func_t;
+
 struct _plan_pddl_t {
     plan_pddl_lisp_t *domain_lisp;
     plan_pddl_lisp_t *problem_lisp;
@@ -128,6 +143,10 @@ struct _plan_pddl_t {
     plan_pddl_action_t *action;
     int action_size;
     plan_pddl_cond_t goal;
+    plan_pddl_fact_t *init_fact;
+    int init_fact_size;
+    plan_pddl_inst_func_t *init_func;
+    int init_func_size;
     int metric;
 
     plan_pddl_obj_arr_t *type_obj_map;

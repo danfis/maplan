@@ -295,6 +295,7 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
                          const plan_ma_msg_t *msg)
 {
     plan_ma_comm_tcp_t *tcp = TCP(comm);
+    struct pollfd pfd;
     char *outbuf = tcp->sendbuf;
     int size, sent;
     ssize_t send_ret;
@@ -316,20 +317,29 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
     *(uint32_t *)outbuf = TO_LE32(size);
 
     // Send the buffer over network
+    pfd.events = POLLOUT;
+    pfd.fd = tcp->send_sock[node_id];
     size += 4;
     sent = 0;
     while (sent != size){
-        send_ret = write(tcp->send_sock[node_id], outbuf + sent, size - sent);
-        if (send_ret < 0){
-            ERR(tcp, "Could not send message to %d: %s", node_id, strerror(errno));
-            ret = -1;
-            break;
+        if (poll(&pfd, 1, -1) < 0){
+            ERRNO(tcp, "Poll error:");
+            continue;
         }
 
-        sent += send_ret;
+        if (pfd.revents & POLLOUT){
+            send_ret = write(pfd.fd, outbuf + sent, size - sent);
+            if (send_ret < 0){
+                ERR(tcp, "Could not send message to %d: %s",
+                    node_id, strerror(errno));
+                return -1;
+            }
+
+            sent += send_ret;
+        }
     }
 
-    return ret;
+    return 0;
 }
 
 static plan_ma_msg_t *_tcpRecv(plan_ma_comm_tcp_t *tcp, int timeout_in_ms)

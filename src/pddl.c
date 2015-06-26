@@ -184,7 +184,6 @@ static void condFree(plan_pddl_cond_t *c)
         BOR_FREE(c->arg);
 }
 
-
 static void condFlattenAnd(plan_pddl_cond_t *cond)
 {
     plan_pddl_cond_t cond_tmp;
@@ -222,6 +221,160 @@ static void condFlattenAnd(plan_pddl_cond_t *cond)
         condFlattenAnd(cond->arg + 1);
     }
 }
+
+static void predicateInit(plan_pddl_predicate_t *p)
+{
+    bzero(p, sizeof(*p));
+}
+
+static void predicateFree(plan_pddl_predicate_t *p)
+{
+    if (p->param != NULL)
+        BOR_FREE(p->param);
+}
+
+static void predicateFree2(plan_pddl_predicate_t *p, int size)
+{
+    int i;
+    for (i = 0; i < size; ++i)
+        predicateFree(p + i);
+}
+
+static void predicateDel2(plan_pddl_predicate_t *p, int size)
+{
+    if (p == NULL)
+        return;
+    predicateFree2(p, size);
+    BOR_FREE(p);
+}
+
+
+static void factInit(plan_pddl_fact_t *f)
+{
+    bzero(f, sizeof(*f));
+}
+
+static void factFree(plan_pddl_fact_t *f)
+{
+    if (f->arg != NULL)
+        BOR_FREE(f->arg);
+}
+
+static void factFree2(plan_pddl_fact_t *f, int size)
+{
+    int i;
+    for (i = 0; i < size; ++i)
+        factFree(f + i);
+}
+
+static void factDel2(plan_pddl_fact_t *f, int size)
+{
+    if (f == NULL)
+        return;
+    factFree2(f, size);
+    BOR_FREE(f);
+}
+
+static plan_pddl_fact_t *factNewArr(int size)
+{
+    return BOR_CALLOC_ARR(plan_pddl_fact_t, size);
+}
+
+static void factPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
+                      const plan_pddl_fact_t *f, FILE *fout)
+{
+    int i, id;
+
+    if (f->neg)
+        fprintf(fout, "N:");
+    fprintf(fout, "%s:", pddl->predicate[f->pred].name);
+    for (i = 0; i < f->arg_size; ++i){
+        if (a != NULL){
+            if (f->arg[i] >= 0){
+                fprintf(fout, " %s", a->param[f->arg[i]].name);
+            }else{
+                id = f->arg[i] + pddl->obj_size;
+                fprintf(fout, " %s", pddl->obj[id].name);
+            }
+        }else{
+            if (f->arg[i] >= 0){
+                fprintf(fout, " %s", pddl->obj[f->arg[i]].name);
+            }else{
+                fprintf(fout, " ???");
+            }
+        }
+    }
+}
+
+static void factPrintArr(const plan_pddl_t *pddl,
+                         const plan_pddl_action_t *a,
+                         const plan_pddl_fact_t *f, int size,
+                         FILE *fout, const char *prefix)
+{
+    int i;
+
+    for (i = 0; i < size; ++i){
+        fprintf(fout, "%s", prefix);
+        factPrint(pddl, a, f + i, fout);
+        fprintf(fout, "\n");
+    }
+}
+
+static void actionInit(plan_pddl_action_t *a)
+{
+    bzero(a, sizeof(*a));
+}
+
+static void actionFree(plan_pddl_action_t *a)
+{
+    if (a->param != NULL)
+        BOR_FREE(a->param);
+    factDel2(a->pre, a->pre_size);
+    factDel2(a->eff, a->eff_size);
+}
+
+static void actionFree2(plan_pddl_action_t *a, int size)
+{
+    int i;
+    for (i = 0; i < size; ++i)
+        actionFree(a + i);
+}
+
+static void actionDel2(plan_pddl_action_t *a, int size)
+{
+    if (a == NULL)
+        return;
+    actionFree2(a, size);
+    BOR_FREE(a);
+}
+
+static void actionPrint(const plan_pddl_t *pddl,
+                        const plan_pddl_action_t *a, FILE *fout)
+{
+    int i;
+
+    fprintf(fout, "    %s:", a->name);
+    for (i = 0; i < a->param_size; ++i)
+        fprintf(fout, " %s:%d", a->param[i].name, a->param[i].type);
+    fprintf(fout, "\n");
+
+    fprintf(fout, "        pre[%d]:\n", a->pre_size);
+    factPrintArr(pddl, a, a->pre, a->pre_size, fout, "            ");
+
+    fprintf(fout, "        eff[%d]:\n", a->eff_size);
+    factPrintArr(pddl, a, a->eff, a->eff_size, fout, "            ");
+}
+
+static void actionPrintArr(const plan_pddl_t *pddl,
+                           const plan_pddl_action_t *a,int size,
+                           FILE *fout)
+{
+    int i;
+    for (i = 0; i < size; ++i)
+        actionPrint(pddl, a + i, fout);
+}
+
+
 
 static int nodeHeadKw(const plan_pddl_lisp_node_t *n)
 {
@@ -597,6 +750,20 @@ static int makeTypeObjMap(plan_pddl_t *pddl)
     return 0;
 }
 
+static void delTypeObjMap(plan_pddl_t *pddl)
+{
+    int i;
+
+    if (pddl->type_obj_map == NULL)
+        return;
+
+    for (i = 0; i < pddl->type_size; ++i){
+        if (pddl->type_obj_map[i].obj != NULL)
+            BOR_FREE(pddl->type_obj_map[i].obj);
+    }
+    BOR_FREE(pddl->type_obj_map);
+}
+
 static int addPredicate(plan_pddl_t *pddl, const char *name)
 {
     int i, id;
@@ -613,9 +780,8 @@ static int addPredicate(plan_pddl_t *pddl, const char *name)
                                       plan_pddl_predicate_t,
                                       pddl->predicate_size);
     id = pddl->predicate_size - 1;
+    predicateInit(pddl->predicate + id);
     pddl->predicate[id].name = name;
-    pddl->predicate[id].param = NULL;
-    pddl->predicate[id].param_size = 0;
     return id;
 }
 
@@ -638,16 +804,7 @@ static void addEqPredicate(plan_pddl_t *pddl)
     id = addPredicate(pddl, "=");
     pddl->predicate[id].param_size = 2;
     pddl->predicate[id].param = BOR_CALLOC_ARR(int, 2);
-}
-
-static int parsePredicateAdd(plan_pddl_t *pddl, const char *name)
-{
-    plan_pddl_predicate_t *pred;
-    pred = pddl->predicate + pddl->predicate_size - 1;
-    ++pred->param_size;
-    pred->param = BOR_REALLOC_ARR(pred->param, int, pred->param_size);
-    pred->param[pred->param_size - 1] = 0;
-    return 0;
+    pddl->eq_pred_id = id;
 }
 
 static int parsePredicateSet(plan_pddl_t *pddl,
@@ -817,7 +974,7 @@ static int addAction(plan_pddl_t *pddl, const char *name)
     ++pddl->action_size;
     pddl->action = BOR_REALLOC_ARR(pddl->action, plan_pddl_action_t,
                                    pddl->action_size);
-    bzero(pddl->action + id, sizeof(plan_pddl_action_t));
+    actionInit(pddl->action + id);
     pddl->action[id].name = name;
 
     return id;
@@ -1242,7 +1399,7 @@ static int parseActionPre(plan_pddl_t *pddl, int action_id,
     int i, j, neg;
 
     a->pre_size = cond->arg_size;
-    a->pre = BOR_CALLOC_ARR(plan_pddl_fact_t, a->pre_size);
+    a->pre = factNewArr(a->pre_size);
     for (i = 0; i < a->pre_size; ++i){
         c = cond->arg + i;
         neg = 0;
@@ -1281,9 +1438,9 @@ static int parseActionEff(plan_pddl_t *pddl, int action_id,
     plan_pddl_cond_t *c;
     int i, j, neg;
 
-    a->eff_size = cond->arg_size;
-    a->eff = BOR_CALLOC_ARR(plan_pddl_fact_t, a->eff_size);
-    for (i = 0; i < a->eff_size; ++i){
+    a->eff_size = 0;
+    a->eff = factNewArr(cond->arg_size);
+    for (i = 0; i < cond->arg_size; ++i){
         c = cond->arg + i;
         neg = 0;
         if (c->type == PLAN_PDDL_COND_NOT){
@@ -1292,7 +1449,7 @@ static int parseActionEff(plan_pddl_t *pddl, int action_id,
         }
 
         if (c->type == PLAN_PDDL_COND_PRED){
-            eff = a->eff + i;
+            eff = a->eff + a->eff_size++;
             eff->pred = c->val;
             eff->neg = neg;
             eff->arg_size = c->arg_size;
@@ -1413,7 +1570,7 @@ static int parseGoal(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     }
     condFlattenAnd(&cond);
 
-    pddl->goal = BOR_CALLOC_ARR(plan_pddl_fact_t, cond.arg_size);
+    pddl->goal = factNewArr(cond.arg_size);
     pddl->goal_size = 0;
     for (i = 0; i < cond.arg_size; ++i){
         if (cond.arg[i].type != PLAN_PDDL_COND_PRED){
@@ -1536,7 +1693,7 @@ static int parseInit(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     }
 
     // Pre-allocate facts and functions
-    pddl->init_fact = BOR_CALLOC_ARR(plan_pddl_fact_t, I->child_size - 1);
+    pddl->init_fact = factNewArr(I->child_size - 1);
     pddl->init_func = BOR_CALLOC_ARR(plan_pddl_inst_func_t, I->child_size - 1);
 
     for (i = 1; i < I->child_size; ++i){
@@ -1587,6 +1744,7 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
 
     pddl = BOR_ALLOC(plan_pddl_t);
     bzero(pddl, sizeof(*pddl));
+    pddl->eq_pred_id = -1;
     pddl->domain_lisp = domain_lisp;
     pddl->problem_lisp = problem_lisp;
     pddl->domain_name = parseDomainName(&domain_lisp->root);
@@ -1637,7 +1795,7 @@ pddl_fail:
 
 void planPDDLDel(plan_pddl_t *pddl)
 {
-    int i, j;
+    int i;
 
     if (pddl->domain_lisp)
         planPDDLLispDel(pddl->domain_lisp);
@@ -1648,60 +1806,12 @@ void planPDDLDel(plan_pddl_t *pddl)
     if (pddl->obj)
         BOR_FREE(pddl->obj);
 
-    for (i = 0; i < pddl->predicate_size; ++i){
-        if (pddl->predicate[i].param != NULL)
-            BOR_FREE(pddl->predicate[i].param);
-    }
-    if (pddl->predicate)
-        BOR_FREE(pddl->predicate);
-
-    for (i = 0; i < pddl->function_size; ++i){
-        if (pddl->function[i].param != NULL)
-            BOR_FREE(pddl->function[i].param);
-    }
-    if (pddl->function)
-        BOR_FREE(pddl->function);
-
-    for (i = 0; i < pddl->action_size; ++i){
-        if (pddl->action[i].param != NULL)
-            BOR_FREE(pddl->action[i].param);
-        for (j = 0; j < pddl->action[i].pre_size; ++j){
-            if (pddl->action[i].pre[j].arg != NULL)
-                BOR_FREE(pddl->action[i].pre[j].arg);
-        }
-        if (pddl->action[i].pre != NULL)
-            BOR_FREE(pddl->action[i].pre);
-        for (j = 0; j < pddl->action[i].eff_size; ++j){
-            if (pddl->action[i].eff[j].arg != NULL)
-                BOR_FREE(pddl->action[i].eff[j].arg);
-        }
-        if (pddl->action[i].eff != NULL)
-            BOR_FREE(pddl->action[i].eff);
-    }
-    if (pddl->action)
-        BOR_FREE(pddl->action);
-
-    if (pddl->type_obj_map != NULL){
-        for (i = 0; i < pddl->type_size; ++i){
-            if (pddl->type_obj_map[i].obj != NULL)
-                BOR_FREE(pddl->type_obj_map[i].obj);
-        }
-        BOR_FREE(pddl->type_obj_map);
-    }
-
-    for (i = 0; i < pddl->goal_size; ++i){
-        if (pddl->goal[i].arg != NULL)
-            BOR_FREE(pddl->goal[i].arg);
-    }
-    if (pddl->goal != NULL)
-        BOR_FREE(pddl->goal);
-
-    for (i = 0; i < pddl->init_fact_size; ++i){
-        if (pddl->init_fact[i].arg != NULL)
-            BOR_FREE(pddl->init_fact[i].arg);
-    }
-    if (pddl->init_fact)
-        BOR_FREE(pddl->init_fact);
+    predicateDel2(pddl->predicate, pddl->predicate_size);
+    predicateDel2(pddl->function, pddl->function_size);
+    actionDel2(pddl->action, pddl->action_size);
+    delTypeObjMap(pddl);
+    factDel2(pddl->goal, pddl->goal_size);
+    factDel2(pddl->init_fact, pddl->init_fact_size);
 
     for (i = 0; i < pddl->init_func_size; ++i){
         if (pddl->init_func[i].arg != NULL)
@@ -1797,7 +1907,7 @@ static void dumpCond(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
 
 void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
 {
-    int i, j, k;
+    int i, j;
 
     fprintf(fout, "Domain: %s\n", pddl->domain_name);
     fprintf(fout, "Problem: %s\n", pddl->problem_name);
@@ -1842,69 +1952,11 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
     }
 
     fprintf(fout, "Action[%d]:\n", pddl->action_size);
-    for (i = 0; i < pddl->action_size; ++i){
-        fprintf(fout, "    %s:", pddl->action[i].name);
-        for (j = 0; j < pddl->action[i].param_size; ++j){
-            fprintf(fout, " %s:%d", pddl->action[i].param[j].name,
-                    pddl->action[i].param[j].type);
-        }
-        fprintf(fout, "\n");
-
-        fprintf(fout, "        pre[%d]:\n", pddl->action[i].pre_size);
-        for (j = 0; j < pddl->action[i].pre_size; ++j){
-            fprintf(fout, "            ");
-            if (pddl->action[i].pre[j].neg)
-                fprintf(fout, "N:");
-            fprintf(fout, "%s", pddl->predicate[pddl->action[i].pre[j].pred].name);
-            for (k = 0; k < pddl->action[i].pre[j].arg_size; ++k){
-                if (pddl->action[i].pre[j].arg[k] >= 0){
-                    fprintf(fout, " %s",
-                            pddl->action[i].param[pddl->action[i].pre[j].arg[k]].name);
-                }
-            }
-            fprintf(fout, "\n");
-        }
-
-        fprintf(fout, "        eff[%d]:\n", pddl->action[i].eff_size);
-        for (j = 0; j < pddl->action[i].eff_size; ++j){
-            fprintf(fout, "            ");
-            if (pddl->action[i].eff[j].neg)
-                fprintf(fout, "N:");
-            fprintf(fout, "%s", pddl->predicate[pddl->action[i].eff[j].pred].name);
-            for (k = 0; k < pddl->action[i].eff[j].arg_size; ++k){
-                if (pddl->action[i].eff[j].arg[k] >= 0){
-                    fprintf(fout, " %s",
-                            pddl->action[i].param[pddl->action[i].eff[j].arg[k]].name);
-                }
-            }
-            fprintf(fout, "\n");
-        }
-    }
-
+    actionPrintArr(pddl, pddl->action, pddl->action_size, fout);
     fprintf(fout, "Goal[%d]:\n", pddl->goal_size);
-    for (i = 0; i < pddl->goal_size; ++i){
-        fprintf(fout, "    ");
-        if (pddl->init_fact[i].neg)
-            fprintf(fout, "N:");
-        fprintf(fout, "%s:", pddl->predicate[pddl->goal[i].pred].name);
-        for (j = 0; j < pddl->goal[i].arg_size; ++j){
-            fprintf(fout, " %s", pddl->obj[pddl->goal[i].arg[j]].name);
-        }
-        fprintf(fout, "\n");
-    }
-
+    factPrintArr(pddl, NULL, pddl->goal, pddl->goal_size, fout, "    ");
     fprintf(fout, "Init[%d]:\n", pddl->init_fact_size);
-    for (i = 0; i < pddl->init_fact_size; ++i){
-        fprintf(fout, "    ");
-        if (pddl->init_fact[i].neg)
-            fprintf(fout, "N:");
-        fprintf(fout, "%s:",
-                pddl->predicate[pddl->init_fact[i].pred].name);
-        for (j = 0; j < pddl->init_fact[i].arg_size; ++j)
-            fprintf(fout, " %s",
-                    pddl->obj[pddl->init_fact[i].arg[j]].name);
-        fprintf(fout, "\n");
-    }
+    factPrintArr(pddl, NULL, pddl->init_fact, pddl->init_fact_size, fout, "    ");
 
     fprintf(fout, "Init Func[%d]:\n", pddl->init_func_size);
     for (i = 0; i < pddl->init_func_size; ++i){

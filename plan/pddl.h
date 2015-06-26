@@ -119,6 +119,7 @@ struct _plan_pddl_t {
     int obj_size;
     plan_pddl_predicate_t *predicate;
     int predicate_size;
+    int eq_pred_id;
     plan_pddl_predicate_t *function;
     int function_size;
     plan_pddl_action_t *action;

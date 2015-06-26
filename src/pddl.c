@@ -782,11 +782,8 @@ static int addAction(plan_pddl_t *pddl, const char *name)
     ++pddl->action_size;
     pddl->action = BOR_REALLOC_ARR(pddl->action, plan_pddl_action_t,
                                    pddl->action_size);
+    bzero(pddl->action + id, sizeof(plan_pddl_action_t));
     pddl->action[id].name = name;
-    pddl->action[id].param = NULL;
-    pddl->action[id].param_size = 0;
-    condInit(&pddl->action[id].pre);
-    condInit(&pddl->action[id].eff);
 
     return id;
 }
@@ -1201,8 +1198,94 @@ static int parseActionCond(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
     return 0;
 }
 
+static int parseActionPre(plan_pddl_t *pddl, int action_id,
+                          plan_pddl_cond_t *cond)
+{
+    plan_pddl_action_t *a = pddl->action + action_id;
+    plan_pddl_fact_t *pre;
+    plan_pddl_cond_t *c;
+    int i, j, neg;
+
+    a->pre_size = cond->arg_size;
+    a->pre = BOR_CALLOC_ARR(plan_pddl_fact_t, a->pre_size);
+    for (i = 0; i < a->pre_size; ++i){
+        c = cond->arg + i;
+        neg = 0;
+        if (c->type == PLAN_PDDL_COND_NOT){
+            neg = 1;
+            c = c->arg;
+        }
+
+        if (c->type != PLAN_PDDL_COND_PRED){
+            ERR("Unsupported precondition of action `%s'", a->name);
+            return -1;
+        }
+
+        pre = a->pre + i;
+        pre->pred = c->val;
+        pre->neg = neg;
+        pre->arg_size = c->arg_size;
+        pre->arg = BOR_CALLOC_ARR(int, pre->arg_size);
+        for (j = 0; j < pre->arg_size; ++j){
+            if (c->arg[j].type == PLAN_PDDL_COND_VAR){
+                pre->arg[j] = c->arg[j].val;
+            }else if (c->arg[j].type == PLAN_PDDL_COND_CONST){
+                pre->arg[j] = c->arg[j].val - pddl->obj_size;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int parseActionEff(plan_pddl_t *pddl, int action_id,
+                          plan_pddl_cond_t *cond)
+{
+    plan_pddl_action_t *a = pddl->action + action_id;
+    plan_pddl_fact_t *eff;
+    plan_pddl_cond_t *c;
+    int i, j, neg;
+
+    a->eff_size = cond->arg_size;
+    a->eff = BOR_CALLOC_ARR(plan_pddl_fact_t, a->eff_size);
+    for (i = 0; i < a->eff_size; ++i){
+        c = cond->arg + i;
+        neg = 0;
+        if (c->type == PLAN_PDDL_COND_NOT){
+            neg = 1;
+            c = c->arg;
+        }
+
+        if (c->type == PLAN_PDDL_COND_PRED){
+            eff = a->eff + i;
+            eff->pred = c->val;
+            eff->neg = neg;
+            eff->arg_size = c->arg_size;
+            eff->arg = BOR_CALLOC_ARR(int, eff->arg_size);
+            for (j = 0; j < eff->arg_size; ++j){
+                if (c->arg[j].type == PLAN_PDDL_COND_VAR){
+                    eff->arg[j] = c->arg[j].val;
+                }else if (c->arg[j].type == PLAN_PDDL_COND_CONST){
+                    eff->arg[j] = c->arg[j].val - pddl->obj_size;
+                }
+            }
+
+        }else if (c->type == PLAN_PDDL_COND_WHEN){
+        }else if (c->type == PLAN_PDDL_COND_INCREASE){
+        }else{
+            ERR("Unsupported effect of action `%s'", a->name);
+            return -1;
+        }
+
+    }
+
+    return 0;
+}
+
 static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
+    plan_pddl_lisp_node_t *n;
+    plan_pddl_cond_t cond;
     int action_id, i;
 
     if (root->child_size < 4
@@ -1214,21 +1297,38 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 
     action_id = addAction(pddl, root->child[1].value);
     for (i = 2; i < root->child_size; i += 2){
+        n = root->child + i + 1;
+
         if (root->child[i].kw == PLAN_PDDL_KW_PARAMETERS){
-            if (parseTypedList(pddl, root->child + i + 1, 0,
-                               root->child[i + 1].child_size,
+            if (parseTypedList(pddl, n, 0, n->child_size,
                                parseActionParamSet) != 0)
                 return -1;
 
         }else if (root->child[i].kw == PLAN_PDDL_KW_PRE){
-            if (parseActionCond(pddl, root->child + i + 1, action_id,
-                                &pddl->action[action_id].pre) != 0)
+            condInit(&cond);
+            if (parseActionCond(pddl, n, action_id, &cond) != 0){
+                condFree(&cond);
                 return -1;
+            }
+            condFlatten(&cond);
+            if (parseActionPre(pddl, action_id, &cond) != 0){
+                condFree(&cond);
+                return -1;
+            }
+            condFree(&cond);
 
         }else if (root->child[i].kw == PLAN_PDDL_KW_EFF){
-            if (parseActionCond(pddl, root->child + i + 1, action_id,
-                                &pddl->action[action_id].eff) != 0)
+            condInit(&cond);
+            if (parseActionCond(pddl, n, action_id, &cond) != 0){
+                condFree(&cond);
                 return -1;
+            }
+            condFlatten(&cond);
+            if (parseActionEff(pddl, action_id, &cond) != 0){
+                condFree(&cond);
+                return -1;
+            }
+            condFree(&cond);
 
         }else{
             ERRN(root->child + i, "Invalid definition of :action."
@@ -1502,7 +1602,7 @@ pddl_fail:
 
 void planPDDLDel(plan_pddl_t *pddl)
 {
-    int i;
+    int i, j;
 
     if (pddl->domain_lisp)
         planPDDLLispDel(pddl->domain_lisp);
@@ -1530,8 +1630,18 @@ void planPDDLDel(plan_pddl_t *pddl)
     for (i = 0; i < pddl->action_size; ++i){
         if (pddl->action[i].param != NULL)
             BOR_FREE(pddl->action[i].param);
-        condFree(&pddl->action[i].pre);
-        condFree(&pddl->action[i].eff);
+        for (j = 0; j < pddl->action[i].pre_size; ++j){
+            if (pddl->action[i].pre[j].arg != NULL)
+                BOR_FREE(pddl->action[i].pre[j].arg);
+        }
+        if (pddl->action[i].pre != NULL)
+            BOR_FREE(pddl->action[i].pre);
+        for (j = 0; j < pddl->action[i].eff_size; ++j){
+            if (pddl->action[i].eff[j].arg != NULL)
+                BOR_FREE(pddl->action[i].eff[j].arg);
+        }
+        if (pddl->action[i].eff != NULL)
+            BOR_FREE(pddl->action[i].eff);
     }
     if (pddl->action)
         BOR_FREE(pddl->action);
@@ -1652,7 +1762,7 @@ static void dumpCond(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
 
 void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
 {
-    int i, j;
+    int i, j, k;
 
     fprintf(fout, "Domain: %s\n", pddl->domain_name);
     fprintf(fout, "Problem: %s\n", pddl->problem_name);
@@ -1705,13 +1815,35 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
         }
         fprintf(fout, "\n");
 
-        fprintf(fout, "        pre: ");
-        dumpCond(pddl, pddl->action + i, &pddl->action[i].pre, fout);
-        fprintf(fout, "\n");
+        fprintf(fout, "        pre[%d]:\n", pddl->action[i].pre_size);
+        for (j = 0; j < pddl->action[i].pre_size; ++j){
+            fprintf(fout, "            ");
+            if (pddl->action[i].pre[j].neg)
+                fprintf(fout, "N:");
+            fprintf(fout, "%s", pddl->predicate[pddl->action[i].pre[j].pred].name);
+            for (k = 0; k < pddl->action[i].pre[j].arg_size; ++k){
+                if (pddl->action[i].pre[j].arg[k] >= 0){
+                    fprintf(fout, " %s",
+                            pddl->action[i].param[pddl->action[i].pre[j].arg[k]].name);
+                }
+            }
+            fprintf(fout, "\n");
+        }
 
-        fprintf(fout, "        eff: ");
-        dumpCond(pddl, pddl->action + i, &pddl->action[i].eff, fout);
-        fprintf(fout, "\n");
+        fprintf(fout, "        eff[%d]:\n", pddl->action[i].eff_size);
+        for (j = 0; j < pddl->action[i].eff_size; ++j){
+            fprintf(fout, "            ");
+            if (pddl->action[i].eff[j].neg)
+                fprintf(fout, "N:");
+            fprintf(fout, "%s", pddl->predicate[pddl->action[i].eff[j].pred].name);
+            for (k = 0; k < pddl->action[i].eff[j].arg_size; ++k){
+                if (pddl->action[i].eff[j].arg[k] >= 0){
+                    fprintf(fout, " %s",
+                            pddl->action[i].param[pddl->action[i].eff[j].arg[k]].name);
+                }
+            }
+            fprintf(fout, "\n");
+        }
     }
 
     fprintf(fout, "Goal[%d]:\n", pddl->goal_size);

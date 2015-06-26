@@ -88,29 +88,6 @@ struct _plan_pddl_predicate_t {
 };
 typedef struct _plan_pddl_predicate_t plan_pddl_predicate_t;
 
-typedef struct _plan_pddl_cond_t plan_pddl_cond_t;
-struct _plan_pddl_cond_t {
-    int type;
-    int val;
-    plan_pddl_cond_t *arg;
-    int arg_size;
-};
-
-struct _plan_pddl_action_t {
-    const char *name;
-    plan_pddl_obj_t *param;
-    int param_size;
-    plan_pddl_cond_t pre;
-    plan_pddl_cond_t eff;
-};
-typedef struct _plan_pddl_action_t plan_pddl_action_t;
-
-struct _plan_pddl_obj_arr_t {
-    int *obj;
-    int size;
-};
-typedef struct _plan_pddl_obj_arr_t plan_pddl_obj_arr_t;
-
 struct _plan_pddl_fact_t {
     int pred;     /*!< Predicate ID */
     int *arg;     /*!< Object IDs are arguments */
@@ -126,6 +103,33 @@ struct _plan_pddl_inst_func_t {
     int arg_size;
 };
 typedef struct _plan_pddl_inst_func_t plan_pddl_inst_func_t;
+
+typedef struct _plan_pddl_cond_t plan_pddl_cond_t;
+struct _plan_pddl_cond_t {
+    int type;
+    int val;
+    plan_pddl_cond_t *arg;
+    int arg_size;
+};
+
+typedef struct _plan_pddl_action_t plan_pddl_action_t;
+struct _plan_pddl_action_t {
+    const char *name;
+    plan_pddl_obj_t *param;
+    int param_size;
+    plan_pddl_fact_t *pre;
+    int pre_size;
+    plan_pddl_fact_t *eff;
+    int eff_size;
+    plan_pddl_action_t *cond_eff;
+    int cond_eff_size;
+};
+
+struct _plan_pddl_obj_arr_t {
+    int *obj;
+    int size;
+};
+typedef struct _plan_pddl_obj_arr_t plan_pddl_obj_arr_t;
 
 struct _plan_pddl_t {
     plan_pddl_lisp_t *domain_lisp;

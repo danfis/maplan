@@ -121,6 +121,9 @@ static require_mask_t require_mask[] = {
 };
 static int require_mask_size = sizeof(require_mask) / sizeof(require_mask_t);
 
+/**
+ * Mapping between keyword on type of condition node.
+ */
 struct _cond_type_t {
     int kw;
     int cond;
@@ -182,12 +185,13 @@ static void condFree(plan_pddl_cond_t *c)
 }
 
 
-static void condFlatten(plan_pddl_cond_t *cond)
+static void condFlattenAnd(plan_pddl_cond_t *cond)
 {
     plan_pddl_cond_t cond_tmp;
     int i, j, size;
 
     if (cond->type == PLAN_PDDL_COND_PRED){
+        // Replace a single precondition with (and (precond ...))
         cond_tmp = *cond;
         cond->type = PLAN_PDDL_COND_AND;
         cond->val = 0;
@@ -199,7 +203,7 @@ static void condFlatten(plan_pddl_cond_t *cond)
         for (i = 0; i < cond->arg_size; ++i){
             if (cond->arg[i].type == PLAN_PDDL_COND_AND){
                 cond_tmp = cond->arg[i];
-                condFlatten(&cond_tmp);
+                condFlattenAnd(&cond_tmp);
                 size = cond->arg_size + cond_tmp.arg_size - 1;
                 cond->arg = BOR_REALLOC_ARR(cond->arg, plan_pddl_cond_t, size);
 
@@ -213,8 +217,9 @@ static void condFlatten(plan_pddl_cond_t *cond)
         }
 
     }else if (cond->type == PLAN_PDDL_COND_WHEN){
-        condFlatten(cond->arg);
-        condFlatten(cond->arg + 1);
+        // Flatten both pre and eff
+        condFlattenAnd(cond->arg);
+        condFlattenAnd(cond->arg + 1);
     }
 }
 
@@ -1340,7 +1345,7 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
                 condFree(&cond);
                 return -1;
             }
-            condFlatten(&cond);
+            condFlattenAnd(&cond);
             if (parseActionPre(pddl, action_id, &cond) != 0){
                 condFree(&cond);
                 return -1;
@@ -1353,7 +1358,7 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
                 condFree(&cond);
                 return -1;
             }
-            condFlatten(&cond);
+            condFlattenAnd(&cond);
             if (parseActionEff(pddl, action_id, &cond) != 0){
                 condFree(&cond);
                 return -1;
@@ -1406,7 +1411,7 @@ static int parseGoal(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
         condFree(&cond);
         return -1;
     }
-    condFlatten(&cond);
+    condFlattenAnd(&cond);
 
     pddl->goal = BOR_CALLOC_ARR(plan_pddl_fact_t, cond.arg_size);
     pddl->goal_size = 0;

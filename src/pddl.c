@@ -1068,7 +1068,7 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
     plan_pddl_lisp_node_t *n;
     plan_pddl_cond_t cond;
-    int action_id, i;
+    int action_id, i, ret;
 
     if (root->child_size < 4
             || root->child_size / 2 == 1
@@ -1086,31 +1086,21 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
                                parseActionParamSet) != 0)
                 return -1;
 
-        }else if (root->child[i].kw == PLAN_PDDL_KW_PRE){
+        }else if (root->child[i].kw == PLAN_PDDL_KW_PRE
+                    || root->child[i].kw == PLAN_PDDL_KW_EFF){
             condInit(&cond);
-            if (condParse(pddl, n, action_id, &cond) != 0){
-                condFree(&cond);
-                return -1;
-            }
-            condFlattenAnd(&cond);
-            if (parseActionPre(pddl, action_id, &cond) != 0){
-                condFree(&cond);
-                return -1;
+            ret = condParse(pddl, n, action_id, &cond);
+            if (ret == 0){
+                condFlattenAnd(&cond);
+                if (root->child[i].kw == PLAN_PDDL_KW_PRE){
+                    ret = parseActionPre(pddl, action_id, &cond);
+                }else{
+                    ret = parseActionEff(pddl, action_id, &cond);
+                }
             }
             condFree(&cond);
-
-        }else if (root->child[i].kw == PLAN_PDDL_KW_EFF){
-            condInit(&cond);
-            if (condParse(pddl, n, action_id, &cond) != 0){
-                condFree(&cond);
-                return -1;
-            }
-            condFlattenAnd(&cond);
-            if (parseActionEff(pddl, action_id, &cond) != 0){
-                condFree(&cond);
-                return -1;
-            }
-            condFree(&cond);
+            if (ret != 0)
+                return ret;
 
         }else{
             ERRN(root->child + i, "Invalid definition of :action."

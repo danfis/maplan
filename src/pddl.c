@@ -980,13 +980,31 @@ static int parseActionParamSet(plan_pddl_t *pddl,
     return 0;
 }
 
+static void condToActionFact(plan_pddl_t *pddl,
+                             const plan_pddl_cond_t *c,
+                             int neg, plan_pddl_fact_t *f)
+{
+    int i;
+
+    f->pred = c->val;
+    f->neg = neg;
+    f->arg_size = c->arg_size;
+    f->arg = BOR_CALLOC_ARR(int, c->arg_size);
+    for (i = 0; i < f->arg_size; ++i){
+        if (c->arg[i].type == PLAN_PDDL_COND_VAR){
+            f->arg[i] = c->arg[i].val;
+        }else if (c->arg[i].type == PLAN_PDDL_COND_CONST){
+            f->arg[i] = c->arg[i].val - pddl->obj_size;
+        }
+    }
+}
+
 static int parseActionPre(plan_pddl_t *pddl, int action_id,
                           plan_pddl_cond_t *cond)
 {
     plan_pddl_action_t *a = pddl->action + action_id;
-    plan_pddl_fact_t *pre;
     plan_pddl_cond_t *c;
-    int i, j, neg;
+    int i, neg;
 
     a->pre_size = cond->arg_size;
     a->pre = factNewArr(a->pre_size);
@@ -1003,18 +1021,7 @@ static int parseActionPre(plan_pddl_t *pddl, int action_id,
             return -1;
         }
 
-        pre = a->pre + i;
-        pre->pred = c->val;
-        pre->neg = neg;
-        pre->arg_size = c->arg_size;
-        pre->arg = BOR_CALLOC_ARR(int, pre->arg_size);
-        for (j = 0; j < pre->arg_size; ++j){
-            if (c->arg[j].type == PLAN_PDDL_COND_VAR){
-                pre->arg[j] = c->arg[j].val;
-            }else if (c->arg[j].type == PLAN_PDDL_COND_CONST){
-                pre->arg[j] = c->arg[j].val - pddl->obj_size;
-            }
-        }
+        condToActionFact(pddl, c, neg, a->pre + i);
     }
 
     return 0;
@@ -1024,9 +1031,8 @@ static int parseActionEff(plan_pddl_t *pddl, int action_id,
                           plan_pddl_cond_t *cond)
 {
     plan_pddl_action_t *a = pddl->action + action_id;
-    plan_pddl_fact_t *eff;
     plan_pddl_cond_t *c;
-    int i, j, neg;
+    int i, neg;
 
     a->eff_size = 0;
     a->eff = factNewArr(cond->arg_size);
@@ -1039,18 +1045,7 @@ static int parseActionEff(plan_pddl_t *pddl, int action_id,
         }
 
         if (c->type == PLAN_PDDL_COND_PRED){
-            eff = a->eff + a->eff_size++;
-            eff->pred = c->val;
-            eff->neg = neg;
-            eff->arg_size = c->arg_size;
-            eff->arg = BOR_CALLOC_ARR(int, eff->arg_size);
-            for (j = 0; j < eff->arg_size; ++j){
-                if (c->arg[j].type == PLAN_PDDL_COND_VAR){
-                    eff->arg[j] = c->arg[j].val;
-                }else if (c->arg[j].type == PLAN_PDDL_COND_CONST){
-                    eff->arg[j] = c->arg[j].val - pddl->obj_size;
-                }
-            }
+            condToActionFact(pddl, c, neg, a->eff + a->eff_size++);
 
         }else if (c->type == PLAN_PDDL_COND_WHEN){
         }else if (c->type == PLAN_PDDL_COND_INCREASE){

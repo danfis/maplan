@@ -46,6 +46,36 @@
     fflush(stderr); \
     } while (0)
 
+
+#define PLAN_PDDL_COND_NONE     0
+#define PLAN_PDDL_COND_AND      1
+#define PLAN_PDDL_COND_OR       2
+#define PLAN_PDDL_COND_NOT      3
+#define PLAN_PDDL_COND_IMPLY    4
+#define PLAN_PDDL_COND_EXISTS   5
+#define PLAN_PDDL_COND_FORALL   6
+#define PLAN_PDDL_COND_WHEN     7
+#define PLAN_PDDL_COND_INCREASE 50
+#define PLAN_PDDL_COND_FUNC     51
+#define PLAN_PDDL_COND_PRED     100
+#define PLAN_PDDL_COND_CONST    101
+#define PLAN_PDDL_COND_VAR      102
+#define PLAN_PDDL_COND_INT      103
+
+/**
+ * Condition (sub-)tree.
+ */
+typedef struct _plan_pddl_cond_t plan_pddl_cond_t;
+struct _plan_pddl_cond_t {
+    int type;               /*!< Type of the root node */
+    int val;                /*!< Value of the root node if any */
+    plan_pddl_cond_t *arg;  /*!< List of arguments */
+    int arg_size;           /*!< Number of arguments */
+};
+
+/**
+ * Mapping between keywords and require flags.
+ */
 struct _require_mask_t {
     int kw;
     unsigned mask;

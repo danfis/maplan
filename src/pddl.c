@@ -152,7 +152,7 @@ static void condFree(plan_pddl_cond_t *c)
 }
 
 
-static int condFlatten(plan_pddl_cond_t *cond)
+static void condFlatten(plan_pddl_cond_t *cond)
 {
     plan_pddl_cond_t cond_tmp;
     int i, j, size;
@@ -186,8 +186,6 @@ static int condFlatten(plan_pddl_cond_t *cond)
         condFlatten(cond->arg);
         condFlatten(cond->arg + 1);
     }
-
-    return 0;
 }
 
 static int nodeHeadKw(const plan_pddl_lisp_node_t *n)
@@ -1205,45 +1203,39 @@ static int parseActionCond(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
 
 static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
-    int action_id;
+    int action_id, i;
 
     if (root->child_size < 4
-            || root->child[1].value == NULL
-            || root->child[2].kw != PLAN_PDDL_KW_PARAMETERS
-            || root->child[3].value != NULL){
+            || root->child_size / 2 == 1
+            || root->child[1].value == NULL){
         ERRN2(root, "Invalid definition of :action");
         return -1;
     }
 
     action_id = addAction(pddl, root->child[1].value);
-    if (parseTypedList(pddl, root->child + 3, 0,
-                       root->child[3].child_size, parseActionParamSet) != 0)
-        return -1;
+    for (i = 2; i < root->child_size; i += 2){
+        if (root->child[i].kw == PLAN_PDDL_KW_PARAMETERS){
+            if (parseTypedList(pddl, root->child + i + 1, 0,
+                               root->child[i + 1].child_size,
+                               parseActionParamSet) != 0)
+                return -1;
 
-    if (root->child_size >= 6){
-        if (root->child[4].kw == PLAN_PDDL_KW_PRE){
-            if (parseActionCond(pddl, root->child + 5, action_id,
+        }else if (root->child[i].kw == PLAN_PDDL_KW_PRE){
+            if (parseActionCond(pddl, root->child + i + 1, action_id,
                                 &pddl->action[action_id].pre) != 0)
                 return -1;
 
-        }else if (root->child[4].kw == PLAN_PDDL_KW_EFF){
-            if (parseActionCond(pddl, root->child + 5, action_id,
+        }else if (root->child[i].kw == PLAN_PDDL_KW_EFF){
+            if (parseActionCond(pddl, root->child + i + 1, action_id,
                                 &pddl->action[action_id].eff) != 0)
                 return -1;
-        }else{
-            ERRN2(root->child + 4, "Invalid definition of :action");
-            return -1;
-        }
-    }
 
-    if (root->child_size == 8){
-        if (root->child[6].kw != PLAN_PDDL_KW_EFF){
-            ERRN2(root->child + 4, "Invalid definition of :action");
+        }else{
+            ERRN(root->child + i, "Invalid definition of :action."
+                                  " Unexpected token: %s",
+                                  root->child[i].value);
             return -1;
         }
-        if (parseActionCond(pddl, root->child + 7, action_id,
-                            &pddl->action[action_id].eff) != 0)
-            return -1;
     }
 
     return 0;
@@ -1280,11 +1272,11 @@ static int parseGoal(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     }
 
     condInit(&cond);
-    if (parseActionCond(pddl, n->child + 1, -1, &cond) != 0
-            || condFlatten(&cond) != 0){
+    if (parseActionCond(pddl, n->child + 1, -1, &cond) != 0){
         condFree(&cond);
         return -1;
     }
+    condFlatten(&cond);
 
     pddl->goal = BOR_CALLOC_ARR(plan_pddl_fact_t, cond.arg_size);
     pddl->goal_size = 0;

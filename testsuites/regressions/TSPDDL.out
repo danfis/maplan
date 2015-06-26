@@ -53,7 +53,9 @@ Action[5]:
     unload: ?x:0 ?y:0 ?z:0 ?p:0
         pre: (and (hoist ?x) (crate ?y) (truck ?z) (place ?p) (at ?x ?p) (at ?z ?p) (available ?x) (in ?y ?z))
         eff: (and (lifting ?x ?y) (not (in ?y ?z)) (not (available ?x)))
-Goal: (and (on crate0 pallet2) (on crate1 pallet1))
+Goal[2]:
+    on: crate0 pallet2
+    on: crate1 pallet1
 Init[36]:
     pallet: pallet0
     surface: pallet0
@@ -145,7 +147,11 @@ Action[6]:
     walk: ?driver:0 ?loc-from:0 ?loc-to:0
         pre: (and (driver ?driver) (location ?loc-from) (location ?loc-to) (at ?driver ?loc-from) (path ?loc-from ?loc-to))
         eff: (and (not (at ?driver ?loc-from)) (at ?driver ?loc-to))
-Goal: (and (at driver1 s1) (at truck1 s1) (at package1 s0) (at package2 s0))
+Goal[4]:
+    at: driver1 s1
+    at: truck1 s1
+    at: package1 s0
+    at: package2 s0
 Init[33]:
     at: driver1 s2
     driver: driver1
@@ -268,7 +274,12 @@ Action[12]:
     ship-order-o5: ?man:4 ?avail:3 ?new-avail:3
         pre: (and (started o5) (made p5) (stacks-avail ?avail) (next-count ?avail ?new-avail))
         eff: (and (not (started o5)) (shipped o5) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
-Goal: (and (shipped o1) (shipped o2) (shipped o3) (shipped o4) (shipped o5))
+Goal[5]:
+    shipped: o1
+    shipped: o2
+    shipped: o3
+    shipped: o4
+    shipped: o5
 Init[22]:
     next-count: n0 n1
     next-count: n1 n2
@@ -387,7 +398,10 @@ Action[9]:
     communicate_image_data: ?r:1 ?l:6 ?o:7 ?m:5 ?x:2 ?y:2
         pre: (and (at ?r ?x) (at_lander ?l ?y) (have_image ?r ?o ?m) (visible ?x ?y) (available ?r) (channel_free ?l))
         eff: (and (not (available ?r)) (not (channel_free ?l)) (channel_free ?l) (communicated_image_data ?o ?m) (available ?r))
-Goal: (and (communicated_soil_data waypoint2) (communicated_rock_data waypoint3) (communicated_image_data objective1 high_res))
+Goal[3]:
+    communicated_soil_data: waypoint2
+    communicated_rock_data: waypoint3
+    communicated_image_data: objective1 high_res
 Init[45]:
     visible: waypoint1 waypoint0
     visible: waypoint0 waypoint1
@@ -508,7 +522,9 @@ Action[7]:
     destroy_road: ?xy_initial:2 ?xy_final:2 ?r1:4
         pre: (and (road_connect ?r1 ?xy_initial ?xy_final) (not (= ?xy_initial ?xy_final)) (in_place ?r1))
         eff: (and (not (in_place ?r1)) (not (road_connect ?r1 ?xy_initial ?xy_final)) (COST 10) (and (when (at_car_road car0 ?r1) (and (not (at_car_road car0 ?r1)) (at_car_jun car0 ?xy_initial))) (when (at_car_road car1 ?r1) (and (not (at_car_road car1 ?r1)) (at_car_jun car1 ?xy_initial)))))
-Goal: (and (arrived car0 junction2-0) (arrived car1 junction2-1))
+Goal[2]:
+    arrived: car0 junction2-0
+    arrived: car1 junction2-1
 Init[53]:
     same_line: junction0-0 junction0-1
     same_line: junction0-1 junction0-0
@@ -635,7 +651,11 @@ Action[6]:
     leave: ?p:4 ?lift:1 ?f:5 ?n1:5 ?n2:5
         pre: (and (lift-at ?lift ?f) (boarded ?p ?lift) (passengers ?lift ?n1) (next ?n2 ?n1))
         eff: (and (passenger-at ?p ?f) (not (boarded ?p ?lift)) (not (passengers ?lift ?n1)) (passengers ?lift ?n2))
-Goal: (and (passenger-at p0 n4) (passenger-at p1 n5) (passenger-at p2 n6) (passenger-at p3 n2))
+Goal[4]:
+    passenger-at: p0 n4
+    passenger-at: p1 n5
+    passenger-at: p2 n6
+    passenger-at: p3 n2
 Init[86]:
     next: n0 n1
     next: n1 n2

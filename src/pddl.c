@@ -151,6 +151,45 @@ static void condFree(plan_pddl_cond_t *c)
         BOR_FREE(c->arg);
 }
 
+
+static int condFlatten(plan_pddl_cond_t *cond)
+{
+    plan_pddl_cond_t cond_tmp;
+    int i, j, size;
+
+    if (cond->type == PLAN_PDDL_COND_PRED){
+        cond_tmp = *cond;
+        cond->type = PLAN_PDDL_COND_AND;
+        cond->val = 0;
+        cond->arg = BOR_ALLOC(plan_pddl_cond_t);
+        cond->arg_size = 1;
+        cond->arg[0] = cond_tmp;
+
+    }else if (cond->type == PLAN_PDDL_COND_AND){
+        for (i = 0; i < cond->arg_size; ++i){
+            if (cond->arg[i].type == PLAN_PDDL_COND_AND){
+                cond_tmp = cond->arg[i];
+                condFlatten(&cond_tmp);
+                size = cond->arg_size + cond_tmp.arg_size - 1;
+                cond->arg = BOR_REALLOC_ARR(cond->arg, plan_pddl_cond_t, size);
+
+                cond->arg[i] = cond_tmp.arg[0];
+                for (j = 1; j < cond_tmp.arg_size; j++){
+                    cond->arg[cond->arg_size++] = cond_tmp.arg[j];
+                }
+                bzero(cond_tmp.arg, sizeof(plan_pddl_cond_t) * cond_tmp.arg_size);
+                condFree(&cond_tmp);
+            }
+        }
+
+    }else if (cond->type == PLAN_PDDL_COND_WHEN){
+        condFlatten(cond->arg);
+        condFlatten(cond->arg + 1);
+    }
+
+    return 0;
+}
+
 static int nodeHeadKw(const plan_pddl_lisp_node_t *n)
 {
     if (n->child_size == 0)
@@ -1226,6 +1265,8 @@ static int parseAction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 static int parseGoal(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
     plan_pddl_lisp_node_t *n;
+    plan_pddl_cond_t cond;
+    int i, j;
 
     n = findNode(root, PLAN_PDDL_KW_GOAL);
     if (n == NULL){
@@ -1238,7 +1279,36 @@ static int parseGoal(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
         return -1;
     }
 
-    return parseActionCond(pddl, n->child + 1, -1, &pddl->goal);
+    condInit(&cond);
+    if (parseActionCond(pddl, n->child + 1, -1, &cond) != 0
+            || condFlatten(&cond) != 0){
+        condFree(&cond);
+        return -1;
+    }
+
+    pddl->goal = BOR_CALLOC_ARR(plan_pddl_fact_t, cond.arg_size);
+    pddl->goal_size = 0;
+    for (i = 0; i < cond.arg_size; ++i){
+        if (cond.arg[i].type != PLAN_PDDL_COND_PRED){
+            ERRN2(root, "Unsupported goal definition. Only conjunctive"
+                        " form of non-negated facts is allowed.");
+            return -1;
+        }
+        pddl->goal[i].pred = cond.arg[i].val;
+        pddl->goal[i].arg = BOR_ALLOC_ARR(int, cond.arg[i].arg_size);
+        pddl->goal[i].arg_size = cond.arg[i].arg_size;
+        for (j = 0; j < cond.arg[i].arg_size; ++j){
+            if (cond.arg[i].arg[j].type != PLAN_PDDL_COND_CONST){
+                ERRN2(root, "Facts in goal must be grounded.");
+                return -1;
+            }
+            pddl->goal[i].arg[j] = cond.arg[i].arg[j].val;
+        }
+        ++pddl->goal_size;
+    }
+
+    condFree(&cond);
+    return 0;
 }
 
 static int parseObjsIntoArr(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n,
@@ -1390,7 +1460,6 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
 
     pddl = BOR_ALLOC(plan_pddl_t);
     bzero(pddl, sizeof(*pddl));
-    condInit(&pddl->goal);
     pddl->domain_lisp = domain_lisp;
     pddl->problem_lisp = problem_lisp;
     pddl->domain_name = parseDomainName(&domain_lisp->root);
@@ -1483,7 +1552,12 @@ void planPDDLDel(plan_pddl_t *pddl)
         BOR_FREE(pddl->type_obj_map);
     }
 
-    condFree(&pddl->goal);
+    for (i = 0; i < pddl->goal_size; ++i){
+        if (pddl->goal[i].arg != NULL)
+            BOR_FREE(pddl->goal[i].arg);
+    }
+    if (pddl->goal != NULL)
+        BOR_FREE(pddl->goal);
 
     for (i = 0; i < pddl->init_fact_size; ++i){
         if (pddl->init_fact[i].arg != NULL)
@@ -1648,13 +1722,24 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
         fprintf(fout, "\n");
     }
 
-    fprintf(fout, "Goal: ");
-    dumpCond(pddl, NULL, &pddl->goal, fout);
-    fprintf(fout, "\n");
+    fprintf(fout, "Goal[%d]:\n", pddl->goal_size);
+    for (i = 0; i < pddl->goal_size; ++i){
+        fprintf(fout, "    ");
+        if (pddl->init_fact[i].neg)
+            fprintf(fout, "N:");
+        fprintf(fout, "%s:", pddl->predicate[pddl->goal[i].pred].name);
+        for (j = 0; j < pddl->goal[i].arg_size; ++j){
+            fprintf(fout, " %s", pddl->obj[pddl->goal[i].arg[j]].name);
+        }
+        fprintf(fout, "\n");
+    }
 
     fprintf(fout, "Init[%d]:\n", pddl->init_fact_size);
     for (i = 0; i < pddl->init_fact_size; ++i){
-        fprintf(fout, "    %s:",
+        fprintf(fout, "    ");
+        if (pddl->init_fact[i].neg)
+            fprintf(fout, "N:");
+        fprintf(fout, "%s:",
                 pddl->predicate[pddl->init_fact[i].pred].name);
         for (j = 0; j < pddl->init_fact[i].arg_size; ++j)
             fprintf(fout, " %s",

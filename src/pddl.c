@@ -270,12 +270,14 @@ static void actionInit(plan_pddl_action_t *a)
     bzero(a, sizeof(*a));
 }
 
+static void actionDel2(plan_pddl_action_t *a, int size);
 static void actionFree(plan_pddl_action_t *a)
 {
     if (a->param != NULL)
         BOR_FREE(a->param);
     factDel2(a->pre, a->pre_size);
     factDel2(a->eff, a->eff_size);
+    actionDel2(a->cond_eff, a->cond_eff_size);
 }
 
 static void actionFree2(plan_pddl_action_t *a, int size)
@@ -308,6 +310,16 @@ static void actionPrint(const plan_pddl_t *pddl,
 
     fprintf(fout, "        eff[%d]:\n", a->eff_size);
     factPrintArr(pddl, a, a->eff, a->eff_size, fout, "            ");
+
+    fprintf(fout, "        cond-eff[%d]:\n", a->cond_eff_size);
+    for (i = 0; i < a->cond_eff_size; ++i){
+        fprintf(fout, "            pre[%d]:\n", a->cond_eff[i].pre_size);
+        factPrintArr(pddl, a, a->cond_eff[i].pre, a->cond_eff[i].pre_size,
+                     fout, "                ");
+        fprintf(fout, "            eff[%d]:\n", a->cond_eff[i].eff_size);
+        factPrintArr(pddl, a, a->cond_eff[i].eff, a->cond_eff[i].eff_size,
+                     fout, "                ");
+    }
 }
 
 static void actionPrintArr(const plan_pddl_t *pddl,
@@ -999,10 +1011,10 @@ static void condToActionFact(plan_pddl_t *pddl,
     }
 }
 
-static int parseActionPre(plan_pddl_t *pddl, int action_id,
+static int parseActionPre(plan_pddl_t *pddl,
+                          plan_pddl_action_t *a,
                           plan_pddl_cond_t *cond)
 {
-    plan_pddl_action_t *a = pddl->action + action_id;
     plan_pddl_cond_t *c;
     int i, neg;
 
@@ -1027,10 +1039,31 @@ static int parseActionPre(plan_pddl_t *pddl, int action_id,
     return 0;
 }
 
-static int parseActionEff(plan_pddl_t *pddl, int action_id,
+static int parseActionEff(plan_pddl_t *pddl,
+                          plan_pddl_action_t *a,
+                          plan_pddl_cond_t *cond);
+static int addActionCondEff(plan_pddl_t *pddl, plan_pddl_action_t *a,
+                            plan_pddl_cond_t *cond)
+{
+    plan_pddl_action_t *ca;
+
+    ++a->cond_eff_size;
+    a->cond_eff = BOR_REALLOC_ARR(a->cond_eff, plan_pddl_action_t,
+                                  a->cond_eff_size);
+    ca = a->cond_eff + a->cond_eff_size - 1;
+    actionInit(ca);
+    if (parseActionPre(pddl, ca, cond->arg) != 0)
+        return -1;
+    if (parseActionEff(pddl, ca, cond->arg + 1) != 0)
+        return -1;
+
+    return 0;
+}
+
+static int parseActionEff(plan_pddl_t *pddl,
+                          plan_pddl_action_t *a,
                           plan_pddl_cond_t *cond)
 {
-    plan_pddl_action_t *a = pddl->action + action_id;
     plan_pddl_cond_t *c;
     int i, neg;
 
@@ -1048,6 +1081,9 @@ static int parseActionEff(plan_pddl_t *pddl, int action_id,
             condToActionFact(pddl, c, neg, a->eff + a->eff_size++);
 
         }else if (c->type == PLAN_PDDL_COND_WHEN){
+            if (addActionCondEff(pddl, a, c) != 0)
+                return -1;
+
         }else if (c->type == PLAN_PDDL_COND_INCREASE){
         }else{
             ERR("Unsupported effect of action `%s'", a->name);
@@ -1063,6 +1099,7 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 {
     plan_pddl_lisp_node_t *n;
     plan_pddl_cond_t cond;
+    plan_pddl_action_t *a;
     int action_id, i, ret;
 
     if (root->child_size < 4
@@ -1073,6 +1110,7 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     }
 
     action_id = addAction(pddl, root->child[1].value);
+    a = pddl->action + action_id;
     for (i = 2; i < root->child_size; i += 2){
         n = root->child + i + 1;
 
@@ -1088,9 +1126,9 @@ static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
             if (ret == 0){
                 condFlattenAnd(&cond);
                 if (root->child[i].kw == PLAN_PDDL_KW_PRE){
-                    ret = parseActionPre(pddl, action_id, &cond);
+                    ret = parseActionPre(pddl, a, &cond);
                 }else{
-                    ret = parseActionEff(pddl, action_id, &cond);
+                    ret = parseActionEff(pddl, a, &cond);
                 }
             }
             condFree(&cond);
@@ -1603,6 +1641,9 @@ static void condFlattenAnd(plan_pddl_cond_t *cond)
                 }
                 bzero(cond_tmp.arg, sizeof(plan_pddl_cond_t) * cond_tmp.arg_size);
                 condFree(&cond_tmp);
+
+            }else if (cond->arg[i].type == PLAN_PDDL_COND_WHEN){
+                condFlattenAnd(cond->arg + i);
             }
         }
 

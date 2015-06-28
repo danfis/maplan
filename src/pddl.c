@@ -155,6 +155,8 @@ static void condFlattenAnd(plan_pddl_cond_t *cond);
 /** Parse pddl node tree into condition tree. */
 static int condParse(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
                      int action_id, plan_pddl_cond_t *cond);
+static void condPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
+                      const plan_pddl_cond_t *cond, FILE *fout);
 
 static unsigned requireMask(int kw)
 {
@@ -298,7 +300,7 @@ static void actionDel2(plan_pddl_action_t *a, int size)
 static void actionPrint(const plan_pddl_t *pddl,
                         const plan_pddl_action_t *a, FILE *fout)
 {
-    int i;
+    int i, j, id;
 
     fprintf(fout, "    %s:", a->name);
     for (i = 0; i < a->param_size; ++i)
@@ -319,6 +321,24 @@ static void actionPrint(const plan_pddl_t *pddl,
         fprintf(fout, "            eff[%d]:\n", a->cond_eff[i].eff_size);
         factPrintArr(pddl, a, a->cond_eff[i].eff, a->cond_eff[i].eff_size,
                      fout, "                ");
+    }
+
+    for (i = 0; i < a->cost_size; ++i){
+        fprintf(fout, "        cost: ");
+        if (a->cost[i].func == -1){
+            fprintf(fout, "%d", a->cost[i].val);
+        }else{
+            fprintf(fout, "%s", pddl->function[a->cost[i].func].name);
+            for (j = 0; j < a->cost[i].arg_size; ++j){
+                if (a->cost[i].arg[j] >= 0){
+                    fprintf(fout, " %s", a->param[a->cost[i].arg[j]].name);
+                }else{
+                    id = a->cost[i].arg[j] + pddl->obj_size;
+                    fprintf(fout, " %s", pddl->obj[id].name);
+                }
+            }
+        }
+        fprintf(fout, "\n");
     }
 }
 
@@ -992,6 +1012,17 @@ static int parseActionParamSet(plan_pddl_t *pddl,
     return 0;
 }
 
+static int condVarConstArg(const plan_pddl_t *pddl,
+                           const plan_pddl_cond_t *c, int i)
+{
+    if (c->arg[i].type == PLAN_PDDL_COND_VAR){
+        return c->arg[i].val;
+    }else if (c->arg[i].type == PLAN_PDDL_COND_CONST){
+        return c->arg[i].val - pddl->obj_size;
+    }
+    return -1;
+}
+
 static void condToActionFact(plan_pddl_t *pddl,
                              const plan_pddl_cond_t *c,
                              int neg, plan_pddl_fact_t *f)
@@ -1003,11 +1034,7 @@ static void condToActionFact(plan_pddl_t *pddl,
     f->arg_size = c->arg_size;
     f->arg = BOR_CALLOC_ARR(int, c->arg_size);
     for (i = 0; i < f->arg_size; ++i){
-        if (c->arg[i].type == PLAN_PDDL_COND_VAR){
-            f->arg[i] = c->arg[i].val;
-        }else if (c->arg[i].type == PLAN_PDDL_COND_CONST){
-            f->arg[i] = c->arg[i].val - pddl->obj_size;
-        }
+        f->arg[i] = condVarConstArg(pddl, c, i);
     }
 }
 
@@ -1060,6 +1087,31 @@ static int addActionCondEff(plan_pddl_t *pddl, plan_pddl_action_t *a,
     return 0;
 }
 
+static int addActionCost(plan_pddl_t *pddl, plan_pddl_action_t *a,
+                         plan_pddl_cond_t *cond)
+{
+    plan_pddl_inst_func_t *f;
+    plan_pddl_cond_t *ccost;
+    int i;
+
+    ++a->cost_size;
+    a->cost = BOR_REALLOC_ARR(a->cost, plan_pddl_inst_func_t, a->cost_size);
+    f = a->cost + a->cost_size - 1;
+    bzero(f, sizeof(*f));
+    ccost = cond->arg;
+    if (ccost->type == PLAN_PDDL_COND_INT){
+        f->func = -1;
+        f->val = ccost->val;
+    }else{
+        f->func = ccost->val;
+        f->arg_size = ccost->arg_size;
+        f->arg = BOR_ALLOC_ARR(int, f->arg_size);
+        for (i = 0; i < f->arg_size; ++i)
+            f->arg[i] = condVarConstArg(pddl, ccost, i);
+    }
+    return 0;
+}
+
 static int parseActionEff(plan_pddl_t *pddl,
                           plan_pddl_action_t *a,
                           plan_pddl_cond_t *cond)
@@ -1085,6 +1137,8 @@ static int parseActionEff(plan_pddl_t *pddl,
                 return -1;
 
         }else if (c->type == PLAN_PDDL_COND_INCREASE){
+            if (addActionCost(pddl, a, c) != 0)
+                return -1;
         }else{
             ERR("Unsupported effect of action `%s'", a->name);
             return -1;
@@ -1436,87 +1490,6 @@ void planPDDLDel(plan_pddl_t *pddl)
     BOR_FREE(pddl);
 }
 
-static const char *_condToStr(int cond_type)
-{
-    switch (cond_type){
-        case PLAN_PDDL_COND_NONE:
-            return "none";
-        case PLAN_PDDL_COND_AND:
-            return "and";
-        case PLAN_PDDL_COND_OR:
-            return "or";
-        case PLAN_PDDL_COND_NOT:
-            return "not";
-        case PLAN_PDDL_COND_IMPLY:
-            return "imply";
-        case PLAN_PDDL_COND_EXISTS:
-            return "exists";
-        case PLAN_PDDL_COND_FORALL:
-            return "forall";
-        case PLAN_PDDL_COND_WHEN:
-            return "when";
-        case PLAN_PDDL_COND_INCREASE:
-            return "COST";
-        case PLAN_PDDL_COND_PRED:
-            return "pred";
-        case PLAN_PDDL_COND_VAR:
-            return "var";
-        case PLAN_PDDL_COND_CONST:
-            return "const";
-    }
-    return "";
-}
-
-static void dumpCond(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
-                     const plan_pddl_cond_t *cond, FILE *fout)
-{
-    const plan_pddl_predicate_t *pred;
-    int i;
-
-    if (cond->type == PLAN_PDDL_COND_AND
-            || cond->type == PLAN_PDDL_COND_OR
-            || cond->type == PLAN_PDDL_COND_NOT
-            || cond->type == PLAN_PDDL_COND_WHEN
-            || cond->type == PLAN_PDDL_COND_INCREASE){
-        fprintf(fout, "(%s", _condToStr(cond->type));
-        for (i = 0; i < cond->arg_size; ++i){
-            fprintf(fout, " ");
-            dumpCond(pddl, a, cond->arg + i, fout);
-        }
-        fprintf(fout, ")");
-
-    }else if (cond->type == PLAN_PDDL_COND_PRED){
-        pred = pddl->predicate + cond->val;
-        fprintf(fout, "(%s", pred->name);
-        for (i = 0; i < cond->arg_size; ++i){
-            fprintf(fout, " ");
-            dumpCond(pddl, a, cond->arg + i, fout);
-        }
-        fprintf(fout, ")");
-
-    }else if (cond->type == PLAN_PDDL_COND_FUNC){
-        pred = pddl->function + cond->val;
-        fprintf(fout, "(%s", pred->name);
-        for (i = 0; i < cond->arg_size; ++i){
-            fprintf(fout, " ");
-            dumpCond(pddl, a, cond->arg + i, fout);
-        }
-        fprintf(fout, ")");
-
-    }else if (cond->type == PLAN_PDDL_COND_VAR){
-        if (a != NULL){
-            fprintf(fout, "%s", a->param[cond->val].name);
-        }else{
-            fprintf(fout, "???var");
-        }
-
-    }else if (cond->type == PLAN_PDDL_COND_CONST){
-        fprintf(fout, "%s", pddl->obj[cond->val].name);
-
-    }else if (cond->type == PLAN_PDDL_COND_INT){
-        fprintf(fout, "%d", cond->val);
-    }
-}
 
 void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
 {
@@ -2003,5 +1976,87 @@ static int condParse(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
         }
     }
     return 0;
+}
+
+static const char *_condToStr(int cond_type)
+{
+    switch (cond_type){
+        case PLAN_PDDL_COND_NONE:
+            return "none";
+        case PLAN_PDDL_COND_AND:
+            return "and";
+        case PLAN_PDDL_COND_OR:
+            return "or";
+        case PLAN_PDDL_COND_NOT:
+            return "not";
+        case PLAN_PDDL_COND_IMPLY:
+            return "imply";
+        case PLAN_PDDL_COND_EXISTS:
+            return "exists";
+        case PLAN_PDDL_COND_FORALL:
+            return "forall";
+        case PLAN_PDDL_COND_WHEN:
+            return "when";
+        case PLAN_PDDL_COND_INCREASE:
+            return "COST";
+        case PLAN_PDDL_COND_PRED:
+            return "pred";
+        case PLAN_PDDL_COND_VAR:
+            return "var";
+        case PLAN_PDDL_COND_CONST:
+            return "const";
+    }
+    return "";
+}
+
+static void condPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
+                      const plan_pddl_cond_t *cond, FILE *fout)
+{
+    const plan_pddl_predicate_t *pred;
+    int i;
+
+    if (cond->type == PLAN_PDDL_COND_AND
+            || cond->type == PLAN_PDDL_COND_OR
+            || cond->type == PLAN_PDDL_COND_NOT
+            || cond->type == PLAN_PDDL_COND_WHEN
+            || cond->type == PLAN_PDDL_COND_INCREASE){
+        fprintf(fout, "(%s", _condToStr(cond->type));
+        for (i = 0; i < cond->arg_size; ++i){
+            fprintf(fout, " ");
+            condPrint(pddl, a, cond->arg + i, fout);
+        }
+        fprintf(fout, ")");
+
+    }else if (cond->type == PLAN_PDDL_COND_PRED){
+        pred = pddl->predicate + cond->val;
+        fprintf(fout, "(%s", pred->name);
+        for (i = 0; i < cond->arg_size; ++i){
+            fprintf(fout, " ");
+            condPrint(pddl, a, cond->arg + i, fout);
+        }
+        fprintf(fout, ")");
+
+    }else if (cond->type == PLAN_PDDL_COND_FUNC){
+        pred = pddl->function + cond->val;
+        fprintf(fout, "(%s", pred->name);
+        for (i = 0; i < cond->arg_size; ++i){
+            fprintf(fout, " ");
+            condPrint(pddl, a, cond->arg + i, fout);
+        }
+        fprintf(fout, ")");
+
+    }else if (cond->type == PLAN_PDDL_COND_VAR){
+        if (a != NULL){
+            fprintf(fout, "%s", a->param[cond->val].name);
+        }else{
+            fprintf(fout, "???var");
+        }
+
+    }else if (cond->type == PLAN_PDDL_COND_CONST){
+        fprintf(fout, "%s", pddl->obj[cond->val].name);
+
+    }else if (cond->type == PLAN_PDDL_COND_INT){
+        fprintf(fout, "%d", cond->val);
+    }
 }
 /**** CONDITION END ****/

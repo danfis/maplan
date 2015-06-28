@@ -99,6 +99,8 @@ struct _plan_pddl_action_t {
     int eff_size;
     plan_pddl_action_t *cond_eff;
     int cond_eff_size;
+    plan_pddl_inst_func_t *cost;
+    int cost_size;
 };
 
 struct _plan_pddl_obj_arr_t {

@@ -685,116 +685,6 @@ static int parseGoal(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
     return 0;
 }
 
-static int parseObjsIntoArr(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *n,
-                            int from, int to, int **out, int *out_size)
-{
-    const plan_pddl_lisp_node_t *c;
-    int size, *obj, i;
-
-    *out_size = size = to - from;
-    *out = obj = BOR_CALLOC_ARR(int, size);
-    for (i = 0; i < size; ++i){
-        c = n->child + i + from;
-        if (c->value == NULL){
-            ERRN2(c, "Expecting object, got something else.");
-            return -1;
-        }
-
-        obj[i] = planPDDLObjsGet(&pddl->obj, c->value);
-        if (obj[i] < 0){
-            ERRN(c, "Unknown object `%s'.", c->value);
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
-static int parseInstFunc(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *n)
-{
-    const plan_pddl_lisp_node_t *nfunc, *nval;
-    plan_pddl_inst_func_t *func;
-
-    nfunc = n->child + 1;
-    nval = n->child + 2;
-
-    if (nfunc->child_size < 1
-            || nfunc->child[0].value == NULL
-            || nval->value == NULL){
-        ERRN2(n, "Invalid function assignement.");
-        return -1;
-    }
-
-    func = pddl->init_func + pddl->init_func_size++;
-    func->val = atoi(nval->value);
-    func->func = planPDDLPredicatesGet(&pddl->function, nfunc->child[0].value);
-    if (func->func < 0){
-        ERRN(nfunc, "Unknown function `%s'", nfunc->child[0].value);
-        return -1;
-    }
-
-    return parseObjsIntoArr(pddl, nfunc, 1, nfunc->child_size,
-                            &func->arg, &func->arg_size);
-}
-
-static int parseFact(plan_pddl_t *pddl, const char *head,
-                     const plan_pddl_lisp_node_t *n)
-{
-    plan_pddl_fact_t *fact = pddl->init_fact + pddl->init_fact_size++;
-
-    fact->pred = planPDDLPredicatesGet(&pddl->predicate, head);
-    if (fact->pred < 0){
-        ERRN(n, "Unkwnown predicate `%s'.", head);
-        return -1;
-    }
-
-    return parseObjsIntoArr(pddl, n, 1, n->child_size,
-                            &fact->arg, &fact->arg_size);
-}
-
-static int parseFactFunc(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *n)
-{
-    const char *head;
-
-    if (n->child_size < 1){
-        ERRN2(n, "Invalid fact in :init.");
-        return -1;
-    }
-
-    head = planPDDLLispNodeHead(n);
-    if (strcmp(head, "=") == 0
-            && n->child_size == 3
-            && n->child[1].value == NULL){
-        return parseInstFunc(pddl, n);
-    }else{
-        return parseFact(pddl, head, n);
-    }
-}
-
-static int parseInit(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
-{
-    const plan_pddl_lisp_node_t *I, *n;
-    int i;
-
-    I = planPDDLLispFindNode(root, PLAN_PDDL_KW_INIT);
-    if (I == NULL){
-        ERR2("Missing :init.");
-        return -1;
-    }
-
-    // Pre-allocate facts and functions
-    pddl->init_fact = factNewArr(I->child_size - 1);
-    pddl->init_func = BOR_CALLOC_ARR(plan_pddl_inst_func_t, I->child_size - 1);
-
-    for (i = 1; i < I->child_size; ++i){
-        n = I->child + i;
-        if (parseFactFunc(pddl, n) != 0)
-            return -1;
-    }
-
-    return 0;
-}
-
 static int parseMetric(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
     const plan_pddl_lisp_node_t *n;
@@ -855,9 +745,11 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
                                        &pddl->type, &pddl->predicate) != 0
             || planPDDLFunctionsParse(domain_lisp, &pddl->type,
                                       &pddl->function) != 0
+            || planPDDLFactsParseInit(problem_lisp, &pddl->predicate,
+                                      &pddl->function, &pddl->obj,
+                                      &pddl->init_fact, &pddl->init_func) != 0
             || parseAction(pddl, &domain_lisp->root) != 0
             || parseGoal(pddl, &problem_lisp->root) != 0
-            || parseInit(pddl, &problem_lisp->root) != 0
             || parseMetric(pddl, &problem_lisp->root) != 0){
         goto pddl_fail;
     }
@@ -872,8 +764,6 @@ pddl_fail:
 
 void planPDDLDel(plan_pddl_t *pddl)
 {
-    int i;
-
     if (pddl->domain_lisp)
         planPDDLLispDel(pddl->domain_lisp);
     if (pddl->problem_lisp)
@@ -883,17 +773,11 @@ void planPDDLDel(plan_pddl_t *pddl)
     planPDDLTypeObjFree(&pddl->type_obj);
     planPDDLPredicatesFree(&pddl->predicate);
     planPDDLPredicatesFree(&pddl->function);
+    planPDDLFactsFree(&pddl->init_fact);
+    planPDDLFactsFree(&pddl->init_func);
 
     actionDel2(pddl->action, pddl->action_size);
     factDel2(pddl->goal, pddl->goal_size);
-    factDel2(pddl->init_fact, pddl->init_fact_size);
-
-    for (i = 0; i < pddl->init_func_size; ++i){
-        if (pddl->init_func[i].arg != NULL)
-            BOR_FREE(pddl->init_func[i].arg);
-    }
-    if (pddl->init_func)
-        BOR_FREE(pddl->init_func);
 
     BOR_FREE(pddl);
 }
@@ -916,17 +800,17 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
     actionPrintArr(pddl, pddl->action, pddl->action_size, fout);
     fprintf(fout, "Goal[%d]:\n", pddl->goal_size);
     factPrintArr(pddl, NULL, pddl->goal, pddl->goal_size, fout, "    ");
-    fprintf(fout, "Init[%d]:\n", pddl->init_fact_size);
-    factPrintArr(pddl, NULL, pddl->init_fact, pddl->init_fact_size, fout, "    ");
+    fprintf(fout, "Init[%d]:\n", pddl->init_fact.size);
+    factPrintArr(pddl, NULL, pddl->init_fact.fact, pddl->init_fact.size, fout, "    ");
 
-    fprintf(fout, "Init Func[%d]:\n", pddl->init_func_size);
-    for (i = 0; i < pddl->init_func_size; ++i){
+    fprintf(fout, "Init Func[%d]:\n", pddl->init_func.size);
+    for (i = 0; i < pddl->init_func.size; ++i){
         fprintf(fout, "    %s:",
-                pddl->function.pred[pddl->init_func[i].func].name);
-        for (j = 0; j < pddl->init_func[i].arg_size; ++j)
+                pddl->function.pred[pddl->init_func.fact[i].pred].name);
+        for (j = 0; j < pddl->init_func.fact[i].arg_size; ++j)
             fprintf(fout, " %s",
-                    pddl->obj.obj[pddl->init_func[i].arg[j]].name);
-        fprintf(fout, " --> %d\n", pddl->init_func[i].val);
+                    pddl->obj.obj[pddl->init_func.fact[i].arg[j]].name);
+        fprintf(fout, " --> %d\n", pddl->init_func.fact[i].func_val);
     }
 
     fprintf(fout, "Metric: %d\n", pddl->metric);

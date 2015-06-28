@@ -25,18 +25,11 @@
 #include <plan/pddl_type.h>
 #include <plan/pddl_obj.h>
 #include <plan/pddl_predicate.h>
+#include <plan/pddl_fact.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-struct _plan_pddl_fact_t {
-    int pred;     /*!< Predicate ID */
-    int *arg;     /*!< Object IDs are arguments */
-    int arg_size; /*!< Number of arguments */
-    int neg;      /*!< True if it is negated form */
-};
-typedef struct _plan_pddl_fact_t plan_pddl_fact_t;
 
 struct _plan_pddl_inst_func_t {
     int func; /*!< Function ID */
@@ -78,15 +71,13 @@ struct _plan_pddl_t {
     plan_pddl_type_obj_t type_obj;
     plan_pddl_predicates_t predicate;
     plan_pddl_predicates_t function;
+    plan_pddl_facts_t init_fact;
+    plan_pddl_facts_t init_func;
 
     plan_pddl_action_t *action;
     int action_size;
     plan_pddl_fact_t *goal;
     int goal_size;
-    plan_pddl_fact_t *init_fact;
-    int init_fact_size;
-    plan_pddl_inst_func_t *init_func;
-    int init_func_size;
     int metric;
 
     struct {

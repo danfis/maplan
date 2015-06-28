@@ -85,32 +85,6 @@ static int condParse(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
 static void condPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
                       const plan_pddl_cond_t *cond, FILE *fout);
 
-static void predicateInit(plan_pddl_predicate_t *p)
-{
-    bzero(p, sizeof(*p));
-}
-
-static void predicateFree(plan_pddl_predicate_t *p)
-{
-    if (p->param != NULL)
-        BOR_FREE(p->param);
-}
-
-static void predicateFree2(plan_pddl_predicate_t *p, int size)
-{
-    int i;
-    for (i = 0; i < size; ++i)
-        predicateFree(p + i);
-}
-
-static void predicateDel2(plan_pddl_predicate_t *p, int size)
-{
-    if (p == NULL)
-        return;
-    predicateFree2(p, size);
-    BOR_FREE(p);
-}
-
 
 static void factInit(plan_pddl_fact_t *f)
 {

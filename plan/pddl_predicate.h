@@ -50,6 +50,13 @@ int planPDDLPredicatesParse(const plan_pddl_lisp_t *domain,
                             plan_pddl_predicates_t *ps);
 
 /**
+ * Parse :functions from domain PDDL.
+ */
+int planPDDLFunctionsParse(const plan_pddl_lisp_t *domain,
+                           const plan_pddl_types_t *types,
+                           plan_pddl_predicates_t *ps);
+
+/**
  * Frees allocated resources.
  */
 void planPDDLPredicatesFree(plan_pddl_predicates_t *ps);

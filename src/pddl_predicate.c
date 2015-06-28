@@ -68,17 +68,18 @@ static int checkDuplicate(const plan_pddl_predicates_t *ps, const char *name)
 static int parsePredicate(const plan_pddl_types_t *types,
                           const plan_pddl_lisp_node_t *n,
                           const plan_pddl_predicates_t *ps,
+                          const char *errname,
                           plan_pddl_predicate_t *p)
 {
     set_t set;
 
     if (n->child_size < 1 || n->child[0].value == NULL){
-        ERRN2(n, "Invalid definition of predicate.");
+        ERRN(n, "Invalid definition of %s.", errname);
         return -1;
     }
 
     if (checkDuplicate(ps, n->child[0].value)){
-        ERRN(n, "Duplicate predicate `%s'", n->child[0].value);
+        ERRN(n, "Duplicate %s `%s'", errname, n->child[0].value);
         return -1;
     }
 
@@ -117,9 +118,42 @@ int planPDDLPredicatesParse(const plan_pddl_lisp_t *domain,
     if (require & PLAN_PDDL_REQUIRE_EQUALITY)
         addEqPredicate(ps);
     for (i = 1; i < n->child_size; ++i){
-        if (parsePredicate(types, n->child + i, ps, ps->pred + ps->size) != 0)
+        if (parsePredicate(types, n->child + i, ps,
+                           "predicate", ps->pred + ps->size) != 0)
             return -1;
         ++ps->size;
+    }
+    return 0;
+}
+
+int planPDDLFunctionsParse(const plan_pddl_lisp_t *domain,
+                           const plan_pddl_types_t *types,
+                           plan_pddl_predicates_t *ps)
+{
+    const plan_pddl_lisp_node_t *n;
+    int i;
+
+    n = planPDDLLispFindNode(&domain->root, PLAN_PDDL_KW_FUNCTIONS);
+    if (n == NULL)
+        return 0;
+
+    ps->pred = BOR_CALLOC_ARR(plan_pddl_predicate_t, n->child_size);
+    for (i = 1; i < n->child_size; ++i){
+        if (parsePredicate(types, n->child + i, ps,
+                           "function", ps->pred + ps->size) != 0)
+            return -1;
+        ++ps->size;
+
+        if (i + 2 < n->child_size
+                && n->child[i + 1].value != NULL
+                && strcmp(n->child[i + 1].value, "-") == 0){
+            if (n->child[i + 2].value == NULL
+                    || strcmp(n->child[i + 2].value, "number") != 0){
+                ERRN2(n->child + i + 2, "Only number functions are supported.");
+                return -1;
+            }
+            i += 2;
+        }
     }
     return 0;
 }

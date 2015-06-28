@@ -77,9 +77,8 @@ struct _plan_pddl_t {
     plan_pddl_objs_t obj;
     plan_pddl_type_obj_t type_obj;
     plan_pddl_predicates_t predicate;
+    plan_pddl_predicates_t function;
 
-    plan_pddl_predicate_t *function;
-    int function_size;
     plan_pddl_action_t *action;
     int action_size;
     plan_pddl_fact_t *goal;

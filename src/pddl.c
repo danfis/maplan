@@ -150,7 +150,7 @@ static void factPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
 
     if (f->neg)
         fprintf(fout, "N:");
-    fprintf(fout, "%s:", pddl->predicate[f->pred].name);
+    fprintf(fout, "%s:", pddl->predicate.pred[f->pred].name);
     for (i = 0; i < f->arg_size; ++i){
         if (a != NULL){
             if (f->arg[i] >= 0){
@@ -365,106 +365,6 @@ static int checkDomainName(plan_pddl_t *pddl)
     return 0;
 }
 
-
-static int addPredicate(plan_pddl_t *pddl, const char *name)
-{
-    int i, id;
-
-    for (i = 0; i < pddl->predicate_size; ++i){
-        if (strcmp(pddl->predicate[i].name, name) == 0){
-            ERR("Duplicate predicate `%s'", name);
-            return -1;
-        }
-    }
-
-    ++pddl->predicate_size;
-    pddl->predicate = BOR_REALLOC_ARR(pddl->predicate,
-                                      plan_pddl_predicate_t,
-                                      pddl->predicate_size);
-    id = pddl->predicate_size - 1;
-    predicateInit(pddl->predicate + id);
-    pddl->predicate[id].name = name;
-    return id;
-}
-
-static int getPredicate(plan_pddl_t *pddl, const char *name)
-{
-    int i;
-
-    for (i = 0; i < pddl->predicate_size; ++i){
-        if (strcmp(name, pddl->predicate[i].name) == 0)
-            return i;
-    }
-
-    return -1;
-}
-
-static void addEqPredicate(plan_pddl_t *pddl)
-{
-    int id;
-
-    id = addPredicate(pddl, "=");
-    pddl->predicate[id].param_size = 2;
-    pddl->predicate[id].param = BOR_CALLOC_ARR(int, 2);
-    pddl->eq_pred_id = id;
-}
-
-static int parsePredicateSet(plan_pddl_t *pddl,
-                             const plan_pddl_lisp_node_t *root,
-                             int child_from, int child_to, int child_type)
-{
-    plan_pddl_predicate_t *pred;
-    int i, j, tid;
-
-    tid = 0;
-    if (child_type >= 0){
-        tid = planPDDLTypesGet(&pddl->type, root->child[child_type].value);
-        if (tid < 0){
-            ERRN(root->child + child_type, "Invalid type `%s'",
-                 root->child[child_type].value);
-            return -1;
-        }
-    }
-
-    pred = pddl->predicate + pddl->predicate_size - 1;
-    j = pred->param_size;
-    pred->param_size += child_to - child_from;
-    pred->param = BOR_REALLOC_ARR(pred->param, int, pred->param_size);
-    for (i = child_from; i < child_to; ++i, ++j)
-        pred->param[j] = tid;
-    return 0;
-}
-
-static int parsePredicate1(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
-{
-    if (root->child_size < 1 || root->child[0].value == NULL){
-        ERRN2(root, "Invalid definition of predicate.");
-        return -1;
-    }
-
-    if (addPredicate(pddl, root->child[0].value) < 0)
-        return -1;
-
-    if (parseTypedList(pddl, root, 1, root->child_size, parsePredicateSet) != 0)
-        return -1;
-    return 0;
-}
-
-static int parsePredicate(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
-{
-    const plan_pddl_lisp_node_t *n;
-    int i;
-
-    n = planPDDLLispFindNode(root, PLAN_PDDL_KW_PREDICATES);
-    if (n == NULL)
-        return 0;
-
-    for (i = 1; i < n->child_size; ++i){
-        if (parsePredicate1(pddl, n->child + i) != 0)
-            return -1;
-    }
-    return 0;
-}
 
 static int addFunction(plan_pddl_t *pddl, const char *name)
 {
@@ -944,7 +844,7 @@ static int parseFact(plan_pddl_t *pddl, const char *head,
 {
     plan_pddl_fact_t *fact = pddl->init_fact + pddl->init_fact_size++;
 
-    fact->pred = getPredicate(pddl, head);
+    fact->pred = planPDDLPredicatesGet(&pddl->predicate, head);
     if (fact->pred < 0){
         ERRN(n, "Unkwnown predicate `%s'.", head);
         return -1;
@@ -1036,7 +936,6 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
 
     pddl = BOR_ALLOC(plan_pddl_t);
     bzero(pddl, sizeof(*pddl));
-    pddl->eq_pred_id = -1;
     pddl->domain_lisp = domain_lisp;
     pddl->problem_lisp = problem_lisp;
     pddl->domain_name = parseDomainName(&domain_lisp->root);
@@ -1047,20 +946,15 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
     if (pddl->domain_name == NULL)
         goto pddl_fail;
 
-    if (checkDomainName(pddl) != 0)
-        goto pddl_fail;
 
-    if (planPDDLRequireParse(domain_lisp, &pddl->require) != 0
-            || planPDDLTypesParse(domain_lisp, &pddl->type) != 0)
-        goto pddl_fail;
-
-    // Add (= ?x ?y - object) predicate if set in requirements
-    if (pddl->require & PLAN_PDDL_REQUIRE_EQUALITY)
-        addEqPredicate(pddl);
-
-    if (planPDDLObjsParse(domain_lisp, problem_lisp, &pddl->type, &pddl->obj) != 0
+    if (checkDomainName(pddl) != 0
+            || planPDDLRequireParse(domain_lisp, &pddl->require) != 0
+            || planPDDLTypesParse(domain_lisp, &pddl->type) != 0
+            || planPDDLObjsParse(domain_lisp, problem_lisp,
+                                 &pddl->type, &pddl->obj) != 0
             || planPDDLTypeObjInit(&pddl->type_obj, &pddl->type, &pddl->obj) != 0
-            || parsePredicate(pddl, &domain_lisp->root) != 0
+            || planPDDLPredicatesParse(domain_lisp, pddl->require,
+                                       &pddl->type, &pddl->predicate) != 0
             || parseFunction(pddl, &domain_lisp->root) != 0
             || parseAction(pddl, &domain_lisp->root) != 0
             || parseGoal(pddl, &problem_lisp->root) != 0
@@ -1088,8 +982,8 @@ void planPDDLDel(plan_pddl_t *pddl)
     planPDDLTypesFree(&pddl->type);
     planPDDLObjsFree(&pddl->obj);
     planPDDLTypeObjFree(&pddl->type_obj);
+    planPDDLPredicatesFree(&pddl->predicate);
 
-    predicateDel2(pddl->predicate, pddl->predicate_size);
     predicateDel2(pddl->function, pddl->function_size);
     actionDel2(pddl->action, pddl->action_size);
     factDel2(pddl->goal, pddl->goal_size);
@@ -1116,15 +1010,7 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
     planPDDLTypesPrint(&pddl->type, fout);
     planPDDLObjsPrint(&pddl->obj, fout);
     planPDDLTypeObjPrint(&pddl->type_obj, fout);
-
-    fprintf(fout, "Predicate[%d]:\n", pddl->predicate_size);
-    for (i = 0; i < pddl->predicate_size; ++i){
-        fprintf(fout, "    %s:", pddl->predicate[i].name);
-        for (j = 0; j < pddl->predicate[i].param_size; ++j){
-            fprintf(fout, " %d", pddl->predicate[i].param[j]);
-        }
-        fprintf(fout, "\n");
-    }
+    planPDDLPredicatesPrint(&pddl->predicate, "Predicate", fout);
 
     fprintf(fout, "Function[%d]:\n", pddl->function_size);
     for (i = 0; i < pddl->function_size; ++i){
@@ -1267,7 +1153,7 @@ static int condParsePred(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
     }
 
     cond->type = PLAN_PDDL_COND_PRED;
-    cond->val = getPredicate(pddl, name);
+    cond->val = planPDDLPredicatesGet(&pddl->predicate, name);
     if (cond->val == -1){
         ERRN(root, "Unkown predicate `%s'", name);
         return -1;
@@ -1627,7 +1513,7 @@ static void condPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
         fprintf(fout, ")");
 
     }else if (cond->type == PLAN_PDDL_COND_PRED){
-        pred = pddl->predicate + cond->val;
+        pred = pddl->predicate.pred + cond->val;
         fprintf(fout, "(%s", pred->name);
         for (i = 0; i < cond->arg_size; ++i){
             fprintf(fout, " ");

@@ -193,11 +193,19 @@ static void actionInit(plan_pddl_action_t *a)
 static void actionDel2(plan_pddl_action_t *a, int size);
 static void actionFree(plan_pddl_action_t *a)
 {
+    int i;
+
     if (a->param != NULL)
         BOR_FREE(a->param);
     factDel2(a->pre, a->pre_size);
     factDel2(a->eff, a->eff_size);
     actionDel2(a->cond_eff, a->cond_eff_size);
+    for (i = 0; i < a->cost_size; ++i){
+        if (a->cost[i].arg != NULL)
+            BOR_FREE(a->cost[i].arg);
+    }
+    if (a->cost != NULL)
+        BOR_FREE(a->cost);
 }
 
 static void actionFree2(plan_pddl_action_t *a, int size)

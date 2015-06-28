@@ -103,6 +103,22 @@ void planPDDLLispDump(const plan_pddl_lisp_t *lisp, FILE *fout);
 const plan_pddl_lisp_node_t *planPDDLLispFindNode(
             const plan_pddl_lisp_node_t *root, int kw);
 
+
+/**
+ * Callback for planPDDLLispParseTypedList().
+ */
+typedef int (*plan_pddl_lisp_parse_typed_list_fn)(
+                const plan_pddl_lisp_node_t *root,
+                int child_from, int child_to, int child_type, void *ud);
+
+/**
+ * Parse typed list.
+ */
+int planPDDLLispParseTypedList(const plan_pddl_lisp_node_t *root,
+                               int from, int to,
+                               plan_pddl_lisp_parse_typed_list_fn cb,
+                               void *ud);
+
 /**
  * Copy pddl-lisp-node from src to dst.
  */

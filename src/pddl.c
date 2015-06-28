@@ -72,8 +72,6 @@ static cond_type_t cond_type[] = {
 };
 static int cond_type_size = sizeof(cond_type) / sizeof(cond_type_t);
 
-static char _object_type_name[] = "object";
-
 /** Returns PLAN_PDDL_COND_* type based on keyword. */
 static int condType(int kw);
 /** Initialize and free condition tree */
@@ -367,77 +365,6 @@ static int checkDomainName(plan_pddl_t *pddl)
     return 0;
 }
 
-static int getType(plan_pddl_t *pddl, const char *name)
-{
-    int i;
-
-    for (i = 0; i < pddl->type_size; ++i){
-        if (strcmp(pddl->type[i].name, name) == 0)
-            return i;
-    }
-
-    return -1;
-}
-
-static int addType(plan_pddl_t *pddl, const char *name)
-{
-    int id;
-
-    if ((id = getType(pddl, name)) != -1)
-        return id;
-
-    ++pddl->type_size;
-    pddl->type = BOR_REALLOC_ARR(pddl->type, plan_pddl_type_t,
-                                 pddl->type_size);
-    pddl->type[pddl->type_size - 1].name = name;
-    pddl->type[pddl->type_size - 1].parent = 0;
-    return pddl->type_size - 1;
-}
-
-static int parseTypeSet(plan_pddl_t *pddl,
-                        const plan_pddl_lisp_node_t *root,
-                        int child_from, int child_to, int child_type)
-{
-    int i, tid, pid;
-
-    pid = 0;
-    if (child_type >= 0){
-        if (root->child[child_type].value == NULL){
-            ERRN2(root->child + child_type, "Invalid type definition.");
-            return -1;
-        }
-        pid = addType(pddl, root->child[child_type].value);
-    }
-
-    for (i = child_from; i < child_to; ++i){
-        if (root->child[i].value == NULL){
-            ERRN2(root->child + i, "Invalid type definition.");
-            return -1;
-        }
-
-        tid = addType(pddl, root->child[i].value);
-        pddl->type[tid].parent = pid;
-    }
-
-    return 0;
-}
-
-static int parseType(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
-{
-    const plan_pddl_lisp_node_t *types;
-
-    types = planPDDLLispFindNode(root, PLAN_PDDL_KW_TYPES);
-    if (types == NULL)
-        return 0;
-
-    // TODO: Check circular dependency on types
-    if (parseTypedList(pddl, types, 1, types->child_size, parseTypeSet) != 0){
-        ERRN2(root, "Invalid definition of :types");
-        return -1;
-    }
-    return 0;
-}
-
 static plan_pddl_obj_t *addObj(plan_pddl_t *pddl, const char *name, int type)
 {
     plan_pddl_obj_t *o;
@@ -483,7 +410,7 @@ static int parseConstantSet(plan_pddl_t *pddl,
 
     tid = 0;
     if (child_type >= 0){
-        tid = getType(pddl, root->child[child_type].value);
+        tid = planPDDLTypesGet(&pddl->type, root->child[child_type].value);
         if (tid < 0){
             ERRN(root->child + child_type, "Invalid type `%s'",
                  root->child[child_type].value);
@@ -523,7 +450,7 @@ static int parseObjSet(plan_pddl_t *pddl,
 
     tid = 0;
     if (child_type >= 0){
-        tid = getType(pddl, root->child[child_type].value);
+        tid = planPDDLTypesGet(&pddl->type, root->child[child_type].value);
         if (tid < 0){
             ERRN(root->child + child_type, "Invalid type `%s'",
                  root->child[child_type].value);
@@ -563,8 +490,8 @@ static void _makeTypeObjMapRec(plan_pddl_t *pddl, int arr_id, int type_id)
             m->obj[i] = 1;
     }
 
-    for (i = 0; i < pddl->type_size; ++i){
-        if (pddl->type[i].parent == type_id)
+    for (i = 0; i < pddl->type.size; ++i){
+        if (pddl->type.type[i].parent == type_id)
             _makeTypeObjMapRec(pddl, arr_id, i);
     }
 }
@@ -592,8 +519,8 @@ static int makeTypeObjMap(plan_pddl_t *pddl)
     int i;
 
     pddl->type_obj_map = BOR_CALLOC_ARR(plan_pddl_obj_arr_t,
-                                        pddl->type_size);
-    for (i = 0; i < pddl->type_size; ++i){
+                                        pddl->type.size);
+    for (i = 0; i < pddl->type.size; ++i){
         _makeTypeObjMap(pddl, i);
     }
     return 0;
@@ -606,7 +533,7 @@ static void delTypeObjMap(plan_pddl_t *pddl)
     if (pddl->type_obj_map == NULL)
         return;
 
-    for (i = 0; i < pddl->type_size; ++i){
+    for (i = 0; i < pddl->type.size; ++i){
         if (pddl->type_obj_map[i].obj != NULL)
             BOR_FREE(pddl->type_obj_map[i].obj);
     }
@@ -665,7 +592,7 @@ static int parsePredicateSet(plan_pddl_t *pddl,
 
     tid = 0;
     if (child_type >= 0){
-        tid = getType(pddl, root->child[child_type].value);
+        tid = planPDDLTypesGet(&pddl->type, root->child[child_type].value);
         if (tid < 0){
             ERRN(root->child + child_type, "Invalid type `%s'",
                  root->child[child_type].value);
@@ -756,7 +683,7 @@ static int parseFunctionSet(plan_pddl_t *pddl,
 
     tid = 0;
     if (child_type >= 0){
-        tid = getType(pddl, root->child[child_type].value);
+        tid = planPDDLTypesGet(&pddl->type, root->child[child_type].value);
         if (tid < 0){
             ERRN(root->child + child_type, "Invalid type `%s'",
                  root->child[child_type].value);
@@ -852,7 +779,7 @@ static int parseActionParamSet(plan_pddl_t *pddl,
 
     tid = 0;
     if (child_type >= 0){
-        tid = getType(pddl, root->child[child_type].value);
+        tid = planPDDLTypesGet(&pddl->type, root->child[child_type].value);
         if (tid < 0){
             ERRN(root->child + child_type, "Unkown type `%s'",
                  root->child[child_type].value);
@@ -1297,21 +1224,15 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
     if (checkDomainName(pddl) != 0)
         goto pddl_fail;
 
-    if (planPDDLRequireParse(domain_lisp, &pddl->require) != 0)
+    if (planPDDLRequireParse(domain_lisp, &pddl->require) != 0
+            || planPDDLTypesParse(domain_lisp, &pddl->type) != 0)
         goto pddl_fail;
-
-    // Add 'object' type
-    pddl->type_size = 1;
-    pddl->type = BOR_ALLOC_ARR(plan_pddl_type_t, 1);
-    pddl->type[0].name = _object_type_name;
-    pddl->type[0].parent = -1;
 
     // Add (= ?x ?y - object) predicate if set in requirements
     if (pddl->require & PLAN_PDDL_REQUIRE_EQUALITY)
         addEqPredicate(pddl);
 
-    if (parseType(pddl, &domain_lisp->root) != 0
-            || parseConstant(pddl, &domain_lisp->root) != 0
+    if (parseConstant(pddl, &domain_lisp->root) != 0
             || parseObj(pddl, &problem_lisp->root) != 0
             || makeTypeObjMap(pddl) != 0
             || parsePredicate(pddl, &domain_lisp->root) != 0
@@ -1339,8 +1260,7 @@ void planPDDLDel(plan_pddl_t *pddl)
         planPDDLLispDel(pddl->domain_lisp);
     if (pddl->problem_lisp)
         planPDDLLispDel(pddl->problem_lisp);
-    if (pddl->type)
-        BOR_FREE(pddl->type);
+    planPDDLTypesFree(&pddl->type);
     if (pddl->obj)
         BOR_FREE(pddl->obj);
 
@@ -1369,11 +1289,7 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
     fprintf(fout, "Domain: %s\n", pddl->domain_name);
     fprintf(fout, "Problem: %s\n", pddl->problem_name);
     fprintf(fout, "Require: %x\n", pddl->require);
-    fprintf(fout, "Type[%d]:\n", pddl->type_size);
-    for (i = 0; i < pddl->type_size; ++i){
-        fprintf(fout, "    [%d]: %s, parent: %d\n", i,
-                pddl->type[i].name, pddl->type[i].parent);
-    }
+    planPDDLTypesPrint(&pddl->type, fout);
 
     fprintf(fout, "Obj[%d]:\n", pddl->obj_size);
     for (i = 0; i < pddl->obj_size; ++i){
@@ -1383,7 +1299,7 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
     }
 
     fprintf(fout, "Type-Obj:\n");
-    for (i = 0; i < pddl->type_size; ++i){
+    for (i = 0; i < pddl->type.size; ++i){
         fprintf(fout, "    [%d]:", i);
         for (j = 0; j < pddl->type_obj_map[i].size; ++j)
             fprintf(fout, " %d", pddl->type_obj_map[i].obj[j]);
@@ -1631,7 +1547,7 @@ static int condParseForallSet(plan_pddl_t *pddl,
 
     tid = 0;
     if (child_type >= 0){
-        tid = getType(pddl, root->child[child_type].value);
+        tid = planPDDLTypesGet(&pddl->type, root->child[child_type].value);
         if (tid < 0){
             ERRN(root->child + child_type, "Invalid type `%s'",
                  root->child[child_type].value);

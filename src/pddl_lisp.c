@@ -8,6 +8,7 @@
 #include <boruvka/alloc.h>
 
 #include "plan/pddl_lisp.h"
+#include "pddl_err.h"
 
 #define IS_WS(c) ((c) == ' ' || (c) == '\n' || (c) == '\r' || (c) == '\t')
 #define IS_ALPHA(c) (!IS_WS(c) && (c) != ')' && (c) != '(' && (c) != ';')
@@ -319,4 +320,44 @@ const plan_pddl_lisp_node_t *planPDDLLispFindNode(
             return root->child + i;
     }
     return NULL;
+}
+
+int planPDDLLispParseTypedList(const plan_pddl_lisp_node_t *root,
+                               int from, int to,
+                               plan_pddl_lisp_parse_typed_list_fn cb,
+                               void *ud)
+{
+    plan_pddl_lisp_node_t *n;
+    int i, itfrom, itto, ittype;
+
+    ittype = -1;
+    itfrom = from;
+    itto = from;
+    for (i = from; i < to; ++i){
+        n = root->child + i;
+
+        if (strcmp(n->value, "-") == 0){
+            itto = i;
+            ittype = ++i;
+            if (ittype >= to){
+                ERRN2(root, "Invalid typed list.");
+                return -1;
+            }
+            if (cb(root, itfrom, itto, ittype, ud) != 0)
+                return -1;
+            itfrom = i + 1;
+            itto = i + 1;
+            ittype = -1;
+
+        }else{
+            ++itto;
+        }
+    }
+
+    if (itfrom < itto){
+        if (cb(root, itfrom, itto, -1, ud) != 0)
+            return -1;
+    }
+
+    return 0;
 }

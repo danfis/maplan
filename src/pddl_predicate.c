@@ -123,6 +123,10 @@ int planPDDLPredicatesParse(const plan_pddl_lisp_t *domain,
             return -1;
         ++ps->size;
     }
+
+    if (ps->size != n->child_size)
+        ps->pred = BOR_REALLOC_ARR(ps->pred, plan_pddl_predicate_t, ps->size);
+
     return 0;
 }
 
@@ -155,6 +159,10 @@ int planPDDLFunctionsParse(const plan_pddl_lisp_t *domain,
             i += 2;
         }
     }
+
+    if (ps->size != n->child_size)
+        ps->pred = BOR_REALLOC_ARR(ps->pred, plan_pddl_predicate_t, ps->size);
+
     return 0;
 }
 

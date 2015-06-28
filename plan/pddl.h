@@ -23,17 +23,11 @@
 #include <plan/pddl_lisp.h>
 #include <plan/pddl_require.h>
 #include <plan/pddl_type.h>
+#include <plan/pddl_obj.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-struct _plan_pddl_obj_t {
-    const char *name;
-    int type;
-    int is_constant;
-};
-typedef struct _plan_pddl_obj_t plan_pddl_obj_t;
 
 struct _plan_pddl_predicate_t {
     const char *name;
@@ -86,8 +80,7 @@ struct _plan_pddl_t {
     const char *problem_name;
     unsigned require;
     plan_pddl_types_t type;
-    plan_pddl_obj_t *obj;
-    int obj_size;
+    plan_pddl_objs_t obj;
     plan_pddl_predicate_t *predicate;
     int predicate_size;
     int eq_pred_id;

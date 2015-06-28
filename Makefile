@@ -17,6 +17,7 @@ OBJS += problem_pddl
 OBJS += pddl_lisp
 OBJS += pddl_require
 OBJS += pddl_type
+OBJS += pddl_obj
 OBJS += pddl
 OBJS += var
 OBJS += state

@@ -156,12 +156,12 @@ static void factPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
             if (f->arg[i] >= 0){
                 fprintf(fout, " %s", a->param[f->arg[i]].name);
             }else{
-                id = f->arg[i] + pddl->obj_size;
-                fprintf(fout, " %s", pddl->obj[id].name);
+                id = f->arg[i] + pddl->obj.size;
+                fprintf(fout, " %s", pddl->obj.obj[id].name);
             }
         }else{
             if (f->arg[i] >= 0){
-                fprintf(fout, " %s", pddl->obj[f->arg[i]].name);
+                fprintf(fout, " %s", pddl->obj.obj[f->arg[i]].name);
             }else{
                 fprintf(fout, " ???");
             }
@@ -257,8 +257,8 @@ static void actionPrint(const plan_pddl_t *pddl,
                 if (a->cost[i].arg[j] >= 0){
                     fprintf(fout, " %s", a->param[a->cost[i].arg[j]].name);
                 }else{
-                    id = a->cost[i].arg[j] + pddl->obj_size;
-                    fprintf(fout, " %s", pddl->obj[id].name);
+                    id = a->cost[i].arg[j] + pddl->obj.size;
+                    fprintf(fout, " %s", pddl->obj.obj[id].name);
                 }
             }
         }
@@ -365,128 +365,13 @@ static int checkDomainName(plan_pddl_t *pddl)
     return 0;
 }
 
-static plan_pddl_obj_t *addObj(plan_pddl_t *pddl, const char *name, int type)
-{
-    plan_pddl_obj_t *o;
-
-    ++pddl->obj_size;
-    pddl->obj = BOR_REALLOC_ARR(pddl->obj, plan_pddl_obj_t, pddl->obj_size);
-    o = pddl->obj + pddl->obj_size - 1;
-    o->name = name;
-    o->type = type;
-    o->is_constant = 0;
-    return o;
-}
-
-static int getConst(const plan_pddl_t *pddl, const char *name)
-{
-    int i;
-
-    for (i = 0; i < pddl->obj_size; ++i){
-        if (pddl->obj[i].is_constant
-                && strcmp(pddl->obj[i].name, name) == 0)
-            return i;
-    }
-    return -1;
-}
-
-static int getObj(const plan_pddl_t *pddl, const char *name)
-{
-    int i;
-
-    for (i = 0; i < pddl->obj_size; ++i){
-        if (strcmp(pddl->obj[i].name, name) == 0)
-            return i;
-    }
-    return -1;
-}
-
-static int parseConstantSet(plan_pddl_t *pddl,
-                            const plan_pddl_lisp_node_t *root,
-                            int child_from, int child_to, int child_type)
-{
-    plan_pddl_obj_t *o;
-    int i, tid;
-
-    tid = 0;
-    if (child_type >= 0){
-        tid = planPDDLTypesGet(&pddl->type, root->child[child_type].value);
-        if (tid < 0){
-            ERRN(root->child + child_type, "Invalid type `%s'",
-                 root->child[child_type].value);
-            return -1;
-        }
-    }
-
-    for (i = child_from; i < child_to; ++i){
-        o = addObj(pddl, root->child[i].value, tid);
-        o->is_constant = 1;
-    }
-
-    return 0;
-}
-
-static int parseConstant(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
-{
-    const plan_pddl_lisp_node_t *n;
-
-    n = planPDDLLispFindNode(root, PLAN_PDDL_KW_CONSTANTS);
-    if (n == NULL)
-        return 0;
-
-    if (parseTypedList(pddl, n, 1, n->child_size, parseConstantSet) != 0){
-        ERRN2(n, "Invalid definition of :constants.");
-        return -1;
-    }
-
-    return 0;
-}
-
-static int parseObjSet(plan_pddl_t *pddl,
-                       const plan_pddl_lisp_node_t *root,
-                       int child_from, int child_to, int child_type)
-{
-    int i, tid;
-
-    tid = 0;
-    if (child_type >= 0){
-        tid = planPDDLTypesGet(&pddl->type, root->child[child_type].value);
-        if (tid < 0){
-            ERRN(root->child + child_type, "Invalid type `%s'",
-                 root->child[child_type].value);
-            return -1;
-        }
-    }
-
-    for (i = child_from; i < child_to; ++i)
-        addObj(pddl, root->child[i].value, tid);
-
-    return 0;
-}
-
-static int parseObj(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
-{
-    const plan_pddl_lisp_node_t *n;
-
-    n = planPDDLLispFindNode(root, PLAN_PDDL_KW_OBJECTS);
-    if (n == NULL)
-        return 0;
-
-    if (parseTypedList(pddl, n, 1, n->child_size, parseObjSet) != 0){
-        ERRN2(n, "Invalid definition of :objects.");
-        return -1;
-    }
-
-    return 0;
-}
-
 static void _makeTypeObjMapRec(plan_pddl_t *pddl, int arr_id, int type_id)
 {
     plan_pddl_obj_arr_t *m = pddl->type_obj_map + arr_id;
     int i;
 
-    for (i = 0; i < pddl->obj_size; ++i){
-        if (pddl->obj[i].type == type_id)
+    for (i = 0; i < pddl->obj.size; ++i){
+        if (pddl->obj.obj[i].type == type_id)
             m->obj[i] = 1;
     }
 
@@ -502,15 +387,15 @@ static void _makeTypeObjMap(plan_pddl_t *pddl, int type_id)
     int i, ins;
 
     m->size = 0;
-    m->obj = BOR_CALLOC_ARR(int, pddl->obj_size);
+    m->obj = BOR_CALLOC_ARR(int, pddl->obj.size);
     _makeTypeObjMapRec(pddl, type_id, type_id);
 
-    for (ins = 0, i = 0; i < pddl->obj_size; ++i){
+    for (ins = 0, i = 0; i < pddl->obj.size; ++i){
         if (m->obj[i])
             m->obj[ins++] = i;
     }
     m->size = ins;
-    if (m->size != pddl->obj_size)
+    if (m->size != pddl->obj.size)
         m->obj = BOR_REALLOC_ARR(m->obj, int, m->size);
 }
 
@@ -817,7 +702,7 @@ static int condVarConstArg(const plan_pddl_t *pddl,
     if (c->arg[i].type == PLAN_PDDL_COND_VAR){
         return c->arg[i].val;
     }else if (c->arg[i].type == PLAN_PDDL_COND_CONST){
-        return c->arg[i].val - pddl->obj_size;
+        return c->arg[i].val - pddl->obj.size;
     }
     return -1;
 }
@@ -1076,7 +961,7 @@ static int parseObjsIntoArr(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *n,
             return -1;
         }
 
-        obj[i] = getObj(pddl, c->value);
+        obj[i] = planPDDLObjsGet(&pddl->obj, c->value);
         if (obj[i] < 0){
             ERRN(c, "Unknown object `%s'.", c->value);
             return -1;
@@ -1232,8 +1117,7 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
     if (pddl->require & PLAN_PDDL_REQUIRE_EQUALITY)
         addEqPredicate(pddl);
 
-    if (parseConstant(pddl, &domain_lisp->root) != 0
-            || parseObj(pddl, &problem_lisp->root) != 0
+    if (planPDDLObjsParse(domain_lisp, problem_lisp, &pddl->type, &pddl->obj) != 0
             || makeTypeObjMap(pddl) != 0
             || parsePredicate(pddl, &domain_lisp->root) != 0
             || parseFunction(pddl, &domain_lisp->root) != 0
@@ -1261,8 +1145,7 @@ void planPDDLDel(plan_pddl_t *pddl)
     if (pddl->problem_lisp)
         planPDDLLispDel(pddl->problem_lisp);
     planPDDLTypesFree(&pddl->type);
-    if (pddl->obj)
-        BOR_FREE(pddl->obj);
+    planPDDLObjsFree(&pddl->obj);
 
     predicateDel2(pddl->predicate, pddl->predicate_size);
     predicateDel2(pddl->function, pddl->function_size);
@@ -1290,13 +1173,7 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
     fprintf(fout, "Problem: %s\n", pddl->problem_name);
     fprintf(fout, "Require: %x\n", pddl->require);
     planPDDLTypesPrint(&pddl->type, fout);
-
-    fprintf(fout, "Obj[%d]:\n", pddl->obj_size);
-    for (i = 0; i < pddl->obj_size; ++i){
-        fprintf(fout, "    [%d]: %s, type: %d, is-constant: %d\n", i,
-                pddl->obj[i].name, pddl->obj[i].type,
-                pddl->obj[i].is_constant);
-    }
+    planPDDLObjsPrint(&pddl->obj, fout);
 
     fprintf(fout, "Type-Obj:\n");
     for (i = 0; i < pddl->type.size; ++i){
@@ -1337,7 +1214,7 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
                 pddl->function[pddl->init_func[i].func].name);
         for (j = 0; j < pddl->init_func[i].arg_size; ++j)
             fprintf(fout, " %s",
-                    pddl->obj[pddl->init_func[i].arg[j]].name);
+                    pddl->obj.obj[pddl->init_func[i].arg[j]].name);
         fprintf(fout, " --> %d\n", pddl->init_func[i].val);
     }
 
@@ -1432,7 +1309,7 @@ static int condParseVarConst(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *roo
 
     }else{
         cond->type = PLAN_PDDL_COND_CONST;
-        cond->val = getObj(pddl, root->value);
+        cond->val = planPDDLObjsGet(&pddl->obj, root->value);
         if (cond->val == -1){
             ERRN(root, "Invalid object `%s'", root->value);
             return -1;
@@ -1490,7 +1367,7 @@ static void condParseForallReplace(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n)
     if (n->kw == -1 && n->value != NULL){
         for (i = 0; i < pddl->forall.param_size; ++i){
             if (strcmp(n->value, pddl->forall.param[i].name) == 0){
-                n->value = pddl->obj[pddl->forall.param_bind[i]].name;
+                n->value = pddl->obj.obj[pddl->forall.param_bind[i]].name;
             }
         }
     }
@@ -1840,7 +1717,7 @@ static void condPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
         }
 
     }else if (cond->type == PLAN_PDDL_COND_CONST){
-        fprintf(fout, "%s", pddl->obj[cond->val].name);
+        fprintf(fout, "%s", pddl->obj.obj[cond->val].name);
 
     }else if (cond->type == PLAN_PDDL_COND_INT){
         fprintf(fout, "%d", cond->val);

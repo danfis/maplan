@@ -122,3 +122,89 @@ void planPDDLObjsPrint(const plan_pddl_objs_t *objs, FILE *fout)
                 objs->obj[i].is_constant);
     }
 }
+
+
+
+static void typeObjMapRec(int *m, int type_id,
+                          const plan_pddl_types_t *types,
+                          const plan_pddl_objs_t *objs)
+{
+    int i;
+
+    for (i = 0; i < objs->size; ++i){
+        if (objs->obj[i].type == type_id)
+            m[i] = 1;
+    }
+
+    for (i = 0; i < types->size; ++i){
+        if (types->type[i].parent == type_id)
+            typeObjMapRec(m, i, types, objs);
+    }
+}
+
+static void typeObjMap(plan_pddl_type_obj_t *to, int type,
+                       const plan_pddl_types_t *types,
+                       const plan_pddl_objs_t *objs)
+{
+    int i, ins, *m;
+
+    m = to->map[type] = BOR_CALLOC_ARR(int, objs->size);
+    typeObjMapRec(m, type, types, objs);
+
+    for (ins = 0, i = 0; i < objs->size; ++i){
+        if (m[i])
+            m[ins++] = i;
+    }
+    to->map_size[type] = ins;
+    if (ins != objs->size)
+        to->map[type] = BOR_REALLOC_ARR(to->map[type], int, ins);
+}
+
+int planPDDLTypeObjInit(plan_pddl_type_obj_t *to,
+                        const plan_pddl_types_t *types,
+                        const plan_pddl_objs_t *objs)
+{
+    int i;
+
+    to->size = types->size;
+    to->map = BOR_CALLOC_ARR(int *, types->size);
+    to->map_size = BOR_CALLOC_ARR(int, types->size);
+    for (i = 0; i < to->size; ++i)
+        typeObjMap(to, i, types, objs);
+    return 0;
+}
+
+void planPDDLTypeObjFree(plan_pddl_type_obj_t *to)
+{
+    int i;
+
+    for (i = 0; i < to->size; ++i){
+        if (to->map[i] != NULL)
+            BOR_FREE(to->map[i]);
+    }
+    if (to->map_size != NULL)
+        BOR_FREE(to->map_size);
+    if (to->map != NULL)
+        BOR_FREE(to->map);
+}
+
+const int *planPDDLTypeObjGet(const plan_pddl_type_obj_t *to, int type_id,
+                              int *size)
+{
+    if (size != NULL)
+        *size = to->map_size[type_id];
+    return to->map[type_id];
+}
+
+void planPDDLTypeObjPrint(const plan_pddl_type_obj_t *to, FILE *fout)
+{
+    int i, j;
+
+    fprintf(fout, "Type-Obj:\n");
+    for (i = 0; i < to->size; ++i){
+        fprintf(fout, "    [%d]:", i);
+        for (j = 0; j < to->map_size[i]; ++j)
+            fprintf(fout, " %d", to->map[i][j]);
+        fprintf(fout, "\n");
+    }
+}

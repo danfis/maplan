@@ -62,6 +62,37 @@ int planPDDLObjsGet(const plan_pddl_objs_t *objs, const char *name);
  */
 void planPDDLObjsPrint(const plan_pddl_objs_t *objs, FILE *fout);
 
+
+/**
+ * Mapping between type and objects.
+ */
+struct _plan_pddl_type_obj_t {
+    int **map;
+    int *map_size;
+    int size;
+};
+typedef struct _plan_pddl_type_obj_t plan_pddl_type_obj_t;
+
+/**
+ * Initializes mapping between types and objects.
+ */
+int planPDDLTypeObjInit(plan_pddl_type_obj_t *to,
+                        const plan_pddl_types_t *types,
+                        const plan_pddl_objs_t *objs);
+
+/**
+ * Frees allocated resources
+ */
+void planPDDLTypeObjFree(plan_pddl_type_obj_t *to);
+
+/**
+ * Returns list of object IDs of a given type.
+ */
+const int *planPDDLTypeObjGet(const plan_pddl_type_obj_t *to, int type_id,
+                              int *size);
+
+void planPDDLTypeObjPrint(const plan_pddl_type_obj_t *to, FILE *fout);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

@@ -81,6 +81,7 @@ struct _plan_pddl_t {
     unsigned require;
     plan_pddl_types_t type;
     plan_pddl_objs_t obj;
+    plan_pddl_type_obj_t type_obj;
     plan_pddl_predicate_t *predicate;
     int predicate_size;
     int eq_pred_id;
@@ -95,8 +96,6 @@ struct _plan_pddl_t {
     plan_pddl_inst_func_t *init_func;
     int init_func_size;
     int metric;
-
-    plan_pddl_obj_arr_t *type_obj_map;
 
     struct {
         plan_pddl_obj_t *param;

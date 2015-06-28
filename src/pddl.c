@@ -365,65 +365,6 @@ static int checkDomainName(plan_pddl_t *pddl)
     return 0;
 }
 
-static void _makeTypeObjMapRec(plan_pddl_t *pddl, int arr_id, int type_id)
-{
-    plan_pddl_obj_arr_t *m = pddl->type_obj_map + arr_id;
-    int i;
-
-    for (i = 0; i < pddl->obj.size; ++i){
-        if (pddl->obj.obj[i].type == type_id)
-            m->obj[i] = 1;
-    }
-
-    for (i = 0; i < pddl->type.size; ++i){
-        if (pddl->type.type[i].parent == type_id)
-            _makeTypeObjMapRec(pddl, arr_id, i);
-    }
-}
-
-static void _makeTypeObjMap(plan_pddl_t *pddl, int type_id)
-{
-    plan_pddl_obj_arr_t *m = pddl->type_obj_map + type_id;
-    int i, ins;
-
-    m->size = 0;
-    m->obj = BOR_CALLOC_ARR(int, pddl->obj.size);
-    _makeTypeObjMapRec(pddl, type_id, type_id);
-
-    for (ins = 0, i = 0; i < pddl->obj.size; ++i){
-        if (m->obj[i])
-            m->obj[ins++] = i;
-    }
-    m->size = ins;
-    if (m->size != pddl->obj.size)
-        m->obj = BOR_REALLOC_ARR(m->obj, int, m->size);
-}
-
-static int makeTypeObjMap(plan_pddl_t *pddl)
-{
-    int i;
-
-    pddl->type_obj_map = BOR_CALLOC_ARR(plan_pddl_obj_arr_t,
-                                        pddl->type.size);
-    for (i = 0; i < pddl->type.size; ++i){
-        _makeTypeObjMap(pddl, i);
-    }
-    return 0;
-}
-
-static void delTypeObjMap(plan_pddl_t *pddl)
-{
-    int i;
-
-    if (pddl->type_obj_map == NULL)
-        return;
-
-    for (i = 0; i < pddl->type.size; ++i){
-        if (pddl->type_obj_map[i].obj != NULL)
-            BOR_FREE(pddl->type_obj_map[i].obj);
-    }
-    BOR_FREE(pddl->type_obj_map);
-}
 
 static int addPredicate(plan_pddl_t *pddl, const char *name)
 {
@@ -1118,7 +1059,7 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
         addEqPredicate(pddl);
 
     if (planPDDLObjsParse(domain_lisp, problem_lisp, &pddl->type, &pddl->obj) != 0
-            || makeTypeObjMap(pddl) != 0
+            || planPDDLTypeObjInit(&pddl->type_obj, &pddl->type, &pddl->obj) != 0
             || parsePredicate(pddl, &domain_lisp->root) != 0
             || parseFunction(pddl, &domain_lisp->root) != 0
             || parseAction(pddl, &domain_lisp->root) != 0
@@ -1146,11 +1087,11 @@ void planPDDLDel(plan_pddl_t *pddl)
         planPDDLLispDel(pddl->problem_lisp);
     planPDDLTypesFree(&pddl->type);
     planPDDLObjsFree(&pddl->obj);
+    planPDDLTypeObjFree(&pddl->type_obj);
 
     predicateDel2(pddl->predicate, pddl->predicate_size);
     predicateDel2(pddl->function, pddl->function_size);
     actionDel2(pddl->action, pddl->action_size);
-    delTypeObjMap(pddl);
     factDel2(pddl->goal, pddl->goal_size);
     factDel2(pddl->init_fact, pddl->init_fact_size);
 
@@ -1174,14 +1115,7 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
     fprintf(fout, "Require: %x\n", pddl->require);
     planPDDLTypesPrint(&pddl->type, fout);
     planPDDLObjsPrint(&pddl->obj, fout);
-
-    fprintf(fout, "Type-Obj:\n");
-    for (i = 0; i < pddl->type.size; ++i){
-        fprintf(fout, "    [%d]:", i);
-        for (j = 0; j < pddl->type_obj_map[i].size; ++j)
-            fprintf(fout, " %d", pddl->type_obj_map[i].obj[j]);
-        fprintf(fout, "\n");
-    }
+    planPDDLTypeObjPrint(&pddl->type_obj, fout);
 
     fprintf(fout, "Predicate[%d]:\n", pddl->predicate_size);
     for (i = 0; i < pddl->predicate_size; ++i){
@@ -1397,12 +1331,13 @@ static int condParseForallEval(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *r
 static int condParseForallRec(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
                               int action_id, plan_pddl_cond_t *cond, int param)
 {
-    plan_pddl_obj_arr_t *m;
-    int i;
+    const int *obj;
+    int obj_size, i;
 
-    m = pddl->type_obj_map + pddl->forall.param[param].type;
-    for (i = 0; i < m->size; ++i){
-        pddl->forall.param_bind[param] = m->obj[i];
+    obj = planPDDLTypeObjGet(&pddl->type_obj, pddl->forall.param[param].type,
+                             &obj_size);
+    for (i = 0; i < obj_size; ++i){
+        pddl->forall.param_bind[param] = obj[i];
         if (param == pddl->forall.param_size - 1){
             if (condParseForallEval(pddl, root, action_id, cond) != 0)
                 return -1;

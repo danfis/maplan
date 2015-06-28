@@ -15,6 +15,7 @@ TARGETS  = libplan.a
 OBJS  = problem
 OBJS += problem_pddl
 OBJS += pddl_lisp
+OBJS += pddl_require
 OBJS += pddl
 OBJS += var
 OBJS += state

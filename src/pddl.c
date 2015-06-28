@@ -21,30 +21,7 @@
 #include <boruvka/alloc.h>
 #include <plan/pddl.h>
 
-#define ERR(format, ...) do { \
-    fprintf(stderr, "Error PDDL: " format "\n", __VA_ARGS__); \
-    fflush(stderr); \
-    } while (0)
-#define ERR2(text) do { \
-    fprintf(stderr, "Error PDDL: " text "\n"); \
-    fflush(stderr); \
-    } while (0)
-
-#define ERRN(NODE, format, ...) do { \
-    fprintf(stderr, "Error PDDL: Line %d: " format "\n", \
-            (NODE)->lineno, __VA_ARGS__); \
-    fflush(stderr); \
-    } while (0)
-#define ERRN2(NODE, text) do { \
-    fprintf(stderr, "Error PDDL: Line %d: " text "\n", \
-            (NODE)->lineno); \
-    fflush(stderr); \
-    } while (0)
-
-#define WARN(format, ...) do { \
-    fprintf(stderr, "Warning PDDL: " format "\n", __VA_ARGS__); \
-    fflush(stderr); \
-    } while (0)
+#include "pddl_err.h"
 
 
 #define PLAN_PDDL_COND_NONE     0
@@ -72,54 +49,6 @@ struct _plan_pddl_cond_t {
     plan_pddl_cond_t *arg;  /*!< List of arguments */
     int arg_size;           /*!< Number of arguments */
 };
-
-/**
- * Mapping between keywords and require flags.
- */
-struct _require_mask_t {
-    int kw;
-    unsigned mask;
-};
-typedef struct _require_mask_t require_mask_t;
-
-static require_mask_t require_mask[] = {
-    { PLAN_PDDL_KW_STRIPS, PLAN_PDDL_REQUIRE_STRIPS },
-    { PLAN_PDDL_KW_TYPING, PLAN_PDDL_REQUIRE_TYPING },
-    { PLAN_PDDL_KW_NEGATIVE_PRE, PLAN_PDDL_REQUIRE_NEGATIVE_PRE },
-    { PLAN_PDDL_KW_DISJUNCTIVE_PRE, PLAN_PDDL_REQUIRE_DISJUNCTIVE_PRE },
-    { PLAN_PDDL_KW_EQUALITY, PLAN_PDDL_REQUIRE_EQUALITY },
-    { PLAN_PDDL_KW_EXISTENTIAL_PRE, PLAN_PDDL_REQUIRE_EXISTENTIAL_PRE },
-    { PLAN_PDDL_KW_UNIVERSAL_PRE, PLAN_PDDL_REQUIRE_UNIVERSAL_PRE },
-    { PLAN_PDDL_KW_CONDITIONAL_EFF, PLAN_PDDL_REQUIRE_CONDITIONAL_EFF },
-    { PLAN_PDDL_KW_NUMERIC_FLUENT, PLAN_PDDL_REQUIRE_NUMERIC_FLUENT },
-    { PLAN_PDDL_KW_OBJECT_FLUENT, PLAN_PDDL_REQUIRE_OBJECT_FLUENT },
-    { PLAN_PDDL_KW_DURATIVE_ACTION, PLAN_PDDL_REQUIRE_DURATIVE_ACTION },
-    { PLAN_PDDL_KW_DURATION_INEQUALITY, PLAN_PDDL_REQUIRE_DURATION_INEQUALITY },
-    { PLAN_PDDL_KW_CONTINUOUS_EFF, PLAN_PDDL_REQUIRE_CONTINUOUS_EFF },
-    { PLAN_PDDL_KW_DERIVED_PRED, PLAN_PDDL_REQUIRE_DERIVED_PRED },
-    { PLAN_PDDL_KW_TIMED_INITIAL_LITERAL, PLAN_PDDL_REQUIRE_TIMED_INITIAL_LITERAL },
-    { PLAN_PDDL_KW_DURATIVE_ACTION, PLAN_PDDL_REQUIRE_DURATIVE_ACTION },
-    { PLAN_PDDL_KW_PREFERENCE, PLAN_PDDL_REQUIRE_PREFERENCE },
-    { PLAN_PDDL_KW_CONSTRAINT, PLAN_PDDL_REQUIRE_CONSTRAINT },
-    { PLAN_PDDL_KW_ACTION_COST, PLAN_PDDL_REQUIRE_ACTION_COST },
-    { PLAN_PDDL_KW_MULTI_AGENT, PLAN_PDDL_REQUIRE_MULTI_AGENT },
-    { PLAN_PDDL_KW_UNFACTORED_PRIVACY, PLAN_PDDL_REQUIRE_UNFACTORED_PRIVACY },
-    { PLAN_PDDL_KW_FACTORED_PRIVACY, PLAN_PDDL_REQUIRE_FACTORED_PRIVACY },
-
-    { PLAN_PDDL_KW_QUANTIFIED_PRE, PLAN_PDDL_REQUIRE_EXISTENTIAL_PRE |
-                                   PLAN_PDDL_REQUIRE_UNIVERSAL_PRE },
-    { PLAN_PDDL_KW_FLUENTS, PLAN_PDDL_REQUIRE_NUMERIC_FLUENT |
-                            PLAN_PDDL_REQUIRE_OBJECT_FLUENT },
-    { PLAN_PDDL_KW_ADL, PLAN_PDDL_REQUIRE_STRIPS |
-                        PLAN_PDDL_REQUIRE_TYPING |
-                        PLAN_PDDL_REQUIRE_NEGATIVE_PRE |
-                        PLAN_PDDL_REQUIRE_DISJUNCTIVE_PRE |
-                        PLAN_PDDL_REQUIRE_EQUALITY |
-                        PLAN_PDDL_REQUIRE_EXISTENTIAL_PRE |
-                        PLAN_PDDL_REQUIRE_UNIVERSAL_PRE |
-                        PLAN_PDDL_REQUIRE_CONDITIONAL_EFF },
-};
-static int require_mask_size = sizeof(require_mask) / sizeof(require_mask_t);
 
 /**
  * Mapping between keyword on type of condition node.
@@ -157,17 +86,6 @@ static int condParse(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
                      int action_id, plan_pddl_cond_t *cond);
 static void condPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
                       const plan_pddl_cond_t *cond, FILE *fout);
-
-static unsigned requireMask(int kw)
-{
-    int i;
-
-    for (i = 0; i < require_mask_size; ++i){
-        if (require_mask[i].kw == kw)
-            return require_mask[i].mask;
-    }
-    return 0u;
-}
 
 static void predicateInit(plan_pddl_predicate_t *p)
 {
@@ -439,35 +357,6 @@ static int checkDomainName(plan_pddl_t *pddl)
         return 0;
     }
     return 0;
-}
-
-static unsigned parseRequire(const plan_pddl_lisp_node_t *root)
-{
-    const plan_pddl_lisp_node_t *rnode, *n;
-    int i;
-    unsigned mask = 0u, m;
-
-    rnode = planPDDLLispFindNode(root, PLAN_PDDL_KW_REQUIREMENTS);
-    // No :requirements implies :strips
-    if (rnode == NULL)
-        return PLAN_PDDL_REQUIRE_STRIPS;
-
-    for (i = 1; i < rnode->child_size; ++i){
-        n = rnode->child + i;
-        if (n->value == NULL){
-            ERRN2(n, "Invalid :requirements definition.");
-            return 0u;
-        }
-        if ((m = requireMask(n->kw)) == 0u){
-            ERRN(n, "Invalid :requirements definition: Unkown keyword `%s'.",
-                 n->value);
-            return 0u;
-        }
-
-        mask |= m;
-    }
-
-    return mask;
 }
 
 static int getType(plan_pddl_t *pddl, const char *name)
@@ -1400,8 +1289,7 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
     if (checkDomainName(pddl) != 0)
         goto pddl_fail;
 
-    pddl->require = parseRequire(&domain_lisp->root);
-    if (pddl->require == 0u)
+    if (planPDDLRequireParse(domain_lisp, &pddl->require) != 0)
         goto pddl_fail;
 
     // Add 'object' type

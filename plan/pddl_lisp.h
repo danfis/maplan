@@ -2,6 +2,7 @@
 #define __PLAN_PDDL_LISP_H__
 
 #include <stdio.h>
+#include <boruvka/compiler.h>
 
 #ifdef __cplusplus
 extern "C" {

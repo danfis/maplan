@@ -308,3 +308,15 @@ void planPDDLLispNodeFree(plan_pddl_lisp_node_t *node)
 {
     lispNodeFree(node);
 }
+
+const plan_pddl_lisp_node_t *planPDDLLispFindNode(
+            const plan_pddl_lisp_node_t *root, int kw)
+{
+    int i;
+
+    for (i = 0; i < root->child_size; ++i){
+        if (planPDDLLispNodeHeadKw(root->child + i) == kw)
+            return root->child + i;
+    }
+    return NULL;
+}

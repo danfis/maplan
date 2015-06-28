@@ -153,7 +153,7 @@ static void condFree(plan_pddl_cond_t *c);
 /** Flatten condition tree so there are not nested conjunctions */
 static void condFlattenAnd(plan_pddl_cond_t *cond);
 /** Parse pddl node tree into condition tree. */
-static int condParse(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+static int condParse(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
                      int action_id, plan_pddl_cond_t *cond);
 static void condPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
                       const plan_pddl_cond_t *cond, FILE *fout);
@@ -353,37 +353,12 @@ static void actionPrintArr(const plan_pddl_t *pddl,
 
 
 
-static int nodeHeadKw(const plan_pddl_lisp_node_t *n)
-{
-    if (n->child_size == 0)
-        return -1;
-    return n->child[0].kw;
-}
-
-static const char *nodeHead(const plan_pddl_lisp_node_t *n)
-{
-    if (n->child_size == 0)
-        return NULL;
-    return n->child[0].value;
-}
-
-static plan_pddl_lisp_node_t *findNode(plan_pddl_lisp_node_t *node, int kw)
-{
-    int i;
-
-    for (i = 0; i < node->child_size; ++i){
-        if (nodeHeadKw(node->child + i) == kw)
-            return node->child + i;
-    }
-    return NULL;
-}
-
 typedef int (*parse_typed_list_set_fn)(plan_pddl_t *pddl,
-                                       plan_pddl_lisp_node_t *root,
+                                       const plan_pddl_lisp_node_t *root,
                                        int child_from, int child_to,
                                        int child_type);
 static int parseTypedList(plan_pddl_t *pddl,
-                          plan_pddl_lisp_node_t *root,
+                          const plan_pddl_lisp_node_t *root,
                           int from, int to,
                           parse_typed_list_set_fn set_fn)
 {
@@ -425,9 +400,9 @@ static int parseTypedList(plan_pddl_t *pddl,
 static const char *parseName(plan_pddl_lisp_node_t *root, int kw,
                              const char *err_name)
 {
-    plan_pddl_lisp_node_t *n;
+    const plan_pddl_lisp_node_t *n;
 
-    n = findNode(root, kw);
+    n = planPDDLLispFindNode(root, kw);
     if (n == NULL){
         ERR("Could not find %s name definition.", err_name);
         return NULL;
@@ -466,13 +441,13 @@ static int checkDomainName(plan_pddl_t *pddl)
     return 0;
 }
 
-static unsigned parseRequire(plan_pddl_lisp_node_t *root)
+static unsigned parseRequire(const plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *rnode, *n;
+    const plan_pddl_lisp_node_t *rnode, *n;
     int i;
     unsigned mask = 0u, m;
 
-    rnode = findNode(root, PLAN_PDDL_KW_REQUIREMENTS);
+    rnode = planPDDLLispFindNode(root, PLAN_PDDL_KW_REQUIREMENTS);
     // No :requirements implies :strips
     if (rnode == NULL)
         return PLAN_PDDL_REQUIRE_STRIPS;
@@ -523,7 +498,7 @@ static int addType(plan_pddl_t *pddl, const char *name)
 }
 
 static int parseTypeSet(plan_pddl_t *pddl,
-                        plan_pddl_lisp_node_t *root,
+                        const plan_pddl_lisp_node_t *root,
                         int child_from, int child_to, int child_type)
 {
     int i, tid, pid;
@@ -550,11 +525,11 @@ static int parseTypeSet(plan_pddl_t *pddl,
     return 0;
 }
 
-static int parseType(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parseType(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *types;
+    const plan_pddl_lisp_node_t *types;
 
-    types = findNode(root, PLAN_PDDL_KW_TYPES);
+    types = planPDDLLispFindNode(root, PLAN_PDDL_KW_TYPES);
     if (types == NULL)
         return 0;
 
@@ -603,7 +578,7 @@ static int getObj(const plan_pddl_t *pddl, const char *name)
 }
 
 static int parseConstantSet(plan_pddl_t *pddl,
-                            plan_pddl_lisp_node_t *root,
+                            const plan_pddl_lisp_node_t *root,
                             int child_from, int child_to, int child_type)
 {
     plan_pddl_obj_t *o;
@@ -627,11 +602,11 @@ static int parseConstantSet(plan_pddl_t *pddl,
     return 0;
 }
 
-static int parseConstant(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parseConstant(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *n;
+    const plan_pddl_lisp_node_t *n;
 
-    n = findNode(root, PLAN_PDDL_KW_CONSTANTS);
+    n = planPDDLLispFindNode(root, PLAN_PDDL_KW_CONSTANTS);
     if (n == NULL)
         return 0;
 
@@ -644,7 +619,7 @@ static int parseConstant(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
 }
 
 static int parseObjSet(plan_pddl_t *pddl,
-                       plan_pddl_lisp_node_t *root,
+                       const plan_pddl_lisp_node_t *root,
                        int child_from, int child_to, int child_type)
 {
     int i, tid;
@@ -665,11 +640,11 @@ static int parseObjSet(plan_pddl_t *pddl,
     return 0;
 }
 
-static int parseObj(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parseObj(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *n;
+    const plan_pddl_lisp_node_t *n;
 
-    n = findNode(root, PLAN_PDDL_KW_OBJECTS);
+    n = planPDDLLispFindNode(root, PLAN_PDDL_KW_OBJECTS);
     if (n == NULL)
         return 0;
 
@@ -785,7 +760,7 @@ static void addEqPredicate(plan_pddl_t *pddl)
 }
 
 static int parsePredicateSet(plan_pddl_t *pddl,
-                             plan_pddl_lisp_node_t *root,
+                             const plan_pddl_lisp_node_t *root,
                              int child_from, int child_to, int child_type)
 {
     plan_pddl_predicate_t *pred;
@@ -810,7 +785,7 @@ static int parsePredicateSet(plan_pddl_t *pddl,
     return 0;
 }
 
-static int parsePredicate1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parsePredicate1(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
     if (root->child_size < 1 || root->child[0].value == NULL){
         ERRN2(root, "Invalid definition of predicate.");
@@ -825,12 +800,12 @@ static int parsePredicate1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return 0;
 }
 
-static int parsePredicate(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parsePredicate(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *n;
+    const plan_pddl_lisp_node_t *n;
     int i;
 
-    n = findNode(root, PLAN_PDDL_KW_PREDICATES);
+    n = planPDDLLispFindNode(root, PLAN_PDDL_KW_PREDICATES);
     if (n == NULL)
         return 0;
 
@@ -876,7 +851,7 @@ static int getFunction(plan_pddl_t *pddl, const char *name)
 }
 
 static int parseFunctionSet(plan_pddl_t *pddl,
-                            plan_pddl_lisp_node_t *root,
+                            const plan_pddl_lisp_node_t *root,
                             int child_from, int child_to, int child_type)
 {
     plan_pddl_predicate_t *pred;
@@ -901,7 +876,7 @@ static int parseFunctionSet(plan_pddl_t *pddl,
     return 0;
 }
 
-static int parseFunction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parseFunction1(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
     if (root->child_size < 1 || root->child[0].value == NULL){
         ERRN2(root, "Invalid definition of predicate.");
@@ -916,12 +891,12 @@ static int parseFunction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return 0;
 }
 
-static int parseFunction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parseFunction(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *n;
+    const plan_pddl_lisp_node_t *n;
     int i;
 
-    n = findNode(root, PLAN_PDDL_KW_FUNCTIONS);
+    n = planPDDLLispFindNode(root, PLAN_PDDL_KW_FUNCTIONS);
     if (n == NULL)
         return 0;
 
@@ -971,7 +946,7 @@ static int getActionParam(const plan_pddl_t *pddl, int action_id,
 }
 
 static int parseActionParamSet(plan_pddl_t *pddl,
-                               plan_pddl_lisp_node_t *root,
+                               const plan_pddl_lisp_node_t *root,
                                int child_from, int child_to, int child_type)
 {
     int id = pddl->action_size - 1;
@@ -1149,9 +1124,9 @@ static int parseActionEff(plan_pddl_t *pddl,
     return 0;
 }
 
-static int parseAction1(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parseAction1(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *n;
+    const plan_pddl_lisp_node_t *n;
     plan_pddl_cond_t cond;
     plan_pddl_action_t *a;
     int action_id, i, ret;
@@ -1205,7 +1180,7 @@ static int parseAction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     int i;
 
     for (i = 0; i < root->child_size; ++i){
-        if (nodeHeadKw(root->child + i) == PLAN_PDDL_KW_ACTION){
+        if (planPDDLLispNodeHeadKw(root->child + i) == PLAN_PDDL_KW_ACTION){
             if (parseAction1(pddl, root->child + i) != 0)
                 return -1;
         }
@@ -1213,13 +1188,13 @@ static int parseAction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return 0;
 }
 
-static int parseGoal(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parseGoal(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *n;
+    const plan_pddl_lisp_node_t *n;
     plan_pddl_cond_t cond;
     int i, j;
 
-    n = findNode(root, PLAN_PDDL_KW_GOAL);
+    n = planPDDLLispFindNode(root, PLAN_PDDL_KW_GOAL);
     if (n == NULL){
         ERR2("Could not find :goal.");
         return -1;
@@ -1262,10 +1237,10 @@ static int parseGoal(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return 0;
 }
 
-static int parseObjsIntoArr(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n,
+static int parseObjsIntoArr(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *n,
                             int from, int to, int **out, int *out_size)
 {
-    plan_pddl_lisp_node_t *c;
+    const plan_pddl_lisp_node_t *c;
     int size, *obj, i;
 
     *out_size = size = to - from;
@@ -1287,9 +1262,9 @@ static int parseObjsIntoArr(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n,
     return 0;
 }
 
-static int parseInstFunc(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n)
+static int parseInstFunc(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *n)
 {
-    plan_pddl_lisp_node_t *nfunc, *nval;
+    const plan_pddl_lisp_node_t *nfunc, *nval;
     plan_pddl_inst_func_t *func;
 
     nfunc = n->child + 1;
@@ -1315,7 +1290,7 @@ static int parseInstFunc(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n)
 }
 
 static int parseFact(plan_pddl_t *pddl, const char *head,
-                     plan_pddl_lisp_node_t *n)
+                     const plan_pddl_lisp_node_t *n)
 {
     plan_pddl_fact_t *fact = pddl->init_fact + pddl->init_fact_size++;
 
@@ -1329,7 +1304,7 @@ static int parseFact(plan_pddl_t *pddl, const char *head,
                             &fact->arg, &fact->arg_size);
 }
 
-static int parseFactFunc(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n)
+static int parseFactFunc(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *n)
 {
     const char *head;
 
@@ -1338,7 +1313,7 @@ static int parseFactFunc(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n)
         return -1;
     }
 
-    head = nodeHead(n);
+    head = planPDDLLispNodeHead(n);
     if (strcmp(head, "=") == 0
             && n->child_size == 3
             && n->child[1].value == NULL){
@@ -1348,12 +1323,12 @@ static int parseFactFunc(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n)
     }
 }
 
-static int parseInit(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parseInit(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *I, *n;
+    const plan_pddl_lisp_node_t *I, *n;
     int i;
 
-    I = findNode(root, PLAN_PDDL_KW_INIT);
+    I = planPDDLLispFindNode(root, PLAN_PDDL_KW_INIT);
     if (I == NULL){
         ERR2("Missing :init.");
         return -1;
@@ -1372,11 +1347,11 @@ static int parseInit(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
     return 0;
 }
 
-static int parseMetric(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root)
+static int parseMetric(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
-    plan_pddl_lisp_node_t *n;
+    const plan_pddl_lisp_node_t *n;
 
-    n = findNode(root, PLAN_PDDL_KW_METRIC);
+    n = planPDDLLispFindNode(root, PLAN_PDDL_KW_METRIC);
     if (n == NULL)
         return 0;
 
@@ -1627,7 +1602,7 @@ static void condFlattenAnd(plan_pddl_cond_t *cond)
     }
 }
 
-static int condParseVarConst(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+static int condParseVarConst(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
                              int action_id, plan_pddl_cond_t *cond)
 {
     if (root->value[0] == '?'){
@@ -1655,13 +1630,13 @@ static int condParseVarConst(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
     return 0;
 }
 
-static int condParsePred(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+static int condParsePred(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
                          int action_id, plan_pddl_cond_t *cond)
 {
     const char *name;
     int i;
 
-    name = nodeHead(root);
+    name = planPDDLLispNodeHead(root);
     if (name == NULL){
         ERRN2(root, "Invalid definition of conditional, missing head of"
                     " expression.");
@@ -1712,7 +1687,7 @@ static void condParseForallReplace(plan_pddl_t *pddl, plan_pddl_lisp_node_t *n)
         condParseForallReplace(pddl, n->child + i);
 }
 
-static int condParseForallEval(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+static int condParseForallEval(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
                                int action_id, plan_pddl_cond_t *cond)
 {
     plan_pddl_lisp_node_t arg;
@@ -1730,7 +1705,7 @@ static int condParseForallEval(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
     return ret;
 }
 
-static int condParseForallRec(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+static int condParseForallRec(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
                               int action_id, plan_pddl_cond_t *cond, int param)
 {
     plan_pddl_obj_arr_t *m;
@@ -1752,7 +1727,7 @@ static int condParseForallRec(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
 }
 
 static int condParseForallSet(plan_pddl_t *pddl,
-                              plan_pddl_lisp_node_t *root,
+                              const plan_pddl_lisp_node_t *root,
                               int child_from, int child_to,
                               int child_type)
 {
@@ -1781,7 +1756,7 @@ static int condParseForallSet(plan_pddl_t *pddl,
     return 0;
 }
 
-static int condParseForall(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+static int condParseForall(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
                            int action_id, plan_pddl_cond_t *cond)
 {
     if (root->child_size != 3
@@ -1819,7 +1794,7 @@ static int condParseForall(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
     return 0;
 }
 
-static int condParseFunction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+static int condParseFunction(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
                              int action_id, plan_pddl_cond_t *cond)
 {
     int i;
@@ -1857,12 +1832,12 @@ static int condParseFunction(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
     return 0;
 }
 
-static int condParse(plan_pddl_t *pddl, plan_pddl_lisp_node_t *root,
+static int condParse(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root,
                      int action_id, plan_pddl_cond_t *cond)
 {
     int i;
 
-    cond->type = condType(nodeHeadKw(root));
+    cond->type = condType(planPDDLLispNodeHeadKw(root));
     if (cond->type == -1)
         return condParsePred(pddl, root, action_id, cond);
 

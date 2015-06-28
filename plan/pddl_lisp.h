@@ -81,13 +81,63 @@ struct _plan_pddl_lisp_t {
 };
 typedef struct _plan_pddl_lisp_t plan_pddl_lisp_t;
 
+/**
+ * Parses the input file and returns the parsed pddl-lisp object.
+ */
 plan_pddl_lisp_t *planPDDLLispParse(const char *fn);
+
+/**
+ * Deletes pddl-lisp object.
+ */
 void planPDDLLispDel(plan_pddl_lisp_t *lisp);
+
+/**
+ * Prints pddl-lisp object to the specified output.
+ */
 void planPDDLLispDump(const plan_pddl_lisp_t *lisp, FILE *fout);
 
+/**
+ * Returns root's child with the specified head keyword.
+ */
+const plan_pddl_lisp_node_t *planPDDLLispFindNode(
+            const plan_pddl_lisp_node_t *root, int kw);
+
+/**
+ * Copy pddl-lisp-node from src to dst.
+ */
 void planPDDLLispNodeCopy(plan_pddl_lisp_node_t *dst,
                           const plan_pddl_lisp_node_t *src);
+
+/**
+ * Frees pddl-lisp-node -- use it as pair function to *Copy().
+ */
 void planPDDLLispNodeFree(plan_pddl_lisp_node_t *node);
+
+/**
+ * Returns the value of the first sub-element of the specified node.
+ */
+_bor_inline const char *planPDDLLispNodeHead(const plan_pddl_lisp_node_t *n);
+
+/**
+ * Simliar to planPDDLLispNodeHead() but returns the keyword corresponding
+ * to the head value.
+ */
+_bor_inline int planPDDLLispNodeHeadKw(const plan_pddl_lisp_node_t *n);
+
+/**** INLINES: ****/
+_bor_inline const char *planPDDLLispNodeHead(const plan_pddl_lisp_node_t *n)
+{
+    if (n->child_size == 0)
+        return NULL;
+    return n->child[0].value;
+}
+
+_bor_inline int planPDDLLispNodeHeadKw(const plan_pddl_lisp_node_t *n)
+{
+    if (n->child_size == 0)
+        return -1;
+    return n->child[0].kw;
+}
 
 #ifdef __cplusplus
 }

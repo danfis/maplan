@@ -727,7 +727,8 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
                                       &pddl->function, &pddl->obj,
                                       &pddl->init_fact, &pddl->init_func) != 0
             || planPDDLActionsParse(domain_lisp, &pddl->type, &pddl->obj,
-                                    &pddl->predicate, &pddl->function,
+                                    &pddl->type_obj, &pddl->predicate,
+                                    &pddl->function, pddl->require,
                                     &pddl->action) != 0
             || parseMetric(pddl, &problem_lisp->root) != 0){
         goto pddl_fail;

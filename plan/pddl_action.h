@@ -62,8 +62,10 @@ typedef struct _plan_pddl_actions_t plan_pddl_actions_t;
 int planPDDLActionsParse(const plan_pddl_lisp_t *domain,
                          const plan_pddl_types_t *types,
                          const plan_pddl_objs_t *objs,
-                         const plan_pddl_predicates_t *predicate,
+                         const plan_pddl_type_obj_t *type_obj,
+                         const plan_pddl_predicates_t *predicates,
                          const plan_pddl_predicates_t *functions,
+                         unsigned require,
                          plan_pddl_actions_t *actions);
 
 void planPDDLActionsFree(plan_pddl_actions_t *actions);

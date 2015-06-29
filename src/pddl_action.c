@@ -22,14 +22,17 @@
 #include "pddl_err.h"
 
 struct _set_param_t {
-    plan_pddl_action_t *a;
+    plan_pddl_objs_t *param;
     const plan_pddl_types_t *types;
 };
 typedef struct _set_param_t set_param_t;
 
-static int parsePreEff(const plan_pddl_objs_t *objs,
+static int parsePreEff(const plan_pddl_types_t *types,
+                       const plan_pddl_objs_t *objs,
+                       const plan_pddl_type_obj_t *type_obj,
                        const plan_pddl_predicates_t *predicates,
                        const plan_pddl_predicates_t *functions,
+                       unsigned require,
                        const plan_pddl_lisp_node_t *root,
                        const char *errname,
                        plan_pddl_action_t *a,
@@ -75,7 +78,7 @@ static int getParam(const plan_pddl_action_t *a, const char *var_name)
 static int setParams(const plan_pddl_lisp_node_t *root,
                      int child_from, int child_to, int child_type, void *ud)
 {
-    plan_pddl_action_t *a = ((set_param_t *)ud)->a;
+    plan_pddl_objs_t *param = ((set_param_t *)ud)->param;
     const plan_pddl_types_t *types = ((set_param_t *)ud)->types;
     int i, j, tid;
 
@@ -89,10 +92,9 @@ static int setParams(const plan_pddl_lisp_node_t *root,
         }
     }
 
-    j = a->param.size;
-    a->param.size += child_to - child_from;
-    a->param.obj = BOR_REALLOC_ARR(a->param.obj, plan_pddl_obj_t,
-                                   a->param.size);
+    j = param->size;
+    param->size += child_to - child_from;
+    param->obj = BOR_REALLOC_ARR(param->obj, plan_pddl_obj_t, param->size);
     for (i = child_from; i < child_to; ++i, ++j){
         if (root->child[i].value == NULL){
             ERRN2(root->child + i, "Invalid parameter definition:"
@@ -107,9 +109,9 @@ static int setParams(const plan_pddl_lisp_node_t *root,
             return -1;
         }
 
-        a->param.obj[j].name = root->child[i].value;
-        a->param.obj[j].type = tid;
-        a->param.obj[j].is_constant = 0;
+        param->obj[j].name = root->child[i].value;
+        param->obj[j].type = tid;
+        param->obj[j].is_constant = 0;
     }
 
     return 0;
@@ -117,10 +119,10 @@ static int setParams(const plan_pddl_lisp_node_t *root,
 
 static int parseParams(const plan_pddl_types_t *types,
                        const plan_pddl_lisp_node_t *n,
-                       plan_pddl_action_t *a)
+                       plan_pddl_objs_t *param)
 {
     set_param_t set_param;
-    set_param.a = a;
+    set_param.param = param;
     set_param.types = types;
     if (planPDDLLispParseTypedList(n, 0, n->child_size,
                                    setParams, &set_param) != 0)
@@ -200,18 +202,17 @@ static plan_pddl_fact_t *parseFact(const plan_pddl_objs_t *objs,
 
 static int parseCost(const plan_pddl_objs_t *objs,
                      const plan_pddl_predicates_t *functions,
+                     unsigned require,
                      const plan_pddl_lisp_node_t *root,
                      plan_pddl_action_t *a)
 {
     plan_pddl_fact_t *f;
 
-    /* TODO
-    if (!(pddl->require & PLAN_PDDL_REQUIRE_ACTION_COST)){
+    if (!(require & PLAN_PDDL_REQUIRE_ACTION_COST)){
         ERRN2(root, "(increase ...) is supported only under"
                 " :action-costs requirement.");
         return -1;
     }
-    */
 
     if (root->child_size != 3){
         ERRN2(root, "Invalid (increase ...) specification.");
@@ -240,7 +241,9 @@ static int parseCost(const plan_pddl_objs_t *objs,
     return 0;
 }
 
-static int parseCondEff(const plan_pddl_objs_t *objs,
+static int parseCondEff(const plan_pddl_types_t *types,
+                        const plan_pddl_objs_t *objs,
+                        const plan_pddl_type_obj_t *type_obj,
                         const plan_pddl_predicates_t *predicates,
                         const plan_pddl_lisp_node_t *root,
                         plan_pddl_action_t *a)
@@ -255,18 +258,147 @@ static int parseCondEff(const plan_pddl_objs_t *objs,
     }
 
     ce = addCondEff(a);
-    if (parsePreEff(objs, predicates, NULL, root->child + 1,
+    if (parsePreEff(types, objs, type_obj, predicates, NULL, 0, root->child + 1,
                     "cond-eff predicate", a, &ce->pre, 0, 0) != 0)
         return -1;
-    if (parsePreEff(objs, predicates, NULL, root->child + 2,
+    if (parsePreEff(types, objs, type_obj, predicates, NULL, 0, root->child + 2,
                     "cond-eff effect", a, &ce->eff, 0, 0) != 0)
         return -1;
     return 0;
 }
 
-static int parsePreEff(const plan_pddl_objs_t *objs,
+static void parseForallReplace(const plan_pddl_objs_t *params,
+                               const int *bound_var,
+                               const plan_pddl_objs_t *objs,
+                               plan_pddl_lisp_node_t *n)
+{
+    int i;
+
+    if (n->kw == -1 && n->value != NULL){
+        for (i = 0; i < params->size; ++i){
+            if (strcmp(n->value, params->obj[i].name) == 0){
+                n->value = objs->obj[bound_var[i]].name;
+            }
+        }
+    }
+
+    for (i = 0; i < n->child_size; ++i)
+        parseForallReplace(params, bound_var, objs, n->child + i);
+}
+
+static int parseForallEval(const plan_pddl_objs_t *params,
+                           int *bound_var,
+                           const plan_pddl_types_t *types,
+                           const plan_pddl_objs_t *objs,
+                           const plan_pddl_type_obj_t *type_obj,
+                           const plan_pddl_predicates_t *predicates,
+                           const plan_pddl_predicates_t *functions,
+                           unsigned require,
+                           const plan_pddl_lisp_node_t *root,
+                           const char *errname,
+                           plan_pddl_action_t *a,
+                           plan_pddl_facts_t *facts,
+                           int parse_cost, int parse_cond_eff)
+{
+    plan_pddl_lisp_node_t arg;
+    int ret = 0;
+
+    planPDDLLispNodeCopy(&arg, root->child + 2);
+    parseForallReplace(params, bound_var, objs, &arg);
+    ret = parsePreEff(types, objs, type_obj, predicates, functions,
+                      require, &arg, errname, a, facts, parse_cost,
+                      parse_cond_eff);
+    planPDDLLispNodeFree(&arg);
+    return ret;
+}
+
+static int parseForallRec(const plan_pddl_objs_t *params,
+                          int *bound_var, int var_id,
+                          const plan_pddl_types_t *types,
+                          const plan_pddl_objs_t *objs,
+                          const plan_pddl_type_obj_t *type_obj,
+                          const plan_pddl_predicates_t *predicates,
+                          const plan_pddl_predicates_t *functions,
+                          unsigned require,
+                          const plan_pddl_lisp_node_t *root,
+                          const char *errname,
+                          plan_pddl_action_t *a,
+                          plan_pddl_facts_t *facts,
+                          int parse_cost, int parse_cond_eff)
+{
+    const int *obj;
+    int obj_size, i;
+
+    obj = planPDDLTypeObjGet(type_obj, params->obj[var_id].type, &obj_size);
+    for (i = 0; i < obj_size; ++i){
+        bound_var[var_id] = obj[i];
+        if (var_id == params->size - 1){
+            if (parseForallEval(params, bound_var, types, objs, type_obj,
+                                predicates, functions, require, root,
+                                errname, a, facts, parse_cost,
+                                parse_cond_eff) != 0)
+                return -1;
+        }else{
+            if (parseForallRec(params, bound_var, var_id + 1, types,
+                               objs, type_obj, predicates, functions,
+                               require, root, errname, a, facts,
+                               parse_cost, parse_cond_eff) != 0)
+                return -1;
+        }
+    }
+
+    return 0;
+}
+
+static int parseForall(const plan_pddl_types_t *types,
+                       const plan_pddl_objs_t *objs,
+                       const plan_pddl_type_obj_t *type_obj,
                        const plan_pddl_predicates_t *predicates,
                        const plan_pddl_predicates_t *functions,
+                       unsigned require,
+                       const plan_pddl_lisp_node_t *root,
+                       const char *errname,
+                       plan_pddl_action_t *a,
+                       plan_pddl_facts_t *facts,
+                       int parse_cost, int parse_cond_eff)
+{
+    plan_pddl_objs_t params;
+    int *bound_var;
+    int ret;
+
+    if (root->child_size != 3
+            || root->child[1].value != NULL
+            || root->child[2].value != NULL){
+        ERRN2(root, "Invalid (forall ...) condition.");
+        return -1;
+    }
+
+    bzero(&params, sizeof(params));
+    if (parseParams(types, root->child + 1, &params) != 0){
+        planPDDLObjsFree(&params);
+        return -1;
+    }
+    if (params.size == 0){
+        ERRN2(root, "Missing arguments in (forall ...).");
+        return -1;
+    }
+
+    bound_var = BOR_ALLOC_ARR(int, params.size);
+    ret = parseForallRec(&params, bound_var, 0, types, objs, type_obj,
+                         predicates, functions, require, root, errname, a, facts,
+                         parse_cost, parse_cond_eff);
+
+    BOR_FREE(bound_var);
+    planPDDLObjsFree(&params);
+    return ret;
+}
+
+static int parsePreEff(const plan_pddl_types_t *types,
+                       const plan_pddl_objs_t *objs,
+                       const plan_pddl_type_obj_t *type_obj,
+                       const plan_pddl_predicates_t *predicates,
+                       const plan_pddl_predicates_t *functions,
+                       unsigned require,
                        const plan_pddl_lisp_node_t *root,
                        const char *errname,
                        plan_pddl_action_t *a,
@@ -279,8 +411,9 @@ static int parsePreEff(const plan_pddl_objs_t *objs,
     kw = planPDDLLispNodeHeadKw(root);
     if (kw == PLAN_PDDL_KW_AND){
         for (i = 1; i < root->child_size; ++i){
-            if (parsePreEff(objs, predicates, functions, root->child + i,
-                            errname, a, facts, parse_cost, parse_cond_eff) != 0)
+            if (parsePreEff(types, objs, type_obj, predicates, functions,
+                            require, root->child + i, errname, a, facts,
+                            parse_cost, parse_cond_eff) != 0)
                 return -1;
         }
 
@@ -297,8 +430,10 @@ static int parsePreEff(const plan_pddl_objs_t *objs,
         f->neg = 1;
 
     }else if (kw == PLAN_PDDL_KW_FORALL){
-        ERRN(root, "(forall ...) is not supported in %s yet.", errname);
-        return 0;
+        if (parseForall(types, objs, type_obj, predicates, functions,
+                        require, root, errname, a, facts, parse_cost,
+                        parse_cond_eff) != 0)
+            return -1;
 
     }else if (kw == PLAN_PDDL_KW_WHEN){
         if (!parse_cond_eff){
@@ -306,7 +441,7 @@ static int parsePreEff(const plan_pddl_objs_t *objs,
             return 0;
         }
 
-        if (parseCondEff(objs, predicates, root, a) != 0)
+        if (parseCondEff(types, objs, type_obj, predicates, root, a) != 0)
             return -1;
 
     }else if (kw == PLAN_PDDL_KW_OR){
@@ -327,7 +462,7 @@ static int parsePreEff(const plan_pddl_objs_t *objs,
             return -1;
         }
 
-        if (parseCost(objs, functions, root, a) != 0)
+        if (parseCost(objs, functions, require, root, a) != 0)
             return -1;
 
     }else if (kw == -1){
@@ -349,8 +484,10 @@ static int parsePreEff(const plan_pddl_objs_t *objs,
 
 static int parseAction(const plan_pddl_types_t *types,
                        const plan_pddl_objs_t *objs,
+                       const plan_pddl_type_obj_t *type_obj,
                        const plan_pddl_predicates_t *predicates,
                        const plan_pddl_predicates_t *functions,
+                       unsigned require,
                        const plan_pddl_lisp_node_t *root,
                        plan_pddl_actions_t *actions)
 {
@@ -369,17 +506,17 @@ static int parseAction(const plan_pddl_types_t *types,
     for (i = 2; i < root->child_size; i += 2){
         n = root->child + i + 1;
         if (root->child[i].kw == PLAN_PDDL_KW_PARAMETERS){
-            if (parseParams(types, n, a) != 0)
+            if (parseParams(types, n, &a->param) != 0)
                 return -1;
 
         }else if (root->child[i].kw == PLAN_PDDL_KW_PRE){
-            if (parsePreEff(objs, predicates, functions, n,
-                            "precondition", a, &a->pre, 0, 0) != 0)
+            if (parsePreEff(types, objs, type_obj, predicates, functions,
+                            require, n, "precondition", a, &a->pre, 0, 0) != 0)
                 return -1;
 
         }else if (root->child[i].kw == PLAN_PDDL_KW_EFF){
-            if (parsePreEff(objs, predicates, functions, n,
-                            "effect", a, &a->eff, 1, 1) != 0)
+            if (parsePreEff(types, objs, type_obj, predicates, functions,
+                            require, n, "effect", a, &a->eff, 1, 1) != 0)
                 return -1;
 
         }else{
@@ -396,8 +533,10 @@ static int parseAction(const plan_pddl_types_t *types,
 int planPDDLActionsParse(const plan_pddl_lisp_t *domain,
                          const plan_pddl_types_t *types,
                          const plan_pddl_objs_t *objs,
+                         const plan_pddl_type_obj_t *type_obj,
                          const plan_pddl_predicates_t *predicates,
                          const plan_pddl_predicates_t *functions,
+                         unsigned require,
                          plan_pddl_actions_t *actions)
 {
     const plan_pddl_lisp_node_t *root = &domain->root;
@@ -407,7 +546,8 @@ int planPDDLActionsParse(const plan_pddl_lisp_t *domain,
     for (i = 0; i < root->child_size; ++i){
         n = root->child + i;
         if (planPDDLLispNodeHeadKw(n) == PLAN_PDDL_KW_ACTION){
-            if (parseAction(types, objs, predicates, functions, n, actions) != 0)
+            if (parseAction(types, objs, type_obj, predicates,
+                            functions, require, n, actions) != 0)
                 return -1;
         }
     }
@@ -488,9 +628,6 @@ static void planPDDLActionPrint(const plan_pddl_action_t *a,
         fprintf(fout, "          eff[%d]:\n",
                 a->cond_eff.cond_eff[i].eff.size);
         printFacts(a, objs, predicates, &a->cond_eff.cond_eff[i].eff, fout);
-        //fprintf(fout, "            eff[%d]:\n", a->cond_eff[i].eff_size);
-        //factPrintArr(pddl, a, a->cond_eff[i].eff, a->cond_eff[i].eff_size,
-        //             fout, "                ");
     }
 
     for (i = 0; i < a->cost.size; ++i){

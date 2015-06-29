@@ -88,6 +88,7 @@ int planPDDLObjsParse(const plan_pddl_lisp_t *domain,
                       const plan_pddl_types_t *types,
                       plan_pddl_objs_t *objs)
 {
+    bzero(objs, sizeof(*objs));
     if (parse(domain, PLAN_PDDL_KW_CONSTANTS, 1, types, objs) != 0
             || parse(problem, PLAN_PDDL_KW_OBJECTS, 0, types, objs) != 0)
         return -1;

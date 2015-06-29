@@ -726,6 +726,8 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
             || planPDDLFactsParseInit(problem_lisp, &pddl->predicate,
                                       &pddl->function, &pddl->obj,
                                       &pddl->init_fact, &pddl->init_func) != 0
+            || planPDDLFactsParseGoal(problem_lisp, &pddl->predicate,
+                                      &pddl->obj, &pddl->goal) != 0
             || planPDDLActionsParse(domain_lisp, &pddl->type, &pddl->obj,
                                     &pddl->type_obj, &pddl->predicate,
                                     &pddl->function, pddl->require,
@@ -776,21 +778,9 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
     planPDDLActionsPrint(&pddl->action, &pddl->obj, &pddl->predicate,
                          &pddl->function, fout);
 
-    /*
-    fprintf(fout, "Init[%d]:\n", pddl->init_fact.size);
-    factPrintArr(pddl, NULL, pddl->init_fact.fact, pddl->init_fact.size, fout, "    ");
-
-    fprintf(fout, "Init Func[%d]:\n", pddl->init_func.size);
-    for (i = 0; i < pddl->init_func.size; ++i){
-        fprintf(fout, "    %s:",
-                pddl->function.pred[pddl->init_func.fact[i].pred].name);
-        for (j = 0; j < pddl->init_func.fact[i].arg_size; ++j)
-            fprintf(fout, " %s",
-                    pddl->obj.obj[pddl->init_func.fact[i].arg[j]].name);
-        fprintf(fout, " --> %d\n", pddl->init_func.fact[i].func_val);
-    }
-    */
-
+    planPDDLFactsPrintGoal(&pddl->predicate, &pddl->obj, &pddl->goal, fout);
+    planPDDLFactsPrintInit(&pddl->predicate, &pddl->obj, &pddl->init_fact, fout);
+    planPDDLFactsPrintInitFunc(&pddl->function, &pddl->obj, &pddl->init_func, fout);
     fprintf(fout, "Metric: %d\n", pddl->metric);
 }
 

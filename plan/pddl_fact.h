@@ -55,6 +55,14 @@ int planPDDLFactsParseInit(const plan_pddl_lisp_t *problem,
                            plan_pddl_facts_t *init_func);
 
 /**
+ * Parses :goal into list of facts.
+ */
+int planPDDLFactsParseGoal(const plan_pddl_lisp_t *problem,
+                           const plan_pddl_predicates_t *predicates,
+                           const plan_pddl_objs_t *objs,
+                           plan_pddl_facts_t *goal);
+
+/**
  * Free allocated resources.
  */
 void planPDDLFactsFree(plan_pddl_facts_t *fs);
@@ -64,6 +72,18 @@ void planPDDLFactsFree(plan_pddl_facts_t *fs);
  */
 plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs);
 
+void planPDDLFactsPrintInit(const plan_pddl_predicates_t *predicates,
+                            const plan_pddl_objs_t *objs,
+                            const plan_pddl_facts_t *in,
+                            FILE *fout);
+void planPDDLFactsPrintInitFunc(const plan_pddl_predicates_t *predicates,
+                                const plan_pddl_objs_t *objs,
+                                const plan_pddl_facts_t *in,
+                                FILE *fout);
+void planPDDLFactsPrintGoal(const plan_pddl_predicates_t *predicates,
+                            const plan_pddl_objs_t *objs,
+                            const plan_pddl_facts_t *in,
+                            FILE *fout);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

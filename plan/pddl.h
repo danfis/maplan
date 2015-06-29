@@ -45,7 +45,7 @@ struct _plan_pddl_t {
     plan_pddl_predicates_t function;
     plan_pddl_facts_t init_fact;
     plan_pddl_facts_t init_func;
-
+    plan_pddl_facts_t goal;
     plan_pddl_actions_t action;
     int metric;
 

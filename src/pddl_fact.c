@@ -155,6 +155,142 @@ int planPDDLFactsParseInit(const plan_pddl_lisp_t *problem,
     return 0;
 }
 
+static plan_pddl_fact_t *addGoal(plan_pddl_facts_t *goal)
+{
+    plan_pddl_fact_t *f;
+
+    ++goal->size;
+    goal->fact = BOR_REALLOC_ARR(goal->fact, plan_pddl_fact_t, goal->size);
+    f = goal->fact + goal->size - 1;
+    bzero(f, sizeof(*f));
+    return f;
+}
+
+static plan_pddl_fact_t *parseGoalFact(const plan_pddl_lisp_node_t *root,
+                                       const plan_pddl_predicates_t *predicates,
+                                       const plan_pddl_objs_t *objs,
+                                       plan_pddl_facts_t *goal)
+{
+    plan_pddl_fact_t *f;
+    const char *name;
+    int pred, i;
+
+    // Get predicate name
+    name = planPDDLLispNodeHead(root);
+    if (name == NULL){
+        ERRN2(root, "Invalid definition of :goal, missing predicate name.");
+        return NULL;
+    }
+
+    // And resolve it agains known predicates
+    pred = planPDDLPredicatesGet(predicates, name);
+    if (pred == -1){
+        ERRN(root, "Unkown predicate `%s'", name);
+        return NULL;
+    }
+
+    // Check that all children are terminals
+    for (i = 1; i < root->child_size; ++i){
+        if (root->child[i].value == NULL){
+            ERRN(root, "Invalid instantiation of predicate `%s'", name);
+            return NULL;
+        }
+    }
+
+    // Add fact to preconditions
+    f = addGoal(goal);
+    f->pred = pred;
+    f->arg_size = root->child_size - 1;
+    f->arg = BOR_ALLOC_ARR(int, f->arg_size);
+    for (i = 0; i < f->arg_size; ++i){
+        f->arg[i] = planPDDLObjsGet(objs, root->child[i + 1].value);
+        if (f->arg[i] < 0){
+            ERRN(root->child + i + 1, "Invalid object in :goal predicate %s.",
+                 name);
+            return NULL;
+        }
+    }
+
+    return f;
+}
+
+int parseGoal(const plan_pddl_lisp_node_t *root,
+              const plan_pddl_predicates_t *predicates,
+              const plan_pddl_objs_t *objs,
+              plan_pddl_facts_t *goal)
+{
+    plan_pddl_fact_t *f;
+    int i, kw;
+
+    kw = planPDDLLispNodeHeadKw(root);
+    if (kw == PLAN_PDDL_KW_AND){
+        for (i = 1; i < root->child_size; ++i){
+            if (parseGoal(root->child + i, predicates, objs, goal) != 0)
+                return -1;
+        }
+
+    }else if (kw == PLAN_PDDL_KW_NOT){
+        if (root->child_size != 2
+                || root->child[1].kw != -1){
+            ERRN2(root, "Only simple (not (predicate ...)) construct is"
+                        " allowed :goal");
+            return -1;
+        }
+
+        f = parseGoalFact(root->child + 1, predicates, objs, goal);
+        if (f == NULL)
+            return -1;
+        f->neg = 1;
+
+    }else if (kw == PLAN_PDDL_KW_FORALL
+                || kw == PLAN_PDDL_KW_WHEN
+                || kw == PLAN_PDDL_KW_OR
+                || kw == PLAN_PDDL_KW_IMPLY
+                || kw == PLAN_PDDL_KW_EXISTS
+                || kw == PLAN_PDDL_KW_INCREASE){
+        ERRN(root, "(%s ...) is not supported in :goal.",
+             planPDDLLispNodeHead(root));
+        return 0;
+
+    }else if (kw == -1){
+        if (parseGoalFact(root, predicates, objs, goal) == NULL)
+            return -1;
+
+    }else{
+        if (root->child_size >= 1
+                && root->child[0].value != NULL){
+            ERRN(root, "Unexpected token while parsing :goal `%s'",
+                 root->child[0].value);
+        }else{
+            ERRN2(root, "Unexpected token while parsing :goal.");
+        }
+        return -1;
+    }
+    return 0;
+}
+
+int planPDDLFactsParseGoal(const plan_pddl_lisp_t *problem,
+                           const plan_pddl_predicates_t *predicates,
+                           const plan_pddl_objs_t *objs,
+                           plan_pddl_facts_t *goal)
+{
+    const plan_pddl_lisp_node_t *ngoal;
+
+    ngoal = planPDDLLispFindNode(&problem->root, PLAN_PDDL_KW_GOAL);
+    if (ngoal == NULL){
+        ERR2("Missing :goal.");
+        return -1;
+    }
+
+    if (ngoal->child_size != 2
+            || ngoal->child[1].value != NULL){
+        ERRN2(ngoal, "Invalid definition of :goal.");
+        return -1;
+    }
+
+    return parseGoal(ngoal->child + 1, predicates, objs, goal);
+}
+
 void planPDDLFactsFree(plan_pddl_facts_t *fs)
 {
     int i;
@@ -176,4 +312,61 @@ plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs)
     f = fs->fact + fs->size - 1;
     bzero(f, sizeof(*f));
     return f;
+}
+
+static void printFact(const plan_pddl_predicates_t *predicates,
+                      const plan_pddl_objs_t *objs,
+                      const plan_pddl_fact_t *f,
+                      int func_val, FILE *fout)
+{
+    int i;
+
+    fprintf(fout, "    ");
+    if (f->neg)
+        fprintf(fout, "N:");
+    fprintf(fout, "%s:", predicates->pred[f->pred].name);
+    for (i = 0; i < f->arg_size; ++i){
+        fprintf(fout, " %s", objs->obj[f->arg[i]].name);
+    }
+    if (func_val != 0)
+        fprintf(fout, " --> %d", f->func_val);
+    fprintf(fout, "\n");
+}
+
+static void planPDDLFactsPrint(const plan_pddl_predicates_t *predicates,
+                               const plan_pddl_objs_t *objs,
+                               const plan_pddl_facts_t *in,
+                               const char *header,
+                               int func_val,
+                               FILE *fout)
+{
+    int i;
+
+    fprintf(fout, "%s[%d]:\n", header, in->size);
+    for (i = 0; i < in->size; ++i)
+        printFact(predicates, objs, in->fact + i, func_val, fout);
+}
+
+void planPDDLFactsPrintInit(const plan_pddl_predicates_t *predicates,
+                            const plan_pddl_objs_t *objs,
+                            const plan_pddl_facts_t *in,
+                            FILE *fout)
+{
+    planPDDLFactsPrint(predicates, objs, in, "Init", 0, fout);
+}
+
+void planPDDLFactsPrintInitFunc(const plan_pddl_predicates_t *predicates,
+                                const plan_pddl_objs_t *objs,
+                                const plan_pddl_facts_t *in,
+                                FILE *fout)
+{
+    planPDDLFactsPrint(predicates, objs, in, "Init Func", 1, fout);
+}
+
+void planPDDLFactsPrintGoal(const plan_pddl_predicates_t *predicates,
+                            const plan_pddl_objs_t *objs,
+                            const plan_pddl_facts_t *in,
+                            FILE *fout)
+{
+    planPDDLFactsPrint(predicates, objs, in, "Goal", 0, fout);
 }

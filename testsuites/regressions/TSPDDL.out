@@ -39,20 +39,81 @@ Predicate[15]:
 Function[0]:
 Action[5]:
     drive: ?x:0 ?y:0 ?z:0
-        pre: (and (truck ?x) (place ?y) (place ?z) (at ?x ?y))
-        eff: (and (at ?x ?z) (not (at ?x ?y)))
+        pre[4]:
+            truck: ?x
+            place: ?y
+            place: ?z
+            at: ?x ?y
+        eff[2]:
+            at: ?x ?z
+            N:at: ?x ?y
+        cond-eff[0]:
     lift: ?x:0 ?y:0 ?z:0 ?p:0
-        pre: (and (hoist ?x) (crate ?y) (surface ?z) (place ?p) (at ?x ?p) (available ?x) (at ?y ?p) (on ?y ?z) (clear ?y))
-        eff: (and (lifting ?x ?y) (clear ?z) (not (at ?y ?p)) (not (clear ?y)) (not (available ?x)) (not (on ?y ?z)))
+        pre[9]:
+            hoist: ?x
+            crate: ?y
+            surface: ?z
+            place: ?p
+            at: ?x ?p
+            available: ?x
+            at: ?y ?p
+            on: ?y ?z
+            clear: ?y
+        eff[6]:
+            lifting: ?x ?y
+            clear: ?z
+            N:at: ?y ?p
+            N:clear: ?y
+            N:available: ?x
+            N:on: ?y ?z
+        cond-eff[0]:
     drop: ?x:0 ?y:0 ?z:0 ?p:0
-        pre: (and (hoist ?x) (crate ?y) (surface ?z) (place ?p) (at ?x ?p) (at ?z ?p) (clear ?z) (lifting ?x ?y))
-        eff: (and (available ?x) (at ?y ?p) (clear ?y) (on ?y ?z) (not (lifting ?x ?y)) (not (clear ?z)))
+        pre[8]:
+            hoist: ?x
+            crate: ?y
+            surface: ?z
+            place: ?p
+            at: ?x ?p
+            at: ?z ?p
+            clear: ?z
+            lifting: ?x ?y
+        eff[6]:
+            available: ?x
+            at: ?y ?p
+            clear: ?y
+            on: ?y ?z
+            N:lifting: ?x ?y
+            N:clear: ?z
+        cond-eff[0]:
     load: ?x:0 ?y:0 ?z:0 ?p:0
-        pre: (and (hoist ?x) (crate ?y) (truck ?z) (place ?p) (at ?x ?p) (at ?z ?p) (lifting ?x ?y))
-        eff: (and (in ?y ?z) (available ?x) (not (lifting ?x ?y)))
+        pre[7]:
+            hoist: ?x
+            crate: ?y
+            truck: ?z
+            place: ?p
+            at: ?x ?p
+            at: ?z ?p
+            lifting: ?x ?y
+        eff[3]:
+            in: ?y ?z
+            available: ?x
+            N:lifting: ?x ?y
+        cond-eff[0]:
     unload: ?x:0 ?y:0 ?z:0 ?p:0
-        pre: (and (hoist ?x) (crate ?y) (truck ?z) (place ?p) (at ?x ?p) (at ?z ?p) (available ?x) (in ?y ?z))
-        eff: (and (lifting ?x ?y) (not (in ?y ?z)) (not (available ?x)))
+        pre[8]:
+            hoist: ?x
+            crate: ?y
+            truck: ?z
+            place: ?p
+            at: ?x ?p
+            at: ?z ?p
+            available: ?x
+            in: ?y ?z
+        eff[3]:
+            lifting: ?x ?y
+            N:in: ?y ?z
+            N:available: ?x
+        cond-eff[0]:
 Goal[2]:
     on: crate0 pallet2
     on: crate1 pallet1
@@ -130,23 +191,80 @@ Predicate[10]:
 Function[0]:
 Action[6]:
     load-truck: ?obj:0 ?truck:0 ?driver:0 ?loc:0
-        pre: (and (obj ?obj) (truck ?truck) (location ?loc) (driver ?driver) (at ?truck ?loc) (at ?obj ?loc) (driving ?driver ?truck))
-        eff: (and (not (at ?obj ?loc)) (in ?obj ?truck))
+        pre[7]:
+            obj: ?obj
+            truck: ?truck
+            location: ?loc
+            driver: ?driver
+            at: ?truck ?loc
+            at: ?obj ?loc
+            driving: ?driver ?truck
+        eff[2]:
+            N:at: ?obj ?loc
+            in: ?obj ?truck
+        cond-eff[0]:
     unload-truck: ?obj:0 ?truck:0 ?driver:0 ?loc:0
-        pre: (and (obj ?obj) (truck ?truck) (location ?loc) (driver ?driver) (at ?truck ?loc) (in ?obj ?truck) (driving ?driver ?truck))
-        eff: (and (not (in ?obj ?truck)) (at ?obj ?loc))
+        pre[7]:
+            obj: ?obj
+            truck: ?truck
+            location: ?loc
+            driver: ?driver
+            at: ?truck ?loc
+            in: ?obj ?truck
+            driving: ?driver ?truck
+        eff[2]:
+            N:in: ?obj ?truck
+            at: ?obj ?loc
+        cond-eff[0]:
     board-truck: ?driver:0 ?truck:0 ?loc:0
-        pre: (and (driver ?driver) (truck ?truck) (location ?loc) (at ?truck ?loc) (at ?driver ?loc) (empty ?truck))
-        eff: (and (not (at ?driver ?loc)) (driving ?driver ?truck) (not (empty ?truck)))
+        pre[6]:
+            driver: ?driver
+            truck: ?truck
+            location: ?loc
+            at: ?truck ?loc
+            at: ?driver ?loc
+            empty: ?truck
+        eff[3]:
+            N:at: ?driver ?loc
+            driving: ?driver ?truck
+            N:empty: ?truck
+        cond-eff[0]:
     disembark-truck: ?driver:0 ?truck:0 ?loc:0
-        pre: (and (driver ?driver) (truck ?truck) (location ?loc) (at ?truck ?loc) (driving ?driver ?truck))
-        eff: (and (not (driving ?driver ?truck)) (at ?driver ?loc) (empty ?truck))
+        pre[5]:
+            driver: ?driver
+            truck: ?truck
+            location: ?loc
+            at: ?truck ?loc
+            driving: ?driver ?truck
+        eff[3]:
+            N:driving: ?driver ?truck
+            at: ?driver ?loc
+            empty: ?truck
+        cond-eff[0]:
     drive-truck: ?truck:0 ?loc-from:0 ?loc-to:0 ?driver:0
-        pre: (and (truck ?truck) (location ?loc-from) (location ?loc-to) (driver ?driver) (at ?truck ?loc-from) (driving ?driver ?truck) (link ?loc-from ?loc-to))
-        eff: (and (not (at ?truck ?loc-from)) (at ?truck ?loc-to))
+        pre[7]:
+            truck: ?truck
+            location: ?loc-from
+            location: ?loc-to
+            driver: ?driver
+            at: ?truck ?loc-from
+            driving: ?driver ?truck
+            link: ?loc-from ?loc-to
+        eff[2]:
+            N:at: ?truck ?loc-from
+            at: ?truck ?loc-to
+        cond-eff[0]:
     walk: ?driver:0 ?loc-from:0 ?loc-to:0
-        pre: (and (driver ?driver) (location ?loc-from) (location ?loc-to) (at ?driver ?loc-from) (path ?loc-from ?loc-to))
-        eff: (and (not (at ?driver ?loc-from)) (at ?driver ?loc-to))
+        pre[5]:
+            driver: ?driver
+            location: ?loc-from
+            location: ?loc-to
+            at: ?driver ?loc-from
+            path: ?loc-from ?loc-to
+        eff[2]:
+            N:at: ?driver ?loc-from
+            at: ?driver ?loc-to
+        cond-eff[0]:
 Goal[4]:
     at: driver1 s1
     at: truck1 s1
@@ -239,41 +357,129 @@ Function[1]:
     total-cost:
 Action[12]:
     open-new-stack: ?man:5 ?open:3 ?new-open:3
-        pre: (and (stacks-avail ?open) (next-count ?open ?new-open))
-        eff: (and (not (stacks-avail ?open)) (stacks-avail ?new-open) (COST 1))
+        pre[2]:
+            stacks-avail: ?open
+            next-count: ?open ?new-open
+        eff[2]:
+            N:stacks-avail: ?open
+            stacks-avail: ?new-open
+        cond-eff[0]:
+        cost: 1
     start-order: ?man:4 ?o:1 ?avail:3 ?new-avail:3
-        pre: (and (waiting ?o) (stacks-avail ?avail) (next-count ?new-avail ?avail))
-        eff: (and (not (waiting ?o)) (started ?o) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
+        pre[3]:
+            waiting: ?o
+            stacks-avail: ?avail
+            next-count: ?new-avail ?avail
+        eff[4]:
+            N:waiting: ?o
+            started: ?o
+            N:stacks-avail: ?avail
+            stacks-avail: ?new-avail
+        cond-eff[0]:
     make-product-p1: ?man:5
-        pre: (and (not-made p1) (started o2))
-        eff: (and (not (not-made p1)) (made p1))
+        pre[2]:
+            not-made: p1
+            started: o2
+        eff[2]:
+            N:not-made: p1
+            made: p1
+        cond-eff[0]:
     make-product-p2: ?man:5
-        pre: (and (not-made p2) (started o1) (started o2))
-        eff: (and (not (not-made p2)) (made p2))
+        pre[3]:
+            not-made: p2
+            started: o1
+            started: o2
+        eff[2]:
+            N:not-made: p2
+            made: p2
+        cond-eff[0]:
     make-product-p3: ?man:5
-        pre: (and (not-made p3) (started o3) (started o4))
-        eff: (and (not (not-made p3)) (made p3))
+        pre[3]:
+            not-made: p3
+            started: o3
+            started: o4
+        eff[2]:
+            N:not-made: p3
+            made: p3
+        cond-eff[0]:
     make-product-p4: ?man:5
-        pre: (and (not-made p4) (started o4))
-        eff: (and (not (not-made p4)) (made p4))
+        pre[2]:
+            not-made: p4
+            started: o4
+        eff[2]:
+            N:not-made: p4
+            made: p4
+        cond-eff[0]:
     make-product-p5: ?man:5
-        pre: (and (not-made p5) (started o5))
-        eff: (and (not (not-made p5)) (made p5))
+        pre[2]:
+            not-made: p5
+            started: o5
+        eff[2]:
+            N:not-made: p5
+            made: p5
+        cond-eff[0]:
     ship-order-o1: ?man:4 ?avail:3 ?new-avail:3
-        pre: (and (started o1) (made p2) (stacks-avail ?avail) (next-count ?avail ?new-avail))
-        eff: (and (not (started o1)) (shipped o1) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
+        pre[4]:
+            started: o1
+            made: p2
+            stacks-avail: ?avail
+            next-count: ?avail ?new-avail
+        eff[4]:
+            N:started: o1
+            shipped: o1
+            N:stacks-avail: ?avail
+            stacks-avail: ?new-avail
+        cond-eff[0]:
     ship-order-o2: ?man:4 ?avail:3 ?new-avail:3
-        pre: (and (started o2) (made p1) (made p2) (stacks-avail ?avail) (next-count ?avail ?new-avail))
-        eff: (and (not (started o2)) (shipped o2) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
+        pre[5]:
+            started: o2
+            made: p1
+            made: p2
+            stacks-avail: ?avail
+            next-count: ?avail ?new-avail
+        eff[4]:
+            N:started: o2
+            shipped: o2
+            N:stacks-avail: ?avail
+            stacks-avail: ?new-avail
+        cond-eff[0]:
     ship-order-o3: ?man:4 ?avail:3 ?new-avail:3
-        pre: (and (started o3) (made p3) (stacks-avail ?avail) (next-count ?avail ?new-avail))
-        eff: (and (not (started o3)) (shipped o3) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
+        pre[4]:
+            started: o3
+            made: p3
+            stacks-avail: ?avail
+            next-count: ?avail ?new-avail
+        eff[4]:
+            N:started: o3
+            shipped: o3
+            N:stacks-avail: ?avail
+            stacks-avail: ?new-avail
+        cond-eff[0]:
     ship-order-o4: ?man:4 ?avail:3 ?new-avail:3
-        pre: (and (started o4) (made p3) (made p4) (stacks-avail ?avail) (next-count ?avail ?new-avail))
-        eff: (and (not (started o4)) (shipped o4) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
+        pre[5]:
+            started: o4
+            made: p3
+            made: p4
+            stacks-avail: ?avail
+            next-count: ?avail ?new-avail
+        eff[4]:
+            N:started: o4
+            shipped: o4
+            N:stacks-avail: ?avail
+            stacks-avail: ?new-avail
+        cond-eff[0]:
     ship-order-o5: ?man:4 ?avail:3 ?new-avail:3
-        pre: (and (started o5) (made p5) (stacks-avail ?avail) (next-count ?avail ?new-avail))
-        eff: (and (not (started o5)) (shipped o5) (not (stacks-avail ?avail)) (stacks-avail ?new-avail))
+        pre[4]:
+            started: o5
+            made: p5
+            stacks-avail: ?avail
+            next-count: ?avail ?new-avail
+        eff[4]:
+            N:started: o5
+            shipped: o5
+            N:stacks-avail: ?avail
+            stacks-avail: ?new-avail
+        cond-eff[0]:
 Goal[5]:
     shipped: o1
     shipped: o2
@@ -372,32 +578,116 @@ Predicate[25]:
 Function[0]:
 Action[9]:
     navigate: ?x:1 ?y:2 ?z:2
-        pre: (and (can_traverse ?x ?y ?z) (available ?x) (at ?x ?y) (visible ?y ?z))
-        eff: (and (not (at ?x ?y)) (at ?x ?z))
+        pre[4]:
+            can_traverse: ?x ?y ?z
+            available: ?x
+            at: ?x ?y
+            visible: ?y ?z
+        eff[2]:
+            N:at: ?x ?y
+            at: ?x ?z
+        cond-eff[0]:
     sample_soil: ?x:1 ?s:3 ?p:2
-        pre: (and (at ?x ?p) (at_soil_sample ?p) (equipped_for_soil_analysis ?x) (store_of ?s ?x) (empty ?s))
-        eff: (and (not (empty ?s)) (full ?s) (have_soil_analysis ?x ?p) (not (at_soil_sample ?p)))
+        pre[5]:
+            at: ?x ?p
+            at_soil_sample: ?p
+            equipped_for_soil_analysis: ?x
+            store_of: ?s ?x
+            empty: ?s
+        eff[4]:
+            N:empty: ?s
+            full: ?s
+            have_soil_analysis: ?x ?p
+            N:at_soil_sample: ?p
+        cond-eff[0]:
     sample_rock: ?x:1 ?s:3 ?p:2
-        pre: (and (at ?x ?p) (at_rock_sample ?p) (equipped_for_rock_analysis ?x) (store_of ?s ?x) (empty ?s))
-        eff: (and (not (empty ?s)) (full ?s) (have_rock_analysis ?x ?p) (not (at_rock_sample ?p)))
+        pre[5]:
+            at: ?x ?p
+            at_rock_sample: ?p
+            equipped_for_rock_analysis: ?x
+            store_of: ?s ?x
+            empty: ?s
+        eff[4]:
+            N:empty: ?s
+            full: ?s
+            have_rock_analysis: ?x ?p
+            N:at_rock_sample: ?p
+        cond-eff[0]:
     drop: ?x:1 ?y:3
-        pre: (and (store_of ?y ?x) (full ?y))
-        eff: (and (not (full ?y)) (empty ?y))
+        pre[2]:
+            store_of: ?y ?x
+            full: ?y
+        eff[2]:
+            N:full: ?y
+            empty: ?y
+        cond-eff[0]:
     calibrate: ?r:1 ?i:4 ?t:7 ?w:2
-        pre: (and (equipped_for_imaging ?r) (calibration_target ?i ?t) (at ?r ?w) (visible_from ?t ?w) (on_board ?i ?r))
-        eff: (calibrated ?i ?r)
+        pre[5]:
+            equipped_for_imaging: ?r
+            calibration_target: ?i ?t
+            at: ?r ?w
+            visible_from: ?t ?w
+            on_board: ?i ?r
+        eff[1]:
+            calibrated: ?i ?r
+        cond-eff[0]:
     take_image: ?r:1 ?p:2 ?o:7 ?i:4 ?m:5
-        pre: (and (calibrated ?i ?r) (on_board ?i ?r) (equipped_for_imaging ?r) (supports ?i ?m) (visible_from ?o ?p) (at ?r ?p))
-        eff: (and (have_image ?r ?o ?m) (not (calibrated ?i ?r)))
+        pre[6]:
+            calibrated: ?i ?r
+            on_board: ?i ?r
+            equipped_for_imaging: ?r
+            supports: ?i ?m
+            visible_from: ?o ?p
+            at: ?r ?p
+        eff[2]:
+            have_image: ?r ?o ?m
+            N:calibrated: ?i ?r
+        cond-eff[0]:
     communicate_soil_data: ?r:1 ?l:6 ?p:2 ?x:2 ?y:2
-        pre: (and (at ?r ?x) (at_lander ?l ?y) (have_soil_analysis ?r ?p) (visible ?x ?y) (available ?r) (channel_free ?l))
-        eff: (and (not (available ?r)) (not (channel_free ?l)) (channel_free ?l) (communicated_soil_data ?p) (available ?r))
+        pre[6]:
+            at: ?r ?x
+            at_lander: ?l ?y
+            have_soil_analysis: ?r ?p
+            visible: ?x ?y
+            available: ?r
+            channel_free: ?l
+        eff[5]:
+            N:available: ?r
+            N:channel_free: ?l
+            channel_free: ?l
+            communicated_soil_data: ?p
+            available: ?r
+        cond-eff[0]:
     communicate_rock_data: ?r:1 ?l:6 ?p:2 ?x:2 ?y:2
-        pre: (and (at ?r ?x) (at_lander ?l ?y) (have_rock_analysis ?r ?p) (visible ?x ?y) (available ?r) (channel_free ?l))
-        eff: (and (not (available ?r)) (not (channel_free ?l)) (channel_free ?l) (communicated_rock_data ?p) (available ?r))
+        pre[6]:
+            at: ?r ?x
+            at_lander: ?l ?y
+            have_rock_analysis: ?r ?p
+            visible: ?x ?y
+            available: ?r
+            channel_free: ?l
+        eff[5]:
+            N:available: ?r
+            N:channel_free: ?l
+            channel_free: ?l
+            communicated_rock_data: ?p
+            available: ?r
+        cond-eff[0]:
     communicate_image_data: ?r:1 ?l:6 ?o:7 ?m:5 ?x:2 ?y:2
-        pre: (and (at ?r ?x) (at_lander ?l ?y) (have_image ?r ?o ?m) (visible ?x ?y) (available ?r) (channel_free ?l))
-        eff: (and (not (available ?r)) (not (channel_free ?l)) (channel_free ?l) (communicated_image_data ?o ?m) (available ?r))
+        pre[6]:
+            at: ?r ?x
+            at_lander: ?l ?y
+            have_image: ?r ?o ?m
+            visible: ?x ?y
+            available: ?r
+            channel_free: ?l
+        eff[5]:
+            N:available: ?r
+            N:channel_free: ?l
+            channel_free: ?l
+            communicated_image_data: ?o ?m
+            available: ?r
+        cond-eff[0]:
 Goal[3]:
     communicated_soil_data: waypoint2
     communicated_rock_data: waypoint3
@@ -502,26 +792,90 @@ Function[1]:
     total-cost:
 Action[7]:
     move_car_in_road: ?xy_initial:2 ?xy_final:2 ?machine:1 ?r1:4
-        pre: (and (at_car_jun ?machine ?xy_initial) (not (= ?xy_initial ?xy_final)) (road_connect ?r1 ?xy_initial ?xy_final) (in_place ?r1))
-        eff: (and (clear ?xy_initial) (at_car_road ?machine ?r1) (not (at_car_jun ?machine ?xy_initial)) (COST 1))
+        pre[4]:
+            at_car_jun: ?machine ?xy_initial
+            N:=: ?xy_initial ?xy_final
+            road_connect: ?r1 ?xy_initial ?xy_final
+            in_place: ?r1
+        eff[3]:
+            clear: ?xy_initial
+            at_car_road: ?machine ?r1
+            N:at_car_jun: ?machine ?xy_initial
+        cond-eff[0]:
+        cost: 1
     move_car_out_road: ?xy_initial:2 ?xy_final:2 ?machine:1 ?r1:4
-        pre: (and (at_car_road ?machine ?r1) (clear ?xy_final) (not (= ?xy_initial ?xy_final)) (road_connect ?r1 ?xy_initial ?xy_final) (in_place ?r1))
-        eff: (and (at_car_jun ?machine ?xy_final) (not (clear ?xy_final)) (not (at_car_road ?machine ?r1)) (COST 1))
+        pre[5]:
+            at_car_road: ?machine ?r1
+            clear: ?xy_final
+            N:=: ?xy_initial ?xy_final
+            road_connect: ?r1 ?xy_initial ?xy_final
+            in_place: ?r1
+        eff[3]:
+            at_car_jun: ?machine ?xy_final
+            N:clear: ?xy_final
+            N:at_car_road: ?machine ?r1
+        cond-eff[0]:
+        cost: 1
     car_arrived: ?xy_final:2 ?machine:1
-        pre: (and (at_car_jun ?machine ?xy_final))
-        eff: (and (clear ?xy_final) (arrived ?machine ?xy_final) (not (at_car_jun ?machine ?xy_final)))
+        pre[1]:
+            at_car_jun: ?machine ?xy_final
+        eff[3]:
+            clear: ?xy_final
+            arrived: ?machine ?xy_final
+            N:at_car_jun: ?machine ?xy_final
+        cond-eff[0]:
     car_start: ?xy_final:2 ?machine:1 ?g:3
-        pre: (and (at_garage ?g ?xy_final) (starting ?machine ?g) (clear ?xy_final))
-        eff: (and (not (clear ?xy_final)) (at_car_jun ?machine ?xy_final) (not (starting ?machine ?g)))
+        pre[3]:
+            at_garage: ?g ?xy_final
+            starting: ?machine ?g
+            clear: ?xy_final
+        eff[3]:
+            N:clear: ?xy_final
+            at_car_jun: ?machine ?xy_final
+            N:starting: ?machine ?g
+        cond-eff[0]:
     build_diagonal_oneway: ?xy_initial:2 ?xy_final:2 ?r1:4
-        pre: (and (clear ?xy_final) (not (= ?xy_initial ?xy_final)) (not (in_place ?r1)) (diagonal ?xy_initial ?xy_final))
-        eff: (and (road_connect ?r1 ?xy_initial ?xy_final) (in_place ?r1) (COST 30))
+        pre[4]:
+            clear: ?xy_final
+            N:=: ?xy_initial ?xy_final
+            N:in_place: ?r1
+            diagonal: ?xy_initial ?xy_final
+        eff[2]:
+            road_connect: ?r1 ?xy_initial ?xy_final
+            in_place: ?r1
+        cond-eff[0]:
+        cost: 30
     build_straight_oneway: ?xy_initial:2 ?xy_final:2 ?r1:4
-        pre: (and (clear ?xy_final) (not (= ?xy_initial ?xy_final)) (same_line ?xy_initial ?xy_final) (not (in_place ?r1)))
-        eff: (and (road_connect ?r1 ?xy_initial ?xy_final) (in_place ?r1) (COST 20))
+        pre[4]:
+            clear: ?xy_final
+            N:=: ?xy_initial ?xy_final
+            same_line: ?xy_initial ?xy_final
+            N:in_place: ?r1
+        eff[2]:
+            road_connect: ?r1 ?xy_initial ?xy_final
+            in_place: ?r1
+        cond-eff[0]:
+        cost: 20
     destroy_road: ?xy_initial:2 ?xy_final:2 ?r1:4
-        pre: (and (road_connect ?r1 ?xy_initial ?xy_final) (not (= ?xy_initial ?xy_final)) (in_place ?r1))
-        eff: (and (not (in_place ?r1)) (not (road_connect ?r1 ?xy_initial ?xy_final)) (COST 10) (and (when (at_car_road car0 ?r1) (and (not (at_car_road car0 ?r1)) (at_car_jun car0 ?xy_initial))) (when (at_car_road car1 ?r1) (and (not (at_car_road car1 ?r1)) (at_car_jun car1 ?xy_initial)))))
+        pre[3]:
+            road_connect: ?r1 ?xy_initial ?xy_final
+            N:=: ?xy_initial ?xy_final
+            in_place: ?r1
+        eff[2]:
+            N:in_place: ?r1
+            N:road_connect: ?r1 ?xy_initial ?xy_final
+        cond-eff[2]:
+          pre[1]:
+            at_car_road: car0 ?r1
+          eff[2]:
+            N:at_car_road: car0 ?r1
+            at_car_jun: car0 ?xy_initial
+          pre[1]:
+            at_car_road: car1 ?r1
+          eff[2]:
+            N:at_car_road: car1 ?r1
+            at_car_jun: car1 ?xy_initial
+        cost: 10
 Goal[2]:
     arrived: car0 junction2-0
     arrived: car1 junction2-1
@@ -634,23 +988,70 @@ Function[3]:
     travel-fast: 5 5
 Action[6]:
     move-up-slow: ?lift:2 ?f1:5 ?f2:5
-        pre: (and (lift-at ?lift ?f1) (above ?f1 ?f2) (reachable-floor ?lift ?f2))
-        eff: (and (lift-at ?lift ?f2) (not (lift-at ?lift ?f1)) (COST (travel-slow ?f1 ?f2)))
+        pre[3]:
+            lift-at: ?lift ?f1
+            above: ?f1 ?f2
+            reachable-floor: ?lift ?f2
+        eff[2]:
+            lift-at: ?lift ?f2
+            N:lift-at: ?lift ?f1
+        cond-eff[0]:
+        cost: travel-slow ?f1 ?f2
     move-down-slow: ?lift:2 ?f1:5 ?f2:5
-        pre: (and (lift-at ?lift ?f1) (above ?f2 ?f1) (reachable-floor ?lift ?f2))
-        eff: (and (lift-at ?lift ?f2) (not (lift-at ?lift ?f1)) (COST (travel-slow ?f2 ?f1)))
+        pre[3]:
+            lift-at: ?lift ?f1
+            above: ?f2 ?f1
+            reachable-floor: ?lift ?f2
+        eff[2]:
+            lift-at: ?lift ?f2
+            N:lift-at: ?lift ?f1
+        cond-eff[0]:
+        cost: travel-slow ?f2 ?f1
     move-up-fast: ?lift:3 ?f1:5 ?f2:5
-        pre: (and (lift-at ?lift ?f1) (above ?f1 ?f2) (reachable-floor ?lift ?f2))
-        eff: (and (lift-at ?lift ?f2) (not (lift-at ?lift ?f1)) (COST (travel-fast ?f1 ?f2)))
+        pre[3]:
+            lift-at: ?lift ?f1
+            above: ?f1 ?f2
+            reachable-floor: ?lift ?f2
+        eff[2]:
+            lift-at: ?lift ?f2
+            N:lift-at: ?lift ?f1
+        cond-eff[0]:
+        cost: travel-fast ?f1 ?f2
     move-down-fast: ?lift:3 ?f1:5 ?f2:5
-        pre: (and (lift-at ?lift ?f1) (above ?f2 ?f1) (reachable-floor ?lift ?f2))
-        eff: (and (lift-at ?lift ?f2) (not (lift-at ?lift ?f1)) (COST (travel-fast ?f2 ?f1)))
+        pre[3]:
+            lift-at: ?lift ?f1
+            above: ?f2 ?f1
+            reachable-floor: ?lift ?f2
+        eff[2]:
+            lift-at: ?lift ?f2
+            N:lift-at: ?lift ?f1
+        cond-eff[0]:
+        cost: travel-fast ?f2 ?f1
     board: ?p:4 ?lift:1 ?f:5 ?n1:5 ?n2:5
-        pre: (and (lift-at ?lift ?f) (passenger-at ?p ?f) (passengers ?lift ?n1) (next ?n1 ?n2) (can-hold ?lift ?n2))
-        eff: (and (not (passenger-at ?p ?f)) (boarded ?p ?lift) (not (passengers ?lift ?n1)) (passengers ?lift ?n2))
+        pre[5]:
+            lift-at: ?lift ?f
+            passenger-at: ?p ?f
+            passengers: ?lift ?n1
+            next: ?n1 ?n2
+            can-hold: ?lift ?n2
+        eff[4]:
+            N:passenger-at: ?p ?f
+            boarded: ?p ?lift
+            N:passengers: ?lift ?n1
+            passengers: ?lift ?n2
+        cond-eff[0]:
     leave: ?p:4 ?lift:1 ?f:5 ?n1:5 ?n2:5
-        pre: (and (lift-at ?lift ?f) (boarded ?p ?lift) (passengers ?lift ?n1) (next ?n2 ?n1))
-        eff: (and (passenger-at ?p ?f) (not (boarded ?p ?lift)) (not (passengers ?lift ?n1)) (passengers ?lift ?n2))
+        pre[4]:
+            lift-at: ?lift ?f
+            boarded: ?p ?lift
+            passengers: ?lift ?n1
+            next: ?n2 ?n1
+        eff[4]:
+            passenger-at: ?p ?f
+            N:boarded: ?p ?lift
+            N:passengers: ?lift ?n1
+            passengers: ?lift ?n2
+        cond-eff[0]:
 Goal[4]:
     passenger-at: p0 n4
     passenger-at: p1 n5

@@ -27,6 +27,15 @@ struct _set_param_t {
 };
 typedef struct _set_param_t set_param_t;
 
+static int parsePreEff(const plan_pddl_objs_t *objs,
+                       const plan_pddl_predicates_t *predicates,
+                       const plan_pddl_predicates_t *functions,
+                       const plan_pddl_lisp_node_t *root,
+                       const char *errname,
+                       plan_pddl_action_t *a,
+                       plan_pddl_facts_t *facts,
+                       int parse_cost, int parse_cond_eff);
+
 static plan_pddl_action_t *addAction(plan_pddl_actions_t *as, const char *name)
 {
     plan_pddl_action_t *a;
@@ -37,6 +46,19 @@ static plan_pddl_action_t *addAction(plan_pddl_actions_t *as, const char *name)
     bzero(a, sizeof(*a));
     a->name = name;
     return a;
+}
+
+static plan_pddl_cond_eff_t *addCondEff(plan_pddl_action_t *a)
+{
+    plan_pddl_cond_eff_t *ce;
+
+    ++a->cond_eff.size;
+    a->cond_eff.cond_eff = BOR_REALLOC_ARR(a->cond_eff.cond_eff,
+                                           plan_pddl_cond_eff_t,
+                                           a->cond_eff.size);
+    ce = a->cond_eff.cond_eff + a->cond_eff.size - 1;
+    bzero(ce, sizeof(*ce));
+    return ce;
 }
 
 static int getParam(const plan_pddl_action_t *a, const char *var_name)
@@ -218,6 +240,30 @@ static int parseCost(const plan_pddl_objs_t *objs,
     return 0;
 }
 
+static int parseCondEff(const plan_pddl_objs_t *objs,
+                        const plan_pddl_predicates_t *predicates,
+                        const plan_pddl_lisp_node_t *root,
+                        plan_pddl_action_t *a)
+{
+    plan_pddl_cond_eff_t *ce;
+
+    if (root->child_size != 3
+            || root->child[1].value != NULL
+            || root->child[2].value != NULL){
+        ERRN2(root, "Invalid (when ...) condition.");
+        return -1;
+    }
+
+    ce = addCondEff(a);
+    if (parsePreEff(objs, predicates, NULL, root->child + 1,
+                    "cond-eff predicate", a, &ce->pre, 0, 0) != 0)
+        return -1;
+    if (parsePreEff(objs, predicates, NULL, root->child + 2,
+                    "cond-eff effect", a, &ce->eff, 0, 0) != 0)
+        return -1;
+    return 0;
+}
+
 static int parsePreEff(const plan_pddl_objs_t *objs,
                        const plan_pddl_predicates_t *predicates,
                        const plan_pddl_predicates_t *functions,
@@ -225,7 +271,7 @@ static int parsePreEff(const plan_pddl_objs_t *objs,
                        const char *errname,
                        plan_pddl_action_t *a,
                        plan_pddl_facts_t *facts,
-                       int parse_cost)
+                       int parse_cost, int parse_cond_eff)
 {
     plan_pddl_fact_t *f;
     int i, kw;
@@ -234,7 +280,7 @@ static int parsePreEff(const plan_pddl_objs_t *objs,
     if (kw == PLAN_PDDL_KW_AND){
         for (i = 1; i < root->child_size; ++i){
             if (parsePreEff(objs, predicates, functions, root->child + i,
-                            errname, a, facts, parse_cost) != 0)
+                            errname, a, facts, parse_cost, parse_cond_eff) != 0)
                 return -1;
         }
 
@@ -255,8 +301,13 @@ static int parsePreEff(const plan_pddl_objs_t *objs,
         return 0;
 
     }else if (kw == PLAN_PDDL_KW_WHEN){
-        ERRN(root, "(when ...) is not supported in %s yet.", errname);
-        return 0;
+        if (!parse_cond_eff){
+            ERRN(root, "(when ...) is not supported in %s.", errname);
+            return 0;
+        }
+
+        if (parseCondEff(objs, predicates, root, a) != 0)
+            return -1;
 
     }else if (kw == PLAN_PDDL_KW_OR){
         ERRN(root, "(or ...) is not supported in %s yet.", errname);
@@ -323,12 +374,12 @@ static int parseAction(const plan_pddl_types_t *types,
 
         }else if (root->child[i].kw == PLAN_PDDL_KW_PRE){
             if (parsePreEff(objs, predicates, functions, n,
-                            "precondition", a, &a->pre, 0) != 0)
+                            "precondition", a, &a->pre, 0, 0) != 0)
                 return -1;
 
         }else if (root->child[i].kw == PLAN_PDDL_KW_EFF){
             if (parsePreEff(objs, predicates, functions, n,
-                            "effect", a, &a->eff, 1) != 0)
+                            "effect", a, &a->eff, 1, 1) != 0)
                 return -1;
 
         }else{
@@ -365,14 +416,22 @@ int planPDDLActionsParse(const plan_pddl_lisp_t *domain,
 
 void planPDDLActionsFree(plan_pddl_actions_t *actions)
 {
-    int i;
+    int i, j;
 
     for (i = 0; i < actions->size; ++i){
         planPDDLObjsFree(&actions->action[i].param);
         planPDDLFactsFree(&actions->action[i].pre);
         planPDDLFactsFree(&actions->action[i].eff);
         planPDDLFactsFree(&actions->action[i].cost);
+        for (j = 0; j < actions->action[i].cond_eff.size; ++j){
+            planPDDLFactsFree(&actions->action[i].cond_eff.cond_eff[j].pre);
+            planPDDLFactsFree(&actions->action[i].cond_eff.cond_eff[j].eff);
+        }
+        if (actions->action[i].cond_eff.cond_eff != NULL)
+            BOR_FREE(actions->action[i].cond_eff.cond_eff);
     }
+    if (actions->action != NULL)
+        BOR_FREE(actions->action);
 }
 
 static void printFacts(const plan_pddl_action_t *a,
@@ -421,17 +480,18 @@ static void planPDDLActionPrint(const plan_pddl_action_t *a,
     fprintf(fout, "        eff[%d]:\n", a->eff.size);
     printFacts(a, objs, predicates, &a->eff, fout);
 
-    /*
-    fprintf(fout, "        cond-eff[%d]:\n", a->cond_eff_size);
-    for (i = 0; i < a->cond_eff_size; ++i){
-        fprintf(fout, "            pre[%d]:\n", a->cond_eff[i].pre_size);
-        factPrintArr(pddl, a, a->cond_eff[i].pre, a->cond_eff[i].pre_size,
-                     fout, "                ");
-        fprintf(fout, "            eff[%d]:\n", a->cond_eff[i].eff_size);
-        factPrintArr(pddl, a, a->cond_eff[i].eff, a->cond_eff[i].eff_size,
-                     fout, "                ");
+    fprintf(fout, "        cond-eff[%d]:\n", a->cond_eff.size);
+    for (i = 0; i < a->cond_eff.size; ++i){
+        fprintf(fout, "          pre[%d]:\n",
+                a->cond_eff.cond_eff[i].pre.size);
+        printFacts(a, objs, predicates, &a->cond_eff.cond_eff[i].pre, fout);
+        fprintf(fout, "          eff[%d]:\n",
+                a->cond_eff.cond_eff[i].eff.size);
+        printFacts(a, objs, predicates, &a->cond_eff.cond_eff[i].eff, fout);
+        //fprintf(fout, "            eff[%d]:\n", a->cond_eff[i].eff_size);
+        //factPrintArr(pddl, a, a->cond_eff[i].eff, a->cond_eff[i].eff_size,
+        //             fout, "                ");
     }
-    */
 
     for (i = 0; i < a->cost.size; ++i){
         fprintf(fout, "        cost: ");

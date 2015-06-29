@@ -28,12 +28,25 @@
 extern "C" {
 #endif /* __cplusplus */
 
+struct _plan_pddl_cond_eff_t {
+    plan_pddl_facts_t pre;
+    plan_pddl_facts_t eff;
+};
+typedef struct _plan_pddl_cond_eff_t plan_pddl_cond_eff_t;
+
+struct _plan_pddl_cond_effs_t {
+    plan_pddl_cond_eff_t *cond_eff;
+    int size;
+};
+typedef struct _plan_pddl_cond_effs_t plan_pddl_cond_effs_t;
+
 struct _plan_pddl_action_t {
     const char *name;
     plan_pddl_objs_t param;
     plan_pddl_facts_t pre;
     plan_pddl_facts_t eff;
     plan_pddl_facts_t cost;
+    plan_pddl_cond_effs_t cond_eff;
 };
 typedef struct _plan_pddl_action_t plan_pddl_action_t;
 

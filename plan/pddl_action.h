@@ -40,9 +40,16 @@ struct _plan_pddl_cond_effs_t {
 };
 typedef struct _plan_pddl_cond_effs_t plan_pddl_cond_effs_t;
 
+struct _plan_pddl_action_args_t {
+    int *arg;
+    int size;
+};
+typedef struct _plan_pddl_action_args_t plan_pddl_action_args_t;
+
 struct _plan_pddl_action_t {
     const char *name;
     plan_pddl_objs_t param;
+    plan_pddl_action_args_t arg;
     plan_pddl_facts_t pre;
     plan_pddl_facts_t eff;
     plan_pddl_facts_t cost;
@@ -69,6 +76,8 @@ int planPDDLActionsParse(const plan_pddl_lisp_t *domain,
                          plan_pddl_actions_t *actions);
 
 void planPDDLActionsFree(plan_pddl_actions_t *actions);
+
+plan_pddl_action_t *planPDDLActionsAdd(plan_pddl_actions_t *as);
 
 void planPDDLActionsPrint(const plan_pddl_actions_t *actions,
                           const plan_pddl_objs_t *objs,

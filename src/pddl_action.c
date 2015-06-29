@@ -42,11 +42,7 @@ static int parsePreEff(const plan_pddl_types_t *types,
 static plan_pddl_action_t *addAction(plan_pddl_actions_t *as, const char *name)
 {
     plan_pddl_action_t *a;
-
-    ++as->size;
-    as->action = BOR_REALLOC_ARR(as->action, plan_pddl_action_t, as->size);
-    a = as->action + as->size - 1;
-    bzero(a, sizeof(*a));
+    a = planPDDLActionsAdd(as);
     a->name = name;
     return a;
 }
@@ -552,6 +548,17 @@ int planPDDLActionsParse(const plan_pddl_lisp_t *domain,
         }
     }
     return 0;
+}
+
+plan_pddl_action_t *planPDDLActionsAdd(plan_pddl_actions_t *as)
+{
+    plan_pddl_action_t *a;
+
+    ++as->size;
+    as->action = BOR_REALLOC_ARR(as->action, plan_pddl_action_t, as->size);
+    a = as->action + as->size - 1;
+    bzero(a, sizeof(*a));
+    return a;
 }
 
 void planPDDLActionsFree(plan_pddl_actions_t *actions)

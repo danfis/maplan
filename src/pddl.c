@@ -86,6 +86,7 @@ static void condPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
                       const plan_pddl_cond_t *cond, FILE *fout);
 
 
+#if 0
 static void factInit(plan_pddl_fact_t *f)
 {
     bzero(f, sizeof(*f));
@@ -294,6 +295,7 @@ static int parseTypedList(plan_pddl_t *pddl,
 
     return 0;
 }
+#endif
 
 static const char *parseName(plan_pddl_lisp_node_t *root, int kw,
                              const char *err_name)
@@ -340,6 +342,7 @@ static int checkDomainName(plan_pddl_t *pddl)
 }
 
 
+#if 0
 static int addAction(plan_pddl_t *pddl, const char *name)
 {
     int id;
@@ -658,6 +661,7 @@ static int parseGoal(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
     condFree(&cond);
     return 0;
 }
+#endif
 
 static int parseMetric(plan_pddl_t *pddl, const plan_pddl_lisp_node_t *root)
 {
@@ -722,8 +726,9 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
             || planPDDLFactsParseInit(problem_lisp, &pddl->predicate,
                                       &pddl->function, &pddl->obj,
                                       &pddl->init_fact, &pddl->init_func) != 0
-            || parseAction(pddl, &domain_lisp->root) != 0
-            || parseGoal(pddl, &problem_lisp->root) != 0
+            || planPDDLActionsParse(domain_lisp, &pddl->type, &pddl->obj,
+                                    &pddl->predicate, &pddl->function,
+                                    &pddl->action) != 0
             || parseMetric(pddl, &problem_lisp->root) != 0){
         goto pddl_fail;
     }
@@ -749,9 +754,7 @@ void planPDDLDel(plan_pddl_t *pddl)
     planPDDLPredicatesFree(&pddl->function);
     planPDDLFactsFree(&pddl->init_fact);
     planPDDLFactsFree(&pddl->init_func);
-
-    actionDel2(pddl->action, pddl->action_size);
-    factDel2(pddl->goal, pddl->goal_size);
+    planPDDLActionsFree(&pddl->action);
 
     BOR_FREE(pddl);
 }
@@ -769,11 +772,10 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
     planPDDLTypeObjPrint(&pddl->type_obj, fout);
     planPDDLPredicatesPrint(&pddl->predicate, "Predicate", fout);
     planPDDLPredicatesPrint(&pddl->function, "Function", fout);
+    planPDDLActionsPrint(&pddl->action, &pddl->obj, &pddl->predicate,
+                         &pddl->function, fout);
 
-    fprintf(fout, "Action[%d]:\n", pddl->action_size);
-    actionPrintArr(pddl, pddl->action, pddl->action_size, fout);
-    fprintf(fout, "Goal[%d]:\n", pddl->goal_size);
-    factPrintArr(pddl, NULL, pddl->goal, pddl->goal_size, fout, "    ");
+    /*
     fprintf(fout, "Init[%d]:\n", pddl->init_fact.size);
     factPrintArr(pddl, NULL, pddl->init_fact.fact, pddl->init_fact.size, fout, "    ");
 
@@ -786,11 +788,13 @@ void planPDDLDump(const plan_pddl_t *pddl, FILE *fout)
                     pddl->obj.obj[pddl->init_func.fact[i].arg[j]].name);
         fprintf(fout, " --> %d\n", pddl->init_func.fact[i].func_val);
     }
+    */
 
     fprintf(fout, "Metric: %d\n", pddl->metric);
 }
 
 
+#if 0
 /**** CONDITION ****/
 static int condType(int kw)
 {
@@ -1294,3 +1298,4 @@ static void condPrint(const plan_pddl_t *pddl, const plan_pddl_action_t *a,
     }
 }
 /**** CONDITION END ****/
+#endif

@@ -166,3 +166,14 @@ void planPDDLFactsFree(plan_pddl_facts_t *fs)
     if (fs->fact != NULL)
         BOR_FREE(fs->fact);
 }
+
+plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs)
+{
+    plan_pddl_fact_t *f;
+
+    ++fs->size;
+    fs->fact = BOR_REALLOC_ARR(fs->fact, plan_pddl_fact_t, fs->size);
+    f = fs->fact + fs->size - 1;
+    bzero(f, sizeof(*f));
+    return f;
+}

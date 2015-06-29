@@ -26,39 +26,11 @@
 #include <plan/pddl_obj.h>
 #include <plan/pddl_predicate.h>
 #include <plan/pddl_fact.h>
+#include <plan/pddl_action.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-struct _plan_pddl_inst_func_t {
-    int func; /*!< Function ID */
-    int val;  /*!< Assigned value */
-    int *arg; /*!< Object IDs are arguments */
-    int arg_size;
-};
-typedef struct _plan_pddl_inst_func_t plan_pddl_inst_func_t;
-
-typedef struct _plan_pddl_action_t plan_pddl_action_t;
-struct _plan_pddl_action_t {
-    const char *name;
-    plan_pddl_obj_t *param;
-    int param_size;
-    plan_pddl_fact_t *pre;
-    int pre_size;
-    plan_pddl_fact_t *eff;
-    int eff_size;
-    plan_pddl_action_t *cond_eff;
-    int cond_eff_size;
-    plan_pddl_inst_func_t *cost;
-    int cost_size;
-};
-
-struct _plan_pddl_obj_arr_t {
-    int *obj;
-    int size;
-};
-typedef struct _plan_pddl_obj_arr_t plan_pddl_obj_arr_t;
 
 struct _plan_pddl_t {
     plan_pddl_lisp_t *domain_lisp;
@@ -74,10 +46,7 @@ struct _plan_pddl_t {
     plan_pddl_facts_t init_fact;
     plan_pddl_facts_t init_func;
 
-    plan_pddl_action_t *action;
-    int action_size;
-    plan_pddl_fact_t *goal;
-    int goal_size;
+    plan_pddl_actions_t action;
     int metric;
 
     struct {

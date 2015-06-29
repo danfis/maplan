@@ -20,6 +20,7 @@ OBJS += pddl_type
 OBJS += pddl_obj
 OBJS += pddl_predicate
 OBJS += pddl_fact
+OBJS += pddl_action
 OBJS += pddl
 OBJS += var
 OBJS += state

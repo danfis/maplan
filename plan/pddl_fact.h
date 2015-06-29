@@ -59,6 +59,11 @@ int planPDDLFactsParseInit(const plan_pddl_lisp_t *problem,
  */
 void planPDDLFactsFree(plan_pddl_facts_t *fs);
 
+/**
+ * Adds another fact to array.
+ */
+plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

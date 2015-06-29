@@ -48,12 +48,6 @@ struct _plan_pddl_t {
     plan_pddl_facts_t goal;
     plan_pddl_actions_t action;
     int metric;
-
-    struct {
-        plan_pddl_obj_t *param;
-        int *param_bind;
-        int param_size;
-    } forall;
 };
 typedef struct _plan_pddl_t plan_pddl_t;
 

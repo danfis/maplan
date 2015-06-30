@@ -359,6 +359,8 @@ static void instActionBoundPre(const lift_action_t *lift_action,
         fprintf(stderr, " %d", bound_arg[i]);
     fprintf(stderr, "\n");
 
+    // TODO: Check that the bounded effect is not false, i.e., if it
+    //       contains fact and its negation.
     // Add effects
     for (fact_i = 0; fact_i < action->eff.size; ++fact_i){
         fact = action->eff.fact + fact_i;
@@ -497,6 +499,8 @@ static uint64_t groundFactComputeKey(const ground_fact_t *g)
 {
     uint64_t key;
     uint32_t *k = (uint32_t *)&key;
+    // TODO: Hash table uses modulo so this approach is not the best one.
+    //       We can do better with some data copying.
     k[0] = (g->fact.pred << 1) | g->fact.neg;
     k[1] = borFastHash_32(g->fact.arg, sizeof(int) * g->fact.arg_size, 123);
     return key;

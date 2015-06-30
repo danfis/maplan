@@ -43,6 +43,8 @@ void planPDDLGround(const plan_pddl_t *pddl, plan_pddl_ground_t *g);
  */
 void planPDDLGroundFree(plan_pddl_ground_t *g);
 
+void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

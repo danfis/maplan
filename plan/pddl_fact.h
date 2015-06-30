@@ -78,6 +78,10 @@ plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs);
  */
 void planPDDLFactCopy(plan_pddl_fact_t *dst, const plan_pddl_fact_t *src);
 
+void planPDDLFactPrint(const plan_pddl_predicates_t *predicates,
+                       const plan_pddl_objs_t *objs,
+                       const plan_pddl_fact_t *f,
+                       FILE *fout);
 void planPDDLFactsPrintInit(const plan_pddl_predicates_t *predicates,
                             const plan_pddl_objs_t *objs,
                             const plan_pddl_facts_t *in,

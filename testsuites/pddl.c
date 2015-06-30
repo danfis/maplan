@@ -1,5 +1,6 @@
 #include <cu/cu.h>
 #include "plan/pddl.h"
+#include "plan/pddl_ground.h"
 
 static void dumpDomain(const char *domain_fn, const char *problem_fn)
 {
@@ -23,4 +24,23 @@ TEST(testPDDL)
     dumpDomain("pddl/rovers-domain.pddl", "pddl/rovers-p01.pddl");
     dumpDomain("pddl/CityCar-domain.pddl", "pddl/CityCar-p3-2-2-0-1.pddl");
     dumpDomain("pddl/elevators08-domain.pddl", "pddl/elevators08-p01.pddl");
+}
+
+static void testGround(const char *domain_fn, const char *problem_fn)
+{
+    plan_pddl_t *d;
+    plan_pddl_ground_t ground;
+
+    d = planPDDLNew(domain_fn, problem_fn);
+    if (d == NULL)
+        return;
+
+    planPDDLGround(d, &ground);
+    planPDDLGroundPrint(&ground, stdout);
+    planPDDLGroundFree(&ground);
+    planPDDLDel(d);
+}
+TEST(testPDDLGround)
+{
+    testGround("pddl/depot-domain.pddl", "pddl/depot-pfile1.pddl");
 }

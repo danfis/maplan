@@ -325,20 +325,28 @@ void planPDDLFactCopy(plan_pddl_fact_t *dst, const plan_pddl_fact_t *src)
     memcpy(dst->arg, src->arg, sizeof(int) * dst->arg_size);
 }
 
-static void printFact(const plan_pddl_predicates_t *predicates,
-                      const plan_pddl_objs_t *objs,
-                      const plan_pddl_fact_t *f,
-                      int func_val, FILE *fout)
+void planPDDLFactPrint(const plan_pddl_predicates_t *predicates,
+                       const plan_pddl_objs_t *objs,
+                       const plan_pddl_fact_t *f,
+                       FILE *fout)
 {
     int i;
 
-    fprintf(fout, "    ");
     if (f->neg)
         fprintf(fout, "N:");
     fprintf(fout, "%s:", predicates->pred[f->pred].name);
     for (i = 0; i < f->arg_size; ++i){
         fprintf(fout, " %s", objs->obj[f->arg[i]].name);
     }
+}
+
+static void printFact(const plan_pddl_predicates_t *predicates,
+                      const plan_pddl_objs_t *objs,
+                      const plan_pddl_fact_t *f,
+                      int func_val, FILE *fout)
+{
+    fprintf(fout, "    ");
+    planPDDLFactPrint(predicates, objs, f, fout);
     if (func_val != 0)
         fprintf(fout, " --> %d", f->func_val);
     fprintf(fout, "\n");

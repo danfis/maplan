@@ -18,21 +18,22 @@
  */
 
 #include <boruvka/alloc.h>
+#include <boruvka/extarr.h>
 #include <boruvka/rbtree.h>
 #include "plan/pddl_ground.h"
 #include "pddl_err.h"
 
 struct _ground_fact_t {
-    plan_pddl_fact_t *fact;
+    plan_pddl_fact_t fact;
     bor_rbtree_node_t node;
 };
 typedef struct _ground_fact_t ground_fact_t;
 
 struct _ground_fact_pool_t {
     bor_rbtree_t tree;
-    plan_pddl_facts_t *fact;
+    bor_extarr_t **fact;
+    int *fact_size;
     int size;
-    ground_fact_t *next_gf;
 };
 typedef struct _ground_fact_pool_t ground_fact_pool_t;
 
@@ -42,8 +43,8 @@ static int groundFactCmp(const bor_rbtree_node_t *n1,
 {
     const ground_fact_t *g1 = bor_container_of(n1, ground_fact_t, node);
     const ground_fact_t *g2 = bor_container_of(n2, ground_fact_t, node);
-    const plan_pddl_fact_t *f1 = g1->fact;
-    const plan_pddl_fact_t *f2 = g2->fact;
+    const plan_pddl_fact_t *f1 = &g1->fact;
+    const plan_pddl_fact_t *f2 = &g2->fact;
     int cmp, i = 0;
 
     cmp = f1->pred - f2->pred;
@@ -57,59 +58,114 @@ static int groundFactCmp(const bor_rbtree_node_t *n1,
 
 static void groundFactPoolInit(ground_fact_pool_t *gf, int size)
 {
-    borRBTreeInit(&gf->tree, groundFactCmp, NULL);
-    gf->fact = BOR_CALLOC_ARR(plan_pddl_facts_t, size);
+    ground_fact_t init_gf;
+    int i;
+
     gf->size = size;
-    gf->next_gf = BOR_CALLOC_ARR(ground_fact_t, 1);
+    gf->fact = BOR_ALLOC_ARR(bor_extarr_t *, size);
+    bzero(&init_gf, sizeof(init_gf));
+    for (i = 0; i < size; ++i)
+        gf->fact[i] = borExtArrNew(sizeof(ground_fact_t), NULL, &init_gf);
+    gf->fact_size = BOR_CALLOC_ARR(int, size);
+    borRBTreeInit(&gf->tree, groundFactCmp, NULL);
 }
 
 static void groundFactPoolFree(ground_fact_pool_t *gf)
 {
-    bor_rbtree_node_t *node;
-    ground_fact_t *f;
-    int i;
+    int i, j;
 
-    for (i = 0; i < gf->size; ++i)
-        planPDDLFactsFree(gf->fact + i);
+    borRBTreeFree(&gf->tree);
+    for (i = 0; i < gf->size; ++i){
+        for (j = 0; j < gf->fact_size[i]; ++j)
+            planPDDLFactFree(borExtArrGet(gf->fact[i], j));
+        borExtArrDel(gf->fact[i]);
+    }
     if (gf->fact != NULL)
         BOR_FREE(gf->fact);
-    if (gf->next_gf)
-        BOR_FREE(gf->next_gf);
-
-    while (!borRBTreeEmpty(&gf->tree)){
-        node = borRBTreeExtractMin(&gf->tree);
-        f = bor_container_of(node, ground_fact_t, node);
-        BOR_FREE(f);
-    }
-    borRBTreeFree(&gf->tree);
+    if (gf->fact_size != NULL)
+        BOR_FREE(gf->fact_size);
 }
 
-static int groundFactsAdd(ground_fact_pool_t *gf, const plan_pddl_fact_t *f)
+static int groundFactPoolAdd(ground_fact_pool_t *gf, const plan_pddl_fact_t *f)
 {
+    ground_fact_t *fact;
     bor_rbtree_node_t *node;
-    plan_pddl_fact_t *new_f;
 
-    gf->next_gf->fact = (plan_pddl_fact_t *)f;
-    node = borRBTreeInsert(&gf->tree, &gf->next_gf->node);
+    // Get element from array
+    fact = borExtArrGet(gf->fact[f->pred], gf->fact_size[f->pred]);
+    // and make shallow copy
+    fact->fact = *f;
+
+    // Try to insert it into tree
+    node = borRBTreeInsert(&gf->tree, &fact->node);
     if (node != NULL)
         return -1;
 
-    new_f = planPDDLFactsAdd(gf->fact + f->pred);
-    planPDDLFactCopy(new_f, f);
-    gf->next_gf->fact = new_f;
-    gf->next_gf = BOR_CALLOC_ARR(ground_fact_t, 1);
+    // Make deep copy and increase size of array
+    planPDDLFactCopy(&fact->fact, f);
+    ++gf->fact_size[f->pred];
     return 0;
 }
 
+static void addInitFacts(ground_fact_pool_t *pool,
+                         const plan_pddl_facts_t *facts)
+{
+    int i;
+
+    for (i = 0; i < facts->size; ++i)
+        groundFactPoolAdd(pool, facts->fact + i);
+}
+
+static void gatherFactsFromPool(plan_pddl_facts_t *fs,
+                                const ground_fact_pool_t *pool)
+{
+    const plan_pddl_fact_t *f;
+    int pred, i, ins, size;
+
+    size = 0;
+    for (pred = 0; pred < pool->size; ++pred)
+        size += pool->fact_size[pred];
+
+    fs->size = size;
+    fs->fact = BOR_CALLOC_ARR(plan_pddl_fact_t, fs->size);
+    ins = 0;
+    for (pred = 0; pred < pool->size; ++pred){
+        for (i = 0; i < pool->fact_size[pred]; ++i){
+            f = borExtArrGet(pool->fact[pred], i);
+            planPDDLFactCopy(fs->fact + ins++, f);
+        }
+    }
+}
 
 void planPDDLGround(const plan_pddl_t *pddl, plan_pddl_ground_t *g)
 {
+    ground_fact_pool_t fact_pool;
+
     bzero(g, sizeof(*g));
+    groundFactPoolInit(&fact_pool, pddl->predicate.size);
+
+    addInitFacts(&fact_pool, &pddl->init_fact);
+
     g->pddl = pddl;
+    gatherFactsFromPool(&g->fact, &fact_pool);
+    groundFactPoolFree(&fact_pool);
 }
 
 void planPDDLGroundFree(plan_pddl_ground_t *g)
 {
     planPDDLFactsFree(&g->fact);
     planPDDLActionsFree(&g->action);
+}
+
+void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
+{
+    int i;
+
+    fprintf(fout, "Facts[%d]:\n", g->fact.size);
+    for (i = 0; i < g->fact.size; ++i){
+        fprintf(fout, "    ");
+        planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj,
+                          g->fact.fact + i, fout);
+        fprintf(fout, "\n");
+    }
 }

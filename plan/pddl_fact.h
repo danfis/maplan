@@ -66,11 +66,17 @@ int planPDDLFactsParseGoal(const plan_pddl_lisp_t *problem,
  * Free allocated resources.
  */
 void planPDDLFactsFree(plan_pddl_facts_t *fs);
+void planPDDLFactFree(plan_pddl_fact_t *f);
 
 /**
  * Adds another fact to array.
  */
 plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs);
+
+/**
+ * Copies fact from src to dst.
+ */
+void planPDDLFactCopy(plan_pddl_fact_t *dst, const plan_pddl_fact_t *src);
 
 void planPDDLFactsPrintInit(const plan_pddl_predicates_t *predicates,
                             const plan_pddl_objs_t *objs,

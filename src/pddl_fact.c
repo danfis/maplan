@@ -291,14 +291,18 @@ int planPDDLFactsParseGoal(const plan_pddl_lisp_t *problem,
     return parseGoal(ngoal->child + 1, predicates, objs, goal);
 }
 
+void planPDDLFactFree(plan_pddl_fact_t *f)
+{
+    if (f->arg != NULL)
+        BOR_FREE(f->arg);
+}
+
 void planPDDLFactsFree(plan_pddl_facts_t *fs)
 {
     int i;
 
-    for (i = 0; i < fs->size; ++i){
-        if (fs->fact[i].arg != NULL)
-            BOR_FREE(fs->fact[i].arg);
-    }
+    for (i = 0; i < fs->size; ++i)
+        planPDDLFactFree(fs->fact + i);
     if (fs->fact != NULL)
         BOR_FREE(fs->fact);
 }
@@ -312,6 +316,13 @@ plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs)
     f = fs->fact + fs->size - 1;
     bzero(f, sizeof(*f));
     return f;
+}
+
+void planPDDLFactCopy(plan_pddl_fact_t *dst, const plan_pddl_fact_t *src)
+{
+    memcpy(dst, src, sizeof(*dst));
+    dst->arg = BOR_ALLOC_ARR(int, dst->arg_size);
+    memcpy(dst->arg, src->arg, sizeof(int) * dst->arg_size);
 }
 
 static void printFact(const plan_pddl_predicates_t *predicates,

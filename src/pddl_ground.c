@@ -39,6 +39,20 @@ struct _ground_fact_pool_t {
 };
 typedef struct _ground_fact_pool_t ground_fact_pool_t;
 
+struct _lift_action_t {
+    int action;
+    plan_pddl_facts_t pre;
+    plan_pddl_facts_t pre_neg;
+    plan_pddl_facts_t eq;
+};
+typedef struct _lift_action_t lift_action_t;
+
+struct _lift_actions_t {
+    lift_action_t *action;
+    int size;
+};
+typedef struct _lift_actions_t lift_actions_t;
+
 uint64_t groundFactComputeKey(const ground_fact_t *g)
 {
     uint64_t key;
@@ -126,6 +140,121 @@ static int groundFactPoolAdd(ground_fact_pool_t *gf, const plan_pddl_fact_t *f)
     return 0;
 }
 
+static int liftActionPreCmp(const void *a, const void *b)
+{
+    const plan_pddl_fact_t *f1 = a;
+    const plan_pddl_fact_t *f2 = b;
+    int cmp, i;
+
+    cmp = f1->arg_size - f2->arg_size;
+    if (cmp == 0)
+        cmp = f1->pred - f2->pred;
+    for (i = 0; cmp == 0 && i < f1->arg_size; ++i)
+        cmp = f1->arg[i] - f2->arg[i];
+    return cmp;
+}
+
+static void liftActionPrepare(lift_action_t *a)
+{
+    qsort(a->pre.fact, a->pre.size, sizeof(plan_pddl_fact_t),
+          liftActionPreCmp);
+}
+
+static void liftActionsInit(lift_actions_t *action,
+                            const plan_pddl_actions_t *pddl_action,
+                            int eq_fact_id)
+{
+    lift_action_t *a;
+    const plan_pddl_action_t *pddl_a;
+    plan_pddl_fact_t *f;
+    const plan_pddl_fact_t *pddl_f;
+    int i, prei;
+
+    action->size = pddl_action->size;
+    action->action = BOR_CALLOC_ARR(lift_action_t, action->size);
+
+    for (i = 0; i < action->size; ++i){
+        a = action->action + i;
+        a->action = i;
+
+        pddl_a = pddl_action->action + i;
+        for (prei = 0; prei < pddl_a->pre.size; ++prei){
+            pddl_f = pddl_a->pre.fact + prei;
+            if (pddl_f->pred == eq_fact_id){
+                f = planPDDLFactsAdd(&a->eq);
+            }else if (pddl_f->neg){
+                f = planPDDLFactsAdd(&a->pre_neg);
+            }else{
+                f = planPDDLFactsAdd(&a->pre);
+            }
+            planPDDLFactCopy(f, pddl_f);
+        }
+
+        liftActionPrepare(a);
+    }
+}
+
+static void liftActionsFree(lift_actions_t *as)
+{
+    int i;
+
+    for (i = 0; i < as->size; ++i){
+        planPDDLFactsFree(&as->action[i].pre);
+        planPDDLFactsFree(&as->action[i].pre_neg);
+        planPDDLFactsFree(&as->action[i].eq);
+    }
+
+    if (as->action != NULL)
+        BOR_FREE(as->action);
+}
+
+static void _liftActionFactsPrint(const lift_action_t *a,
+                                  const plan_pddl_facts_t *fs,
+                                  const plan_pddl_actions_t *action,
+                                  const plan_pddl_predicates_t *pred,
+                                  const plan_pddl_objs_t *obj,
+                                  const char *header,
+                                  FILE *fout)
+{
+    int i, j;
+
+    fprintf(fout, "    %s[%d]:\n", header, fs->size);
+    for (i = 0; i < fs->size; ++i){
+        fprintf(fout, "      ");
+        if (fs->fact[i].neg)
+            fprintf(fout, "N:");
+        fprintf(fout, "%s:", pred->pred[fs->fact[i].pred].name);
+        for (j = 0; j < fs->fact[i].arg_size; ++j){
+            if (fs->fact[i].arg[j] < 0){
+                fprintf(fout, " %s", obj->obj[fs->fact[i].arg[j] + obj->size].name);
+            }else{
+                fprintf(fout, " %s",
+                        action->action[a->action].param.obj[fs->fact[i].arg[j]].name);
+            }
+        }
+        fprintf(fout, "\n");
+    }
+}
+
+static void liftActionsPrint(const lift_actions_t *a,
+                             const plan_pddl_actions_t *action,
+                             const plan_pddl_predicates_t *pred,
+                             const plan_pddl_objs_t *obj,
+                             FILE *fout)
+{
+    const lift_action_t *lift;
+    int i;
+
+    fprintf(fout, "Lift Actions[%d]:\n", a->size);
+    for (i = 0; i < a->size; ++i){
+        lift = a->action + i;
+        fprintf(fout, "  %s:\n", action->action[lift->action].name);
+        _liftActionFactsPrint(lift, &lift->pre, action, pred, obj, "pre", fout);
+        _liftActionFactsPrint(lift, &lift->pre_neg, action, pred, obj, "pre-neg", fout);
+        _liftActionFactsPrint(lift, &lift->eq, action, pred, obj, "eq", fout);
+    }
+}
+
 static void addInitFacts(ground_fact_pool_t *pool,
                          const plan_pddl_facts_t *facts)
 {
@@ -159,14 +288,19 @@ static void gatherFactsFromPool(plan_pddl_facts_t *fs,
 void planPDDLGround(const plan_pddl_t *pddl, plan_pddl_ground_t *g)
 {
     ground_fact_pool_t fact_pool;
+    lift_actions_t lift_actions;
 
     bzero(g, sizeof(*g));
     groundFactPoolInit(&fact_pool, pddl->predicate.size);
+    liftActionsInit(&lift_actions, &pddl->action, pddl->predicate.eq_pred);
+    liftActionsPrint(&lift_actions, &pddl->action,
+                     &pddl->predicate, &pddl->obj, stdout);
 
     addInitFacts(&fact_pool, &pddl->init_fact);
 
     g->pddl = pddl;
     gatherFactsFromPool(&g->fact, &fact_pool);
+    liftActionsFree(&lift_actions);
     groundFactPoolFree(&fact_pool);
 }
 

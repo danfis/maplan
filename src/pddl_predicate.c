@@ -115,6 +115,7 @@ int planPDDLPredicatesParse(const plan_pddl_lisp_t *domain,
         return 0;
 
     ps->pred = BOR_CALLOC_ARR(plan_pddl_predicate_t, n->child_size);
+    ps->eq_pred = -1;
     if (require & PLAN_PDDL_REQUIRE_EQUALITY)
         addEqPredicate(ps);
     for (i = 1; i < n->child_size; ++i){

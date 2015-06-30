@@ -19,41 +19,58 @@
 
 #include <boruvka/alloc.h>
 #include <boruvka/extarr.h>
-#include <boruvka/rbtree.h>
+#include <boruvka/htable.h>
+#include <boruvka/hfunc.h>
 #include "plan/pddl_ground.h"
 #include "pddl_err.h"
 
 struct _ground_fact_t {
     plan_pddl_fact_t fact;
-    bor_rbtree_node_t node;
+    uint64_t key;
+    bor_list_t htable;
 };
 typedef struct _ground_fact_t ground_fact_t;
 
 struct _ground_fact_pool_t {
-    bor_rbtree_t tree;
+    bor_htable_t *htable;
     bor_extarr_t **fact;
     int *fact_size;
     int size;
 };
 typedef struct _ground_fact_pool_t ground_fact_pool_t;
 
-static int groundFactCmp(const bor_rbtree_node_t *n1,
-                         const bor_rbtree_node_t *n2,
-                         void *data)
+uint64_t groundFactComputeKey(const ground_fact_t *g)
 {
-    const ground_fact_t *g1 = bor_container_of(n1, ground_fact_t, node);
-    const ground_fact_t *g2 = bor_container_of(n2, ground_fact_t, node);
+    uint64_t key;
+    uint32_t *k = (uint32_t *)&key;
+    k[0] = (g->fact.pred << 1) | g->fact.neg;
+    k[1] = borFastHash_32(g->fact.arg, sizeof(int) * g->fact.arg_size, 123);
+    return key;
+}
+uint64_t groundFactKey(const bor_list_t *key, void *userdata)
+{
+    const ground_fact_t *f = bor_container_of(key, ground_fact_t, htable);
+    return f->key;
+}
+
+int groundFactEq(const bor_list_t *key1, const bor_list_t *key2,
+                 void *userdata)
+{
+    const ground_fact_t *g1 = bor_container_of(key1, ground_fact_t, htable);
+    const ground_fact_t *g2 = bor_container_of(key2, ground_fact_t, htable);
     const plan_pddl_fact_t *f1 = &g1->fact;
     const plan_pddl_fact_t *f2 = &g2->fact;
-    int cmp, i = 0;
+    int cmp, i;
 
     cmp = f1->pred - f2->pred;
-    while (cmp == 0 && i < f1->arg_size && i < f2->arg_size)
+    if (cmp == 0)
+        cmp = f1->neg - f2->neg;
+    for (i = 0;cmp == 0 && i < f1->arg_size && i < f2->arg_size; ++i)
         cmp = f1->arg[i] - f2->arg[i];
     if (cmp == 0)
         cmp = f1->arg_size - f2->arg_size;
 
-    return cmp;
+    return cmp == 0;
 }
 
 static void groundFactPoolInit(ground_fact_pool_t *gf, int size)
@@ -67,14 +84,14 @@ static void groundFactPoolInit(ground_fact_pool_t *gf, int size)
     for (i = 0; i < size; ++i)
         gf->fact[i] = borExtArrNew(sizeof(ground_fact_t), NULL, &init_gf);
     gf->fact_size = BOR_CALLOC_ARR(int, size);
-    borRBTreeInit(&gf->tree, groundFactCmp, NULL);
+    gf->htable = borHTableNew(groundFactKey, groundFactEq, NULL);
 }
 
 static void groundFactPoolFree(ground_fact_pool_t *gf)
 {
     int i, j;
 
-    borRBTreeFree(&gf->tree);
+    borHTableDel(gf->htable);
     for (i = 0; i < gf->size; ++i){
         for (j = 0; j < gf->fact_size[i]; ++j)
             planPDDLFactFree(borExtArrGet(gf->fact[i], j));
@@ -89,15 +106,17 @@ static void groundFactPoolFree(ground_fact_pool_t *gf)
 static int groundFactPoolAdd(ground_fact_pool_t *gf, const plan_pddl_fact_t *f)
 {
     ground_fact_t *fact;
-    bor_rbtree_node_t *node;
+    bor_list_t *node;
 
     // Get element from array
     fact = borExtArrGet(gf->fact[f->pred], gf->fact_size[f->pred]);
     // and make shallow copy
     fact->fact = *f;
+    fact->key = groundFactComputeKey(fact);
+    borListInit(&fact->htable);
 
     // Try to insert it into tree
-    node = borRBTreeInsert(&gf->tree, &fact->node);
+    node = borHTableInsertUnique(gf->htable, &fact->htable);
     if (node != NULL)
         return -1;
 

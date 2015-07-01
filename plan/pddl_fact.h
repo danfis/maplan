@@ -77,6 +77,7 @@ plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs);
  * Copies fact from src to dst.
  */
 void planPDDLFactCopy(plan_pddl_fact_t *dst, const plan_pddl_fact_t *src);
+void planPDDLFactsCopy(plan_pddl_facts_t *dst, const plan_pddl_facts_t *src);
 
 void planPDDLFactPrint(const plan_pddl_predicates_t *predicates,
                        const plan_pddl_objs_t *objs,

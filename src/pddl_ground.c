@@ -60,6 +60,7 @@ struct _lift_action_t {
     const plan_pddl_action_t *action;
     int param_size;
     int obj_size;
+    const plan_pddl_facts_t *func;
     int **allowed_arg;
     plan_pddl_facts_t pre;
     plan_pddl_facts_t pre_neg;
@@ -108,12 +109,15 @@ static void groundActionPoolFree(ground_action_pool_t *ga);
 static plan_pddl_ground_action_t *groundActionPoolAdd(ground_action_pool_t *ga,
                                                       const lift_action_t *lift_action,
                                                       const int *bound_arg);
+static void groundActionPoolToArr(const ground_action_pool_t *ga,
+                                  plan_pddl_ground_actions_t *as);
 
 
 /** Creates a list of lifted actions ready to be grounded. */
 static void liftActionsInit(lift_actions_t *action,
                             const plan_pddl_actions_t *pddl_action,
                             const plan_pddl_type_obj_t *type_obj,
+                            const plan_pddl_facts_t *func,
                             int obj_size, int eq_fact_id);
 /** Frees allocated resouces */
 static void liftActionsFree(lift_actions_t *as);
@@ -144,7 +148,8 @@ void planPDDLGround(const plan_pddl_t *pddl, plan_pddl_ground_t *g)
     groundFactPoolInit(&fact_pool, pddl->predicate.size);
     groundActionPoolInit(&action_pool, &pddl->obj);
     liftActionsInit(&lift_actions, &pddl->action, &pddl->type_obj,
-                    pddl->obj.size, pddl->predicate.eq_pred);
+                    &pddl->init_func, pddl->obj.size,
+                    pddl->predicate.eq_pred);
     liftActionsPrint(&lift_actions, &pddl->predicate, &pddl->obj, stdout);
 
     groundFactPoolAddFacts(&fact_pool, &pddl->init_fact);
@@ -154,6 +159,7 @@ void planPDDLGround(const plan_pddl_t *pddl, plan_pddl_ground_t *g)
     bzero(g, sizeof(*g));
     g->pddl = pddl;
     groundFactPoolToFacts(&fact_pool, &g->fact);
+    groundActionPoolToArr(&action_pool, &g->action);
 
     liftActionsFree(&lift_actions);
     groundActionPoolFree(&action_pool);
@@ -163,7 +169,7 @@ void planPDDLGround(const plan_pddl_t *pddl, plan_pddl_ground_t *g)
 void planPDDLGroundFree(plan_pddl_ground_t *g)
 {
     planPDDLFactsFree(&g->fact);
-    //TODO: planPDDLActionsFree(&g->action);
+    planPDDLGroundActionsFree(&g->action);
 }
 
 void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
@@ -180,23 +186,40 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
 }
 
 
-static void planPDDLGroundActionFree(plan_pddl_ground_action_t *ga)
+void planPDDLGroundActionFree(plan_pddl_ground_action_t *ga)
 {
-    int i;
-
     if (ga->name)
         BOR_FREE(ga->name);
     if (ga->arg)
         BOR_FREE(ga->arg);
     planPDDLFactsFree(&ga->pre);
     planPDDLFactsFree(&ga->eff);
+    planPDDLCondEffsFree(&ga->cond_eff);
+}
 
-    for (i = 0; i < ga->cond_eff.size; ++i){
-        planPDDLFactsFree(&ga->cond_eff.cond_eff[i].pre);
-        planPDDLFactsFree(&ga->cond_eff.cond_eff[i].eff);
+void planPDDLGroundActionsFree(plan_pddl_ground_actions_t *ga)
+{
+    int i;
+
+    for (i = 0; i < ga->size; ++i)
+        planPDDLGroundActionFree(ga->action + i);
+    if (ga->action != NULL)
+        BOR_FREE(ga->action);
+}
+
+void planPDDLGroundActionCopy(plan_pddl_ground_action_t *dst,
+                              const plan_pddl_ground_action_t *src)
+{
+    *dst = *src;
+    if (src->name != NULL)
+        dst->name = BOR_STRDUP(src->name);
+    if (src->arg != NULL){
+        dst->arg = BOR_ALLOC_ARR(int, src->arg_size);
+        memcpy(dst->arg, src->arg, sizeof(int) * src->arg_size);
     }
-    if (ga->cond_eff.cond_eff != NULL)
-        BOR_FREE(ga->cond_eff.cond_eff);
+    planPDDLFactsCopy(&dst->pre, &src->pre);
+    planPDDLFactsCopy(&dst->eff, &src->eff);
+    planPDDLCondEffsCopy(&dst->cond_eff, &src->cond_eff);
 }
 
 /**** GROUND FACT POOL ***/
@@ -515,6 +538,50 @@ static int checkConflictInFacts(const plan_pddl_facts_t *facts)
     return 0;
 }
 
+static int funcEq(const plan_pddl_fact_t *func1,
+                  const plan_pddl_fact_t *func2)
+{
+    return func1->pred == func2->pred
+            && memcmp(func1->arg, func2->arg,
+                      sizeof(int) * func1->arg_size) == 0;
+}
+
+static int groundCostFunc(const plan_pddl_fact_t *func,
+                          const plan_pddl_facts_t *init_func)
+{
+    int i;
+
+    if (func->pred == -1)
+        return func->func_val;
+
+    for (i = 0; i < init_func->size; ++i){
+        if (funcEq(func, init_func->fact + i))
+            return init_func->fact[i].func_val;
+    }
+
+    WARN2("Could not find defined cost function. Returning zero.");
+    return 0;
+}
+
+static int groundCost(const lift_action_t *lift_action,
+                      const int *bound_arg)
+{
+    const plan_pddl_action_t *a = lift_action->action;
+    const plan_pddl_facts_t *cost_facts = &a->cost;
+    plan_pddl_facts_t ground_cost_facts;
+    int cost = 0;
+    int i;
+
+    bzero(&ground_cost_facts, sizeof(ground_cost_facts));
+    groundFacts(&ground_cost_facts, cost_facts, lift_action, bound_arg);
+    for (i = 0; i < ground_cost_facts.size; ++i){
+        cost += groundCostFunc(ground_cost_facts.fact + i, lift_action->func);
+    }
+
+    planPDDLFactsFree(&ground_cost_facts);
+    return cost;
+}
+
 static plan_pddl_ground_action_t *groundActionPoolAdd(ground_action_pool_t *ga,
                                                       const lift_action_t *lift_action,
                                                       const int *bound_arg)
@@ -554,6 +621,11 @@ static plan_pddl_ground_action_t *groundActionPoolAdd(ground_action_pool_t *ga,
     groundFacts(&action->pre, &lift_action->action->pre, lift_action, bound_arg);
     groundCondEffs(&action->cond_eff, &lift_action->action->cond_eff,
                    lift_action, bound_arg);
+    action->cost = groundCost(lift_action, bound_arg);
+    action->arg_size = lift_action->param_size;
+    action->arg = BOR_ALLOC_ARR(int, action->arg_size);
+    memcpy(action->arg, bound_arg, sizeof(int) * action->arg_size);
+
 
     // Insert it into hash table
     borListInit(&act->htable);
@@ -563,6 +635,19 @@ static plan_pddl_ground_action_t *groundActionPoolAdd(ground_action_pool_t *ga,
     return action;
 }
 
+static void groundActionPoolToArr(const ground_action_pool_t *ga,
+                                  plan_pddl_ground_actions_t *as)
+{
+    const ground_action_t *a;
+    int i;
+
+    as->size = ga->size;
+    as->action = BOR_CALLOC_ARR(plan_pddl_ground_action_t, as->size);
+    for (i = 0; i < as->size; ++i){
+        a = borExtArrGet(ga->action, i);
+        planPDDLGroundActionCopy(as->action + i, &a->action);
+    }
+}
 /**** GROUND ACTION POOL END ****/
 
 
@@ -603,6 +688,7 @@ static void liftActionPrepare(lift_action_t *a,
 static void liftActionsInit(lift_actions_t *action,
                             const plan_pddl_actions_t *pddl_action,
                             const plan_pddl_type_obj_t *type_obj,
+                            const plan_pddl_facts_t *func,
                             int obj_size, int eq_fact_id)
 {
     lift_action_t *a;
@@ -622,6 +708,7 @@ static void liftActionsInit(lift_actions_t *action,
         a->action = pddl_a;
         a->param_size = pddl_a->param.size;
         a->obj_size = obj_size;
+        a->func = func;
 
         for (prei = 0; prei < pddl_a->pre.size; ++prei){
             pddl_f = pddl_a->pre.fact + prei;

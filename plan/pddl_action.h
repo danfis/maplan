@@ -77,6 +77,13 @@ void planPDDLActionsPrint(const plan_pddl_actions_t *actions,
                           const plan_pddl_predicates_t *predicates,
                           const plan_pddl_predicates_t *functions,
                           FILE *fout);
+
+void planPDDLCondEffFree(plan_pddl_cond_eff_t *ce);
+void planPDDLCondEffsFree(plan_pddl_cond_effs_t *ce);
+void planPDDLCondEffCopy(plan_pddl_cond_eff_t *dst,
+                         const plan_pddl_cond_eff_t *src);
+void planPDDLCondEffsCopy(plan_pddl_cond_effs_t *dst,
+                          const plan_pddl_cond_effs_t *src);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

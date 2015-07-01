@@ -50,6 +50,10 @@ extern "C" {
     fprintf(stderr, "Warning PDDL: " format "\n", __VA_ARGS__); \
     fflush(stderr); \
     } while (0)
+#define WARN2(text) do { \
+    fprintf(stderr, "Warning PDDL: " text "\n"); \
+    fflush(stderr); \
+    } while (0)
 
 
 #ifdef __cplusplus

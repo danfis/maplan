@@ -563,19 +563,14 @@ plan_pddl_action_t *planPDDLActionsAdd(plan_pddl_actions_t *as)
 
 void planPDDLActionsFree(plan_pddl_actions_t *actions)
 {
-    int i, j;
+    int i;
 
     for (i = 0; i < actions->size; ++i){
         planPDDLObjsFree(&actions->action[i].param);
         planPDDLFactsFree(&actions->action[i].pre);
         planPDDLFactsFree(&actions->action[i].eff);
         planPDDLFactsFree(&actions->action[i].cost);
-        for (j = 0; j < actions->action[i].cond_eff.size; ++j){
-            planPDDLFactsFree(&actions->action[i].cond_eff.cond_eff[j].pre);
-            planPDDLFactsFree(&actions->action[i].cond_eff.cond_eff[j].eff);
-        }
-        if (actions->action[i].cond_eff.cond_eff != NULL)
-            BOR_FREE(actions->action[i].cond_eff.cond_eff);
+        planPDDLCondEffsFree(&actions->action[i].cond_eff);
     }
     if (actions->action != NULL)
         BOR_FREE(actions->action);
@@ -668,4 +663,39 @@ void planPDDLActionsPrint(const plan_pddl_actions_t *actions,
     for (i = 0; i < actions->size; ++i)
         planPDDLActionPrint(actions->action + i, objs,
                             predicates, functions, fout);
+}
+
+void planPDDLCondEffFree(plan_pddl_cond_eff_t *ce)
+{
+    planPDDLFactsFree(&ce->pre);
+    planPDDLFactsFree(&ce->eff);
+}
+
+void planPDDLCondEffsFree(plan_pddl_cond_effs_t *ce)
+{
+    int i;
+
+    for (i = 0; i < ce->size; ++i)
+        planPDDLCondEffFree(ce->cond_eff + i);
+    if (ce->cond_eff != NULL)
+        BOR_FREE(ce->cond_eff);
+}
+
+void planPDDLCondEffCopy(plan_pddl_cond_eff_t *dst,
+                         const plan_pddl_cond_eff_t *src)
+{
+    planPDDLFactsCopy(&dst->pre, &src->pre);
+    planPDDLFactsCopy(&dst->eff, &src->eff);
+}
+
+void planPDDLCondEffsCopy(plan_pddl_cond_effs_t *dst,
+                          const plan_pddl_cond_effs_t *src)
+{
+    int i;
+
+    *dst = *src;
+    if (src->cond_eff != NULL)
+        dst->cond_eff = BOR_ALLOC_ARR(plan_pddl_cond_eff_t, dst->size);
+    for (i = 0; i < dst->size; ++i)
+        planPDDLCondEffCopy(dst->cond_eff + i, src->cond_eff + i);
 }

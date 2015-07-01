@@ -325,6 +325,17 @@ void planPDDLFactCopy(plan_pddl_fact_t *dst, const plan_pddl_fact_t *src)
     memcpy(dst->arg, src->arg, sizeof(int) * dst->arg_size);
 }
 
+void planPDDLFactsCopy(plan_pddl_facts_t *dst, const plan_pddl_facts_t *src)
+{
+    int i;
+
+    *dst = *src;
+    if (src->fact != NULL)
+        dst->fact = BOR_ALLOC_ARR(plan_pddl_fact_t, src->size);
+    for (i = 0; i < dst->size; ++i)
+        planPDDLFactCopy(dst->fact + i, src->fact + i);
+}
+
 void planPDDLFactPrint(const plan_pddl_predicates_t *predicates,
                        const plan_pddl_objs_t *objs,
                        const plan_pddl_fact_t *f,

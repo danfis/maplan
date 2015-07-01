@@ -26,7 +26,7 @@
 
 struct _ground_fact_t {
     plan_pddl_fact_t fact;
-    uint64_t key;
+    bor_htable_key_t key;
     bor_list_t htable;
 };
 typedef struct _ground_fact_t ground_fact_t;
@@ -200,25 +200,23 @@ static void planPDDLGroundActionFree(plan_pddl_ground_action_t *ga)
 }
 
 /**** GROUND FACT POOL ***/
-static uint64_t groundFactComputeKey(const ground_fact_t *g)
+static bor_htable_key_t groundFactComputeKey(const ground_fact_t *g)
 {
-    uint64_t key;
-    uint32_t *k = (uint32_t *)&key;
-    // TODO: Hash table uses modulo so this approach is not the best one.
-    //       We can do better with some data copying.
-    k[0] = (g->fact.pred << 1) | g->fact.neg;
-    k[1] = borFastHash_32(g->fact.arg, sizeof(int) * g->fact.arg_size, 123);
-    return key;
+    int buf[g->fact.arg_size + 2];
+    buf[0] = g->fact.pred;
+    buf[1] = g->fact.neg;
+    memcpy(buf + 2, g->fact.arg, sizeof(int) * g->fact.arg_size);
+    return borFastHash_64(buf, sizeof(int) * (g->fact.arg_size + 2), 123);
 }
 
-static uint64_t groundFactKey(const bor_list_t *key, void *userdata)
+static bor_htable_key_t groundFactKey(const bor_list_t *key, void *userdata)
 {
     const ground_fact_t *f = bor_container_of(key, ground_fact_t, htable);
     return f->key;
 }
 
 static int groundFactEq(const bor_list_t *key1, const bor_list_t *key2,
-                 void *userdata)
+                        void *userdata)
 {
     const ground_fact_t *g1 = bor_container_of(key1, ground_fact_t, htable);
     const ground_fact_t *g2 = bor_container_of(key2, ground_fact_t, htable);

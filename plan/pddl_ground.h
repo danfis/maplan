@@ -26,10 +26,27 @@
 extern "C" {
 #endif /* __cplusplus */
 
+struct _plan_pddl_ground_action_t {
+    char *name;
+    int *arg;
+    int arg_size;
+    int cost;
+    plan_pddl_facts_t pre;
+    plan_pddl_facts_t eff;
+    plan_pddl_cond_effs_t cond_eff;
+};
+typedef struct _plan_pddl_ground_action_t plan_pddl_ground_action_t;
+
+struct _plan_pddl_ground_actions_t {
+    plan_pddl_ground_action_t *action;
+    int size;
+};
+typedef struct _plan_pddl_ground_actions_t plan_pddl_ground_actions_t;
+
 struct _plan_pddl_ground_t {
     const plan_pddl_t *pddl;
     plan_pddl_facts_t fact;
-    plan_pddl_actions_t action;
+    plan_pddl_ground_actions_t action;
 };
 typedef struct _plan_pddl_ground_t plan_pddl_ground_t;
 

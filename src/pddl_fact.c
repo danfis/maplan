@@ -320,7 +320,7 @@ plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs)
 
 void planPDDLFactCopy(plan_pddl_fact_t *dst, const plan_pddl_fact_t *src)
 {
-    memcpy(dst, src, sizeof(*dst));
+    *dst = *src;
     dst->arg = BOR_ALLOC_ARR(int, dst->arg_size);
     memcpy(dst->arg, src->arg, sizeof(int) * dst->arg_size);
 }

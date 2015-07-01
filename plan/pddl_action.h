@@ -40,16 +40,9 @@ struct _plan_pddl_cond_effs_t {
 };
 typedef struct _plan_pddl_cond_effs_t plan_pddl_cond_effs_t;
 
-struct _plan_pddl_action_args_t {
-    int *arg;
-    int size;
-};
-typedef struct _plan_pddl_action_args_t plan_pddl_action_args_t;
-
 struct _plan_pddl_action_t {
     const char *name;
     plan_pddl_objs_t param;
-    plan_pddl_action_args_t arg;
     plan_pddl_facts_t pre;
     plan_pddl_facts_t eff;
     plan_pddl_facts_t cost;

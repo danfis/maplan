@@ -50,13 +50,38 @@ static int groundFactPoolAdd(ground_fact_pool_t *gf,
 /** Returns true if the fact is already in pool */
 static int groundFactPoolExist(ground_fact_pool_t *gf,
                                const plan_pddl_fact_t *f);
+/** Returns true if all facts in fs exists in the pool */
+static int groundFactPoolExistFacts(ground_fact_pool_t *gf,
+                                    const plan_pddl_facts_t *fs);
 /** Adds all facts from the list to the pool */
 static void groundFactPoolAddFacts(ground_fact_pool_t *pool,
                                    const plan_pddl_facts_t *facts);
+/** Adds effects of the grounded action */
+static void groundFactPoolAddActionEffects(ground_fact_pool_t *pool,
+                                           const plan_pddl_ground_action_t *a);
 /** Writes all facts from the pool to the output array */
 static void groundFactPoolToFacts(const ground_fact_pool_t *pool,
                                   plan_pddl_facts_t *fs);
 
+struct _ground_action_t {
+    plan_pddl_ground_action_t action;
+    bor_htable_key_t key;
+    bor_list_t htable;
+};
+typedef struct _ground_action_t ground_action_t;
+
+struct _ground_action_pool_t {
+    bor_htable_t *htable;
+    bor_extarr_t *action;
+    int size;
+    const plan_pddl_objs_t *objs;
+};
+typedef struct _ground_action_pool_t ground_action_pool_t;
+
+/** Initializes and frees action pool */
+static void groundActionPoolInit(ground_action_pool_t *ga,
+                                 const plan_pddl_objs_t *objs);
+static void groundActionPoolFree(ground_action_pool_t *ga);
 
 struct _lift_action_t {
     int action_id;
@@ -94,6 +119,7 @@ static int liftActionFirstAllowedObj(const lift_action_t *lift_action, int i);
 /** Instantiates actions using facts in fact pool. */
 static void instActions(const lift_actions_t *actions,
                         ground_fact_pool_t *fact_pool,
+                        ground_action_pool_t *action_pool,
                         const plan_pddl_t *pddl);
 /** Instantiates negative preconditions of actions and adds them to fact
  *  pool. */
@@ -103,29 +129,32 @@ static void instActionsNegativePreconditions(const lift_actions_t *as,
 void planPDDLGround(const plan_pddl_t *pddl, plan_pddl_ground_t *g)
 {
     ground_fact_pool_t fact_pool;
+    ground_action_pool_t action_pool;
     lift_actions_t lift_actions;
 
     groundFactPoolInit(&fact_pool, pddl->predicate.size);
+    groundActionPoolInit(&action_pool, &pddl->obj);
     liftActionsInit(&lift_actions, &pddl->action, &pddl->type_obj,
                     pddl->obj.size, pddl->predicate.eq_pred);
     liftActionsPrint(&lift_actions, &pddl->predicate, &pddl->obj, stdout);
 
     groundFactPoolAddFacts(&fact_pool, &pddl->init_fact);
     instActionsNegativePreconditions(&lift_actions, &fact_pool);
-    instActions(&lift_actions, &fact_pool, pddl);
+    instActions(&lift_actions, &fact_pool, &action_pool, pddl);
 
     bzero(g, sizeof(*g));
     g->pddl = pddl;
     groundFactPoolToFacts(&fact_pool, &g->fact);
 
     liftActionsFree(&lift_actions);
+    groundActionPoolFree(&action_pool);
     groundFactPoolFree(&fact_pool);
 }
 
 void planPDDLGroundFree(plan_pddl_ground_t *g)
 {
     planPDDLFactsFree(&g->fact);
-    planPDDLActionsFree(&g->action);
+    //TODO: planPDDLActionsFree(&g->action);
 }
 
 void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
@@ -141,6 +170,25 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
     }
 }
 
+
+static void planPDDLGroundActionFree(plan_pddl_ground_action_t *ga)
+{
+    int i;
+
+    if (ga->name)
+        BOR_FREE(ga->name);
+    if (ga->arg)
+        BOR_FREE(ga->arg);
+    planPDDLFactsFree(&ga->pre);
+    planPDDLFactsFree(&ga->eff);
+
+    for (i = 0; i < ga->cond_eff.size; ++i){
+        planPDDLFactsFree(&ga->cond_eff.cond_eff[i].pre);
+        planPDDLFactsFree(&ga->cond_eff.cond_eff[i].eff);
+    }
+    if (ga->cond_eff.cond_eff != NULL)
+        BOR_FREE(ga->cond_eff.cond_eff);
+}
 
 /**** GROUND FACT POOL ***/
 static uint64_t groundFactComputeKey(const ground_fact_t *g)
@@ -253,6 +301,18 @@ static int groundFactPoolExist(ground_fact_pool_t *gf, const plan_pddl_fact_t *f
     return 1;
 }
 
+static int groundFactPoolExistFacts(ground_fact_pool_t *gf,
+                                    const plan_pddl_facts_t *fs)
+{
+    int i;
+
+    for (i = 0; i < fs->size; ++i){
+        if (!groundFactPoolExist(gf, fs->fact + i))
+            return 0;
+    }
+    return 1;
+}
+
 static void groundFactPoolAddFacts(ground_fact_pool_t *pool,
                                    const plan_pddl_facts_t *facts)
 {
@@ -260,6 +320,21 @@ static void groundFactPoolAddFacts(ground_fact_pool_t *pool,
 
     for (i = 0; i < facts->size; ++i)
         groundFactPoolAdd(pool, facts->fact + i);
+}
+
+static void groundFactPoolAddActionEffects(ground_fact_pool_t *pool,
+                                           const plan_pddl_ground_action_t *a)
+{
+    const plan_pddl_facts_t *eff, *pre;
+    int i;
+
+    groundFactPoolAddFacts(pool, &a->eff);
+    for (i = 0; i < a->cond_eff.size; ++i){
+        pre = &a->cond_eff.cond_eff[i].pre;
+        eff = &a->cond_eff.cond_eff[i].eff;
+        if (groundFactPoolExistFacts(pool, pre))
+            groundFactPoolAddFacts(pool, eff);
+    }
 }
 
 static void groundFactPoolToFacts(const ground_fact_pool_t *pool,
@@ -286,6 +361,203 @@ static void groundFactPoolToFacts(const ground_fact_pool_t *pool,
 }
 
 /**** GROUND FACT POOL END ***/
+
+
+/**** GROUND ACTION POOL ****/
+static bor_htable_key_t groundActionComputeKey(const plan_pddl_ground_action_t *a)
+{
+    return borHashSDBM(a->name);
+}
+
+static bor_htable_key_t groundActionKey(const bor_list_t *key, void *userdata)
+{
+    const ground_action_t *a = bor_container_of(key, ground_action_t, htable);
+    return a->key;
+}
+
+static int groundActionEq(const bor_list_t *key1, const bor_list_t *key2,
+                          void *userdata)
+{
+    const ground_action_t *g1 = bor_container_of(key1, ground_action_t, htable);
+    const ground_action_t *g2 = bor_container_of(key2, ground_action_t, htable);
+    const plan_pddl_ground_action_t *a1 = &g1->action;
+    const plan_pddl_ground_action_t *a2 = &g2->action;
+    return strcmp(a1->name, a2->name) == 0;
+}
+
+static void groundActionPoolInit(ground_action_pool_t *ga,
+                                 const plan_pddl_objs_t *objs)
+{
+    ground_action_t ga_init;
+
+    ga->htable = borHTableNew(groundActionKey, groundActionEq, NULL);
+    bzero(&ga_init, sizeof(ga_init));
+    ga->action = borExtArrNew(sizeof(ground_action_t), NULL, &ga_init);
+    ga->size = 0;
+    ga->objs = objs;
+}
+
+static void groundActionPoolFree(ground_action_pool_t *ga)
+{
+    ground_action_t *a;
+    int i;
+
+    borHTableDel(ga->htable);
+    for (i = 0; i < ga->size; ++i){
+        a = borExtArrGet(ga->action, i);
+        planPDDLGroundActionFree(&a->action);
+    }
+    borExtArrDel(ga->action);
+}
+
+static void setActionName(char *dstname, const lift_action_t *lift_action,
+                          const int *bound_arg, const plan_pddl_objs_t *objs)
+{
+    const char *s;
+    char *c;
+    int i;
+
+    c = dstname;
+    for (s = lift_action->action->name; *s != 0x0; ++s)
+        *(c++) = *s;
+
+    for (i = 0; i < lift_action->param_size; ++i){
+        *(c++) = ' ';
+        for (s = objs->obj[bound_arg[i]].name; *s != 0x0; ++s)
+            *(c++) = *s;
+    }
+    *c = 0x0;
+}
+
+static void groundFact(plan_pddl_fact_t *out,
+                       const plan_pddl_fact_t *fact,
+                       const lift_action_t *lift_action,
+                       const int *bound_arg)
+{
+    int i, var, val;
+
+    planPDDLFactCopy(out, fact);
+    for (i = 0; i < fact->arg_size; ++i){
+        var = fact->arg[i];
+        if (var < 0){
+            val = var + lift_action->obj_size;
+        }else{
+            val = bound_arg[var];
+        }
+        out->arg[i] = val;
+    }
+}
+
+static void groundFacts(plan_pddl_facts_t *out,
+                        const plan_pddl_facts_t *facts,
+                        const lift_action_t *lift_action,
+                        const int *bound_arg)
+{
+    int i;
+
+    out->size = facts->size;
+    out->fact = BOR_CALLOC_ARR(plan_pddl_fact_t, out->size);
+    for (i = 0; i < facts->size; ++i)
+        groundFact(out->fact + i, facts->fact + i, lift_action, bound_arg);
+}
+
+static void groundCondEffs(plan_pddl_cond_effs_t *out,
+                           const plan_pddl_cond_effs_t *ce,
+                           const lift_action_t *lift_action,
+                           const int *bound_arg)
+{
+    int i;
+
+    out->size = ce->size;
+    out->cond_eff = BOR_CALLOC_ARR(plan_pddl_cond_eff_t, out->size);
+    for (i = 0; i < ce->size; ++i){
+        groundFacts(&out->cond_eff[i].pre, &ce->cond_eff[i].pre,
+                    lift_action, bound_arg);
+        groundFacts(&out->cond_eff[i].eff, &ce->cond_eff[i].eff,
+                    lift_action, bound_arg);
+    }
+}
+
+static int checkConflict(const plan_pddl_fact_t *fact1,
+                         const plan_pddl_fact_t *fact2)
+{
+    int i;
+
+    if (fact1->neg == fact2->neg
+            || fact1->pred != fact2->pred)
+        return 0;
+
+    for (i = 0; i < fact1->arg_size; ++i){
+        if (fact1->arg[i] != fact2->arg[i])
+            return 0;
+    }
+
+    return 1;
+}
+
+static int checkConflictInFacts(const plan_pddl_facts_t *facts)
+{
+    int i, j;
+
+    for (i = 0; i < facts->size; ++i){
+        for (j = i + 1; j < facts->size; ++j){
+            if (checkConflict(facts->fact + i, facts->fact + j))
+                return 1;
+        }
+    }
+    return 0;
+}
+
+static plan_pddl_ground_action_t *groundActionPoolAdd(ground_action_pool_t *ga,
+                                                      const lift_action_t *lift_action,
+                                                      const int *bound_arg)
+{
+    ground_action_t *act;
+    plan_pddl_ground_action_t *action;
+    bor_list_t *node;
+    char name[1024];
+
+    act = borExtArrGet(ga->action, ga->size);
+    action = &act->action;
+
+    // Construct name from name of the action and its arguments
+    setActionName(name, lift_action, bound_arg, ga->objs);
+
+    // Make only shallow copy and check whether the action isn't already in
+    // pool
+    action->name = name;
+    act->key = groundActionComputeKey(action);
+    node = borHTableFind(ga->htable, &act->htable);
+    if (node != NULL)
+        return NULL;
+
+    // Now ground all effects and check for conflicts, i.e., whether there
+    // are both positive and negative version of the same fact.
+    groundFacts(&action->eff, &lift_action->action->eff, lift_action, bound_arg);
+    if (checkConflictInFacts(&action->eff)){
+        planPDDLFactsFree(&action->eff);
+        bzero(action, sizeof(*action));
+        return NULL;
+    }
+
+    // Everything is ok, so make deep copy of the name, ground
+    // preconditions and conditional effects, determine cost of the
+    // action and copy arguments.
+    action->name = BOR_STRDUP(name);
+    groundFacts(&action->pre, &lift_action->action->pre, lift_action, bound_arg);
+    groundCondEffs(&action->cond_eff, &lift_action->action->cond_eff,
+                   lift_action, bound_arg);
+
+    // Insert it into hash table
+    borListInit(&act->htable);
+    borHTableInsert(ga->htable, &act->htable);
+    ++ga->size;
+
+    return action;
+}
+
+/**** GROUND ACTION POOL END ****/
+
 
 /**** LIFT ACTION ****/
 static int liftActionPreCmp(const void *a, const void *b)
@@ -445,18 +717,6 @@ static int liftActionFirstAllowedObj(const lift_action_t *lift_action, int arg_i
 /**** LIFT ACTION END ****/
 
 /**** INSTANTIATE ****/
-static void _copyBoundArg(int *bound_arg, const int *bound_arg_init, int size)
-{
-    int i;
-
-    if (bound_arg_init == NULL){
-        for (i = 0; i < size; ++i)
-            bound_arg[i] = -1;
-    }else{
-        memcpy(bound_arg, bound_arg_init, sizeof(int) * size);
-    }
-}
-
 static void initBoundArg(int *bound_arg, const int *bound_arg_init, int size)
 {
     int i;
@@ -614,47 +874,25 @@ static int unboundArg(const int *bound_arg, int arg_size)
 
 static void instActionBound(const lift_action_t *lift_action,
                             ground_fact_pool_t *fact_pool,
+                            ground_action_pool_t *action_pool,
                             const int *bound_arg)
 {
-    const plan_pddl_action_t *action = lift_action->action;
-    const plan_pddl_fact_t *fact;
-    const plan_pddl_cond_eff_t *cond_eff;
-    int arg_size = lift_action->param_size;
-    int obj_size = lift_action->obj_size;
-    int fact_i, cond_eff_i;
+    const plan_pddl_ground_action_t *ga;
 
     // Check (= ...) equality predicate if it holds for the current binding
     // of arguments.
     if (!checkBoundArgEq(lift_action, bound_arg))
         return;
 
-    fprintf(stderr, "INST: %s:", lift_action->action->name);
-    for (int i = 0; i < arg_size; ++i)
-        fprintf(stderr, " %d", bound_arg[i]);
-    fprintf(stderr, "\n");
-
-    // TODO: Check that the bounded effect is not false, i.e., if it
-    //       contains fact and its negation.
-    // Add effects
-    for (fact_i = 0; fact_i < action->eff.size; ++fact_i){
-        fact = action->eff.fact + fact_i;
-        instFact(fact, bound_arg, obj_size, fact_pool);
-    }
-
-    // and conditional effects
-    for (cond_eff_i = 0; cond_eff_i < action->cond_eff.size; ++cond_eff_i){
-        cond_eff = action->cond_eff.cond_eff + cond_eff_i;
-        if (preHolds(fact_pool, bound_arg, obj_size, &cond_eff->pre)){
-            for (fact_i = 0; fact_i < cond_eff->eff.size; ++fact_i){
-                fact = cond_eff->eff.fact + fact_i;
-                instFact(fact, bound_arg, obj_size, fact_pool);
-            }
-        }
-    }
+    // Ground action and if successful instatiate grounded
+    ga = groundActionPoolAdd(action_pool, lift_action, bound_arg);
+    if (ga != NULL)
+        groundFactPoolAddActionEffects(fact_pool, ga);
 }
 
 static void instActionBoundPre(const lift_action_t *lift_action,
                                ground_fact_pool_t *fact_pool,
+                               ground_action_pool_t *action_pool,
                                const int *bound_arg_init)
 {
     const plan_pddl_action_t *action = lift_action->action;
@@ -670,7 +908,7 @@ static void instActionBoundPre(const lift_action_t *lift_action,
             // If parameter is not used anywhere just bound by a first
             // available object
             bound_arg[unbound] = liftActionFirstAllowedObj(lift_action, unbound);
-            instActionBoundPre(lift_action, fact_pool, bound_arg);
+            instActionBoundPre(lift_action, fact_pool, action_pool, bound_arg);
 
         }else{
             // Bound by all possible objects
@@ -678,12 +916,12 @@ static void instActionBoundPre(const lift_action_t *lift_action,
                 if (!lift_action->allowed_arg[unbound][i])
                     continue;
                 bound_arg[unbound] = i;
-                instActionBoundPre(lift_action, fact_pool, bound_arg);
+                instActionBoundPre(lift_action, fact_pool, action_pool, bound_arg);
             }
         }
 
     }else{
-        instActionBound(lift_action, fact_pool, bound_arg);
+        instActionBound(lift_action, fact_pool, action_pool, bound_arg);
     }
 }
 
@@ -724,6 +962,7 @@ static int instBoundArg(const lift_action_t *lift_action,
 
 static void instAction(const lift_action_t *lift_action,
                               ground_fact_pool_t *fact_pool,
+                              ground_action_pool_t *action_pool,
                               const int *bound_arg_init,
                               int pre_i)
 {
@@ -747,17 +986,19 @@ static void instAction(const lift_action_t *lift_action,
         if (pre_i == lift_action->pre.size - 1){
             // If this was the last precondition then try to instantiate
             // action using bounded arguments.
-            instActionBoundPre(lift_action, fact_pool, bound_arg);
+            instActionBoundPre(lift_action, fact_pool, action_pool, bound_arg);
 
         }else{
             // Recursion -- bound next precondition
-            instAction(lift_action, fact_pool, bound_arg, pre_i + 1);
+            instAction(lift_action, fact_pool, action_pool,
+                       bound_arg, pre_i + 1);
         }
     }
 }
 
 static void instActions(const lift_actions_t *actions,
                         ground_fact_pool_t *fact_pool,
+                        ground_action_pool_t *action_pool,
                         const plan_pddl_t *pddl)
 {
     const lift_action_t *lift_action;
@@ -767,9 +1008,10 @@ static void instActions(const lift_actions_t *actions,
         num_facts = fact_pool->num_facts;
         for (i = 0; i < actions->size; ++i){
             lift_action = actions->action + i;
-            instAction(lift_action, fact_pool, NULL, 0);
+            instAction(lift_action, fact_pool, action_pool, NULL, 0);
         }
-        fprintf(stderr, "num_facts: %d\n", num_facts);
+        fprintf(stderr, "num_facts: %d | %d\n", num_facts, fact_pool->num_facts);
+        fprintf(stderr, "num_ops: %d\n", action_pool->size);
     } while (num_facts != fact_pool->num_facts);
 }
 /**** INSTANTIATE END ****/

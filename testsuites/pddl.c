@@ -32,6 +32,7 @@ static void testGround(const char *domain_fn, const char *problem_fn)
     plan_pddl_ground_t ground;
 
     printf("---- Ground %s | %s ----\n", domain_fn, problem_fn);
+    fprintf(stderr, "---- Ground %s | %s ----\n", domain_fn, problem_fn);
     d = planPDDLNew(domain_fn, problem_fn);
     if (d == NULL)
         return;
@@ -41,6 +42,7 @@ static void testGround(const char *domain_fn, const char *problem_fn)
     planPDDLGroundFree(&ground);
     planPDDLDel(d);
     printf("---- Ground %s | %s END ----\n", domain_fn, problem_fn);
+    fprintf(stderr, "---- Ground %s | %s END ----\n", domain_fn, problem_fn);
 }
 TEST(testPDDLGround)
 {

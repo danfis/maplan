@@ -1431,7 +1431,7 @@ Lift Actions[12]:
       next-count: ?avail ?new-avail
     pre-neg[0]:
     eq[0]:
-Facts[22]:
+Facts[63]:
     includes: o1 p3
     includes: o2 p4
     includes: o3 p4
@@ -1443,12 +1443,53 @@ Facts[22]:
     waiting: o3
     waiting: o4
     waiting: o5
+    N:waiting: o1
+    N:waiting: o2
+    N:waiting: o3
+    N:waiting: o4
+    N:waiting: o5
+    started: o1
+    started: o2
+    started: o3
+    started: o4
+    started: o5
+    N:started: o1
+    N:started: o2
+    N:started: o3
+    N:started: o4
+    N:started: o5
+    shipped: o1
+    shipped: o2
+    shipped: o3
+    shipped: o4
+    shipped: o5
+    made: p1
+    made: p2
+    made: p3
+    made: p4
+    made: p5
     not-made: p1
     not-made: p2
     not-made: p3
     not-made: p4
     not-made: p5
+    N:not-made: p1
+    N:not-made: p2
+    N:not-made: p3
+    N:not-made: p4
+    N:not-made: p5
     stacks-avail: n0
+    N:stacks-avail: n0
+    stacks-avail: n1
+    N:stacks-avail: n1
+    stacks-avail: n2
+    N:stacks-avail: n2
+    stacks-avail: n3
+    N:stacks-avail: n3
+    stacks-avail: n4
+    N:stacks-avail: n4
+    stacks-avail: n5
+    N:stacks-avail: n5
     next-count: n0 n1
     next-count: n1 n2
     next-count: n2 n3

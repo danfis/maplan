@@ -183,6 +183,12 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
                           g->fact.fact + i, fout);
         fprintf(fout, "\n");
     }
+
+    fprintf(fout, "Actions[%d]:\n", g->action.size);
+    for (i = 0; i < g->action.size; ++i){
+        planPDDLGroundActionPrint(g->action.action + i, &g->pddl->predicate,
+                                  &g->pddl->obj, fout);
+    }
 }
 
 
@@ -220,6 +226,62 @@ void planPDDLGroundActionCopy(plan_pddl_ground_action_t *dst,
     planPDDLFactsCopy(&dst->pre, &src->pre);
     planPDDLFactsCopy(&dst->eff, &src->eff);
     planPDDLCondEffsCopy(&dst->cond_eff, &src->cond_eff);
+}
+
+static void printFact(const plan_pddl_fact_t *fact,
+                      const plan_pddl_predicates_t *preds,
+                      const plan_pddl_objs_t *objs,
+                      FILE *fout)
+{
+    int i;
+
+    fprintf(fout, "        ");
+    if (fact->neg)
+        fprintf(fout, "N:");
+    fprintf(fout, "%s", preds->pred[fact->pred].name);
+    for (i = 0; i < fact->arg_size; ++i)
+        fprintf(fout, " %s", objs->obj[fact->arg[i]].name);
+    fprintf(fout, "\n");
+}
+
+static void printFacts(const plan_pddl_facts_t *facts,
+                       const plan_pddl_predicates_t *preds,
+                       const plan_pddl_objs_t *objs,
+                       FILE *fout)
+{
+    int i;
+
+    for (i = 0; i < facts->size; ++i)
+        printFact(facts->fact + i, preds, objs, fout);
+}
+
+static void printCondEffs(const plan_pddl_cond_effs_t *ce,
+                          const plan_pddl_predicates_t *preds,
+                          const plan_pddl_objs_t *objs,
+                          FILE *fout)
+{
+    int i;
+
+    for (i = 0; i < ce->size; ++i){
+        fprintf(fout, "      pre[%d]:\n", ce->cond_eff[i].pre.size);
+        printFacts(&ce->cond_eff[i].pre, preds, objs, fout);
+        fprintf(fout, "      eff[%d]:\n", ce->cond_eff[i].eff.size);
+        printFacts(&ce->cond_eff[i].eff, preds, objs, fout);
+    }
+}
+
+void planPDDLGroundActionPrint(const plan_pddl_ground_action_t *a,
+                               const plan_pddl_predicates_t *preds,
+                               const plan_pddl_objs_t *objs,
+                               FILE *fout)
+{
+    fprintf(fout, "%s --> %d\n", a->name, a->cost);
+    fprintf(fout, "    pre[%d]:\n", a->pre.size);
+    printFacts(&a->pre, preds, objs, fout);
+    fprintf(fout, "    eff[%d]:\n", a->eff.size);
+    printFacts(&a->eff, preds, objs, fout);
+    fprintf(fout, "    cond-eff[%d]:\n", a->cond_eff.size);
+    printCondEffs(&a->cond_eff, preds, objs, fout);
 }
 
 /**** GROUND FACT POOL ***/

@@ -64,6 +64,11 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout);
 
 void planPDDLGroundActionFree(plan_pddl_ground_action_t *ga);
 void planPDDLGroundActionsFree(plan_pddl_ground_actions_t *ga);
+
+void planPDDLGroundActionPrint(const plan_pddl_ground_action_t *a,
+                               const plan_pddl_predicates_t *preds,
+                               const plan_pddl_objs_t *objs,
+                               FILE *fout);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

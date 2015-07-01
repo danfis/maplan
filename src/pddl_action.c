@@ -113,6 +113,119 @@ static int setParams(const plan_pddl_lisp_node_t *root,
     return 0;
 }
 
+static int factNonNegCmp(const plan_pddl_fact_t *f1,
+                          const plan_pddl_fact_t *f2)
+{
+    int cmp;
+
+    cmp = f1->pred - f2->pred;
+    if (cmp == 0)
+        cmp = f1->arg_size - f2->arg_size;
+    if (cmp == 0)
+        cmp = memcmp(f1->arg, f2->arg, sizeof(int) * f1->arg_size);
+    return cmp;
+}
+
+static int factCmp(const plan_pddl_fact_t *f1,
+                    const plan_pddl_fact_t *f2)
+{
+    int cmp;
+
+    cmp = factNonNegCmp(f1, f2);
+    if (cmp == 0)
+        cmp = f1->neg - f2->neg;
+    return cmp;
+}
+
+static int sortFactsCmp(const void *a, const void *b)
+{
+    const plan_pddl_fact_t *f1 = a;
+    const plan_pddl_fact_t *f2 = b;
+    return factCmp(f1, f2);
+}
+
+static void sortFacts(plan_pddl_facts_t *eff)
+{
+    // Sort effects so the same ones are next to each other
+    qsort(eff->fact, eff->size, sizeof(plan_pddl_fact_t), sortFactsCmp);
+}
+
+static void reorderFacts(plan_pddl_facts_t *fs)
+{
+    int ins, i;
+
+    for (ins = 0, i = 0; i < fs->size; ++i){
+        if (fs->fact[i].neg != 2){
+            fs->fact[ins++] = fs->fact[i];
+        }
+    }
+
+    fs->size = ins;
+    fs->fact = BOR_REALLOC_ARR(fs->fact, plan_pddl_fact_t, fs->size);
+}
+
+static int factInFacts(const plan_pddl_fact_t *fact,
+                       const plan_pddl_facts_t *fs)
+{
+    int i;
+
+    for (i = 0; i < fs->size && fs->fact[i].pred <= fact->pred; ++i){
+        if (factCmp(fact, fs->fact + i) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+static void simplifyAction(plan_pddl_action_t *a)
+{
+    plan_pddl_fact_t *f1, *f2;
+    int i, cmp, del = 0;
+
+    // First sort facts in precondition and effect
+    sortFacts(&a->pre);
+    sortFacts(&a->eff);
+
+    for (i = 1; i < a->eff.size; ++i){
+        f1 = a->eff.fact + i - 1;
+        f2 = a->eff.fact + i;
+
+        cmp = factNonNegCmp(f1, f2);
+        if (cmp == 0 && f1->neg != f2->neg){
+            // Remove delete effects if they are also in add effects.
+            // This is "add-after-delete semantics" which seems to be
+            // accepted as de-facto standard -- see rovers domain.
+
+            // Delete effect
+            planPDDLFactFree(f1);
+            // and use .neg flag as "remove it later flag"
+            f1->neg = 2;
+            // Force the second fact to positive fact because we use
+            // "add-after-delete" semantics.
+            f2->neg = 0;
+            del = 1;
+
+        }else if (cmp == 0 && f1->neg == f2->neg){
+            // Remove duplicate facts
+            planPDDLFactFree(f1);
+            f1->neg = 2;
+            del = 1;
+        }
+    }
+
+    // Delete effects that are already in preconditions
+    for (i = 0; i < a->eff.size; ++i){
+        f1 = a->eff.fact + i;
+        if (factInFacts(f1, &a->pre)){
+            planPDDLFactFree(f1);
+            f1->neg = 2;
+            del = 1;
+        }
+    }
+
+    if (del)
+        reorderFacts(&a->eff);
+}
+
 static int parseParams(const plan_pddl_types_t *types,
                        const plan_pddl_lisp_node_t *n,
                        plan_pddl_objs_t *param)
@@ -522,6 +635,8 @@ static int parseAction(const plan_pddl_types_t *types,
             return -1;
         }
     }
+
+    simplifyAction(a);
 
     return 0;
 }

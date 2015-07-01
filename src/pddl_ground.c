@@ -40,6 +40,40 @@ struct _ground_fact_pool_t {
 };
 typedef struct _ground_fact_pool_t ground_fact_pool_t;
 
+struct _ground_action_t {
+    plan_pddl_ground_action_t action;
+    bor_htable_key_t key;
+    bor_list_t htable;
+};
+typedef struct _ground_action_t ground_action_t;
+
+struct _ground_action_pool_t {
+    bor_htable_t *htable;
+    bor_extarr_t *action;
+    int size;
+    const plan_pddl_objs_t *objs;
+};
+typedef struct _ground_action_pool_t ground_action_pool_t;
+
+struct _lift_action_t {
+    int action_id;
+    const plan_pddl_action_t *action;
+    int param_size;
+    int obj_size;
+    int **allowed_arg;
+    plan_pddl_facts_t pre;
+    plan_pddl_facts_t pre_neg;
+    plan_pddl_facts_t eq;
+};
+typedef struct _lift_action_t lift_action_t;
+
+struct _lift_actions_t {
+    lift_action_t *action;
+    int size;
+};
+typedef struct _lift_actions_t lift_actions_t;
+
+
 /** Initializes pool of grounded facts */
 static void groundFactPoolInit(ground_fact_pool_t *gf, int size);
 /** Frees allocated resources */
@@ -63,43 +97,18 @@ static void groundFactPoolAddActionEffects(ground_fact_pool_t *pool,
 static void groundFactPoolToFacts(const ground_fact_pool_t *pool,
                                   plan_pddl_facts_t *fs);
 
-struct _ground_action_t {
-    plan_pddl_ground_action_t action;
-    bor_htable_key_t key;
-    bor_list_t htable;
-};
-typedef struct _ground_action_t ground_action_t;
-
-struct _ground_action_pool_t {
-    bor_htable_t *htable;
-    bor_extarr_t *action;
-    int size;
-    const plan_pddl_objs_t *objs;
-};
-typedef struct _ground_action_pool_t ground_action_pool_t;
 
 /** Initializes and frees action pool */
 static void groundActionPoolInit(ground_action_pool_t *ga,
                                  const plan_pddl_objs_t *objs);
 static void groundActionPoolFree(ground_action_pool_t *ga);
+/** Adds grounded action into pool if not already there.
+ *  If an action was inserted, pointer is returned. Otherwise NULL is
+ *  returned. */
+static plan_pddl_ground_action_t *groundActionPoolAdd(ground_action_pool_t *ga,
+                                                      const lift_action_t *lift_action,
+                                                      const int *bound_arg);
 
-struct _lift_action_t {
-    int action_id;
-    const plan_pddl_action_t *action;
-    int param_size;
-    int obj_size;
-    int **allowed_arg;
-    plan_pddl_facts_t pre;
-    plan_pddl_facts_t pre_neg;
-    plan_pddl_facts_t eq;
-};
-typedef struct _lift_action_t lift_action_t;
-
-struct _lift_actions_t {
-    lift_action_t *action;
-    int size;
-};
-typedef struct _lift_actions_t lift_actions_t;
 
 /** Creates a list of lifted actions ready to be grounded. */
 static void liftActionsInit(lift_actions_t *action,
@@ -729,43 +738,6 @@ static void initBoundArg(int *bound_arg, const int *bound_arg_init, int size)
     }
 }
 
-static int factHolds(ground_fact_pool_t *fact_pool,
-                     const int *bound_arg,
-                     int obj_size,
-                     const plan_pddl_fact_t *fact)
-{
-    plan_pddl_fact_t f;
-    int i, var, ret;
-
-    planPDDLFactCopy(&f, fact);
-    for (i = 0; i < f.arg_size; ++i){
-        var = fact->arg[i];
-        if (var < 0){
-            f.arg[i] = var + obj_size;
-        }else{
-            f.arg[i] = bound_arg[var];
-        }
-    }
-
-    ret = groundFactPoolExist(fact_pool, &f);
-    planPDDLFactFree(&f);
-    return ret;
-}
-
-static int preHolds(ground_fact_pool_t *fact_pool,
-                    const int *bound_arg,
-                    int obj_size,
-                    const plan_pddl_facts_t *pre)
-{
-    int i;
-
-    for (i = 0; i < pre->size; ++i){
-        if (!factHolds(fact_pool, bound_arg, obj_size, pre->fact + i))
-            return 0;
-    }
-    return 1;
-}
-
 static int _paramIsUsedByFacts(const plan_pddl_facts_t *fs, int param)
 {
     int i, j;
@@ -799,28 +771,6 @@ static int paramIsUsedInEff(const plan_pddl_action_t *a, int param)
 
     return 0;
 }
-
-static void instFact(const plan_pddl_fact_t *fact,
-                     const int *bound_arg, int obj_size,
-                     ground_fact_pool_t *fact_pool)
-{
-    plan_pddl_fact_t f;
-    int i, var;
-
-    planPDDLFactCopy(&f, fact);
-    for (i = 0; i < f.arg_size; ++i){
-        var = fact->arg[i];
-        if (var < 0){
-            f.arg[i] = var + obj_size;
-        }else{
-            f.arg[i] = bound_arg[var];
-        }
-    }
-
-    groundFactPoolAdd(fact_pool, &f);
-    planPDDLFactFree(&f);
-}
-
 
 static int checkBoundArgEqFact(const plan_pddl_fact_t *eq,
                                int obj_size,

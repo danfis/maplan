@@ -1107,8 +1107,6 @@ static void instActions(const lift_actions_t *actions,
             lift_action = actions->action + i;
             instAction(lift_action, fact_pool, action_pool, NULL, 0);
         }
-        fprintf(stderr, "num_facts: %d | %d\n", num_facts, fact_pool->num_facts);
-        fprintf(stderr, "num_ops: %d\n", action_pool->size);
     } while (num_facts != fact_pool->num_facts);
 }
 /**** INSTANTIATE END ****/

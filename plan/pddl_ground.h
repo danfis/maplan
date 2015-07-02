@@ -20,6 +20,8 @@
 #ifndef __PLAN_PDDL_GROUND_H__
 #define __PLAN_PDDL_GROUND_H__
 
+#include <boruvka/extarr.h>
+#include <boruvka/htable.h>
 #include <plan/pddl.h>
 
 #ifdef __cplusplus
@@ -43,22 +45,45 @@ struct _plan_pddl_ground_actions_t {
 };
 typedef struct _plan_pddl_ground_actions_t plan_pddl_ground_actions_t;
 
+
+struct _plan_pddl_ground_fact_pool_t {
+    bor_htable_t *htable;
+    bor_extarr_t **fact;
+    int *fact_size;
+    int pred_size;
+    int size;
+};
+typedef struct _plan_pddl_ground_fact_pool_t plan_pddl_ground_fact_pool_t;
+
+struct _plan_pddl_ground_action_pool_t {
+    bor_htable_t *htable;
+    bor_extarr_t *action;
+    int size;
+    const plan_pddl_objs_t *objs;
+};
+typedef struct _plan_pddl_ground_action_pool_t plan_pddl_ground_action_pool_t;
+
 struct _plan_pddl_ground_t {
     const plan_pddl_t *pddl;
-    plan_pddl_facts_t fact;
-    plan_pddl_ground_actions_t action;
+    plan_pddl_ground_fact_pool_t fact_pool;
+    plan_pddl_ground_action_pool_t action_pool;
 };
 typedef struct _plan_pddl_ground_t plan_pddl_ground_t;
 
 /**
- * Grounds pddl object.
+ * Initialize the main structure.
  */
-void planPDDLGround(const plan_pddl_t *pddl, plan_pddl_ground_t *g);
+void planPDDLGroundInit(plan_pddl_ground_t *g, const plan_pddl_t *pddl);
 
 /**
  * Frees allocated resources.
  */
 void planPDDLGroundFree(plan_pddl_ground_t *g);
+
+/**
+ * Grounds pddl problem.
+ */
+void planPDDLGround(plan_pddl_ground_t *g);
 
 void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout);
 

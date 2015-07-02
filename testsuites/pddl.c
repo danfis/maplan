@@ -36,7 +36,8 @@ static void testGround(const char *domain_fn, const char *problem_fn)
     if (d == NULL)
         return;
 
-    planPDDLGround(d, &ground);
+    planPDDLGroundInit(&ground, d);
+    planPDDLGround(&ground);
     planPDDLGroundPrint(&ground, stdout);
     planPDDLGroundFree(&ground);
     planPDDLDel(d);
@@ -49,4 +50,7 @@ TEST(testPDDLGround)
     testGround("pddl/rovers-domain.pddl", "pddl/rovers-p01.pddl");
     testGround("pddl/CityCar-domain.pddl", "pddl/CityCar-p3-2-2-0-1.pddl");
     testGround("pddl/elevators08-domain.pddl", "pddl/elevators08-p01.pddl");
+
+    //testGround("/home/danfis/dev/plan-data/raw/atg/satellites-hc/domain.pddl",
+    //           "/home/danfis/dev/plan-data/raw/atg/satellites-hc/p33-HC-pfile13.pddl");
 }

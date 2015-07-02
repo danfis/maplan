@@ -22,6 +22,23 @@
 #include "plan/pddl_ground.h"
 #include "pddl_err.h"
 
+struct _plan_pddl_ground_action_t {
+    char *name;
+    int *arg;
+    int arg_size;
+    int cost;
+    plan_pddl_facts_t pre;
+    plan_pddl_facts_t eff;
+    plan_pddl_cond_effs_t cond_eff;
+};
+typedef struct _plan_pddl_ground_action_t plan_pddl_ground_action_t;
+
+struct _plan_pddl_ground_actions_t {
+    plan_pddl_ground_action_t *action;
+    int size;
+};
+typedef struct _plan_pddl_ground_actions_t plan_pddl_ground_actions_t;
+
 struct _ground_fact_t {
     plan_pddl_fact_t fact;
     bor_htable_key_t key;
@@ -126,6 +143,11 @@ static void instActions(const lift_actions_t *actions,
  *  pool. */
 static void instActionsNegativePreconditions(const lift_actions_t *as,
                                              plan_pddl_ground_fact_pool_t *fact_pool);
+
+void planPDDLGroundActionPrint(const plan_pddl_ground_action_t *a,
+                               const plan_pddl_predicates_t *preds,
+                               const plan_pddl_objs_t *objs,
+                               FILE *fout);
 
 void planPDDLGroundInit(plan_pddl_ground_t *g, const plan_pddl_t *pddl)
 {

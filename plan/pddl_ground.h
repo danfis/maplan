@@ -28,24 +28,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-struct _plan_pddl_ground_action_t {
-    char *name;
-    int *arg;
-    int arg_size;
-    int cost;
-    plan_pddl_facts_t pre;
-    plan_pddl_facts_t eff;
-    plan_pddl_cond_effs_t cond_eff;
-};
-typedef struct _plan_pddl_ground_action_t plan_pddl_ground_action_t;
-
-struct _plan_pddl_ground_actions_t {
-    plan_pddl_ground_action_t *action;
-    int size;
-};
-typedef struct _plan_pddl_ground_actions_t plan_pddl_ground_actions_t;
-
-
 struct _plan_pddl_ground_fact_pool_t {
     bor_htable_t *htable;
     bor_extarr_t **fact;
@@ -87,13 +69,6 @@ void planPDDLGround(plan_pddl_ground_t *g);
 
 void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout);
 
-void planPDDLGroundActionFree(plan_pddl_ground_action_t *ga);
-void planPDDLGroundActionsFree(plan_pddl_ground_actions_t *ga);
-
-void planPDDLGroundActionPrint(const plan_pddl_ground_action_t *a,
-                               const plan_pddl_predicates_t *preds,
-                               const plan_pddl_objs_t *objs,
-                               FILE *fout);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

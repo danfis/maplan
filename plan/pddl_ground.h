@@ -23,19 +23,11 @@
 #include <boruvka/extarr.h>
 #include <boruvka/htable.h>
 #include <plan/pddl.h>
+#include <plan/pddl_fact_pool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-struct _plan_pddl_ground_fact_pool_t {
-    bor_htable_t *htable;
-    bor_extarr_t **fact;
-    int *fact_size;
-    int pred_size;
-    int size;
-};
-typedef struct _plan_pddl_ground_fact_pool_t plan_pddl_ground_fact_pool_t;
 
 struct _plan_pddl_ground_action_pool_t {
     bor_htable_t *htable;
@@ -47,7 +39,7 @@ typedef struct _plan_pddl_ground_action_pool_t plan_pddl_ground_action_pool_t;
 
 struct _plan_pddl_ground_t {
     const plan_pddl_t *pddl;
-    plan_pddl_ground_fact_pool_t fact_pool;
+    plan_pddl_fact_pool_t fact_pool;
     plan_pddl_ground_action_pool_t action_pool;
 };
 typedef struct _plan_pddl_ground_t plan_pddl_ground_t;

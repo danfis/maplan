@@ -39,13 +39,6 @@ struct _plan_pddl_ground_actions_t {
 };
 typedef struct _plan_pddl_ground_actions_t plan_pddl_ground_actions_t;
 
-struct _ground_fact_t {
-    plan_pddl_fact_t fact;
-    bor_htable_key_t key;
-    bor_list_t htable;
-};
-typedef struct _ground_fact_t ground_fact_t;
-
 struct _ground_action_t {
     plan_pddl_ground_action_t action;
     bor_htable_key_t key;
@@ -71,33 +64,6 @@ struct _lift_actions_t {
     int size;
 };
 typedef struct _lift_actions_t lift_actions_t;
-
-
-/** Initializes pool of grounded facts */
-static void groundFactPoolInit(plan_pddl_ground_fact_pool_t *gf, int size);
-/** Frees allocated resources */
-static void groundFactPoolFree(plan_pddl_ground_fact_pool_t *gf);
-/** Adds a fact to the pool of facts if not already there */
-static int groundFactPoolAdd(plan_pddl_ground_fact_pool_t *gf,
-                             const plan_pddl_fact_t *f);
-/** Returns true if the fact is already in pool */
-static int groundFactPoolExist(plan_pddl_ground_fact_pool_t *gf,
-                               const plan_pddl_fact_t *f);
-/** Returns true if all facts in fs exists in the pool */
-static int groundFactPoolExistFacts(plan_pddl_ground_fact_pool_t *gf,
-                                    const plan_pddl_facts_t *fs);
-/** Adds all facts from the list to the pool */
-static void groundFactPoolAddFacts(plan_pddl_ground_fact_pool_t *pool,
-                                   const plan_pddl_facts_t *facts);
-/** Adds effects of the grounded action */
-static void groundFactPoolAddActionEffects(plan_pddl_ground_fact_pool_t *pool,
-                                           const plan_pddl_ground_action_t *a);
-/** Writes all facts from the pool to the output array */
-static void groundFactPoolToFacts(const plan_pddl_ground_fact_pool_t *pool,
-                                  plan_pddl_facts_t *fs);
-/** Returns i'th fact from the pool */
-static plan_pddl_fact_t *groundFactPoolGetFact(
-            const plan_pddl_ground_fact_pool_t *pool, int pred, int i);
 
 
 
@@ -136,13 +102,13 @@ static int liftActionFirstAllowedObj(const lift_action_t *lift_action, int i);
 
 /** Instantiates actions using facts in fact pool. */
 static void instActions(const lift_actions_t *actions,
-                        plan_pddl_ground_fact_pool_t *fact_pool,
+                        plan_pddl_fact_pool_t *fact_pool,
                         plan_pddl_ground_action_pool_t *action_pool,
                         const plan_pddl_t *pddl);
 /** Instantiates negative preconditions of actions and adds them to fact
  *  pool. */
 static void instActionsNegativePreconditions(const lift_actions_t *as,
-                                             plan_pddl_ground_fact_pool_t *fact_pool);
+                                             plan_pddl_fact_pool_t *fact_pool);
 
 void planPDDLGroundActionPrint(const plan_pddl_ground_action_t *a,
                                const plan_pddl_predicates_t *preds,
@@ -153,13 +119,13 @@ void planPDDLGroundInit(plan_pddl_ground_t *g, const plan_pddl_t *pddl)
 {
     bzero(g, sizeof(*g));
     g->pddl = pddl;
-    groundFactPoolInit(&g->fact_pool, pddl->predicate.size);
+    planPDDLFactPoolInit(&g->fact_pool, pddl->predicate.size);
     groundActionPoolInit(&g->action_pool, &pddl->obj);
 }
 
 void planPDDLGroundFree(plan_pddl_ground_t *g)
 {
-    groundFactPoolFree(&g->fact_pool);
+    planPDDLFactPoolFree(&g->fact_pool);
     groundActionPoolFree(&g->action_pool);
 }
 
@@ -172,7 +138,7 @@ void planPDDLGround(plan_pddl_ground_t *g)
                     g->pddl->predicate.eq_pred);
     liftActionsPrint(&lift_actions, &g->pddl->predicate, &g->pddl->obj, stdout);
 
-    groundFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
+    planPDDLFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
     instActionsNegativePreconditions(&lift_actions, &g->fact_pool);
     instActions(&lift_actions, &g->fact_pool, &g->action_pool, g->pddl);
 
@@ -183,16 +149,14 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
 {
     const plan_pddl_fact_t *fact;
     const plan_pddl_ground_action_t *action;
-    int i, j;
+    int i;
 
     fprintf(fout, "Facts[%d]:\n", g->fact_pool.size);
-    for (i = 0; i < g->fact_pool.pred_size; ++i){
-        for (j = 0; j < g->fact_pool.fact_size[i]; ++j){
-            fact = groundFactPoolGetFact(&g->fact_pool, i, j);
-            fprintf(fout, "    ");
-            planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
-            fprintf(fout, "\n");
-        }
+    for (i = 0; i < g->fact_pool.size; ++i){
+        fact = planPDDLFactPoolGet(&g->fact_pool, i);
+        fprintf(fout, "    ");
+        planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
+        fprintf(fout, "\n");
     }
 
     fprintf(fout, "Actions[%d]:\n", g->action_pool.size);
@@ -295,185 +259,6 @@ void planPDDLGroundActionPrint(const plan_pddl_ground_action_t *a,
     fprintf(fout, "    cond-eff[%d]:\n", a->cond_eff.size);
     printCondEffs(&a->cond_eff, preds, objs, fout);
 }
-
-/**** GROUND FACT POOL ***/
-static bor_htable_key_t groundFactComputeKey(const ground_fact_t *g)
-{
-    int buf[g->fact.arg_size + 2];
-    buf[0] = g->fact.pred;
-    buf[1] = g->fact.neg;
-    memcpy(buf + 2, g->fact.arg, sizeof(int) * g->fact.arg_size);
-    return borFastHash_64(buf, sizeof(int) * (g->fact.arg_size + 2), 123);
-}
-
-static bor_htable_key_t groundFactKey(const bor_list_t *key, void *userdata)
-{
-    const ground_fact_t *f = bor_container_of(key, ground_fact_t, htable);
-    return f->key;
-}
-
-static int groundFactEq(const bor_list_t *key1, const bor_list_t *key2,
-                        void *userdata)
-{
-    const ground_fact_t *g1 = bor_container_of(key1, ground_fact_t, htable);
-    const ground_fact_t *g2 = bor_container_of(key2, ground_fact_t, htable);
-    const plan_pddl_fact_t *f1 = &g1->fact;
-    const plan_pddl_fact_t *f2 = &g2->fact;
-    int cmp, i;
-
-    cmp = f1->pred - f2->pred;
-    if (cmp == 0)
-        cmp = f1->neg - f2->neg;
-    for (i = 0;cmp == 0 && i < f1->arg_size && i < f2->arg_size; ++i)
-        cmp = f1->arg[i] - f2->arg[i];
-    if (cmp == 0)
-        cmp = f1->arg_size - f2->arg_size;
-
-    return cmp == 0;
-}
-
-static void groundFactPoolInit(plan_pddl_ground_fact_pool_t *gf, int size)
-{
-    ground_fact_t init_gf;
-    int i;
-
-    gf->pred_size = size;
-    gf->fact = BOR_ALLOC_ARR(bor_extarr_t *, size);
-    bzero(&init_gf, sizeof(init_gf));
-    for (i = 0; i < size; ++i)
-        gf->fact[i] = borExtArrNew(sizeof(ground_fact_t), NULL, &init_gf);
-    gf->fact_size = BOR_CALLOC_ARR(int, size);
-    gf->htable = borHTableNew(groundFactKey, groundFactEq, NULL);
-    gf->size = 0;
-}
-
-static void groundFactPoolFree(plan_pddl_ground_fact_pool_t *gf)
-{
-    int i, j;
-
-    borHTableDel(gf->htable);
-    for (i = 0; i < gf->pred_size; ++i){
-        for (j = 0; j < gf->fact_size[i]; ++j)
-            planPDDLFactFree(borExtArrGet(gf->fact[i], j));
-        borExtArrDel(gf->fact[i]);
-    }
-    if (gf->fact != NULL)
-        BOR_FREE(gf->fact);
-    if (gf->fact_size != NULL)
-        BOR_FREE(gf->fact_size);
-}
-
-static int groundFactPoolAdd(plan_pddl_ground_fact_pool_t *gf, const plan_pddl_fact_t *f)
-{
-    ground_fact_t *fact;
-    bor_list_t *node;
-
-    // Get element from array
-    fact = borExtArrGet(gf->fact[f->pred], gf->fact_size[f->pred]);
-    // and make shallow copy
-    fact->fact = *f;
-    fact->key = groundFactComputeKey(fact);
-    borListInit(&fact->htable);
-
-    // Try to insert it into tree
-    node = borHTableInsertUnique(gf->htable, &fact->htable);
-    if (node != NULL)
-        return -1;
-
-    // Make deep copy and increase size of array
-    planPDDLFactCopy(&fact->fact, f);
-    ++gf->fact_size[f->pred];
-    ++gf->size;
-    return 0;
-}
-
-static int groundFactPoolExist(plan_pddl_ground_fact_pool_t *gf, const plan_pddl_fact_t *f)
-{
-    ground_fact_t *fact;
-    bor_list_t *node;
-
-    // Get element from array
-    fact = borExtArrGet(gf->fact[f->pred], gf->fact_size[f->pred]);
-    // and make shallow copy which is in this case enough
-    fact->fact = *f;
-    fact->key = groundFactComputeKey(fact);
-    borListInit(&fact->htable);
-
-    node = borHTableFind(gf->htable, &fact->htable);
-    if (node == NULL)
-        return 0;
-    return 1;
-}
-
-static int groundFactPoolExistFacts(plan_pddl_ground_fact_pool_t *gf,
-                                    const plan_pddl_facts_t *fs)
-{
-    int i;
-
-    for (i = 0; i < fs->size; ++i){
-        if (!groundFactPoolExist(gf, fs->fact + i))
-            return 0;
-    }
-    return 1;
-}
-
-static void groundFactPoolAddFacts(plan_pddl_ground_fact_pool_t *pool,
-                                   const plan_pddl_facts_t *facts)
-{
-    int i;
-
-    for (i = 0; i < facts->size; ++i)
-        groundFactPoolAdd(pool, facts->fact + i);
-}
-
-static void groundFactPoolAddActionEffects(plan_pddl_ground_fact_pool_t *pool,
-                                           const plan_pddl_ground_action_t *a)
-{
-    const plan_pddl_facts_t *eff, *pre;
-    int i;
-
-    groundFactPoolAddFacts(pool, &a->eff);
-    for (i = 0; i < a->cond_eff.size; ++i){
-        pre = &a->cond_eff.cond_eff[i].pre;
-        eff = &a->cond_eff.cond_eff[i].eff;
-        if (groundFactPoolExistFacts(pool, pre))
-            groundFactPoolAddFacts(pool, eff);
-    }
-}
-
-static void groundFactPoolToFacts(const plan_pddl_ground_fact_pool_t *pool,
-                                  plan_pddl_facts_t *fs)
-{
-    const plan_pddl_fact_t *f;
-    int pred, i, ins, size;
-
-    planPDDLFactsFree(fs);
-
-    size = 0;
-    for (pred = 0; pred < pool->pred_size; ++pred)
-        size += pool->fact_size[pred];
-
-    fs->size = size;
-    fs->fact = BOR_CALLOC_ARR(plan_pddl_fact_t, fs->size);
-    ins = 0;
-    for (pred = 0; pred < pool->pred_size; ++pred){
-        for (i = 0; i < pool->fact_size[pred]; ++i){
-            f = borExtArrGet(pool->fact[pred], i);
-            planPDDLFactCopy(fs->fact + ins++, f);
-        }
-    }
-}
-
-static plan_pddl_fact_t *groundFactPoolGetFact(
-            const plan_pddl_ground_fact_pool_t *pool, int pred, int i)
-{
-    ground_fact_t *f;
-
-    f = borExtArrGet(pool->fact[pred], i);
-    return &f->fact;
-}
-
-/**** GROUND FACT POOL END ***/
 
 
 /**** GROUND ACTION POOL ****/
@@ -999,8 +784,22 @@ static int unboundArg(const int *bound_arg, int arg_size)
     return -1;
 }
 
+static void factPoolAddActionEffects(plan_pddl_fact_pool_t *pool,
+                                     const plan_pddl_ground_action_t *a)
+{
+    const plan_pddl_facts_t *eff, *pre;
+    int i;
+
+    planPDDLFactPoolAddFacts(pool, &a->eff);
+    for (i = 0; i < a->cond_eff.size; ++i){
+        pre = &a->cond_eff.cond_eff[i].pre;
+        eff = &a->cond_eff.cond_eff[i].eff;
+        if (planPDDLFactPoolExistFacts(pool, pre))
+            planPDDLFactPoolAddFacts(pool, eff);
+    }
+}
 static void instActionBound(const lift_action_t *lift_action,
-                            plan_pddl_ground_fact_pool_t *fact_pool,
+                            plan_pddl_fact_pool_t *fact_pool,
                             plan_pddl_ground_action_pool_t *action_pool,
                             const int *bound_arg)
 {
@@ -1014,11 +813,11 @@ static void instActionBound(const lift_action_t *lift_action,
     // Ground action and if successful instatiate grounded
     ga = groundActionPoolAdd(action_pool, lift_action, bound_arg);
     if (ga != NULL)
-        groundFactPoolAddActionEffects(fact_pool, ga);
+        factPoolAddActionEffects(fact_pool, ga);
 }
 
 static void instActionBoundPre(const lift_action_t *lift_action,
-                               plan_pddl_ground_fact_pool_t *fact_pool,
+                               plan_pddl_fact_pool_t *fact_pool,
                                plan_pddl_ground_action_pool_t *action_pool,
                                const int *bound_arg_init)
 {
@@ -1088,20 +887,18 @@ static int instBoundArg(const lift_action_t *lift_action,
 }
 
 static void instAction(const lift_action_t *lift_action,
-                              plan_pddl_ground_fact_pool_t *fact_pool,
+                              plan_pddl_fact_pool_t *fact_pool,
                               plan_pddl_ground_action_pool_t *action_pool,
                               const int *bound_arg_init,
                               int pre_i)
 {
-    bor_extarr_t *facts;
     const plan_pddl_fact_t *fact, *pre;
     int facts_size, i, bound_arg[lift_action->param_size];
 
     pre = lift_action->pre.fact + pre_i;
-    facts = fact_pool->fact[pre->pred];
-    facts_size = fact_pool->fact_size[pre->pred];
+    facts_size = planPDDLFactPoolPredSize(fact_pool, pre->pred);
     for (i = 0; i < facts_size; ++i){
-        fact = &((const ground_fact_t *)borExtArrGet(facts, i))->fact;
+        fact = planPDDLFactPoolGetPred(fact_pool, pre->pred, i);
         // Precondition and the fact must really match
         if (fact->neg != pre->neg)
             continue;
@@ -1124,7 +921,7 @@ static void instAction(const lift_action_t *lift_action,
 }
 
 static void instActions(const lift_actions_t *actions,
-                        plan_pddl_ground_fact_pool_t *fact_pool,
+                        plan_pddl_fact_pool_t *fact_pool,
                         plan_pddl_ground_action_pool_t *action_pool,
                         const plan_pddl_t *pddl)
 {
@@ -1145,7 +942,7 @@ static void instActions(const lift_actions_t *actions,
 static void instActionNegPreWrite(const lift_action_t *lift_action,
                                   const plan_pddl_fact_t *pre,
                                   int *bound_arg,
-                                  plan_pddl_ground_fact_pool_t *fact_pool)
+                                  plan_pddl_fact_pool_t *fact_pool)
 {
     plan_pddl_fact_t f;
 
@@ -1156,9 +953,9 @@ static void instActionNegPreWrite(const lift_action_t *lift_action,
     // Write only those negative facts that are not present in positive
     // form
     f.neg = 0;
-    if (!groundFactPoolExist(fact_pool, &f)){
+    if (!planPDDLFactPoolExist(fact_pool, &f)){
         f.neg = 1;
-        groundFactPoolAdd(fact_pool, &f);
+        planPDDLFactPoolAdd(fact_pool, &f);
     }
     planPDDLFactFree(&f);
 }
@@ -1166,7 +963,7 @@ static void instActionNegPreWrite(const lift_action_t *lift_action,
 static void instActionNegPre(const lift_action_t *lift_action,
                              const plan_pddl_fact_t *pre,
                              int *bound_arg, int arg_i,
-                             plan_pddl_ground_fact_pool_t *fact_pool)
+                             plan_pddl_fact_pool_t *fact_pool)
 {
     int i, var, *allowed;
 
@@ -1194,7 +991,7 @@ static void instActionNegPre(const lift_action_t *lift_action,
 }
 
 static void instActionNegPres(const lift_action_t *lift_action,
-                              plan_pddl_ground_fact_pool_t *fact_pool)
+                              plan_pddl_fact_pool_t *fact_pool)
 {
     const plan_pddl_fact_t *fact;
     int i, *bound_arg;
@@ -1208,7 +1005,7 @@ static void instActionNegPres(const lift_action_t *lift_action,
 }
 
 static void instActionsNegativePreconditions(const lift_actions_t *as,
-                                             plan_pddl_ground_fact_pool_t *fact_pool)
+                                             plan_pddl_fact_pool_t *fact_pool)
 {
     int i;
     for (i = 0; i < as->size; ++i)

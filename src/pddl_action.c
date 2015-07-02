@@ -215,6 +215,9 @@ static void simplifyAction(plan_pddl_action_t *a)
     // Delete effects that are already in preconditions
     for (i = 0; i < a->eff.size; ++i){
         f1 = a->eff.fact + i;
+        if (f1->neg == 2)
+            continue;
+
         if (factInFacts(f1, &a->pre)){
             planPDDLFactFree(f1);
             f1->neg = 2;

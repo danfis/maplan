@@ -34,6 +34,7 @@ struct _plan_pddl_fact_t {
     int arg_size; /*!< Number of arguments */
     int neg;      /*!< True if it is negated form */
     int func_val; /*!< Assigned value in case of function */
+    int stat;     /*!< True if the fact is static */
 };
 typedef struct _plan_pddl_fact_t plan_pddl_fact_t;
 

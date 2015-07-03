@@ -694,6 +694,29 @@ void planPDDLActionsFree(plan_pddl_actions_t *actions)
         BOR_FREE(actions->action);
 }
 
+void planPDDLActionFactPrint(const plan_pddl_predicates_t *predicates,
+                             const plan_pddl_objs_t *objs,
+                             const plan_pddl_action_t *a,
+                             const plan_pddl_fact_t *f,
+                             FILE *fout)
+{
+    int j, id;
+
+    if (f->neg)
+        fprintf(fout, "N:");
+    if (f->stat)
+        fprintf(fout, "S:");
+    fprintf(fout, "%s:", predicates->pred[f->pred].name);
+    for (j = 0; j < f->arg_size; ++j){
+        if (f->arg[j] < 0){
+            id = f->arg[j] + objs->size;
+            fprintf(fout, " %s", objs->obj[id].name);
+        }else{
+            fprintf(fout, " %s", a->param.obj[f->arg[j]].name);
+        }
+    }
+}
+
 static void printFacts(const plan_pddl_action_t *a,
                        const plan_pddl_objs_t *objs,
                        const plan_pddl_predicates_t *predicates,
@@ -701,22 +724,12 @@ static void printFacts(const plan_pddl_action_t *a,
                        FILE *fout)
 {
     const plan_pddl_fact_t *f;
-    int i, j, id;
+    int i;
 
     for (i = 0; i < fs->size; ++i){
         f = fs->fact + i;
         fprintf(fout, "            ");
-        if (f->neg)
-            fprintf(fout, "N:");
-        fprintf(fout, "%s:", predicates->pred[f->pred].name);
-        for (j = 0; j < f->arg_size; ++j){
-            if (f->arg[j] < 0){
-                id = f->arg[j] + objs->size;
-                fprintf(fout, " %s", objs->obj[id].name);
-            }else{
-                fprintf(fout, " %s", a->param.obj[f->arg[j]].name);
-            }
-        }
+        planPDDLActionFactPrint(predicates, objs, a, f, fout);
         fprintf(fout, "\n");
     }
 }

@@ -447,15 +447,10 @@ static void groundFactPrint(int fact_id,
                             FILE *fout)
 {
     const plan_pddl_fact_t *fact;
-    int i;
 
     fact = planPDDLFactPoolGet(fact_pool, fact_id);
     fprintf(fout, "        ");
-    if (fact->neg)
-        fprintf(fout, "N:");
-    fprintf(fout, "%s", preds->pred[fact->pred].name);
-    for (i = 0; i < fact->arg_size; ++i)
-        fprintf(fout, " %s", objs->obj[fact->arg[i]].name);
+    planPDDLFactPrint(preds, objs, fact, fout);
     fprintf(fout, "\n");
 }
 

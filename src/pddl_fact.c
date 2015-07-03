@@ -345,6 +345,8 @@ void planPDDLFactPrint(const plan_pddl_predicates_t *predicates,
 
     if (f->neg)
         fprintf(fout, "N:");
+    if (f->stat)
+        fprintf(fout, "S:");
     fprintf(fout, "%s:", predicates->pred[f->pred].name);
     for (i = 0; i < f->arg_size; ++i){
         fprintf(fout, " %s", objs->obj[f->arg[i]].name);

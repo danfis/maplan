@@ -72,6 +72,12 @@ void planPDDLActionsFree(plan_pddl_actions_t *actions);
 
 plan_pddl_action_t *planPDDLActionsAdd(plan_pddl_actions_t *as);
 
+void planPDDLActionFactPrint(const plan_pddl_predicates_t *predicates,
+                             const plan_pddl_objs_t *objs,
+                             const plan_pddl_action_t *a,
+                             const plan_pddl_fact_t *f,
+                             FILE *fout);
+
 void planPDDLActionsPrint(const plan_pddl_actions_t *actions,
                           const plan_pddl_objs_t *objs,
                           const plan_pddl_predicates_t *predicates,

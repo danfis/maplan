@@ -126,22 +126,12 @@ static void _planPDDLLiftActionFactsPrint(const plan_pddl_lift_action_t *a,
                                           const char *header,
                                           FILE *fout)
 {
-    int i, j;
+    int i;
 
     fprintf(fout, "    %s[%d]:\n", header, fs->size);
     for (i = 0; i < fs->size; ++i){
         fprintf(fout, "      ");
-        if (fs->fact[i].neg)
-            fprintf(fout, "N:");
-        fprintf(fout, "%s:", pred->pred[fs->fact[i].pred].name);
-        for (j = 0; j < fs->fact[i].arg_size; ++j){
-            if (fs->fact[i].arg[j] < 0){
-                fprintf(fout, " %s", obj->obj[fs->fact[i].arg[j] + obj->size].name);
-            }else{
-                fprintf(fout, " %s",
-                        a->action->param.obj[fs->fact[i].arg[j]].name);
-            }
-        }
+        planPDDLActionFactPrint(pred, obj, a->action, fs->fact + i, fout);
         fprintf(fout, "\n");
     }
 }

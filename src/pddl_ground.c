@@ -33,6 +33,32 @@ static void instActions(const plan_pddl_lift_actions_t *actions,
 static void instActionsNegativePreconditions(const plan_pddl_lift_actions_t *as,
                                              plan_pddl_fact_pool_t *fact_pool);
 
+/** Flip flag of the facts that are static facts.
+ *  Static facts are those that are in the init state and are never changed
+ *  to negative form. */
+static void markStaticFacts(plan_pddl_fact_pool_t *fact_pool,
+                            const plan_pddl_facts_t *init_facts)
+{
+    plan_pddl_fact_t fact, *init_fact, *f;
+    int i, id;
+
+    for (i = 0; i < init_facts->size; ++i){
+        init_fact = init_facts->fact + i;
+        if (init_fact->neg)
+            continue;
+
+        planPDDLFactCopy(&fact, init_fact);
+        fact.neg = 1;
+        if (!planPDDLFactPoolExist(fact_pool, &fact)){
+            fact.neg = 0;
+            id = planPDDLFactPoolFind(fact_pool, &fact);
+            f = planPDDLFactPoolGet(fact_pool, id);
+            f->stat = 1;
+        }
+        planPDDLFactFree(&fact);
+    }
+}
+
 void planPDDLGroundInit(plan_pddl_ground_t *g, const plan_pddl_t *pddl)
 {
     bzero(g, sizeof(*g));
@@ -58,6 +84,7 @@ void planPDDLGround(plan_pddl_ground_t *g)
     planPDDLFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
     instActionsNegativePreconditions(&g->lift_action, &g->fact_pool);
     instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
+    markStaticFacts(&g->fact_pool, &g->pddl->init_fact);
     planPDDLGroundActionPoolInst(&g->action_pool, &g->fact_pool);
 }
 

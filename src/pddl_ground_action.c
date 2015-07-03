@@ -29,18 +29,8 @@ struct _ground_action_facts_t {
 };
 typedef struct _ground_action_facts_t ground_action_facts_t;
 
-static void groundActionFactsInit(ground_action_facts_t *f)
-{
-    bzero(f, sizeof(*f));
-}
-
-static void groundActionFactsFree(ground_action_facts_t *f)
-{
-    planPDDLFactsFree(&f->pre);
-    planPDDLFactsFree(&f->eff);
-    planPDDLCondEffsFree(&f->cond_eff);
-}
-
+static void groundActionFactsInit(ground_action_facts_t *f);
+static void groundActionFactsFree(ground_action_facts_t *f);
 
 struct _ground_action_t {
     plan_pddl_ground_action_t action;
@@ -317,19 +307,25 @@ static int factsToGroundFacts(plan_pddl_ground_facts_t *dst,
                               const plan_pddl_facts_t *src,
                               plan_pddl_fact_pool_t *pool)
 {
-    const plan_pddl_fact_t *fact;
-    int i;
+    const plan_pddl_fact_t *fact, *fact2;
+    int i, id;
 
-    dst->size = src->size;
-    dst->fact = BOR_ALLOC_ARR(int, dst->size);
+    dst->size = 0;
+    dst->fact = BOR_ALLOC_ARR(int, src->size);
     for (i = 0; i < src->size; ++i){
         fact = src->fact + i;
-        dst->fact[i] = planPDDLFactPoolAdd(pool, fact);
-        if (dst->fact[i] == -1){
+        id = planPDDLFactPoolFind(pool, fact);
+        if (id < 0){
             BOR_FREE(dst->fact);
             bzero(dst, sizeof(*dst));
             return -1;
         }
+
+        fact2 = planPDDLFactPoolGet(pool, id);
+        if (fact2->stat)
+            continue;
+
+        dst->fact[dst->size++] = id;
     }
 
     return 0;
@@ -527,4 +523,16 @@ void planPDDLGroundActionPrint(const plan_pddl_ground_action_t *a,
     groundFactsPrint(&a->eff, fact_pool, preds, objs, fout);
     fprintf(fout, "    cond-eff[%d]:\n", a->cond_eff.size);
     groundCondEffsPrint(&a->cond_eff, fact_pool, preds, objs, fout);
+}
+
+static void groundActionFactsInit(ground_action_facts_t *f)
+{
+    bzero(f, sizeof(*f));
+}
+
+static void groundActionFactsFree(ground_action_facts_t *f)
+{
+    planPDDLFactsFree(&f->pre);
+    planPDDLFactsFree(&f->eff);
+    planPDDLCondEffsFree(&f->cond_eff);
 }

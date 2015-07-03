@@ -24,6 +24,7 @@
 #include <boruvka/htable.h>
 #include <plan/pddl.h>
 #include <plan/pddl_fact_pool.h>
+#include <plan/pddl_lift_action.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,6 +42,7 @@ struct _plan_pddl_ground_t {
     const plan_pddl_t *pddl;
     plan_pddl_fact_pool_t fact_pool;
     plan_pddl_ground_action_pool_t action_pool;
+    plan_pddl_lift_actions_t lift_action;
 };
 typedef struct _plan_pddl_ground_t plan_pddl_ground_t;
 

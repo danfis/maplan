@@ -25,18 +25,11 @@
 #include <plan/pddl.h>
 #include <plan/pddl_fact_pool.h>
 #include <plan/pddl_lift_action.h>
+#include <plan/pddl_ground_action.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-struct _plan_pddl_ground_action_pool_t {
-    bor_htable_t *htable;
-    bor_extarr_t *action;
-    int size;
-    const plan_pddl_objs_t *objs;
-};
-typedef struct _plan_pddl_ground_action_pool_t plan_pddl_ground_action_pool_t;
 
 struct _plan_pddl_ground_t {
     const plan_pddl_t *pddl;

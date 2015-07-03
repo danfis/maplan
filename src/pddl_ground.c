@@ -59,6 +59,17 @@ static void markStaticFacts(plan_pddl_fact_pool_t *fact_pool,
     }
 }
 
+static void removeStaticFacts(plan_pddl_fact_pool_t *fact_pool,
+                              plan_pddl_ground_action_pool_t *action_pool)
+{
+    int *map;
+
+    map = BOR_CALLOC_ARR(int, fact_pool->size);
+    planPDDLFactPoolRemoveStaticFacts(fact_pool, map);
+    planPDDLGroundActionPoolRemap(action_pool, map);
+    BOR_FREE(map);
+}
+
 void planPDDLGroundInit(plan_pddl_ground_t *g, const plan_pddl_t *pddl)
 {
     bzero(g, sizeof(*g));
@@ -86,6 +97,7 @@ void planPDDLGround(plan_pddl_ground_t *g)
     instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
     markStaticFacts(&g->fact_pool, &g->pddl->init_fact);
     planPDDLGroundActionPoolInst(&g->action_pool, &g->fact_pool);
+    removeStaticFacts(&g->fact_pool, &g->action_pool);
 }
 
 void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)

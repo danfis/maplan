@@ -1224,43 +1224,19 @@ Lift Actions[5]:
       in: ?y ?z
     pre-neg[0]:
     eq[0]:
-Facts[100]:
-    S:pallet: pallet0
-    S:surface: pallet0
-    S:at: pallet0 depot0
+Facts[76]:
     clear: crate1
-    S:pallet: pallet1
-    S:surface: pallet1
-    S:at: pallet1 distributor0
     clear: crate0
-    S:pallet: pallet2
-    S:surface: pallet2
-    S:at: pallet2 distributor1
     clear: pallet2
-    S:truck: truck0
     at: truck0 distributor1
-    S:truck: truck1
     at: truck1 depot0
-    S:hoist: hoist0
-    S:at: hoist0 depot0
     available: hoist0
-    S:hoist: hoist1
-    S:at: hoist1 distributor0
     available: hoist1
-    S:hoist: hoist2
-    S:at: hoist2 distributor1
     available: hoist2
-    S:crate: crate0
-    S:surface: crate0
     at: crate0 distributor0
     on: crate0 pallet1
-    S:crate: crate1
-    S:surface: crate1
     at: crate1 depot0
     on: crate1 pallet0
-    S:place: depot0
-    S:place: distributor0
-    S:place: distributor1
     N:at: truck1 depot0
     at: truck1 distributor0
     at: truck1 distributor1
@@ -2214,24 +2190,13 @@ Lift Actions[12]:
       next-count: ?avail ?new-avail
     pre-neg[0]:
     eq[0]:
-Facts[63]:
-    S:next-count: n0 n1
-    S:next-count: n1 n2
-    S:next-count: n2 n3
-    S:next-count: n3 n4
-    S:next-count: n4 n5
+Facts[52]:
     stacks-avail: n0
     waiting: o1
-    S:includes: o1 p3
     waiting: o2
-    S:includes: o2 p4
     waiting: o3
-    S:includes: o3 p4
     waiting: o4
-    S:includes: o4 p2
-    S:includes: o4 p5
     waiting: o5
-    S:includes: o5 p1
     not-made: p1
     not-made: p2
     not-made: p3
@@ -2975,52 +2940,15 @@ Lift Actions[9]:
       have_image: ?r ?o ?m
     pre-neg[0]:
     eq[0]:
-Facts[83]:
-    S:visible: waypoint1 waypoint0
-    S:visible: waypoint0 waypoint1
-    S:visible: waypoint2 waypoint0
-    S:visible: waypoint0 waypoint2
-    S:visible: waypoint2 waypoint1
-    S:visible: waypoint1 waypoint2
-    S:visible: waypoint3 waypoint0
-    S:visible: waypoint0 waypoint3
-    S:visible: waypoint3 waypoint1
-    S:visible: waypoint1 waypoint3
-    S:visible: waypoint3 waypoint2
-    S:visible: waypoint2 waypoint3
+Facts[46]:
     at_soil_sample: waypoint0
     at_rock_sample: waypoint1
     at_soil_sample: waypoint2
     at_rock_sample: waypoint2
     at_soil_sample: waypoint3
     at_rock_sample: waypoint3
-    S:at_lander: general waypoint0
-    S:channel_free: general
     at: rover0 waypoint3
-    S:available: rover0
-    S:store_of: rover0store rover0
     empty: rover0store
-    S:equipped_for_soil_analysis: rover0
-    S:equipped_for_rock_analysis: rover0
-    S:equipped_for_imaging: rover0
-    S:can_traverse: rover0 waypoint3 waypoint0
-    S:can_traverse: rover0 waypoint0 waypoint3
-    S:can_traverse: rover0 waypoint3 waypoint1
-    S:can_traverse: rover0 waypoint1 waypoint3
-    S:can_traverse: rover0 waypoint1 waypoint2
-    S:can_traverse: rover0 waypoint2 waypoint1
-    S:on_board: camera0 rover0
-    S:calibration_target: camera0 objective1
-    S:supports: camera0 colour
-    S:supports: camera0 high_res
-    S:visible_from: objective0 waypoint0
-    S:visible_from: objective0 waypoint1
-    S:visible_from: objective0 waypoint2
-    S:visible_from: objective0 waypoint3
-    S:visible_from: objective1 waypoint0
-    S:visible_from: objective1 waypoint1
-    S:visible_from: objective1 waypoint2
-    S:visible_from: objective1 waypoint3
     N:at: rover0 waypoint3
     at: rover0 waypoint0
     at: rover0 waypoint1
@@ -3594,47 +3522,7 @@ Lift Actions[7]:
     pre-neg[0]:
     eq[1]:
       N:=: ?xy_initial ?xy_final
-Facts[548]:
-    S:same_line: junction0-0 junction0-1
-    S:same_line: junction0-1 junction0-0
-    S:same_line: junction0-1 junction0-2
-    S:same_line: junction0-2 junction0-1
-    S:same_line: junction1-0 junction1-1
-    S:same_line: junction1-1 junction1-0
-    S:same_line: junction1-1 junction1-2
-    S:same_line: junction1-2 junction1-1
-    S:same_line: junction2-0 junction2-1
-    S:same_line: junction2-1 junction2-0
-    S:same_line: junction2-1 junction2-2
-    S:same_line: junction2-2 junction2-1
-    S:same_line: junction0-0 junction1-0
-    S:same_line: junction1-0 junction0-0
-    S:same_line: junction1-0 junction2-0
-    S:same_line: junction2-0 junction1-0
-    S:same_line: junction0-1 junction1-1
-    S:same_line: junction1-1 junction0-1
-    S:same_line: junction1-1 junction2-1
-    S:same_line: junction2-1 junction1-1
-    S:same_line: junction0-2 junction1-2
-    S:same_line: junction1-2 junction0-2
-    S:same_line: junction1-2 junction2-2
-    S:same_line: junction2-2 junction1-2
-    S:diagonal: junction0-0 junction1-1
-    S:diagonal: junction1-1 junction0-0
-    S:diagonal: junction0-1 junction1-0
-    S:diagonal: junction1-0 junction0-1
-    S:diagonal: junction0-1 junction1-2
-    S:diagonal: junction1-2 junction0-1
-    S:diagonal: junction0-2 junction1-1
-    S:diagonal: junction1-1 junction0-2
-    S:diagonal: junction1-0 junction2-1
-    S:diagonal: junction2-1 junction1-0
-    S:diagonal: junction1-1 junction2-0
-    S:diagonal: junction2-0 junction1-1
-    S:diagonal: junction1-1 junction2-2
-    S:diagonal: junction2-2 junction1-1
-    S:diagonal: junction1-2 junction2-1
-    S:diagonal: junction2-1 junction1-2
+Facts[506]:
     clear: junction0-0
     clear: junction0-1
     clear: junction0-2
@@ -3644,8 +3532,6 @@ Facts[548]:
     clear: junction2-0
     clear: junction2-1
     clear: junction2-2
-    S:at_garage: garage0 junction0-0
-    S:at_garage: garage1 junction0-0
     starting: car0 garage0
     starting: car1 garage1
     N:in_place: road0
@@ -17954,89 +17840,15 @@ Lift Actions[6]:
       next: ?n2 ?n1
     pre-neg[0]:
     eq[0]:
-Facts[246]:
-    S:next: n0 n1
-    S:next: n1 n2
-    S:next: n2 n3
-    S:next: n3 n4
-    S:next: n4 n5
-    S:next: n5 n6
-    S:next: n6 n7
-    S:next: n7 n8
-    S:above: n0 n1
-    S:above: n0 n2
-    S:above: n0 n3
-    S:above: n0 n4
-    S:above: n0 n5
-    S:above: n0 n6
-    S:above: n0 n7
-    S:above: n0 n8
-    S:above: n1 n2
-    S:above: n1 n3
-    S:above: n1 n4
-    S:above: n1 n5
-    S:above: n1 n6
-    S:above: n1 n7
-    S:above: n1 n8
-    S:above: n2 n3
-    S:above: n2 n4
-    S:above: n2 n5
-    S:above: n2 n6
-    S:above: n2 n7
-    S:above: n2 n8
-    S:above: n3 n4
-    S:above: n3 n5
-    S:above: n3 n6
-    S:above: n3 n7
-    S:above: n3 n8
-    S:above: n4 n5
-    S:above: n4 n6
-    S:above: n4 n7
-    S:above: n4 n8
-    S:above: n5 n6
-    S:above: n5 n7
-    S:above: n5 n8
-    S:above: n6 n7
-    S:above: n6 n8
-    S:above: n7 n8
+Facts[172]:
     lift-at: fast0 n8
     passengers: fast0 n0
-    S:can-hold: fast0 n1
-    S:can-hold: fast0 n2
-    S:can-hold: fast0 n3
-    S:reachable-floor: fast0 n0
-    S:reachable-floor: fast0 n2
-    S:reachable-floor: fast0 n4
-    S:reachable-floor: fast0 n6
-    S:reachable-floor: fast0 n8
     lift-at: fast1 n6
     passengers: fast1 n0
-    S:can-hold: fast1 n1
-    S:can-hold: fast1 n2
-    S:can-hold: fast1 n3
-    S:reachable-floor: fast1 n0
-    S:reachable-floor: fast1 n2
-    S:reachable-floor: fast1 n4
-    S:reachable-floor: fast1 n6
-    S:reachable-floor: fast1 n8
     lift-at: slow0-0 n4
     passengers: slow0-0 n0
-    S:can-hold: slow0-0 n1
-    S:can-hold: slow0-0 n2
-    S:reachable-floor: slow0-0 n0
-    S:reachable-floor: slow0-0 n1
-    S:reachable-floor: slow0-0 n2
-    S:reachable-floor: slow0-0 n3
-    S:reachable-floor: slow0-0 n4
     lift-at: slow1-0 n4
     passengers: slow1-0 n0
-    S:can-hold: slow1-0 n1
-    S:can-hold: slow1-0 n2
-    S:reachable-floor: slow1-0 n4
-    S:reachable-floor: slow1-0 n5
-    S:reachable-floor: slow1-0 n6
-    S:reachable-floor: slow1-0 n7
-    S:reachable-floor: slow1-0 n8
     passenger-at: p0 n3
     passenger-at: p1 n1
     passenger-at: p2 n7

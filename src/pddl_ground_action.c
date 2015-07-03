@@ -392,6 +392,38 @@ plan_pddl_ground_action_t *planPDDLGroundActionPoolGet(
     return &a->action;
 }
 
+static void remapFactIds2(plan_pddl_ground_facts_t *fs, const int *map)
+{
+    int i;
+
+    for (i = 0; i < fs->size; ++i)
+        fs->fact[i] = map[fs->fact[i]];
+}
+
+static void remapFactIds(plan_pddl_ground_action_t *a, const int *map)
+{
+    int i;
+
+    remapFactIds2(&a->pre, map);
+    remapFactIds2(&a->eff, map);
+    for (i = 0; i < a->cond_eff.size; ++i){
+        remapFactIds2(&a->cond_eff.cond_eff[i].pre, map);
+        remapFactIds2(&a->cond_eff.cond_eff[i].eff, map);
+    }
+}
+
+void planPDDLGroundActionPoolRemap(plan_pddl_ground_action_pool_t *pool,
+                                   const int *map)
+{
+    ground_action_t *act;
+    int i;
+
+    for (i = 0; i < pool->size; ++i){
+        act = borExtArrGet(pool->action, i);
+        remapFactIds(&act->action, map);
+    }
+}
+
 
 static void groundFactsFree(plan_pddl_ground_facts_t *fs)
 {

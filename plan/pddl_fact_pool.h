@@ -49,9 +49,7 @@ void planPDDLFactPoolInit(plan_pddl_fact_pool_t *fact_pool, int pred_size);
 void planPDDLFactPoolFree(plan_pddl_fact_pool_t *fact_pool);
 
 /**
- * Adds a fact to the pool.
- * If successfully inserted an 0 is returned, if fact was already in the
- * pool -1 is returned.
+ * Adds a fact to the pool. Returns ID of the inserted fact.
  */
 int planPDDLFactPoolAdd(plan_pddl_fact_pool_t *pool,
                         const plan_pddl_fact_t *f);
@@ -61,6 +59,12 @@ int planPDDLFactPoolAdd(plan_pddl_fact_pool_t *pool,
  */
 _bor_inline void planPDDLFactPoolAddFacts(plan_pddl_fact_pool_t *pool,
                                           const plan_pddl_facts_t *facts);
+
+/**
+ * Returns ID of the fact or -1 if not found.
+ */
+int planPDDLFactPoolFind(plan_pddl_fact_pool_t *pool,
+                         const plan_pddl_fact_t *f);
 
 /**
  * Returns true if the fact already inserted in the pool.

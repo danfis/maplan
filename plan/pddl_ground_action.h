@@ -28,7 +28,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-    /*
 struct _plan_pddl_ground_facts_t {
     int *fact;
     int size;
@@ -48,23 +47,14 @@ struct _plan_pddl_ground_cond_effs_t {
 typedef struct _plan_pddl_ground_cond_effs_t plan_pddl_ground_cond_effs_t;
 
 struct _plan_pddl_ground_action_t {
+    const plan_pddl_lift_action_t *action;
+    int *arg;
+    int arg_size;
     char *name;
     int cost;
     plan_pddl_ground_facts_t pre;
     plan_pddl_ground_facts_t eff;
     plan_pddl_ground_cond_effs_t cond_eff;
-};
-typedef struct _plan_pddl_ground_action_t plan_pddl_ground_action_t;
-*/
-
-struct _plan_pddl_ground_action_t {
-    char *name;
-    int *arg;
-    int arg_size;
-    int cost;
-    plan_pddl_facts_t pre;
-    plan_pddl_facts_t eff;
-    plan_pddl_cond_effs_t cond_eff;
 };
 typedef struct _plan_pddl_ground_action_t plan_pddl_ground_action_t;
 
@@ -103,6 +93,12 @@ int planPDDLGroundActionPoolAdd(plan_pddl_ground_action_pool_t *ga,
                                 plan_pddl_fact_pool_t *fact_pool);
 
 /**
+ * Instantiate all actions in pool, i.e., final grounding is computed.
+ */
+void planPDDLGroundActionPoolInst(plan_pddl_ground_action_pool_t *ga,
+                                  plan_pddl_fact_pool_t *fact_pool);
+
+/**
  * Returns i'th action from the pool.
  */
 plan_pddl_ground_action_t *planPDDLGroundActionPoolGet(
@@ -113,6 +109,7 @@ void planPDDLGroundActionsFree(plan_pddl_ground_actions_t *ga);
 void planPDDLGroundActionCopy(plan_pddl_ground_action_t *dst,
                               const plan_pddl_ground_action_t *src);
 void planPDDLGroundActionPrint(const plan_pddl_ground_action_t *a,
+                               const plan_pddl_fact_pool_t *fact_pool,
                                const plan_pddl_predicates_t *preds,
                                const plan_pddl_objs_t *objs,
                                FILE *fout);

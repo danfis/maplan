@@ -23,6 +23,7 @@
 #include "pddl_err.h"
 
 struct _fact_t {
+    int id;
     plan_pddl_fact_t fact;
     bor_htable_key_t key;
     bor_list_t htable;
@@ -110,6 +111,7 @@ int planPDDLFactPoolAdd(plan_pddl_fact_pool_t *pool,
 
     // Get element from array
     fact = borExtArrGet(pool->fact, pool->size);
+    fact->id = pool->size;
     // and make shallow copy
     fact->fact = *f;
     fact->key = factComputeKey(fact);
@@ -117,8 +119,10 @@ int planPDDLFactPoolAdd(plan_pddl_fact_pool_t *pool,
 
     // Try to insert it into tree
     node = borHTableInsertUnique(pool->htable, &fact->htable);
-    if (node != NULL)
-        return -1;
+    if (node != NULL){
+        fact = bor_container_of(node, fact_t, htable);
+        return fact->id;
+    }
 
     // Make deep copy and increase size of array
     planPDDLFactCopy(&fact->fact, f);
@@ -127,11 +131,11 @@ int planPDDLFactPoolAdd(plan_pddl_fact_pool_t *pool,
     *by_pred = pool->size;
     ++pool->pred_fact_size[f->pred];
     ++pool->size;
-    return 0;
+    return fact->id;
 }
 
-int planPDDLFactPoolExist(plan_pddl_fact_pool_t *pool,
-                          const plan_pddl_fact_t *f)
+int planPDDLFactPoolFind(plan_pddl_fact_pool_t *pool,
+                         const plan_pddl_fact_t *f)
 {
     fact_t *fact;
     bor_list_t *node;
@@ -145,8 +149,18 @@ int planPDDLFactPoolExist(plan_pddl_fact_pool_t *pool,
 
     node = borHTableFind(pool->htable, &fact->htable);
     if (node == NULL)
-        return 0;
-    return 1;
+        return -1;
+
+    fact = bor_container_of(node, fact_t, htable);
+    return fact->id;
+}
+
+int planPDDLFactPoolExist(plan_pddl_fact_pool_t *pool,
+                          const plan_pddl_fact_t *f)
+{
+    if (planPDDLFactPoolFind(pool, f) >= 0)
+        return 1;
+    return 0;
 }
 
 plan_pddl_fact_t *planPDDLFactPoolGet(const plan_pddl_fact_pool_t *pool, int i)

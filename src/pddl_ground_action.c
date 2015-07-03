@@ -22,6 +22,26 @@
 #include "plan/pddl_ground_action.h"
 #include "pddl_err.h"
 
+struct _ground_action_facts_t {
+    plan_pddl_facts_t pre;
+    plan_pddl_facts_t eff;
+    plan_pddl_cond_effs_t cond_eff;
+};
+typedef struct _ground_action_facts_t ground_action_facts_t;
+
+static void groundActionFactsInit(ground_action_facts_t *f)
+{
+    bzero(f, sizeof(*f));
+}
+
+static void groundActionFactsFree(ground_action_facts_t *f)
+{
+    planPDDLFactsFree(&f->pre);
+    planPDDLFactsFree(&f->eff);
+    planPDDLCondEffsFree(&f->cond_eff);
+}
+
+
 struct _ground_action_t {
     plan_pddl_ground_action_t action;
     bor_htable_key_t key;
@@ -217,8 +237,10 @@ static int groundCost(const plan_pddl_lift_action_t *lift_action,
     return cost;
 }
 
+
+
 static void factPoolAddActionEffects(plan_pddl_fact_pool_t *pool,
-                                     const plan_pddl_ground_action_t *a)
+                                     const ground_action_facts_t *a)
 {
     const plan_pddl_facts_t *eff, *pre;
     int i;
@@ -238,6 +260,7 @@ int planPDDLGroundActionPoolAdd(plan_pddl_ground_action_pool_t *ga,
                                 plan_pddl_fact_pool_t *fact_pool)
 {
     ground_action_t *act;
+    ground_action_facts_t ground;
     plan_pddl_ground_action_t *action;
     bor_list_t *node;
     char name[1024];
@@ -258,35 +281,111 @@ int planPDDLGroundActionPoolAdd(plan_pddl_ground_action_pool_t *ga,
 
     // Now ground all effects and check for conflicts, i.e., whether there
     // are both positive and negative version of the same fact.
-    groundFacts(&action->eff, &lift_action->action->eff, lift_action, bound_arg);
-    if (checkConflictInFacts(&action->eff)){
-        planPDDLFactsFree(&action->eff);
+    groundActionFactsInit(&ground);
+    groundFacts(&ground.eff, &lift_action->action->eff, lift_action, bound_arg);
+    if (checkConflictInFacts(&ground.eff)){
+        groundActionFactsFree(&ground);
         bzero(action, sizeof(*action));
         return -1;
     }
 
-    // Everything is ok, so make deep copy of the name, ground
-    // preconditions and conditional effects, determine cost of the
-    // action and copy arguments.
-    action->name = BOR_STRDUP(name);
-    groundFacts(&action->pre, &lift_action->action->pre, lift_action, bound_arg);
-    groundCondEffs(&action->cond_eff, &lift_action->action->cond_eff,
+    // Everything is ok, so ground the rest of the facts
+    // and add the effects to the fact_pool
+    groundCondEffs(&ground.cond_eff, &lift_action->action->cond_eff,
                    lift_action, bound_arg);
-    action->cost = groundCost(lift_action, bound_arg);
+    factPoolAddActionEffects(fact_pool, &ground);
+
+    // Now construct ground-action instance without actually fillin pre and
+    // eff and cond-eff.
+    bzero(action, sizeof(*action));
+    action->name = BOR_STRDUP(name);
+    action->action = lift_action;
     action->arg_size = lift_action->param_size;
     action->arg = BOR_ALLOC_ARR(int, action->arg_size);
     memcpy(action->arg, bound_arg, sizeof(int) * action->arg_size);
-
 
     // Insert it into hash table
     borListInit(&act->htable);
     borHTableInsert(ga->htable, &act->htable);
     ++ga->size;
 
-    factPoolAddActionEffects(fact_pool, &act->action);
+    groundActionFactsFree(&ground);
     return 0;
 }
 
+static int factsToGroundFacts(plan_pddl_ground_facts_t *dst,
+                              const plan_pddl_facts_t *src,
+                              plan_pddl_fact_pool_t *pool)
+{
+    const plan_pddl_fact_t *fact;
+    int i;
+
+    dst->size = src->size;
+    dst->fact = BOR_ALLOC_ARR(int, dst->size);
+    for (i = 0; i < src->size; ++i){
+        fact = src->fact + i;
+        dst->fact[i] = planPDDLFactPoolAdd(pool, fact);
+        if (dst->fact[i] == -1){
+            BOR_FREE(dst->fact);
+            bzero(dst, sizeof(*dst));
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+static void condEffsToGroundCondEffs(plan_pddl_ground_cond_effs_t *cdst,
+                                     const plan_pddl_cond_effs_t *csrc,
+                                     plan_pddl_fact_pool_t *pool)
+{
+    plan_pddl_ground_cond_eff_t *dst;
+    const plan_pddl_cond_eff_t *src;
+    int i;
+
+    cdst->size = 0;
+    cdst->cond_eff = BOR_CALLOC_ARR(plan_pddl_ground_cond_eff_t, csrc->size);
+    for (i = 0; i < csrc->size; ++i){
+        dst = cdst->cond_eff + cdst->size;
+        src = csrc->cond_eff + i;
+        if (factsToGroundFacts(&dst->pre, &src->pre, pool) == 0){
+            factsToGroundFacts(&dst->eff, &src->eff, pool);
+            ++cdst->size;
+        }
+    }
+}
+
+static void groundActionInst(plan_pddl_ground_action_t *a,
+                             plan_pddl_fact_pool_t *fact_pool)
+{
+    ground_action_facts_t ground;
+
+    groundActionFactsInit(&ground);
+    groundFacts(&ground.pre, &a->action->pre, a->action, a->arg);
+    groundFacts(&ground.eff, &a->action->action->eff, a->action, a->arg);
+    groundCondEffs(&ground.cond_eff, &a->action->action->cond_eff,
+                   a->action, a->arg);
+
+    a->cost = groundCost(a->action, a->arg);
+    factsToGroundFacts(&a->pre, &ground.pre, fact_pool);
+    factsToGroundFacts(&a->eff, &ground.eff, fact_pool);
+    condEffsToGroundCondEffs(&a->cond_eff, &ground.cond_eff, fact_pool);
+
+    groundActionFactsFree(&ground);
+}
+
+void planPDDLGroundActionPoolInst(plan_pddl_ground_action_pool_t *ga,
+                                  plan_pddl_fact_pool_t *fact_pool)
+{
+    ground_action_t *act;
+    int i, size;
+
+    size = ga->size;
+    for (i = 0; i < size; ++i){
+        act = borExtArrGet(ga->action, i);
+        groundActionInst(&act->action, fact_pool);
+    }
+}
 
 plan_pddl_ground_action_t *planPDDLGroundActionPoolGet(
             const plan_pddl_ground_action_pool_t *pool, int i)
@@ -297,15 +396,106 @@ plan_pddl_ground_action_t *planPDDLGroundActionPoolGet(
     return &a->action;
 }
 
+
+static void groundFactsFree(plan_pddl_ground_facts_t *fs)
+{
+    if (fs->fact != NULL)
+        BOR_FREE(fs->fact);
+}
+
+static void groundCondEffsFree(plan_pddl_ground_cond_effs_t *ce)
+{
+    int i;
+
+    for (i = 0; i < ce->size; ++i){
+        groundFactsFree(&ce->cond_eff[i].pre);
+        groundFactsFree(&ce->cond_eff[i].eff);
+    }
+    if (ce->cond_eff != NULL)
+        BOR_FREE(ce->cond_eff);
+}
+
+static void groundFactsCopy(plan_pddl_ground_facts_t *dst,
+                            const plan_pddl_ground_facts_t *src)
+{
+    *dst = *src;
+    if (src->fact != NULL){
+        dst->fact = BOR_ALLOC_ARR(int, src->size);
+        memcpy(dst->fact, src->fact, sizeof(int) * src->size);
+    }
+}
+
+static void groundCondEffsCopy(plan_pddl_ground_cond_effs_t *dst,
+                               const plan_pddl_ground_cond_effs_t *src)
+{
+    *dst = *src;
+    int i;
+
+    if (src->cond_eff != NULL){
+        dst->cond_eff = BOR_ALLOC_ARR(plan_pddl_ground_cond_eff_t, src->size);
+        for (i = 0; i < src->size; ++i){
+            groundFactsCopy(&dst->cond_eff[i].pre, &src->cond_eff[i].pre);
+            groundFactsCopy(&dst->cond_eff[i].eff, &src->cond_eff[i].eff);
+        }
+    }
+}
+
+static void groundFactPrint(int fact_id,
+                            const plan_pddl_fact_pool_t *fact_pool,
+                            const plan_pddl_predicates_t *preds,
+                            const plan_pddl_objs_t *objs,
+                            FILE *fout)
+{
+    const plan_pddl_fact_t *fact;
+    int i;
+
+    fact = planPDDLFactPoolGet(fact_pool, fact_id);
+    fprintf(fout, "        ");
+    if (fact->neg)
+        fprintf(fout, "N:");
+    fprintf(fout, "%s", preds->pred[fact->pred].name);
+    for (i = 0; i < fact->arg_size; ++i)
+        fprintf(fout, " %s", objs->obj[fact->arg[i]].name);
+    fprintf(fout, "\n");
+}
+
+static void groundFactsPrint(const plan_pddl_ground_facts_t *fs,
+                             const plan_pddl_fact_pool_t *fact_pool,
+                             const plan_pddl_predicates_t *preds,
+                             const plan_pddl_objs_t *objs,
+                             FILE *fout)
+{
+    int i;
+
+    for (i = 0; i < fs->size; ++i)
+        groundFactPrint(fs->fact[i], fact_pool, preds, objs, fout);
+}
+
+static void groundCondEffsPrint(const plan_pddl_ground_cond_effs_t *ce,
+                                const plan_pddl_fact_pool_t *fact_pool,
+                                const plan_pddl_predicates_t *preds,
+                                const plan_pddl_objs_t *objs,
+                                FILE *fout)
+{
+    int i;
+
+    for (i = 0; i < ce->size; ++i){
+        fprintf(fout, "      pre[%d]:\n", ce->cond_eff[i].pre.size);
+        groundFactsPrint(&ce->cond_eff[i].pre, fact_pool, preds, objs, fout);
+        fprintf(fout, "      eff[%d]:\n", ce->cond_eff[i].eff.size);
+        groundFactsPrint(&ce->cond_eff[i].eff, fact_pool, preds, objs, fout);
+    }
+}
+
 void planPDDLGroundActionFree(plan_pddl_ground_action_t *ga)
 {
     if (ga->name)
         BOR_FREE(ga->name);
     if (ga->arg)
         BOR_FREE(ga->arg);
-    planPDDLFactsFree(&ga->pre);
-    planPDDLFactsFree(&ga->eff);
-    planPDDLCondEffsFree(&ga->cond_eff);
+    groundFactsFree(&ga->pre);
+    groundFactsFree(&ga->eff);
+    groundCondEffsFree(&ga->cond_eff);
 }
 
 void planPDDLGroundActionsFree(plan_pddl_ground_actions_t *ga)
@@ -324,67 +514,22 @@ void planPDDLGroundActionCopy(plan_pddl_ground_action_t *dst,
     *dst = *src;
     if (src->name != NULL)
         dst->name = BOR_STRDUP(src->name);
-    if (src->arg != NULL){
-        dst->arg = BOR_ALLOC_ARR(int, src->arg_size);
-        memcpy(dst->arg, src->arg, sizeof(int) * src->arg_size);
-    }
-    planPDDLFactsCopy(&dst->pre, &src->pre);
-    planPDDLFactsCopy(&dst->eff, &src->eff);
-    planPDDLCondEffsCopy(&dst->cond_eff, &src->cond_eff);
-}
-
-static void printFact(const plan_pddl_fact_t *fact,
-                      const plan_pddl_predicates_t *preds,
-                      const plan_pddl_objs_t *objs,
-                      FILE *fout)
-{
-    int i;
-
-    fprintf(fout, "        ");
-    if (fact->neg)
-        fprintf(fout, "N:");
-    fprintf(fout, "%s", preds->pred[fact->pred].name);
-    for (i = 0; i < fact->arg_size; ++i)
-        fprintf(fout, " %s", objs->obj[fact->arg[i]].name);
-    fprintf(fout, "\n");
-}
-
-static void printFacts(const plan_pddl_facts_t *facts,
-                       const plan_pddl_predicates_t *preds,
-                       const plan_pddl_objs_t *objs,
-                       FILE *fout)
-{
-    int i;
-
-    for (i = 0; i < facts->size; ++i)
-        printFact(facts->fact + i, preds, objs, fout);
-}
-
-static void printCondEffs(const plan_pddl_cond_effs_t *ce,
-                          const plan_pddl_predicates_t *preds,
-                          const plan_pddl_objs_t *objs,
-                          FILE *fout)
-{
-    int i;
-
-    for (i = 0; i < ce->size; ++i){
-        fprintf(fout, "      pre[%d]:\n", ce->cond_eff[i].pre.size);
-        printFacts(&ce->cond_eff[i].pre, preds, objs, fout);
-        fprintf(fout, "      eff[%d]:\n", ce->cond_eff[i].eff.size);
-        printFacts(&ce->cond_eff[i].eff, preds, objs, fout);
-    }
+    groundFactsCopy(&dst->pre, &src->pre);
+    groundFactsCopy(&dst->eff, &src->eff);
+    groundCondEffsCopy(&dst->cond_eff, &src->cond_eff);
 }
 
 void planPDDLGroundActionPrint(const plan_pddl_ground_action_t *a,
+                               const plan_pddl_fact_pool_t *fact_pool,
                                const plan_pddl_predicates_t *preds,
                                const plan_pddl_objs_t *objs,
                                FILE *fout)
 {
     fprintf(fout, "%s --> %d\n", a->name, a->cost);
     fprintf(fout, "    pre[%d]:\n", a->pre.size);
-    printFacts(&a->pre, preds, objs, fout);
+    groundFactsPrint(&a->pre, fact_pool, preds, objs, fout);
     fprintf(fout, "    eff[%d]:\n", a->eff.size);
-    printFacts(&a->eff, preds, objs, fout);
+    groundFactsPrint(&a->eff, fact_pool, preds, objs, fout);
     fprintf(fout, "    cond-eff[%d]:\n", a->cond_eff.size);
-    printCondEffs(&a->cond_eff, preds, objs, fout);
+    groundCondEffsPrint(&a->cond_eff, fact_pool, preds, objs, fout);
 }

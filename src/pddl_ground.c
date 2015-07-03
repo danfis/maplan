@@ -58,6 +58,7 @@ void planPDDLGround(plan_pddl_ground_t *g)
     planPDDLFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
     instActionsNegativePreconditions(&g->lift_action, &g->fact_pool);
     instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
+    planPDDLGroundActionPoolInst(&g->action_pool, &g->fact_pool);
 }
 
 void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
@@ -77,7 +78,7 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
     fprintf(fout, "Actions[%d]:\n", g->action_pool.size);
     for (i = 0; i < g->action_pool.size; ++i){
         action = planPDDLGroundActionPoolGet(&g->action_pool, i);
-        planPDDLGroundActionPrint(action, &g->pddl->predicate,
+        planPDDLGroundActionPrint(action, &g->fact_pool, &g->pddl->predicate,
                                   &g->pddl->obj, fout);
     }
 }

@@ -303,6 +303,18 @@ int planPDDLGroundActionPoolAdd(plan_pddl_ground_action_pool_t *ga,
     return 0;
 }
 
+static void reallocFacts(plan_pddl_ground_facts_t *dst, int alloc)
+{
+    if (dst->size != alloc){
+        if (dst->size == 0){
+            BOR_FREE(dst->fact);
+            dst->fact = NULL;
+        }else{
+            dst->fact = BOR_REALLOC_ARR(dst->fact, int, dst->size);
+        }
+    }
+}
+
 static int factsToGroundFacts(plan_pddl_ground_facts_t *dst,
                               plan_pddl_ground_facts_t *dst_neg,
                               plan_pddl_facts_t *src,
@@ -341,6 +353,9 @@ static int factsToGroundFacts(plan_pddl_ground_facts_t *dst,
         }
         fact->neg = neg;
     }
+
+    reallocFacts(dst, src->size);
+    reallocFacts(dst_neg, src->size);
 
     return 0;
 }

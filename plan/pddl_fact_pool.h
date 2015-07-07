@@ -95,6 +95,11 @@ _bor_inline int planPDDLFactPoolPredSize(const plan_pddl_fact_pool_t *pool,
 plan_pddl_fact_t *planPDDLFactPoolGetPred(const plan_pddl_fact_pool_t *pool,
                                           int pred, int i);
 
+/**
+ * Removes static and negative facts from the pool.
+ */
+void planPDDLFactPoolRemoveStatAndNegFacts(plan_pddl_fact_pool_t *pool,
+                                           int *map);
 
 /**** INLINES ****/
 _bor_inline void planPDDLFactPoolAddFacts(plan_pddl_fact_pool_t *pool,

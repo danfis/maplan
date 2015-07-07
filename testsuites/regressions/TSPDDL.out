@@ -1224,7 +1224,7 @@ Lift Actions[5]:
       in: ?y ?z
     pre-neg[0]:
     eq[0]:
-Facts[76]:
+Facts[38]:
     clear: crate1
     clear: crate0
     clear: pallet2
@@ -1237,70 +1237,32 @@ Facts[76]:
     on: crate0 pallet1
     at: crate1 depot0
     on: crate1 pallet0
-    N:at: truck1 depot0
     at: truck1 distributor0
     at: truck1 distributor1
-    N:at: truck1 distributor0
-    N:at: truck0 distributor1
     at: truck0 depot0
-    N:at: truck1 distributor1
     at: truck0 distributor0
-    N:at: crate1 depot0
-    N:on: crate1 pallet0
     lifting: hoist0 crate1
-    N:available: hoist0
-    N:clear: crate1
     clear: pallet0
-    N:at: crate0 distributor0
-    N:on: crate0 pallet1
     lifting: hoist1 crate0
-    N:available: hoist1
-    N:clear: crate0
     clear: pallet1
-    N:lifting: hoist0 crate1
-    N:clear: pallet0
-    N:lifting: hoist1 crate0
-    N:clear: pallet1
     in: crate1 truck0
     in: crate1 truck1
     in: crate0 truck0
     in: crate0 truck1
-    N:in: crate0 truck0
     lifting: hoist0 crate0
-    N:in: crate1 truck0
-    N:in: crate0 truck1
-    N:in: crate1 truck1
     lifting: hoist1 crate1
     lifting: hoist2 crate0
-    N:available: hoist2
     lifting: hoist2 crate1
-    N:at: truck0 depot0
-    N:at: truck0 distributor0
     at: crate0 depot0
     on: crate0 crate1
-    N:lifting: hoist0 crate0
     on: crate1 crate0
     at: crate1 distributor0
-    N:lifting: hoist1 crate1
     at: crate0 distributor1
     on: crate0 pallet2
-    N:lifting: hoist2 crate0
-    N:clear: pallet2
     at: crate1 distributor1
     on: crate1 pallet2
-    N:lifting: hoist2 crate1
     on: crate0 pallet0
     on: crate1 pallet1
-    N:on: crate1 pallet1
-    N:on: crate1 pallet2
-    N:on: crate1 crate0
-    N:at: crate0 depot0
-    N:on: crate0 pallet0
-    N:on: crate0 pallet2
-    N:on: crate0 crate1
-    N:at: crate1 distributor0
-    N:at: crate1 distributor1
-    N:at: crate0 distributor1
 Actions[72]:
 drive truck1 depot0 distributor0 --> 0
     pre[1]:
@@ -2334,7 +2296,7 @@ Lift Actions[12]:
       next-count: ?avail ?new-avail
     pre-neg[0]:
     eq[0]:
-Facts[52]:
+Facts[31]:
     stacks-avail: n0
     waiting: o1
     waiting: o2
@@ -2346,47 +2308,26 @@ Facts[52]:
     not-made: p3
     not-made: p4
     not-made: p5
-    N:stacks-avail: n0
     stacks-avail: n1
-    N:waiting: o1
     started: o1
-    N:stacks-avail: n1
-    N:waiting: o2
     started: o2
-    N:waiting: o3
     started: o3
-    N:waiting: o4
     started: o4
-    N:waiting: o5
     started: o5
     made: p1
-    N:not-made: p1
     made: p2
-    N:not-made: p2
     made: p3
-    N:not-made: p3
     made: p4
-    N:not-made: p4
     made: p5
-    N:not-made: p5
-    N:started: o1
     shipped: o1
     stacks-avail: n2
-    N:started: o2
     shipped: o2
-    N:stacks-avail: n2
     stacks-avail: n3
-    N:started: o3
     shipped: o3
-    N:stacks-avail: n3
     stacks-avail: n4
-    N:started: o4
     shipped: o4
-    N:stacks-avail: n4
     stacks-avail: n5
-    N:started: o5
     shipped: o5
-    N:stacks-avail: n5
 Actions[60]:
 open-new-stack manufacturer n0 n1 --> 1
     pre[1]:
@@ -3204,7 +3145,7 @@ Lift Actions[9]:
       have_image: ?r ?o ?m
     pre-neg[0]:
     eq[0]:
-Facts[46]:
+Facts[33]:
     at_soil_sample: waypoint0
     at_rock_sample: waypoint1
     at_soil_sample: waypoint2
@@ -3213,22 +3154,14 @@ Facts[46]:
     at_rock_sample: waypoint3
     at: rover0 waypoint3
     empty: rover0store
-    N:at: rover0 waypoint3
     at: rover0 waypoint0
     at: rover0 waypoint1
-    N:empty: rover0store
     have_soil_analysis: rover0 waypoint0
     full: rover0store
-    N:at_soil_sample: waypoint0
     have_soil_analysis: rover0 waypoint3
-    N:at_soil_sample: waypoint3
     have_rock_analysis: rover0 waypoint1
-    N:at_rock_sample: waypoint1
     have_rock_analysis: rover0 waypoint3
-    N:at_rock_sample: waypoint3
-    N:full: rover0store
     calibrated: camera0 rover0
-    N:calibrated: camera0 rover0
     have_image: rover0 objective0 colour
     have_image: rover0 objective1 colour
     have_image: rover0 objective0 high_res
@@ -3241,16 +3174,11 @@ Facts[46]:
     communicated_image_data: objective1 colour
     communicated_image_data: objective0 high_res
     communicated_image_data: objective1 high_res
-    N:at: rover0 waypoint0
-    N:at: rover0 waypoint1
     at: rover0 waypoint2
     have_soil_analysis: rover0 waypoint2
-    N:at_soil_sample: waypoint2
     have_rock_analysis: rover0 waypoint2
-    N:at_rock_sample: waypoint2
     communicated_soil_data: waypoint2
     communicated_rock_data: waypoint2
-    N:at: rover0 waypoint2
 Actions[63]:
 navigate rover0 waypoint3 waypoint0 --> 0
     pre[1]:
@@ -3912,7 +3840,7 @@ Lift Actions[7]:
     pre-neg[0]:
     eq[1]:
       N:=: ?xy_initial ?xy_final
-Facts[506]:
+Facts[262]:
     clear: junction0-0
     clear: junction0-1
     clear: junction0-2
@@ -3924,16 +3852,8 @@ Facts[506]:
     clear: junction2-2
     starting: car0 garage0
     starting: car1 garage1
-    N:in_place: road0
-    N:in_place: road1
-    N:in_place: road2
-    N:in_place: road3
-    N:in_place: road4
     at_car_jun: car0 junction0-0
-    N:starting: car0 garage0
-    N:clear: junction0-0
     at_car_jun: car1 junction0-0
-    N:starting: car1 garage1
     road_connect: road0 junction1-1 junction0-0
     in_place: road0
     road_connect: road1 junction1-1 junction0-0
@@ -4139,209 +4059,7 @@ Facts[506]:
     road_connect: road3 junction1-2 junction2-2
     road_connect: road4 junction2-1 junction2-2
     road_connect: road4 junction1-2 junction2-2
-    N:road_connect: road0 junction1-1 junction0-0
-    N:road_connect: road0 junction1-0 junction0-1
-    N:road_connect: road0 junction1-2 junction0-1
-    N:road_connect: road0 junction1-1 junction0-2
-    N:road_connect: road0 junction0-1 junction1-0
-    N:road_connect: road0 junction2-1 junction1-0
-    N:road_connect: road0 junction0-0 junction1-1
-    N:road_connect: road0 junction0-2 junction1-1
-    N:road_connect: road0 junction2-0 junction1-1
-    N:road_connect: road0 junction2-2 junction1-1
-    N:road_connect: road0 junction0-1 junction1-2
-    N:road_connect: road0 junction2-1 junction1-2
-    N:road_connect: road0 junction1-1 junction2-0
-    N:road_connect: road0 junction1-0 junction2-1
-    N:road_connect: road0 junction1-2 junction2-1
-    N:road_connect: road0 junction1-1 junction2-2
-    N:road_connect: road0 junction0-1 junction0-0
-    N:road_connect: road0 junction1-0 junction0-0
-    N:road_connect: road0 junction0-0 junction0-1
-    N:road_connect: road0 junction0-2 junction0-1
-    N:road_connect: road0 junction1-1 junction0-1
-    N:road_connect: road0 junction0-1 junction0-2
-    N:road_connect: road0 junction1-2 junction0-2
-    N:road_connect: road0 junction1-1 junction1-0
-    N:road_connect: road0 junction0-0 junction1-0
-    N:road_connect: road0 junction2-0 junction1-0
-    N:road_connect: road0 junction1-0 junction1-1
-    N:road_connect: road0 junction1-2 junction1-1
-    N:road_connect: road0 junction0-1 junction1-1
-    N:road_connect: road0 junction2-1 junction1-1
-    N:road_connect: road0 junction1-1 junction1-2
-    N:road_connect: road0 junction0-2 junction1-2
-    N:road_connect: road0 junction2-2 junction1-2
-    N:road_connect: road0 junction2-1 junction2-0
-    N:road_connect: road0 junction1-0 junction2-0
-    N:road_connect: road0 junction2-0 junction2-1
-    N:road_connect: road0 junction2-2 junction2-1
-    N:road_connect: road0 junction1-1 junction2-1
-    N:road_connect: road0 junction2-1 junction2-2
-    N:road_connect: road0 junction1-2 junction2-2
-    N:road_connect: road1 junction1-1 junction0-0
-    N:road_connect: road1 junction1-0 junction0-1
-    N:road_connect: road1 junction1-2 junction0-1
-    N:road_connect: road1 junction1-1 junction0-2
-    N:road_connect: road1 junction0-1 junction1-0
-    N:road_connect: road1 junction2-1 junction1-0
-    N:road_connect: road1 junction0-0 junction1-1
-    N:road_connect: road1 junction0-2 junction1-1
-    N:road_connect: road1 junction2-0 junction1-1
-    N:road_connect: road1 junction2-2 junction1-1
-    N:road_connect: road1 junction0-1 junction1-2
-    N:road_connect: road1 junction2-1 junction1-2
-    N:road_connect: road1 junction1-1 junction2-0
-    N:road_connect: road1 junction1-0 junction2-1
-    N:road_connect: road1 junction1-2 junction2-1
-    N:road_connect: road1 junction1-1 junction2-2
-    N:road_connect: road1 junction0-1 junction0-0
-    N:road_connect: road1 junction1-0 junction0-0
-    N:road_connect: road1 junction0-0 junction0-1
-    N:road_connect: road1 junction0-2 junction0-1
-    N:road_connect: road1 junction1-1 junction0-1
-    N:road_connect: road1 junction0-1 junction0-2
-    N:road_connect: road1 junction1-2 junction0-2
-    N:road_connect: road1 junction1-1 junction1-0
-    N:road_connect: road1 junction0-0 junction1-0
-    N:road_connect: road1 junction2-0 junction1-0
-    N:road_connect: road1 junction1-0 junction1-1
-    N:road_connect: road1 junction1-2 junction1-1
-    N:road_connect: road1 junction0-1 junction1-1
-    N:road_connect: road1 junction2-1 junction1-1
-    N:road_connect: road1 junction1-1 junction1-2
-    N:road_connect: road1 junction0-2 junction1-2
-    N:road_connect: road1 junction2-2 junction1-2
-    N:road_connect: road1 junction2-1 junction2-0
-    N:road_connect: road1 junction1-0 junction2-0
-    N:road_connect: road1 junction2-0 junction2-1
-    N:road_connect: road1 junction2-2 junction2-1
-    N:road_connect: road1 junction1-1 junction2-1
-    N:road_connect: road1 junction2-1 junction2-2
-    N:road_connect: road1 junction1-2 junction2-2
-    N:road_connect: road2 junction1-1 junction0-0
-    N:road_connect: road2 junction1-0 junction0-1
-    N:road_connect: road2 junction1-2 junction0-1
-    N:road_connect: road2 junction1-1 junction0-2
-    N:road_connect: road2 junction0-1 junction1-0
-    N:road_connect: road2 junction2-1 junction1-0
-    N:road_connect: road2 junction0-0 junction1-1
-    N:road_connect: road2 junction0-2 junction1-1
-    N:road_connect: road2 junction2-0 junction1-1
-    N:road_connect: road2 junction2-2 junction1-1
-    N:road_connect: road2 junction0-1 junction1-2
-    N:road_connect: road2 junction2-1 junction1-2
-    N:road_connect: road2 junction1-1 junction2-0
-    N:road_connect: road2 junction1-0 junction2-1
-    N:road_connect: road2 junction1-2 junction2-1
-    N:road_connect: road2 junction1-1 junction2-2
-    N:road_connect: road2 junction0-1 junction0-0
-    N:road_connect: road2 junction1-0 junction0-0
-    N:road_connect: road2 junction0-0 junction0-1
-    N:road_connect: road2 junction0-2 junction0-1
-    N:road_connect: road2 junction1-1 junction0-1
-    N:road_connect: road2 junction0-1 junction0-2
-    N:road_connect: road2 junction1-2 junction0-2
-    N:road_connect: road2 junction1-1 junction1-0
-    N:road_connect: road2 junction0-0 junction1-0
-    N:road_connect: road2 junction2-0 junction1-0
-    N:road_connect: road2 junction1-0 junction1-1
-    N:road_connect: road2 junction1-2 junction1-1
-    N:road_connect: road2 junction0-1 junction1-1
-    N:road_connect: road2 junction2-1 junction1-1
-    N:road_connect: road2 junction1-1 junction1-2
-    N:road_connect: road2 junction0-2 junction1-2
-    N:road_connect: road2 junction2-2 junction1-2
-    N:road_connect: road2 junction2-1 junction2-0
-    N:road_connect: road2 junction1-0 junction2-0
-    N:road_connect: road2 junction2-0 junction2-1
-    N:road_connect: road2 junction2-2 junction2-1
-    N:road_connect: road2 junction1-1 junction2-1
-    N:road_connect: road2 junction2-1 junction2-2
-    N:road_connect: road2 junction1-2 junction2-2
-    N:road_connect: road3 junction1-1 junction0-0
-    N:road_connect: road3 junction1-0 junction0-1
-    N:road_connect: road3 junction1-2 junction0-1
-    N:road_connect: road3 junction1-1 junction0-2
-    N:road_connect: road3 junction0-1 junction1-0
-    N:road_connect: road3 junction2-1 junction1-0
-    N:road_connect: road3 junction0-0 junction1-1
-    N:road_connect: road3 junction0-2 junction1-1
-    N:road_connect: road3 junction2-0 junction1-1
-    N:road_connect: road3 junction2-2 junction1-1
-    N:road_connect: road3 junction0-1 junction1-2
-    N:road_connect: road3 junction2-1 junction1-2
-    N:road_connect: road3 junction1-1 junction2-0
-    N:road_connect: road3 junction1-0 junction2-1
-    N:road_connect: road3 junction1-2 junction2-1
-    N:road_connect: road3 junction1-1 junction2-2
-    N:road_connect: road3 junction0-1 junction0-0
-    N:road_connect: road3 junction1-0 junction0-0
-    N:road_connect: road3 junction0-0 junction0-1
-    N:road_connect: road3 junction0-2 junction0-1
-    N:road_connect: road3 junction1-1 junction0-1
-    N:road_connect: road3 junction0-1 junction0-2
-    N:road_connect: road3 junction1-2 junction0-2
-    N:road_connect: road3 junction1-1 junction1-0
-    N:road_connect: road3 junction0-0 junction1-0
-    N:road_connect: road3 junction2-0 junction1-0
-    N:road_connect: road3 junction1-0 junction1-1
-    N:road_connect: road3 junction1-2 junction1-1
-    N:road_connect: road3 junction0-1 junction1-1
-    N:road_connect: road3 junction2-1 junction1-1
-    N:road_connect: road3 junction1-1 junction1-2
-    N:road_connect: road3 junction0-2 junction1-2
-    N:road_connect: road3 junction2-2 junction1-2
-    N:road_connect: road3 junction2-1 junction2-0
-    N:road_connect: road3 junction1-0 junction2-0
-    N:road_connect: road3 junction2-0 junction2-1
-    N:road_connect: road3 junction2-2 junction2-1
-    N:road_connect: road3 junction1-1 junction2-1
-    N:road_connect: road3 junction2-1 junction2-2
-    N:road_connect: road3 junction1-2 junction2-2
-    N:road_connect: road4 junction1-1 junction0-0
-    N:road_connect: road4 junction1-0 junction0-1
-    N:road_connect: road4 junction1-2 junction0-1
-    N:road_connect: road4 junction1-1 junction0-2
-    N:road_connect: road4 junction0-1 junction1-0
-    N:road_connect: road4 junction2-1 junction1-0
-    N:road_connect: road4 junction0-0 junction1-1
-    N:road_connect: road4 junction0-2 junction1-1
-    N:road_connect: road4 junction2-0 junction1-1
-    N:road_connect: road4 junction2-2 junction1-1
-    N:road_connect: road4 junction0-1 junction1-2
-    N:road_connect: road4 junction2-1 junction1-2
-    N:road_connect: road4 junction1-1 junction2-0
-    N:road_connect: road4 junction1-0 junction2-1
-    N:road_connect: road4 junction1-2 junction2-1
-    N:road_connect: road4 junction1-1 junction2-2
-    N:road_connect: road4 junction0-1 junction0-0
-    N:road_connect: road4 junction1-0 junction0-0
-    N:road_connect: road4 junction0-0 junction0-1
-    N:road_connect: road4 junction0-2 junction0-1
-    N:road_connect: road4 junction1-1 junction0-1
-    N:road_connect: road4 junction0-1 junction0-2
-    N:road_connect: road4 junction1-2 junction0-2
-    N:road_connect: road4 junction1-1 junction1-0
-    N:road_connect: road4 junction0-0 junction1-0
-    N:road_connect: road4 junction2-0 junction1-0
-    N:road_connect: road4 junction1-0 junction1-1
-    N:road_connect: road4 junction1-2 junction1-1
-    N:road_connect: road4 junction0-1 junction1-1
-    N:road_connect: road4 junction2-1 junction1-1
-    N:road_connect: road4 junction1-1 junction1-2
-    N:road_connect: road4 junction0-2 junction1-2
-    N:road_connect: road4 junction2-2 junction1-2
-    N:road_connect: road4 junction2-1 junction2-0
-    N:road_connect: road4 junction1-0 junction2-0
-    N:road_connect: road4 junction2-0 junction2-1
-    N:road_connect: road4 junction2-2 junction2-1
-    N:road_connect: road4 junction1-1 junction2-1
-    N:road_connect: road4 junction2-1 junction2-2
-    N:road_connect: road4 junction1-2 junction2-2
-    N:at_car_jun: car0 junction0-0
     at_car_road: car0 road0
-    N:at_car_jun: car1 junction0-0
     at_car_road: car1 road0
     at_car_road: car0 road1
     at_car_road: car1 road1
@@ -4351,73 +4069,39 @@ Facts[506]:
     at_car_road: car1 road3
     at_car_road: car0 road4
     at_car_road: car1 road4
-    N:at_car_road: car0 road0
-    N:at_car_road: car1 road0
-    N:at_car_road: car0 road1
-    N:at_car_road: car1 road1
-    N:at_car_road: car0 road2
-    N:at_car_road: car1 road2
-    N:at_car_road: car0 road3
-    N:at_car_road: car1 road3
-    N:at_car_road: car0 road4
-    N:at_car_road: car1 road4
     at_car_jun: car0 junction0-1
-    N:clear: junction0-1
     at_car_jun: car1 junction0-1
     at_car_jun: car0 junction0-2
-    N:clear: junction0-2
     at_car_jun: car1 junction0-2
     at_car_jun: car0 junction1-0
-    N:clear: junction1-0
     at_car_jun: car1 junction1-0
     at_car_jun: car0 junction1-1
-    N:clear: junction1-1
     at_car_jun: car1 junction1-1
     at_car_jun: car0 junction1-2
-    N:clear: junction1-2
     at_car_jun: car1 junction1-2
     at_car_jun: car0 junction2-0
-    N:clear: junction2-0
     at_car_jun: car1 junction2-0
     at_car_jun: car0 junction2-1
-    N:clear: junction2-1
     at_car_jun: car1 junction2-1
     at_car_jun: car0 junction2-2
-    N:clear: junction2-2
     at_car_jun: car1 junction2-2
     arrived: car0 junction0-0
     arrived: car1 junction0-0
-    N:at_car_jun: car0 junction0-1
     arrived: car0 junction0-1
-    N:at_car_jun: car1 junction0-1
     arrived: car1 junction0-1
-    N:at_car_jun: car0 junction0-2
     arrived: car0 junction0-2
-    N:at_car_jun: car1 junction0-2
     arrived: car1 junction0-2
-    N:at_car_jun: car0 junction1-0
     arrived: car0 junction1-0
-    N:at_car_jun: car1 junction1-0
     arrived: car1 junction1-0
-    N:at_car_jun: car0 junction1-1
     arrived: car0 junction1-1
-    N:at_car_jun: car1 junction1-1
     arrived: car1 junction1-1
-    N:at_car_jun: car0 junction1-2
     arrived: car0 junction1-2
-    N:at_car_jun: car1 junction1-2
     arrived: car1 junction1-2
-    N:at_car_jun: car0 junction2-0
     arrived: car0 junction2-0
-    N:at_car_jun: car1 junction2-0
     arrived: car1 junction2-0
-    N:at_car_jun: car0 junction2-1
     arrived: car0 junction2-1
-    N:at_car_jun: car1 junction2-1
     arrived: car1 junction2-1
-    N:at_car_jun: car0 junction2-2
     arrived: car0 junction2-2
-    N:at_car_jun: car1 junction2-2
     arrived: car1 junction2-2
 Actions[1220]:
 car_start junction0-0 car0 garage0 --> 0
@@ -21470,7 +21154,7 @@ Lift Actions[6]:
       next: ?n2 ?n1
     pre-neg[0]:
     eq[0]:
-Facts[172]:
+Facts[86]:
     lift-at: fast0 n8
     passengers: fast0 n0
     lift-at: fast1 n6
@@ -21483,23 +21167,15 @@ Facts[172]:
     passenger-at: p1 n1
     passenger-at: p2 n7
     passenger-at: p3 n0
-    N:lift-at: slow1-0 n4
     lift-at: slow1-0 n5
     lift-at: slow1-0 n6
     lift-at: slow1-0 n7
     lift-at: slow1-0 n8
-    N:lift-at: slow0-0 n4
     lift-at: slow0-0 n0
     lift-at: slow0-0 n1
     lift-at: slow0-0 n2
     lift-at: slow0-0 n3
-    N:lift-at: slow1-0 n5
-    N:lift-at: slow1-0 n6
-    N:lift-at: slow1-0 n7
-    N:lift-at: slow1-0 n8
-    N:lift-at: fast1 n6
     lift-at: fast1 n8
-    N:lift-at: fast0 n8
     lift-at: fast0 n0
     lift-at: fast0 n2
     lift-at: fast0 n4
@@ -21507,142 +21183,64 @@ Facts[172]:
     lift-at: fast1 n0
     lift-at: fast1 n2
     lift-at: fast1 n4
-    N:lift-at: fast1 n8
-    N:passenger-at: p0 n3
     boarded: p0 slow0-0
-    N:passengers: slow0-0 n0
     passengers: slow0-0 n1
-    N:passenger-at: p1 n1
     boarded: p1 slow0-0
-    N:passengers: slow0-0 n1
     passengers: slow0-0 n2
-    N:passenger-at: p2 n7
     boarded: p2 slow1-0
-    N:passengers: slow1-0 n0
     passengers: slow1-0 n1
-    N:passenger-at: p3 n0
     boarded: p3 slow0-0
     boarded: p3 fast0
-    N:passengers: fast0 n0
     passengers: fast0 n1
     boarded: p3 fast1
-    N:passengers: fast1 n0
     passengers: fast1 n1
     passenger-at: p0 n4
-    N:boarded: p0 slow0-0
-    N:passengers: slow0-0 n2
     passenger-at: p0 n0
     passenger-at: p0 n1
     passenger-at: p0 n2
     passenger-at: p1 n4
-    N:boarded: p1 slow0-0
     passenger-at: p1 n0
     passenger-at: p1 n2
     passenger-at: p1 n3
     passenger-at: p2 n4
-    N:boarded: p2 slow1-0
-    N:passengers: slow1-0 n1
     passenger-at: p2 n5
     passenger-at: p2 n6
     passenger-at: p2 n8
     passenger-at: p3 n4
-    N:boarded: p3 slow0-0
     passenger-at: p3 n1
     passenger-at: p3 n2
     passenger-at: p3 n3
     passenger-at: p3 n8
-    N:boarded: p3 fast0
-    N:passengers: fast0 n1
     passenger-at: p3 n6
-    N:boarded: p3 fast1
-    N:passengers: fast1 n1
-    N:lift-at: slow0-0 n0
-    N:lift-at: slow0-0 n1
-    N:lift-at: slow0-0 n2
-    N:lift-at: slow0-0 n3
-    N:lift-at: fast0 n0
-    N:lift-at: fast0 n2
-    N:lift-at: fast0 n4
-    N:lift-at: fast0 n6
-    N:lift-at: fast1 n0
-    N:lift-at: fast1 n2
-    N:lift-at: fast1 n4
     passengers: slow1-0 n2
     passengers: fast0 n2
     passengers: fast1 n2
-    N:passenger-at: p0 n4
     boarded: p0 slow1-0
     boarded: p0 fast0
-    N:passengers: fast0 n2
     passengers: fast0 n3
     boarded: p0 fast1
-    N:passengers: fast1 n2
     passengers: fast1 n3
-    N:passenger-at: p0 n0
-    N:passenger-at: p0 n1
-    N:passenger-at: p0 n2
-    N:passenger-at: p1 n4
     boarded: p1 slow1-0
     boarded: p1 fast0
     boarded: p1 fast1
-    N:passenger-at: p1 n0
-    N:passenger-at: p1 n2
-    N:passenger-at: p1 n3
-    N:passenger-at: p2 n4
     boarded: p2 slow0-0
     boarded: p2 fast0
     boarded: p2 fast1
-    N:passenger-at: p2 n5
-    N:passenger-at: p2 n6
-    N:passenger-at: p2 n8
-    N:passenger-at: p3 n4
     boarded: p3 slow1-0
-    N:passenger-at: p3 n1
-    N:passenger-at: p3 n2
-    N:passenger-at: p3 n3
-    N:passenger-at: p3 n8
-    N:passenger-at: p3 n6
-    N:passengers: slow1-0 n2
-    N:passengers: fast0 n3
-    N:passengers: fast1 n3
-    N:boarded: p0 slow1-0
     passenger-at: p0 n5
     passenger-at: p0 n6
     passenger-at: p0 n7
     passenger-at: p0 n8
-    N:boarded: p0 fast0
-    N:boarded: p0 fast1
-    N:boarded: p1 slow1-0
     passenger-at: p1 n5
     passenger-at: p1 n6
     passenger-at: p1 n7
     passenger-at: p1 n8
-    N:boarded: p1 fast0
-    N:boarded: p1 fast1
-    N:boarded: p2 slow0-0
     passenger-at: p2 n0
     passenger-at: p2 n1
     passenger-at: p2 n2
     passenger-at: p2 n3
-    N:boarded: p2 fast0
-    N:boarded: p2 fast1
-    N:boarded: p3 slow1-0
     passenger-at: p3 n5
     passenger-at: p3 n7
-    N:passenger-at: p0 n5
-    N:passenger-at: p0 n6
-    N:passenger-at: p0 n7
-    N:passenger-at: p0 n8
-    N:passenger-at: p1 n5
-    N:passenger-at: p1 n6
-    N:passenger-at: p1 n7
-    N:passenger-at: p1 n8
-    N:passenger-at: p2 n0
-    N:passenger-at: p2 n1
-    N:passenger-at: p2 n2
-    N:passenger-at: p2 n3
-    N:passenger-at: p3 n5
-    N:passenger-at: p3 n7
 Actions[480]:
 move-up-slow slow1-0 n4 n5 --> 6
     pre[1]:

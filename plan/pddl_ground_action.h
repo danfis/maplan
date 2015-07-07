@@ -103,6 +103,12 @@ void planPDDLGroundActionPoolInst(plan_pddl_ground_action_pool_t *ga,
                                   plan_pddl_fact_pool_t *fact_pool);
 
 /**
+ * Remaps fact IDs according to the given map.
+ */
+void planPDDLGroundActionPoolRemap(plan_pddl_ground_action_pool_t *pool,
+                                   const int *map);
+
+/**
  * Returns i'th action from the pool.
  */
 plan_pddl_ground_action_t *planPDDLGroundActionPoolGet(

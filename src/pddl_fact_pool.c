@@ -179,8 +179,8 @@ plan_pddl_fact_t *planPDDLFactPoolGetPred(const plan_pddl_fact_pool_t *pool,
     return planPDDLFactPoolGet(pool, *fact_id);
 }
 
-void planPDDLFactPoolRemoveStaticFacts(plan_pddl_fact_pool_t *pool,
-                                       int *map)
+void planPDDLFactPoolRemoveStatAndNegFacts(plan_pddl_fact_pool_t *pool,
+                                           int *map)
 {
     plan_pddl_fact_pool_t old_pool;
     fact_t *fact;
@@ -191,7 +191,7 @@ void planPDDLFactPoolRemoveStaticFacts(plan_pddl_fact_pool_t *pool,
 
     for (i = 0; i < old_pool.size; ++i){
         fact = borExtArrGet(old_pool.fact, i);
-        if (fact->fact.stat){
+        if (fact->fact.stat || fact->fact.neg){
             map[i] = -1;
         }else{
             id = planPDDLFactPoolAdd(pool, &fact->fact);

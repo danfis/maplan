@@ -304,20 +304,29 @@ int planPDDLGroundActionPoolAdd(plan_pddl_ground_action_pool_t *ga,
 }
 
 static int factsToGroundFacts(plan_pddl_ground_facts_t *dst,
-                              const plan_pddl_facts_t *src,
+                              plan_pddl_ground_facts_t *dst_neg,
+                              plan_pddl_facts_t *src,
                               plan_pddl_fact_pool_t *pool)
 {
-    const plan_pddl_fact_t *fact, *fact2;
-    int i, id;
+    plan_pddl_fact_t *fact, *fact2;
+    int i, id, neg;
 
     dst->size = 0;
     dst->fact = BOR_ALLOC_ARR(int, src->size);
+    dst_neg->size = 0;
+    dst_neg->fact = BOR_ALLOC_ARR(int, src->size);
     for (i = 0; i < src->size; ++i){
         fact = src->fact + i;
+        neg = fact->neg;
+        fact->neg = 0;
+
         id = planPDDLFactPoolFind(pool, fact);
         if (id < 0){
             BOR_FREE(dst->fact);
             bzero(dst, sizeof(*dst));
+            BOR_FREE(dst_neg->fact);
+            bzero(dst_neg, sizeof(*dst_neg));
+            fact->neg = neg;
             return -1;
         }
 
@@ -325,18 +334,23 @@ static int factsToGroundFacts(plan_pddl_ground_facts_t *dst,
         if (fact2->stat)
             continue;
 
-        dst->fact[dst->size++] = id;
+        if (neg){
+            dst_neg->fact[dst_neg->size++] = id;
+        }else{
+            dst->fact[dst->size++] = id;
+        }
+        fact->neg = neg;
     }
 
     return 0;
 }
 
 static void condEffsToGroundCondEffs(plan_pddl_ground_cond_effs_t *cdst,
-                                     const plan_pddl_cond_effs_t *csrc,
+                                     plan_pddl_cond_effs_t *csrc,
                                      plan_pddl_fact_pool_t *pool)
 {
     plan_pddl_ground_cond_eff_t *dst;
-    const plan_pddl_cond_eff_t *src;
+    plan_pddl_cond_eff_t *src;
     int i;
 
     cdst->size = 0;
@@ -344,8 +358,8 @@ static void condEffsToGroundCondEffs(plan_pddl_ground_cond_effs_t *cdst,
     for (i = 0; i < csrc->size; ++i){
         dst = cdst->cond_eff + cdst->size;
         src = csrc->cond_eff + i;
-        if (factsToGroundFacts(&dst->pre, &src->pre, pool) == 0){
-            factsToGroundFacts(&dst->eff, &src->eff, pool);
+        if (factsToGroundFacts(&dst->pre, &dst->pre_neg, &src->pre, pool) == 0){
+            factsToGroundFacts(&dst->eff_add, &dst->eff_del, &src->eff, pool);
             ++cdst->size;
         }
     }
@@ -363,8 +377,8 @@ static void groundActionInst(plan_pddl_ground_action_t *a,
                    a->action, a->arg);
 
     a->cost = groundCost(a->action, a->arg);
-    factsToGroundFacts(&a->pre, &ground.pre, fact_pool);
-    factsToGroundFacts(&a->eff, &ground.eff, fact_pool);
+    factsToGroundFacts(&a->pre, &a->pre_neg, &ground.pre, fact_pool);
+    factsToGroundFacts(&a->eff_add, &a->eff_del, &ground.eff, fact_pool);
     condEffsToGroundCondEffs(&a->cond_eff, &ground.cond_eff, fact_pool);
 
     groundActionFactsFree(&ground);
@@ -405,10 +419,14 @@ static void remapFactIds(plan_pddl_ground_action_t *a, const int *map)
     int i;
 
     remapFactIds2(&a->pre, map);
-    remapFactIds2(&a->eff, map);
+    remapFactIds2(&a->pre_neg, map);
+    remapFactIds2(&a->eff_add, map);
+    remapFactIds2(&a->eff_del, map);
     for (i = 0; i < a->cond_eff.size; ++i){
         remapFactIds2(&a->cond_eff.cond_eff[i].pre, map);
-        remapFactIds2(&a->cond_eff.cond_eff[i].eff, map);
+        remapFactIds2(&a->cond_eff.cond_eff[i].pre_neg, map);
+        remapFactIds2(&a->cond_eff.cond_eff[i].eff_add, map);
+        remapFactIds2(&a->cond_eff.cond_eff[i].eff_del, map);
     }
 }
 
@@ -437,7 +455,9 @@ static void groundCondEffsFree(plan_pddl_ground_cond_effs_t *ce)
 
     for (i = 0; i < ce->size; ++i){
         groundFactsFree(&ce->cond_eff[i].pre);
-        groundFactsFree(&ce->cond_eff[i].eff);
+        groundFactsFree(&ce->cond_eff[i].pre_neg);
+        groundFactsFree(&ce->cond_eff[i].eff_add);
+        groundFactsFree(&ce->cond_eff[i].eff_del);
     }
     if (ce->cond_eff != NULL)
         BOR_FREE(ce->cond_eff);
@@ -463,7 +483,9 @@ static void groundCondEffsCopy(plan_pddl_ground_cond_effs_t *dst,
         dst->cond_eff = BOR_ALLOC_ARR(plan_pddl_ground_cond_eff_t, src->size);
         for (i = 0; i < src->size; ++i){
             groundFactsCopy(&dst->cond_eff[i].pre, &src->cond_eff[i].pre);
-            groundFactsCopy(&dst->cond_eff[i].eff, &src->cond_eff[i].eff);
+            groundFactsCopy(&dst->cond_eff[i].pre_neg, &src->cond_eff[i].pre_neg);
+            groundFactsCopy(&dst->cond_eff[i].eff_add, &src->cond_eff[i].eff_add);
+            groundFactsCopy(&dst->cond_eff[i].eff_del, &src->cond_eff[i].eff_del);
         }
     }
 }
@@ -505,8 +527,12 @@ static void groundCondEffsPrint(const plan_pddl_ground_cond_effs_t *ce,
     for (i = 0; i < ce->size; ++i){
         fprintf(fout, "      pre[%d]:\n", ce->cond_eff[i].pre.size);
         groundFactsPrint(&ce->cond_eff[i].pre, fact_pool, preds, objs, fout);
-        fprintf(fout, "      eff[%d]:\n", ce->cond_eff[i].eff.size);
-        groundFactsPrint(&ce->cond_eff[i].eff, fact_pool, preds, objs, fout);
+        fprintf(fout, "      pre-neg[%d]:\n", ce->cond_eff[i].pre.size);
+        groundFactsPrint(&ce->cond_eff[i].pre_neg, fact_pool, preds, objs, fout);
+        fprintf(fout, "      eff-add[%d]:\n", ce->cond_eff[i].eff_add.size);
+        groundFactsPrint(&ce->cond_eff[i].eff_add, fact_pool, preds, objs, fout);
+        fprintf(fout, "      eff-del[%d]:\n", ce->cond_eff[i].eff_del.size);
+        groundFactsPrint(&ce->cond_eff[i].eff_del, fact_pool, preds, objs, fout);
     }
 }
 
@@ -517,7 +543,9 @@ void planPDDLGroundActionFree(plan_pddl_ground_action_t *ga)
     if (ga->arg)
         BOR_FREE(ga->arg);
     groundFactsFree(&ga->pre);
-    groundFactsFree(&ga->eff);
+    groundFactsFree(&ga->pre_neg);
+    groundFactsFree(&ga->eff_add);
+    groundFactsFree(&ga->eff_del);
     groundCondEffsFree(&ga->cond_eff);
 }
 
@@ -538,7 +566,9 @@ void planPDDLGroundActionCopy(plan_pddl_ground_action_t *dst,
     if (src->name != NULL)
         dst->name = BOR_STRDUP(src->name);
     groundFactsCopy(&dst->pre, &src->pre);
-    groundFactsCopy(&dst->eff, &src->eff);
+    groundFactsCopy(&dst->pre_neg, &src->pre_neg);
+    groundFactsCopy(&dst->eff_add, &src->eff_add);
+    groundFactsCopy(&dst->eff_del, &src->eff_del);
     groundCondEffsCopy(&dst->cond_eff, &src->cond_eff);
 }
 
@@ -551,8 +581,12 @@ void planPDDLGroundActionPrint(const plan_pddl_ground_action_t *a,
     fprintf(fout, "%s --> %d\n", a->name, a->cost);
     fprintf(fout, "    pre[%d]:\n", a->pre.size);
     groundFactsPrint(&a->pre, fact_pool, preds, objs, fout);
-    fprintf(fout, "    eff[%d]:\n", a->eff.size);
-    groundFactsPrint(&a->eff, fact_pool, preds, objs, fout);
+    fprintf(fout, "    pre-neg[%d]:\n", a->pre_neg.size);
+    groundFactsPrint(&a->pre_neg, fact_pool, preds, objs, fout);
+    fprintf(fout, "    eff-add[%d]:\n", a->eff_add.size);
+    groundFactsPrint(&a->eff_add, fact_pool, preds, objs, fout);
+    fprintf(fout, "    eff-del[%d]:\n", a->eff_del.size);
+    groundFactsPrint(&a->eff_del, fact_pool, preds, objs, fout);
     fprintf(fout, "    cond-eff[%d]:\n", a->cond_eff.size);
     groundCondEffsPrint(&a->cond_eff, fact_pool, preds, objs, fout);
 }

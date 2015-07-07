@@ -36,7 +36,9 @@ typedef struct _plan_pddl_ground_facts_t plan_pddl_ground_facts_t;
 
 struct _plan_pddl_ground_cond_eff_t {
     plan_pddl_ground_facts_t pre;
-    plan_pddl_ground_facts_t eff;
+    plan_pddl_ground_facts_t pre_neg;
+    plan_pddl_ground_facts_t eff_add;
+    plan_pddl_ground_facts_t eff_del;
 };
 typedef struct _plan_pddl_ground_cond_eff_t plan_pddl_ground_cond_eff_t;
 
@@ -53,7 +55,9 @@ struct _plan_pddl_ground_action_t {
     char *name;
     int cost;
     plan_pddl_ground_facts_t pre;
-    plan_pddl_ground_facts_t eff;
+    plan_pddl_ground_facts_t pre_neg;
+    plan_pddl_ground_facts_t eff_add;
+    plan_pddl_ground_facts_t eff_del;
     plan_pddl_ground_cond_effs_t cond_eff;
 };
 typedef struct _plan_pddl_ground_action_t plan_pddl_ground_action_t;

@@ -17,6 +17,10 @@
  * See the License for more information.
  */
 
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE
+#endif /* _GNU_SOURCE */
+
 #include <boruvka/alloc.h>
 #include <boruvka/hfunc.h>
 #include "plan/pddl_fact_pool.h"
@@ -179,25 +183,49 @@ plan_pddl_fact_t *planPDDLFactPoolGetPred(const plan_pddl_fact_pool_t *pool,
     return planPDDLFactPoolGet(pool, *fact_id);
 }
 
-void planPDDLFactPoolRemoveStatAndNegFacts(plan_pddl_fact_pool_t *pool,
-                                           int *map)
+static int cmpFactIds(const void *a, const void *b, void *ud)
+{
+    int id1 = *(int *)a;
+    int id2 = *(int *)b;
+    const plan_pddl_fact_pool_t *fact_pool = ud;
+    const plan_pddl_fact_t *f1 = planPDDLFactPoolGet(fact_pool, id1);
+    const plan_pddl_fact_t *f2 = planPDDLFactPoolGet(fact_pool, id2);
+    int cmp;
+
+    cmp = f1->pred - f2->pred;
+    if (cmp == 0)
+        cmp = memcmp(f1->arg, f2->arg, sizeof(int) * f1->arg_size);
+    if (cmp == 0)
+        cmp = f1->neg - f2->neg;
+
+    return cmp;
+}
+
+void planPDDLFactPoolCleanup(plan_pddl_fact_pool_t *pool, int *map)
 {
     plan_pddl_fact_pool_t old_pool;
     fact_t *fact;
-    int id, i;
+    int *fact_ids;
+    int id, i, fid;
 
     old_pool = *pool;
-    planPDDLFactPoolInit(pool, old_pool.pred_size);
+    fact_ids = BOR_ALLOC_ARR(int, old_pool.size);
+    for (i = 0; i < old_pool.size; ++i)
+        fact_ids[i] = i;
+    qsort_r(fact_ids, old_pool.size, sizeof(int), cmpFactIds, &old_pool);
 
+    planPDDLFactPoolInit(pool, old_pool.pred_size);
     for (i = 0; i < old_pool.size; ++i){
-        fact = borExtArrGet(old_pool.fact, i);
+        fid = fact_ids[i];
+        fact = borExtArrGet(old_pool.fact, fid);
         if (fact->fact.stat || fact->fact.neg){
-            map[i] = -1;
+            map[fid] = -1;
         }else{
             id = planPDDLFactPoolAdd(pool, &fact->fact);
-            map[i] = id;
+            map[fid] = id;
         }
     }
 
     planPDDLFactPoolFree(&old_pool);
+    BOR_FREE(fact_ids);
 }

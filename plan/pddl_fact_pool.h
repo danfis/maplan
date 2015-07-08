@@ -96,10 +96,10 @@ plan_pddl_fact_t *planPDDLFactPoolGetPred(const plan_pddl_fact_pool_t *pool,
                                           int pred, int i);
 
 /**
- * Removes static and negative facts from the pool.
+ * Removes static and negative facts, sorts the facts.
+ * Returns mapping between old IDs and the new one via map argument.
  */
-void planPDDLFactPoolRemoveStatAndNegFacts(plan_pddl_fact_pool_t *pool,
-                                           int *map);
+void planPDDLFactPoolCleanup(plan_pddl_fact_pool_t *pool, int *map);
 
 /**** INLINES ****/
 _bor_inline void planPDDLFactPoolAddFacts(plan_pddl_fact_pool_t *pool,

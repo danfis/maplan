@@ -321,9 +321,8 @@ static void polishFacts(plan_pddl_ground_facts_t *dst, int alloc)
         }
     }
 
-    if (dst->size > 1){
+    if (dst->size > 1)
         qsort(dst->fact, dst->size, sizeof(int), intCmp);
-    }
 }
 
 static int factsToGroundFacts(plan_pddl_ground_facts_t *dst,
@@ -438,6 +437,8 @@ static void remapFactIds2(plan_pddl_ground_facts_t *fs, const int *map)
 
     for (i = 0; i < fs->size; ++i)
         fs->fact[i] = map[fs->fact[i]];
+    if (fs->size > 1)
+        qsort(fs->fact, fs->size, sizeof(int), intCmp);
 }
 
 static void remapFactIds(plan_pddl_ground_action_t *a, const int *map)

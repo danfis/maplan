@@ -69,7 +69,7 @@ static void removeStatAndNegFacts(plan_pddl_fact_pool_t *fact_pool,
     int *map;
 
     map = BOR_CALLOC_ARR(int, fact_pool->size);
-    planPDDLFactPoolRemoveStatAndNegFacts(fact_pool, map);
+    planPDDLFactPoolCleanup(fact_pool, map);
     planPDDLGroundActionPoolRemap(action_pool, map);
     BOR_FREE(map);
 }
@@ -104,24 +104,6 @@ void planPDDLGround(plan_pddl_ground_t *g)
     removeStatAndNegFacts(&g->fact_pool, &g->action_pool);
 }
 
-static int printCmpFacts(const void *a, const void *b, void *ud)
-{
-    int id1 = *(int *)a;
-    int id2 = *(int *)b;
-    const plan_pddl_fact_pool_t *fact_pool = ud;
-    const plan_pddl_fact_t *f1 = planPDDLFactPoolGet(fact_pool, id1);
-    const plan_pddl_fact_t *f2 = planPDDLFactPoolGet(fact_pool, id2);
-    int cmp;
-
-    cmp = f1->pred - f2->pred;
-    if (cmp == 0)
-        cmp = memcmp(f1->arg, f2->arg, sizeof(int) * f1->arg_size);
-    if (cmp == 0)
-        cmp = f1->neg - f2->neg;
-
-    return cmp;
-}
-
 static int printCmpActions(const void *a, const void *b, void *ud)
 {
     int id1 = *(int *)a;
@@ -136,25 +118,19 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
 {
     const plan_pddl_fact_t *fact;
     const plan_pddl_ground_action_t *action;
-    int *fact_ids, *action_ids;
+    int *action_ids;
     int i;
-
-    fact_ids = BOR_ALLOC_ARR(int, g->fact_pool.size);
-    for (i = 0; i < g->fact_pool.size; ++i)
-        fact_ids[i] = i;
 
     action_ids = BOR_ALLOC_ARR(int, g->action_pool.size);
     for (i = 0; i < g->action_pool.size; ++i)
         action_ids[i] = i;
 
-    qsort_r(fact_ids, g->fact_pool.size, sizeof(int), printCmpFacts,
-            (void *)&g->fact_pool);
     qsort_r(action_ids, g->action_pool.size, sizeof(int), printCmpActions,
             (void *)&g->action_pool);
 
     fprintf(fout, "Facts[%d]:\n", g->fact_pool.size);
     for (i = 0; i < g->fact_pool.size; ++i){
-        fact = planPDDLFactPoolGet(&g->fact_pool, fact_ids[i]);
+        fact = planPDDLFactPoolGet(&g->fact_pool, i);
         fprintf(fout, "    ");
         planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
         fprintf(fout, "\n");
@@ -167,7 +143,6 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
                                   &g->pddl->obj, fout);
     }
 
-    BOR_FREE(fact_ids);
     BOR_FREE(action_ids);
 }
 

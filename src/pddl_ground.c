@@ -17,6 +17,10 @@
  * See the License for more information.
  */
 
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE
+#endif /* _GNU_SOURCE */
+
 #include <boruvka/alloc.h>
 #include <boruvka/hfunc.h>
 #include "plan/pddl_ground.h"
@@ -100,15 +104,57 @@ void planPDDLGround(plan_pddl_ground_t *g)
     removeStatAndNegFacts(&g->fact_pool, &g->action_pool);
 }
 
+static int printCmpFacts(const void *a, const void *b, void *ud)
+{
+    int id1 = *(int *)a;
+    int id2 = *(int *)b;
+    const plan_pddl_fact_pool_t *fact_pool = ud;
+    const plan_pddl_fact_t *f1 = planPDDLFactPoolGet(fact_pool, id1);
+    const plan_pddl_fact_t *f2 = planPDDLFactPoolGet(fact_pool, id2);
+    int cmp;
+
+    cmp = f1->pred - f2->pred;
+    if (cmp == 0)
+        cmp = memcmp(f1->arg, f2->arg, sizeof(int) * f1->arg_size);
+    if (cmp == 0)
+        cmp = f1->neg - f2->neg;
+
+    return cmp;
+}
+
+static int printCmpActions(const void *a, const void *b, void *ud)
+{
+    int id1 = *(int *)a;
+    int id2 = *(int *)b;
+    const plan_pddl_ground_action_pool_t *ap = ud;
+    const plan_pddl_ground_action_t *a1 = planPDDLGroundActionPoolGet(ap, id1);
+    const plan_pddl_ground_action_t *a2 = planPDDLGroundActionPoolGet(ap, id2);
+    return strcmp(a1->name, a2->name);
+}
+
 void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
 {
     const plan_pddl_fact_t *fact;
     const plan_pddl_ground_action_t *action;
+    int *fact_ids, *action_ids;
     int i;
+
+    fact_ids = BOR_ALLOC_ARR(int, g->fact_pool.size);
+    for (i = 0; i < g->fact_pool.size; ++i)
+        fact_ids[i] = i;
+
+    action_ids = BOR_ALLOC_ARR(int, g->action_pool.size);
+    for (i = 0; i < g->action_pool.size; ++i)
+        action_ids[i] = i;
+
+    qsort_r(fact_ids, g->fact_pool.size, sizeof(int), printCmpFacts,
+            (void *)&g->fact_pool);
+    qsort_r(action_ids, g->action_pool.size, sizeof(int), printCmpActions,
+            (void *)&g->action_pool);
 
     fprintf(fout, "Facts[%d]:\n", g->fact_pool.size);
     for (i = 0; i < g->fact_pool.size; ++i){
-        fact = planPDDLFactPoolGet(&g->fact_pool, i);
+        fact = planPDDLFactPoolGet(&g->fact_pool, fact_ids[i]);
         fprintf(fout, "    ");
         planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
         fprintf(fout, "\n");
@@ -116,10 +162,13 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
 
     fprintf(fout, "Actions[%d]:\n", g->action_pool.size);
     for (i = 0; i < g->action_pool.size; ++i){
-        action = planPDDLGroundActionPoolGet(&g->action_pool, i);
+        action = planPDDLGroundActionPoolGet(&g->action_pool, action_ids[i]);
         planPDDLGroundActionPrint(action, &g->fact_pool, &g->pddl->predicate,
                                   &g->pddl->obj, fout);
     }
+
+    BOR_FREE(fact_ids);
+    BOR_FREE(action_ids);
 }
 
 
@@ -306,10 +355,10 @@ static int instBoundArg(const plan_pddl_lift_action_t *lift_action,
 }
 
 static void instAction(const plan_pddl_lift_action_t *lift_action,
-                              plan_pddl_fact_pool_t *fact_pool,
-                              plan_pddl_ground_action_pool_t *action_pool,
-                              const int *bound_arg_init,
-                              int pre_i)
+                       plan_pddl_fact_pool_t *fact_pool,
+                       plan_pddl_ground_action_pool_t *action_pool,
+                       const int *bound_arg_init,
+                       int pre_i)
 {
     const plan_pddl_fact_t *fact, *pre;
     int facts_size, i, bound_arg[lift_action->param_size];

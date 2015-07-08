@@ -388,21 +388,53 @@ static void instAction(const plan_pddl_lift_action_t *lift_action,
     }
 }
 
+static void instActionFromFact(const plan_pddl_lift_action_t *lift_action,
+                               plan_pddl_fact_pool_t *fact_pool,
+                               plan_pddl_ground_action_pool_t *action_pool,
+                               int fact_id)
+{
+    const plan_pddl_fact_t *fact, *pre;
+    int i, pre_size = lift_action->pre.size;
+    int bound_arg[lift_action->param_size];
+
+    fact = planPDDLFactPoolGet(fact_pool, fact_id);
+    for (i = 0; i < pre_size; ++i){
+        pre = lift_action->pre.fact + i;
+        if (pre->pred != fact->pred || pre->neg != fact->neg)
+            continue;
+
+        if (instBoundArg(lift_action, pre, fact, NULL, bound_arg) != 0)
+            continue;
+
+        instAction(lift_action, fact_pool, action_pool, bound_arg, 0);
+    }
+}
+
 static void instActions(const plan_pddl_lift_actions_t *actions,
                         plan_pddl_fact_pool_t *fact_pool,
                         plan_pddl_ground_action_pool_t *action_pool,
                         const plan_pddl_t *pddl)
 {
     const plan_pddl_lift_action_t *lift_action;
-    int i, num_facts;
+    int i, fact_id, size, num_facts;
 
-    do {
+    num_facts = fact_pool->size;
+    for (i = 0; i < actions->size; ++i){
+        lift_action = actions->action + i;
+        instAction(lift_action, fact_pool, action_pool, NULL, 0);
+    }
+
+    while (num_facts != fact_pool->size){
+        fact_id = num_facts;
+        size = fact_pool->size;
         num_facts = fact_pool->size;
-        for (i = 0; i < actions->size; ++i){
-            lift_action = actions->action + i;
-            instAction(lift_action, fact_pool, action_pool, NULL, 0);
+        for (; fact_id < size; ++fact_id){
+            for (i = 0; i < actions->size; ++i){
+                lift_action = actions->action + i;
+                instActionFromFact(lift_action, fact_pool, action_pool, fact_id);
+            }
         }
-    } while (num_facts != fact_pool->size);
+    }
 }
 /**** INSTANTIATE END ****/
 

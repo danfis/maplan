@@ -303,7 +303,14 @@ int planPDDLGroundActionPoolAdd(plan_pddl_ground_action_pool_t *ga,
     return 0;
 }
 
-static void reallocFacts(plan_pddl_ground_facts_t *dst, int alloc)
+static int intCmp(const void *a, const void *b)
+{
+    int i1 = *(int *)a;
+    int i2 = *(int *)b;
+    return i1 - i2;
+}
+
+static void polishFacts(plan_pddl_ground_facts_t *dst, int alloc)
 {
     if (dst->size != alloc){
         if (dst->size == 0){
@@ -312,6 +319,10 @@ static void reallocFacts(plan_pddl_ground_facts_t *dst, int alloc)
         }else{
             dst->fact = BOR_REALLOC_ARR(dst->fact, int, dst->size);
         }
+    }
+
+    if (dst->size > 1){
+        qsort(dst->fact, dst->size, sizeof(int), intCmp);
     }
 }
 
@@ -354,8 +365,8 @@ static int factsToGroundFacts(plan_pddl_ground_facts_t *dst,
         fact->neg = neg;
     }
 
-    reallocFacts(dst, src->size);
-    reallocFacts(dst_neg, src->size);
+    polishFacts(dst, src->size);
+    polishFacts(dst_neg, src->size);
 
     return 0;
 }

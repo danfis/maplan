@@ -70,10 +70,19 @@ struct _sas_fact_edge_t {
 };
 typedef struct _sas_fact_edge_t sas_fact_edge_t;
 
+typedef struct _sas_split_node_t sas_split_node_t;
+struct _sas_split_node_t {
+    int *fact;
+    sas_split_node_t *child;
+    int size;
+};
+
 struct _sas_fact_t {
     int *conn;
     sas_fact_edge_t *edge;
     int edge_size;
+    sas_split_node_t split;
+    plan_pddl_ground_facts_t must_fact;
     int is_init;
 };
 typedef struct _sas_fact_t sas_fact_t;
@@ -93,6 +102,7 @@ static void sasInit(sas_t *sas, int fact_size)
     sas_fact_t *f;
     int i;
 
+    bzero(sas, sizeof(*sas));
     sas->fact_size = fact_size;
     sas->fact = BOR_CALLOC_ARR(sas_fact_t, fact_size);
     for (i = 0; i < fact_size; ++i){
@@ -104,6 +114,30 @@ static void sasInit(sas_t *sas, int fact_size)
     sas->cur_comp = BOR_ALLOC_ARR(int, fact_size);
 }
 
+static void sasSplitNodeFree(sas_split_node_t *split)
+{
+    int i;
+
+    for (i = 0; i < split->size; ++i)
+        sasSplitNodeFree(split->child + i);
+
+    if (split->child != NULL)
+        BOR_FREE(split->child);
+    if (split->fact != NULL)
+        BOR_FREE(split->fact);
+}
+
+static void sasFactFree(sas_fact_t *sas_fact)
+{
+    if (sas_fact->conn)
+        BOR_FREE(sas_fact->conn);
+    if (sas_fact->edge)
+        BOR_FREE(sas_fact->edge);
+    if (sas_fact->must_fact.fact != NULL)
+        BOR_FREE(sas_fact->must_fact.fact);
+    sasSplitNodeFree(&sas_fact->split);
+}
+
 static void sasFree(sas_t *sas)
 {
     sas_fact_t *f;
@@ -111,12 +145,11 @@ static void sasFree(sas_t *sas)
 
     for (i = 0; i < sas->fact_size; ++i){
         f = sas->fact + i;
-        if (f->conn != NULL)
-            BOR_FREE(f->conn);
-        if (f->edge != NULL)
-            BOR_FREE(f->edge);
+        sasFactFree(f);
     }
     BOR_FREE(sas->fact);
+    if (sas->cur_comp != NULL)
+        BOR_FREE(sas->cur_comp);
 }
 
 static void sasSetInitFacts(sas_t *sas, const plan_pddl_facts_t *fs,
@@ -244,6 +277,197 @@ static void sasConnectFacts(sas_t *sas,
     for (i = 0; i < pool->size; ++i){
         a = planPDDLGroundActionPoolGet(pool, i);
         sasConnectFacts2(sas, i, &a->eff_del, &a->eff_add);
+    }
+}
+
+static void _sasSetMustFacts(sas_fact_t *sas_fact)
+{
+    plan_pddl_ground_facts_t *w;
+    int i, j, action;
+
+    w = &sas_fact->must_fact;
+    w->size = 0;
+    w->fact = BOR_ALLOC_ARR(int, sas_fact->edge_size);
+
+    for (i = 0; i < sas_fact->edge_size;){
+        action = sas_fact->edge[i].action;
+        for (j = i + 1; j < sas_fact->edge_size
+                && sas_fact->edge[j].action == action; ++j);
+
+        if (j == i + 1)
+            w->fact[w->size++] = sas_fact->edge[i].fact;
+
+        i = j;
+    }
+}
+
+static void sasSetMustFacts(sas_t *sas)
+{
+    int i;
+    for (i = 0; i < sas->fact_size; ++i)
+        _sasSetMustFacts(sas->fact + i);
+}
+
+static int _sasBuildSplitTreeNext(const sas_fact_t *sas_fact, int from,
+                                  int *start, int *end)
+{
+    int i, j, action;
+
+    *start = *end = -1;
+    for (i = from; i < sas_fact->edge_size;){
+        action = sas_fact->edge[i].action;
+        for (j = i + 1; j < sas_fact->edge_size
+                && sas_fact->edge[j].action == action; ++j);
+
+        if (j != i + 1){
+            *start = i;
+            *end = j;
+            return 0;
+        }
+
+        i = j;
+    }
+
+    return -1;
+}
+
+static void _sasBuildSplitTree(sas_t *sas,
+                               sas_fact_t *sas_fact,
+                               sas_split_node_t *node,
+                               const int *allowed,
+                               int from, int to)
+{
+    int *next_allowed;
+    int forced, split;
+    int i, j, fi, fact_id, next_from, next_to;
+
+    if (from == -1){
+        node->size = 0;
+        return;
+    }
+
+    forced = -1;
+    split = 0;
+    for (i = from; i < to; ++i){
+        fact_id = sas_fact->edge[i].fact;
+        if (allowed[fact_id] == 0){
+            ++split;
+
+        }else if (allowed[fact_id] == 1){
+            if (forced != -1){
+                // Two forced edges -- this branch cannot be satisfied.
+                node->size = -1;
+                return;
+            }
+            forced = i;
+        }
+    }
+
+    if (forced >= 0){
+        next_allowed = BOR_ALLOC_ARR(int, sas->fact_size);
+        memcpy(next_allowed, allowed, sizeof(int) * sas->fact_size);
+        next_allowed[forced] = 1;
+
+        for (j = from; j < to; ++j){
+            if (forced != j)
+                next_allowed[sas_fact->edge[j].fact] = -1;
+        }
+        _sasBuildSplitTreeNext(sas_fact, to, &next_from, &next_to);
+        _sasBuildSplitTree(sas, sas_fact, node, next_allowed, next_from, next_to);
+        BOR_FREE(next_allowed);
+        return;
+    }
+
+    if (split == 0){
+        // No branching possible
+        node->size = -1;
+        return;
+    }
+
+    node->size = split;
+    node->fact = BOR_ALLOC_ARR(int, node->size);
+    node->child = BOR_CALLOC_ARR(sas_split_node_t, node->size);
+    next_allowed = BOR_ALLOC_ARR(int, sas->fact_size);
+    for (fi = 0, i = from; i < to; ++i){
+        fact_id = sas_fact->edge[i].fact;
+        if (allowed[fact_id] == -1)
+            continue;
+
+        memcpy(next_allowed, allowed, sizeof(int) * sas->fact_size);
+        next_allowed[fact_id] = 1;
+
+        for (j = from; j < to; ++j){
+            if (i != j)
+                next_allowed[sas_fact->edge[j].fact] = -1;
+        }
+
+        _sasBuildSplitTreeNext(sas_fact, to, &next_from, &next_to);
+        _sasBuildSplitTree(sas, sas_fact, &node->child[fi], next_allowed,
+                           next_from, next_to);
+        node->fact[fi] = fact_id;
+        ++fi;
+    }
+
+    BOR_FREE(next_allowed);
+
+    for (i = 0, fi = 0; i < node->size; ++i){
+        if (node->child[i].size != -1){
+            if (i != fi){
+                node->child[fi] = node->child[i];
+                node->fact[fi] = node->fact[i];
+            }
+            ++fi;
+        }
+    }
+    node->size = fi;
+
+    if (node->size == 0){
+        BOR_FREE(node->child);
+        BOR_FREE(node->fact);
+        node->size = -1;
+    }
+}
+
+
+static void sasBuildSplitTree(sas_t *sas, sas_fact_t *sas_fact)
+{
+    int from, to, *allowed;
+
+    allowed = BOR_CALLOC_ARR(int, sas->fact_size);
+    _sasBuildSplitTreeNext(sas_fact, 0, &from, &to);
+    _sasBuildSplitTree(sas, sas_fact, &sas_fact->split, allowed, from, to);
+    BOR_FREE(allowed);
+}
+
+static void sasBuildSplitTrees(sas_t *sas)
+{
+    int i;
+    for (i = 0; i < sas->fact_size; ++i)
+        sasBuildSplitTree(sas, sas->fact + i);
+}
+
+static void _sasPrintSplitTree(sas_split_node_t *root, int fact_id, int prefix, FILE *fout)
+{
+    int i;
+    for (i = 0; i < prefix; ++i)
+        fprintf(fout, " ");
+    fprintf(fout, "%d: size: %d\n", fact_id, root->size);
+
+    for (i = 0; i < root->size; ++i)
+        _sasPrintSplitTree(root->child + i, root->fact[i], prefix + 2, fout);
+}
+
+static void sasPrintSplitTree(sas_split_node_t *root, FILE *fout)
+{
+    _sasPrintSplitTree(root, -1, 0, fout);
+}
+
+static void sasPrintSplitTrees(sas_t *sas, FILE *fout)
+{
+    int i;
+    for (i = 0; i < sas->fact_size; ++i){
+        fprintf(fout, "fact-split-tree[%d]:\n", i);
+        sasPrintSplitTree(&sas->fact[i].split, fout);
     }
 }
 
@@ -483,7 +707,10 @@ static void sas(plan_pddl_ground_t *g)
     sasSetInitFacts(&sas, &g->pddl->init_fact, &g->fact_pool);
     sasMarkExclusiveFacts(&sas, &g->action_pool);
     sasConnectFacts(&sas, &g->action_pool);
+    sasSetMustFacts(&sas);
+    sasBuildSplitTrees(&sas);
     sasPrintConn(&sas, stdout);
+    sasPrintSplitTrees(&sas, stdout);
     sasSCC(&sas);
     sasFree(&sas);
     /*

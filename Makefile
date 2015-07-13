@@ -26,6 +26,7 @@ OBJS += pddl_lift_action
 OBJS += pddl_ground_action
 OBJS += pddl
 OBJS += pddl_ground
+OBJS += pddl_sas
 OBJS += var
 OBJS += state
 OBJS += part_state

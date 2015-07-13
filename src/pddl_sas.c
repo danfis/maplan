@@ -24,6 +24,8 @@ static void sasFactFree(plan_pddl_sas_fact_t *f)
 {
     int i;
 
+    if (f->conflict.fact)
+        BOR_FREE(f->conflict.fact);
     if (f->single_edge.fact != NULL)
         BOR_FREE(f->single_edge.fact);
 
@@ -33,8 +35,57 @@ static void sasFactFree(plan_pddl_sas_fact_t *f)
     }
     if (f->multi_edge != NULL)
         BOR_FREE(f->multi_edge);
-    if (f->conflict)
-        BOR_FREE(f->conflict);
+}
+
+static void sasFactMergeConflict(plan_pddl_sas_fact_t *dst,
+                                 const plan_pddl_sas_fact_t *src,
+                                 int fact_size)
+{
+    int i;
+
+    for (i = 0; i < fact_size; ++i)
+        dst->conflict.fact[i] |= src->conflict.fact[i];
+}
+
+static void sasFactMergeConflicts(plan_pddl_sas_t *sas)
+{
+    plan_pddl_sas_fact_t *fact, *fact2;
+    int i, j;
+
+    for (i = 0; i < sas->fact_size; ++i){
+        fact = sas->fact + i;
+        for (j = 0; j < fact->single_edge.size; ++j){
+            fact2 = sas->fact + fact->single_edge.fact[j];
+            sasFactMergeConflict(fact, fact2, sas->fact_size);
+        }
+    }
+}
+
+static void sasFactFinalize(plan_pddl_sas_t *sas,
+                            plan_pddl_sas_fact_t *f)
+{
+    int i, single = 0;
+
+    for (i = 0; i < f->single_edge.size; ++i){
+        if (f->conflict.fact[f->single_edge.fact[i]])
+            single = 1;
+    }
+
+    if (single == 1){
+        for (i = 0; i < sas->fact_size; ++i){
+            if (i != f->id)
+                f->conflict.fact[f->conflict.size++] = i;
+        }
+
+    }else{
+        for (i = 0; i < sas->fact_size; ++i){
+            if (f->conflict.fact[i])
+                f->conflict.fact[f->conflict.size++] = i;
+        }
+    }
+
+    f->conflict.fact = BOR_REALLOC_ARR(f->conflict.fact, int,
+                                       f->conflict.size);
 }
 
 static void sasFactAddSingleEdge(plan_pddl_sas_fact_t *f,
@@ -90,14 +141,33 @@ static void addConflicts(plan_pddl_sas_t *sas,
         f1 = fs->fact[i];
         for (j = i + 1; j < fs->size; ++j){
             f2 = fs->fact[j];
-            sas->fact[f1].conflict[f2] = 1;
-            sas->fact[f2].conflict[f1] = 1;
+            sas->fact[f1].conflict.fact[f2] = 1;
+            sas->fact[f2].conflict.fact[f1] = 1;
         }
     }
 }
 
-static void addEdges(plan_pddl_sas_t *sas,
-                     const plan_pddl_ground_action_pool_t *pool)
+static void setSingleFact(plan_pddl_sas_fact_t *fact, int fact_size)
+{
+    int i;
+
+    for (i = 0; i < fact_size; ++i){
+        if (fact->id != i)
+            fact->conflict.fact[i] = 1;
+    }
+}
+
+static void setSingleFacts(plan_pddl_sas_t *sas,
+                           const plan_pddl_ground_facts_t *fs)
+{
+    int i;
+
+    for (i = 0; i < fs->size; ++i)
+        setSingleFact(sas->fact + fs->fact[i], sas->fact_size);
+}
+
+static void processActions(plan_pddl_sas_t *sas,
+                           const plan_pddl_ground_action_pool_t *pool)
 {
     const plan_pddl_ground_action_t *a;
     int i;
@@ -108,6 +178,10 @@ static void addEdges(plan_pddl_sas_t *sas,
         addConflicts(sas, &a->eff_del);
         addConflicts(sas, &a->eff_add);
         addConflicts(sas, &a->pre);
+        if (a->eff_del.size == 0)
+            setSingleFacts(sas, &a->eff_add);
+        if (a->eff_add.size == 0)
+            setSingleFacts(sas, &a->eff_del);
     }
 }
 
@@ -121,36 +195,80 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
     sas->fact = BOR_CALLOC_ARR(plan_pddl_sas_fact_t, sas->fact_size);
     for (i = 0; i < sas->fact_size; ++i){
         sas->fact[i].id = i;
-        sas->fact[i].conflict = BOR_CALLOC_ARR(int, sas->fact_size);
+        sas->fact[i].conflict.fact = BOR_CALLOC_ARR(int, sas->fact_size);
     }
 
-    addEdges(sas, &g->action_pool);
+    sas->is_in_invariant = BOR_CALLOC_ARR(int, sas->fact_size);
+    sas->invariant = NULL;
+    sas->invariant_size = 0;
+
+    processActions(sas, &g->action_pool);
+    sasFactMergeConflicts(sas);
+    for (i = 0; i < sas->fact_size; ++i)
+        sasFactFinalize(sas, sas->fact + i);
 }
 
 void planPDDLSasFree(plan_pddl_sas_t *sas)
 {
     int i;
 
-    if (sas->comp)
+    if (sas->comp != NULL)
         BOR_FREE(sas->comp);
-    if (sas->close)
+    if (sas->close != NULL)
         BOR_FREE(sas->close);
 
     for (i = 0; i < sas->fact_size; ++i)
         sasFactFree(sas->fact + i);
     if (sas->fact != NULL)
         BOR_FREE(sas->fact);
+
+    if (sas->is_in_invariant != NULL)
+        BOR_FREE(sas->is_in_invariant);
+    for (i = 0; i < sas->invariant_size; ++i){
+        if (sas->invariant[i].fact != NULL)
+            BOR_FREE(sas->invariant[i].fact);
+    }
+    if (sas->invariant != NULL)
+        BOR_FREE(sas->invariant);
 }
 
-static void pComp(const plan_pddl_sas_t *sas, const int *comp)
+static int checkFact(const plan_pddl_sas_fact_t *fact,
+                     const int *comp)
 {
-    int i;
-    fprintf(stdout, "C:");
-    for (i = 0; i < sas->fact_size; ++i){
-        if (comp[i] != 0)
-            fprintf(stdout, " %d:%d", i, comp[i]);
+    int i, fact_id;
+
+    if (comp[fact->id] < 0)
+        return -1;
+
+    for (i = 0; i < fact->single_edge.size; ++i){
+        if (comp[fact->single_edge.fact[i]] < 0)
+            return -1;
     }
-    fprintf(stdout, "\n");
+
+    for (i = 0; i < fact->conflict.size; ++i){
+        fact_id = fact->conflict.fact[i];
+        if (comp[fact_id] > 0)
+            return -1;
+    }
+
+    return 0;
+}
+
+static int setFact(const plan_pddl_sas_fact_t *fact,
+                   int *comp, int val)
+{
+    int i, fact_id;
+
+    comp[fact->id] += val;
+    for (i = 0; i < fact->single_edge.size; ++i)
+        comp[fact->single_edge.fact[i]] += val;
+
+    for (i = 0; i < fact->conflict.size; ++i){
+        fact_id = fact->conflict.fact[i];
+        comp[fact_id] -= val;
+    }
+
+    return 0;
 }
 
 static void analyzeMultiEdge(const plan_pddl_ground_facts_t *me,
@@ -203,77 +321,31 @@ static int nextMultiEdge(int mi, const plan_pddl_sas_fact_t *f,
     return mi;
 }
 
-static void boundEdgeFromMultiEdge(int fact_id,
-                                   const plan_pddl_ground_facts_t *fs,
-                                   int *comp, int val)
+static void processFact(plan_pddl_sas_t *sas,
+                        const plan_pddl_sas_fact_t *fact,
+                        int *comp, int *close);
+
+static void processNextFact(plan_pddl_sas_t *sas, int *comp, int *close)
 {
-    int i;
-
-    comp[fact_id] += val;
-    for (i = 0; i < fs->size; ++i){
-        if (fs->fact[i] != fact_id)
-            comp[fs->fact[i]] -= val;
-    }
-}
-
-static int checkSingleEdges(const plan_pddl_ground_facts_t *fs,
-                            const int *comp)
-{
-    int i;
-
-    for (i = 0; i < fs->size; ++i){
-        if (comp[fs->fact[i]] < 0)
-            return -1;
-    }
-    return 0;
-}
-
-static int checkConflicts(const plan_pddl_sas_t *sas,
-                          const plan_pddl_sas_fact_t *fact,
-                          const int *comp)
-{
-    int i;
+    plan_pddl_ground_facts_t *inv;
+    int i, size;
 
     for (i = 0; i < sas->fact_size; ++i){
-        if (fact->conflict[i] && comp[i] > 0)
-            return -1;
+        if (comp[i] > 0 && !close[i]){
+            processFact(sas, sas->fact + i, comp, close);
+            return;
+        }
     }
-    return 0;
-}
 
-static void boundConflicts(const plan_pddl_sas_t *sas,
-                           const plan_pddl_sas_fact_t *fact,
-                           int *comp, int val)
-{
-    int i;
-
-    for (i = 0; i < sas->fact_size; ++i){
-        if (fact->conflict[i])
-            comp[i] -= val;
+    for (i = 0, size = 0; i < sas->fact_size; ++i){
+        if (comp[i] > 0){
+            sas->is_in_invariant[i] = 1;
+            ++size;
+        }
     }
-}
 
-static void boundSingleEdges(const plan_pddl_ground_facts_t *fs,
-                             int *comp, int val)
-{
-    int i;
-
-    for (i = 0; i < fs->size; ++i)
-        comp[fs->fact[i]] += val;
-}
-
-static int processFact(plan_pddl_sas_t *sas,
-                       const plan_pddl_sas_fact_t *fact,
-                       int *comp, int *close);
-
-static int processNextFact(plan_pddl_sas_t *sas, int *comp, int *close)
-{
-    int i;
-
-    for (i = 0; i < sas->fact_size; ++i){
-        if (comp[i] > 0 && !close[i])
-            return processFact(sas, sas->fact + i, comp, close);
-    }
+    if (size <= 1)
+        return;
 
     fprintf(stdout, "Invariant:");
     for (i = 0; i < sas->fact_size; ++i){
@@ -281,26 +353,38 @@ static int processNextFact(plan_pddl_sas_t *sas, int *comp, int *close)
             fprintf(stdout, " %d", i);
     }
     fprintf(stdout, "\n");
-    return 0;
+
+
+    ++sas->invariant_size;
+    sas->invariant = BOR_REALLOC_ARR(sas->invariant,
+                                     plan_pddl_ground_facts_t,
+                                     sas->invariant_size);
+    inv = sas->invariant + sas->invariant_size - 1;
+    inv->size = 0;
+    inv->fact = BOR_ALLOC_ARR(int, size);
+    for (i = 0, size = 0; i < sas->fact_size; ++i){
+        if (comp[i] > 0)
+            inv->fact[inv->size++] = i;
+    }
 }
 
-static int processFactMultiEdges(plan_pddl_sas_t *sas,
-                                 const plan_pddl_sas_fact_t *fact,
-                                 int *comp, int *close, int mi)
+static void processFactMultiEdges(plan_pddl_sas_t *sas,
+                                  const plan_pddl_sas_fact_t *fact,
+                                  int *comp, int *close, int mi)
 {
     const plan_pddl_ground_facts_t *me;
-    int ret, i, fact_id;
+    int i, fact_id;
 
     // Get next multi edge to split on
     mi = nextMultiEdge(mi, fact, comp);
     if (mi == -1)
-        return -1;
+        return;
 
     if (mi == fact->multi_edge_size){
         close[fact->id] = 1;
-        ret = processNextFact(sas, comp, close);
+        processNextFact(sas, comp, close);
         close[fact->id] = 0;
-        return ret;
+        return;
     }
 
     me = fact->multi_edge + mi;
@@ -309,39 +393,24 @@ static int processFactMultiEdges(plan_pddl_sas_t *sas,
         if (comp[fact_id] != 0)
             continue;
 
-        boundEdgeFromMultiEdge(fact_id, me, comp, 1);
-        processFactMultiEdges(sas, fact, comp, close, mi + 1);
-        boundEdgeFromMultiEdge(fact_id, me, comp, -1);
-    }
+        if (checkFact(sas->fact + fact_id, comp) != 0)
+            continue;
 
-    return 0;
+        setFact(sas->fact + fact_id, comp, 1);
+        processFactMultiEdges(sas, fact, comp, close, mi + 1);
+        setFact(sas->fact + fact_id, comp, -1);
+    }
 }
 
-static int processFact(plan_pddl_sas_t *sas,
-                       const plan_pddl_sas_fact_t *fact,
-                       int *comp, int *close)
+static void processFact(plan_pddl_sas_t *sas,
+                        const plan_pddl_sas_fact_t *fact,
+                        int *comp, int *close)
 {
-    int ret;
-
-    // Check that the single edges can be bound to the current component
-    if (checkSingleEdges(&fact->single_edge, comp) != 0)
-        return -1;
-
-    // Check that there are no conflicts with the current fact
-    if (checkConflicts(sas, fact, comp) != 0)
-        return -1;
-
-    // Bound facts on the single edges and conflicts
-    boundSingleEdges(&fact->single_edge, comp, 1);
-    boundConflicts(sas, fact, comp, 1);
-
-    ret = processFactMultiEdges(sas, fact, comp, close, 0);
-
-    // Unbound facts on the single edges and conflicts
-    boundConflicts(sas, fact, comp, -1);
-    boundSingleEdges(&fact->single_edge, comp, -1);
-
-    return ret;
+    if (checkFact(fact, comp) != 0)
+        return;
+    setFact(fact, comp, 1);
+    processFactMultiEdges(sas, fact, comp, close, 0);
+    setFact(fact, comp, -1);
 }
 
 static void factToSas(plan_pddl_sas_t *sas, int fact_id)
@@ -349,7 +418,7 @@ static void factToSas(plan_pddl_sas_t *sas, int fact_id)
     bzero(sas->comp, sizeof(int) * sas->fact_size);
     bzero(sas->close, sizeof(int) * sas->fact_size);
     sas->comp[fact_id] = 1;
-    processFact(sas, sas->fact + fact_id, sas->comp, sas->close);
+    processNextFact(sas, sas->comp, sas->close);
 }
 
 void planPDDLSas(plan_pddl_sas_t *sas)
@@ -357,7 +426,7 @@ void planPDDLSas(plan_pddl_sas_t *sas)
     int i;
 
     for (i = 0; i < sas->fact_size; ++i){
-        printf("factToSas(%d)\n", i);
-        factToSas(sas, i);
+        if (!sas->is_in_invariant[i])
+            factToSas(sas, i);
     }
 }

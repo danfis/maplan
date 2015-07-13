@@ -29,7 +29,7 @@ extern "C" {
 
 struct _plan_pddl_sas_fact_t {
     int id;
-    int *conflict;
+    plan_pddl_ground_facts_t conflict;
     plan_pddl_ground_facts_t single_edge;
     plan_pddl_ground_facts_t *multi_edge;
     int multi_edge_size;
@@ -42,6 +42,10 @@ struct _plan_pddl_sas_t {
 
     plan_pddl_sas_fact_t *fact; /*!< Array of fact related data */
     int fact_size;        /*!< Number of facts */
+
+    int *is_in_invariant;
+    plan_pddl_ground_facts_t *invariant;
+    int invariant_size;
 };
 typedef struct _plan_pddl_sas_t plan_pddl_sas_t;
 

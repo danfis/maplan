@@ -347,14 +347,6 @@ static void processNextFact(plan_pddl_sas_t *sas, int *comp, int *close)
     if (size <= 1)
         return;
 
-    fprintf(stdout, "Invariant:");
-    for (i = 0; i < sas->fact_size; ++i){
-        if (comp[i] > 0)
-            fprintf(stdout, " %d", i);
-    }
-    fprintf(stdout, "\n");
-
-
     ++sas->invariant_size;
     sas->invariant = BOR_REALLOC_ARR(sas->invariant,
                                      plan_pddl_ground_facts_t,
@@ -428,5 +420,24 @@ void planPDDLSas(plan_pddl_sas_t *sas)
     for (i = 0; i < sas->fact_size; ++i){
         if (!sas->is_in_invariant[i])
             factToSas(sas, i);
+    }
+}
+
+void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
+                               const plan_pddl_ground_t *g,
+                               FILE *fout)
+{
+    const plan_pddl_fact_t *fact;
+    int i, j;
+
+    for (i = 0; i < sas->invariant_size; ++i){
+        fprintf(fout, "Invariant %d:\n", i);
+        for (j = 0; j < sas->invariant[i].size; ++j){
+            fact = planPDDLFactPoolGet(&g->fact_pool,
+                                       sas->invariant[i].fact[j]);
+            fprintf(fout, "    ");
+            planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
+            fprintf(fout, "\n");
+        }
     }
 }

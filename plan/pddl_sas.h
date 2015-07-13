@@ -53,6 +53,9 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g);
 void planPDDLSasFree(plan_pddl_sas_t *sas);
 
 void planPDDLSas(plan_pddl_sas_t *sas);
+void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
+                               const plan_pddl_ground_t *g,
+                               FILE *fout);
 
 #ifdef __cplusplus
 } /* extern "C" */

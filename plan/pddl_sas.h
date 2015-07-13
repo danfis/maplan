@@ -28,6 +28,8 @@ extern "C" {
 
 
 struct _plan_pddl_sas_fact_t {
+    int id;
+    int *conflict;
     plan_pddl_ground_facts_t single_edge;
     plan_pddl_ground_facts_t *multi_edge;
     int multi_edge_size;
@@ -45,6 +47,8 @@ typedef struct _plan_pddl_sas_t plan_pddl_sas_t;
 
 void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g);
 void planPDDLSasFree(plan_pddl_sas_t *sas);
+
+void planPDDLSas(plan_pddl_sas_t *sas);
 
 #ifdef __cplusplus
 } /* extern "C" */

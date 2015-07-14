@@ -33,6 +33,7 @@ struct _plan_pddl_sas_fact_t {
     plan_pddl_ground_facts_t single_edge;
     plan_pddl_ground_facts_t *multi_edge;
     int multi_edge_size;
+    int in_rank;
 };
 typedef struct _plan_pddl_sas_fact_t plan_pddl_sas_fact_t;
 

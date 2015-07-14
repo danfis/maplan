@@ -199,22 +199,38 @@ static void setSingleFacts(plan_pddl_sas_t *sas,
         setSingleFact(sas->fact + fs->fact[i], sas->fact_size);
 }
 
+static void processAction(plan_pddl_sas_t *sas,
+                          const plan_pddl_ground_facts_t *pre,
+                          const plan_pddl_ground_facts_t *pre_neg,
+                          const plan_pddl_ground_facts_t *eff_add,
+                          const plan_pddl_ground_facts_t *eff_del)
+{
+    addActionEdges(sas, eff_del, eff_add);
+    addConflicts(sas, eff_del);
+    addConflicts(sas, eff_add);
+    addConflicts(sas, pre);
+    if (eff_del->size == 0)
+        setSingleFacts(sas, eff_add);
+    if (eff_add->size == 0)
+        setSingleFacts(sas, eff_del);
+}
+
 static void processActions(plan_pddl_sas_t *sas,
                            const plan_pddl_ground_action_pool_t *pool)
 {
     const plan_pddl_ground_action_t *a;
-    int i;
+    int i, j;
 
     for (i = 0; i < pool->size; ++i){
         a = planPDDLGroundActionPoolGet(pool, i);
-        addActionEdges(sas, &a->eff_del, &a->eff_add);
-        addConflicts(sas, &a->eff_del);
-        addConflicts(sas, &a->eff_add);
-        addConflicts(sas, &a->pre);
-        if (a->eff_del.size == 0)
-            setSingleFacts(sas, &a->eff_add);
-        if (a->eff_add.size == 0)
-            setSingleFacts(sas, &a->eff_del);
+        processAction(sas, &a->pre, &a->pre_neg,
+                      &a->eff_add, &a->eff_del);
+        for (j = 0; j < a->cond_eff.size; ++j){
+            processAction(sas, &a->cond_eff.cond_eff[j].pre,
+                          &a->cond_eff.cond_eff[j].pre_neg,
+                          &a->cond_eff.cond_eff[j].eff_add,
+                          &a->cond_eff.cond_eff[j].eff_del);
+        }
     }
 }
 

@@ -44,9 +44,9 @@ struct _plan_pddl_sas_t {
     plan_pddl_sas_fact_t *fact; /*!< Array of fact related data */
     int fact_size;        /*!< Number of facts */
 
-    int *is_in_invariant;
-    plan_pddl_ground_facts_t *invariant;
-    int invariant_size;
+    bor_extarr_t *inv_pool;
+    bor_htable_t *inv_htable;
+    int inv_size;
 };
 typedef struct _plan_pddl_sas_t plan_pddl_sas_t;
 

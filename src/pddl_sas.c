@@ -458,9 +458,9 @@ static void addInvariant(plan_pddl_sas_t *sas, const int *comp)
     }
 }
 
-static void processFactMultiEdges(plan_pddl_sas_t *sas,
-                                  const plan_pddl_sas_fact_t *fact,
-                                  int *comp, int *close, int mi);
+static void processFact(plan_pddl_sas_t *sas,
+                        const plan_pddl_sas_fact_t *fact,
+                        int *comp, int *close);
 
 static void processNextFact(plan_pddl_sas_t *sas, int *comp, int *close)
 {
@@ -468,7 +468,7 @@ static void processNextFact(plan_pddl_sas_t *sas, int *comp, int *close)
 
     for (i = 0; i < sas->fact_size; ++i){
         if (comp[i] > 0 && !close[i]){
-            processFactMultiEdges(sas, sas->fact + i, comp, close, 0);
+            processFact(sas, sas->fact + i, comp, close);
             return;
         }
     }
@@ -510,13 +510,24 @@ static void processFactMultiEdges(plan_pddl_sas_t *sas,
     }
 }
 
+static void processFact(plan_pddl_sas_t *sas,
+                        const plan_pddl_sas_fact_t *fact,
+                        int *comp, int *close)
+{
+    if (checkFact(fact, comp) != 0)
+        return;
+
+    setFact(fact, comp, 1);
+    processFactMultiEdges(sas, fact, comp, close, 0);
+    setFact(fact, comp, -1);
+}
+
 static void factToSas(plan_pddl_sas_t *sas, int fact_id)
 {
     bzero(sas->comp, sizeof(int) * sas->fact_size);
     bzero(sas->close, sizeof(int) * sas->fact_size);
-    setFact(sas->fact + fact_id, sas->comp, 1);
-    processFactMultiEdges(sas, sas->fact + fact_id, sas->comp,
-                          sas->close, 0);
+    sas->comp[fact_id] = 1;
+    processFact(sas, sas->fact + fact_id, sas->comp, sas->close);
 }
 
 void planPDDLSas(plan_pddl_sas_t *sas)

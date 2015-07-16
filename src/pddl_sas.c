@@ -649,6 +649,48 @@ static void invariantRemoveTop(const plan_pddl_sas_t *sas,
           invariantCmp);
 }
 
+static int numVarEdge(const plan_pddl_sas_t *sas,
+                      const plan_pddl_ground_facts_t *fs,
+                      int var)
+{
+    int i, num = 0;
+
+    for (i = 0; i < fs->size; ++i){
+        if (sas->fact[fs->fact[i]].var == var)
+            ++num;
+    }
+    return num;
+}
+
+static void setVarNeg(plan_pddl_sas_t *sas)
+{
+    const plan_pddl_sas_fact_t *fact;
+    int i, j, add, *var_done;
+
+    var_done = BOR_CALLOC_ARR(int, sas->var_size);
+    for (i = 0; i < sas->fact_size; ++i){
+        fact = sas->fact + i;
+        if (var_done[fact->var])
+            continue;
+
+        add = 0;
+        if (numVarEdge(sas, &fact->single_edge, fact->var)
+                != fact->single_edge.size){
+            add = 1;
+        }
+        for (j = 0; !add && j < fact->multi_edge_size; ++j){
+            if (numVarEdge(sas, fact->multi_edge + j, fact->var) == 0)
+                add = 1;
+        }
+
+        if (add){
+            var_done[fact->var] = 1;
+            ++sas->var_range[fact->var];
+        }
+    }
+    BOR_FREE(var_done);
+}
+
 static void invariantToVar(plan_pddl_sas_t *sas)
 {
     plan_pddl_ground_facts_t *inv;
@@ -677,6 +719,8 @@ static void invariantToVar(plan_pddl_sas_t *sas)
 
     invariantGroundFactsFree(sas, inv);
     BOR_FREE(inv);
+
+    setVarNeg(sas);
 }
 
 void planPDDLSas(plan_pddl_sas_t *sas)
@@ -703,6 +747,10 @@ void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
             fact = planPDDLFactPoolGet(&g->fact_pool, inv->fact[j]);
             fprintf(fout, "    ");
             planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
+            fprintf(fout, " var: %d, val: %d/%d",
+                    sas->fact[inv->fact[j]].var,
+                    sas->fact[inv->fact[j]].val,
+                    sas->var_range[sas->fact[inv->fact[j]].var]);
             fprintf(fout, "\n");
         }
     }

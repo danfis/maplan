@@ -34,6 +34,8 @@ struct _plan_pddl_sas_fact_t {
     plan_pddl_ground_facts_t *multi_edge;
     int multi_edge_size;
     int in_rank;
+    int var;
+    int val;
 };
 typedef struct _plan_pddl_sas_fact_t plan_pddl_sas_fact_t;
 
@@ -47,6 +49,8 @@ struct _plan_pddl_sas_t {
     bor_extarr_t *inv_pool;
     bor_htable_t *inv_htable;
     int inv_size;
+    int *var_range;
+    int var_size;
 };
 typedef struct _plan_pddl_sas_t plan_pddl_sas_t;
 

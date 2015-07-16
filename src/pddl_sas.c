@@ -269,6 +269,8 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
     for (i = 0; i < sas->fact_size; ++i){
         sas->fact[i].id = i;
         sas->fact[i].conflict.fact = BOR_CALLOC_ARR(int, sas->fact_size);
+        sas->fact[i].var = -1;
+        sas->fact[i].val = -1;
     }
 
     bzero(&inv_init, sizeof(inv_init));
@@ -281,6 +283,9 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
     sasFactMergeConflicts(sas);
     for (i = 0; i < sas->fact_size; ++i)
         sasFactFinalize(sas, sas->fact + i);
+
+    sas->var_range = NULL;
+    sas->var_size = 0;
 }
 
 void planPDDLSasFree(plan_pddl_sas_t *sas)
@@ -305,6 +310,8 @@ void planPDDLSasFree(plan_pddl_sas_t *sas)
             BOR_FREE(inv->fact);
     }
     borExtArrDel(sas->inv_pool);
+    if (sas->var_range != NULL)
+        BOR_FREE(sas->var_range);
 }
 
 static int checkFact(const plan_pddl_sas_fact_t *fact,
@@ -546,12 +553,139 @@ static void factToSas(plan_pddl_sas_t *sas, int fact_id)
     processFact(sas, sas->fact + fact_id, sas->comp, sas->close);
 }
 
+
+static int invariantCmp(const void *a, const void *b)
+{
+    const plan_pddl_ground_facts_t *f1 = a;
+    const plan_pddl_ground_facts_t *f2 = b;
+    return f2->size - f1->size;
+}
+
+static void invariantsToGroundFacts(plan_pddl_sas_t *sas,
+                                    plan_pddl_ground_facts_t *fs)
+{
+    inv_t *inv;
+    plan_pddl_ground_facts_t *f;
+    int i;
+
+    for (i = 0; i < sas->inv_size; ++i){
+        inv = borExtArrGet(sas->inv_pool, i);
+        f = fs + i;
+        f->size = inv->size;
+        f->fact = BOR_ALLOC_ARR(int, inv->size);
+        memcpy(f->fact, inv->fact, sizeof(int) * inv->size);
+    }
+
+    qsort(fs, sas->inv_size, sizeof(plan_pddl_ground_facts_t),
+          invariantCmp);
+}
+
+static void invariantGroundFactsFree(plan_pddl_sas_t *sas,
+                                     plan_pddl_ground_facts_t *inv)
+{
+    int i;
+    for (i = 0; i < sas->inv_size; ++i){
+        if (inv[i].fact != NULL)
+            BOR_FREE(inv[i].fact);
+    }
+}
+
+static void invariantAddVar(plan_pddl_sas_t *sas,
+                            const plan_pddl_ground_facts_t *inv)
+{
+    int size, var_range, var, val;
+
+    size = var_range = inv->size;
+    var = sas->var_size;
+    ++sas->var_size;
+    sas->var_range = BOR_REALLOC_ARR(sas->var_range, int, sas->var_size);
+    sas->var_range[var] = var_range;
+
+    for (val = 0; val < size; ++val){
+        sas->fact[inv->fact[val]].var = var;
+        sas->fact[inv->fact[val]].val = val;
+    }
+}
+
+static void invariantRemoveFacts(const plan_pddl_sas_t *sas,
+                                 const plan_pddl_ground_facts_t *src,
+                                 plan_pddl_ground_facts_t *dst)
+{
+    int si, di, ins, ssize, dsize;
+    int sfact, dfact;
+
+    ssize = src->size;
+    dsize = dst->size;
+    for (si = 0, di = 0, ins = 0; si < ssize && di < dsize;){
+        sfact = src->fact[si];
+        dfact = dst->fact[di];
+
+        if (sfact == dfact){
+            ++si;
+            ++di;
+        }else if (sfact < dfact){
+            ++si;
+        }else{ // dfact < sfact
+            dst->fact[ins++] = dst->fact[di];
+            ++di;
+        }
+    }
+
+    for (; di < dsize; ++di)
+        dst->fact[ins++] = dst->fact[di];
+
+    dst->size = ins;
+}
+
+static void invariantRemoveTop(const plan_pddl_sas_t *sas,
+                               plan_pddl_ground_facts_t *inv)
+{
+    int i;
+
+    for (i = 1; i < sas->inv_size; ++i)
+        invariantRemoveFacts(sas, inv, inv + i);
+    inv[0].size = 0;
+    qsort(inv, sas->inv_size, sizeof(plan_pddl_ground_facts_t),
+          invariantCmp);
+}
+
+static void invariantToVar(plan_pddl_sas_t *sas)
+{
+    plan_pddl_ground_facts_t *inv;
+    plan_pddl_ground_facts_t one;
+    int i;
+
+    if (sas->inv_size == 0)
+        return;
+
+    inv = BOR_CALLOC_ARR(plan_pddl_ground_facts_t, sas->inv_size);
+    invariantsToGroundFacts(sas, inv);
+
+    while (inv[0].size > 1){
+        invariantAddVar(sas, inv);
+        invariantRemoveTop(sas, inv);
+    }
+
+    one.fact = alloca(sizeof(int));
+    one.size = 1;
+    for (i = 0; i < sas->fact_size; ++i){
+        if (sas->fact[i].var == -1){
+            one.fact[0] = i;
+            invariantAddVar(sas, &one);
+        }
+    }
+
+    invariantGroundFactsFree(sas, inv);
+    BOR_FREE(inv);
+}
+
 void planPDDLSas(plan_pddl_sas_t *sas)
 {
     int i;
 
     for (i = 0; i < sas->fact_size; ++i)
         factToSas(sas, i);
+    invariantToVar(sas);
 }
 
 void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,

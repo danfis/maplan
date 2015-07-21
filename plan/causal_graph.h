@@ -53,14 +53,23 @@ typedef struct _plan_causal_graph_t plan_causal_graph_t;
 /**
  * Creates a new causal graph of variables
  */
-plan_causal_graph_t *planCausalGraphNew(int var_size,
-                                        const plan_op_t *op, int op_size,
-                                        const plan_part_state_t *goal);
+plan_causal_graph_t *planCausalGraphNew(int var_size);
 
 /**
  * Deletes causal graph object.
  */
 void planCausalGraphDel(plan_causal_graph_t *cg);
+
+/**
+ * Fill causal graphs from operators.
+ */
+void planCausalGraphFillFromOps(plan_causal_graph_t *cg,
+                                const plan_op_t *op, int op_size);
+
+/**
+ * Process causal graph and fills .important_var and .var_order* members.
+ */
+void planCausalGraph(plan_causal_graph_t *cg, const plan_part_state_t *goal);
 
 #ifdef __cplusplus
 } /* extern "C" */

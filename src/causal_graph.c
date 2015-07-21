@@ -60,9 +60,7 @@ static void createOrdering(plan_causal_graph_t *cg);
 static scc_t *sccNew(const plan_causal_graph_graph_t *graph, int var_size);
 static void sccDel(scc_t *);
 
-plan_causal_graph_t *planCausalGraphNew(int var_size,
-                                        const plan_op_t *op, int op_size,
-                                        const plan_part_state_t *goal)
+plan_causal_graph_t *planCausalGraphNew(int var_size)
 {
     plan_causal_graph_t *cg;
 
@@ -72,16 +70,6 @@ plan_causal_graph_t *planCausalGraphNew(int var_size,
     graphInit(&cg->predecessor_graph, var_size);
     cg->important_var = BOR_ALLOC_ARR(int, cg->var_size);
     cg->var_order = BOR_ALLOC_ARR(plan_var_id_t, cg->var_size + 1);
-
-    // Fill successor and predecessor graphs by dependencies between
-    // preconditions and effects of operators.
-    fillGraphs(cg, op, op_size);
-
-    // Set up .important_var[]
-    markImportantVars(cg, goal);
-
-    // Compute ordering of variables (.var_order*)
-    createOrdering(cg);
 
     return cg;
 }
@@ -95,6 +83,23 @@ void planCausalGraphDel(plan_causal_graph_t *cg)
     if (cg->var_order)
         BOR_FREE(cg->var_order);
     BOR_FREE(cg);
+}
+
+void planCausalGraphFillFromOps(plan_causal_graph_t *cg,
+                                const plan_op_t *op, int op_size)
+{
+    // Fill successor and predecessor graphs by dependencies between
+    // preconditions and effects of operators.
+    fillGraphs(cg, op, op_size);
+}
+
+void planCausalGraph(plan_causal_graph_t *cg, const plan_part_state_t *goal)
+{
+    // Set up .important_var[]
+    markImportantVars(cg, goal);
+
+    // Compute ordering of variables (.var_order*)
+    createOrdering(cg);
 }
 
 static void graphInit(plan_causal_graph_graph_t *g, int var_size)

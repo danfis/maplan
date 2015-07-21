@@ -20,6 +20,7 @@
 #include <boruvka/alloc.h>
 #include <boruvka/hfunc.h>
 #include "plan/pddl_sas.h"
+#include "plan/causal_graph.h"
 
 struct _inv_t {
     int *fact;
@@ -56,12 +57,15 @@ static void writeFactIds(plan_pddl_ground_facts_t *dst,
 static void factToSas(plan_pddl_sas_t *sas, int fact_id);
 /** Transforms invariants into sas variables */
 static void invariantToVar(plan_pddl_sas_t *sas);
+/** Applies simplifications received from causal graph */
+static void causalGraph(plan_pddl_sas_t *sas);
 
 void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
 {
     inv_t inv_init;
     int i;
 
+    sas->ground = g;
     sas->fact_size = g->fact_pool.size;
     sas->comp = BOR_ALLOC_ARR(int, sas->fact_size);
     sas->close = BOR_ALLOC_ARR(int, sas->fact_size);
@@ -69,8 +73,8 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
     for (i = 0; i < sas->fact_size; ++i){
         sas->fact[i].id = i;
         sas->fact[i].conflict.fact = BOR_CALLOC_ARR(int, sas->fact_size);
-        sas->fact[i].var = -1;
-        sas->fact[i].val = -1;
+        sas->fact[i].var = PLAN_VAR_ID_UNDEFINED;
+        sas->fact[i].val = PLAN_VAL_UNDEFINED;
     }
 
     bzero(&inv_init, sizeof(inv_init));
@@ -85,6 +89,7 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
         sasFactFinalize(sas, sas->fact + i);
 
     sas->var_range = NULL;
+    sas->var_order = NULL;
     sas->var_size = 0;
     writeFactIds(&sas->goal, (plan_pddl_fact_pool_t *)&g->fact_pool,
                  &g->pddl->goal);
@@ -116,15 +121,25 @@ void planPDDLSasFree(plan_pddl_sas_t *sas)
     borExtArrDel(sas->inv_pool);
     if (sas->var_range != NULL)
         BOR_FREE(sas->var_range);
+    if (sas->var_order != NULL)
+        BOR_FREE(sas->var_order);
+    if (sas->goal.fact != NULL)
+        BOR_FREE(sas->goal.fact);
+    if (sas->init.fact != NULL)
+        BOR_FREE(sas->init.fact);
 }
 
-void planPDDLSas(plan_pddl_sas_t *sas)
+void planPDDLSas(plan_pddl_sas_t *sas, unsigned flags)
 {
     int i;
 
     for (i = 0; i < sas->fact_size; ++i)
         factToSas(sas, i);
     invariantToVar(sas);
+
+    if (!(flags & PLAN_PDDL_SAS_NO_CG)){
+        causalGraph(sas);
+    }
 }
 
 void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
@@ -687,7 +702,7 @@ static void invariantAddVar(plan_pddl_sas_t *sas,
     size = var_range = inv->size;
     var = sas->var_size;
     ++sas->var_size;
-    sas->var_range = BOR_REALLOC_ARR(sas->var_range, int, sas->var_size);
+    sas->var_range = BOR_REALLOC_ARR(sas->var_range, plan_val_t, sas->var_size);
     sas->var_range[var] = var_range;
 
     for (val = 0; val < size; ++val){
@@ -800,7 +815,7 @@ static void invariantToVar(plan_pddl_sas_t *sas)
     one.fact = alloca(sizeof(int));
     one.size = 1;
     for (i = 0; i < sas->fact_size; ++i){
-        if (sas->fact[i].var == -1){
+        if (sas->fact[i].var == PLAN_VAR_ID_UNDEFINED){
             one.fact[0] = i;
             invariantAddVar(sas, &one);
         }
@@ -812,3 +827,118 @@ static void invariantToVar(plan_pddl_sas_t *sas)
     setVarNeg(sas);
 }
 
+
+static void causalGraphBuildAddEdges(const plan_pddl_sas_t *sas,
+                                     const plan_pddl_ground_facts_t *pre,
+                                     const plan_pddl_ground_facts_t *eff,
+                                     plan_causal_graph_build_t *build)
+{
+    int i, j, pre_var, eff_var;
+
+    for (i = 0; i < pre->size; ++i){
+        for (j = 0; j < eff->size; ++j){
+            pre_var = sas->fact[pre->fact[i]].var;
+            eff_var = sas->fact[eff->fact[j]].var;
+            planCausalGraphBuildAdd(build, pre_var, eff_var);
+        }
+    }
+}
+
+static void causalGraphBuildAddAction(const plan_pddl_sas_t *sas,
+                                      const plan_pddl_ground_action_t *action,
+                                      plan_causal_graph_build_t *build)
+{
+    const plan_pddl_ground_cond_eff_t *ce;
+    int i;
+
+    causalGraphBuildAddEdges(sas, &action->pre, &action->eff_add, build);
+    causalGraphBuildAddEdges(sas, &action->pre, &action->eff_del, build);
+    causalGraphBuildAddEdges(sas, &action->pre_neg, &action->eff_add, build);
+    causalGraphBuildAddEdges(sas, &action->pre_neg, &action->eff_del, build);
+
+    for (i = 0; i < action->cond_eff.size; ++i){
+        ce = action->cond_eff.cond_eff + i;
+        causalGraphBuildAddEdges(sas, &action->pre, &ce->eff_add, build);
+        causalGraphBuildAddEdges(sas, &action->pre, &ce->eff_del, build);
+        causalGraphBuildAddEdges(sas, &action->pre_neg, &ce->eff_add, build);
+        causalGraphBuildAddEdges(sas, &action->pre_neg, &ce->eff_del, build);
+        causalGraphBuildAddEdges(sas, &ce->pre, &ce->eff_add, build);
+        causalGraphBuildAddEdges(sas, &ce->pre_neg, &ce->eff_del, build);
+    }
+}
+
+static plan_causal_graph_t *causalGraphBuild(const plan_pddl_sas_t *sas)
+{
+    plan_causal_graph_t *cg;
+    plan_causal_graph_build_t cg_build;
+    const plan_pddl_ground_action_t *action;
+    plan_part_state_t *goal;
+    int i;
+
+    planCausalGraphBuildInit(&cg_build);
+    for (i = 0; i < sas->ground->action_pool.size; ++i){
+        action = planPDDLGroundActionPoolGet(&sas->ground->action_pool, i);
+        causalGraphBuildAddAction(sas, action, &cg_build);
+    }
+
+    cg = planCausalGraphNew(sas->var_size);
+    planCausalGraphBuild(cg, &cg_build);
+    planCausalGraphBuildFree(&cg_build);
+
+    goal = planPartStateNew(sas->var_size);
+    for (i = 0; i < sas->goal.size; ++i){
+        planPartStateSet(goal, sas->fact[sas->goal.fact[i]].var,
+                               sas->fact[sas->goal.fact[i]].val);
+    }
+    planCausalGraph(cg, goal);
+    planPartStateDel(goal);
+
+    return cg;
+}
+
+static void causalGraph(plan_pddl_sas_t *sas)
+{
+    plan_causal_graph_t *cg;
+    plan_var_id_t *var_map;
+    int i, id, var_size;
+    plan_val_t *var_range;
+
+    cg = causalGraphBuild(sas);
+
+    // Create mapping from old var ID to the new ID
+    var_map = (plan_var_id_t *)alloca(sizeof(plan_var_id_t) * sas->var_size);
+    var_size = 0;
+    for (i = 0, id = 0; i < sas->var_size; ++i){
+        if (cg->important_var[i]){
+            var_map[i] = id++;
+            ++var_size;
+        }else{
+            var_map[i] = PLAN_VAR_ID_UNDEFINED;
+        }
+    }
+
+    // Fix fact variables
+    for (i = 0; i < sas->fact_size; ++i)
+        sas->fact[i].var = var_map[sas->fact[i].var];
+
+    // Fix ranges of variables
+    var_range = BOR_ALLOC_ARR(plan_val_t, var_size);
+    for (i = 0; i < sas->var_size; ++i){
+        if (var_map[i] != PLAN_VAR_ID_UNDEFINED){
+            var_range[var_map[i]] = sas->var_range[i];
+        }
+    }
+    BOR_FREE(sas->var_range);
+    sas->var_range = var_range;
+    sas->var_size = var_size;
+
+    // Copy var-order array
+    sas->var_order = BOR_ALLOC_ARR(plan_var_id_t, cg->var_order_size + 1);
+    memcpy(sas->var_order, cg->var_order,
+           sizeof(plan_var_id_t) * cg->var_order_size);
+    sas->var_order[cg->var_order_size] = PLAN_VAR_ID_UNDEFINED;
+    for (i = 0; i < cg->var_order_size; ++i)
+        sas->var_order[i] = var_map[sas->var_order[i]];
+
+    planCausalGraphDel(cg);
+}

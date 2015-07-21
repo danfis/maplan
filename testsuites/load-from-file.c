@@ -371,12 +371,11 @@ TEST(testLoadFromPDDL)
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
     testFromPDDL("pddl/rovers-domain.pddl", "pddl/rovers-p03.pddl", flags);
 
-    /*
     flags = PLAN_PROBLEM_USE_CG;
-    p = planProblemFromProto("proto/openstacks-p03.proto", flags);
-    printf("---- testLoadFromPDDL ----\n");
-    pProblem(p, stdout);
-    printf("---- testLoadFromPDDL END ----\n");
-    planProblemDel(p);
-    */
+    testFromPDDL("pddl/openstacks-p03-domain.pddl",
+                 "pddl/openstacks-p03.pddl", flags);
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    testFromPDDL("pddl/CityCar-domain.pddl",
+                 "pddl/CityCar-p3-2-2-0-1.pddl", flags);
 }

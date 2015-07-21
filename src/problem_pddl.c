@@ -161,30 +161,206 @@ static void opSetEff(plan_op_t *op, const plan_problem_t *p,
     }
 }
 
-static void addOp(plan_problem_t *p, const plan_pddl_sas_t *sas,
-                  int metric, const plan_pddl_ground_action_t *action)
+static void opCondEffSetPre(plan_op_t *op, int ce_id,
+                            const plan_pddl_sas_t *sas,
+                            const plan_pddl_ground_cond_eff_t *ce)
 {
-    plan_op_t *op;
+    int i, fact_id;
+    plan_var_id_t var;
+    plan_val_t val;
 
-    op = p->op + p->op_size;
+    for (i = 0; i < ce->pre.size; ++i){
+        fact_id = ce->pre.fact[i];
+        var = sas->fact[fact_id].var;
+        val = sas->fact[fact_id].val;
+        if (var == PLAN_VAR_ID_UNDEFINED)
+            continue;
+
+        planOpCondEffSetPre(op, ce_id, var, val);
+    }
+}
+
+static void opCondEffSetEff(plan_op_t *op, int ce_id,
+                            const plan_problem_t *p,
+                            const plan_pddl_sas_t *sas,
+                            const plan_pddl_ground_cond_eff_t *ce)
+{
+    int set_var[p->var_size];
+    int i, fact_id;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    bzero(set_var, sizeof(int) * p->var_size);
+
+    for (i = 0; i < ce->eff_add.size; ++i){
+        fact_id = ce->eff_add.fact[i];
+        var = sas->fact[fact_id].var;
+        val = sas->fact[fact_id].val;
+        if (var == PLAN_VAR_ID_UNDEFINED)
+            continue;
+        if (set_var[var]){
+            fprintf(stderr, "Problem Error: Conflicting variables in action"
+                            " effect!!!\n");
+        }
+
+        planOpCondEffSetEff(op, ce_id, var, val);
+        set_var[var] = 1;
+    }
+
+    for (i = 0; i < ce->eff_del.size; ++i){
+        fact_id = ce->eff_del.fact[i];
+        var = sas->fact[fact_id].var;
+        val = sas->fact[fact_id].val;
+        if (var == PLAN_VAR_ID_UNDEFINED || set_var[var])
+            continue;
+        planOpCondEffSetEff(op, ce_id, var, p->var[var].range - 1);
+    }
+}
+
+static void opAddCondEff(plan_op_t *op, const plan_problem_t *p,
+                         const plan_pddl_sas_t *sas,
+                         const plan_pddl_ground_cond_eff_t *ce)
+{
+    int id;
+
+    id = planOpAddCondEff(op);
+    opCondEffSetPre(op, id, sas, ce);
+    opCondEffSetEff(op, id, p, sas, ce);
+}
+
+static int setOp(plan_op_t *op, const plan_problem_t *p,
+                 const plan_pddl_sas_t *sas, int metric,
+                 const plan_pddl_ground_action_t *action)
+{
+    int i;
+
     planOpInit(op, p->var_size);
     planOpSetName(op, action->name);
     planOpSetCost(op, 1);
     if (metric)
         planOpSetCost(op, action->cost);
 
-    // TODO: neg preconditions
     opSetPre(op, sas, action);
     opSetEff(op, p, sas, action);
     if (op->eff->vals_size == 0){
         planOpFree(op);
+        return -1;
+    }
+
+    // TODO: neg preconditions in conditional effects
+    for (i = 0; i < action->cond_eff.size; ++i){
+        if (action->cond_eff.cond_eff[i].pre_neg.size > 0){
+            fprintf(stderr, "Problem Error: Negative preconditions in"
+                            " conditional effects are not supported yet.\n");
+            exit(-1);
+        }
+    }
+
+    for (i = 0; i < action->cond_eff.size; ++i)
+        opAddCondEff(op, p, sas, action->cond_eff.cond_eff + i);
+
+    return 0;
+}
+
+static void addOp(plan_problem_t *p, int *alloc_size,
+                  const plan_pddl_sas_t *sas,
+                  int metric, const plan_pddl_ground_action_t *action)
+{
+    plan_op_t *op;
+
+    if (p->op_size >= *alloc_size){
+        *alloc_size *= 2;
+        p->op = BOR_REALLOC_ARR(p->op, plan_op_t, *alloc_size);
+    }
+
+    op = p->op + p->op_size;
+    if (setOp(op, p, sas, metric, action) == 0)
+        ++p->op_size;
+}
+
+/** Returns number of operators that will be created from this action that
+ *  has negative precondition */
+static int preNegNumOps(const plan_pddl_sas_t *sas,
+                        const plan_pddl_ground_action_t *action)
+{
+    int i, fact_id, var, num = 1;
+
+    for (i = 0; i < action->pre_neg.size; ++i){
+        fact_id = action->pre_neg.fact[i];
+        var = sas->fact[fact_id].var;
+        if (var == PLAN_VAR_ID_UNDEFINED)
+            continue;
+
+        num *= sas->var_range[var] - 1;
+    }
+
+    return num;
+}
+
+static void addOpPreNegWrite(plan_problem_t *p, const plan_pddl_sas_t *sas,
+                             int metric, const plan_pddl_ground_action_t *action,
+                             const plan_val_t *bound)
+{
+    plan_op_t *op;
+    int i, fact_id, var, val;
+
+    op = p->op + p->op_size;
+    if (setOp(op, p, sas, metric, action) != 0)
+        return;
+
+    ++p->op_size;
+    for (i = 0; i < action->pre_neg.size; ++i){
+        fact_id = action->pre_neg.fact[i];
+        var = sas->fact[fact_id].var;
+        val = bound[i];
+        if (var != PLAN_VAR_ID_UNDEFINED)
+            planOpSetPre(op, var, val);
+    }
+}
+
+static void addOpPreNeg2(plan_problem_t *p, const plan_pddl_sas_t *sas,
+                         int metric, const plan_pddl_ground_action_t *action,
+                         plan_val_t *bound, int pre_i)
+{
+    int i, fact_id;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    if (pre_i >= action->pre_neg.size){
+        addOpPreNegWrite(p, sas, metric, action, bound);
         return;
     }
 
-    // TODO: cond effs
+    fact_id = action->pre_neg.fact[pre_i];
+    var = sas->fact[fact_id].var;
+    val = sas->fact[fact_id].val;
+    if (var == PLAN_VAR_ID_UNDEFINED)
+        addOpPreNeg2(p, sas, metric, action, bound, pre_i + 1);
 
-    ++p->op_size;
+    for (i = 0; i < p->var[var].range; ++i){
+        if (i == val)
+            continue;
+        bound[pre_i] = i;
+        addOpPreNeg2(p, sas, metric, action, bound, pre_i + 1);
+    }
 }
+
+static void addOpPreNeg(plan_problem_t *p, int *alloc_size,
+                        const plan_pddl_sas_t *sas,
+                        int metric, const plan_pddl_ground_action_t *action)
+{
+    plan_val_t bound[action->pre_neg.size];
+    int num_ops;
+
+    num_ops = preNegNumOps(sas, action);
+    while (p->op_size + num_ops >= *alloc_size){
+        *alloc_size *= 2;
+        p->op = BOR_REALLOC_ARR(p->op, plan_op_t, *alloc_size);
+    }
+
+    addOpPreNeg2(p, sas, metric, action, bound, 0);
+}
+
 
 static int cmpPartState(const plan_part_state_t *p1,
                         const plan_part_state_t *p2)
@@ -286,15 +462,20 @@ static int createOps(plan_problem_t *p, const plan_pddl_sas_t *sas,
                      unsigned flags)
 {
     const plan_pddl_ground_action_t *action;
-    int i, metric;
+    int i, metric, alloc_size;
 
     metric = sas->ground->pddl->metric;
 
+    alloc_size = sas->ground->action_pool.size;
+    p->op = BOR_ALLOC_ARR(plan_op_t, alloc_size);
     p->op_size = 0;
-    p->op = BOR_ALLOC_ARR(plan_op_t, sas->ground->action_pool.size);
     for (i = 0; i < sas->ground->action_pool.size; ++i){
         action = planPDDLGroundActionPoolGet(&sas->ground->action_pool, i);
-        addOp(p, sas, metric, action);
+        if (action->pre_neg.size > 0){
+            addOpPreNeg(p, &alloc_size, sas, metric, action);
+        }else{
+            addOp(p, &alloc_size, sas, metric, action);
+        }
     }
 
     if (flags & PLAN_PROBLEM_PRUNE_DUPLICATES)

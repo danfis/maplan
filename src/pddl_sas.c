@@ -256,6 +256,25 @@ static void processInit(plan_pddl_sas_t *sas,
     BOR_FREE(gfs.fact);
 }
 
+static void writeFactIds(plan_pddl_ground_facts_t *dst,
+                         plan_pddl_fact_pool_t *fact_pool,
+                         const plan_pddl_facts_t *src)
+{
+    int i, fact_id;
+
+    dst->size = 0;
+    dst->fact = BOR_ALLOC_ARR(int, src->size);
+    for (i = 0; i < src->size; ++i){
+        fact_id = planPDDLFactPoolFind(fact_pool, src->fact + i);
+        if (fact_id >= 0){
+            dst->fact[dst->size++] = fact_id;
+        }
+    }
+
+    if (dst->size != src->size){
+        dst->fact = BOR_REALLOC_ARR(dst->fact, int, dst->size);
+    }
+}
 
 void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
 {
@@ -286,6 +305,10 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
 
     sas->var_range = NULL;
     sas->var_size = 0;
+    writeFactIds(&sas->goal, (plan_pddl_fact_pool_t *)&g->fact_pool,
+                 &g->pddl->goal);
+    writeFactIds(&sas->init, (plan_pddl_fact_pool_t *)&g->fact_pool,
+                 &g->pddl->init_fact);
 }
 
 void planPDDLSasFree(plan_pddl_sas_t *sas)

@@ -51,6 +51,8 @@ struct _plan_pddl_sas_t {
     int inv_size;
     int *var_range;
     int var_size;
+    plan_pddl_ground_facts_t init;
+    plan_pddl_ground_facts_t goal;
 };
 typedef struct _plan_pddl_sas_t plan_pddl_sas_t;
 

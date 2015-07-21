@@ -29,7 +29,132 @@ struct _inv_t {
 };
 typedef struct _inv_t inv_t;
 
-static bor_htable_key_t invComputeHash(const inv_t *inv)
+/** Computes hash key of the invariant */
+_bor_inline bor_htable_key_t invComputeHash(const inv_t *inv);
+/** Callbacks for hash table structure */
+static bor_htable_key_t invHash(const bor_list_t *k, void *_);
+static int invEq(const bor_list_t *k1, const bor_list_t *k2, void *_);
+/** Frees allocated resources of sas-fact */
+static void sasFactFree(plan_pddl_sas_fact_t *f);
+/** Merges conflicts from a single-edges to the conflict array of each fact */
+static void sasFactMergeConflicts(plan_pddl_sas_t *sas);
+/** Finalizes a fact structure */
+static void sasFactFinalize(plan_pddl_sas_t *sas,
+                            plan_pddl_sas_fact_t *f);
+/** Process all actions -- this sets up all facts and edges */
+static void processActions(plan_pddl_sas_t *sas,
+                           const plan_pddl_ground_action_pool_t *pool);
+/** Process initial state */
+static void processInit(plan_pddl_sas_t *sas,
+                        const plan_pddl_facts_t *init_fact,
+                        const plan_pddl_fact_pool_t *fact_pool);
+/** Transforms list of pddl facts to the list of fact IDs */
+static void writeFactIds(plan_pddl_ground_facts_t *dst,
+                         plan_pddl_fact_pool_t *fact_pool,
+                         const plan_pddl_facts_t *src);
+/** Finds out sas related invariants that contain the given fact */
+static void factToSas(plan_pddl_sas_t *sas, int fact_id);
+/** Transforms invariants into sas variables */
+static void invariantToVar(plan_pddl_sas_t *sas);
+
+void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
+{
+    inv_t inv_init;
+    int i;
+
+    sas->fact_size = g->fact_pool.size;
+    sas->comp = BOR_ALLOC_ARR(int, sas->fact_size);
+    sas->close = BOR_ALLOC_ARR(int, sas->fact_size);
+    sas->fact = BOR_CALLOC_ARR(plan_pddl_sas_fact_t, sas->fact_size);
+    for (i = 0; i < sas->fact_size; ++i){
+        sas->fact[i].id = i;
+        sas->fact[i].conflict.fact = BOR_CALLOC_ARR(int, sas->fact_size);
+        sas->fact[i].var = -1;
+        sas->fact[i].val = -1;
+    }
+
+    bzero(&inv_init, sizeof(inv_init));
+    sas->inv_pool = borExtArrNew(sizeof(inv_init), NULL, &inv_init);
+    sas->inv_htable = borHTableNew(invHash, invEq, NULL);
+    sas->inv_size = 0;
+
+    processActions(sas, &g->action_pool);
+    processInit(sas, &g->pddl->init_fact, &g->fact_pool);
+    sasFactMergeConflicts(sas);
+    for (i = 0; i < sas->fact_size; ++i)
+        sasFactFinalize(sas, sas->fact + i);
+
+    sas->var_range = NULL;
+    sas->var_size = 0;
+    writeFactIds(&sas->goal, (plan_pddl_fact_pool_t *)&g->fact_pool,
+                 &g->pddl->goal);
+    writeFactIds(&sas->init, (plan_pddl_fact_pool_t *)&g->fact_pool,
+                 &g->pddl->init_fact);
+}
+
+void planPDDLSasFree(plan_pddl_sas_t *sas)
+{
+    inv_t *inv;
+    int i;
+
+    if (sas->comp != NULL)
+        BOR_FREE(sas->comp);
+    if (sas->close != NULL)
+        BOR_FREE(sas->close);
+
+    for (i = 0; i < sas->fact_size; ++i)
+        sasFactFree(sas->fact + i);
+    if (sas->fact != NULL)
+        BOR_FREE(sas->fact);
+
+    borHTableDel(sas->inv_htable);
+    for (i = 0; i < sas->inv_size; ++i){
+        inv = borExtArrGet(sas->inv_pool, i);
+        if (inv->fact != NULL)
+            BOR_FREE(inv->fact);
+    }
+    borExtArrDel(sas->inv_pool);
+    if (sas->var_range != NULL)
+        BOR_FREE(sas->var_range);
+}
+
+void planPDDLSas(plan_pddl_sas_t *sas)
+{
+    int i;
+
+    for (i = 0; i < sas->fact_size; ++i)
+        factToSas(sas, i);
+    invariantToVar(sas);
+}
+
+void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
+                               const plan_pddl_ground_t *g,
+                               FILE *fout)
+{
+    const plan_pddl_fact_t *fact;
+    const inv_t *inv;
+    int i, j;
+
+    for (i = 0; i < sas->inv_size; ++i){
+        inv = borExtArrGet(sas->inv_pool, i);
+        fprintf(fout, "Invariant %d:\n", i);
+        for (j = 0; j < inv->size; ++j){
+            fact = planPDDLFactPoolGet(&g->fact_pool, inv->fact[j]);
+            fprintf(fout, "    ");
+            planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
+            fprintf(fout, " var: %d, val: %d/%d",
+                    sas->fact[inv->fact[j]].var,
+                    sas->fact[inv->fact[j]].val,
+                    sas->var_range[sas->fact[inv->fact[j]].var]);
+            fprintf(fout, "\n");
+        }
+    }
+}
+
+
+
+
+_bor_inline bor_htable_key_t invComputeHash(const inv_t *inv)
 {
     return borCityHash_64(inv->fact, sizeof(int) * inv->size);
 }
@@ -276,67 +401,8 @@ static void writeFactIds(plan_pddl_ground_facts_t *dst,
     }
 }
 
-void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
-{
-    inv_t inv_init;
-    int i;
 
-    sas->fact_size = g->fact_pool.size;
-    sas->comp = BOR_ALLOC_ARR(int, sas->fact_size);
-    sas->close = BOR_ALLOC_ARR(int, sas->fact_size);
-    sas->fact = BOR_CALLOC_ARR(plan_pddl_sas_fact_t, sas->fact_size);
-    for (i = 0; i < sas->fact_size; ++i){
-        sas->fact[i].id = i;
-        sas->fact[i].conflict.fact = BOR_CALLOC_ARR(int, sas->fact_size);
-        sas->fact[i].var = -1;
-        sas->fact[i].val = -1;
-    }
-
-    bzero(&inv_init, sizeof(inv_init));
-    sas->inv_pool = borExtArrNew(sizeof(inv_init), NULL, &inv_init);
-    sas->inv_htable = borHTableNew(invHash, invEq, NULL);
-    sas->inv_size = 0;
-
-    processActions(sas, &g->action_pool);
-    processInit(sas, &g->pddl->init_fact, &g->fact_pool);
-    sasFactMergeConflicts(sas);
-    for (i = 0; i < sas->fact_size; ++i)
-        sasFactFinalize(sas, sas->fact + i);
-
-    sas->var_range = NULL;
-    sas->var_size = 0;
-    writeFactIds(&sas->goal, (plan_pddl_fact_pool_t *)&g->fact_pool,
-                 &g->pddl->goal);
-    writeFactIds(&sas->init, (plan_pddl_fact_pool_t *)&g->fact_pool,
-                 &g->pddl->init_fact);
-}
-
-void planPDDLSasFree(plan_pddl_sas_t *sas)
-{
-    inv_t *inv;
-    int i;
-
-    if (sas->comp != NULL)
-        BOR_FREE(sas->comp);
-    if (sas->close != NULL)
-        BOR_FREE(sas->close);
-
-    for (i = 0; i < sas->fact_size; ++i)
-        sasFactFree(sas->fact + i);
-    if (sas->fact != NULL)
-        BOR_FREE(sas->fact);
-
-    borHTableDel(sas->inv_htable);
-    for (i = 0; i < sas->inv_size; ++i){
-        inv = borExtArrGet(sas->inv_pool, i);
-        if (inv->fact != NULL)
-            BOR_FREE(inv->fact);
-    }
-    borExtArrDel(sas->inv_pool);
-    if (sas->var_range != NULL)
-        BOR_FREE(sas->var_range);
-}
-
+/*** INVARIANT: ***/
 static int checkFact(const plan_pddl_sas_fact_t *fact,
                      const int *comp)
 {
@@ -746,35 +812,3 @@ static void invariantToVar(plan_pddl_sas_t *sas)
     setVarNeg(sas);
 }
 
-void planPDDLSas(plan_pddl_sas_t *sas)
-{
-    int i;
-
-    for (i = 0; i < sas->fact_size; ++i)
-        factToSas(sas, i);
-    invariantToVar(sas);
-}
-
-void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
-                               const plan_pddl_ground_t *g,
-                               FILE *fout)
-{
-    const plan_pddl_fact_t *fact;
-    const inv_t *inv;
-    int i, j;
-
-    for (i = 0; i < sas->inv_size; ++i){
-        inv = borExtArrGet(sas->inv_pool, i);
-        fprintf(fout, "Invariant %d:\n", i);
-        for (j = 0; j < inv->size; ++j){
-            fact = planPDDLFactPoolGet(&g->fact_pool, inv->fact[j]);
-            fprintf(fout, "    ");
-            planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
-            fprintf(fout, " var: %d, val: %d/%d",
-                    sas->fact[inv->fact[j]].var,
-                    sas->fact[inv->fact[j]].val,
-                    sas->var_range[sas->fact[inv->fact[j]].var]);
-            fprintf(fout, "\n");
-        }
-    }
-}

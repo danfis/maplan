@@ -157,12 +157,17 @@ static int readOpts(int argc, char *argv[])
     if (opts(&argc, argv) != 0){
         return -1;
     }
-    if (argc != 1){
+    if ((o->proto != NULL && argc != 1) || (o->proto == NULL && argc != 3)){
         fprintf(stderr, "Unrecognized options:");
         for (i = 1; i < argc; ++i)
             fprintf(stderr, " `%s'", argv[i]);
         fprintf(stderr, "\n");
         return -1;
+    }
+
+    if (o->proto == NULL){
+        o->pddl_domain = argv[1];
+        o->pddl_problem = argv[2];
     }
 
     if (o->tcp_id >= o->tcp_size || (o->tcp_size > 0 && o->tcp_id < 0)){
@@ -332,6 +337,7 @@ static void printOpts(void)
         printf("Multi-agent: no\n");
     }
     printf("Proto: %s\n", o->proto);
+    printf("PDDL: %s %s\n", o->pddl_domain, o->pddl_problem);
     printf("Output: %s\n", o->output);
     printf("Max time: %d s\n", o->max_time);
     printf("Max mem: %d MB\n", o->max_mem);
@@ -377,7 +383,7 @@ options_t *options(int argc, char *argv[])
         return NULL;
     }
 
-    if (o->proto == NULL){
+    if (o->proto == NULL && (o->pddl_domain == NULL || o->pddl_problem == NULL)){
         fprintf(stderr, "Error: Problem file not specified! (see -p"
                         " option)\n\n");
         usage(argv[0]);

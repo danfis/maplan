@@ -418,10 +418,20 @@ static int loadProblemSeq(const options_t *o)
     int flags;
 
     flags = PLAN_PROBLEM_USE_CG;
-    problem = planProblemFromProto(o->proto, flags);
-    if (problem == NULL){
-        fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
-        return -1;
+    if (o->proto != NULL){
+        problem = planProblemFromProto(o->proto, flags);
+        if (problem == NULL){
+            fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
+            return -1;
+        }
+    }else{
+        problem = planProblemFromPDDL(o->pddl_domain, o->pddl_problem, flags);
+        if (problem == NULL){
+            fprintf(stderr, "Error: Could not load PDDL files domain: `%s',"
+                            " problem: `%s'\n", o->pddl_domain,
+                            o->pddl_problem);
+            return -1;
+        }
     }
 
     printProblem(problem);

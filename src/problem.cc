@@ -179,7 +179,7 @@ static int loadProblem(plan_problem_t *p,
     // Fix problem with causal graph
     if (flags & PLAN_PROBLEM_USE_CG){
         cg = planCausalGraphNew(p->var_size);
-        planCausalGraphFillFromOps(cg, p->op, p->op_size);
+        planCausalGraphBuildFromOps(cg, p->op, p->op_size);
         planCausalGraph(cg, p->goal);
 
         if (hasUnimportantVars(cg)){

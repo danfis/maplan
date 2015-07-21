@@ -18,7 +18,6 @@
  */
 
 #include <boruvka/alloc.h>
-#include <boruvka/rbtree_int.h>
 #include <boruvka/pairheap.h>
 
 #include "plan/causal_graph.h"
@@ -83,14 +82,6 @@ void planCausalGraphDel(plan_causal_graph_t *cg)
     if (cg->var_order)
         BOR_FREE(cg->var_order);
     BOR_FREE(cg);
-}
-
-void planCausalGraphFillFromOps(plan_causal_graph_t *cg,
-                                const plan_op_t *op, int op_size)
-{
-    // Fill successor and predecessor graphs by dependencies between
-    // preconditions and effects of operators.
-    fillGraphs(cg, op, op_size);
 }
 
 void planCausalGraph(plan_causal_graph_t *cg, const plan_part_state_t *goal)
@@ -295,22 +286,39 @@ static void graphAddConnection(bor_rbtree_int_t *graph, int from, int to)
     ++edge->value;
 }
 
-static void fillGraphs(plan_causal_graph_t *cg,
-                       const plan_op_t *op, int op_size)
+void planCausalGraphBuildInit(plan_causal_graph_build_t *cg_build)
+{
+    cg_build->succ_graph = borRBTreeIntNew();
+    cg_build->pred_graph = borRBTreeIntNew();
+}
+
+void planCausalGraphBuildFree(plan_causal_graph_build_t *cg_build)
+{
+    borRBTreeIntDel(cg_build->succ_graph);
+    borRBTreeIntDel(cg_build->pred_graph);
+}
+
+void planCausalGraphBuildAdd(plan_causal_graph_build_t *cg_build,
+                             int pre_var, int eff_var)
+{
+    graphAddConnection(cg_build->succ_graph, pre_var, eff_var);
+    graphAddConnection(cg_build->pred_graph, eff_var, pre_var);
+}
+
+void planCausalGraphBuildFromOps(plan_causal_graph_t *cg,
+                                 const plan_op_t *op, int op_size)
 {
     plan_op_cond_eff_t *cond_eff;
     int i, j, prei, effi;
     plan_var_id_t pre_var, eff_var;
-    bor_rbtree_int_t *succ_graph, *pred_graph;
+    plan_causal_graph_build_t build;
 
-    succ_graph = borRBTreeIntNew();
-    pred_graph = borRBTreeIntNew();
+    planCausalGraphBuildInit(&build);
 
     for (i = 0; i < op_size; ++i){
         PLAN_PART_STATE_FOR_EACH_VAR(op[i].pre, prei, pre_var){
             PLAN_PART_STATE_FOR_EACH_VAR(op[i].eff, effi, eff_var){
-                graphAddConnection(succ_graph, pre_var, eff_var);
-                graphAddConnection(pred_graph, eff_var, pre_var);
+                planCausalGraphBuildAdd(&build, pre_var, eff_var);
             }
         }
 
@@ -319,25 +327,27 @@ static void fillGraphs(plan_causal_graph_t *cg,
 
             PLAN_PART_STATE_FOR_EACH_VAR(op[i].pre, prei, pre_var){
                 PLAN_PART_STATE_FOR_EACH_VAR(cond_eff->eff, effi, eff_var){
-                    graphAddConnection(succ_graph, pre_var, eff_var);
-                    graphAddConnection(pred_graph, eff_var, pre_var);
+                    planCausalGraphBuildAdd(&build, pre_var, eff_var);
                 }
             }
 
             PLAN_PART_STATE_FOR_EACH_VAR(cond_eff->pre, prei, pre_var){
                 PLAN_PART_STATE_FOR_EACH_VAR(cond_eff->eff, effi, eff_var){
-                    graphAddConnection(succ_graph, pre_var, eff_var);
-                    graphAddConnection(pred_graph, eff_var, pre_var);
+                    planCausalGraphBuildAdd(&build, pre_var, eff_var);
                 }
             }
         }
     }
 
-    rbtreeToGraph(succ_graph, &cg->successor_graph);
-    rbtreeToGraph(pred_graph, &cg->predecessor_graph);
+    planCausalGraphBuild(cg, &build);
+    planCausalGraphBuildFree(&build);
+}
 
-    borRBTreeIntDel(succ_graph);
-    borRBTreeIntDel(pred_graph);
+void planCausalGraphBuild(plan_causal_graph_t *cg,
+                          plan_causal_graph_build_t *cg_build)
+{
+    rbtreeToGraph(cg_build->succ_graph, &cg->successor_graph);
+    rbtreeToGraph(cg_build->pred_graph, &cg->predecessor_graph);
 }
 
 

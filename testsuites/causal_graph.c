@@ -10,7 +10,7 @@ TEST(testCausalGraphImportantVar)
 
     prob = planProblemFromProto("proto/rovers-p03.proto", 0);
     cg = planCausalGraphNew(prob->var_size);
-    planCausalGraphFillFromOps(cg, prob->op, prob->op_size);
+    planCausalGraphBuildFromOps(cg, prob->op, prob->op_size);
     planCausalGraph(cg, prob->goal);
     assertTrue(cg->important_var[0]);
     assertTrue(cg->important_var[1]);
@@ -53,7 +53,7 @@ static void varOrder(const char *fn)
 
     prob = planProblemFromProto(fn, 0);
     cg = planCausalGraphNew(prob->var_size);
-    planCausalGraphFillFromOps(cg, prob->op, prob->op_size);
+    planCausalGraphBuildFromOps(cg, prob->op, prob->op_size);
     planCausalGraph(cg, prob->goal);
 
     fprintf(stdout, "VarOrder for `%s':\n", fn);

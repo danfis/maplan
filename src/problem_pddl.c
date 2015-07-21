@@ -31,7 +31,7 @@ static void formatFactName(const plan_pddl_sas_t *sas, int fact_id, char *dst)
     sprintf(dst, ")");
 }
 
-static void createVar(plan_problem_t *p, const plan_pddl_sas_t *sas)
+static int createVar(plan_problem_t *p, const plan_pddl_sas_t *sas)
 {
     char name[1024];
     plan_var_t *var;
@@ -60,6 +60,8 @@ static void createVar(plan_problem_t *p, const plan_pddl_sas_t *sas)
             planVarSetValName(var, var->range - 1, "<none of those>");
         }
     }
+
+    return 0;
 }
 
 static int createStatePool(plan_problem_t *p, const plan_pddl_sas_t *sas)
@@ -98,6 +100,217 @@ static int createStatePool(plan_problem_t *p, const plan_pddl_sas_t *sas)
     return 0;
 }
 
+static int opCmp(const void *a, const void *b)
+{
+    const plan_op_t *o1 = a;
+    const plan_op_t *o2 = b;
+    return strcmp(o1->name, o2->name);
+}
+
+static void opSetPre(plan_op_t *op, const plan_pddl_sas_t *sas,
+                     const plan_pddl_ground_action_t *action)
+{
+    int i, fact_id;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    for (i = 0; i < action->pre.size; ++i){
+        fact_id = action->pre.fact[i];
+        var = sas->fact[fact_id].var;
+        val = sas->fact[fact_id].val;
+        if (var == PLAN_VAR_ID_UNDEFINED)
+            continue;
+
+        planOpSetPre(op, var, val);
+    }
+}
+
+static void opSetEff(plan_op_t *op, const plan_problem_t *p,
+                     const plan_pddl_sas_t *sas,
+                     const plan_pddl_ground_action_t *action)
+{
+    int set_var[p->var_size];
+    int i, fact_id;
+    plan_var_id_t var;
+    plan_val_t val;
+
+    bzero(set_var, sizeof(int) * p->var_size);
+
+    for (i = 0; i < action->eff_add.size; ++i){
+        fact_id = action->eff_add.fact[i];
+        var = sas->fact[fact_id].var;
+        val = sas->fact[fact_id].val;
+        if (var == PLAN_VAR_ID_UNDEFINED)
+            continue;
+        if (set_var[var]){
+            fprintf(stderr, "Problem Error: Conflicting variables in action"
+                            " effect!!!\n");
+        }
+
+        planOpSetEff(op, var, val);
+        set_var[var] = 1;
+    }
+
+    for (i = 0; i < action->eff_del.size; ++i){
+        fact_id = action->eff_del.fact[i];
+        var = sas->fact[fact_id].var;
+        val = sas->fact[fact_id].val;
+        if (var == PLAN_VAR_ID_UNDEFINED || set_var[var])
+            continue;
+        planOpSetEff(op, var, p->var[var].range - 1);
+    }
+}
+
+static void addOp(plan_problem_t *p, const plan_pddl_sas_t *sas,
+                  int metric, const plan_pddl_ground_action_t *action)
+{
+    plan_op_t *op;
+
+    op = p->op + p->op_size;
+    planOpInit(op, p->var_size);
+    planOpSetName(op, action->name);
+    planOpSetCost(op, 1);
+    if (metric)
+        planOpSetCost(op, action->cost);
+
+    // TODO: neg preconditions
+    opSetPre(op, sas, action);
+    opSetEff(op, p, sas, action);
+    if (op->eff->vals_size == 0){
+        planOpFree(op);
+        return;
+    }
+
+    // TODO: cond effs
+
+    ++p->op_size;
+}
+
+static int cmpPartState(const plan_part_state_t *p1,
+                        const plan_part_state_t *p2)
+{
+    int i;
+
+    // First sort part-states with less values set
+    if (p1->vals_size < p2->vals_size){
+        return -1;
+    }else if (p1->vals_size > p2->vals_size){
+        return 1;
+    }
+
+    // We assume that in .vals_size are values sorted according to variable
+    // ID
+    for (i = 0; i < p1->vals_size; ++i){
+        if (p1->vals[i].var != p2->vals[i].var){
+            return p1->vals[i].var - p2->vals[i].var;
+        }else if (p1->vals[i].val != p2->vals[i].val){
+            return p1->vals[i].val - p2->vals[i].val;
+        }
+    }
+
+    return 0;
+}
+
+static int cmpOp(const plan_op_t *op1, const plan_op_t *op2)
+{
+    int i, cmp;
+    plan_op_cond_eff_t *ce1, *ce2;
+
+    if (op1->pre->vals_size != op2->pre->vals_size)
+        return op1->pre->vals_size - op2->pre->vals_size;
+    if (op1->eff->vals_size != op2->eff->vals_size)
+        return op1->eff->vals_size - op2->eff->vals_size;
+    if (op1->cond_eff_size != op2->cond_eff_size)
+        return op1->cond_eff_size - op2->cond_eff_size;
+
+    if ((cmp = cmpPartState(op1->pre, op2->pre)) != 0)
+        return cmp;
+    if ((cmp = cmpPartState(op1->eff, op2->eff)) != 0)
+        return cmp;
+
+    for (i = 0; i < op1->cond_eff_size; ++i){
+        ce1 = op1->cond_eff + i;
+        ce2 = op2->cond_eff + i;
+        if ((cmp = cmpPartState(ce1->pre, ce2->pre)) != 0)
+            return cmp;
+        if ((cmp = cmpPartState(ce1->eff, ce2->eff)) != 0)
+            return cmp;
+    }
+
+    return 0;
+}
+
+static int duplicateOpsCmp(const void *a, const void *b)
+{
+    const plan_op_t *op1 = *(const plan_op_t **)a;
+    const plan_op_t *op2 = *(const plan_op_t **)b;
+    return cmpOp(op1, op2);
+}
+
+static void pruneDuplicateOps(plan_problem_t *prob)
+{
+    plan_op_t **sorted_ops;
+    int i, ins;
+
+    // Sort operators so that duplicates are one after other
+    sorted_ops = BOR_ALLOC_ARR(plan_op_t *, prob->op_size);
+    for (i = 0; i < prob->op_size; ++i)
+        sorted_ops[i] = prob->op + i;
+    qsort(sorted_ops, prob->op_size, sizeof(plan_op_t *), duplicateOpsCmp);
+
+    // Free duplicate operators and mark their position with global_id set
+    // to -1
+    for (i = 1; i < prob->op_size; ++i){
+        if (cmpOp(sorted_ops[i - 1], sorted_ops[i]) == 0){
+            planOpFree(sorted_ops[i - 1]);
+            sorted_ops[i - 1]->global_id = -1;
+        }
+    }
+
+    // Squash operators to a continuous array
+    for (i = 0, ins = 0; i < prob->op_size; ++i, ++ins){
+        if (prob->op[i].global_id == -1){
+            --ins;
+        }else if (ins != i){
+            prob->op[ins] = prob->op[i];
+            prob->op[ins].global_id = ins;
+        }
+    }
+    prob->duplicate_ops_removed = prob->op_size - ins;
+    prob->op_size = ins;
+
+    BOR_FREE(sorted_ops);
+}
+
+static int createOps(plan_problem_t *p, const plan_pddl_sas_t *sas,
+                     unsigned flags)
+{
+    const plan_pddl_ground_action_t *action;
+    int i, metric;
+
+    metric = sas->ground->pddl->metric;
+
+    p->op_size = 0;
+    p->op = BOR_ALLOC_ARR(plan_op_t, sas->ground->action_pool.size);
+    for (i = 0; i < sas->ground->action_pool.size; ++i){
+        action = planPDDLGroundActionPoolGet(&sas->ground->action_pool, i);
+        addOp(p, sas, metric, action);
+    }
+
+    if (flags & PLAN_PROBLEM_PRUNE_DUPLICATES)
+        pruneDuplicateOps(p);
+    p->op = BOR_REALLOC_ARR(p->op, plan_op_t, p->op_size);
+    qsort(p->op, p->op_size, sizeof(plan_op_t), opCmp);
+
+    return 0;
+}
+
+static int createSuccGen(plan_problem_t *p)
+{
+    p->succ_gen = planSuccGenNew(p->op, p->op_size, NULL);
+    return 0;
+}
+
 plan_problem_t *planProblemFromPDDL(const char *domain_pddl,
                                     const char *problem_pddl,
                                     unsigned flags)
@@ -121,8 +334,12 @@ plan_problem_t *planProblemFromPDDL(const char *domain_pddl,
     planPDDLSas(&sas, sas_flags);
 
     p = BOR_CALLOC_ARR(plan_problem_t, 1);
-    createVar(p, &sas);
-    if (createStatePool(p, &sas) != 0){
+    p->ma_privacy_var = -1;
+
+    if (createVar(p, &sas)
+            || createStatePool(p, &sas) != 0
+            || createOps(p, &sas, flags) != 0
+            || createSuccGen(p) != 0){
         planProblemDel(p);
         return NULL;
     }

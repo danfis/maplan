@@ -28,9 +28,9 @@ extern "C" {
 #endif /* __cplusplus */
 
 /**
- * Disable causal graph simplification.
+ * If set, causal graph will be used for fine tuning problem definition.
  */
-#define PLAN_PDDL_SAS_NO_CG 0x1u
+#define PLAN_PDDL_SAS_USE_CG 0x1u
 
 struct _plan_pddl_sas_fact_t {
     int id;

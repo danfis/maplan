@@ -1224,6 +1224,131 @@ Lift Actions[5]:
       in: ?y ?z
     pre-neg[0]:
     eq[0]:
+Invariant 0:
+    at: truck0 depot0 var: 4, val: 0/3
+    at: truck0 distributor0 var: 4, val: 1/3
+    at: truck0 distributor1 var: 4, val: 2/3
+Invariant 1:
+    at: truck1 depot0 var: 5, val: 0/3
+    at: truck1 distributor0 var: 5, val: 1/3
+    at: truck1 distributor1 var: 5, val: 2/3
+Invariant 2:
+    at: crate0 depot0 var: 3, val: 0/4
+    at: crate0 distributor0 var: 3, val: 1/4
+    at: crate0 distributor1 var: 3, val: 2/4
+    in: crate0 truck0 var: 0, val: 4/9
+    in: crate0 truck1 var: 0, val: 5/9
+    lifting: hoist0 crate0 var: 0, val: 6/9
+    lifting: hoist1 crate0 var: 0, val: 7/9
+    lifting: hoist2 crate0 var: 0, val: 8/9
+Invariant 3:
+    at: crate1 depot0 var: 2, val: 0/4
+    at: crate1 distributor0 var: 2, val: 1/4
+    at: crate1 distributor1 var: 2, val: 2/4
+    in: crate1 truck0 var: 1, val: 4/9
+    in: crate1 truck1 var: 1, val: 5/9
+    lifting: hoist0 crate1 var: 1, val: 6/9
+    lifting: hoist1 crate1 var: 1, val: 7/9
+    lifting: hoist2 crate1 var: 1, val: 8/9
+Invariant 4:
+    on: crate0 pallet0 var: 0, val: 0/9
+    on: crate0 pallet1 var: 0, val: 1/9
+    on: crate0 pallet2 var: 0, val: 2/9
+    on: crate0 crate1 var: 0, val: 3/9
+    in: crate0 truck0 var: 0, val: 4/9
+    in: crate0 truck1 var: 0, val: 5/9
+    lifting: hoist0 crate0 var: 0, val: 6/9
+    lifting: hoist1 crate0 var: 0, val: 7/9
+    lifting: hoist2 crate0 var: 0, val: 8/9
+Invariant 5:
+    on: crate0 pallet0 var: 0, val: 0/9
+    on: crate1 pallet0 var: 1, val: 0/9
+    clear: pallet0 var: 9, val: 0/2
+Invariant 6:
+    on: crate0 pallet1 var: 0, val: 1/9
+    on: crate1 pallet1 var: 1, val: 1/9
+    clear: pallet1 var: 10, val: 0/2
+Invariant 7:
+    on: crate0 pallet2 var: 0, val: 2/9
+    on: crate1 pallet2 var: 1, val: 2/9
+    clear: pallet2 var: 11, val: 0/2
+Invariant 8:
+    on: crate0 crate1 var: 0, val: 3/9
+    in: crate1 truck0 var: 1, val: 4/9
+    in: crate1 truck1 var: 1, val: 5/9
+    lifting: hoist0 crate1 var: 1, val: 6/9
+    lifting: hoist1 crate1 var: 1, val: 7/9
+    lifting: hoist2 crate1 var: 1, val: 8/9
+    clear: crate1 var: 13, val: 0/2
+Invariant 9:
+    on: crate1 pallet0 var: 1, val: 0/9
+    on: crate1 pallet1 var: 1, val: 1/9
+    on: crate1 pallet2 var: 1, val: 2/9
+    on: crate1 crate0 var: 1, val: 3/9
+    in: crate1 truck0 var: 1, val: 4/9
+    in: crate1 truck1 var: 1, val: 5/9
+    lifting: hoist0 crate1 var: 1, val: 6/9
+    lifting: hoist1 crate1 var: 1, val: 7/9
+    lifting: hoist2 crate1 var: 1, val: 8/9
+Invariant 10:
+    on: crate1 crate0 var: 1, val: 3/9
+    in: crate0 truck0 var: 0, val: 4/9
+    in: crate0 truck1 var: 0, val: 5/9
+    lifting: hoist0 crate0 var: 0, val: 6/9
+    lifting: hoist1 crate0 var: 0, val: 7/9
+    lifting: hoist2 crate0 var: 0, val: 8/9
+    clear: crate0 var: 12, val: 0/2
+Invariant 11:
+    lifting: hoist0 crate0 var: 0, val: 6/9
+    lifting: hoist0 crate1 var: 1, val: 6/9
+    available: hoist0 var: 6, val: 0/2
+Invariant 12:
+    lifting: hoist1 crate0 var: 0, val: 7/9
+    lifting: hoist1 crate1 var: 1, val: 7/9
+    available: hoist1 var: 7, val: 0/2
+Invariant 13:
+    lifting: hoist2 crate0 var: 0, val: 8/9
+    lifting: hoist2 crate1 var: 1, val: 8/9
+    available: hoist2 var: 8, val: 0/2
+SAS Facts[38]:
+    at: truck0 depot0 var: 4, val: 0/3
+    at: truck0 distributor0 var: 4, val: 1/3
+    at: truck0 distributor1 var: 4, val: 2/3
+    at: truck1 depot0 var: 5, val: 0/3
+    at: truck1 distributor0 var: 5, val: 1/3
+    at: truck1 distributor1 var: 5, val: 2/3
+    at: crate0 depot0 var: 3, val: 0/4
+    at: crate0 distributor0 var: 3, val: 1/4
+    at: crate0 distributor1 var: 3, val: 2/4
+    at: crate1 depot0 var: 2, val: 0/4
+    at: crate1 distributor0 var: 2, val: 1/4
+    at: crate1 distributor1 var: 2, val: 2/4
+    on: crate0 pallet0 var: 0, val: 0/9
+    on: crate0 pallet1 var: 0, val: 1/9
+    on: crate0 pallet2 var: 0, val: 2/9
+    on: crate0 crate1 var: 0, val: 3/9
+    on: crate1 pallet0 var: 1, val: 0/9
+    on: crate1 pallet1 var: 1, val: 1/9
+    on: crate1 pallet2 var: 1, val: 2/9
+    on: crate1 crate0 var: 1, val: 3/9
+    in: crate0 truck0 var: 0, val: 4/9
+    in: crate0 truck1 var: 0, val: 5/9
+    in: crate1 truck0 var: 1, val: 4/9
+    in: crate1 truck1 var: 1, val: 5/9
+    lifting: hoist0 crate0 var: 0, val: 6/9
+    lifting: hoist0 crate1 var: 1, val: 6/9
+    lifting: hoist1 crate0 var: 0, val: 7/9
+    lifting: hoist1 crate1 var: 1, val: 7/9
+    lifting: hoist2 crate0 var: 0, val: 8/9
+    lifting: hoist2 crate1 var: 1, val: 8/9
+    available: hoist0 var: 6, val: 0/2
+    available: hoist1 var: 7, val: 0/2
+    available: hoist2 var: 8, val: 0/2
+    clear: pallet0 var: 9, val: 0/2
+    clear: pallet1 var: 10, val: 0/2
+    clear: pallet2 var: 11, val: 0/2
+    clear: crate0 var: 12, val: 0/2
+    clear: crate1 var: 13, val: 0/2
 Facts[38]:
     at: truck0 depot0
     at: truck0 distributor0
@@ -2296,6 +2421,80 @@ Lift Actions[12]:
       next-count: ?avail ?new-avail
     pre-neg[0]:
     eq[0]:
+Invariant 0:
+    waiting: o1 var: 1, val: 0/3
+    started: o1 var: 1, val: 1/3
+    shipped: o1 var: 1, val: 2/3
+Invariant 1:
+    waiting: o2 var: 2, val: 0/3
+    started: o2 var: 2, val: 1/3
+    shipped: o2 var: 2, val: 2/3
+Invariant 2:
+    waiting: o3 var: 3, val: 0/3
+    started: o3 var: 3, val: 1/3
+    shipped: o3 var: 3, val: 2/3
+Invariant 3:
+    waiting: o4 var: 4, val: 0/3
+    started: o4 var: 4, val: 1/3
+    shipped: o4 var: 4, val: 2/3
+Invariant 4:
+    waiting: o5 var: 5, val: 0/3
+    started: o5 var: 5, val: 1/3
+    shipped: o5 var: 5, val: 2/3
+Invariant 5:
+    made: p1 var: 6, val: 0/2
+    not-made: p1 var: 6, val: 1/2
+Invariant 6:
+    made: p2 var: 7, val: 0/2
+    not-made: p2 var: 7, val: 1/2
+Invariant 7:
+    made: p3 var: 8, val: 0/2
+    not-made: p3 var: 8, val: 1/2
+Invariant 8:
+    made: p4 var: 9, val: 0/2
+    not-made: p4 var: 9, val: 1/2
+Invariant 9:
+    made: p5 var: 10, val: 0/2
+    not-made: p5 var: 10, val: 1/2
+Invariant 10:
+    stacks-avail: n0 var: 0, val: 0/6
+    stacks-avail: n1 var: 0, val: 1/6
+    stacks-avail: n2 var: 0, val: 2/6
+    stacks-avail: n3 var: 0, val: 3/6
+    stacks-avail: n4 var: 0, val: 4/6
+    stacks-avail: n5 var: 0, val: 5/6
+SAS Facts[31]:
+    waiting: o1 var: 1, val: 0/3
+    waiting: o2 var: 2, val: 0/3
+    waiting: o3 var: 3, val: 0/3
+    waiting: o4 var: 4, val: 0/3
+    waiting: o5 var: 5, val: 0/3
+    started: o1 var: 1, val: 1/3
+    started: o2 var: 2, val: 1/3
+    started: o3 var: 3, val: 1/3
+    started: o4 var: 4, val: 1/3
+    started: o5 var: 5, val: 1/3
+    shipped: o1 var: 1, val: 2/3
+    shipped: o2 var: 2, val: 2/3
+    shipped: o3 var: 3, val: 2/3
+    shipped: o4 var: 4, val: 2/3
+    shipped: o5 var: 5, val: 2/3
+    made: p1 var: 6, val: 0/2
+    made: p2 var: 7, val: 0/2
+    made: p3 var: 8, val: 0/2
+    made: p4 var: 9, val: 0/2
+    made: p5 var: 10, val: 0/2
+    not-made: p1 var: 6, val: 1/2
+    not-made: p2 var: 7, val: 1/2
+    not-made: p3 var: 8, val: 1/2
+    not-made: p4 var: 9, val: 1/2
+    not-made: p5 var: 10, val: 1/2
+    stacks-avail: n0 var: 0, val: 0/6
+    stacks-avail: n1 var: 0, val: 1/6
+    stacks-avail: n2 var: 0, val: 2/6
+    stacks-avail: n3 var: 0, val: 3/6
+    stacks-avail: n4 var: 0, val: 4/6
+    stacks-avail: n5 var: 0, val: 5/6
 Facts[31]:
     waiting: o1
     waiting: o2
@@ -3145,6 +3344,66 @@ Lift Actions[9]:
       have_image: ?r ?o ?m
     pre-neg[0]:
     eq[0]:
+Invariant 0:
+    at: rover0 waypoint0 var: 0, val: 0/4
+    at: rover0 waypoint1 var: 0, val: 1/4
+    at: rover0 waypoint2 var: 0, val: 2/4
+    at: rover0 waypoint3 var: 0, val: 3/4
+Invariant 1:
+    empty: rover0store var: 1, val: 0/2
+    full: rover0store var: 1, val: 1/2
+Invariant 2:
+    have_soil_analysis: rover0 waypoint0 var: 2, val: 0/2
+    at_soil_sample: waypoint0 var: 2, val: 1/2
+Invariant 3:
+    have_soil_analysis: rover0 waypoint2 var: 3, val: 0/2
+    at_soil_sample: waypoint2 var: 3, val: 1/2
+Invariant 4:
+    have_soil_analysis: rover0 waypoint3 var: 4, val: 0/2
+    at_soil_sample: waypoint3 var: 4, val: 1/2
+Invariant 5:
+    have_rock_analysis: rover0 waypoint1 var: 5, val: 0/2
+    at_rock_sample: waypoint1 var: 5, val: 1/2
+Invariant 6:
+    have_rock_analysis: rover0 waypoint2 var: 6, val: 0/2
+    at_rock_sample: waypoint2 var: 6, val: 1/2
+Invariant 7:
+    have_rock_analysis: rover0 waypoint3 var: 7, val: 0/2
+    at_rock_sample: waypoint3 var: 7, val: 1/2
+SAS Facts[33]:
+    at: rover0 waypoint0 var: 0, val: 0/4
+    at: rover0 waypoint1 var: 0, val: 1/4
+    at: rover0 waypoint2 var: 0, val: 2/4
+    at: rover0 waypoint3 var: 0, val: 3/4
+    empty: rover0store var: 1, val: 0/2
+    have_rock_analysis: rover0 waypoint1 var: 5, val: 0/2
+    have_rock_analysis: rover0 waypoint2 var: 6, val: 0/2
+    have_rock_analysis: rover0 waypoint3 var: 7, val: 0/2
+    have_soil_analysis: rover0 waypoint0 var: 2, val: 0/2
+    have_soil_analysis: rover0 waypoint2 var: 3, val: 0/2
+    have_soil_analysis: rover0 waypoint3 var: 4, val: 0/2
+    full: rover0store var: 1, val: 1/2
+    calibrated: camera0 rover0 var: 8, val: 0/2
+    have_image: rover0 objective0 colour var: -1, val: 0/0
+    have_image: rover0 objective0 high_res var: -1, val: 0/0
+    have_image: rover0 objective1 colour var: -1, val: 0/0
+    have_image: rover0 objective1 high_res var: 9, val: 0/1
+    communicated_soil_data: waypoint0 var: -1, val: 0/0
+    communicated_soil_data: waypoint2 var: 10, val: 0/1
+    communicated_soil_data: waypoint3 var: -1, val: 0/0
+    communicated_rock_data: waypoint1 var: -1, val: 0/0
+    communicated_rock_data: waypoint2 var: -1, val: 0/0
+    communicated_rock_data: waypoint3 var: 11, val: 0/1
+    communicated_image_data: objective0 colour var: -1, val: 0/0
+    communicated_image_data: objective0 high_res var: -1, val: 0/0
+    communicated_image_data: objective1 colour var: -1, val: 0/0
+    communicated_image_data: objective1 high_res var: 12, val: 0/1
+    at_soil_sample: waypoint0 var: 2, val: 1/2
+    at_soil_sample: waypoint2 var: 3, val: 1/2
+    at_soil_sample: waypoint3 var: 4, val: 1/2
+    at_rock_sample: waypoint1 var: 5, val: 1/2
+    at_rock_sample: waypoint2 var: 6, val: 1/2
+    at_rock_sample: waypoint3 var: 7, val: 1/2
 Facts[33]:
     at: rover0 waypoint0
     at: rover0 waypoint1
@@ -3840,6 +4099,319 @@ Lift Actions[7]:
     pre-neg[0]:
     eq[1]:
       N:=: ?xy_initial ?xy_final
+Invariant 0:
+    at_car_jun: car0 junction0-0 var: 0, val: 0/24
+    at_car_jun: car0 junction0-1 var: 0, val: 1/24
+    at_car_jun: car0 junction0-2 var: 0, val: 2/24
+    at_car_jun: car0 junction1-0 var: 0, val: 3/24
+    at_car_jun: car0 junction1-1 var: 0, val: 4/24
+    at_car_jun: car0 junction1-2 var: 0, val: 5/24
+    at_car_jun: car0 junction2-0 var: 0, val: 6/24
+    at_car_jun: car0 junction2-1 var: 0, val: 7/24
+    at_car_jun: car0 junction2-2 var: 0, val: 8/24
+    at_car_road: car0 road0 var: 0, val: 9/24
+    at_car_road: car0 road1 var: 0, val: 10/24
+    at_car_road: car0 road2 var: 0, val: 11/24
+    at_car_road: car0 road3 var: 0, val: 12/24
+    at_car_road: car0 road4 var: 0, val: 13/24
+    starting: car0 garage0 var: 0, val: 14/24
+    arrived: car0 junction0-0 var: 0, val: 15/24
+    arrived: car0 junction0-1 var: 0, val: 16/24
+    arrived: car0 junction0-2 var: 0, val: 17/24
+    arrived: car0 junction1-0 var: 0, val: 18/24
+    arrived: car0 junction1-1 var: 0, val: 19/24
+    arrived: car0 junction1-2 var: 0, val: 20/24
+    arrived: car0 junction2-0 var: 0, val: 21/24
+    arrived: car0 junction2-1 var: 0, val: 22/24
+    arrived: car0 junction2-2 var: 0, val: 23/24
+Invariant 1:
+    at_car_jun: car1 junction0-0 var: 1, val: 0/24
+    at_car_jun: car1 junction0-1 var: 1, val: 1/24
+    at_car_jun: car1 junction0-2 var: 1, val: 2/24
+    at_car_jun: car1 junction1-0 var: 1, val: 3/24
+    at_car_jun: car1 junction1-1 var: 1, val: 4/24
+    at_car_jun: car1 junction1-2 var: 1, val: 5/24
+    at_car_jun: car1 junction2-0 var: 1, val: 6/24
+    at_car_jun: car1 junction2-1 var: 1, val: 7/24
+    at_car_jun: car1 junction2-2 var: 1, val: 8/24
+    at_car_road: car1 road0 var: 1, val: 9/24
+    at_car_road: car1 road1 var: 1, val: 10/24
+    at_car_road: car1 road2 var: 1, val: 11/24
+    at_car_road: car1 road3 var: 1, val: 12/24
+    at_car_road: car1 road4 var: 1, val: 13/24
+    starting: car1 garage1 var: 1, val: 14/24
+    arrived: car1 junction0-0 var: 1, val: 15/24
+    arrived: car1 junction0-1 var: 1, val: 16/24
+    arrived: car1 junction0-2 var: 1, val: 17/24
+    arrived: car1 junction1-0 var: 1, val: 18/24
+    arrived: car1 junction1-1 var: 1, val: 19/24
+    arrived: car1 junction1-2 var: 1, val: 20/24
+    arrived: car1 junction2-0 var: 1, val: 21/24
+    arrived: car1 junction2-1 var: 1, val: 22/24
+    arrived: car1 junction2-2 var: 1, val: 23/24
+SAS Facts[262]:
+    at_car_jun: car0 junction0-0 var: 0, val: 0/24
+    at_car_jun: car0 junction0-1 var: 0, val: 1/24
+    at_car_jun: car0 junction0-2 var: 0, val: 2/24
+    at_car_jun: car0 junction1-0 var: 0, val: 3/24
+    at_car_jun: car0 junction1-1 var: 0, val: 4/24
+    at_car_jun: car0 junction1-2 var: 0, val: 5/24
+    at_car_jun: car0 junction2-0 var: 0, val: 6/24
+    at_car_jun: car0 junction2-1 var: 0, val: 7/24
+    at_car_jun: car0 junction2-2 var: 0, val: 8/24
+    at_car_jun: car1 junction0-0 var: 1, val: 0/24
+    at_car_jun: car1 junction0-1 var: 1, val: 1/24
+    at_car_jun: car1 junction0-2 var: 1, val: 2/24
+    at_car_jun: car1 junction1-0 var: 1, val: 3/24
+    at_car_jun: car1 junction1-1 var: 1, val: 4/24
+    at_car_jun: car1 junction1-2 var: 1, val: 5/24
+    at_car_jun: car1 junction2-0 var: 1, val: 6/24
+    at_car_jun: car1 junction2-1 var: 1, val: 7/24
+    at_car_jun: car1 junction2-2 var: 1, val: 8/24
+    at_car_road: car0 road0 var: 0, val: 9/24
+    at_car_road: car0 road1 var: 0, val: 10/24
+    at_car_road: car0 road2 var: 0, val: 11/24
+    at_car_road: car0 road3 var: 0, val: 12/24
+    at_car_road: car0 road4 var: 0, val: 13/24
+    at_car_road: car1 road0 var: 1, val: 9/24
+    at_car_road: car1 road1 var: 1, val: 10/24
+    at_car_road: car1 road2 var: 1, val: 11/24
+    at_car_road: car1 road3 var: 1, val: 12/24
+    at_car_road: car1 road4 var: 1, val: 13/24
+    starting: car0 garage0 var: 0, val: 14/24
+    starting: car1 garage1 var: 1, val: 14/24
+    arrived: car0 junction0-0 var: 0, val: 15/24
+    arrived: car0 junction0-1 var: 0, val: 16/24
+    arrived: car0 junction0-2 var: 0, val: 17/24
+    arrived: car0 junction1-0 var: 0, val: 18/24
+    arrived: car0 junction1-1 var: 0, val: 19/24
+    arrived: car0 junction1-2 var: 0, val: 20/24
+    arrived: car0 junction2-0 var: 0, val: 21/24
+    arrived: car0 junction2-1 var: 0, val: 22/24
+    arrived: car0 junction2-2 var: 0, val: 23/24
+    arrived: car1 junction0-0 var: 1, val: 15/24
+    arrived: car1 junction0-1 var: 1, val: 16/24
+    arrived: car1 junction0-2 var: 1, val: 17/24
+    arrived: car1 junction1-0 var: 1, val: 18/24
+    arrived: car1 junction1-1 var: 1, val: 19/24
+    arrived: car1 junction1-2 var: 1, val: 20/24
+    arrived: car1 junction2-0 var: 1, val: 21/24
+    arrived: car1 junction2-1 var: 1, val: 22/24
+    arrived: car1 junction2-2 var: 1, val: 23/24
+    road_connect: road0 junction0-0 junction0-1 var: 2, val: 0/2
+    road_connect: road0 junction0-0 junction1-0 var: 3, val: 0/2
+    road_connect: road0 junction0-0 junction1-1 var: 4, val: 0/2
+    road_connect: road0 junction0-1 junction0-0 var: 5, val: 0/2
+    road_connect: road0 junction0-1 junction0-2 var: 6, val: 0/2
+    road_connect: road0 junction0-1 junction1-0 var: 7, val: 0/2
+    road_connect: road0 junction0-1 junction1-1 var: 8, val: 0/2
+    road_connect: road0 junction0-1 junction1-2 var: 9, val: 0/2
+    road_connect: road0 junction0-2 junction0-1 var: 10, val: 0/2
+    road_connect: road0 junction0-2 junction1-1 var: 11, val: 0/2
+    road_connect: road0 junction0-2 junction1-2 var: 12, val: 0/2
+    road_connect: road0 junction1-0 junction0-0 var: 13, val: 0/2
+    road_connect: road0 junction1-0 junction0-1 var: 14, val: 0/2
+    road_connect: road0 junction1-0 junction1-1 var: 15, val: 0/2
+    road_connect: road0 junction1-0 junction2-0 var: 16, val: 0/2
+    road_connect: road0 junction1-0 junction2-1 var: 17, val: 0/2
+    road_connect: road0 junction1-1 junction0-0 var: 18, val: 0/2
+    road_connect: road0 junction1-1 junction0-1 var: 19, val: 0/2
+    road_connect: road0 junction1-1 junction0-2 var: 20, val: 0/2
+    road_connect: road0 junction1-1 junction1-0 var: 21, val: 0/2
+    road_connect: road0 junction1-1 junction1-2 var: 22, val: 0/2
+    road_connect: road0 junction1-1 junction2-0 var: 23, val: 0/2
+    road_connect: road0 junction1-1 junction2-1 var: 24, val: 0/2
+    road_connect: road0 junction1-1 junction2-2 var: 25, val: 0/2
+    road_connect: road0 junction1-2 junction0-1 var: 26, val: 0/2
+    road_connect: road0 junction1-2 junction0-2 var: 27, val: 0/2
+    road_connect: road0 junction1-2 junction1-1 var: 28, val: 0/2
+    road_connect: road0 junction1-2 junction2-1 var: 29, val: 0/2
+    road_connect: road0 junction1-2 junction2-2 var: 30, val: 0/2
+    road_connect: road0 junction2-0 junction1-0 var: 31, val: 0/2
+    road_connect: road0 junction2-0 junction1-1 var: 32, val: 0/2
+    road_connect: road0 junction2-0 junction2-1 var: 33, val: 0/2
+    road_connect: road0 junction2-1 junction1-0 var: 34, val: 0/2
+    road_connect: road0 junction2-1 junction1-1 var: 35, val: 0/2
+    road_connect: road0 junction2-1 junction1-2 var: 36, val: 0/2
+    road_connect: road0 junction2-1 junction2-0 var: 37, val: 0/2
+    road_connect: road0 junction2-1 junction2-2 var: 38, val: 0/2
+    road_connect: road0 junction2-2 junction1-1 var: 39, val: 0/2
+    road_connect: road0 junction2-2 junction1-2 var: 40, val: 0/2
+    road_connect: road0 junction2-2 junction2-1 var: 41, val: 0/2
+    road_connect: road1 junction0-0 junction0-1 var: 42, val: 0/2
+    road_connect: road1 junction0-0 junction1-0 var: 43, val: 0/2
+    road_connect: road1 junction0-0 junction1-1 var: 44, val: 0/2
+    road_connect: road1 junction0-1 junction0-0 var: 45, val: 0/2
+    road_connect: road1 junction0-1 junction0-2 var: 46, val: 0/2
+    road_connect: road1 junction0-1 junction1-0 var: 47, val: 0/2
+    road_connect: road1 junction0-1 junction1-1 var: 48, val: 0/2
+    road_connect: road1 junction0-1 junction1-2 var: 49, val: 0/2
+    road_connect: road1 junction0-2 junction0-1 var: 50, val: 0/2
+    road_connect: road1 junction0-2 junction1-1 var: 51, val: 0/2
+    road_connect: road1 junction0-2 junction1-2 var: 52, val: 0/2
+    road_connect: road1 junction1-0 junction0-0 var: 53, val: 0/2
+    road_connect: road1 junction1-0 junction0-1 var: 54, val: 0/2
+    road_connect: road1 junction1-0 junction1-1 var: 55, val: 0/2
+    road_connect: road1 junction1-0 junction2-0 var: 56, val: 0/2
+    road_connect: road1 junction1-0 junction2-1 var: 57, val: 0/2
+    road_connect: road1 junction1-1 junction0-0 var: 58, val: 0/2
+    road_connect: road1 junction1-1 junction0-1 var: 59, val: 0/2
+    road_connect: road1 junction1-1 junction0-2 var: 60, val: 0/2
+    road_connect: road1 junction1-1 junction1-0 var: 61, val: 0/2
+    road_connect: road1 junction1-1 junction1-2 var: 62, val: 0/2
+    road_connect: road1 junction1-1 junction2-0 var: 63, val: 0/2
+    road_connect: road1 junction1-1 junction2-1 var: 64, val: 0/2
+    road_connect: road1 junction1-1 junction2-2 var: 65, val: 0/2
+    road_connect: road1 junction1-2 junction0-1 var: 66, val: 0/2
+    road_connect: road1 junction1-2 junction0-2 var: 67, val: 0/2
+    road_connect: road1 junction1-2 junction1-1 var: 68, val: 0/2
+    road_connect: road1 junction1-2 junction2-1 var: 69, val: 0/2
+    road_connect: road1 junction1-2 junction2-2 var: 70, val: 0/2
+    road_connect: road1 junction2-0 junction1-0 var: 71, val: 0/2
+    road_connect: road1 junction2-0 junction1-1 var: 72, val: 0/2
+    road_connect: road1 junction2-0 junction2-1 var: 73, val: 0/2
+    road_connect: road1 junction2-1 junction1-0 var: 74, val: 0/2
+    road_connect: road1 junction2-1 junction1-1 var: 75, val: 0/2
+    road_connect: road1 junction2-1 junction1-2 var: 76, val: 0/2
+    road_connect: road1 junction2-1 junction2-0 var: 77, val: 0/2
+    road_connect: road1 junction2-1 junction2-2 var: 78, val: 0/2
+    road_connect: road1 junction2-2 junction1-1 var: 79, val: 0/2
+    road_connect: road1 junction2-2 junction1-2 var: 80, val: 0/2
+    road_connect: road1 junction2-2 junction2-1 var: 81, val: 0/2
+    road_connect: road2 junction0-0 junction0-1 var: 82, val: 0/2
+    road_connect: road2 junction0-0 junction1-0 var: 83, val: 0/2
+    road_connect: road2 junction0-0 junction1-1 var: 84, val: 0/2
+    road_connect: road2 junction0-1 junction0-0 var: 85, val: 0/2
+    road_connect: road2 junction0-1 junction0-2 var: 86, val: 0/2
+    road_connect: road2 junction0-1 junction1-0 var: 87, val: 0/2
+    road_connect: road2 junction0-1 junction1-1 var: 88, val: 0/2
+    road_connect: road2 junction0-1 junction1-2 var: 89, val: 0/2
+    road_connect: road2 junction0-2 junction0-1 var: 90, val: 0/2
+    road_connect: road2 junction0-2 junction1-1 var: 91, val: 0/2
+    road_connect: road2 junction0-2 junction1-2 var: 92, val: 0/2
+    road_connect: road2 junction1-0 junction0-0 var: 93, val: 0/2
+    road_connect: road2 junction1-0 junction0-1 var: 94, val: 0/2
+    road_connect: road2 junction1-0 junction1-1 var: 95, val: 0/2
+    road_connect: road2 junction1-0 junction2-0 var: 96, val: 0/2
+    road_connect: road2 junction1-0 junction2-1 var: 97, val: 0/2
+    road_connect: road2 junction1-1 junction0-0 var: 98, val: 0/2
+    road_connect: road2 junction1-1 junction0-1 var: 99, val: 0/2
+    road_connect: road2 junction1-1 junction0-2 var: 100, val: 0/2
+    road_connect: road2 junction1-1 junction1-0 var: 101, val: 0/2
+    road_connect: road2 junction1-1 junction1-2 var: 102, val: 0/2
+    road_connect: road2 junction1-1 junction2-0 var: 103, val: 0/2
+    road_connect: road2 junction1-1 junction2-1 var: 104, val: 0/2
+    road_connect: road2 junction1-1 junction2-2 var: 105, val: 0/2
+    road_connect: road2 junction1-2 junction0-1 var: 106, val: 0/2
+    road_connect: road2 junction1-2 junction0-2 var: 107, val: 0/2
+    road_connect: road2 junction1-2 junction1-1 var: 108, val: 0/2
+    road_connect: road2 junction1-2 junction2-1 var: 109, val: 0/2
+    road_connect: road2 junction1-2 junction2-2 var: 110, val: 0/2
+    road_connect: road2 junction2-0 junction1-0 var: 111, val: 0/2
+    road_connect: road2 junction2-0 junction1-1 var: 112, val: 0/2
+    road_connect: road2 junction2-0 junction2-1 var: 113, val: 0/2
+    road_connect: road2 junction2-1 junction1-0 var: 114, val: 0/2
+    road_connect: road2 junction2-1 junction1-1 var: 115, val: 0/2
+    road_connect: road2 junction2-1 junction1-2 var: 116, val: 0/2
+    road_connect: road2 junction2-1 junction2-0 var: 117, val: 0/2
+    road_connect: road2 junction2-1 junction2-2 var: 118, val: 0/2
+    road_connect: road2 junction2-2 junction1-1 var: 119, val: 0/2
+    road_connect: road2 junction2-2 junction1-2 var: 120, val: 0/2
+    road_connect: road2 junction2-2 junction2-1 var: 121, val: 0/2
+    road_connect: road3 junction0-0 junction0-1 var: 122, val: 0/2
+    road_connect: road3 junction0-0 junction1-0 var: 123, val: 0/2
+    road_connect: road3 junction0-0 junction1-1 var: 124, val: 0/2
+    road_connect: road3 junction0-1 junction0-0 var: 125, val: 0/2
+    road_connect: road3 junction0-1 junction0-2 var: 126, val: 0/2
+    road_connect: road3 junction0-1 junction1-0 var: 127, val: 0/2
+    road_connect: road3 junction0-1 junction1-1 var: 128, val: 0/2
+    road_connect: road3 junction0-1 junction1-2 var: 129, val: 0/2
+    road_connect: road3 junction0-2 junction0-1 var: 130, val: 0/2
+    road_connect: road3 junction0-2 junction1-1 var: 131, val: 0/2
+    road_connect: road3 junction0-2 junction1-2 var: 132, val: 0/2
+    road_connect: road3 junction1-0 junction0-0 var: 133, val: 0/2
+    road_connect: road3 junction1-0 junction0-1 var: 134, val: 0/2
+    road_connect: road3 junction1-0 junction1-1 var: 135, val: 0/2
+    road_connect: road3 junction1-0 junction2-0 var: 136, val: 0/2
+    road_connect: road3 junction1-0 junction2-1 var: 137, val: 0/2
+    road_connect: road3 junction1-1 junction0-0 var: 138, val: 0/2
+    road_connect: road3 junction1-1 junction0-1 var: 139, val: 0/2
+    road_connect: road3 junction1-1 junction0-2 var: 140, val: 0/2
+    road_connect: road3 junction1-1 junction1-0 var: 141, val: 0/2
+    road_connect: road3 junction1-1 junction1-2 var: 142, val: 0/2
+    road_connect: road3 junction1-1 junction2-0 var: 143, val: 0/2
+    road_connect: road3 junction1-1 junction2-1 var: 144, val: 0/2
+    road_connect: road3 junction1-1 junction2-2 var: 145, val: 0/2
+    road_connect: road3 junction1-2 junction0-1 var: 146, val: 0/2
+    road_connect: road3 junction1-2 junction0-2 var: 147, val: 0/2
+    road_connect: road3 junction1-2 junction1-1 var: 148, val: 0/2
+    road_connect: road3 junction1-2 junction2-1 var: 149, val: 0/2
+    road_connect: road3 junction1-2 junction2-2 var: 150, val: 0/2
+    road_connect: road3 junction2-0 junction1-0 var: 151, val: 0/2
+    road_connect: road3 junction2-0 junction1-1 var: 152, val: 0/2
+    road_connect: road3 junction2-0 junction2-1 var: 153, val: 0/2
+    road_connect: road3 junction2-1 junction1-0 var: 154, val: 0/2
+    road_connect: road3 junction2-1 junction1-1 var: 155, val: 0/2
+    road_connect: road3 junction2-1 junction1-2 var: 156, val: 0/2
+    road_connect: road3 junction2-1 junction2-0 var: 157, val: 0/2
+    road_connect: road3 junction2-1 junction2-2 var: 158, val: 0/2
+    road_connect: road3 junction2-2 junction1-1 var: 159, val: 0/2
+    road_connect: road3 junction2-2 junction1-2 var: 160, val: 0/2
+    road_connect: road3 junction2-2 junction2-1 var: 161, val: 0/2
+    road_connect: road4 junction0-0 junction0-1 var: 162, val: 0/2
+    road_connect: road4 junction0-0 junction1-0 var: 163, val: 0/2
+    road_connect: road4 junction0-0 junction1-1 var: 164, val: 0/2
+    road_connect: road4 junction0-1 junction0-0 var: 165, val: 0/2
+    road_connect: road4 junction0-1 junction0-2 var: 166, val: 0/2
+    road_connect: road4 junction0-1 junction1-0 var: 167, val: 0/2
+    road_connect: road4 junction0-1 junction1-1 var: 168, val: 0/2
+    road_connect: road4 junction0-1 junction1-2 var: 169, val: 0/2
+    road_connect: road4 junction0-2 junction0-1 var: 170, val: 0/2
+    road_connect: road4 junction0-2 junction1-1 var: 171, val: 0/2
+    road_connect: road4 junction0-2 junction1-2 var: 172, val: 0/2
+    road_connect: road4 junction1-0 junction0-0 var: 173, val: 0/2
+    road_connect: road4 junction1-0 junction0-1 var: 174, val: 0/2
+    road_connect: road4 junction1-0 junction1-1 var: 175, val: 0/2
+    road_connect: road4 junction1-0 junction2-0 var: 176, val: 0/2
+    road_connect: road4 junction1-0 junction2-1 var: 177, val: 0/2
+    road_connect: road4 junction1-1 junction0-0 var: 178, val: 0/2
+    road_connect: road4 junction1-1 junction0-1 var: 179, val: 0/2
+    road_connect: road4 junction1-1 junction0-2 var: 180, val: 0/2
+    road_connect: road4 junction1-1 junction1-0 var: 181, val: 0/2
+    road_connect: road4 junction1-1 junction1-2 var: 182, val: 0/2
+    road_connect: road4 junction1-1 junction2-0 var: 183, val: 0/2
+    road_connect: road4 junction1-1 junction2-1 var: 184, val: 0/2
+    road_connect: road4 junction1-1 junction2-2 var: 185, val: 0/2
+    road_connect: road4 junction1-2 junction0-1 var: 186, val: 0/2
+    road_connect: road4 junction1-2 junction0-2 var: 187, val: 0/2
+    road_connect: road4 junction1-2 junction1-1 var: 188, val: 0/2
+    road_connect: road4 junction1-2 junction2-1 var: 189, val: 0/2
+    road_connect: road4 junction1-2 junction2-2 var: 190, val: 0/2
+    road_connect: road4 junction2-0 junction1-0 var: 191, val: 0/2
+    road_connect: road4 junction2-0 junction1-1 var: 192, val: 0/2
+    road_connect: road4 junction2-0 junction2-1 var: 193, val: 0/2
+    road_connect: road4 junction2-1 junction1-0 var: 194, val: 0/2
+    road_connect: road4 junction2-1 junction1-1 var: 195, val: 0/2
+    road_connect: road4 junction2-1 junction1-2 var: 196, val: 0/2
+    road_connect: road4 junction2-1 junction2-0 var: 197, val: 0/2
+    road_connect: road4 junction2-1 junction2-2 var: 198, val: 0/2
+    road_connect: road4 junction2-2 junction1-1 var: 199, val: 0/2
+    road_connect: road4 junction2-2 junction1-2 var: 200, val: 0/2
+    road_connect: road4 junction2-2 junction2-1 var: 201, val: 0/2
+    clear: junction0-0 var: 202, val: 0/2
+    clear: junction0-1 var: 203, val: 0/2
+    clear: junction0-2 var: 204, val: 0/2
+    clear: junction1-0 var: 205, val: 0/2
+    clear: junction1-1 var: 206, val: 0/2
+    clear: junction1-2 var: 207, val: 0/2
+    clear: junction2-0 var: 208, val: 0/2
+    clear: junction2-1 var: 209, val: 0/2
+    clear: junction2-2 var: 210, val: 0/2
+    in_place: road0 var: 211, val: 0/2
+    in_place: road1 var: 212, val: 0/2
+    in_place: road2 var: 213, val: 0/2
+    in_place: road3 var: 214, val: 0/2
+    in_place: road4 var: 215, val: 0/2
 Facts[262]:
     at_car_jun: car0 junction0-0
     at_car_jun: car0 junction0-1
@@ -6318,14 +6890,14 @@ destroy_road junction0-0 junction0-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6342,14 +6914,14 @@ destroy_road junction0-0 junction0-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6366,14 +6938,14 @@ destroy_road junction0-0 junction0-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6390,14 +6962,14 @@ destroy_road junction0-0 junction0-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6414,14 +6986,14 @@ destroy_road junction0-0 junction0-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6438,14 +7010,14 @@ destroy_road junction0-0 junction1-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6462,14 +7034,14 @@ destroy_road junction0-0 junction1-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6486,14 +7058,14 @@ destroy_road junction0-0 junction1-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6510,14 +7082,14 @@ destroy_road junction0-0 junction1-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6534,14 +7106,14 @@ destroy_road junction0-0 junction1-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6558,14 +7130,14 @@ destroy_road junction0-0 junction1-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6582,14 +7154,14 @@ destroy_road junction0-0 junction1-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6606,14 +7178,14 @@ destroy_road junction0-0 junction1-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6630,14 +7202,14 @@ destroy_road junction0-0 junction1-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6654,14 +7226,14 @@ destroy_road junction0-0 junction1-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-0
       eff-del[1]:
@@ -6678,14 +7250,14 @@ destroy_road junction0-1 junction0-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6702,14 +7274,14 @@ destroy_road junction0-1 junction0-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6726,14 +7298,14 @@ destroy_road junction0-1 junction0-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6750,14 +7322,14 @@ destroy_road junction0-1 junction0-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6774,14 +7346,14 @@ destroy_road junction0-1 junction0-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6798,14 +7370,14 @@ destroy_road junction0-1 junction0-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6822,14 +7394,14 @@ destroy_road junction0-1 junction0-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6846,14 +7418,14 @@ destroy_road junction0-1 junction0-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6870,14 +7442,14 @@ destroy_road junction0-1 junction0-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6894,14 +7466,14 @@ destroy_road junction0-1 junction0-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6918,14 +7490,14 @@ destroy_road junction0-1 junction1-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6942,14 +7514,14 @@ destroy_road junction0-1 junction1-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6966,14 +7538,14 @@ destroy_road junction0-1 junction1-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -6990,14 +7562,14 @@ destroy_road junction0-1 junction1-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7014,14 +7586,14 @@ destroy_road junction0-1 junction1-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7038,14 +7610,14 @@ destroy_road junction0-1 junction1-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7062,14 +7634,14 @@ destroy_road junction0-1 junction1-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7086,14 +7658,14 @@ destroy_road junction0-1 junction1-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7110,14 +7682,14 @@ destroy_road junction0-1 junction1-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7134,14 +7706,14 @@ destroy_road junction0-1 junction1-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7158,14 +7730,14 @@ destroy_road junction0-1 junction1-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7182,14 +7754,14 @@ destroy_road junction0-1 junction1-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7206,14 +7778,14 @@ destroy_road junction0-1 junction1-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7230,14 +7802,14 @@ destroy_road junction0-1 junction1-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7254,14 +7826,14 @@ destroy_road junction0-1 junction1-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-1
       eff-del[1]:
@@ -7278,14 +7850,14 @@ destroy_road junction0-2 junction0-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7302,14 +7874,14 @@ destroy_road junction0-2 junction0-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7326,14 +7898,14 @@ destroy_road junction0-2 junction0-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7350,14 +7922,14 @@ destroy_road junction0-2 junction0-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7374,14 +7946,14 @@ destroy_road junction0-2 junction0-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7398,14 +7970,14 @@ destroy_road junction0-2 junction1-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7422,14 +7994,14 @@ destroy_road junction0-2 junction1-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7446,14 +8018,14 @@ destroy_road junction0-2 junction1-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7470,14 +8042,14 @@ destroy_road junction0-2 junction1-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7494,14 +8066,14 @@ destroy_road junction0-2 junction1-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7518,14 +8090,14 @@ destroy_road junction0-2 junction1-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7542,14 +8114,14 @@ destroy_road junction0-2 junction1-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7566,14 +8138,14 @@ destroy_road junction0-2 junction1-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7590,14 +8162,14 @@ destroy_road junction0-2 junction1-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7614,14 +8186,14 @@ destroy_road junction0-2 junction1-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction0-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction0-2
       eff-del[1]:
@@ -7638,14 +8210,14 @@ destroy_road junction1-0 junction0-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7662,14 +8234,14 @@ destroy_road junction1-0 junction0-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7686,14 +8258,14 @@ destroy_road junction1-0 junction0-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7710,14 +8282,14 @@ destroy_road junction1-0 junction0-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7734,14 +8306,14 @@ destroy_road junction1-0 junction0-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7758,14 +8330,14 @@ destroy_road junction1-0 junction0-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7782,14 +8354,14 @@ destroy_road junction1-0 junction0-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7806,14 +8378,14 @@ destroy_road junction1-0 junction0-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7830,14 +8402,14 @@ destroy_road junction1-0 junction0-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7854,14 +8426,14 @@ destroy_road junction1-0 junction0-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7878,14 +8450,14 @@ destroy_road junction1-0 junction1-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7902,14 +8474,14 @@ destroy_road junction1-0 junction1-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7926,14 +8498,14 @@ destroy_road junction1-0 junction1-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7950,14 +8522,14 @@ destroy_road junction1-0 junction1-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7974,14 +8546,14 @@ destroy_road junction1-0 junction1-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -7998,14 +8570,14 @@ destroy_road junction1-0 junction2-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -8022,14 +8594,14 @@ destroy_road junction1-0 junction2-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -8046,14 +8618,14 @@ destroy_road junction1-0 junction2-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -8070,14 +8642,14 @@ destroy_road junction1-0 junction2-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -8094,14 +8666,14 @@ destroy_road junction1-0 junction2-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -8118,14 +8690,14 @@ destroy_road junction1-0 junction2-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -8142,14 +8714,14 @@ destroy_road junction1-0 junction2-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -8166,14 +8738,14 @@ destroy_road junction1-0 junction2-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -8190,14 +8762,14 @@ destroy_road junction1-0 junction2-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -8214,14 +8786,14 @@ destroy_road junction1-0 junction2-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-0
       eff-del[1]:
@@ -8238,14 +8810,14 @@ destroy_road junction1-1 junction0-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8262,14 +8834,14 @@ destroy_road junction1-1 junction0-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8286,14 +8858,14 @@ destroy_road junction1-1 junction0-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8310,14 +8882,14 @@ destroy_road junction1-1 junction0-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8334,14 +8906,14 @@ destroy_road junction1-1 junction0-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8358,14 +8930,14 @@ destroy_road junction1-1 junction0-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8382,14 +8954,14 @@ destroy_road junction1-1 junction0-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8406,14 +8978,14 @@ destroy_road junction1-1 junction0-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8430,14 +9002,14 @@ destroy_road junction1-1 junction0-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8454,14 +9026,14 @@ destroy_road junction1-1 junction0-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8478,14 +9050,14 @@ destroy_road junction1-1 junction0-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8502,14 +9074,14 @@ destroy_road junction1-1 junction0-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8526,14 +9098,14 @@ destroy_road junction1-1 junction0-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8550,14 +9122,14 @@ destroy_road junction1-1 junction0-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8574,14 +9146,14 @@ destroy_road junction1-1 junction0-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8598,14 +9170,14 @@ destroy_road junction1-1 junction1-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8622,14 +9194,14 @@ destroy_road junction1-1 junction1-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8646,14 +9218,14 @@ destroy_road junction1-1 junction1-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8670,14 +9242,14 @@ destroy_road junction1-1 junction1-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8694,14 +9266,14 @@ destroy_road junction1-1 junction1-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8718,14 +9290,14 @@ destroy_road junction1-1 junction1-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8742,14 +9314,14 @@ destroy_road junction1-1 junction1-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8766,14 +9338,14 @@ destroy_road junction1-1 junction1-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8790,14 +9362,14 @@ destroy_road junction1-1 junction1-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8814,14 +9386,14 @@ destroy_road junction1-1 junction1-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8838,14 +9410,14 @@ destroy_road junction1-1 junction2-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8862,14 +9434,14 @@ destroy_road junction1-1 junction2-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8886,14 +9458,14 @@ destroy_road junction1-1 junction2-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8910,14 +9482,14 @@ destroy_road junction1-1 junction2-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8934,14 +9506,14 @@ destroy_road junction1-1 junction2-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8958,14 +9530,14 @@ destroy_road junction1-1 junction2-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -8982,14 +9554,14 @@ destroy_road junction1-1 junction2-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -9006,14 +9578,14 @@ destroy_road junction1-1 junction2-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -9030,14 +9602,14 @@ destroy_road junction1-1 junction2-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -9054,14 +9626,14 @@ destroy_road junction1-1 junction2-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -9078,14 +9650,14 @@ destroy_road junction1-1 junction2-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -9102,14 +9674,14 @@ destroy_road junction1-1 junction2-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -9126,14 +9698,14 @@ destroy_road junction1-1 junction2-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -9150,14 +9722,14 @@ destroy_road junction1-1 junction2-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -9174,14 +9746,14 @@ destroy_road junction1-1 junction2-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-1
       eff-del[1]:
@@ -9198,14 +9770,14 @@ destroy_road junction1-2 junction0-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9222,14 +9794,14 @@ destroy_road junction1-2 junction0-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9246,14 +9818,14 @@ destroy_road junction1-2 junction0-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9270,14 +9842,14 @@ destroy_road junction1-2 junction0-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9294,14 +9866,14 @@ destroy_road junction1-2 junction0-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9318,14 +9890,14 @@ destroy_road junction1-2 junction0-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9342,14 +9914,14 @@ destroy_road junction1-2 junction0-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9366,14 +9938,14 @@ destroy_road junction1-2 junction0-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9390,14 +9962,14 @@ destroy_road junction1-2 junction0-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9414,14 +9986,14 @@ destroy_road junction1-2 junction0-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9438,14 +10010,14 @@ destroy_road junction1-2 junction1-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9462,14 +10034,14 @@ destroy_road junction1-2 junction1-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9486,14 +10058,14 @@ destroy_road junction1-2 junction1-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9510,14 +10082,14 @@ destroy_road junction1-2 junction1-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9534,14 +10106,14 @@ destroy_road junction1-2 junction1-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9558,14 +10130,14 @@ destroy_road junction1-2 junction2-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9582,14 +10154,14 @@ destroy_road junction1-2 junction2-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9606,14 +10178,14 @@ destroy_road junction1-2 junction2-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9630,14 +10202,14 @@ destroy_road junction1-2 junction2-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9654,14 +10226,14 @@ destroy_road junction1-2 junction2-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9678,14 +10250,14 @@ destroy_road junction1-2 junction2-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9702,14 +10274,14 @@ destroy_road junction1-2 junction2-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9726,14 +10298,14 @@ destroy_road junction1-2 junction2-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9750,14 +10322,14 @@ destroy_road junction1-2 junction2-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9774,14 +10346,14 @@ destroy_road junction1-2 junction2-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction1-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction1-2
       eff-del[1]:
@@ -9798,14 +10370,14 @@ destroy_road junction2-0 junction1-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -9822,14 +10394,14 @@ destroy_road junction2-0 junction1-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -9846,14 +10418,14 @@ destroy_road junction2-0 junction1-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -9870,14 +10442,14 @@ destroy_road junction2-0 junction1-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -9894,14 +10466,14 @@ destroy_road junction2-0 junction1-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -9918,14 +10490,14 @@ destroy_road junction2-0 junction1-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -9942,14 +10514,14 @@ destroy_road junction2-0 junction1-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -9966,14 +10538,14 @@ destroy_road junction2-0 junction1-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -9990,14 +10562,14 @@ destroy_road junction2-0 junction1-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -10014,14 +10586,14 @@ destroy_road junction2-0 junction1-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -10038,14 +10610,14 @@ destroy_road junction2-0 junction2-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -10062,14 +10634,14 @@ destroy_road junction2-0 junction2-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -10086,14 +10658,14 @@ destroy_road junction2-0 junction2-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -10110,14 +10682,14 @@ destroy_road junction2-0 junction2-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -10134,14 +10706,14 @@ destroy_road junction2-0 junction2-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-0
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-0
       eff-del[1]:
@@ -10158,14 +10730,14 @@ destroy_road junction2-1 junction1-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10182,14 +10754,14 @@ destroy_road junction2-1 junction1-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10206,14 +10778,14 @@ destroy_road junction2-1 junction1-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10230,14 +10802,14 @@ destroy_road junction2-1 junction1-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10254,14 +10826,14 @@ destroy_road junction2-1 junction1-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10278,14 +10850,14 @@ destroy_road junction2-1 junction1-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10302,14 +10874,14 @@ destroy_road junction2-1 junction1-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10326,14 +10898,14 @@ destroy_road junction2-1 junction1-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10350,14 +10922,14 @@ destroy_road junction2-1 junction1-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10374,14 +10946,14 @@ destroy_road junction2-1 junction1-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10398,14 +10970,14 @@ destroy_road junction2-1 junction1-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10422,14 +10994,14 @@ destroy_road junction2-1 junction1-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10446,14 +11018,14 @@ destroy_road junction2-1 junction1-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10470,14 +11042,14 @@ destroy_road junction2-1 junction1-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10494,14 +11066,14 @@ destroy_road junction2-1 junction1-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10518,14 +11090,14 @@ destroy_road junction2-1 junction2-0 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10542,14 +11114,14 @@ destroy_road junction2-1 junction2-0 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10566,14 +11138,14 @@ destroy_road junction2-1 junction2-0 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10590,14 +11162,14 @@ destroy_road junction2-1 junction2-0 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10614,14 +11186,14 @@ destroy_road junction2-1 junction2-0 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10638,14 +11210,14 @@ destroy_road junction2-1 junction2-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10662,14 +11234,14 @@ destroy_road junction2-1 junction2-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10686,14 +11258,14 @@ destroy_road junction2-1 junction2-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10710,14 +11282,14 @@ destroy_road junction2-1 junction2-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10734,14 +11306,14 @@ destroy_road junction2-1 junction2-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-1
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-1
       eff-del[1]:
@@ -10758,14 +11330,14 @@ destroy_road junction2-2 junction1-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -10782,14 +11354,14 @@ destroy_road junction2-2 junction1-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -10806,14 +11378,14 @@ destroy_road junction2-2 junction1-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -10830,14 +11402,14 @@ destroy_road junction2-2 junction1-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -10854,14 +11426,14 @@ destroy_road junction2-2 junction1-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -10878,14 +11450,14 @@ destroy_road junction2-2 junction1-2 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -10902,14 +11474,14 @@ destroy_road junction2-2 junction1-2 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -10926,14 +11498,14 @@ destroy_road junction2-2 junction1-2 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -10950,14 +11522,14 @@ destroy_road junction2-2 junction1-2 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -10974,14 +11546,14 @@ destroy_road junction2-2 junction1-2 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -10998,14 +11570,14 @@ destroy_road junction2-2 junction2-1 road0 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road0
       pre[1]:
         at_car_road: car1 road0
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -11022,14 +11594,14 @@ destroy_road junction2-2 junction2-1 road1 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road1
       pre[1]:
         at_car_road: car1 road1
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -11046,14 +11618,14 @@ destroy_road junction2-2 junction2-1 road2 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road2
       pre[1]:
         at_car_road: car1 road2
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -11070,14 +11642,14 @@ destroy_road junction2-2 junction2-1 road3 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road3
       pre[1]:
         at_car_road: car1 road3
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -11094,14 +11666,14 @@ destroy_road junction2-2 junction2-1 road4 --> 10
     cond-eff[2]:
       pre[1]:
         at_car_road: car0 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car0 junction2-2
       eff-del[1]:
         at_car_road: car0 road4
       pre[1]:
         at_car_road: car1 road4
-      pre-neg[1]:
+      pre-neg[0]:
       eff-add[1]:
         at_car_jun: car1 junction2-2
       eff-del[1]:
@@ -21154,6 +21726,191 @@ Lift Actions[6]:
       next: ?n2 ?n1
     pre-neg[0]:
     eq[0]:
+Invariant 0:
+    passenger-at: p0 n0 var: 0, val: 0/13
+    passenger-at: p0 n1 var: 0, val: 1/13
+    passenger-at: p0 n2 var: 0, val: 2/13
+    passenger-at: p0 n3 var: 0, val: 3/13
+    passenger-at: p0 n4 var: 0, val: 4/13
+    passenger-at: p0 n5 var: 0, val: 5/13
+    passenger-at: p0 n6 var: 0, val: 6/13
+    passenger-at: p0 n7 var: 0, val: 7/13
+    passenger-at: p0 n8 var: 0, val: 8/13
+    boarded: p0 fast0 var: 0, val: 9/13
+    boarded: p0 fast1 var: 0, val: 10/13
+    boarded: p0 slow0-0 var: 0, val: 11/13
+    boarded: p0 slow1-0 var: 0, val: 12/13
+Invariant 1:
+    passenger-at: p1 n0 var: 1, val: 0/13
+    passenger-at: p1 n1 var: 1, val: 1/13
+    passenger-at: p1 n2 var: 1, val: 2/13
+    passenger-at: p1 n3 var: 1, val: 3/13
+    passenger-at: p1 n4 var: 1, val: 4/13
+    passenger-at: p1 n5 var: 1, val: 5/13
+    passenger-at: p1 n6 var: 1, val: 6/13
+    passenger-at: p1 n7 var: 1, val: 7/13
+    passenger-at: p1 n8 var: 1, val: 8/13
+    boarded: p1 fast0 var: 1, val: 9/13
+    boarded: p1 fast1 var: 1, val: 10/13
+    boarded: p1 slow0-0 var: 1, val: 11/13
+    boarded: p1 slow1-0 var: 1, val: 12/13
+Invariant 2:
+    passenger-at: p2 n0 var: 2, val: 0/13
+    passenger-at: p2 n1 var: 2, val: 1/13
+    passenger-at: p2 n2 var: 2, val: 2/13
+    passenger-at: p2 n3 var: 2, val: 3/13
+    passenger-at: p2 n4 var: 2, val: 4/13
+    passenger-at: p2 n5 var: 2, val: 5/13
+    passenger-at: p2 n6 var: 2, val: 6/13
+    passenger-at: p2 n7 var: 2, val: 7/13
+    passenger-at: p2 n8 var: 2, val: 8/13
+    boarded: p2 fast0 var: 2, val: 9/13
+    boarded: p2 fast1 var: 2, val: 10/13
+    boarded: p2 slow0-0 var: 2, val: 11/13
+    boarded: p2 slow1-0 var: 2, val: 12/13
+Invariant 3:
+    passenger-at: p3 n0 var: 3, val: 0/13
+    passenger-at: p3 n1 var: 3, val: 1/13
+    passenger-at: p3 n2 var: 3, val: 2/13
+    passenger-at: p3 n3 var: 3, val: 3/13
+    passenger-at: p3 n4 var: 3, val: 4/13
+    passenger-at: p3 n5 var: 3, val: 5/13
+    passenger-at: p3 n6 var: 3, val: 6/13
+    passenger-at: p3 n7 var: 3, val: 7/13
+    passenger-at: p3 n8 var: 3, val: 8/13
+    boarded: p3 fast0 var: 3, val: 9/13
+    boarded: p3 fast1 var: 3, val: 10/13
+    boarded: p3 slow0-0 var: 3, val: 11/13
+    boarded: p3 slow1-0 var: 3, val: 12/13
+Invariant 4:
+    lift-at: fast0 n0 var: 4, val: 0/5
+    lift-at: fast0 n2 var: 4, val: 1/5
+    lift-at: fast0 n4 var: 4, val: 2/5
+    lift-at: fast0 n6 var: 4, val: 3/5
+    lift-at: fast0 n8 var: 4, val: 4/5
+Invariant 5:
+    lift-at: fast1 n0 var: 5, val: 0/5
+    lift-at: fast1 n2 var: 5, val: 1/5
+    lift-at: fast1 n4 var: 5, val: 2/5
+    lift-at: fast1 n6 var: 5, val: 3/5
+    lift-at: fast1 n8 var: 5, val: 4/5
+Invariant 6:
+    lift-at: slow0-0 n0 var: 6, val: 0/5
+    lift-at: slow0-0 n1 var: 6, val: 1/5
+    lift-at: slow0-0 n2 var: 6, val: 2/5
+    lift-at: slow0-0 n3 var: 6, val: 3/5
+    lift-at: slow0-0 n4 var: 6, val: 4/5
+Invariant 7:
+    lift-at: slow1-0 n4 var: 7, val: 0/5
+    lift-at: slow1-0 n5 var: 7, val: 1/5
+    lift-at: slow1-0 n6 var: 7, val: 2/5
+    lift-at: slow1-0 n7 var: 7, val: 3/5
+    lift-at: slow1-0 n8 var: 7, val: 4/5
+Invariant 8:
+    passengers: fast0 n0 var: 8, val: 0/4
+    passengers: fast0 n1 var: 8, val: 1/4
+    passengers: fast0 n2 var: 8, val: 2/4
+    passengers: fast0 n3 var: 8, val: 3/4
+Invariant 9:
+    passengers: fast1 n0 var: 9, val: 0/4
+    passengers: fast1 n1 var: 9, val: 1/4
+    passengers: fast1 n2 var: 9, val: 2/4
+    passengers: fast1 n3 var: 9, val: 3/4
+Invariant 10:
+    passengers: slow0-0 n0 var: 10, val: 0/3
+    passengers: slow0-0 n1 var: 10, val: 1/3
+    passengers: slow0-0 n2 var: 10, val: 2/3
+Invariant 11:
+    passengers: slow1-0 n0 var: 11, val: 0/3
+    passengers: slow1-0 n1 var: 11, val: 1/3
+    passengers: slow1-0 n2 var: 11, val: 2/3
+SAS Facts[86]:
+    passenger-at: p0 n0 var: 0, val: 0/13
+    passenger-at: p0 n1 var: 0, val: 1/13
+    passenger-at: p0 n2 var: 0, val: 2/13
+    passenger-at: p0 n3 var: 0, val: 3/13
+    passenger-at: p0 n4 var: 0, val: 4/13
+    passenger-at: p0 n5 var: 0, val: 5/13
+    passenger-at: p0 n6 var: 0, val: 6/13
+    passenger-at: p0 n7 var: 0, val: 7/13
+    passenger-at: p0 n8 var: 0, val: 8/13
+    passenger-at: p1 n0 var: 1, val: 0/13
+    passenger-at: p1 n1 var: 1, val: 1/13
+    passenger-at: p1 n2 var: 1, val: 2/13
+    passenger-at: p1 n3 var: 1, val: 3/13
+    passenger-at: p1 n4 var: 1, val: 4/13
+    passenger-at: p1 n5 var: 1, val: 5/13
+    passenger-at: p1 n6 var: 1, val: 6/13
+    passenger-at: p1 n7 var: 1, val: 7/13
+    passenger-at: p1 n8 var: 1, val: 8/13
+    passenger-at: p2 n0 var: 2, val: 0/13
+    passenger-at: p2 n1 var: 2, val: 1/13
+    passenger-at: p2 n2 var: 2, val: 2/13
+    passenger-at: p2 n3 var: 2, val: 3/13
+    passenger-at: p2 n4 var: 2, val: 4/13
+    passenger-at: p2 n5 var: 2, val: 5/13
+    passenger-at: p2 n6 var: 2, val: 6/13
+    passenger-at: p2 n7 var: 2, val: 7/13
+    passenger-at: p2 n8 var: 2, val: 8/13
+    passenger-at: p3 n0 var: 3, val: 0/13
+    passenger-at: p3 n1 var: 3, val: 1/13
+    passenger-at: p3 n2 var: 3, val: 2/13
+    passenger-at: p3 n3 var: 3, val: 3/13
+    passenger-at: p3 n4 var: 3, val: 4/13
+    passenger-at: p3 n5 var: 3, val: 5/13
+    passenger-at: p3 n6 var: 3, val: 6/13
+    passenger-at: p3 n7 var: 3, val: 7/13
+    passenger-at: p3 n8 var: 3, val: 8/13
+    boarded: p0 fast0 var: 0, val: 9/13
+    boarded: p0 fast1 var: 0, val: 10/13
+    boarded: p0 slow0-0 var: 0, val: 11/13
+    boarded: p0 slow1-0 var: 0, val: 12/13
+    boarded: p1 fast0 var: 1, val: 9/13
+    boarded: p1 fast1 var: 1, val: 10/13
+    boarded: p1 slow0-0 var: 1, val: 11/13
+    boarded: p1 slow1-0 var: 1, val: 12/13
+    boarded: p2 fast0 var: 2, val: 9/13
+    boarded: p2 fast1 var: 2, val: 10/13
+    boarded: p2 slow0-0 var: 2, val: 11/13
+    boarded: p2 slow1-0 var: 2, val: 12/13
+    boarded: p3 fast0 var: 3, val: 9/13
+    boarded: p3 fast1 var: 3, val: 10/13
+    boarded: p3 slow0-0 var: 3, val: 11/13
+    boarded: p3 slow1-0 var: 3, val: 12/13
+    lift-at: fast0 n0 var: 4, val: 0/5
+    lift-at: fast0 n2 var: 4, val: 1/5
+    lift-at: fast0 n4 var: 4, val: 2/5
+    lift-at: fast0 n6 var: 4, val: 3/5
+    lift-at: fast0 n8 var: 4, val: 4/5
+    lift-at: fast1 n0 var: 5, val: 0/5
+    lift-at: fast1 n2 var: 5, val: 1/5
+    lift-at: fast1 n4 var: 5, val: 2/5
+    lift-at: fast1 n6 var: 5, val: 3/5
+    lift-at: fast1 n8 var: 5, val: 4/5
+    lift-at: slow0-0 n0 var: 6, val: 0/5
+    lift-at: slow0-0 n1 var: 6, val: 1/5
+    lift-at: slow0-0 n2 var: 6, val: 2/5
+    lift-at: slow0-0 n3 var: 6, val: 3/5
+    lift-at: slow0-0 n4 var: 6, val: 4/5
+    lift-at: slow1-0 n4 var: 7, val: 0/5
+    lift-at: slow1-0 n5 var: 7, val: 1/5
+    lift-at: slow1-0 n6 var: 7, val: 2/5
+    lift-at: slow1-0 n7 var: 7, val: 3/5
+    lift-at: slow1-0 n8 var: 7, val: 4/5
+    passengers: fast0 n0 var: 8, val: 0/4
+    passengers: fast0 n1 var: 8, val: 1/4
+    passengers: fast0 n2 var: 8, val: 2/4
+    passengers: fast0 n3 var: 8, val: 3/4
+    passengers: fast1 n0 var: 9, val: 0/4
+    passengers: fast1 n1 var: 9, val: 1/4
+    passengers: fast1 n2 var: 9, val: 2/4
+    passengers: fast1 n3 var: 9, val: 3/4
+    passengers: slow0-0 n0 var: 10, val: 0/3
+    passengers: slow0-0 n1 var: 10, val: 1/3
+    passengers: slow0-0 n2 var: 10, val: 2/3
+    passengers: slow1-0 n0 var: 11, val: 0/3
+    passengers: slow1-0 n1 var: 11, val: 1/3
+    passengers: slow1-0 n2 var: 11, val: 2/3
 Facts[86]:
     passenger-at: p0 n0
     passenger-at: p0 n1

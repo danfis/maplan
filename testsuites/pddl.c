@@ -32,6 +32,7 @@ static void testGround(const char *domain_fn, const char *problem_fn)
     plan_pddl_t *d;
     plan_pddl_ground_t ground;
     plan_pddl_sas_t sas;
+    unsigned sas_flags = PLAN_PDDL_SAS_USE_CG;
 
     printf("---- Ground %s | %s ----\n", domain_fn, problem_fn);
     d = planPDDLNew(domain_fn, problem_fn);
@@ -42,8 +43,9 @@ static void testGround(const char *domain_fn, const char *problem_fn)
     planPDDLGround(&ground);
 
     planPDDLSasInit(&sas, &ground);
-    planPDDLSas(&sas);
+    planPDDLSas(&sas, sas_flags);
     planPDDLSasPrintInvariant(&sas, &ground, stdout);
+    planPDDLSasPrintFacts(&sas, &ground, stdout);
     planPDDLSasFree(&sas);
 
     planPDDLGroundPrint(&ground, stdout);

@@ -554,7 +554,7 @@ static void groundCondEffsPrint(const plan_pddl_ground_cond_effs_t *ce,
     for (i = 0; i < ce->size; ++i){
         fprintf(fout, "      pre[%d]:\n", ce->cond_eff[i].pre.size);
         groundFactsPrint(&ce->cond_eff[i].pre, fact_pool, preds, objs, fout);
-        fprintf(fout, "      pre-neg[%d]:\n", ce->cond_eff[i].pre.size);
+        fprintf(fout, "      pre-neg[%d]:\n", ce->cond_eff[i].pre_neg.size);
         groundFactsPrint(&ce->cond_eff[i].pre_neg, fact_pool, preds, objs, fout);
         fprintf(fout, "      eff-add[%d]:\n", ce->cond_eff[i].eff_add.size);
         groundFactsPrint(&ce->cond_eff[i].eff_add, fact_pool, preds, objs, fout);

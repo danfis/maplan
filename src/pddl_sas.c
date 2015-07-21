@@ -137,7 +137,7 @@ void planPDDLSas(plan_pddl_sas_t *sas, unsigned flags)
         factToSas(sas, i);
     invariantToVar(sas);
 
-    if (!(flags & PLAN_PDDL_SAS_NO_CG)){
+    if (flags & PLAN_PDDL_SAS_USE_CG){
         causalGraph(sas);
     }
 }
@@ -180,7 +180,8 @@ void planPDDLSasPrintFacts(const plan_pddl_sas_t *sas,
         fact = planPDDLFactPoolGet(&g->fact_pool, i);
         fprintf(fout, "    ");
         planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
-        fprintf(fout, " var: %d, val: %d", (int)f->var, (int)f->val);
+        fprintf(fout, " var: %d, val: %d/%d", (int)f->var, (int)f->val,
+                (int)sas->var_range[f->var]);
         fprintf(fout, "\n");
     }
 }

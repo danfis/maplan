@@ -98,7 +98,8 @@ typedef struct _plan_problem_agents_t plan_problem_agents_t;
  * Creates a problem structure from pddl domain and problem files.
  */
 plan_problem_t *planProblemFromPDDL(const char *domain_pddl,
-                                    const char *problem_pddl, int flags);
+                                    const char *problem_pddl,
+                                    unsigned flags);
 
 /**
  * Loads problem definition from protbuf format.

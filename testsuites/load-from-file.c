@@ -352,3 +352,31 @@ TEST(testLoadFromFactoredProto)
     loadFactoredProto("proto/rovers-p03-rover0.proto", flags);
     loadFactoredProto("proto/rovers-p03-rover1.proto", flags);
 }
+
+static void testFromPDDL(const char *domain, const char *prob, unsigned flags)
+{
+    plan_problem_t *p;
+
+    p = planProblemFromPDDL(domain, prob, flags);
+    printf("---- testLoadFromPDDL [%s | %s] ----\n", domain, prob);
+    pProblem(p, stdout);
+    printf("---- testLoadFromPDDL [%s | %s] END ----\n", domain, prob);
+    planProblemDel(p);
+}
+
+TEST(testLoadFromPDDL)
+{
+    int flags;
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    testFromPDDL("pddl/rovers-domain.pddl", "pddl/rovers-p03.pddl", flags);
+
+    /*
+    flags = PLAN_PROBLEM_USE_CG;
+    p = planProblemFromProto("proto/openstacks-p03.proto", flags);
+    printf("---- testLoadFromPDDL ----\n");
+    pProblem(p, stdout);
+    printf("---- testLoadFromPDDL END ----\n");
+    planProblemDel(p);
+    */
+}

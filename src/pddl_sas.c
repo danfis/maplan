@@ -180,8 +180,12 @@ void planPDDLSasPrintFacts(const plan_pddl_sas_t *sas,
         fact = planPDDLFactPoolGet(&g->fact_pool, i);
         fprintf(fout, "    ");
         planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
-        fprintf(fout, " var: %d, val: %d/%d", (int)f->var, (int)f->val,
-                (int)sas->var_range[f->var]);
+        if (f->var != PLAN_VAR_ID_UNDEFINED){
+            fprintf(fout, " var: %d, val: %d/%d", (int)f->var, (int)f->val,
+                    (int)sas->var_range[f->var]);
+        }else{
+            fprintf(fout, " var: %d", (int)PLAN_VAR_ID_UNDEFINED);
+        }
         fprintf(fout, "\n");
     }
 }
@@ -797,7 +801,7 @@ static void setVarNeg(plan_pddl_sas_t *sas)
         if (var_done[fact->var])
             continue;
 
-        add = 0;
+        add = (sas->var_range[fact->var] == 1);
         if (numVarEdge(sas, &fact->single_edge, fact->var)
                 != fact->single_edge.size){
             add = 1;
@@ -927,15 +931,11 @@ static void causalGraph(plan_pddl_sas_t *sas)
 
     // Create mapping from old var ID to the new ID
     var_map = (plan_var_id_t *)alloca(sizeof(plan_var_id_t) * sas->var_size);
-    var_size = 0;
-    for (i = 0, id = 0; i < sas->var_size; ++i){
-        if (cg->important_var[i]){
-            var_map[i] = id++;
-            ++var_size;
-        }else{
-            var_map[i] = PLAN_VAR_ID_UNDEFINED;
-        }
-    }
+    var_size = cg->var_order_size;
+    for (i = 0; i < sas->var_size; ++i)
+        var_map[i] = PLAN_VAR_ID_UNDEFINED;
+    for (i = 0; i < cg->var_order_size; ++i)
+        var_map[cg->var_order[i]] = i;
 
     // Fix fact variables
     for (i = 0; i < sas->fact_size; ++i)

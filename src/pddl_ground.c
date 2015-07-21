@@ -95,7 +95,6 @@ void planPDDLGround(plan_pddl_ground_t *g)
     planPDDLLiftActionsInit(&g->lift_action, &g->pddl->action,
                             &g->pddl->type_obj, &g->pddl->init_func,
                             g->pddl->obj.size, g->pddl->predicate.eq_pred);
-    planPDDLLiftActionsPrint(&g->lift_action, &g->pddl->predicate, &g->pddl->obj, stdout);
 
     planPDDLFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
     instActionsNegativePreconditions(&g->lift_action, &g->fact_pool);

@@ -71,6 +71,9 @@ void planPDDLSas(plan_pddl_sas_t *sas, unsigned flags);
 void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
                                const plan_pddl_ground_t *g,
                                FILE *fout);
+void planPDDLSasPrintFacts(const plan_pddl_sas_t *sas,
+                           const plan_pddl_ground_t *g,
+                           FILE *fout);
 
 #ifdef __cplusplus
 } /* extern "C" */

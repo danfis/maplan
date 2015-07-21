@@ -166,6 +166,25 @@ void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
     }
 }
 
+void planPDDLSasPrintFacts(const plan_pddl_sas_t *sas,
+                           const plan_pddl_ground_t *g,
+                           FILE *fout)
+{
+    const plan_pddl_fact_t *fact;
+    const plan_pddl_sas_fact_t *f;
+    int i;
+
+    fprintf(fout, "SAS Facts[%d]:\n", sas->fact_size);
+    for (i = 0; i < sas->fact_size; ++i){
+        f = sas->fact + i;
+        fact = planPDDLFactPoolGet(&g->fact_pool, i);
+        fprintf(fout, "    ");
+        planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
+        fprintf(fout, " var: %d, val: %d", (int)f->var, (int)f->val);
+        fprintf(fout, "\n");
+    }
+}
+
 
 
 

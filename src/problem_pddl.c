@@ -529,5 +529,7 @@ plan_problem_t *planProblemFromPDDL(const char *domain_pddl,
     planPDDLSasFree(&sas);
     planPDDLGroundFree(&ground);
     planPDDLDel(pddl);
+
+    planProblemPack(p);
     return p;
 }

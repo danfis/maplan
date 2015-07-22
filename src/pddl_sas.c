@@ -924,7 +924,7 @@ static void causalGraph(plan_pddl_sas_t *sas)
 {
     plan_causal_graph_t *cg;
     plan_var_id_t *var_map;
-    int i, id, var_size;
+    int i, var_size;
     plan_val_t *var_range;
 
     cg = causalGraphBuild(sas);

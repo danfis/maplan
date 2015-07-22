@@ -108,6 +108,9 @@ static int setParams(const plan_pddl_lisp_node_t *root,
         param->obj[j].name = root->child[i].value;
         param->obj[j].type = tid;
         param->obj[j].is_constant = 0;
+        param->obj[j].is_private = 0;
+        param->obj[j].owner = -1;
+        param->obj[j].is_agent = 0;
     }
 
     return 0;
@@ -227,6 +230,30 @@ static void simplifyAction(plan_pddl_action_t *a)
 
     if (del)
         reorderFacts(&a->eff);
+}
+
+static int parseAgentParams(const plan_pddl_types_t *types,
+                            const plan_pddl_lisp_node_t *n, int nid,
+                            plan_pddl_objs_t *param)
+{
+    set_param_t set_param;
+    int to;
+
+    if (nid + 2 < n->child_size
+            && n->child[nid + 2].value != NULL
+            && n->child[nid + 2].value[0] == '-'){
+        to = nid + 4;
+    }else{
+        to = nid + 2;
+    }
+
+    set_param.param = param;
+    set_param.types = types;
+    if (planPDDLLispParseTypedList(n, nid + 1, to, setParams, &set_param) != 0)
+        return -1;
+
+    param->obj[param->size - 1].is_agent = 1;
+    return to;
 }
 
 static int parseParams(const plan_pddl_types_t *types,
@@ -605,7 +632,7 @@ static int parseAction(const plan_pddl_types_t *types,
 {
     const plan_pddl_lisp_node_t *n;
     plan_pddl_action_t *a;
-    int i;
+    int i, ret;
 
     if (root->child_size < 4
             || root->child_size / 2 == 1
@@ -617,7 +644,19 @@ static int parseAction(const plan_pddl_types_t *types,
     a = addAction(actions, root->child[1].value);
     for (i = 2; i < root->child_size; i += 2){
         n = root->child + i + 1;
-        if (root->child[i].kw == PLAN_PDDL_KW_PARAMETERS){
+        if (root->child[i].kw == PLAN_PDDL_KW_AGENT){
+            if (!(require & PLAN_PDDL_REQUIRE_MULTI_AGENT)){
+                ERRN2(root->child + i, ":agent is allowed only with"
+                                       " :multi-agent requirement.");
+                return -1;
+            }
+
+            ret = parseAgentParams(types, root, i, &a->param);
+            if (ret < 0)
+                return -1;
+            i = ret - 2;
+
+        }else if (root->child[i].kw == PLAN_PDDL_KW_PARAMETERS){
             if (parseParams(types, n, &a->param) != 0)
                 return -1;
 
@@ -743,8 +782,12 @@ static void planPDDLActionPrint(const plan_pddl_action_t *a,
     int i, j, id;
 
     fprintf(fout, "    %s:", a->name);
-    for (i = 0; i < a->param.size; ++i)
-        fprintf(fout, " %s:%d", a->param.obj[i].name, a->param.obj[i].type);
+    for (i = 0; i < a->param.size; ++i){
+        fprintf(fout, " ");
+        if (a->param.obj[i].is_agent)
+            fprintf(fout, "A:");
+        fprintf(fout, "%s:%d", a->param.obj[i].name, a->param.obj[i].type);
+    }
     fprintf(fout, "\n");
 
     fprintf(fout, "        pre[%d]:\n", a->pre.size);

@@ -5,19 +5,19 @@ Require: 1
 Type[1]:
     [0]: object, parent: -1
 Obj[13]:
-    [0]: depot0, type: 0, is-constant: 0
-    [1]: distributor0, type: 0, is-constant: 0
-    [2]: distributor1, type: 0, is-constant: 0
-    [3]: truck0, type: 0, is-constant: 0
-    [4]: truck1, type: 0, is-constant: 0
-    [5]: pallet0, type: 0, is-constant: 0
-    [6]: pallet1, type: 0, is-constant: 0
-    [7]: pallet2, type: 0, is-constant: 0
-    [8]: crate0, type: 0, is-constant: 0
-    [9]: crate1, type: 0, is-constant: 0
-    [10]: hoist0, type: 0, is-constant: 0
-    [11]: hoist1, type: 0, is-constant: 0
-    [12]: hoist2, type: 0, is-constant: 0
+    [0]: depot0, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: distributor0, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: distributor1, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: truck0, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: truck1, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: pallet0, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: pallet1, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: pallet2, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: crate0, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: crate1, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: hoist0, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [11]: hoist1, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [12]: hoist2, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
 Type-Obj:
     [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12
 Predicate[15]:
@@ -164,17 +164,17 @@ Require: 1
 Type[1]:
     [0]: object, parent: -1
 Obj[11]:
-    [0]: driver1, type: 0, is-constant: 0
-    [1]: driver2, type: 0, is-constant: 0
-    [2]: truck1, type: 0, is-constant: 0
-    [3]: truck2, type: 0, is-constant: 0
-    [4]: package1, type: 0, is-constant: 0
-    [5]: package2, type: 0, is-constant: 0
-    [6]: s0, type: 0, is-constant: 0
-    [7]: s1, type: 0, is-constant: 0
-    [8]: s2, type: 0, is-constant: 0
-    [9]: p1-0, type: 0, is-constant: 0
-    [10]: p1-2, type: 0, is-constant: 0
+    [0]: driver1, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: driver2, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: truck1, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: truck2, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: package1, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: package2, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: s0, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: s1, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: s2, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: p1-0, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: p1-2, type: 0, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
 Type-Obj:
     [0]: 0 1 2 3 4 5 6 7 8 9 10
 Predicate[10]:
@@ -319,24 +319,24 @@ Type[6]:
     [4]: manager-agent, parent: 0
     [5]: manufacturer-agent, parent: 0
 Obj[18]:
-    [0]: p1, type: 2, is-constant: 1
-    [1]: p2, type: 2, is-constant: 1
-    [2]: p3, type: 2, is-constant: 1
-    [3]: p4, type: 2, is-constant: 1
-    [4]: p5, type: 2, is-constant: 1
-    [5]: o1, type: 1, is-constant: 1
-    [6]: o2, type: 1, is-constant: 1
-    [7]: o3, type: 1, is-constant: 1
-    [8]: o4, type: 1, is-constant: 1
-    [9]: o5, type: 1, is-constant: 1
-    [10]: manager, type: 4, is-constant: 1
-    [11]: manufacturer, type: 5, is-constant: 1
-    [12]: n0, type: 3, is-constant: 0
-    [13]: n1, type: 3, is-constant: 0
-    [14]: n2, type: 3, is-constant: 0
-    [15]: n3, type: 3, is-constant: 0
-    [16]: n4, type: 3, is-constant: 0
-    [17]: n5, type: 3, is-constant: 0
+    [0]: p1, type: 2, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [1]: p2, type: 2, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [2]: p3, type: 2, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [3]: p4, type: 2, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [4]: p5, type: 2, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [5]: o1, type: 1, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [6]: o2, type: 1, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [7]: o3, type: 1, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [8]: o4, type: 1, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [9]: o5, type: 1, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [10]: manager, type: 4, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [11]: manufacturer, type: 5, is-constant: 1, is-private: 0, owner: -1, is-agent: 0
+    [12]: n0, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [13]: n1, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [14]: n2, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [15]: n3, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [16]: n4, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [17]: n5, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
 Type-Obj:
     [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
     [1]: 5 6 7 8 9
@@ -527,19 +527,19 @@ Type[8]:
     [6]: lander, parent: 0
     [7]: objective, parent: 0
 Obj[13]:
-    [0]: general, type: 6, is-constant: 0
-    [1]: colour, type: 5, is-constant: 0
-    [2]: high_res, type: 5, is-constant: 0
-    [3]: low_res, type: 5, is-constant: 0
-    [4]: rover0, type: 1, is-constant: 0
-    [5]: rover0store, type: 3, is-constant: 0
-    [6]: waypoint0, type: 2, is-constant: 0
-    [7]: waypoint1, type: 2, is-constant: 0
-    [8]: waypoint2, type: 2, is-constant: 0
-    [9]: waypoint3, type: 2, is-constant: 0
-    [10]: camera0, type: 4, is-constant: 0
-    [11]: objective0, type: 7, is-constant: 0
-    [12]: objective1, type: 7, is-constant: 0
+    [0]: general, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: colour, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: high_res, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: low_res, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: rover0, type: 1, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: rover0store, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: waypoint0, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: waypoint1, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: waypoint2, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: waypoint3, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: camera0, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [11]: objective0, type: 7, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [12]: objective1, type: 7, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
 Type-Obj:
     [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12
     [1]: 4
@@ -740,24 +740,24 @@ Type[5]:
     [3]: garage, parent: 0
     [4]: road, parent: 0
 Obj[18]:
-    [0]: junction0-0, type: 2, is-constant: 0
-    [1]: junction0-1, type: 2, is-constant: 0
-    [2]: junction0-2, type: 2, is-constant: 0
-    [3]: junction1-0, type: 2, is-constant: 0
-    [4]: junction1-1, type: 2, is-constant: 0
-    [5]: junction1-2, type: 2, is-constant: 0
-    [6]: junction2-0, type: 2, is-constant: 0
-    [7]: junction2-1, type: 2, is-constant: 0
-    [8]: junction2-2, type: 2, is-constant: 0
-    [9]: car0, type: 1, is-constant: 0
-    [10]: car1, type: 1, is-constant: 0
-    [11]: garage0, type: 3, is-constant: 0
-    [12]: garage1, type: 3, is-constant: 0
-    [13]: road0, type: 4, is-constant: 0
-    [14]: road1, type: 4, is-constant: 0
-    [15]: road2, type: 4, is-constant: 0
-    [16]: road3, type: 4, is-constant: 0
-    [17]: road4, type: 4, is-constant: 0
+    [0]: junction0-0, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: junction0-1, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: junction0-2, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: junction1-0, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: junction1-1, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: junction1-2, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: junction2-0, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: junction2-1, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: junction2-2, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: car0, type: 1, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: car1, type: 1, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [11]: garage0, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [12]: garage1, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [13]: road0, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [14]: road1, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [15]: road2, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [16]: road3, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [17]: road4, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
 Type-Obj:
     [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
     [1]: 9 10
@@ -937,23 +937,23 @@ Type[6]:
     [4]: passenger, parent: 0
     [5]: count, parent: 0
 Obj[17]:
-    [0]: n0, type: 5, is-constant: 0
-    [1]: n1, type: 5, is-constant: 0
-    [2]: n2, type: 5, is-constant: 0
-    [3]: n3, type: 5, is-constant: 0
-    [4]: n4, type: 5, is-constant: 0
-    [5]: n5, type: 5, is-constant: 0
-    [6]: n6, type: 5, is-constant: 0
-    [7]: n7, type: 5, is-constant: 0
-    [8]: n8, type: 5, is-constant: 0
-    [9]: p0, type: 4, is-constant: 0
-    [10]: p1, type: 4, is-constant: 0
-    [11]: p2, type: 4, is-constant: 0
-    [12]: p3, type: 4, is-constant: 0
-    [13]: fast0, type: 3, is-constant: 0
-    [14]: fast1, type: 3, is-constant: 0
-    [15]: slow0-0, type: 2, is-constant: 0
-    [16]: slow1-0, type: 2, is-constant: 0
+    [0]: n0, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: n1, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: n2, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: n3, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: n4, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: n5, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: n6, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: n7, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: n8, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: p0, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: p1, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [11]: p2, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [12]: p3, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [13]: fast0, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [14]: fast1, type: 3, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [15]: slow0-0, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [16]: slow1-0, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
 Type-Obj:
     [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
     [1]: 13 14 15 16
@@ -1166,6 +1166,145 @@ Init Func[31]:
     total-cost: --> 0
 Metric: 1
 ---- Domain: pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl END ----
+---- Domain: pddl/depot-domain.unfactor.pddl | pddl/depot-pfile1.unfactor.pddl ----
+Domain: depot
+Problem: depotprob1818
+Require: c0002
+Type[11]:
+    [0]: object, parent: -1
+    [1]: place, parent: 0
+    [2]: locatable, parent: 0
+    [3]: driver, parent: 0
+    [4]: depot, parent: 1
+    [5]: distributor, parent: 1
+    [6]: truck, parent: 2
+    [7]: hoist, parent: 2
+    [8]: surface, parent: 2
+    [9]: pallet, parent: 8
+    [10]: crate, parent: 8
+Obj[15]:
+    [0]: truck1, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: truck0, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: depot0, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: crate1, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: crate0, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: pallet1, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: pallet0, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: pallet2, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: distributor1, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: distributor0, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: hoist0, type: 7, is-constant: 0, is-private: 1, owner: 2, is-agent: 0
+    [11]: hoist1, type: 7, is-constant: 0, is-private: 1, owner: 9, is-agent: 0
+    [12]: hoist2, type: 7, is-constant: 0, is-private: 1, owner: 8, is-agent: 0
+    [13]: driver1, type: 3, is-constant: 0, is-private: 1, owner: 13, is-agent: 0
+    [14]: driver0, type: 3, is-constant: 0, is-private: 1, owner: 14, is-agent: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14
+    [1]: 2 8 9
+    [2]: 0 1 3 4 5 6 7 10 11 12
+    [3]: 13 14
+    [4]: 2
+    [5]: 8 9
+    [6]: 0 1
+    [7]: 10 11 12
+    [8]: 3 4 5 6 7
+    [9]: 5 6 7
+    [10]: 3 4
+Predicate[7]:
+    at: 2 1
+    on: 10 8
+    in: 10 6
+    clear: 8
+    lifting: 1 7 10
+    available: 1 7
+    driving: 3 6
+Function[0]:
+Action[5]:
+    drive: A:?a:3 ?x:6 ?y:1 ?z:1
+        pre[2]:
+            at: ?x ?y
+            driving: ?a ?x
+        eff[2]:
+            N:at: ?x ?y
+            at: ?x ?z
+        cond-eff[0]:
+    lift: A:?p:1 ?x:7 ?y:10 ?z:8
+        pre[5]:
+            at: ?x ?p
+            at: ?y ?p
+            on: ?y ?z
+            clear: ?y
+            available: ?p ?x
+        eff[6]:
+            N:at: ?y ?p
+            N:on: ?y ?z
+            N:clear: ?y
+            clear: ?z
+            lifting: ?p ?x ?y
+            N:available: ?p ?x
+        cond-eff[0]:
+    drop: A:?p:1 ?x:7 ?y:10 ?z:8
+        pre[4]:
+            at: ?x ?p
+            at: ?z ?p
+            clear: ?z
+            lifting: ?p ?x ?y
+        eff[6]:
+            at: ?y ?p
+            on: ?y ?z
+            clear: ?y
+            N:clear: ?z
+            N:lifting: ?p ?x ?y
+            available: ?p ?x
+        cond-eff[0]:
+    load: A:?p:1 ?x:7 ?y:10 ?z:6
+        pre[3]:
+            at: ?x ?p
+            at: ?z ?p
+            lifting: ?p ?x ?y
+        eff[3]:
+            in: ?y ?z
+            N:lifting: ?p ?x ?y
+            available: ?p ?x
+        cond-eff[0]:
+    unload: A:?p:1 ?x:7 ?y:10 ?z:6
+        pre[4]:
+            at: ?x ?p
+            at: ?z ?p
+            in: ?y ?z
+            available: ?p ?x
+        eff[3]:
+            N:in: ?y ?z
+            lifting: ?p ?x ?y
+            N:available: ?p ?x
+        cond-eff[0]:
+Goal[2]:
+    on: crate0 pallet2
+    on: crate1 pallet1
+Init[20]:
+    driving: driver0 truck0
+    driving: driver1 truck1
+    at: pallet0 depot0
+    clear: crate1
+    at: pallet1 distributor0
+    clear: crate0
+    at: pallet2 distributor1
+    clear: pallet2
+    at: truck0 distributor1
+    at: truck1 depot0
+    at: hoist0 depot0
+    available: depot0 hoist0
+    at: hoist1 distributor0
+    available: distributor0 hoist1
+    at: hoist2 distributor1
+    available: distributor1 hoist2
+    at: crate0 distributor0
+    on: crate0 pallet1
+    at: crate1 depot0
+    on: crate1 pallet0
+Init Func[0]:
+Metric: 0
+---- Domain: pddl/depot-domain.unfactor.pddl | pddl/depot-pfile1.unfactor.pddl END ----
 ---- Ground pddl/depot-domain.pddl | pddl/depot-pfile1.pddl ----
 Invariant 0:
     at: truck0 depot0 var: 13, val: 0/3

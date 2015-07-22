@@ -30,6 +30,9 @@ struct _plan_pddl_obj_t {
     const char *name;
     int type;
     int is_constant;
+    int is_private;
+    int owner;
+    int is_agent;
 };
 typedef struct _plan_pddl_obj_t plan_pddl_obj_t;
 
@@ -45,6 +48,7 @@ typedef struct _plan_pddl_objs_t plan_pddl_objs_t;
 int planPDDLObjsParse(const plan_pddl_lisp_t *domain,
                       const plan_pddl_lisp_t *problem,
                       const plan_pddl_types_t *types,
+                      unsigned require,
                       plan_pddl_objs_t *objs);
 
 /**

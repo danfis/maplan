@@ -25,6 +25,9 @@ TEST(testPDDL)
     dumpDomain("pddl/rovers-domain.pddl", "pddl/rovers-p01.pddl");
     dumpDomain("pddl/CityCar-domain.pddl", "pddl/CityCar-p3-2-2-0-1.pddl");
     dumpDomain("pddl/elevators08-domain.pddl", "pddl/elevators08-p01.pddl");
+
+    dumpDomain("pddl/depot-domain.unfactor.pddl",
+               "pddl/depot-pfile1.unfactor.pddl");
 }
 
 static void testGround(const char *domain_fn, const char *problem_fn)

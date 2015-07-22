@@ -119,6 +119,12 @@ int planPDDLPredicatesParse(const plan_pddl_lisp_t *domain,
     if (require & PLAN_PDDL_REQUIRE_EQUALITY)
         addEqPredicate(ps);
     for (i = 1; i < n->child_size; ++i){
+        if (n->child[i].child_size > 0
+                && n->child[i].child[0].kw == PLAN_PDDL_KW_PRIVATE){
+            // Process :private predicates separately
+            continue;
+        }
+
         if (parsePredicate(types, n->child + i, ps,
                            "predicate", ps->pred + ps->size) != 0)
             return -1;

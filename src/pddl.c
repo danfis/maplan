@@ -120,7 +120,7 @@ plan_pddl_t *planPDDLNew(const char *domain_fn, const char *problem_fn)
             || planPDDLRequireParse(domain_lisp, &pddl->require) != 0
             || planPDDLTypesParse(domain_lisp, &pddl->type) != 0
             || planPDDLObjsParse(domain_lisp, problem_lisp,
-                                 &pddl->type, &pddl->obj) != 0
+                                 &pddl->type, pddl->require, &pddl->obj) != 0
             || planPDDLTypeObjInit(&pddl->type_obj, &pddl->type, &pddl->obj) != 0
             || planPDDLPredicatesParse(domain_lisp, pddl->require,
                                        &pddl->type, &pddl->predicate) != 0

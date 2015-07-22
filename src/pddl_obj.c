@@ -19,6 +19,7 @@
 
 #include <boruvka/alloc.h>
 #include "plan/pddl_obj.h"
+#include "plan/pddl_require.h"
 #include "pddl_err.h"
 
 struct _set_t {
@@ -56,6 +57,9 @@ static int setCB(const plan_pddl_lisp_node_t *root,
         o->name = root->child[i].value;
         o->type = tid;
         o->is_constant = is_const;
+        o->is_private = 0;
+        o->owner = -1;
+        o->is_agent = 0;
     }
 
     return 0;
@@ -66,18 +70,75 @@ static int parse(const plan_pddl_lisp_t *lisp, int kw, int is_const,
                  plan_pddl_objs_t *objs)
 {
     const plan_pddl_lisp_node_t *n;
+    int to;
     set_t set;
 
     n = planPDDLLispFindNode(&lisp->root, kw);
     if (n == NULL)
         return 0;
 
+    // Find out if there are :private objects -- according to BNF the
+    // :private definitions must be at the end of the :constants or
+    // :objects expression, so we just need to determine the first :private
+    // child.
+    for (to = 1; to < n->child_size; ++to){
+        if (n->child[to].child_size > 0
+                && n->child[to].child[0].kw == PLAN_PDDL_KW_PRIVATE)
+            break;
+    }
+
     set.objs = objs;
     set.types = types;
     set.is_const = is_const;
-    if (planPDDLLispParseTypedList(n, 1, n->child_size, setCB, &set) != 0){
-        ERRN2(n, "Invalid definition of :constants.");
+    if (planPDDLLispParseTypedList(n, 1, to, setCB, &set) != 0){
+        if (is_const){
+            ERRN2(n, "Invalid definition of :constants.");
+        }else{
+            ERRN2(n, "Invalid definition of :objects.");
+        }
         return -1;
+    }
+
+    return 0;
+}
+
+static int parsePrivate(const plan_pddl_lisp_t *lisp,
+                        const plan_pddl_types_t *types,
+                        plan_pddl_objs_t *objs)
+{
+    const plan_pddl_lisp_node_t *n, *p;
+    int i, pi, owner;
+    set_t set;
+
+    n = planPDDLLispFindNode(&lisp->root, PLAN_PDDL_KW_OBJECTS);
+    if (n == NULL)
+        return 0;
+
+    set.objs = objs;
+    set.types = types;
+    set.is_const = 0;
+    for (i = 1; i < n->child_size; ++i){
+        p = n->child + i;
+        if (p->child_size == 0 || p->child[0].kw != PLAN_PDDL_KW_PRIVATE)
+            continue;
+
+        pi = objs->size;
+        if (planPDDLLispParseTypedList(p, 2, p->child_size, setCB, &set) != 0){
+            ERRN2(n->child + i, "Invalid definition of :private :objects.");
+            return -1;
+        }
+
+        owner = planPDDLObjsGet(objs, p->child[1].value);
+        if (owner < 0){
+            ERRN(n->child + i, "Invalid definition of private objects."
+                               " Unkown owner `%s'.\n", p->child[1].value);
+            return -1;
+        }
+
+        for (; pi < objs->size; ++pi){
+            objs->obj[pi].is_private = 1;
+            objs->obj[pi].owner = owner;
+        }
     }
 
     return 0;
@@ -86,12 +147,19 @@ static int parse(const plan_pddl_lisp_t *lisp, int kw, int is_const,
 int planPDDLObjsParse(const plan_pddl_lisp_t *domain,
                       const plan_pddl_lisp_t *problem,
                       const plan_pddl_types_t *types,
+                      unsigned require,
                       plan_pddl_objs_t *objs)
 {
     bzero(objs, sizeof(*objs));
     if (parse(domain, PLAN_PDDL_KW_CONSTANTS, 1, types, objs) != 0
             || parse(problem, PLAN_PDDL_KW_OBJECTS, 0, types, objs) != 0)
         return -1;
+
+    if ((require & PLAN_PDDL_REQUIRE_MULTI_AGENT)
+            && (require & PLAN_PDDL_REQUIRE_UNFACTORED_PRIVACY)){
+        if (parsePrivate(problem, types, objs) != 0)
+            return -1;
+    }
     return 0;
 }
 
@@ -118,9 +186,11 @@ void planPDDLObjsPrint(const plan_pddl_objs_t *objs, FILE *fout)
 
     fprintf(fout, "Obj[%d]:\n", objs->size);
     for (i = 0; i < objs->size; ++i){
-        fprintf(fout, "    [%d]: %s, type: %d, is-constant: %d\n", i,
+        fprintf(fout, "    [%d]: %s, type: %d, is-constant: %d,"
+                      " is-private: %d, owner: %d, is-agent: %d\n", i,
                 objs->obj[i].name, objs->obj[i].type,
-                objs->obj[i].is_constant);
+                objs->obj[i].is_constant, objs->obj[i].is_private,
+                objs->obj[i].owner, objs->obj[i].is_agent);
     }
 }
 

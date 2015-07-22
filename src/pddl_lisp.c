@@ -79,6 +79,9 @@ static kw_t kw[] = {
     { "exists", PLAN_PDDL_KW_EXISTS },
     { "forall", PLAN_PDDL_KW_FORALL },
     { "when", PLAN_PDDL_KW_WHEN },
+
+    { ":private", PLAN_PDDL_KW_PRIVATE },
+    { ":agent", PLAN_PDDL_KW_AGENT },
 };
 static int kw_size = sizeof(kw) / sizeof(kw_t);
 
@@ -335,6 +338,11 @@ int planPDDLLispParseTypedList(const plan_pddl_lisp_node_t *root,
     itto = from;
     for (i = from; i < to; ++i){
         n = root->child + i;
+
+        if (n->value == NULL){
+            ERRN2(n, "Unexpected token.");
+            return -1;
+        }
 
         if (strcmp(n->value, "-") == 0){
             itto = i;

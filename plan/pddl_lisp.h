@@ -63,6 +63,9 @@ typedef enum {
     PLAN_PDDL_KW_EXISTS,
     PLAN_PDDL_KW_FORALL,
     PLAN_PDDL_KW_WHEN,
+
+    PLAN_PDDL_KW_PRIVATE,
+    PLAN_PDDL_KW_AGENT,
 } plan_pddl_kw_t;
 
 typedef struct _plan_pddl_lisp_node_t plan_pddl_lisp_node_t;

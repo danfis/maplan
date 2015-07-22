@@ -514,7 +514,8 @@ plan_problem_t *planProblemFromPDDL(const char *domain_pddl,
     planPDDLSasInit(&sas, &ground);
     planPDDLSas(&sas, sas_flags);
 
-    p = BOR_CALLOC_ARR(plan_problem_t, 1);
+    p = BOR_ALLOC(plan_problem_t);
+    planProblemInit(p);
     p->ma_privacy_var = -1;
 
     if (createVar(p, &sas)

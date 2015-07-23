@@ -12,14 +12,14 @@
 	(in ?x - crate ?y - truck)
 	(clear ?x - surface)
 
-	;(:private ?agent - place
+	(:private ?agent - place
 		(lifting ?agent - place ?x - hoist ?y - crate)
 		(available ?agent - place ?x - hoist)
-	;)
+	)
 
-	;(:private ?agent - driver
+	(:private ?agent - driver
 		(driving ?agent - driver ?t - truck)
-	;)
+	)
 
 )
 

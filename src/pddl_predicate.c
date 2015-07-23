@@ -123,6 +123,7 @@ int planPDDLPredicatesParse(const plan_pddl_lisp_t *domain,
                 && n->child[i].child[0].kw == PLAN_PDDL_KW_PRIVATE){
             // Process :private predicates separately
             continue;
+
         }
 
         if (parsePredicate(types, n->child + i, ps,

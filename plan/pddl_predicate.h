@@ -31,6 +31,8 @@ struct _plan_pddl_predicate_t {
     const char *name;
     int *param;
     int param_size;
+    int is_private;
+    int owner_param;
 };
 typedef struct _plan_pddl_predicate_t plan_pddl_predicate_t;
 

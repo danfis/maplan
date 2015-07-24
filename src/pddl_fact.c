@@ -25,33 +25,16 @@ static int factSetPrivate(plan_pddl_fact_t *fact,
                           const plan_pddl_predicates_t *pred,
                           const plan_pddl_objs_t *objs)
 {
-    const plan_pddl_predicate_t *pr;
-    const plan_pddl_obj_t *obj;
-    int i;
+    int ret;
 
-    pr = pred->pred + fact->pred;
-    if (pr->is_private){
-        fact->is_private = 1;
-        fact->owner = fact->arg[pr->owner_param];
-    }
-
-    for (i = 0; i < fact->arg_size; ++i){
-        obj = objs->obj + fact->arg[i];
-        if (obj->is_private){
-            if (fact->is_private){
-                if (fact->owner != obj->owner){
-                    fprintf(stderr, "Error PDDL: Invalid definition of fact ");
-                    planPDDLFactPrint(pred, objs, fact, stderr);
-                    fprintf(stderr, ".\n");
-                    ERR2("The fact is defined so it should be private for"
-                         " two different agents.");
-                    return -1;
-                }
-            }else{
-                fact->is_private = 1;
-                fact->owner = obj->owner;
-            }
-        }
+    ret = planPDDLFactSetPrivate(fact, pred, objs);
+    if (ret < 0){
+        fprintf(stderr, "Error PDDL: Invalid definition of fact ");
+        planPDDLFactPrint(pred, objs, fact, stderr);
+        fprintf(stderr, ".\n");
+        ERR2("The fact is defined so it should be private for two"
+             " different agents.");
+        return -1;
     }
 
     return 0;
@@ -354,6 +337,37 @@ void planPDDLFactsCopy(plan_pddl_facts_t *dst, const plan_pddl_facts_t *src)
         dst->fact = BOR_ALLOC_ARR(plan_pddl_fact_t, src->size);
     for (i = 0; i < dst->size; ++i)
         planPDDLFactCopy(dst->fact + i, src->fact + i);
+}
+
+int planPDDLFactSetPrivate(plan_pddl_fact_t *fact,
+                           const plan_pddl_predicates_t *pred,
+                           const plan_pddl_objs_t *objs)
+{
+    const plan_pddl_predicate_t *pr;
+    const plan_pddl_obj_t *obj;
+    int i;
+
+    pr = pred->pred + fact->pred;
+    if (pr->is_private){
+        fact->is_private = 1;
+        fact->owner = fact->arg[pr->owner_param];
+    }
+
+    for (i = 0; i < fact->arg_size; ++i){
+        obj = objs->obj + fact->arg[i];
+        if (obj->is_private){
+            if (fact->is_private){
+                if (fact->owner != obj->owner){
+                    return -1;
+                }
+            }else{
+                fact->is_private = 1;
+                fact->owner = obj->owner;
+            }
+        }
+    }
+
+    return fact->is_private;
 }
 
 void planPDDLFactPrint(const plan_pddl_predicates_t *predicates,

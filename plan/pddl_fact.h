@@ -93,6 +93,16 @@ void planPDDLFactsReserve(plan_pddl_facts_t *fs, int alloc_size);
 void planPDDLFactCopy(plan_pddl_fact_t *dst, const plan_pddl_fact_t *src);
 void planPDDLFactsCopy(plan_pddl_facts_t *dst, const plan_pddl_facts_t *src);
 
+/**
+ * Determines whether the fact should be private and which object should be
+ * owner.
+ * Returns 0 if fact remained non-private, 1 if privateness was set and -1
+ * if there is conflict in owners of the fact (thus this is invalid fact).
+ */
+int planPDDLFactSetPrivate(plan_pddl_fact_t *fact,
+                           const plan_pddl_predicates_t *pred,
+                           const plan_pddl_objs_t *objs);
+
 void planPDDLFactPrint(const plan_pddl_predicates_t *predicates,
                        const plan_pddl_objs_t *objs,
                        const plan_pddl_fact_t *f,

@@ -10,8 +10,8 @@ static void pVar(const plan_var_t *var, int var_size, FILE *fout)
         fprintf(fout, "[%d] name: `%s', range: %d, is_private: %d",
                 i, var[i].name, var[i].range, var[i].is_private);
         fprintf(fout, ", is_val_private:");
-        for (j = 0; var[i].is_val_private && j < var[i].range; ++j)
-            fprintf(fout, " %d", var[i].is_val_private[j]);
+        for (j = 0; var[i].val && j < var[i].range; ++j)
+            fprintf(fout, " %d", var[i].val[j].is_private);
         fprintf(fout, ", val_name:");
         for (j = 0; var[i].val && j < var[i].range; ++j)
             fprintf(fout, " `%s'", var[i].val[j].name);

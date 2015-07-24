@@ -25,11 +25,10 @@ void planVarInit(plan_var_t *var, const char *name, plan_val_t range)
 {
     var->name = BOR_STRDUP(name);
     var->range = range;
-    var->val = BOR_CALLOC_ARR(plan_var_val_t, var->range);
-
-    var->is_val_private = BOR_CALLOC_ARR(int, var->range);
     var->is_private = 0;
     var->ma_privacy = 0;
+
+    var->val = BOR_CALLOC_ARR(plan_var_val_t, var->range);
 }
 
 void planVarInitMAPrivacy(plan_var_t *var)
@@ -37,7 +36,6 @@ void planVarInitMAPrivacy(plan_var_t *var)
     var->name = NULL;
     var->range = INT_MAX;
     var->val = NULL;
-    var->is_val_private = NULL;
     var->is_private = 0;
     var->ma_privacy = 1;
 }
@@ -48,8 +46,6 @@ void planVarFree(plan_var_t *var)
 
     if (var->name)
         BOR_FREE(var->name);
-    if (var->is_val_private)
-        BOR_FREE(var->is_val_private);
 
     if (var->val){
         for (i = 0; i < var->range; ++i){
@@ -69,16 +65,10 @@ void planVarCopy(plan_var_t *dst, const plan_var_t *src)
     dst->is_private = src->is_private;
     dst->ma_privacy = src->ma_privacy;
 
-    dst->is_val_private = NULL;
-    if (src->is_val_private){
-        dst->is_val_private = BOR_ALLOC_ARR(int, dst->range);
-        memcpy(dst->is_val_private, src->is_val_private,
-               sizeof(int) * dst->range);
-    }
-
     dst->val = NULL;
     if (src->val){
         dst->val = BOR_CALLOC_ARR(plan_var_val_t, dst->range);
+        memcpy(dst->val, src->val, sizeof(plan_var_val_t) * dst->range);
         for (i = 0; i < dst->range; ++i){
             if (src->val[i].name)
                 dst->val[i].name = BOR_STRDUP(src->val[i].name);
@@ -90,7 +80,7 @@ static int _isAllPrivate(plan_var_t *var)
 {
     plan_val_t i;
     for (i = 0; i < var->range; ++i){
-        if (!var->is_val_private[i])
+        if (!var->val[i].is_private)
             return 0;
     }
     return 1;
@@ -98,7 +88,7 @@ static int _isAllPrivate(plan_var_t *var)
 
 void planVarSetPrivateVal(plan_var_t *var, plan_val_t val)
 {
-    var->is_val_private[val] = 1;
+    var->val[val].is_private = 1;
     if (_isAllPrivate(var))
         var->is_private = 1;
 }
@@ -107,7 +97,7 @@ void planVarSetPrivate(plan_var_t *var)
 {
     plan_val_t i;
     for (i = 0; i < var->range; ++i)
-        var->is_val_private[i] = 1;
+        var->val[i].is_private = 1;
     var->is_private = 1;
 }
 

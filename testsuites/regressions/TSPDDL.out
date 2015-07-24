@@ -1215,9 +1215,9 @@ Predicate[7]:
     on: 10 8 :: is-private: 0, owner-param: -1
     in: 10 6 :: is-private: 0, owner-param: -1
     clear: 8 :: is-private: 0, owner-param: -1
-    lifting: 1 7 10 :: is-private: 0, owner-param: -1
-    available: 1 7 :: is-private: 0, owner-param: -1
-    driving: 3 6 :: is-private: 0, owner-param: -1
+    lifting: 1 7 10 :: is-private: 1, owner-param: 0
+    available: 1 7 :: is-private: 1, owner-param: 0
+    driving: 3 6 :: is-private: 1, owner-param: 0
 Function[0]:
 Action[5]:
     drive: A:?a:3 ?x:6 ?y:1 ?z:1

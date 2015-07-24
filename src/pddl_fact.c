@@ -304,6 +304,20 @@ plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs)
     return f;
 }
 
+void planPDDLFactsSqueeze(plan_pddl_facts_t *fs)
+{
+    fs->alloc_size = fs->size;
+    fs->fact = BOR_REALLOC_ARR(fs->fact, plan_pddl_fact_t, fs->alloc_size);
+}
+
+void planPDDLFactsReserve(plan_pddl_facts_t *fs, int alloc_size)
+{
+    if (fs->alloc_size >= alloc_size)
+        return;
+    fs->alloc_size = alloc_size;
+    fs->fact = BOR_REALLOC_ARR(fs->fact, plan_pddl_fact_t, fs->alloc_size);
+}
+
 void planPDDLFactCopy(plan_pddl_fact_t *dst, const plan_pddl_fact_t *src)
 {
     *dst = *src;

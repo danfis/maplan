@@ -128,12 +128,14 @@ static void groundFacts(plan_pddl_facts_t *out,
                         const plan_pddl_lift_action_t *lift_action,
                         const int *bound_arg)
 {
+    plan_pddl_fact_t *fact;
     int i;
 
-    out->size = facts->size;
-    out->fact = BOR_CALLOC_ARR(plan_pddl_fact_t, out->size);
-    for (i = 0; i < facts->size; ++i)
-        groundFact(out->fact + i, facts->fact + i, lift_action, bound_arg);
+    planPDDLFactsReserve(out, facts->size);
+    for (i = 0; i < facts->size; ++i){
+        fact = planPDDLFactsAdd(out);
+        groundFact(fact, facts->fact + i, lift_action, bound_arg);
+    }
 }
 
 static void groundCondEffs(plan_pddl_cond_effs_t *out,

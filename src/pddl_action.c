@@ -76,7 +76,8 @@ static int setParams(const plan_pddl_lisp_node_t *root,
 {
     plan_pddl_objs_t *param = ((set_param_t *)ud)->param;
     const plan_pddl_types_t *types = ((set_param_t *)ud)->types;
-    int i, j, tid;
+    plan_pddl_obj_t *obj;
+    int i, tid;
 
     tid = 0;
     if (child_type >= 0){
@@ -88,10 +89,7 @@ static int setParams(const plan_pddl_lisp_node_t *root,
         }
     }
 
-    j = param->size;
-    param->size += child_to - child_from;
-    param->obj = BOR_REALLOC_ARR(param->obj, plan_pddl_obj_t, param->size);
-    for (i = child_from; i < child_to; ++i, ++j){
+    for (i = child_from; i < child_to; ++i){
         if (root->child[i].value == NULL){
             ERRN2(root->child + i, "Invalid parameter definition:"
                                    " Unexpected expression.");
@@ -105,12 +103,13 @@ static int setParams(const plan_pddl_lisp_node_t *root,
             return -1;
         }
 
-        param->obj[j].name = root->child[i].value;
-        param->obj[j].type = tid;
-        param->obj[j].is_constant = 0;
-        param->obj[j].is_private = 0;
-        param->obj[j].owner = -1;
-        param->obj[j].is_agent = 0;
+        obj = planPDDLObjsAdd(param);
+        obj->name = root->child[i].value;
+        obj->type = tid;
+        obj->is_constant = 0;
+        obj->is_private = 0;
+        obj->owner = -1;
+        obj->is_agent = 0;
     }
 
     return 0;
@@ -164,7 +163,7 @@ static void reorderFacts(plan_pddl_facts_t *fs)
     }
 
     fs->size = ins;
-    fs->fact = BOR_REALLOC_ARR(fs->fact, plan_pddl_fact_t, fs->size);
+    planPDDLFactsSqueeze(fs);
 }
 
 static int factInFacts(const plan_pddl_fact_t *fact,

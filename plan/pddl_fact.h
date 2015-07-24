@@ -76,6 +76,16 @@ void planPDDLFactFree(plan_pddl_fact_t *f);
 plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs);
 
 /**
+ * Reallocate array so that .alloc_size == .size.
+ */
+void planPDDLFactsSqueeze(plan_pddl_facts_t *fs);
+
+/**
+ * Reserve at least alloc_size members in array.
+ */
+void planPDDLFactsReserve(plan_pddl_facts_t *fs, int alloc_size);
+
+/**
  * Copies fact from src to dst.
  */
 void planPDDLFactCopy(plan_pddl_fact_t *dst, const plan_pddl_fact_t *src);

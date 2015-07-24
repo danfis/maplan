@@ -65,7 +65,7 @@ static int parseFunc(const plan_pddl_lisp_node_t *n,
         return -1;
     }
 
-    func = fs->fact + fs->size++;
+    func = planPDDLFactsAdd(fs);
     func->func_val = atoi(nval->value);
     func->pred = planPDDLPredicatesGet(functions, nfunc->child[0].value);
     if (func->pred < 0){
@@ -82,8 +82,9 @@ static int parseFact(const plan_pddl_lisp_node_t *n,
                      const plan_pddl_objs_t *objs,
                      const char *head, plan_pddl_facts_t *fs)
 {
-    plan_pddl_fact_t *fact = fs->fact + fs->size++;
+    plan_pddl_fact_t *fact;
 
+    fact = planPDDLFactsAdd(fs);
     fact->pred = planPDDLPredicatesGet(predicates, head);
     if (fact->pred < 0){
         ERRN(n, "Unkwnown predicate `%s'.", head);
@@ -134,10 +135,6 @@ int planPDDLFactsParseInit(const plan_pddl_lisp_t *problem,
         return -1;
     }
 
-    // Pre-allocate facts and functions
-    init_fact->fact = BOR_CALLOC_ARR(plan_pddl_fact_t, ninit->child_size - 1);
-    init_func->fact = BOR_CALLOC_ARR(plan_pddl_fact_t, ninit->child_size - 1);
-
     for (i = 1; i < ninit->child_size; ++i){
         n = ninit->child + i;
         if (parseFactFunc(n, predicates, functions, objs,
@@ -145,25 +142,7 @@ int planPDDLFactsParseInit(const plan_pddl_lisp_t *problem,
             return -1;
     }
 
-    if (init_fact->size < ninit->child_size - 1)
-        init_fact->fact = BOR_REALLOC_ARR(init_fact->fact, plan_pddl_fact_t,
-                                          init_fact->size);
-
-    if (init_func->size < ninit->child_size - 1)
-        init_func->fact = BOR_REALLOC_ARR(init_func->fact, plan_pddl_fact_t,
-                                          init_func->size);
     return 0;
-}
-
-static plan_pddl_fact_t *addGoal(plan_pddl_facts_t *goal)
-{
-    plan_pddl_fact_t *f;
-
-    ++goal->size;
-    goal->fact = BOR_REALLOC_ARR(goal->fact, plan_pddl_fact_t, goal->size);
-    f = goal->fact + goal->size - 1;
-    bzero(f, sizeof(*f));
-    return f;
 }
 
 static plan_pddl_fact_t *parseGoalFact(const plan_pddl_lisp_node_t *root,
@@ -198,7 +177,7 @@ static plan_pddl_fact_t *parseGoalFact(const plan_pddl_lisp_node_t *root,
     }
 
     // Add fact to preconditions
-    f = addGoal(goal);
+    f = planPDDLFactsAdd(goal);
     f->pred = pred;
     f->arg_size = root->child_size - 1;
     f->arg = BOR_ALLOC_ARR(int, f->arg_size);
@@ -311,9 +290,16 @@ plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs)
 {
     plan_pddl_fact_t *f;
 
-    ++fs->size;
-    fs->fact = BOR_REALLOC_ARR(fs->fact, plan_pddl_fact_t, fs->size);
-    f = fs->fact + fs->size - 1;
+    if (fs->size >= fs->alloc_size){
+        if (fs->alloc_size == 0){
+            fs->alloc_size = 2;
+        }else{
+            fs->alloc_size *= 2;
+        }
+        fs->fact = BOR_REALLOC_ARR(fs->fact, plan_pddl_fact_t, fs->alloc_size);
+    }
+
+    f = fs->fact + fs->size++;
     bzero(f, sizeof(*f));
     return f;
 }

@@ -41,6 +41,7 @@ typedef struct _plan_pddl_fact_t plan_pddl_fact_t;
 struct _plan_pddl_facts_t {
     plan_pddl_fact_t *fact;
     int size;
+    int alloc_size;
 };
 typedef struct _plan_pddl_facts_t plan_pddl_facts_t;
 

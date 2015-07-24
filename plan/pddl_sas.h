@@ -51,16 +51,18 @@ struct _plan_pddl_sas_t {
     int *close; /*!< True if the corresponding fact is closed */
 
     plan_pddl_sas_fact_t *fact; /*!< Array of fact related data */
-    int fact_size;        /*!< Number of facts */
+    int fact_size;              /*!< Number of facts */
 
-    bor_extarr_t *inv_pool;
-    bor_htable_t *inv_htable;
-    int inv_size;
-    plan_val_t *var_range;
-    plan_var_id_t *var_order;
-    int var_size;
-    plan_pddl_ground_facts_t init;
-    plan_pddl_ground_facts_t goal;
+    bor_extarr_t *inv_pool;   /*!< Pool of all invariants */
+    bor_htable_t *inv_htable; /*!< Hash table for invariants */
+    int inv_size;             /*!< Number of found invariants */
+    plan_val_t *var_range;    /*!< Range for each variable */
+    plan_var_id_t *var_order; /*!< Order of variables as suggested by
+                                   causal-graph analysis. */
+    int var_size;             /*!< Number of variables */
+
+    plan_pddl_ground_facts_t init; /*!< List of facts in initial state */
+    plan_pddl_ground_facts_t goal; /*!< List of facts in goal */
 };
 typedef struct _plan_pddl_sas_t plan_pddl_sas_t;
 

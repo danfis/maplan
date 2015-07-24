@@ -56,7 +56,7 @@ static int createVar(plan_problem_t *p, const plan_pddl_sas_t *sas)
 
     for (i = 0; i < p->var_size; ++i){
         var = p->var + i;
-        if (var->val_name[var->range - 1] == NULL){
+        if (var->val[var->range - 1].name == NULL){
             planVarSetValName(var, var->range - 1, "<none of those>");
         }
     }

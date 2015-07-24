@@ -29,13 +29,19 @@
 extern "C" {
 #endif /* __cplusplus */
 
+struct _plan_var_val_t {
+    char *name; /*!< Name of the value (i.e., corresponding fact) */
+};
+typedef struct _plan_var_val_t plan_var_val_t;
+
 struct _plan_var_t {
     char *name;          /*!< Name of the variable */
     plan_val_t range;    /*!< Number of values in variable */
+    plan_var_val_t *val; /*!< Info about each value within variable */
+
     int *is_val_private; /*!< Flag for each value signal whether it is
                               private */
     int is_private;      /*!< True if all values are private */
-    char **val_name;     /*!< Names of the values (i.e., corresponding facts) */
     int ma_privacy;      /*!< True if the variable is used for state
                               privacy preserving in ma mode */
 };

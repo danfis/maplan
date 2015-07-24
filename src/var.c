@@ -25,9 +25,10 @@ void planVarInit(plan_var_t *var, const char *name, plan_val_t range)
 {
     var->name = BOR_STRDUP(name);
     var->range = range;
+    var->val = BOR_CALLOC_ARR(plan_var_val_t, var->range);
+
     var->is_val_private = BOR_CALLOC_ARR(int, var->range);
     var->is_private = 0;
-    var->val_name = BOR_CALLOC_ARR(char *, var->range);
     var->ma_privacy = 0;
 }
 
@@ -35,9 +36,9 @@ void planVarInitMAPrivacy(plan_var_t *var)
 {
     var->name = NULL;
     var->range = INT_MAX;
+    var->val = NULL;
     var->is_val_private = NULL;
     var->is_private = 0;
-    var->val_name = NULL;
     var->ma_privacy = 1;
 }
 
@@ -49,12 +50,13 @@ void planVarFree(plan_var_t *var)
         BOR_FREE(var->name);
     if (var->is_val_private)
         BOR_FREE(var->is_val_private);
-    if (var->val_name){
+
+    if (var->val){
         for (i = 0; i < var->range; ++i){
-            if (var->val_name[i])
-                BOR_FREE(var->val_name[i]);
+            if (var->val[i].name)
+                BOR_FREE(var->val[i].name);
         }
-        BOR_FREE(var->val_name);
+        BOR_FREE(var->val);
     }
 }
 
@@ -74,12 +76,12 @@ void planVarCopy(plan_var_t *dst, const plan_var_t *src)
                sizeof(int) * dst->range);
     }
 
-    dst->val_name = NULL;
-    if (src->val_name){
-        dst->val_name = BOR_CALLOC_ARR(char *, dst->range);
+    dst->val = NULL;
+    if (src->val){
+        dst->val = BOR_CALLOC_ARR(plan_var_val_t, dst->range);
         for (i = 0; i < dst->range; ++i){
-            if (src->val_name[i])
-                dst->val_name[i] = BOR_STRDUP(src->val_name[i]);
+            if (src->val[i].name)
+                dst->val[i].name = BOR_STRDUP(src->val[i].name);
         }
     }
 }
@@ -111,7 +113,7 @@ void planVarSetPrivate(plan_var_t *var)
 
 void planVarSetValName(plan_var_t *var, plan_val_t val, const char *name)
 {
-    if (var->val_name[val] != NULL)
-        BOR_FREE(var->val_name[val]);
-    var->val_name[val] = BOR_STRDUP(name);
+    if (var->val[val].name != NULL)
+        BOR_FREE(var->val[val].name);
+    var->val[val].name = BOR_STRDUP(name);
 }

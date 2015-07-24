@@ -54,6 +54,7 @@ struct _plan_pddl_ground_action_t {
     int arg_size;
     char *name;
     int cost;
+    int owner;
     plan_pddl_ground_facts_t pre;
     plan_pddl_ground_facts_t pre_neg;
     plan_pddl_ground_facts_t eff_add;
@@ -72,6 +73,7 @@ struct _plan_pddl_ground_action_pool_t {
     bor_htable_t *htable;
     bor_extarr_t *action;
     int size;
+    const plan_pddl_predicates_t *preds;
     const plan_pddl_objs_t *objs;
 };
 typedef struct _plan_pddl_ground_action_pool_t plan_pddl_ground_action_pool_t;
@@ -80,6 +82,7 @@ typedef struct _plan_pddl_ground_action_pool_t plan_pddl_ground_action_pool_t;
  * Initializes action pool.
  */
 void planPDDLGroundActionPoolInit(plan_pddl_ground_action_pool_t *ga,
+                                  const plan_pddl_predicates_t *preds,
                                   const plan_pddl_objs_t *objs);
 
 /**

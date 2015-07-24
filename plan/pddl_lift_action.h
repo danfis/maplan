@@ -36,6 +36,7 @@ struct _plan_pddl_lift_action_t {
     plan_pddl_facts_t pre;
     plan_pddl_facts_t pre_neg;
     plan_pddl_facts_t eq;
+    int owner_param;
 };
 typedef struct _plan_pddl_lift_action_t plan_pddl_lift_action_t;
 
@@ -66,11 +67,6 @@ void planPDDLLiftActionsPrint(const plan_pddl_lift_actions_t *a,
                               const plan_pddl_predicates_t *pred,
                               const plan_pddl_objs_t *obj,
                               FILE *fout);
-
-/**
- * Returns first obj ID that is allowed to be used as i'th argument
- */
-int planPDDLLiftActionFirstAllowedObj(const plan_pddl_lift_action_t *lift_action, int i);
 
 #ifdef __cplusplus
 } /* extern "C" */

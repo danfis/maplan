@@ -72,4 +72,13 @@ TEST(testPDDLGround)
 
     //testGround("/home/danfis/dev/plan-data/raw/atg/satellites-hc/domain.pddl",
     //           "/home/danfis/dev/plan-data/raw/atg/satellites-hc/p33-HC-pfile13.pddl");
+
+    testGround("pddl/depot-domain.unfactor.pddl",
+               "pddl/depot-pfile1.unfactor.pddl");
+    testGround("pddl/driverlog-domain.unfactor.pddl",
+               "pddl/driverlog-pfile1.unfactor.pddl");
+    testGround("pddl/elevators08-domain.unfactor.pddl",
+               "pddl/elevators08-p01.unfactor.pddl");
+    testGround("pddl/rovers-domain.unfactor.pddl",
+               "pddl/rovers-p10.unfactor.pddl");
 }

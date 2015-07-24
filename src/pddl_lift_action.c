@@ -63,7 +63,7 @@ void planPDDLLiftActionsInit(plan_pddl_lift_actions_t *action,
     const plan_pddl_action_t *pddl_a;
     plan_pddl_fact_t *f;
     const plan_pddl_fact_t *pddl_f;
-    int i, prei;
+    int i, pi, prei;
 
     action->size = pddl_action->size;
     action->action = BOR_CALLOC_ARR(plan_pddl_lift_action_t, action->size);
@@ -91,6 +91,14 @@ void planPDDLLiftActionsInit(plan_pddl_lift_actions_t *action,
             }
             planPDDLFactCopy(f, pddl_f);
 
+        }
+
+        a->owner_param = -1;
+        for (pi = 0; pi < pddl_a->param.size; ++pi){
+            if (pddl_a->param.obj[pi].is_agent){
+                a->owner_param = pi;
+                break;
+            }
         }
 
         planPDDLLiftActionPrepare(a, type_obj, obj_size);
@@ -152,17 +160,4 @@ void planPDDLLiftActionsPrint(const plan_pddl_lift_actions_t *a,
         _planPDDLLiftActionFactsPrint(lift, &lift->pre_neg, pred, obj, "pre-neg", fout);
         _planPDDLLiftActionFactsPrint(lift, &lift->eq, pred, obj, "eq", fout);
     }
-}
-
-int planPDDLLiftActionFirstAllowedObj(const plan_pddl_lift_action_t *lift_action, int arg_i)
-{
-    int i;
-    int obj_size = lift_action->obj_size;
-
-    for (i = 0; i < obj_size; ++i){
-        if (lift_action->allowed_arg[arg_i][i])
-            return i;
-    }
-
-    return -1;
 }

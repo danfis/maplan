@@ -35,7 +35,8 @@ static void instActions(const plan_pddl_lift_actions_t *actions,
                         const plan_pddl_t *pddl);
 /** Instantiates negative preconditions of actions and adds them to fact
  *  pool. */
-static void instActionsNegativePreconditions(const plan_pddl_lift_actions_t *as,
+static void instActionsNegativePreconditions(const plan_pddl_t *pddl,
+                                             const plan_pddl_lift_actions_t *as,
                                              plan_pddl_fact_pool_t *fact_pool);
 
 /** Flip flag of the facts that are static facts.
@@ -80,7 +81,7 @@ void planPDDLGroundInit(plan_pddl_ground_t *g, const plan_pddl_t *pddl)
     bzero(g, sizeof(*g));
     g->pddl = pddl;
     planPDDLFactPoolInit(&g->fact_pool, pddl->predicate.size);
-    planPDDLGroundActionPoolInit(&g->action_pool, &pddl->obj);
+    planPDDLGroundActionPoolInit(&g->action_pool, &pddl->predicate, &pddl->obj);
 }
 
 void planPDDLGroundFree(plan_pddl_ground_t *g)
@@ -97,7 +98,7 @@ void planPDDLGround(plan_pddl_ground_t *g)
                             g->pddl->obj.size, g->pddl->predicate.eq_pred);
 
     planPDDLFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
-    instActionsNegativePreconditions(&g->lift_action, &g->fact_pool);
+    instActionsNegativePreconditions(g->pddl, &g->lift_action, &g->fact_pool);
     instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
     markStaticFacts(&g->fact_pool, &g->pddl->init_fact);
     planPDDLGroundActionPoolInst(&g->action_pool, &g->fact_pool);
@@ -154,11 +155,21 @@ static void initBoundArg(int *bound_arg, const int *bound_arg_init, int size)
     int i;
 
     if (bound_arg_init == NULL){
-        for (i = 0; i < size; ++i)
+        for (i = 0; i < size + 1; ++i)
             bound_arg[i] = -1;
     }else{
-        memcpy(bound_arg, bound_arg_init, sizeof(int) * size);
+        memcpy(bound_arg, bound_arg_init, sizeof(int) * (size + 1));
     }
+}
+
+_bor_inline int boundOwner(const int *bound_arg, int arg_size)
+{
+    return bound_arg[arg_size];
+}
+
+_bor_inline void boundSetOwner(int *bound_arg, int arg_size, int owner)
+{
+    bound_arg[arg_size] = owner;
 }
 
 static int _paramIsUsedByFacts(const plan_pddl_facts_t *fs, int param)
@@ -259,39 +270,39 @@ static void instActionBound(const plan_pddl_lift_action_t *lift_action,
     planPDDLGroundActionPoolAdd(action_pool, lift_action, bound_arg, fact_pool);
 }
 
-static void instActionBoundPre(const plan_pddl_lift_action_t *lift_action,
-                               plan_pddl_fact_pool_t *fact_pool,
-                               plan_pddl_ground_action_pool_t *action_pool,
-                               const int *bound_arg_init)
+static int instBoundOwner(const plan_pddl_lift_action_t *lift_action,
+                          const plan_pddl_fact_t *fact,
+                          int *bound_arg)
 {
-    const plan_pddl_action_t *action = lift_action->action;
     int arg_size = lift_action->param_size;
-    int obj_size = lift_action->obj_size;
-    int bound_arg[arg_size];
-    int i, unbound;
+    int owner, bound_owner;
 
-    initBoundArg(bound_arg, bound_arg_init, arg_size);
-    unbound = unboundArg(bound_arg, arg_size);
-    if (unbound >= 0){
-        if (!paramIsUsedInEff(action, unbound)){
-            // If parameter is not used anywhere just bound by a first
-            // available object
-            bound_arg[unbound] = planPDDLLiftActionFirstAllowedObj(lift_action, unbound);
-            instActionBoundPre(lift_action, fact_pool, action_pool, bound_arg);
+    // Determine the owner object that is forced through action bound
+    // argument.
+    owner = -1;
+    if (lift_action->owner_param >= 0
+            && bound_arg[lift_action->owner_param] >= 0)
+        owner = bound_arg[lift_action->owner_param];
 
-        }else{
-            // Bound by all possible objects
-            for (i = 0; i < obj_size; ++i){
-                if (!lift_action->allowed_arg[unbound][i])
-                    continue;
-                bound_arg[unbound] = i;
-                instActionBoundPre(lift_action, fact_pool, action_pool, bound_arg);
-            }
-        }
-
-    }else{
-        instActionBound(lift_action, fact_pool, action_pool, bound_arg);
+    // Check that the owner corresponds to the owner of the binding fact
+    if (fact != NULL && fact->owner >= 0){
+        if (owner >= 0 && fact->owner != owner)
+            return -1;
+        owner = fact->owner;
     }
+
+    // Check that the owner corresponds to the owner bound in previous
+    // steps.
+    bound_owner = boundOwner(bound_arg, arg_size);
+    if (bound_owner >= 0){
+        if (owner >= 0 && owner != bound_owner)
+            return -1;
+        owner = bound_owner;
+    }
+
+    // Bound the owner ID
+    boundSetOwner(bound_arg, arg_size, owner);
+    return 0;
 }
 
 static int instBoundArg(const plan_pddl_lift_action_t *lift_action,
@@ -326,7 +337,46 @@ static int instBoundArg(const plan_pddl_lift_action_t *lift_action,
         }
     }
 
-    return 0;
+    return instBoundOwner(lift_action, fact, bound_arg);
+}
+
+static void instActionBoundPre(const plan_pddl_lift_action_t *lift_action,
+                               plan_pddl_fact_pool_t *fact_pool,
+                               plan_pddl_ground_action_pool_t *action_pool,
+                               const int *bound_arg_init)
+{
+    const plan_pddl_action_t *action = lift_action->action;
+    int arg_size = lift_action->param_size;
+    int obj_size = lift_action->obj_size;
+    int bound_arg[arg_size + 1];
+    int i, unbound, bind_only_first;
+
+    initBoundArg(bound_arg, bound_arg_init, arg_size);
+    unbound = unboundArg(bound_arg, arg_size);
+    if (unbound >= 0){
+        // If parameter is not used anywhere just bound by a first
+        // available object
+        bind_only_first = !paramIsUsedInEff(action, unbound);
+
+        // Bound by all possible objects if bind_first is not set
+        for (i = 0; i < obj_size; ++i){
+            if (!lift_action->allowed_arg[unbound][i])
+                continue;
+
+            // Try an allowed object ID but first check whether it causes
+            // conflict in owners.
+            bound_arg[unbound] = i;
+            if (instBoundOwner(lift_action, NULL, bound_arg) != 0)
+                continue;
+
+            instActionBoundPre(lift_action, fact_pool, action_pool, bound_arg);
+            if (bind_only_first)
+                break;
+        }
+
+    }else{
+        instActionBound(lift_action, fact_pool, action_pool, bound_arg);
+    }
 }
 
 static void instAction(const plan_pddl_lift_action_t *lift_action,
@@ -336,7 +386,7 @@ static void instAction(const plan_pddl_lift_action_t *lift_action,
                        int pre_i)
 {
     const plan_pddl_fact_t *fact, *pre;
-    int facts_size, i, bound_arg[lift_action->param_size];
+    int facts_size, i, bound_arg[lift_action->param_size + 1];
 
     pre = lift_action->pre.fact + pre_i;
     facts_size = planPDDLFactPoolPredSize(fact_pool, pre->pred);
@@ -370,7 +420,7 @@ static void instActionFromFact(const plan_pddl_lift_action_t *lift_action,
 {
     const plan_pddl_fact_t *fact, *pre;
     int i, pre_size = lift_action->pre.size;
-    int bound_arg[lift_action->param_size];
+    int bound_arg[lift_action->param_size + 1];
 
     fact = planPDDLFactPoolGet(fact_pool, fact_id);
     for (i = 0; i < pre_size; ++i){
@@ -414,7 +464,8 @@ static void instActions(const plan_pddl_lift_actions_t *actions,
 /**** INSTANTIATE END ****/
 
 /**** INSTANTIATE NEGATIVE PRECONDITIONS ****/
-static void instActionNegPreWrite(const plan_pddl_lift_action_t *lift_action,
+static void instActionNegPreWrite(const plan_pddl_t *pddl,
+                                  const plan_pddl_lift_action_t *lift_action,
                                   const plan_pddl_fact_t *pre,
                                   int *bound_arg,
                                   plan_pddl_fact_pool_t *fact_pool)
@@ -424,6 +475,12 @@ static void instActionNegPreWrite(const plan_pddl_lift_action_t *lift_action,
     // Termination of recursion -- record the grounded fact
     planPDDLFactCopy(&f, pre);
     memcpy(f.arg, bound_arg, sizeof(int) * f.arg_size);
+
+    // Check if the fact is correct from point of privateness
+    if (planPDDLFactSetPrivate(&f, &pddl->predicate, &pddl->obj) < 0){
+        planPDDLFactFree(&f);
+        return;
+    }
 
     // Write only those negative facts that are not present in positive
     // form
@@ -435,7 +492,8 @@ static void instActionNegPreWrite(const plan_pddl_lift_action_t *lift_action,
     planPDDLFactFree(&f);
 }
 
-static void instActionNegPre(const plan_pddl_lift_action_t *lift_action,
+static void instActionNegPre(const plan_pddl_t *pddl,
+                             const plan_pddl_lift_action_t *lift_action,
                              const plan_pddl_fact_t *pre,
                              int *bound_arg, int arg_i,
                              plan_pddl_fact_pool_t *fact_pool)
@@ -443,14 +501,14 @@ static void instActionNegPre(const plan_pddl_lift_action_t *lift_action,
     int i, var, *allowed;
 
     if (arg_i == pre->arg_size){
-        instActionNegPreWrite(lift_action, pre, bound_arg, fact_pool);
+        instActionNegPreWrite(pddl, lift_action, pre, bound_arg, fact_pool);
         return;
     }
 
     var = pre->arg[arg_i];
     if (var < 0){
         bound_arg[arg_i] = var + lift_action->obj_size;
-        instActionNegPre(lift_action, pre, bound_arg,
+        instActionNegPre(pddl, lift_action, pre, bound_arg,
                          arg_i + 1, fact_pool);
 
     }else{
@@ -459,13 +517,14 @@ static void instActionNegPre(const plan_pddl_lift_action_t *lift_action,
             if (!allowed[i])
                 continue;
             bound_arg[arg_i] = i;
-            instActionNegPre(lift_action, pre, bound_arg,
+            instActionNegPre(pddl, lift_action, pre, bound_arg,
                              arg_i + 1, fact_pool);
         }
     }
 }
 
-static void instActionNegPres(const plan_pddl_lift_action_t *lift_action,
+static void instActionNegPres(const plan_pddl_t *pddl,
+                              const plan_pddl_lift_action_t *lift_action,
                               plan_pddl_fact_pool_t *fact_pool)
 {
     const plan_pddl_fact_t *fact;
@@ -474,16 +533,17 @@ static void instActionNegPres(const plan_pddl_lift_action_t *lift_action,
     for (i = 0; i < lift_action->pre_neg.size; ++i){
         fact = lift_action->pre_neg.fact + i;
         bound_arg = BOR_ALLOC_ARR(int, fact->arg_size);
-        instActionNegPre(lift_action, fact, bound_arg, 0, fact_pool);
+        instActionNegPre(pddl, lift_action, fact, bound_arg, 0, fact_pool);
         BOR_FREE(bound_arg);
     }
 }
 
-static void instActionsNegativePreconditions(const plan_pddl_lift_actions_t *as,
+static void instActionsNegativePreconditions(const plan_pddl_t *pddl,
+                                             const plan_pddl_lift_actions_t *as,
                                              plan_pddl_fact_pool_t *fact_pool)
 {
     int i;
     for (i = 0; i < as->size; ++i)
-        instActionNegPres(as->action + i, fact_pool);
+        instActionNegPres(pddl, as->action + i, fact_pool);
 }
 /**** INSTANTIATE NEGATIVE PRECONDITIONS END ****/

@@ -39,6 +39,7 @@ typedef struct _plan_pddl_obj_t plan_pddl_obj_t;
 struct _plan_pddl_objs_t {
     plan_pddl_obj_t *obj;
     int size;
+    int alloc_size;
 };
 typedef struct _plan_pddl_objs_t plan_pddl_objs_t;
 
@@ -60,6 +61,11 @@ void planPDDLObjsFree(plan_pddl_objs_t *objs);
  * Returns ID of the object of the specified name.
  */
 int planPDDLObjsGet(const plan_pddl_objs_t *objs, const char *name);
+
+/**
+ * Adds a new obj at the end of the array.
+ */
+plan_pddl_obj_t *planPDDLObjsAdd(plan_pddl_objs_t *objs);
 
 /**
  * Print formated objects.

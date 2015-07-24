@@ -36,7 +36,7 @@ static int setCB(const plan_pddl_lisp_node_t *root,
     plan_pddl_obj_t *o;
     const plan_pddl_types_t *types = ((set_t *)ud)->types;
     int is_const = ((set_t *)ud)->is_const;
-    int i, tid, size;
+    int i, tid;
 
     tid = 0;
     if (child_type >= 0){
@@ -49,11 +49,8 @@ static int setCB(const plan_pddl_lisp_node_t *root,
     }
 
 
-    size = objs->size + (child_to - child_from);
-    objs->obj = BOR_REALLOC_ARR(objs->obj, plan_pddl_obj_t, size);
-    o = objs->obj + objs->size;
-    objs->size = size;
-    for (i = child_from; i < child_to; ++i, ++o){
+    for (i = child_from; i < child_to; ++i){
+        o = planPDDLObjsAdd(objs);
         o->name = root->child[i].value;
         o->type = tid;
         o->is_constant = is_const;
@@ -178,6 +175,26 @@ int planPDDLObjsGet(const plan_pddl_objs_t *objs, const char *name)
             return i;
     }
     return -1;
+}
+
+plan_pddl_obj_t *planPDDLObjsAdd(plan_pddl_objs_t *objs)
+{
+    plan_pddl_obj_t *o;
+
+    if (objs->size >= objs->alloc_size){
+        if (objs->alloc_size == 0){
+            objs->alloc_size = 2;
+        }else{
+            objs->alloc_size *= 2;
+        }
+        objs->obj = BOR_REALLOC_ARR(objs->obj, plan_pddl_obj_t,
+                                    objs->alloc_size);
+    }
+
+    o = objs->obj + objs->size++;
+    bzero(o, sizeof(*o));
+    o->owner = -1;
+    return o;
 }
 
 void planPDDLObjsPrint(const plan_pddl_objs_t *objs, FILE *fout)

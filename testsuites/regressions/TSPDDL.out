@@ -1282,8 +1282,8 @@ Goal[2]:
     on: crate0 pallet2
     on: crate1 pallet1
 Init[20]:
-    driving: driver0 truck0
-    driving: driver1 truck1
+    P[14]:driving: driver0 truck0
+    P[13]:driving: driver1 truck1
     at: pallet0 depot0
     clear: crate1
     at: pallet1 distributor0
@@ -1292,12 +1292,12 @@ Init[20]:
     clear: pallet2
     at: truck0 distributor1
     at: truck1 depot0
-    at: hoist0 depot0
-    available: depot0 hoist0
-    at: hoist1 distributor0
-    available: distributor0 hoist1
-    at: hoist2 distributor1
-    available: distributor1 hoist2
+    P[2]:at: hoist0 depot0
+    P[2]:available: depot0 hoist0
+    P[9]:at: hoist1 distributor0
+    P[9]:available: distributor0 hoist1
+    P[8]:at: hoist2 distributor1
+    P[8]:available: distributor1 hoist2
     at: crate0 distributor0
     on: crate0 pallet1
     at: crate1 depot0

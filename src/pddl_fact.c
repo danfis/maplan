@@ -21,6 +21,42 @@
 #include "plan/pddl_fact.h"
 #include "pddl_err.h"
 
+static int factSetPrivate(plan_pddl_fact_t *fact,
+                          const plan_pddl_predicates_t *pred,
+                          const plan_pddl_objs_t *objs)
+{
+    const plan_pddl_predicate_t *pr;
+    const plan_pddl_obj_t *obj;
+    int i;
+
+    pr = pred->pred + fact->pred;
+    if (pr->is_private){
+        fact->is_private = 1;
+        fact->owner = fact->arg[pr->owner_param];
+    }
+
+    for (i = 0; i < fact->arg_size; ++i){
+        obj = objs->obj + fact->arg[i];
+        if (obj->is_private){
+            if (fact->is_private){
+                if (fact->owner != obj->owner){
+                    fprintf(stderr, "Error PDDL: Invalid definition of fact ");
+                    planPDDLFactPrint(pred, objs, fact, stderr);
+                    fprintf(stderr, ".\n");
+                    ERR2("The fact is defined so it should be private for"
+                         " two different agents.");
+                    return -1;
+                }
+            }else{
+                fact->is_private = 1;
+                fact->owner = obj->owner;
+            }
+        }
+    }
+
+    return 0;
+}
+
 static int parseObjsIntoArr(const plan_pddl_lisp_node_t *n,
                             const plan_pddl_objs_t *objs,
                             int from, int to, int **out, int *out_size)
@@ -73,8 +109,14 @@ static int parseFunc(const plan_pddl_lisp_node_t *n,
         return -1;
     }
 
-    return parseObjsIntoArr(nfunc, objs, 1, nfunc->child_size,
-                            &func->arg, &func->arg_size);
+    if (parseObjsIntoArr(nfunc, objs, 1, nfunc->child_size,
+                         &func->arg, &func->arg_size) != 0)
+        return -1;
+
+    if (factSetPrivate(func, functions, objs) != 0)
+        return -1;
+
+    return 0;
 }
 
 static int parseFact(const plan_pddl_lisp_node_t *n,
@@ -91,8 +133,14 @@ static int parseFact(const plan_pddl_lisp_node_t *n,
         return -1;
     }
 
-    return parseObjsIntoArr(n, objs, 1, n->child_size,
-                            &fact->arg, &fact->arg_size);
+    if (parseObjsIntoArr(n, objs, 1, n->child_size,
+                         &fact->arg, &fact->arg_size) != 0)
+        return -1;
+
+    if (factSetPrivate(fact, predicates, objs) != 0)
+        return -1;
+
+    return 0;
 }
 
 static int parseFactFunc(const plan_pddl_lisp_node_t *n,
@@ -150,9 +198,7 @@ static plan_pddl_fact_t *parseGoalFact(const plan_pddl_lisp_node_t *root,
                                        const plan_pddl_objs_t *objs,
                                        plan_pddl_facts_t *goal)
 {
-    plan_pddl_fact_t *f;
     const char *name;
-    int pred, i;
 
     // Get predicate name
     name = planPDDLLispNodeHead(root);
@@ -161,36 +207,9 @@ static plan_pddl_fact_t *parseGoalFact(const plan_pddl_lisp_node_t *root,
         return NULL;
     }
 
-    // And resolve it agains known predicates
-    pred = planPDDLPredicatesGet(predicates, name);
-    if (pred == -1){
-        ERRN(root, "Unkown predicate `%s'", name);
+    if (parseFact(root, predicates, objs, name, goal) != 0)
         return NULL;
-    }
-
-    // Check that all children are terminals
-    for (i = 1; i < root->child_size; ++i){
-        if (root->child[i].value == NULL){
-            ERRN(root, "Invalid instantiation of predicate `%s'", name);
-            return NULL;
-        }
-    }
-
-    // Add fact to preconditions
-    f = planPDDLFactsAdd(goal);
-    f->pred = pred;
-    f->arg_size = root->child_size - 1;
-    f->arg = BOR_ALLOC_ARR(int, f->arg_size);
-    for (i = 0; i < f->arg_size; ++i){
-        f->arg[i] = planPDDLObjsGet(objs, root->child[i + 1].value);
-        if (f->arg[i] < 0){
-            ERRN(root->child + i + 1, "Invalid object in :goal predicate %s.",
-                 name);
-            return NULL;
-        }
-    }
-
-    return f;
+    return goal->fact + goal->size - 1;
 }
 
 int parseGoal(const plan_pddl_lisp_node_t *root,
@@ -301,6 +320,7 @@ plan_pddl_fact_t *planPDDLFactsAdd(plan_pddl_facts_t *fs)
 
     f = fs->fact + fs->size++;
     bzero(f, sizeof(*f));
+    f->owner = -1;
     return f;
 }
 
@@ -347,6 +367,12 @@ void planPDDLFactPrint(const plan_pddl_predicates_t *predicates,
         fprintf(fout, "N:");
     if (f->stat)
         fprintf(fout, "S:");
+    if (f->is_private){
+        fprintf(fout, "P");
+        if (f->owner >= 0)
+            fprintf(fout, "[%d]", f->owner);
+        fprintf(fout, ":");
+    }
     fprintf(fout, "%s:", predicates->pred[f->pred].name);
     for (i = 0; i < f->arg_size; ++i){
         fprintf(fout, " %s", objs->obj[f->arg[i]].name);

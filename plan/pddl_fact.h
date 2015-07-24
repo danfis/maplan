@@ -29,12 +29,14 @@ extern "C" {
 #endif /* __cplusplus */
 
 struct _plan_pddl_fact_t {
-    int pred;     /*!< Predicate ID */
-    int *arg;     /*!< Object IDs are arguments */
-    int arg_size; /*!< Number of arguments */
-    int neg;      /*!< True if it is negated form */
-    int func_val; /*!< Assigned value in case of function */
-    int stat;     /*!< True if the fact is static */
+    int pred;       /*!< Predicate ID */
+    int *arg;       /*!< Object IDs are arguments */
+    int arg_size;   /*!< Number of arguments */
+    int neg;        /*!< True if it is negated form */
+    int func_val;   /*!< Assigned value in case of function */
+    int stat;       /*!< True if the fact is static */
+    int is_private; /*!< True if the fact is private */
+    int owner;      /*!< Owner object ID in case the fact is private */
 };
 typedef struct _plan_pddl_fact_t plan_pddl_fact_t;
 

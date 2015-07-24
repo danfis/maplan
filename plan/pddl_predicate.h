@@ -40,6 +40,7 @@ struct _plan_pddl_predicates_t {
     plan_pddl_predicate_t *pred;
     int size;
     int eq_pred;
+    int alloc_size;
 };
 typedef struct _plan_pddl_predicates_t plan_pddl_predicates_t;
 
@@ -67,6 +68,16 @@ void planPDDLPredicatesFree(plan_pddl_predicates_t *ps);
  * Returns ID of the predicate with the specified name.
  */
 int planPDDLPredicatesGet(const plan_pddl_predicates_t *ps, const char *name);
+
+/**
+ * Adds a new predicate to the end.
+ */
+plan_pddl_predicate_t *planPDDLPredicatesAdd(plan_pddl_predicates_t *ps);
+
+/**
+ * Removes last predicate from the array.
+ */
+void planPDDLPredicatesRemoveLast(plan_pddl_predicates_t *ps);
 
 void planPDDLPredicatesPrint(const plan_pddl_predicates_t *ps,
                              const char *title, FILE *fout);

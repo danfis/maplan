@@ -21,21 +21,21 @@ Obj[13]:
 Type-Obj:
     [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12
 Predicate[15]:
-    at: 0 0
-    on: 0 0
-    in: 0 0
-    lifting: 0 0
-    available: 0
-    clear: 0
-    place: 0
-    locatable: 0
-    depot: 0
-    distributor: 0
-    truck: 0
-    hoist: 0
-    surface: 0
-    pallet: 0
-    crate: 0
+    at: 0 0 :: is-private: 0, owner-param: -1
+    on: 0 0 :: is-private: 0, owner-param: -1
+    in: 0 0 :: is-private: 0, owner-param: -1
+    lifting: 0 0 :: is-private: 0, owner-param: -1
+    available: 0 :: is-private: 0, owner-param: -1
+    clear: 0 :: is-private: 0, owner-param: -1
+    place: 0 :: is-private: 0, owner-param: -1
+    locatable: 0 :: is-private: 0, owner-param: -1
+    depot: 0 :: is-private: 0, owner-param: -1
+    distributor: 0 :: is-private: 0, owner-param: -1
+    truck: 0 :: is-private: 0, owner-param: -1
+    hoist: 0 :: is-private: 0, owner-param: -1
+    surface: 0 :: is-private: 0, owner-param: -1
+    pallet: 0 :: is-private: 0, owner-param: -1
+    crate: 0 :: is-private: 0, owner-param: -1
 Function[0]:
 Action[5]:
     drive: ?x:0 ?y:0 ?z:0
@@ -178,16 +178,16 @@ Obj[11]:
 Type-Obj:
     [0]: 0 1 2 3 4 5 6 7 8 9 10
 Predicate[10]:
-    obj: 0
-    truck: 0
-    location: 0
-    driver: 0
-    at: 0 0
-    in: 0 0
-    driving: 0 0
-    link: 0 0
-    path: 0 0
-    empty: 0
+    obj: 0 :: is-private: 0, owner-param: -1
+    truck: 0 :: is-private: 0, owner-param: -1
+    location: 0 :: is-private: 0, owner-param: -1
+    driver: 0 :: is-private: 0, owner-param: -1
+    at: 0 0 :: is-private: 0, owner-param: -1
+    in: 0 0 :: is-private: 0, owner-param: -1
+    driving: 0 0 :: is-private: 0, owner-param: -1
+    link: 0 0 :: is-private: 0, owner-param: -1
+    path: 0 0 :: is-private: 0, owner-param: -1
+    empty: 0 :: is-private: 0, owner-param: -1
 Function[0]:
 Action[6]:
     load-truck: ?obj:0 ?truck:0 ?driver:0 ?loc:0
@@ -345,16 +345,16 @@ Type-Obj:
     [4]: 10
     [5]: 11
 Predicate[8]:
-    includes: 1 2
-    waiting: 1
-    started: 1
-    shipped: 1
-    made: 2
-    not-made: 2
-    stacks-avail: 3
-    next-count: 3 3
+    includes: 1 2 :: is-private: 0, owner-param: -1
+    waiting: 1 :: is-private: 0, owner-param: -1
+    started: 1 :: is-private: 0, owner-param: -1
+    shipped: 1 :: is-private: 0, owner-param: -1
+    made: 2 :: is-private: 0, owner-param: -1
+    not-made: 2 :: is-private: 0, owner-param: -1
+    stacks-avail: 3 :: is-private: 0, owner-param: -1
+    next-count: 3 3 :: is-private: 0, owner-param: -1
 Function[1]:
-    total-cost:
+    total-cost: :: is-private: 0, owner-param: -1
 Action[12]:
     open-new-stack: ?man:5 ?open:3 ?new-open:3
         pre[2]:
@@ -550,31 +550,31 @@ Type-Obj:
     [6]: 0
     [7]: 11 12
 Predicate[25]:
-    at: 1 2
-    at_lander: 6 2
-    can_traverse: 1 2 2
-    equipped_for_soil_analysis: 1
-    equipped_for_rock_analysis: 1
-    equipped_for_imaging: 1
-    empty: 3
-    have_rock_analysis: 1 2
-    have_soil_analysis: 1 2
-    full: 3
-    calibrated: 4 1
-    supports: 4 5
-    available: 1
-    visible: 2 2
-    have_image: 1 7 5
-    communicated_soil_data: 2
-    communicated_rock_data: 2
-    communicated_image_data: 7 5
-    at_soil_sample: 2
-    at_rock_sample: 2
-    visible_from: 7 2
-    store_of: 3 1
-    calibration_target: 4 7
-    on_board: 4 1
-    channel_free: 6
+    at: 1 2 :: is-private: 0, owner-param: -1
+    at_lander: 6 2 :: is-private: 0, owner-param: -1
+    can_traverse: 1 2 2 :: is-private: 0, owner-param: -1
+    equipped_for_soil_analysis: 1 :: is-private: 0, owner-param: -1
+    equipped_for_rock_analysis: 1 :: is-private: 0, owner-param: -1
+    equipped_for_imaging: 1 :: is-private: 0, owner-param: -1
+    empty: 3 :: is-private: 0, owner-param: -1
+    have_rock_analysis: 1 2 :: is-private: 0, owner-param: -1
+    have_soil_analysis: 1 2 :: is-private: 0, owner-param: -1
+    full: 3 :: is-private: 0, owner-param: -1
+    calibrated: 4 1 :: is-private: 0, owner-param: -1
+    supports: 4 5 :: is-private: 0, owner-param: -1
+    available: 1 :: is-private: 0, owner-param: -1
+    visible: 2 2 :: is-private: 0, owner-param: -1
+    have_image: 1 7 5 :: is-private: 0, owner-param: -1
+    communicated_soil_data: 2 :: is-private: 0, owner-param: -1
+    communicated_rock_data: 2 :: is-private: 0, owner-param: -1
+    communicated_image_data: 7 5 :: is-private: 0, owner-param: -1
+    at_soil_sample: 2 :: is-private: 0, owner-param: -1
+    at_rock_sample: 2 :: is-private: 0, owner-param: -1
+    visible_from: 7 2 :: is-private: 0, owner-param: -1
+    store_of: 3 1 :: is-private: 0, owner-param: -1
+    calibration_target: 4 7 :: is-private: 0, owner-param: -1
+    on_board: 4 1 :: is-private: 0, owner-param: -1
+    channel_free: 6 :: is-private: 0, owner-param: -1
 Function[0]:
 Action[9]:
     navigate: ?x:1 ?y:2 ?z:2
@@ -765,19 +765,19 @@ Type-Obj:
     [3]: 11 12
     [4]: 13 14 15 16 17
 Predicate[11]:
-    =: 0 0
-    same_line: 2 2
-    diagonal: 2 2
-    at_car_jun: 1 2
-    at_car_road: 1 4
-    starting: 1 3
-    arrived: 1 2
-    road_connect: 4 2 2
-    clear: 2
-    in_place: 4
-    at_garage: 3 2
+    =: 0 0 :: is-private: 0, owner-param: -1
+    same_line: 2 2 :: is-private: 0, owner-param: -1
+    diagonal: 2 2 :: is-private: 0, owner-param: -1
+    at_car_jun: 1 2 :: is-private: 0, owner-param: -1
+    at_car_road: 1 4 :: is-private: 0, owner-param: -1
+    starting: 1 3 :: is-private: 0, owner-param: -1
+    arrived: 1 2 :: is-private: 0, owner-param: -1
+    road_connect: 4 2 2 :: is-private: 0, owner-param: -1
+    clear: 2 :: is-private: 0, owner-param: -1
+    in_place: 4 :: is-private: 0, owner-param: -1
+    at_garage: 3 2 :: is-private: 0, owner-param: -1
 Function[1]:
-    total-cost:
+    total-cost: :: is-private: 0, owner-param: -1
 Action[7]:
     move_car_in_road: ?xy_initial:2 ?xy_final:2 ?machine:1 ?r1:4
         pre[4]:
@@ -962,18 +962,18 @@ Type-Obj:
     [4]: 9 10 11 12
     [5]: 0 1 2 3 4 5 6 7 8
 Predicate[8]:
-    passenger-at: 4 5
-    boarded: 4 1
-    lift-at: 1 5
-    reachable-floor: 1 5
-    above: 5 5
-    passengers: 1 5
-    can-hold: 1 5
-    next: 5 5
+    passenger-at: 4 5 :: is-private: 0, owner-param: -1
+    boarded: 4 1 :: is-private: 0, owner-param: -1
+    lift-at: 1 5 :: is-private: 0, owner-param: -1
+    reachable-floor: 1 5 :: is-private: 0, owner-param: -1
+    above: 5 5 :: is-private: 0, owner-param: -1
+    passengers: 1 5 :: is-private: 0, owner-param: -1
+    can-hold: 1 5 :: is-private: 0, owner-param: -1
+    next: 5 5 :: is-private: 0, owner-param: -1
 Function[3]:
-    total-cost:
-    travel-slow: 5 5
-    travel-fast: 5 5
+    total-cost: :: is-private: 0, owner-param: -1
+    travel-slow: 5 5 :: is-private: 0, owner-param: -1
+    travel-fast: 5 5 :: is-private: 0, owner-param: -1
 Action[6]:
     move-up-slow: ?lift:2 ?f1:5 ?f2:5
         pre[3]:
@@ -1211,13 +1211,13 @@ Type-Obj:
     [9]: 5 6 7
     [10]: 3 4
 Predicate[7]:
-    at: 2 1
-    on: 10 8
-    in: 10 6
-    clear: 8
-    lifting: 1 7 10
-    available: 1 7
-    driving: 3 6
+    at: 2 1 :: is-private: 0, owner-param: -1
+    on: 10 8 :: is-private: 0, owner-param: -1
+    in: 10 6 :: is-private: 0, owner-param: -1
+    clear: 8 :: is-private: 0, owner-param: -1
+    lifting: 1 7 10 :: is-private: 0, owner-param: -1
+    available: 1 7 :: is-private: 0, owner-param: -1
+    driving: 3 6 :: is-private: 0, owner-param: -1
 Function[0]:
 Action[5]:
     drive: A:?a:3 ?x:6 ?y:1 ?z:1

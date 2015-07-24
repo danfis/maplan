@@ -67,10 +67,10 @@ static int checkDuplicate(const plan_pddl_predicates_t *ps, const char *name)
 
 static int parsePredicate(const plan_pddl_types_t *types,
                           const plan_pddl_lisp_node_t *n,
-                          const plan_pddl_predicates_t *ps,
                           const char *errname,
-                          plan_pddl_predicate_t *p)
+                          plan_pddl_predicates_t *ps)
 {
+    plan_pddl_predicate_t *p;
     set_t set;
 
     if (n->child_size < 1 || n->child[0].value == NULL){
@@ -83,23 +83,27 @@ static int parsePredicate(const plan_pddl_types_t *types,
         return -1;
     }
 
+    p = planPDDLPredicatesAdd(ps);
     set.pred = p;
     set.types = types;
-    if (planPDDLLispParseTypedList(n, 1, n->child_size, setCB, &set) != 0)
+    if (planPDDLLispParseTypedList(n, 1, n->child_size, setCB, &set) != 0){
+        planPDDLPredicatesRemoveLast(ps);
         return -1;
+    }
+
     p->name = n->child[0].value;
     return 0;
 }
 
 static void addEqPredicate(plan_pddl_predicates_t *ps)
 {
-    int id;
+    plan_pddl_predicate_t *p;
 
-    id = ps->size++;
-    ps->pred[id].name = eq_name;
-    ps->pred[id].param_size = 2;
-    ps->pred[id].param = BOR_CALLOC_ARR(int, 2);
-    ps->eq_pred = id;
+    p = planPDDLPredicatesAdd(ps);
+    p->name = eq_name;
+    p->param_size = 2;
+    p->param = BOR_CALLOC_ARR(int, 2);
+    ps->eq_pred = ps->size - 1;
 }
 
 int planPDDLPredicatesParse(const plan_pddl_lisp_t *domain,
@@ -114,7 +118,6 @@ int planPDDLPredicatesParse(const plan_pddl_lisp_t *domain,
     if (n == NULL)
         return 0;
 
-    ps->pred = BOR_CALLOC_ARR(plan_pddl_predicate_t, n->child_size);
     ps->eq_pred = -1;
     if (require & PLAN_PDDL_REQUIRE_EQUALITY)
         addEqPredicate(ps);
@@ -126,14 +129,9 @@ int planPDDLPredicatesParse(const plan_pddl_lisp_t *domain,
 
         }
 
-        if (parsePredicate(types, n->child + i, ps,
-                           "predicate", ps->pred + ps->size) != 0)
+        if (parsePredicate(types, n->child + i, "predicate", ps) != 0)
             return -1;
-        ++ps->size;
     }
-
-    if (ps->size != n->child_size)
-        ps->pred = BOR_REALLOC_ARR(ps->pred, plan_pddl_predicate_t, ps->size);
 
     return 0;
 }
@@ -149,12 +147,9 @@ int planPDDLFunctionsParse(const plan_pddl_lisp_t *domain,
     if (n == NULL)
         return 0;
 
-    ps->pred = BOR_CALLOC_ARR(plan_pddl_predicate_t, n->child_size);
     for (i = 1; i < n->child_size; ++i){
-        if (parsePredicate(types, n->child + i, ps,
-                           "function", ps->pred + ps->size) != 0)
+        if (parsePredicate(types, n->child + i, "function", ps) != 0)
             return -1;
-        ++ps->size;
 
         if (i + 2 < n->child_size
                 && n->child[i + 1].value != NULL
@@ -167,9 +162,6 @@ int planPDDLFunctionsParse(const plan_pddl_lisp_t *domain,
             i += 2;
         }
     }
-
-    if (ps->size != n->child_size)
-        ps->pred = BOR_REALLOC_ARR(ps->pred, plan_pddl_predicate_t, ps->size);
 
     return 0;
 }
@@ -197,6 +189,35 @@ int planPDDLPredicatesGet(const plan_pddl_predicates_t *ps, const char *name)
     return -1;
 }
 
+plan_pddl_predicate_t *planPDDLPredicatesAdd(plan_pddl_predicates_t *ps)
+{
+    plan_pddl_predicate_t *p;
+
+    if (ps->size >= ps->alloc_size){
+        if (ps->alloc_size == 0){
+            ps->alloc_size = 2;
+        }else{
+            ps->alloc_size *= 2;
+        }
+        ps->pred = BOR_REALLOC_ARR(ps->pred, plan_pddl_predicate_t,
+                                   ps->alloc_size);
+    }
+
+    p = ps->pred + ps->size++;
+    bzero(p, sizeof(*p));
+    p->owner_param = -1;
+    return p;
+}
+
+void planPDDLPredicatesRemoveLast(plan_pddl_predicates_t *ps)
+{
+    plan_pddl_predicate_t *p;
+
+    p = ps->pred + --ps->size;
+    if (p->param != NULL)
+        BOR_FREE(p->param);
+}
+
 void planPDDLPredicatesPrint(const plan_pddl_predicates_t *ps,
                              const char *title, FILE *fout)
 {
@@ -208,6 +229,8 @@ void planPDDLPredicatesPrint(const plan_pddl_predicates_t *ps,
         for (j = 0; j < ps->pred[i].param_size; ++j){
             fprintf(fout, " %d", ps->pred[i].param[j]);
         }
+        fprintf(fout, " :: is-private: %d, owner-param: %d",
+                ps->pred[i].is_private, ps->pred[i].owner_param);
         fprintf(fout, "\n");
     }
 }

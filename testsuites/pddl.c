@@ -28,6 +28,12 @@ TEST(testPDDL)
 
     dumpDomain("pddl/depot-domain.unfactor.pddl",
                "pddl/depot-pfile1.unfactor.pddl");
+    dumpDomain("pddl/driverlog-domain.unfactor.pddl",
+               "pddl/driverlog-pfile1.unfactor.pddl");
+    dumpDomain("pddl/elevators08-domain.unfactor.pddl",
+               "pddl/elevators08-p01.unfactor.pddl");
+    dumpDomain("pddl/rovers-domain.unfactor.pddl",
+               "pddl/rovers-p10.unfactor.pddl");
 }
 
 static void testGround(const char *domain_fn, const char *problem_fn)

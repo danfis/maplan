@@ -133,6 +133,13 @@ void planProblemFree(plan_problem_t *prob);
 void planProblemCopy(plan_problem_t *dst, const plan_problem_t *src);
 
 /**
+ * Loads unfactore multi-agent problem from PDDL files.
+ */
+plan_problem_agents_t *planProblemUnfactorFromPDDL(const char *domain_pddl,
+                                                   const char *problem_pddl,
+                                                   unsigned flags);
+
+/**
  * Loads agent problem definition from protbuf format.
  * For flags see PLAN_PROBLEM_* macros.
  */

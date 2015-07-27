@@ -181,12 +181,31 @@ static int factInFacts(const plan_pddl_fact_t *fact,
 static void simplifyAction(plan_pddl_action_t *a)
 {
     plan_pddl_fact_t *f1, *f2;
-    int i, cmp, del = 0;
+    int i, cmp, del;
 
     // First sort facts in precondition and effect
     sortFacts(&a->pre);
     sortFacts(&a->eff);
 
+    // Delete duplicate preconditions
+    del = 0;
+    for (i = 1; i < a->pre.size; ++i){
+        f1 = a->pre.fact + i - 1;
+        f2 = a->pre.fact + i;
+
+        cmp = factNonNegCmp(f1, f2);
+        if (cmp == 0 && f1->neg == f2->neg){
+            // Remove duplicate facts
+            planPDDLFactFree(f1);
+            f1->neg = 2;
+            del = 1;
+        }
+    }
+
+    if (del)
+        reorderFacts(&a->pre);
+
+    del = 0;
     for (i = 1; i < a->eff.size; ++i){
         f1 = a->eff.fact + i - 1;
         f2 = a->eff.fact + i;

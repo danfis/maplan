@@ -2005,6 +2005,157 @@ Init[141]:
 Init Func[0]:
 Metric: 0
 ---- Domain: pddl/rovers-domain.unfactor.pddl | pddl/rovers-p10.unfactor.pddl END ----
+---- Domain: pddl/satellites-domain.unfactor.pddl | pddl/satellites-p05.unfactor.pddl ----
+Domain: satellite
+Problem: strips-sat-x-1
+Require: c0002
+Type[5]:
+    [0]: object, parent: -1
+    [1]: satellite, parent: 0
+    [2]: direction, parent: 0
+    [3]: instrument, parent: 0
+    [4]: mode, parent: 0
+Obj[25]:
+    [0]: phenomenon6, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: phenomenon5, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: image2, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: planet9, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: phenomenon8, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: thermograph0, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: star7, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: star4, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: spectrograph1, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: star3, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: groundstation2, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [11]: groundstation1, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [12]: groundstation0, type: 2, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [13]: satellite0, type: 1, is-constant: 0, is-private: 1, owner: 13, is-agent: 0
+    [14]: instrument0, type: 3, is-constant: 0, is-private: 1, owner: 13, is-agent: 0
+    [15]: instrument1, type: 3, is-constant: 0, is-private: 1, owner: 13, is-agent: 0
+    [16]: instrument2, type: 3, is-constant: 0, is-private: 1, owner: 13, is-agent: 0
+    [17]: satellite1, type: 1, is-constant: 0, is-private: 1, owner: 17, is-agent: 0
+    [18]: instrument3, type: 3, is-constant: 0, is-private: 1, owner: 17, is-agent: 0
+    [19]: instrument4, type: 3, is-constant: 0, is-private: 1, owner: 17, is-agent: 0
+    [20]: instrument5, type: 3, is-constant: 0, is-private: 1, owner: 17, is-agent: 0
+    [21]: satellite2, type: 1, is-constant: 0, is-private: 1, owner: 21, is-agent: 0
+    [22]: instrument8, type: 3, is-constant: 0, is-private: 1, owner: 21, is-agent: 0
+    [23]: instrument6, type: 3, is-constant: 0, is-private: 1, owner: 21, is-agent: 0
+    [24]: instrument7, type: 3, is-constant: 0, is-private: 1, owner: 21, is-agent: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+    [1]: 13 17 21
+    [2]: 0 1 3 4 6 7 9 10 11 12
+    [3]: 14 15 16 18 19 20 22 23 24
+    [4]: 2 5 8
+Predicate[8]:
+    pointing: 1 2 :: is-private: 0, owner-param: -1
+    have_image: 2 4 :: is-private: 0, owner-param: -1
+    calibrated: 3 :: is-private: 0, owner-param: -1
+    supports: 3 4 :: is-private: 0, owner-param: -1
+    on_board: 3 1 :: is-private: 0, owner-param: -1
+    calibration_target: 3 2 :: is-private: 0, owner-param: -1
+    power_avail: 1 :: is-private: 0, owner-param: -1
+    power_on: 3 :: is-private: 0, owner-param: -1
+Function[0]:
+Action[5]:
+    turn_to: A:?s:1 ?d_new:2 ?d_prev:2
+        pre[1]:
+            pointing: ?s ?d_prev
+        eff[2]:
+            pointing: ?s ?d_new
+            N:pointing: ?s ?d_prev
+        cond-eff[0]:
+    switch_on: A:?s:1 ?i:3
+        pre[2]:
+            on_board: ?i ?s
+            power_avail: ?s
+        eff[3]:
+            N:calibrated: ?i
+            N:power_avail: ?s
+            power_on: ?i
+        cond-eff[0]:
+    switch_off: A:?s:1 ?i:3
+        pre[2]:
+            on_board: ?i ?s
+            power_on: ?i
+        eff[2]:
+            power_avail: ?s
+            N:power_on: ?i
+        cond-eff[0]:
+    calibrate: A:?s:1 ?i:3 ?d:2
+        pre[4]:
+            pointing: ?s ?d
+            on_board: ?i ?s
+            calibration_target: ?i ?d
+            power_on: ?i
+        eff[1]:
+            calibrated: ?i
+        cond-eff[0]:
+    take_image: A:?s:1 ?i:3 ?d:2 ?m:4
+        pre[5]:
+            pointing: ?s ?d
+            calibrated: ?i
+            supports: ?i ?m
+            on_board: ?i ?s
+            power_on: ?i
+        eff[1]:
+            have_image: ?d ?m
+        cond-eff[0]:
+Goal[6]:
+    have_image: star3 thermograph0
+    have_image: phenomenon5 image2
+    have_image: phenomenon6 image2
+    have_image: star7 thermograph0
+    have_image: phenomenon8 image2
+    have_image: planet9 spectrograph1
+Init[44]:
+    P[13]:supports: instrument0 image2
+    P[13]:supports: instrument0 thermograph0
+    P[13]:supports: instrument0 spectrograph1
+    P[13]:calibration_target: instrument0 groundstation2
+    P[13]:supports: instrument1 thermograph0
+    P[13]:supports: instrument1 spectrograph1
+    P[13]:supports: instrument1 image2
+    P[13]:calibration_target: instrument1 groundstation1
+    P[13]:supports: instrument2 image2
+    P[13]:calibration_target: instrument2 groundstation0
+    P[13]:on_board: instrument0 satellite0
+    P[13]:on_board: instrument1 satellite0
+    P[13]:on_board: instrument2 satellite0
+    P[13]:power_avail: satellite0
+    P[13]:pointing: satellite0 phenomenon8
+    P[17]:supports: instrument3 spectrograph1
+    P[17]:supports: instrument3 thermograph0
+    P[17]:calibration_target: instrument3 groundstation0
+    P[17]:supports: instrument4 image2
+    P[17]:supports: instrument4 spectrograph1
+    P[17]:calibration_target: instrument4 groundstation2
+    P[17]:supports: instrument5 image2
+    P[17]:supports: instrument5 spectrograph1
+    P[17]:supports: instrument5 thermograph0
+    P[17]:calibration_target: instrument5 groundstation1
+    P[17]:on_board: instrument3 satellite1
+    P[17]:on_board: instrument4 satellite1
+    P[17]:on_board: instrument5 satellite1
+    P[17]:power_avail: satellite1
+    P[17]:pointing: satellite1 groundstation2
+    P[21]:supports: instrument6 image2
+    P[21]:calibration_target: instrument6 groundstation1
+    P[21]:supports: instrument7 image2
+    P[21]:supports: instrument7 thermograph0
+    P[21]:calibration_target: instrument7 groundstation1
+    P[21]:supports: instrument8 spectrograph1
+    P[21]:supports: instrument8 image2
+    P[21]:supports: instrument8 thermograph0
+    P[21]:calibration_target: instrument8 groundstation0
+    P[21]:on_board: instrument6 satellite2
+    P[21]:on_board: instrument7 satellite2
+    P[21]:on_board: instrument8 satellite2
+    P[21]:power_avail: satellite2
+    P[21]:pointing: satellite2 phenomenon5
+Init Func[0]:
+Metric: 0
+---- Domain: pddl/satellites-domain.unfactor.pddl | pddl/satellites-p05.unfactor.pddl END ----
 ---- Ground pddl/depot-domain.pddl | pddl/depot-pfile1.pddl ----
 Invariant 0:
     at: truck0 depot0 var: 13, val: 0/3

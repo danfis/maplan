@@ -415,4 +415,8 @@ TEST(testLoadUnfactoredFromPDDL)
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
     testUnfactoredFromPDDL("pddl/rovers-domain.unfactor.pddl",
                            "pddl/rovers-p10.unfactor.pddl", flags);
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    testUnfactoredFromPDDL("pddl/satellites-domain.unfactor.pddl",
+                           "pddl/satellites-p05.unfactor.pddl", flags);
 }

@@ -34,6 +34,8 @@ TEST(testPDDL)
                "pddl/elevators08-p01.unfactor.pddl");
     dumpDomain("pddl/rovers-domain.unfactor.pddl",
                "pddl/rovers-p10.unfactor.pddl");
+    dumpDomain("pddl/satellites-domain.unfactor.pddl",
+               "pddl/satellites-p05.unfactor.pddl");
 }
 
 static void testGround(const char *domain_fn, const char *problem_fn)

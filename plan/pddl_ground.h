@@ -36,6 +36,12 @@ struct _plan_pddl_ground_t {
     plan_pddl_fact_pool_t fact_pool;
     plan_pddl_ground_action_pool_t action_pool;
     plan_pddl_lift_actions_t lift_action;
+
+    int agent_size;    /*!< Number of agents defined in PDDL */
+    int *agent_to_obj; /*!< Mapping between agent ID and the
+                            corresponding object ID */
+    int *obj_to_agent; /*!< Mapping between object ID (owner ID) and
+                            agent ID */
 };
 typedef struct _plan_pddl_ground_t plan_pddl_ground_t;
 

@@ -3113,6 +3113,7 @@ unload hoist2 crate1 truck1 distributor1 --> 0
         in: crate1 truck1
         available: hoist2
     cond-eff[0]:
+Agent size: 0
 ---- Ground pddl/depot-domain.pddl | pddl/depot-pfile1.pddl END ----
 ---- Ground pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl ----
 Invariant 0:
@@ -3954,6 +3955,7 @@ start-order manager o5 n5 n4 --> 0
         waiting: o5
         stacks-avail: n5
     cond-eff[0]:
+Agent size: 0
 ---- Ground pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl END ----
 ---- Ground pddl/rovers-domain.pddl | pddl/rovers-p01.pddl ----
 Invariant 0:
@@ -4654,6 +4656,7 @@ take_image rover0 waypoint3 objective1 camera0 high_res --> 0
     eff-del[1]:
         calibrated: camera0 rover0
     cond-eff[0]:
+Agent size: 0
 ---- Ground pddl/rovers-domain.pddl | pddl/rovers-p01.pddl END ----
 ---- Ground pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl ----
 Invariant 0:
@@ -22235,6 +22238,7 @@ move_car_out_road junction2-2 junction2-1 car1 road4 --> 1
         at_car_road: car1 road4
         clear: junction2-1
     cond-eff[0]:
+Agent size: 0
 ---- Ground pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl END ----
 ---- Ground pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl ----
 Invariant 0:
@@ -28430,6 +28434,7 @@ move-up-slow slow1-0 n7 n8 --> 6
     eff-del[1]:
         lift-at: slow1-0 n7
     cond-eff[0]:
+Agent size: 0
 ---- Ground pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl END ----
 ---- Ground pddl/depot-domain.unfactor.pddl | pddl/depot-pfile1.unfactor.pddl ----
 Invariant 0:
@@ -29539,6 +29544,13 @@ unload distributor1 hoist2 crate1 truck1 [owner: 8] --> 0
         in: crate1 truck1
         P[8]:available: distributor1 hoist2
     cond-eff[0]:
+Agent size: 5
+    [0 -> 2] (depot0)
+    [1 -> 8] (distributor1)
+    [2 -> 9] (distributor0)
+    [3 -> 13] (driver1)
+    [4 -> 14] (driver0)
+    obj-to-agent: (2->0) (8->1) (9->2) (13->3) (14->4)
 ---- Ground pddl/depot-domain.unfactor.pddl | pddl/depot-pfile1.unfactor.pddl END ----
 ---- Ground pddl/driverlog-domain.unfactor.pddl | pddl/driverlog-pfile1.unfactor.pddl ----
 Invariant 0:
@@ -30840,6 +30852,10 @@ walk driver2 s2 p1-2 [owner: 10] --> 0
     eff-del[1]:
         P[10]:at: driver2 s2
     cond-eff[0]:
+Agent size: 2
+    [0 -> 9] (driver1)
+    [1 -> 10] (driver2)
+    obj-to-agent: (9->0) (10->1)
 ---- Ground pddl/driverlog-domain.unfactor.pddl | pddl/driverlog-pfile1.unfactor.pddl END ----
 ---- Ground pddl/elevators08-domain.unfactor.pddl | pddl/elevators08-p01.unfactor.pddl ----
 Invariant 0:
@@ -37035,6 +37051,12 @@ move-up-slow slow1-0 n7 n8 [owner: 15] --> 6
     eff-del[1]:
         P[15]:lift-at: slow1-0 n7
     cond-eff[0]:
+Agent size: 4
+    [0 -> 12] (fast0)
+    [1 -> 13] (fast1)
+    [2 -> 14] (slow0-0)
+    [3 -> 15] (slow1-0)
+    obj-to-agent: (12->0) (13->1) (14->2) (15->3)
 ---- Ground pddl/elevators08-domain.unfactor.pddl | pddl/elevators08-p01.unfactor.pddl END ----
 ---- Ground pddl/rovers-domain.unfactor.pddl | pddl/rovers-p10.unfactor.pddl ----
 Invariant 0:
@@ -41002,4 +41024,10 @@ take_image rover3 waypoint5 objective3 camera5 low_res [owner: 28] --> 0
     eff-del[1]:
         P[28]:calibrated: camera5 rover3
     cond-eff[0]:
+Agent size: 4
+    [0 -> 25] (rover0)
+    [1 -> 26] (rover1)
+    [2 -> 27] (rover2)
+    [3 -> 28] (rover3)
+    obj-to-agent: (25->0) (26->1) (27->2) (28->3)
 ---- Ground pddl/rovers-domain.unfactor.pddl | pddl/rovers-p10.unfactor.pddl END ----

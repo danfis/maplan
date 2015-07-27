@@ -38,6 +38,9 @@ static void instActions(const plan_pddl_lift_actions_t *actions,
 static void instActionsNegativePreconditions(const plan_pddl_t *pddl,
                                              const plan_pddl_lift_actions_t *as,
                                              plan_pddl_fact_pool_t *fact_pool);
+/** Finds out how many agents there are and creates all mappings between
+ *  agents and objects */
+static void determineAgents(plan_pddl_ground_t *g);
 
 /** Flip flag of the facts that are static facts.
  *  Static facts are those that are in the init state and are never changed
@@ -82,6 +85,10 @@ void planPDDLGroundInit(plan_pddl_ground_t *g, const plan_pddl_t *pddl)
     g->pddl = pddl;
     planPDDLFactPoolInit(&g->fact_pool, pddl->predicate.size);
     planPDDLGroundActionPoolInit(&g->action_pool, &pddl->predicate, &pddl->obj);
+
+    g->agent_size = 0;
+    g->agent_to_obj = NULL;
+    g->obj_to_agent = NULL;
 }
 
 void planPDDLGroundFree(plan_pddl_ground_t *g)
@@ -89,6 +96,11 @@ void planPDDLGroundFree(plan_pddl_ground_t *g)
     planPDDLFactPoolFree(&g->fact_pool);
     planPDDLGroundActionPoolFree(&g->action_pool);
     planPDDLLiftActionsFree(&g->lift_action);
+
+    if (g->agent_to_obj != NULL)
+        BOR_FREE(g->agent_to_obj);
+    if (g->obj_to_agent != NULL)
+        BOR_FREE(g->obj_to_agent);
 }
 
 void planPDDLGround(plan_pddl_ground_t *g)
@@ -103,6 +115,7 @@ void planPDDLGround(plan_pddl_ground_t *g)
     markStaticFacts(&g->fact_pool, &g->pddl->init_fact);
     planPDDLGroundActionPoolInst(&g->action_pool, &g->fact_pool);
     removeStatAndNegFacts(&g->fact_pool, &g->action_pool);
+    determineAgents(g);
 }
 
 static int printCmpActions(const void *a, const void *b, void *ud)
@@ -142,6 +155,21 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
         action = planPDDLGroundActionPoolGet(&g->action_pool, action_ids[i]);
         planPDDLGroundActionPrint(action, &g->fact_pool, &g->pddl->predicate,
                                   &g->pddl->obj, fout);
+    }
+
+    fprintf(fout, "Agent size: %d\n", g->agent_size);
+    for (i = 0; i < g->agent_size; ++i){
+        fprintf(fout, "    [%d -> %d] (%s)\n",
+                i, g->agent_to_obj[i],
+                g->pddl->obj.obj[g->agent_to_obj[i]].name);
+    }
+    if (g->agent_size > 0){
+        fprintf(fout, "    obj-to-agent:");
+        for (i = 0; i < g->pddl->obj.size; ++i){
+            if (g->obj_to_agent[i] >= 0)
+                fprintf(fout, " (%d->%d)", i, g->obj_to_agent[i]);
+        }
+        fprintf(fout, "\n");
     }
 
     BOR_FREE(action_ids);
@@ -547,3 +575,55 @@ static void instActionsNegativePreconditions(const plan_pddl_t *pddl,
         instActionNegPres(pddl, as->action + i, fact_pool);
 }
 /**** INSTANTIATE NEGATIVE PRECONDITIONS END ****/
+
+static void setFactOwners(plan_pddl_fact_pool_t *fact_pool, int *obj)
+{
+    const plan_pddl_fact_t *fact;
+    int i;
+
+    for (i = 0; i < fact_pool->size; ++i){
+        fact = planPDDLFactPoolGet(fact_pool, i);
+        if (fact->owner >= 0)
+            obj[fact->owner] = 0;
+    }
+}
+
+static void setOpOwners(plan_pddl_ground_action_pool_t *action_pool, int *obj)
+{
+    const plan_pddl_ground_action_t *a;
+    int i;
+
+    for (i = 0; i < action_pool->size; ++i){
+        a = planPDDLGroundActionPoolGet(action_pool, i);
+        if (a->owner >= 0)
+            obj[a->owner] = 0;
+    }
+}
+
+static void determineAgents(plan_pddl_ground_t *g)
+{
+    int i;
+
+    // Initialize mapping from object to agent
+    g->obj_to_agent = BOR_ALLOC_ARR(int, g->pddl->obj.size);
+    for (i = 0; i < g->pddl->obj.size; ++i)
+        g->obj_to_agent[i] = -1;
+
+    // Find out all owners of facts and actions
+    setFactOwners(&g->fact_pool, g->obj_to_agent);
+    setOpOwners(&g->action_pool, g->obj_to_agent);
+
+    // Determine number of owners and assign agent ID
+    g->agent_size = 0;
+    for (i = 0; i < g->pddl->obj.size; ++i){
+        if (g->obj_to_agent[i] == 0)
+            g->obj_to_agent[i] = g->agent_size++;
+    }
+
+    // Create mapping from agent ID to object ID
+    g->agent_to_obj = BOR_ALLOC_ARR(int, g->agent_size);
+    for (i = 0; i < g->pddl->obj.size; ++i){
+        if (g->obj_to_agent[i] >= 0)
+            g->agent_to_obj[g->obj_to_agent[i]] = i;
+    }
+}

@@ -9,14 +9,12 @@ static void pVar(const plan_var_t *var, int var_size, FILE *fout)
     for (i = 0; i < var_size; ++i){
         fprintf(fout, "[%d] name: `%s', range: %d, is_private: %d",
                 i, var[i].name, var[i].range, var[i].is_private);
-        fprintf(fout, ", is_val_private:");
-        for (j = 0; var[i].val && j < var[i].range; ++j)
-            fprintf(fout, " %d", var[i].val[j].is_private);
-        fprintf(fout, ", val_name:");
-        for (j = 0; var[i].val && j < var[i].range; ++j)
-            fprintf(fout, " `%s'", var[i].val[j].name);
         fprintf(fout, ", ma_privacy: %d", var[i].ma_privacy);
         fprintf(fout, "\n");
+        for (j = 0; var[i].val != NULL && j < var[i].range; ++j){
+            fprintf(fout, "    [%d] name: `%s', is_private: %d\n",
+                    j, var[i].val[j].name, var[i].val[j].is_private);
+        }
     }
 }
 
@@ -366,7 +364,7 @@ static void testFromPDDL(const char *domain, const char *prob, unsigned flags)
 
 TEST(testLoadFromPDDL)
 {
-    int flags;
+    unsigned flags;
 
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
     testFromPDDL("pddl/rovers-domain.pddl", "pddl/rovers-p03.pddl", flags);

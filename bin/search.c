@@ -395,8 +395,16 @@ static int loadProblemAgents(const options_t *o)
 {
     int flags;
 
-    flags = PLAN_PROBLEM_USE_CG;
-    agent_problem = planProblemAgentsFromProto(o->proto, flags);
+    flags  = PLAN_PROBLEM_USE_CG;
+    flags |= PLAN_PROBLEM_PRUNE_DUPLICATES;
+    if (o->proto != NULL){
+        agent_problem = planProblemAgentsFromProto(o->proto, flags);
+    }else{
+        agent_problem = planProblemUnfactorFromPDDL(o->pddl_domain,
+                                                    o->pddl_problem,
+                                                    flags);
+    }
+
     if (agent_problem->agent_size <= 1){
         // TODO: Maybe only warning and switch to single-agent mode.
         fprintf(stderr, "Error: Cannot run multi-agent planner on one"

@@ -601,43 +601,19 @@ static int createSuccGen(plan_problem_t *p)
     return 0;
 }
 
-static int loadFromPDDL(plan_problem_t *p,
-                        const char *domain_pddl,
-                        const char *problem_pddl,
+static int loadFromPDDL(plan_problem_t *p, const plan_pddl_sas_t *sas,
                         unsigned flags)
 {
-    plan_pddl_t *pddl;
-    plan_pddl_ground_t ground;
-    plan_pddl_sas_t sas;
-    unsigned sas_flags = 0;
-
     planProblemInit(p);
     p->ma_privacy_var = -1;
 
-    if (flags & PLAN_PROBLEM_USE_CG)
-        sas_flags |= PLAN_PDDL_SAS_USE_CG;
-
-    pddl = planPDDLNew(domain_pddl, problem_pddl);
-    if (pddl == NULL)
-        return -1;
-
-    planPDDLGroundInit(&ground, pddl);
-    planPDDLGround(&ground);
-    planPDDLSasInit(&sas, &ground);
-    planPDDLSas(&sas, sas_flags);
-
-    if (createVar(p, &sas)
-            || createStatePool(p, &sas) != 0
-            || createOps(p, &sas, flags) != 0
+    if (createVar(p, sas)
+            || createStatePool(p, sas) != 0
+            || createOps(p, sas, flags) != 0
             || createSuccGen(p) != 0){
         return -1;
     }
 
-    planPDDLSasFree(&sas);
-    planPDDLGroundFree(&ground);
-    planPDDLDel(pddl);
-
-    planProblemPack(p);
     return 0;
 }
 
@@ -646,14 +622,167 @@ plan_problem_t *planProblemFromPDDL(const char *domain_pddl,
                                     unsigned flags)
 {
     plan_problem_t *p;
+    plan_pddl_t *pddl;
+    plan_pddl_ground_t ground;
+    plan_pddl_sas_t sas;
+    unsigned sas_flags = 0;
+
+    if (flags & PLAN_PROBLEM_USE_CG)
+        sas_flags |= PLAN_PDDL_SAS_USE_CG;
+
+    pddl = planPDDLNew(domain_pddl, problem_pddl);
+    if (pddl == NULL)
+        return NULL;
+
+    planPDDLGroundInit(&ground, pddl);
+    planPDDLGround(&ground);
+    planPDDLSasInit(&sas, &ground);
+    planPDDLSas(&sas, sas_flags);
 
     p = BOR_ALLOC(plan_problem_t);
-    if (loadFromPDDL(p, domain_pddl, problem_pddl, flags) != 0){
+    if (loadFromPDDL(p, &sas, flags) != 0){
         planProblemDel(p);
         return NULL;
     }
 
+    planPDDLSasFree(&sas);
+    planPDDLGroundFree(&ground);
+    planPDDLDel(pddl);
+
+    planProblemPack(p);
     return p;
+}
+
+
+static void createAgentOps(plan_problem_t *dst, const plan_problem_t *src)
+{
+    int i;
+
+    dst->op = BOR_CALLOC_ARR(plan_op_t, src->op_size);
+    dst->op_size = 0;
+    for (i = 0; i < src->op_size; ++i){
+        if (src->op[i].owner == dst->agent_id){
+            planOpInit(dst->op + dst->op_size, dst->var_size);
+            planOpCopy(dst->op + dst->op_size, src->op + i);
+            ++dst->op_size;
+        }
+    }
+
+    if (dst->op_size != src->op_size)
+        dst->op = BOR_REALLOC_ARR(dst->op, plan_op_t, dst->op_size);
+}
+
+static void projectPartState(const plan_problem_t *p, plan_part_state_t *ps)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    plan_var_id_t unset[ps->vals_size];
+    int i, unset_size;
+
+    bzero(unset, sizeof(plan_var_id_t) * ps->vals_size);
+    unset_size = 0;
+    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+        if (p->var[var].val[val].is_private
+                && !planVarValIsUsedBy(p->var + var, val, p->agent_id))
+            unset[unset_size++] = var;
+    }
+
+    for (i = 0; i < unset_size; ++i)
+        planPartStateUnset(ps, unset[i]);
+}
+
+static int projectOp(const plan_problem_t *p, plan_op_t *op)
+{
+    int i;
+
+    projectPartState(p, op->pre);
+    projectPartState(p, op->eff);
+
+    for (i = 0; i < op->cond_eff_size; ++i){
+        // TODO: Probably we should delete cond-eff without effect and do
+        //       something else with cond-eff without precondition.
+        projectPartState(p, op->cond_eff[i].pre);
+        projectPartState(p, op->cond_eff[i].eff);
+    }
+
+    if (op->eff->vals_size > 0 || op->pre->vals_size > 0)
+        return 1;
+    return 0;
+}
+
+static void createAgentProjOps(plan_problem_t *dst, const plan_problem_t *src)
+{
+    int i, ok;
+
+    dst->proj_op = BOR_CALLOC_ARR(plan_op_t, src->op_size);
+    dst->proj_op_size = 0;
+    for (i = 0; i < src->op_size; ++i){
+        // Skip private operators of other agents
+        if (src->op[i].is_private && src->op[i].owner != dst->agent_id)
+            continue;
+
+        // Copy full operator
+        planOpInit(dst->proj_op + dst->proj_op_size, dst->var_size);
+        planOpCopy(dst->proj_op + dst->proj_op_size, src->op + i);
+
+        // Project it if it is other agent's operator
+        ok = 1;
+        if (src->op[i].owner != dst->agent_id)
+            ok = projectOp(dst, dst->proj_op + dst->proj_op_size);
+
+        if (ok){
+            ++dst->proj_op_size;
+        }else{
+            planOpFree(dst->proj_op + dst->proj_op_size);
+        }
+    }
+
+    if (dst->proj_op_size != src->op_size){
+        dst->proj_op = BOR_REALLOC_ARR(dst->proj_op, plan_op_t,
+                                       dst->proj_op_size);
+    }
+}
+
+static void initAgentProblem(plan_problem_t *p, int id,
+                             const plan_pddl_ground_t *ground)
+{
+    const char *name;
+
+    name = ground->pddl->obj.obj[ground->agent_to_obj[id]].name;
+
+    bzero(p, sizeof(*p));
+    planProblemInit(p);
+    p->agent_id = id;
+    p->num_agents = ground->agent_size;
+    p->agent_name = BOR_STRDUP(name);
+}
+
+static void createAgentProblem(plan_problem_t *dst,
+                               const plan_problem_t *src,
+                               unsigned flags)
+{
+    plan_state_t *state;
+    int i;
+
+    dst->var_size = src->var_size;
+    dst->var = BOR_ALLOC_ARR(plan_var_t, dst->var_size);
+    for (i = 0; i < dst->var_size; ++i)
+        planVarCopy(dst->var + i, src->var + i);
+    dst->ma_privacy_var = src->ma_privacy_var;
+
+    dst->state_pool = planStatePoolNew(dst->var, dst->var_size);
+    state = planStateNew(src->state_pool->num_vars);
+    planStatePoolGetState(src->state_pool, src->initial_state, state);
+    dst->initial_state = planStatePoolInsert(dst->state_pool, state);
+    planStateDel(state);
+
+    dst->goal = planPartStateNew(dst->state_pool->num_vars);
+    planPartStateCopy(dst->goal, src->goal);
+
+    createAgentOps(dst, src);
+    createAgentProjOps(dst, src);
+
+    dst->succ_gen = planSuccGenNew(dst->op, dst->op_size, NULL);
 }
 
 plan_problem_agents_t *planProblemUnfactorFromPDDL(const char *domain_pddl,
@@ -661,14 +790,43 @@ plan_problem_agents_t *planProblemUnfactorFromPDDL(const char *domain_pddl,
                                                    unsigned flags)
 {
     plan_problem_agents_t *p;
+    plan_pddl_t *pddl;
+    plan_pddl_ground_t ground;
+    plan_pddl_sas_t sas;
+    unsigned sas_flags = 0;
+    int i;
+
+    if (flags & PLAN_PROBLEM_USE_CG)
+        sas_flags |= PLAN_PDDL_SAS_USE_CG;
+
+    pddl = planPDDLNew(domain_pddl, problem_pddl);
+    if (pddl == NULL)
+        return NULL;
+
+    planPDDLGroundInit(&ground, pddl);
+    planPDDLGround(&ground);
+    planPDDLSasInit(&sas, &ground);
+    planPDDLSas(&sas, sas_flags);
 
     p = BOR_ALLOC(plan_problem_agents_t);
     bzero(p, sizeof(*p));
 
-    if (loadFromPDDL(&p->glob, domain_pddl, problem_pddl, flags) != 0){
+    if (loadFromPDDL(&p->glob, &sas, flags) != 0){
         planProblemAgentsDel(p);
         return NULL;
     }
 
+    p->agent_size = ground.agent_size;
+    p->agent = BOR_CALLOC_ARR(plan_problem_t, p->agent_size);
+    for (i = 0; i < p->agent_size; ++i){
+        initAgentProblem(p->agent + i, i, &ground);
+        createAgentProblem(p->agent + i, &p->glob, flags);
+    }
+
+    planPDDLSasFree(&sas);
+    planPDDLGroundFree(&ground);
+    planPDDLDel(pddl);
+
+    planProblemAgentsPack(p);
     return p;
 }

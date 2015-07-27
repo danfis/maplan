@@ -94,6 +94,21 @@ void planVarSetValUsedBy(plan_var_t *var, plan_val_t val, int used_by);
  */
 void planVarSetPrivateFromUsedBy(plan_var_t *var);
 
+/**
+ * Returns true if the value is used by the specified agent.
+ */
+_bor_inline int planVarValIsUsedBy(const plan_var_t *var, plan_val_t val,
+                                   int used_by);
+
+
+/**** INLINES: ****/
+_bor_inline int planVarValIsUsedBy(const plan_var_t *var, plan_val_t val,
+                                   int used_by)
+{
+    uint64_t mask = (1u << used_by);
+    return (var->val[val].used_by & mask);
+}
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

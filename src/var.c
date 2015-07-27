@@ -107,3 +107,44 @@ void planVarSetValName(plan_var_t *var, plan_val_t val, const char *name)
         BOR_FREE(var->val[val].name);
     var->val[val].name = BOR_STRDUP(name);
 }
+
+void planVarSetValUsedBy(plan_var_t *var, plan_val_t val, int used_by)
+{
+    uint64_t set;
+    set = (1u << used_by);
+    var->val[val].used_by |= set;
+}
+
+_bor_inline int popcount(uint64_t v)
+{
+    uint64_t w = v;
+    int cnt = 0;
+
+    while (w != 0){
+        cnt += (int)(w & 1u);
+        w >>= 1u;
+    }
+
+    return cnt;
+}
+
+static int setValPrivateFromUsedBy(plan_var_val_t *val)
+{
+    if (popcount(val->used_by) <= 1){
+        val->is_private = 1;
+        return 1;
+    }
+    return 0;
+}
+
+void planVarSetPrivateFromUsedBy(plan_var_t *var)
+{
+    int i, num_private;
+
+    num_private = 0;
+    for (i = 0; i < var->range; ++i)
+        num_private += setValPrivateFromUsedBy(var->val + i);
+
+    if (num_private == var->range)
+        var->is_private = 1;
+}

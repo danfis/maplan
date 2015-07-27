@@ -228,43 +228,6 @@ static void opAddCondEff(plan_op_t *op, const plan_problem_t *p,
     opCondEffSetEff(op, id, p, sas, ce);
 }
 
-static int allFactsPrivate(const plan_pddl_ground_facts_t *fs,
-                           const plan_pddl_fact_pool_t *fact_pool)
-{
-    const plan_pddl_fact_t *fact;
-    int i;
-
-    for (i = 0; i < fs->size; ++i){
-        fact = planPDDLFactPoolGet(fact_pool, fs->fact[i]);
-        if (!fact->is_private)
-            return 0;
-    }
-
-    return 1;
-}
-
-static int isActionPrivate(const plan_pddl_ground_action_t *a,
-                           const plan_pddl_fact_pool_t *fact_pool)
-{
-    int i;
-
-    if (!allFactsPrivate(&a->pre, fact_pool)
-            || !allFactsPrivate(&a->pre_neg, fact_pool)
-            || !allFactsPrivate(&a->eff_add, fact_pool)
-            || !allFactsPrivate(&a->eff_del, fact_pool))
-        return 0;
-
-    for (i = 0; i < a->cond_eff.size; ++i){
-        if (!allFactsPrivate(&a->cond_eff.cond_eff[i].pre, fact_pool)
-                || !allFactsPrivate(&a->cond_eff.cond_eff[i].pre_neg, fact_pool)
-                || !allFactsPrivate(&a->cond_eff.cond_eff[i].eff_add, fact_pool)
-                || !allFactsPrivate(&a->cond_eff.cond_eff[i].eff_del, fact_pool))
-            return 0;
-    }
-
-    return 1;
-}
-
 static int setOp(plan_op_t *op, const plan_problem_t *p,
                  const plan_pddl_sas_t *sas, int metric,
                  const plan_pddl_ground_action_t *action)
@@ -299,8 +262,6 @@ static int setOp(plan_op_t *op, const plan_problem_t *p,
     if (action->owner >= 0){
         planOpAddOwner(op, sas->ground->obj_to_agent[action->owner]);
         op->owner = sas->ground->obj_to_agent[action->owner];
-        if (isActionPrivate(action, &sas->ground->fact_pool))
-            op->is_private = 1;
     }
 
     return 0;
@@ -502,6 +463,100 @@ static void pruneDuplicateOps(plan_problem_t *prob)
     BOR_FREE(sorted_ops);
 }
 
+static void setVarValUsedByPartState(plan_problem_t *p,
+                                     const plan_part_state_t *ps,
+                                     int used_by)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+
+    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+        planVarSetValUsedBy(p->var + var, val, used_by);
+    }
+}
+
+static void setVarValUsedByOp(plan_problem_t *p, const plan_op_t *op)
+{
+    int i;
+
+    if (op->owner < 0)
+        return;
+
+    setVarValUsedByPartState(p, op->pre, op->owner);
+    setVarValUsedByPartState(p, op->eff, op->owner);
+    for (i = 0; i < op->cond_eff_size; ++i){
+        setVarValUsedByPartState(p, op->cond_eff[i].pre, op->owner);
+        setVarValUsedByPartState(p, op->cond_eff[i].eff, op->owner);
+    }
+}
+
+static void setVarValUsedBy(plan_problem_t *p)
+{
+    int i;
+
+    for (i = 0; i < p->op_size; ++i){
+        if (p->op[i].owner >= 0)
+            setVarValUsedByOp(p, p->op + i);
+    }
+}
+
+static int isPartStatePrivate(const plan_part_state_t *ps,
+                              const plan_var_t *pvar)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i;
+
+    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
+        if (!pvar[var].val[val].is_private)
+            return 0;
+    }
+
+    return 1;
+}
+
+static int isOpPrivate(const plan_op_t *op, const plan_var_t *var)
+{
+    int i;
+
+    if (!isPartStatePrivate(op->pre, var)
+            || !isPartStatePrivate(op->eff, var))
+        return 0;
+
+    for (i = 0; i < op->cond_eff_size; ++i){
+        if (!isPartStatePrivate(op->cond_eff[i].pre, var)
+                || !isPartStatePrivate(op->cond_eff[i].eff, var))
+            return 0;
+    }
+
+    return 1;
+}
+
+static void setOpPrivate(plan_op_t *op, const plan_var_t *var)
+{
+    if (isOpPrivate(op, var))
+        op->is_private = 1;
+}
+
+static void setPrivateVarAndOp(plan_problem_t *p)
+{
+    int i;
+
+    // Determine which agents use which values of variables
+    setVarValUsedBy(p);
+
+    // Set variables and their values as private according to the .used_by
+    // bitarrays
+    for (i = 0; i < p->var_size; ++i)
+        planVarSetPrivateFromUsedBy(p->var + i);
+
+    for (i = 0; i < p->op_size; ++i){
+        if (p->op[i].owner >= 0)
+            setOpPrivate(p->op + i, p->var);
+    }
+}
+
 static int createOps(plan_problem_t *p, const plan_pddl_sas_t *sas,
                      unsigned flags)
 {
@@ -522,12 +577,20 @@ static int createOps(plan_problem_t *p, const plan_pddl_sas_t *sas,
         }
     }
 
+    // Remove duplicates
     if (flags & PLAN_PROBLEM_PRUNE_DUPLICATES)
         pruneDuplicateOps(p);
+
+    // Give back unneeded memory and sort operators
     p->op = BOR_REALLOC_ARR(p->op, plan_op_t, p->op_size);
     qsort(p->op, p->op_size, sizeof(plan_op_t), opCmp);
+
+    // Set global ID of all operators
     for (i = 0; i < p->op_size; ++i)
         p->op[i].global_id = i;
+
+    // Set private variables and operators
+    setPrivateVarAndOp(p);
 
     return 0;
 }

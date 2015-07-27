@@ -12,8 +12,9 @@ static void pVar(const plan_var_t *var, int var_size, FILE *fout)
         fprintf(fout, ", ma_privacy: %d", var[i].ma_privacy);
         fprintf(fout, "\n");
         for (j = 0; var[i].val != NULL && j < var[i].range; ++j){
-            fprintf(fout, "    [%d] name: `%s', is_private: %d\n",
-                    j, var[i].val[j].name, var[i].val[j].is_private);
+            fprintf(fout, "    [%d] name: `%s', is_private: %d, used_by: %lx\n",
+                    j, var[i].val[j].name, var[i].val[j].is_private,
+                    (long)var[i].val[j].used_by);
         }
     }
 }
@@ -376,4 +377,42 @@ TEST(testLoadFromPDDL)
     flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
     testFromPDDL("pddl/CityCar-domain.pddl",
                  "pddl/CityCar-p3-2-2-0-1.pddl", flags);
+}
+
+static void testUnfactoredFromPDDL(const char *domain, const char *prob,
+                                   unsigned flags)
+{
+    plan_problem_agents_t *p;
+    int i;
+
+    printf("---- testLoadUnfactoredFromPDDL [%s | %s] ----\n", domain, prob);
+
+    p = planProblemUnfactorFromPDDL(domain, prob, flags);
+    assertNotEquals(p, NULL);
+    if (p == NULL)
+        return;
+
+    pProblem(&p->glob, stdout);
+    for (i = 0; i < p->agent_size; ++i)
+        pAgent(p->agent + i, stdout);
+
+    planProblemAgentsDel(p);
+    printf("---- testLoadUnfactoredFromPDDL [%s | %s] END ----\n", domain, prob);
+}
+
+TEST(testLoadUnfactoredFromPDDL)
+{
+    unsigned flags;
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    testUnfactoredFromPDDL("pddl/depot-domain.unfactor.pddl",
+                           "pddl/depot-pfile1.unfactor.pddl", flags);
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    testUnfactoredFromPDDL("pddl/driverlog-domain.unfactor.pddl",
+                           "pddl/driverlog-pfile1.unfactor.pddl", flags);
+
+    flags = PLAN_PROBLEM_USE_CG | PLAN_PROBLEM_PRUNE_DUPLICATES;
+    testUnfactoredFromPDDL("pddl/rovers-domain.unfactor.pddl",
+                           "pddl/rovers-p10.unfactor.pddl", flags);
 }

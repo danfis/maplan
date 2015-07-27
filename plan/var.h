@@ -30,8 +30,9 @@ extern "C" {
 #endif /* __cplusplus */
 
 struct _plan_var_val_t {
-    char *name;     /*!< Name of the value (i.e., corresponding fact) */
-    int is_private; /*!< True if the value is private */
+    char *name;       /*!< Name of the value (i.e., corresponding fact) */
+    int is_private;   /*!< True if the value is private */
+    uint64_t used_by; /*!< Bit array recording agents that use this value */
 };
 typedef struct _plan_var_val_t plan_var_val_t;
 
@@ -80,6 +81,18 @@ void planVarSetPrivate(plan_var_t *var);
  * Sets name of the value.
  */
 void planVarSetValName(plan_var_t *var, plan_val_t val, const char *name);
+
+/**
+ * Sets value as used-by the specified agent.
+ */
+void planVarSetValUsedBy(plan_var_t *var, plan_val_t val, int used_by);
+
+/**
+ * Sets variable's values as private if their .used_by contains at most one
+ * bit set to 1. Then it sets the whole variable as private if all values
+ * are private.
+ */
+void planVarSetPrivateFromUsedBy(plan_var_t *var);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -9,6 +9,7 @@ TEST(testLoadAgentFromProtoClone);
 TEST(testLoadFromFactoredProto);
 
 TEST(testLoadFromPDDL);
+TEST(testLoadUnfactoredFromPDDL);
 
 TEST(protobufTearDown);
 
@@ -21,6 +22,7 @@ TEST_SUITE(TSLoadFromFile) {
     TEST_ADD(testLoadFromFactoredProto),
 
     TEST_ADD(testLoadFromPDDL),
+    TEST_ADD(testLoadUnfactoredFromPDDL),
 
     TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE

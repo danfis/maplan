@@ -395,8 +395,7 @@ static int loadProblemAgents(const options_t *o)
 {
     int flags;
 
-    flags  = PLAN_PROBLEM_USE_CG;
-    flags |= PLAN_PROBLEM_PRUNE_DUPLICATES;
+    flags = PLAN_PROBLEM_USE_CG;
     if (o->proto != NULL){
         agent_problem = planProblemAgentsFromProto(o->proto, flags);
     }else{

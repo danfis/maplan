@@ -1,0 +1,512 @@
+---- Domain: pddl/depot-pfile1-factor/domain-depot0.pddl | pddl/depot-pfile1-factor/problem-depot0.pddl ----
+Domain: depot
+Problem: depotprob1818
+Require: 100002
+Type[11]:
+    [0]: object, parent: -1
+    [1]: place, parent: 0
+    [2]: locatable, parent: 0
+    [3]: driver, parent: 0
+    [4]: depot, parent: 1
+    [5]: distributor, parent: 1
+    [6]: truck, parent: 2
+    [7]: hoist, parent: 2
+    [8]: surface, parent: 2
+    [9]: pallet, parent: 8
+    [10]: crate, parent: 8
+Obj[11]:
+    [0]: truck1, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: truck0, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: depot0, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: crate1, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: crate0, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: pallet1, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: pallet0, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: pallet2, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: distributor1, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: distributor0, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: hoist0, type: 7, is-constant: 0, is-private: 1, owner: -1, is-agent: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10
+    [1]: 2 8 9
+    [2]: 0 1 3 4 5 6 7 10
+    [3]:
+    [4]: 2
+    [5]: 8 9
+    [6]: 0 1
+    [7]: 10
+    [8]: 3 4 5 6 7
+    [9]: 5 6 7
+    [10]: 3 4
+Predicate[6]:
+    at: 2 1 :: is-private: 0, owner-param: -1
+    on: 10 8 :: is-private: 0, owner-param: -1
+    in: 10 6 :: is-private: 0, owner-param: -1
+    clear: 8 :: is-private: 0, owner-param: -1
+    lifting: 1 7 10 :: is-private: 1, owner-param: -1
+    available: 1 7 :: is-private: 1, owner-param: -1
+Function[0]:
+Action[4]:
+    lift: ?p:1 ?x:7 ?y:10 ?z:8
+        pre[5]:
+            at: ?x ?p
+            at: ?y ?p
+            on: ?y ?z
+            clear: ?y
+            available: ?p ?x
+        eff[6]:
+            N:at: ?y ?p
+            N:on: ?y ?z
+            N:clear: ?y
+            clear: ?z
+            lifting: ?p ?x ?y
+            N:available: ?p ?x
+        cond-eff[0]:
+    drop: ?p:1 ?x:7 ?y:10 ?z:8
+        pre[4]:
+            at: ?x ?p
+            at: ?z ?p
+            clear: ?z
+            lifting: ?p ?x ?y
+        eff[6]:
+            at: ?y ?p
+            on: ?y ?z
+            clear: ?y
+            N:clear: ?z
+            N:lifting: ?p ?x ?y
+            available: ?p ?x
+        cond-eff[0]:
+    load: ?p:1 ?x:7 ?y:10 ?z:6
+        pre[3]:
+            at: ?x ?p
+            at: ?z ?p
+            lifting: ?p ?x ?y
+        eff[3]:
+            in: ?y ?z
+            N:lifting: ?p ?x ?y
+            available: ?p ?x
+        cond-eff[0]:
+    unload: ?p:1 ?x:7 ?y:10 ?z:6
+        pre[4]:
+            at: ?x ?p
+            at: ?z ?p
+            in: ?y ?z
+            available: ?p ?x
+        eff[3]:
+            N:in: ?y ?z
+            lifting: ?p ?x ?y
+            N:available: ?p ?x
+        cond-eff[0]:
+Goal[2]:
+    on: crate0 pallet2
+    on: crate1 pallet1
+Init[14]:
+    at: pallet0 depot0
+    clear: crate1
+    at: pallet1 distributor0
+    clear: crate0
+    at: pallet2 distributor1
+    clear: pallet2
+    at: truck0 distributor1
+    at: truck1 depot0
+    P:at: hoist0 depot0
+    P:available: depot0 hoist0
+    at: crate0 distributor0
+    on: crate0 pallet1
+    at: crate1 depot0
+    on: crate1 pallet0
+Init Func[0]:
+Metric: 0
+---- Domain: pddl/depot-pfile1-factor/domain-depot0.pddl | pddl/depot-pfile1-factor/problem-depot0.pddl END ----
+---- Domain: pddl/depot-pfile1-factor/domain-distributor0.pddl | pddl/depot-pfile1-factor/problem-distributor0.pddl ----
+Domain: depot
+Problem: depotprob1818
+Require: 100002
+Type[11]:
+    [0]: object, parent: -1
+    [1]: place, parent: 0
+    [2]: locatable, parent: 0
+    [3]: driver, parent: 0
+    [4]: depot, parent: 1
+    [5]: distributor, parent: 1
+    [6]: truck, parent: 2
+    [7]: hoist, parent: 2
+    [8]: surface, parent: 2
+    [9]: pallet, parent: 8
+    [10]: crate, parent: 8
+Obj[11]:
+    [0]: truck1, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: truck0, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: depot0, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: crate1, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: crate0, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: pallet1, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: pallet0, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: pallet2, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: distributor1, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: distributor0, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: hoist1, type: 7, is-constant: 0, is-private: 1, owner: -1, is-agent: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10
+    [1]: 2 8 9
+    [2]: 0 1 3 4 5 6 7 10
+    [3]:
+    [4]: 2
+    [5]: 8 9
+    [6]: 0 1
+    [7]: 10
+    [8]: 3 4 5 6 7
+    [9]: 5 6 7
+    [10]: 3 4
+Predicate[6]:
+    at: 2 1 :: is-private: 0, owner-param: -1
+    on: 10 8 :: is-private: 0, owner-param: -1
+    in: 10 6 :: is-private: 0, owner-param: -1
+    clear: 8 :: is-private: 0, owner-param: -1
+    lifting: 1 7 10 :: is-private: 1, owner-param: -1
+    available: 1 7 :: is-private: 1, owner-param: -1
+Function[0]:
+Action[4]:
+    lift: ?p:1 ?x:7 ?y:10 ?z:8
+        pre[5]:
+            at: ?x ?p
+            at: ?y ?p
+            on: ?y ?z
+            clear: ?y
+            available: ?p ?x
+        eff[6]:
+            N:at: ?y ?p
+            N:on: ?y ?z
+            N:clear: ?y
+            clear: ?z
+            lifting: ?p ?x ?y
+            N:available: ?p ?x
+        cond-eff[0]:
+    drop: ?p:1 ?x:7 ?y:10 ?z:8
+        pre[4]:
+            at: ?x ?p
+            at: ?z ?p
+            clear: ?z
+            lifting: ?p ?x ?y
+        eff[6]:
+            at: ?y ?p
+            on: ?y ?z
+            clear: ?y
+            N:clear: ?z
+            N:lifting: ?p ?x ?y
+            available: ?p ?x
+        cond-eff[0]:
+    load: ?p:1 ?x:7 ?y:10 ?z:6
+        pre[3]:
+            at: ?x ?p
+            at: ?z ?p
+            lifting: ?p ?x ?y
+        eff[3]:
+            in: ?y ?z
+            N:lifting: ?p ?x ?y
+            available: ?p ?x
+        cond-eff[0]:
+    unload: ?p:1 ?x:7 ?y:10 ?z:6
+        pre[4]:
+            at: ?x ?p
+            at: ?z ?p
+            in: ?y ?z
+            available: ?p ?x
+        eff[3]:
+            N:in: ?y ?z
+            lifting: ?p ?x ?y
+            N:available: ?p ?x
+        cond-eff[0]:
+Goal[2]:
+    on: crate0 pallet2
+    on: crate1 pallet1
+Init[14]:
+    at: pallet0 depot0
+    clear: crate1
+    at: pallet1 distributor0
+    clear: crate0
+    at: pallet2 distributor1
+    clear: pallet2
+    at: truck0 distributor1
+    at: truck1 depot0
+    P:at: hoist1 distributor0
+    P:available: distributor0 hoist1
+    at: crate0 distributor0
+    on: crate0 pallet1
+    at: crate1 depot0
+    on: crate1 pallet0
+Init Func[0]:
+Metric: 0
+---- Domain: pddl/depot-pfile1-factor/domain-distributor0.pddl | pddl/depot-pfile1-factor/problem-distributor0.pddl END ----
+---- Domain: pddl/depot-pfile1-factor/domain-distributor1.pddl | pddl/depot-pfile1-factor/problem-distributor1.pddl ----
+Domain: depot
+Problem: depotprob1818
+Require: 100002
+Type[11]:
+    [0]: object, parent: -1
+    [1]: place, parent: 0
+    [2]: locatable, parent: 0
+    [3]: driver, parent: 0
+    [4]: depot, parent: 1
+    [5]: distributor, parent: 1
+    [6]: truck, parent: 2
+    [7]: hoist, parent: 2
+    [8]: surface, parent: 2
+    [9]: pallet, parent: 8
+    [10]: crate, parent: 8
+Obj[11]:
+    [0]: truck1, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: truck0, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: depot0, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: crate1, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: crate0, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: pallet1, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: pallet0, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: pallet2, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: distributor1, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: distributor0, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: hoist2, type: 7, is-constant: 0, is-private: 1, owner: -1, is-agent: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10
+    [1]: 2 8 9
+    [2]: 0 1 3 4 5 6 7 10
+    [3]:
+    [4]: 2
+    [5]: 8 9
+    [6]: 0 1
+    [7]: 10
+    [8]: 3 4 5 6 7
+    [9]: 5 6 7
+    [10]: 3 4
+Predicate[6]:
+    at: 2 1 :: is-private: 0, owner-param: -1
+    on: 10 8 :: is-private: 0, owner-param: -1
+    in: 10 6 :: is-private: 0, owner-param: -1
+    clear: 8 :: is-private: 0, owner-param: -1
+    lifting: 1 7 10 :: is-private: 1, owner-param: -1
+    available: 1 7 :: is-private: 1, owner-param: -1
+Function[0]:
+Action[4]:
+    lift: ?p:1 ?x:7 ?y:10 ?z:8
+        pre[5]:
+            at: ?x ?p
+            at: ?y ?p
+            on: ?y ?z
+            clear: ?y
+            available: ?p ?x
+        eff[6]:
+            N:at: ?y ?p
+            N:on: ?y ?z
+            N:clear: ?y
+            clear: ?z
+            lifting: ?p ?x ?y
+            N:available: ?p ?x
+        cond-eff[0]:
+    drop: ?p:1 ?x:7 ?y:10 ?z:8
+        pre[4]:
+            at: ?x ?p
+            at: ?z ?p
+            clear: ?z
+            lifting: ?p ?x ?y
+        eff[6]:
+            at: ?y ?p
+            on: ?y ?z
+            clear: ?y
+            N:clear: ?z
+            N:lifting: ?p ?x ?y
+            available: ?p ?x
+        cond-eff[0]:
+    load: ?p:1 ?x:7 ?y:10 ?z:6
+        pre[3]:
+            at: ?x ?p
+            at: ?z ?p
+            lifting: ?p ?x ?y
+        eff[3]:
+            in: ?y ?z
+            N:lifting: ?p ?x ?y
+            available: ?p ?x
+        cond-eff[0]:
+    unload: ?p:1 ?x:7 ?y:10 ?z:6
+        pre[4]:
+            at: ?x ?p
+            at: ?z ?p
+            in: ?y ?z
+            available: ?p ?x
+        eff[3]:
+            N:in: ?y ?z
+            lifting: ?p ?x ?y
+            N:available: ?p ?x
+        cond-eff[0]:
+Goal[2]:
+    on: crate0 pallet2
+    on: crate1 pallet1
+Init[14]:
+    at: pallet0 depot0
+    clear: crate1
+    at: pallet1 distributor0
+    clear: crate0
+    at: pallet2 distributor1
+    clear: pallet2
+    at: truck0 distributor1
+    at: truck1 depot0
+    P:at: hoist2 distributor1
+    P:available: distributor1 hoist2
+    at: crate0 distributor0
+    on: crate0 pallet1
+    at: crate1 depot0
+    on: crate1 pallet0
+Init Func[0]:
+Metric: 0
+---- Domain: pddl/depot-pfile1-factor/domain-distributor1.pddl | pddl/depot-pfile1-factor/problem-distributor1.pddl END ----
+---- Domain: pddl/depot-pfile1-factor/domain-driver0.pddl | pddl/depot-pfile1-factor/problem-driver0.pddl ----
+Domain: depot
+Problem: depotprob1818
+Require: 100002
+Type[11]:
+    [0]: object, parent: -1
+    [1]: place, parent: 0
+    [2]: locatable, parent: 0
+    [3]: driver, parent: 0
+    [4]: depot, parent: 1
+    [5]: distributor, parent: 1
+    [6]: truck, parent: 2
+    [7]: hoist, parent: 2
+    [8]: surface, parent: 2
+    [9]: pallet, parent: 8
+    [10]: crate, parent: 8
+Obj[11]:
+    [0]: truck1, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: truck0, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: depot0, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: crate1, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: crate0, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: pallet1, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: pallet0, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: pallet2, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: distributor1, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: distributor0, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: driver0, type: 3, is-constant: 0, is-private: 1, owner: -1, is-agent: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10
+    [1]: 2 8 9
+    [2]: 0 1 3 4 5 6 7
+    [3]: 10
+    [4]: 2
+    [5]: 8 9
+    [6]: 0 1
+    [7]:
+    [8]: 3 4 5 6 7
+    [9]: 5 6 7
+    [10]: 3 4
+Predicate[5]:
+    at: 2 1 :: is-private: 0, owner-param: -1
+    on: 10 8 :: is-private: 0, owner-param: -1
+    in: 10 6 :: is-private: 0, owner-param: -1
+    clear: 8 :: is-private: 0, owner-param: -1
+    driving: 3 6 :: is-private: 1, owner-param: -1
+Function[0]:
+Action[1]:
+    drive: ?a:3 ?x:6 ?y:1 ?z:1
+        pre[2]:
+            at: ?x ?y
+            driving: ?a ?x
+        eff[2]:
+            N:at: ?x ?y
+            at: ?x ?z
+        cond-eff[0]:
+Goal[2]:
+    on: crate0 pallet2
+    on: crate1 pallet1
+Init[13]:
+    P:driving: driver0 truck0
+    at: pallet0 depot0
+    clear: crate1
+    at: pallet1 distributor0
+    clear: crate0
+    at: pallet2 distributor1
+    clear: pallet2
+    at: truck0 distributor1
+    at: truck1 depot0
+    at: crate0 distributor0
+    on: crate0 pallet1
+    at: crate1 depot0
+    on: crate1 pallet0
+Init Func[0]:
+Metric: 0
+---- Domain: pddl/depot-pfile1-factor/domain-driver0.pddl | pddl/depot-pfile1-factor/problem-driver0.pddl END ----
+---- Domain: pddl/depot-pfile1-factor/domain-driver1.pddl | pddl/depot-pfile1-factor/problem-driver1.pddl ----
+Domain: depot
+Problem: depotprob1818
+Require: 100002
+Type[11]:
+    [0]: object, parent: -1
+    [1]: place, parent: 0
+    [2]: locatable, parent: 0
+    [3]: driver, parent: 0
+    [4]: depot, parent: 1
+    [5]: distributor, parent: 1
+    [6]: truck, parent: 2
+    [7]: hoist, parent: 2
+    [8]: surface, parent: 2
+    [9]: pallet, parent: 8
+    [10]: crate, parent: 8
+Obj[11]:
+    [0]: truck1, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [1]: truck0, type: 6, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [2]: depot0, type: 4, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [3]: crate1, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [4]: crate0, type: 10, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [5]: pallet1, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [6]: pallet0, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [7]: pallet2, type: 9, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [8]: distributor1, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [9]: distributor0, type: 5, is-constant: 0, is-private: 0, owner: -1, is-agent: 0
+    [10]: driver1, type: 3, is-constant: 0, is-private: 1, owner: -1, is-agent: 0
+Type-Obj:
+    [0]: 0 1 2 3 4 5 6 7 8 9 10
+    [1]: 2 8 9
+    [2]: 0 1 3 4 5 6 7
+    [3]: 10
+    [4]: 2
+    [5]: 8 9
+    [6]: 0 1
+    [7]:
+    [8]: 3 4 5 6 7
+    [9]: 5 6 7
+    [10]: 3 4
+Predicate[5]:
+    at: 2 1 :: is-private: 0, owner-param: -1
+    on: 10 8 :: is-private: 0, owner-param: -1
+    in: 10 6 :: is-private: 0, owner-param: -1
+    clear: 8 :: is-private: 0, owner-param: -1
+    driving: 3 6 :: is-private: 1, owner-param: -1
+Function[0]:
+Action[1]:
+    drive: ?a:3 ?x:6 ?y:1 ?z:1
+        pre[2]:
+            at: ?x ?y
+            driving: ?a ?x
+        eff[2]:
+            N:at: ?x ?y
+            at: ?x ?z
+        cond-eff[0]:
+Goal[2]:
+    on: crate0 pallet2
+    on: crate1 pallet1
+Init[13]:
+    P:driving: driver1 truck1
+    at: pallet0 depot0
+    clear: crate1
+    at: pallet1 distributor0
+    clear: crate0
+    at: pallet2 distributor1
+    clear: pallet2
+    at: truck0 distributor1
+    at: truck1 depot0
+    at: crate0 distributor0
+    on: crate0 pallet1
+    at: crate1 depot0
+    on: crate1 pallet0
+Init Func[0]:
+Metric: 0
+---- Domain: pddl/depot-pfile1-factor/domain-driver1.pddl | pddl/depot-pfile1-factor/problem-driver1.pddl END ----

@@ -350,19 +350,21 @@ int planPDDLFactSetPrivate(plan_pddl_fact_t *fact,
     pr = pred->pred + fact->pred;
     if (pr->is_private){
         fact->is_private = 1;
-        fact->owner = fact->arg[pr->owner_param];
+        if (pr->owner_param >= 0)
+            fact->owner = fact->arg[pr->owner_param];
     }
 
     for (i = 0; i < fact->arg_size; ++i){
         obj = objs->obj + fact->arg[i];
         if (obj->is_private){
             if (fact->is_private){
-                if (fact->owner != obj->owner){
+                if (obj->owner >= 0 && fact->owner != obj->owner){
                     return -1;
                 }
             }else{
                 fact->is_private = 1;
-                fact->owner = obj->owner;
+                if (obj->owner >= 0)
+                    fact->owner = obj->owner;
             }
         }
     }

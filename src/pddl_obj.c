@@ -101,11 +101,17 @@ static int parse(const plan_pddl_lisp_t *lisp, int kw, int is_const,
 
 static int parsePrivate(const plan_pddl_lisp_t *lisp,
                         const plan_pddl_types_t *types,
-                        plan_pddl_objs_t *objs)
+                        plan_pddl_objs_t *objs,
+                        unsigned require)
 {
     const plan_pddl_lisp_node_t *n, *p;
-    int i, pi, owner;
+    int i, factor, pi, owner, parse_from;
     set_t set;
+
+    factor = (require & PLAN_PDDL_REQUIRE_FACTORED_PRIVACY);
+    parse_from = 2;
+    if (factor)
+        parse_from = 1;
 
     n = planPDDLLispFindNode(&lisp->root, PLAN_PDDL_KW_OBJECTS);
     if (n == NULL)
@@ -120,16 +126,19 @@ static int parsePrivate(const plan_pddl_lisp_t *lisp,
             continue;
 
         pi = objs->size;
-        if (planPDDLLispParseTypedList(p, 2, p->child_size, setCB, &set) != 0){
+        if (planPDDLLispParseTypedList(p, parse_from, p->child_size, setCB, &set) != 0){
             ERRN2(n->child + i, "Invalid definition of :private :objects.");
             return -1;
         }
 
-        owner = planPDDLObjsGet(objs, p->child[1].value);
-        if (owner < 0){
-            ERRN(n->child + i, "Invalid definition of private objects."
-                               " Unkown owner `%s'.\n", p->child[1].value);
-            return -1;
+        owner = -1;
+        if (!factor){
+            owner = planPDDLObjsGet(objs, p->child[1].value);
+            if (owner < 0){
+                ERRN(n->child + i, "Invalid definition of private objects."
+                                   " Unkown owner `%s'.\n", p->child[1].value);
+                return -1;
+            }
         }
 
         for (; pi < objs->size; ++pi){
@@ -152,9 +161,10 @@ int planPDDLObjsParse(const plan_pddl_lisp_t *domain,
             || parse(problem, PLAN_PDDL_KW_OBJECTS, 0, types, objs) != 0)
         return -1;
 
-    if ((require & PLAN_PDDL_REQUIRE_MULTI_AGENT)
-            && (require & PLAN_PDDL_REQUIRE_UNFACTORED_PRIVACY)){
-        if (parsePrivate(problem, types, objs) != 0)
+    if (((require & PLAN_PDDL_REQUIRE_MULTI_AGENT)
+                && (require & PLAN_PDDL_REQUIRE_UNFACTORED_PRIVACY))
+            || (require & PLAN_PDDL_REQUIRE_FACTORED_PRIVACY)){
+        if (parsePrivate(problem, types, objs, require) != 0)
             return -1;
     }
     return 0;

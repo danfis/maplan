@@ -105,27 +105,43 @@ static int parsePredicate(const plan_pddl_types_t *types,
 
 static int parsePrivatePredicates(const plan_pddl_types_t *types,
                                   const plan_pddl_lisp_node_t *n,
-                                  plan_pddl_predicates_t *ps)
+                                  plan_pddl_predicates_t *ps,
+                                  unsigned require)
 {
     const char *owner_var;
-    int i, from;
+    int factor, i, from;
 
-    if (n->child_size < 3
-            || n->child[0].kw != PLAN_PDDL_KW_PRIVATE
-            || n->child[1].value == NULL
-            || n->child[1].value[0] != '?'
-            || (n->child[2].value != NULL && n->child_size < 5)){
-        ERRN2(n, "Invalid definition of :private predicate.");
-        return -1;
-    }
+    factor = (require & PLAN_PDDL_REQUIRE_FACTORED_PRIVACY);
 
-    owner_var = n->child[1].value;
+    if (factor){
+        if (n->child_size < 2
+                || n->child[0].kw != PLAN_PDDL_KW_PRIVATE){
+            ERRN2(n, "Invalid definition of :private predicate.");
+            return -1;
+        }
 
-    if (n->child[2].value == NULL){
-        from = 2;
+        owner_var = NULL;
+        from = 1;
+
     }else{
-        from = 4;
+        if (n->child_size < 3
+                || n->child[0].kw != PLAN_PDDL_KW_PRIVATE
+                || n->child[1].value == NULL
+                || n->child[1].value[0] != '?'
+                || (n->child[2].value != NULL && n->child_size < 5)){
+            ERRN2(n, "Invalid definition of :private predicate.");
+            return -1;
+        }
+
+        owner_var = n->child[1].value;
+
+        if (n->child[2].value == NULL){
+            from = 2;
+        }else{
+            from = 4;
+        }
     }
+
     for (i = from; i < n->child_size; ++i){
         if (parsePredicate(types, n->child + i, owner_var,
                            "private predicate", ps) != 0)
@@ -188,7 +204,7 @@ int planPDDLPredicatesParse(const plan_pddl_lisp_t *domain,
     if (private){
         // Parse :private predicates
         for (i = to; i < n->child_size; ++i){
-            if (parsePrivatePredicates(types, n->child + i, ps) != 0)
+            if (parsePrivatePredicates(types, n->child + i, ps, require) != 0)
                 return -1;
         }
     }

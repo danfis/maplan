@@ -54,6 +54,7 @@ OBJS += landmark.o
 OBJS += msg_schema.o
 OBJS += lisp_file.o
 OBJS += pddl.o
+OBJS += pddl_factor.o
 
 all: $(TARGETS)
 

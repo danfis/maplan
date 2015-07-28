@@ -541,6 +541,8 @@ static void setOpPrivate(plan_op_t *op, const plan_var_t *var)
 
 static void setPrivateVarAndOp(plan_problem_t *p)
 {
+    plan_var_id_t var;
+    plan_val_t val;
     int i;
 
     // Determine which agents use which values of variables
@@ -550,6 +552,11 @@ static void setPrivateVarAndOp(plan_problem_t *p)
     // bitarrays
     for (i = 0; i < p->var_size; ++i)
         planVarSetPrivateFromUsedBy(p->var + i);
+
+    // Set goals as public
+    PLAN_PART_STATE_FOR_EACH(p->goal, i, var, val){
+        p->var[var].val[val].is_private = 0;
+    }
 
     for (i = 0; i < p->op_size; ++i){
         if (p->op[i].owner >= 0)
@@ -705,7 +712,8 @@ static int projectOp(const plan_problem_t *p, plan_op_t *op)
         projectPartState(p, op->cond_eff[i].eff);
     }
 
-    if (op->eff->vals_size > 0 || op->pre->vals_size > 0)
+    if (op->eff->vals_size > 0 || op->pre->vals_size > 0
+            || op->cond_eff_size > 0)
         return 1;
     return 0;
 }

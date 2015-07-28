@@ -200,40 +200,6 @@ _bor_inline void boundSetOwner(int *bound_arg, int arg_size, int owner)
     bound_arg[arg_size] = owner;
 }
 
-static int _paramIsUsedByFacts(const plan_pddl_facts_t *fs, int param)
-{
-    int i, j;
-
-    for (i = 0; i < fs->size; ++i){
-        for (j = 0; j < fs->fact[i].arg_size; ++j){
-            if (fs->fact[i].arg[j] == param)
-                return 1;
-        }
-    }
-
-    return 0;
-}
-
-static int paramIsUsedInEff(const plan_pddl_action_t *a, int param)
-{
-    const plan_pddl_cond_eff_t *cond_eff;
-    int k;
-
-    if (_paramIsUsedByFacts(&a->eff, param)
-            || _paramIsUsedByFacts(&a->cost, param))
-        return 1;
-
-    for (k = 0; k < a->cond_eff.size; ++k){
-        cond_eff = a->cond_eff.cond_eff + k;
-
-        if (_paramIsUsedByFacts(&cond_eff->pre, param)
-                || _paramIsUsedByFacts(&cond_eff->eff, param))
-            return 1;
-    }
-
-    return 0;
-}
-
 static int checkBoundArgEqFact(const plan_pddl_fact_t *eq,
                                int obj_size,
                                const int *bound_arg)
@@ -371,39 +337,50 @@ static int instBoundArg(const plan_pddl_lift_action_t *lift_action,
 static void instActionBoundPre(const plan_pddl_lift_action_t *lift_action,
                                plan_pddl_fact_pool_t *fact_pool,
                                plan_pddl_ground_action_pool_t *action_pool,
-                               const int *bound_arg_init)
+                               const int *bound_arg_init);
+
+static void instActionBoundFree(const plan_pddl_lift_action_t *lift_action,
+                                plan_pddl_fact_pool_t *fact_pool,
+                                plan_pddl_ground_action_pool_t *action_pool,
+                                const int *bound_arg_init,
+                                int unbound, int obj_id)
 {
-    const plan_pddl_action_t *action = lift_action->action;
     int arg_size = lift_action->param_size;
-    int obj_size = lift_action->obj_size;
     int bound_arg[arg_size + 1];
-    int i, unbound, bind_only_first;
 
     initBoundArg(bound_arg, bound_arg_init, arg_size);
-    unbound = unboundArg(bound_arg, arg_size);
+
+    if (!lift_action->allowed_arg[unbound][obj_id])
+        return;
+
+    // Try an allowed object ID but first check whether it causes
+    // conflict in owners.
+    bound_arg[unbound] = obj_id;
+    if (instBoundOwner(lift_action, NULL, bound_arg) != 0)
+        return;
+
+    instActionBoundPre(lift_action, fact_pool, action_pool, bound_arg);
+}
+
+static void instActionBoundPre(const plan_pddl_lift_action_t *lift_action,
+                               plan_pddl_fact_pool_t *fact_pool,
+                               plan_pddl_ground_action_pool_t *action_pool,
+                               const int *bound_arg_init)
+{
+    int arg_size = lift_action->param_size;
+    int obj_size = lift_action->obj_size;
+    int i, unbound;
+
+    unbound = unboundArg(bound_arg_init, arg_size);
     if (unbound >= 0){
-        // If parameter is not used anywhere just bound by a first
-        // available object
-        bind_only_first = !paramIsUsedInEff(action, unbound);
-
-        // Bound by all possible objects if bind_first is not set
+        // Bound by all possible objects
         for (i = 0; i < obj_size; ++i){
-            if (!lift_action->allowed_arg[unbound][i])
-                continue;
-
-            // Try an allowed object ID but first check whether it causes
-            // conflict in owners.
-            bound_arg[unbound] = i;
-            if (instBoundOwner(lift_action, NULL, bound_arg) != 0)
-                continue;
-
-            instActionBoundPre(lift_action, fact_pool, action_pool, bound_arg);
-            if (bind_only_first)
-                break;
+            instActionBoundFree(lift_action, fact_pool, action_pool,
+                                bound_arg_init, unbound, i);
         }
 
     }else{
-        instActionBound(lift_action, fact_pool, action_pool, bound_arg);
+        instActionBound(lift_action, fact_pool, action_pool, bound_arg_init);
     }
 }
 

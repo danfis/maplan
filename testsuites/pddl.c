@@ -36,6 +36,8 @@ TEST(testPDDL)
                "pddl/rovers-p10.unfactor.pddl");
     dumpDomain("pddl/satellites-domain.unfactor.pddl",
                "pddl/satellites-p05.unfactor.pddl");
+    dumpDomain("pddl/CityCar-domain.unfactor.pddl",
+               "pddl/CityCar-p3-2-2-0-1.unfactor.pddl");
 }
 
 static void testGround(const char *domain_fn, const char *problem_fn)
@@ -83,4 +85,6 @@ TEST(testPDDLGround)
                "pddl/elevators08-p01.unfactor.pddl");
     testGround("pddl/rovers-domain.unfactor.pddl",
                "pddl/rovers-p10.unfactor.pddl");
+    testGround("pddl/CityCar-domain.unfactor.pddl",
+               "pddl/CityCar-p3-2-2-0-1.unfactor.pddl");
 }

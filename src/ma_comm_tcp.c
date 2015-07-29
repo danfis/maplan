@@ -9,6 +9,7 @@
 
 #include <boruvka/alloc.h>
 #include <boruvka/ring_queue.h>
+#include <boruvka/timer.h>
 #include "plan/ma_comm.h"
 
 /**
@@ -809,7 +810,9 @@ static int establishNetwork(plan_ma_comm_tcp_t *tcp, const char **addr)
 {
     struct pollfd pfd[tcp->comm.node_size];
     int i, ret, num_connected = 0;
+    bor_timer_t timer;
 
+    borTimerStart(&timer);
     for (i = 0; i < tcp->comm.node_size; ++i){
         pfd[i].fd = -1;
         pfd[i].events = POLLOUT;
@@ -842,7 +845,7 @@ static int establishNetwork(plan_ma_comm_tcp_t *tcp, const char **addr)
         ret = poll(pfd, tcp->comm.node_size, ESTABLISH_TIMEOUT);
         if (ret == 0){
             ERR(tcp, "Could not establish agent cluster in defined timeout"
-                     " (%d s).", ESTABLISH_TIMEOUT);
+                     " (%d ms).", ESTABLISH_TIMEOUT);
             return -1;
 
         }else if (ret < 0){
@@ -868,6 +871,13 @@ static int establishNetwork(plan_ma_comm_tcp_t *tcp, const char **addr)
                     return -1;
                 }
             }
+        }
+
+        borTimerStop(&timer);
+        if (borTimerElapsedInMs(&timer) > ESTABLISH_TIMEOUT){
+            ERR(tcp, "Could not establish agent cluster in defined timeout"
+                     " (%d ms).", ESTABLISH_TIMEOUT);
+            return -1;
         }
     }
 
@@ -904,7 +914,7 @@ static int shutdownNetwork(plan_ma_comm_tcp_t *tcp)
     while (remain > 0){
         ret = poll(pfd, tcp->comm.node_size, SHUTDOWN_TIMEOUT);
         if (ret == 0){
-            ERR(tcp, "Could not shut-down network in defined timeout (%d s).",
+            ERR(tcp, "Could not shut-down network in defined timeout (%d ms).",
                 SHUTDOWN_TIMEOUT);
             return -1;
 

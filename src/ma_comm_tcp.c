@@ -187,6 +187,7 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
     int i;
 
     tcp = BOR_ALLOC(plan_ma_comm_tcp_t);
+    bzero(tcp, sizeof(*tcp));
     if (flags & PLAN_MA_COMM_TCP_NO_THREAD){
         tcp->use_th = 0;
         _planMACommInit(&tcp->comm, agent_id, agent_size,

@@ -26,6 +26,7 @@
 #include <plan/pddl_fact_pool.h>
 #include <plan/pddl_lift_action.h>
 #include <plan/pddl_ground_action.h>
+#include <plan/ma_comm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,6 +60,11 @@ void planPDDLGroundFree(plan_pddl_ground_t *g);
  * Grounds pddl problem.
  */
 void planPDDLGround(plan_pddl_ground_t *g);
+
+/**
+ * Grounds factored pddl problems.
+ */
+void planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm);
 
 void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout);
 

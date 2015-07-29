@@ -118,6 +118,21 @@ void planPDDLGround(plan_pddl_ground_t *g)
     determineAgents(g);
 }
 
+void planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+{
+    planPDDLLiftActionsInit(&g->lift_action, &g->pddl->action,
+                            &g->pddl->type_obj, &g->pddl->init_func,
+                            g->pddl->obj.size, g->pddl->predicate.eq_pred);
+    planPDDLFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
+    instActionsNegativePreconditions(g->pddl, &g->lift_action, &g->fact_pool);
+
+    instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
+
+    //markStaticFacts(&g->fact_pool, &g->pddl->init_fact);
+    planPDDLGroundActionPoolInst(&g->action_pool, &g->fact_pool);
+    //removeStatAndNegFacts(&g->fact_pool, &g->action_pool);
+}
+
 static int printCmpActions(const void *a, const void *b, void *ud)
 {
     int id1 = *(int *)a;

@@ -136,6 +136,8 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
                          const plan_ma_msg_t *msg);
 static plan_ma_msg_t *tcpRecv(plan_ma_comm_t *comm);
 static plan_ma_msg_t *tcpRecvBlock(plan_ma_comm_t *comm, int timeout_in_ms);
+static void _tcpDel(plan_ma_comm_tcp_t *tcp,
+                    int pipe, int thread);
 
 static void *thRecv(void *);
 static plan_ma_msg_t *tcpRecvTh(plan_ma_comm_t *comm);
@@ -205,13 +207,13 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
     // Create receiving socket but without accepting incomming connections
     tcp->listen_sock = createListenSock(agent_id, agent_size, addr);
     if (tcp->listen_sock < 0){
-        tcpDel(&tcp->comm);
+        BOR_FREE(tcp);
         return NULL;
     }
 
     // Make sure that all remotes are connected
     if (establishNetwork(tcp, addr) != 0){
-        tcpDel(&tcp->comm);
+        _tcpDel(tcp, 0, 0);
         return NULL;
     }
 
@@ -234,12 +236,16 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
         // thread
         if (pipe(tcp->th_pipe) != 0){
             ERRNO(tcp, "Could not create pipe:");
-            tcpDel(&tcp->comm);
+            _tcpDel(tcp, 0, 0);
             return NULL;
         }
 
         // Start recv thread
-        pthread_create(&tcp->th_recv, NULL, thRecv, tcp);
+        if (pthread_create(&tcp->th_recv, NULL, thRecv, tcp) != 0){
+            ERRNO(tcp, "Could not start receive thread.");
+            _tcpDel(tcp, 1, 0);
+            return NULL;
+        }
 
     }else{
         // Initialize buffer for unpacked messages
@@ -256,9 +262,9 @@ plan_ma_comm_t *planMACommTCPNew(int agent_id, int agent_size,
     return &tcp->comm;
 }
 
-static void tcpDel(plan_ma_comm_t *comm)
+static void _tcpDel(plan_ma_comm_tcp_t *tcp,
+                    int pipe, int thread)
 {
-    plan_ma_comm_tcp_t *tcp = TCP(comm);
     int i, tcp_end = 0;
 
     shutdownNetwork(tcp);
@@ -267,7 +273,7 @@ static void tcpDel(plan_ma_comm_t *comm)
         BOR_FREE(tcp->send_sock);
     if (tcp->recv_sock != NULL)
         BOR_FREE(tcp->recv_sock);
-    for (i = 0; i < tcp->comm.node_size; ++i)
+    for (i = 0; tcp->buf != NULL && i < tcp->comm.node_size; ++i)
         bufFree(tcp->buf + i);
     if (tcp->buf != NULL)
         BOR_FREE(tcp->buf);
@@ -275,13 +281,20 @@ static void tcpDel(plan_ma_comm_t *comm)
         BOR_FREE(tcp->sendbuf);
 
     if (tcp->use_th){
-        if (write(tcp->th_pipe[1], &tcp_end, sizeof(int)) < 0){
-            ERRNO(tcp, "Could not write to recv pipe:");
+        if (pipe){
+            if (write(tcp->th_pipe[1], &tcp_end, sizeof(int)) < 0){
+                ERRNO(tcp, "Could not write to recv pipe:");
+            }
         }
-        pthread_join(tcp->th_recv, NULL);
+
+        if (thread){
+            pthread_join(tcp->th_recv, NULL);
+        }
         borRingQueueFree(&tcp->th_msgbuf);
-        close(tcp->th_pipe[1]);
-        close(tcp->th_pipe[0]);
+        if (pipe){
+            close(tcp->th_pipe[1]);
+            close(tcp->th_pipe[0]);
+        }
     }else{
         msgRingBufFree(&tcp->msgbuf);
         if (tcp->recv_pfd)
@@ -289,6 +302,12 @@ static void tcpDel(plan_ma_comm_t *comm)
     }
 
     BOR_FREE(tcp);
+}
+
+static void tcpDel(plan_ma_comm_t *comm)
+{
+    plan_ma_comm_tcp_t *tcp = TCP(comm);
+    _tcpDel(tcp, 1, 1);
 }
 
 static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,

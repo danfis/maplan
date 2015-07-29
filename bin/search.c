@@ -830,6 +830,11 @@ static int maInit(ma_t *ma, int agent_id, const options_t *o,
         return -1;
     }
 
+    if (ma->comm == NULL){
+        fprintf(stderr, "Error: Cannot create a communication channel.\n");
+        return -1;
+    }
+
     return 0;
 }
 

@@ -38,6 +38,7 @@ extern "C" {
 #define PLAN_MA_MSG_PUBLIC_STATE 0x2
 #define PLAN_MA_MSG_SNAPSHOT     0x3
 #define PLAN_MA_MSG_HEUR         0x4
+#define PLAN_MA_MSG_PDDL_GROUND  0x5
 
 
 /**
@@ -103,6 +104,12 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_NONE    0
 #define PLAN_MA_MSG_HEUR_UPDATE  1
 #define PLAN_MA_MSG_HEUR_REQUEST 2
+
+/**
+ * PDDL-ground sub-types
+ */
+#define PLAN_MA_MSG_PDDL_GROUND_COMMON_MAPS 0x0
+
 
 typedef struct _plan_ma_msg_op_t plan_ma_msg_op_t;
 typedef struct _plan_ma_msg_dtg_req_t plan_ma_msg_dtg_req_t;
@@ -211,6 +218,8 @@ void planMAMsgSetHeurCost(plan_ma_msg_t *msg, int cost);
 int planMAMsgSearchRes(const plan_ma_msg_t *msg);
 void planMAMsgSetSearchRes(plan_ma_msg_t *msg, int res);
 
+void planMAMsgAddPDDLGroundPredName(plan_ma_msg_t *msg, const char *name);
+void planMAMsgAddPDDLGroundObjName(plan_ma_msg_t *msg, const char *name);
 
 /**
  * Sets request for DTG heuristic.
@@ -258,7 +267,6 @@ plan_cost_t planMAMsgOpValue(const plan_ma_msg_op_t *op);
 void planMAMsgOpSetValue(plan_ma_msg_op_t *op, plan_cost_t cost);
 const char *planMAMsgOpName(const plan_ma_msg_op_t *op);
 void planMAMsgOpSetName(plan_ma_msg_op_t *op, const char *name);
-
 
 
 

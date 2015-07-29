@@ -113,6 +113,10 @@ struct _plan_ma_msg_t {
     int op_size;
 
     plan_ma_msg_pot_t pot;
+    int8_t *pddl_ground_pred_name;
+    int pddl_ground_pred_name_size;
+    int8_t *pddl_ground_obj_name;
+    int pddl_ground_obj_name_size;
 };
 
 PLAN_MSG_SCHEMA_BEGIN(schema_pot_submatrix)
@@ -209,6 +213,11 @@ PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, dtg_req, &schema_dtg_req)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, search_res, INT32)
 PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_t, op, op_size, &schema_op)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, pot, &schema_pot)
+
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, pddl_ground_pred_name,
+                        pddl_ground_pred_name_size, INT8)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, pddl_ground_obj_name,
+                        pddl_ground_obj_name_size, INT8)
 PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_type                 0x000001u
 #define M_agent_id             0x000002u
@@ -234,6 +243,9 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 
 #define M_op                   0x080000u
 #define M_pot                  0x100000u
+
+#define M_pddl_ground_pred_name 0x200000u
+#define M_pddl_ground_obj_name  0x400000u
 
 
 #define SET_VAL(msg, member, val) \
@@ -533,7 +545,41 @@ int planMAMsgHeurRequestedAgent(const plan_ma_msg_t *msg, int i)
 GETTER_SETTER(HeurCost, heur_cost, int)
 GETTER_SETTER(SearchRes, search_res, int)
 
+static void _pddlGroundAddName(int8_t **arr, int *arr_size, const char *name)
+{
+    int len, oldsize, size;
 
+    len = (strlen(name) + 1) * sizeof(char);
+    oldsize = *arr_size;
+    size = oldsize + len;
+    *arr = BOR_REALLOC_ARR(*arr, int8_t, size);
+    memcpy(*arr + oldsize, name, len);
+    *arr_size = size;
+}
+
+void planMAMsgAddPDDLGroundPredName(plan_ma_msg_t *msg, const char *name)
+{
+    _pddlGroundAddName(&msg->pddl_ground_pred_name,
+                       &msg->pddl_ground_pred_name_size, name);
+}
+
+const char *planMAMsgPDDLGroundPredName(const plan_ma_msg_t *msg, int *size)
+{
+    *size = msg->pddl_ground_pred_name_size;
+    return (const char *)msg->pddl_ground_pred_name;
+}
+
+void planMAMsgAddPDDLGroundObjName(plan_ma_msg_t *msg, const char *name)
+{
+    _pddlGroundAddName(&msg->pddl_ground_obj_name,
+                       &msg->pddl_ground_obj_name_size, name);
+}
+
+const char *planMAMsgPDDLGroundObjName(const plan_ma_msg_t *msg, int *size)
+{
+    *size = msg->pddl_ground_obj_name_size;
+    return (const char *)msg->pddl_ground_obj_name;
+}
 
 
 

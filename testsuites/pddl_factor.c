@@ -38,6 +38,7 @@ static void testGround(int size, ...)
     va_list ap;
     plan_pddl_t **pddl;
     plan_pddl_ground_t *ground;
+    plan_ma_comm_inproc_pool_t *comm_pool;
     plan_ma_comm_t **comm;
     const char *dom, *prob;
     int i;
@@ -45,6 +46,7 @@ static void testGround(int size, ...)
     printf("---- Ground ----\n");
     pddl = BOR_ALLOC_ARR(plan_pddl_t *, size);
     ground = BOR_ALLOC_ARR(plan_pddl_ground_t, size);
+    comm_pool = planMACommInprocPoolNew(size);
     comm = BOR_ALLOC_ARR(plan_ma_comm_t *, size);
     va_start(ap, size);
     for (i = 0; i < size; ++i){
@@ -57,7 +59,7 @@ static void testGround(int size, ...)
             return;
 
         planPDDLGroundInit(ground + i, pddl[i]);
-        comm[i] = planMACommInprocNew(i, size);
+        comm[i] = planMACommInprocNew(comm_pool, size);
     }
     va_end(ap);
 
@@ -71,6 +73,7 @@ static void testGround(int size, ...)
         planPDDLDel(pddl[i]);
         planMACommDel(comm[i]);
     }
+    planMACommInprocPoolDel(comm_pool);
 
     BOR_FREE(pddl);
     BOR_FREE(ground);

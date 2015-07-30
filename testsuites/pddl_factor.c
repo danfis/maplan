@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <pthread.h>
 #include <cu/cu.h>
 #include <boruvka/alloc.h>
 #include "plan/pddl.h"
@@ -33,50 +34,90 @@ TEST(testPDDLFactor)
                "pddl/depot-pfile1-factor/problem-driver1.pddl");
 }
 
+struct _ground_th_t {
+    int id;
+    int size;
+    int use_tcp;
+    plan_pddl_t *pddl;
+    plan_pddl_ground_t ground;
+    plan_ma_comm_inproc_pool_t *comm_pool;
+    pthread_t th;
+};
+typedef struct _ground_th_t ground_th_t;
+
+static char *tcp_urls[] = {
+    "127.0.0.1:21000",
+    "127.0.0.1:21001",
+    "127.0.0.1:21002",
+    "127.0.0.1:21003",
+    "127.0.0.1:21004",
+    "127.0.0.1:21005",
+    "127.0.0.1:21006",
+    "127.0.0.1:21007",
+    "127.0.0.1:21008",
+    "127.0.0.1:21009",
+    "127.0.0.1:21010",
+};
+
+static void *groundTh(void *arg)
+{
+    ground_th_t *th = arg;
+    plan_ma_comm_t *comm;
+
+    if (th->use_tcp){
+        comm = planMACommTCPNew(th->id, th->size, tcp_urls, 0);
+    }else{
+        comm = planMACommInprocNew(th->comm_pool, th->id);
+    }
+    planPDDLGroundFactor(&th->ground, comm);
+    planMACommDel(comm);
+    return NULL;
+}
+
 static void testGround(int size, ...)
 {
     va_list ap;
-    plan_pddl_t **pddl;
-    plan_pddl_ground_t *ground;
     plan_ma_comm_inproc_pool_t *comm_pool;
-    plan_ma_comm_t **comm;
+    ground_th_t th[size];
     const char *dom, *prob;
     int i;
 
     printf("---- Ground ----\n");
-    pddl = BOR_ALLOC_ARR(plan_pddl_t *, size);
-    ground = BOR_ALLOC_ARR(plan_pddl_ground_t, size);
     comm_pool = planMACommInprocPoolNew(size);
-    comm = BOR_ALLOC_ARR(plan_ma_comm_t *, size);
+
     va_start(ap, size);
     for (i = 0; i < size; ++i){
+        th[i].id = i;
+        th[i].size = size;
+        th[i].use_tcp = 0;
+        th[i].comm_pool = comm_pool;
+
         dom  = va_arg(ap, const char *);
         prob = va_arg(ap, const char *);
 
         printf("    |- %s | %s\n", dom, prob);
-        pddl[i] = planPDDLNew(dom, prob);
-        if (pddl[i] == NULL)
+        th[i].pddl = planPDDLNew(dom, prob);
+        if (th[i].pddl == NULL)
             return;
 
-        planPDDLGroundInit(ground + i, pddl[i]);
-        comm[i] = planMACommInprocNew(comm_pool, size);
+        planPDDLGroundInit(&th[i].ground, th[i].pddl);
     }
     va_end(ap);
 
     for (i = 0; i < size; ++i)
-        planPDDLGroundFactor(ground + i, comm[i]);
+        pthread_create(&th[i].th, NULL, groundTh, &th[i]);
+
+    for (i = 0; i < size; ++i)
+        pthread_join(th[i].th, NULL);
 
     for (i = 0; i < size; ++i){
         printf("++++++++++++++++\n");
-        planPDDLGroundPrint(ground + i, stdout);
-        planPDDLGroundFree(ground + i);
-        planPDDLDel(pddl[i]);
-        planMACommDel(comm[i]);
+        planPDDLGroundPrint(&th[i].ground, stdout);
+        planPDDLGroundFree(&th[i].ground);
+        planPDDLDel(th[i].pddl);
     }
     planMACommInprocPoolDel(comm_pool);
 
-    BOR_FREE(pddl);
-    BOR_FREE(ground);
     printf("---- Ground END ----\n");
 }
 

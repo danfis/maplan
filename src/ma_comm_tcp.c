@@ -269,7 +269,32 @@ static void _tcpDel(plan_ma_comm_tcp_t *tcp,
 {
     int i, tcp_end = 0;
 
+    // First terminate recv thread if used
+    if (tcp->use_th){
+        if (thread){
+            if (write(tcp->th_pipe[1], &tcp_end, sizeof(int)) < 0){
+                ERRNO(tcp, "Could not write to recv pipe:");
+            }
+            pthread_join(tcp->th_recv, NULL);
+        }
+
+        if (pipe){
+            close(tcp->th_pipe[1]);
+            close(tcp->th_pipe[0]);
+        }
+    }
+
+    // Then shutdown whole network
     shutdownNetwork(tcp);
+
+    // And finally dealloc allocated resources
+    if (tcp->use_th){
+        borRingQueueFree(&tcp->th_msgbuf);
+    }else{
+        msgRingBufFree(&tcp->msgbuf);
+        if (tcp->recv_pfd)
+            BOR_FREE(tcp->recv_pfd);
+    }
 
     if (tcp->send_sock != NULL)
         BOR_FREE(tcp->send_sock);
@@ -281,27 +306,6 @@ static void _tcpDel(plan_ma_comm_tcp_t *tcp,
         BOR_FREE(tcp->buf);
     if (tcp->sendbuf)
         BOR_FREE(tcp->sendbuf);
-
-    if (tcp->use_th){
-        if (pipe){
-            if (write(tcp->th_pipe[1], &tcp_end, sizeof(int)) < 0){
-                ERRNO(tcp, "Could not write to recv pipe:");
-            }
-        }
-
-        if (thread){
-            pthread_join(tcp->th_recv, NULL);
-        }
-        borRingQueueFree(&tcp->th_msgbuf);
-        if (pipe){
-            close(tcp->th_pipe[1]);
-            close(tcp->th_pipe[0]);
-        }
-    }else{
-        msgRingBufFree(&tcp->msgbuf);
-        if (tcp->recv_pfd)
-            BOR_FREE(tcp->recv_pfd);
-    }
 
     BOR_FREE(tcp);
 }

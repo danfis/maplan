@@ -531,8 +531,6 @@ static void terminate(plan_ma_search_t *ma)
                        PLAN_MA_MSG_TERMINATE_REQUEST,
                        ma->comm->node_id);
     planMAMsgSetTerminateAgent(msg, ma->comm->node_id);
-    planMAMsgSetSearchRes(msg, ma->res);
-    planMAMsgTracePathAppendPath(msg, &ma->path);
     planMACommSendInRing(ma->comm, msg);
     planMAMsgDel(msg);
 

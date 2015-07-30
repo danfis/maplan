@@ -118,8 +118,110 @@ void planPDDLGround(plan_pddl_ground_t *g)
     determineAgents(g);
 }
 
-void planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+static void factorAddPredObjNames(const plan_pddl_ground_t *g,
+                                  plan_ma_msg_t *msg)
 {
+    const plan_pddl_predicates_t *preds;
+    const plan_pddl_objs_t *objs;
+    int i;
+
+    preds = &g->pddl->predicate;
+    for (i = 0; i < preds->size; ++i)
+        planMAMsgAddPDDLGroundPredName(msg, preds->pred[i].name);
+
+    objs = &g->pddl->obj;
+    for (i = 0; i < objs->size; ++i)
+        planMAMsgAddPDDLGroundObjName(msg, objs->obj[i].name);
+}
+
+static int factorSendPredObjNames(const plan_pddl_ground_t *g,
+                                  plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg;
+    int ret;
+
+    fprintf(stderr, "Send %d\n", comm->node_id);
+    fflush(stderr);
+    msg = planMAMsgNew(PLAN_MA_MSG_PDDL_GROUND,
+                       PLAN_MA_MSG_PDDL_GROUND_COMMON_MAPS,
+                       comm->node_id);
+    factorAddPredObjNames(g, msg);
+    fprintf(stderr, "SEND %d -> next\n", comm->node_id);
+    fflush(stderr);
+    ret = planMACommSendInRing(comm, msg);
+    planMAMsgDel(msg);
+
+    return ret;
+}
+
+static int factorUpdatePredObjNames(const plan_pddl_ground_t *g,
+                                    plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg;
+    int ret;
+
+    fprintf(stderr, "Update %d\n", comm->node_id);
+    fflush(stderr);
+    msg = planMACommRecvBlock(comm, -1);
+    if (msg == NULL){
+        // TODO: Error
+        return -1;
+    }
+    factorAddPredObjNames(g, msg);
+    fprintf(stderr, "SEND %d -> next\n", comm->node_id);
+    fflush(stderr);
+    ret = planMACommSendInRing(comm, msg);
+    planMAMsgDel(msg);
+
+    return ret;
+}
+
+static int factorConstructPredObjMaps(const plan_pddl_ground_t *g,
+                                      plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg_in;
+    int ret;
+
+    msg_in = planMACommRecvBlock(comm, 10000);
+    if (msg_in == NULL){
+        // TODO: Error
+        return -1;
+    }
+
+    fprintf(stderr, "END\n");
+    planMAMsgDel(msg_in);
+
+    ret = 0;
+    return ret;
+}
+
+/** Determines a stable mapping between predicate and object IDs */
+static int factorDetermineMapping(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+{
+    if (comm->node_id == 0){
+        if (factorSendPredObjNames(g, comm) != 0){
+            // TODO: Error
+            return -1;
+        }
+    }else{
+        if (factorUpdatePredObjNames(g, comm) != 0){
+            // TODO: Error
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+{
+    if (factorDetermineMapping(g, comm) != 0){
+        // TODO: Error
+        return -1;
+    }
+
+    return 0;
+
     planPDDLLiftActionsInit(&g->lift_action, &g->pddl->action,
                             &g->pddl->type_obj, &g->pddl->init_func,
                             g->pddl->obj.size, g->pddl->predicate.eq_pred);

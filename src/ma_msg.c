@@ -462,6 +462,22 @@ plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg_in)
     planMAMsgDTGReqCopy(&msg->dtg_req, &msg_in->dtg_req);
     planMAMsgPotClone(&msg->pot, &msg_in->pot);
 
+    if (msg_in->pddl_ground_pred_name != NULL){
+        msg->pddl_ground_pred_name = NULL;
+        MEMCPY_ARR(msg, pddl_ground_pred_name,
+                   msg_in->pddl_ground_pred_name,
+                   msg_in->pddl_ground_pred_name_size);
+
+    }
+
+    if (msg_in->pddl_ground_obj_name != NULL){
+        msg->pddl_ground_obj_name = NULL;
+        MEMCPY_ARR(msg, pddl_ground_obj_name,
+                   msg_in->pddl_ground_obj_name,
+                   msg_in->pddl_ground_obj_name_size);
+
+    }
+
     return msg;
 }
 

@@ -219,7 +219,9 @@ int planMAMsgSearchRes(const plan_ma_msg_t *msg);
 void planMAMsgSetSearchRes(plan_ma_msg_t *msg, int res);
 
 void planMAMsgAddPDDLGroundPredName(plan_ma_msg_t *msg, const char *name);
+const char *planMAMsgPDDLGroundPredName(const plan_ma_msg_t *msg, int *size);
 void planMAMsgAddPDDLGroundObjName(plan_ma_msg_t *msg, const char *name);
+const char *planMAMsgPDDLGroundObjName(const plan_ma_msg_t *msg, int *size);
 
 /**
  * Sets request for DTG heuristic.

@@ -321,7 +321,7 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
 {
     plan_ma_comm_tcp_t *tcp = TCP(comm);
     struct pollfd pfd;
-    char *outbuf = tcp->sendbuf;
+    char *outbuf;
     int size, sent;
     ssize_t send_ret;
     int ret = 0;
@@ -332,6 +332,7 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
 
     // Pack the message into prepared buffer. Extend the buffer if needed.
     do {
+        outbuf = tcp->sendbuf;
         size = tcp->sendbuf_size - 4;
         ret = planMAMsgPackToBuf(msg, outbuf + 4, &size);
         if (ret != 0)

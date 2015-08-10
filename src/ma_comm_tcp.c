@@ -336,7 +336,7 @@ static int tcpSendToNode(plan_ma_comm_t *comm, int node_id,
         size = tcp->sendbuf_size - 4;
         ret = planMAMsgPackToBuf(msg, outbuf + 4, &size);
         if (ret != 0)
-            sendbufExtend(tcp, size);
+            sendbufExtend(tcp, size + 4);
     } while (ret != 0);
 
     // Write size of the message at the beggining of the buffer

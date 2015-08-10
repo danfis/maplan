@@ -103,7 +103,7 @@ static void *limitMonitorTh(void *_)
         elapsed = borTimerElapsedInSF(&limit_monitor.timer);
         if ((int)elapsed > limit_monitor.max_time){
             fprintf(stderr, "Aborting due to exceeded hard time limit"
-                            " (elapsed %f, limit: %d.\n",
+                            " (elapsed %f, limit: %d).\n",
                     elapsed, limit_monitor.max_time);
             fflush(stderr);
             limitMonitorAbort();

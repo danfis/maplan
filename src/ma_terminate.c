@@ -219,7 +219,7 @@ int planMATerminateProcessMsg(plan_ma_terminate_t *term,
 
     if (subtype == PLAN_MA_MSG_TERMINATE_REQUEST){
         term->state = PLAN_MA_TERMINATE_IN_PROGRESS;
-        processMsgRequest(term, msg, comm);
+        return processMsgRequest(term, msg, comm);
 
     }else if (subtype == PLAN_MA_MSG_TERMINATE_FINAL){
         ++term->final_counter;

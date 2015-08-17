@@ -358,7 +358,7 @@ static int factorConstructPredObjMaps(plan_pddl_ground_t *g,
                                       plan_ma_comm_t *comm)
 {
     plan_ma_msg_t *msg;
-    int ret;
+    int ret = 0;
 
     msg = planMACommRecvBlock(comm, -1);
     if (msg == NULL){
@@ -374,7 +374,8 @@ static int factorConstructPredObjMaps(plan_pddl_ground_t *g,
     }
 
     // Send the message to the next node right away
-    ret = planMACommSendInRing(comm, msg);
+    if (comm->node_id != comm->node_size - 1)
+        ret = planMACommSendInRing(comm, msg);
 
     // and construct maps now to utilize parallel processing at least to
     // some extent.
@@ -437,6 +438,12 @@ static int factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 
 int planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 {
+    planPDDLLiftActionsInit(&g->lift_action, &g->pddl->action,
+                            &g->pddl->type_obj, &g->pddl->init_func,
+                            g->pddl->obj.size, g->pddl->predicate.eq_pred);
+    planPDDLFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
+    instActionsNegativePreconditions(g->pddl, &g->lift_action, &g->fact_pool);
+
     if (comm->node_id == 0){
         return factorMaster(g, comm);
     }else{
@@ -444,12 +451,6 @@ int planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
     }
 
     return 0;
-
-    planPDDLLiftActionsInit(&g->lift_action, &g->pddl->action,
-                            &g->pddl->type_obj, &g->pddl->init_func,
-                            g->pddl->obj.size, g->pddl->predicate.eq_pred);
-    planPDDLFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
-    instActionsNegativePreconditions(g->pddl, &g->lift_action, &g->fact_pool);
 
     instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
 

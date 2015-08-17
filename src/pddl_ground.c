@@ -118,6 +118,7 @@ void planPDDLGround(plan_pddl_ground_t *g)
     determineAgents(g);
 }
 
+/** Adds predicate and object names into the message. */
 static void factorAddPredObjNames(const plan_pddl_ground_t *g,
                                   plan_ma_msg_t *msg)
 {
@@ -134,6 +135,8 @@ static void factorAddPredObjNames(const plan_pddl_ground_t *g,
         planMAMsgAddPDDLGroundObjName(msg, objs->obj[i].name);
 }
 
+/** Sends a message containing predicate and object names to the next node
+ *  in ring. */
 static int factorSendPredObjNames(const plan_pddl_ground_t *g,
                                   plan_ma_comm_t *comm)
 {
@@ -151,9 +154,14 @@ static int factorSendPredObjNames(const plan_pddl_ground_t *g,
     ret = planMACommSendInRing(comm, msg);
     planMAMsgDel(msg);
 
+    if (ret != 0)
+        ERR2_F(comm, "Could not send a pddl-ground message.");
     return ret;
 }
 
+/** Receives a message containing predicate and object names, updates this
+ *  message with its own predicate and object names and sends it to the
+ *  next node in ring. */
 static int factorUpdatePredObjNames(const plan_pddl_ground_t *g,
                                     plan_ma_comm_t *comm)
 {
@@ -164,15 +172,25 @@ static int factorUpdatePredObjNames(const plan_pddl_ground_t *g,
     fflush(stderr);
     msg = planMACommRecvBlock(comm, -1);
     if (msg == NULL){
-        // TODO: Error
+        ERR2_F(comm, "Received no message, expecting pddl-ground message.");
+        return -1;
+
+    }else if (planMAMsgType(msg) != PLAN_MA_MSG_PDDL_GROUND
+                || planMAMsgSubType(msg) != PLAN_MA_MSG_PDDL_GROUND_COMMON_MAPS){
+        ERR_F(comm, "Expecting pddl-ground message, received something"
+              " else. (type: %d, subtype: %d)", planMAMsgType(msg),
+              planMAMsgSubType(msg));
         return -1;
     }
+
     factorAddPredObjNames(g, msg);
     fprintf(stderr, "SEND %d -> next\n", comm->node_id);
     fflush(stderr);
     ret = planMACommSendInRing(comm, msg);
     planMAMsgDel(msg);
 
+    if (ret != 0)
+        ERR2_F(comm, "Could not send a pddl-ground message.");
     return ret;
 }
 
@@ -182,7 +200,7 @@ static int factorConstructPredObjMaps(const plan_pddl_ground_t *g,
     plan_ma_msg_t *msg_in;
     int ret;
 
-    msg_in = planMACommRecvBlock(comm, 10000);
+    msg_in = planMACommRecvBlock(comm, -1);
     if (msg_in == NULL){
         // TODO: Error
         return -1;
@@ -199,13 +217,13 @@ static int factorConstructPredObjMaps(const plan_pddl_ground_t *g,
 static int factorDetermineMapping(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 {
     if (comm->node_id == 0){
-        if (factorSendPredObjNames(g, comm) != 0){
-            // TODO: Error
+        if (factorSendPredObjNames(g, comm) != 0
+                || factorConstructPredObjMaps(g, comm) != 0){
             return -1;
         }
+
     }else{
         if (factorUpdatePredObjNames(g, comm) != 0){
-            // TODO: Error
             return -1;
         }
     }

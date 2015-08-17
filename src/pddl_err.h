@@ -55,6 +55,15 @@ extern "C" {
     fflush(stderr); \
     } while (0)
 
+#define ERR_F(comm, format, ...) do { \
+    fprintf(stderr, "[%d] Error Factored PDDL: " format "\n", \
+            (comm)->node_id, __VA_ARGS__); \
+    fflush(stderr); \
+    } while (0)
+#define ERR2_F(comm, text) do { \
+    fprintf(stderr, "[%d] Error PDDL: " text "\n", (comm)->node_id); \
+    fflush(stderr); \
+    } while (0)
 
 #ifdef __cplusplus
 } /* extern "C" */

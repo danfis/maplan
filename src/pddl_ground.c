@@ -28,6 +28,14 @@
 #include "pddl_err.h"
 
 
+#define STATE_START                     0
+#define STATE_WAIT_FOR_NAMES            1
+#define STATE_WAIT_FOR_NAME_MAP         2
+#define STATE_GROUND                    3
+#define STATE_WAIT_FOR_GROUNDED_FACTS   4
+#define STATE_GROUND_END                1000
+
+
 /** Instantiates actions using facts in fact pool. */
 static void instActions(const plan_pddl_lift_actions_t *actions,
                         plan_pddl_fact_pool_t *fact_pool,
@@ -89,6 +97,9 @@ void planPDDLGroundInit(plan_pddl_ground_t *g, const plan_pddl_t *pddl)
     g->agent_size = 0;
     g->agent_to_obj = NULL;
     g->obj_to_agent = NULL;
+
+    g->glob_to_obj = g->obj_to_glob = NULL;
+    g->glob_to_pred = g->pred_to_glob = NULL;
 }
 
 void planPDDLGroundFree(plan_pddl_ground_t *g)
@@ -101,6 +112,15 @@ void planPDDLGroundFree(plan_pddl_ground_t *g)
         BOR_FREE(g->agent_to_obj);
     if (g->obj_to_agent != NULL)
         BOR_FREE(g->obj_to_agent);
+
+    if (g->glob_to_obj != NULL)
+        BOR_FREE(g->glob_to_obj);
+    if (g->obj_to_glob != NULL)
+        BOR_FREE(g->obj_to_glob);
+    if (g->glob_to_pred != NULL)
+        BOR_FREE(g->glob_to_pred);
+    if (g->pred_to_glob != NULL)
+        BOR_FREE(g->pred_to_glob);
 }
 
 void planPDDLGround(plan_pddl_ground_t *g)
@@ -127,12 +147,16 @@ static void factorAddPredObjNames(const plan_pddl_ground_t *g,
     int i;
 
     preds = &g->pddl->predicate;
-    for (i = 0; i < preds->size; ++i)
-        planMAMsgAddPDDLGroundPredName(msg, preds->pred[i].name);
+    for (i = 0; i < preds->size; ++i){
+        if (!preds->pred[i].is_private)
+            planMAMsgAddPDDLGroundPredName(msg, preds->pred[i].name);
+    }
 
     objs = &g->pddl->obj;
-    for (i = 0; i < objs->size; ++i)
-        planMAMsgAddPDDLGroundObjName(msg, objs->obj[i].name);
+    for (i = 0; i < objs->size; ++i){
+        if (!objs->obj[i].is_private)
+            planMAMsgAddPDDLGroundObjName(msg, objs->obj[i].name);
+    }
 }
 
 /** Sends a message containing predicate and object names to the next node
@@ -194,37 +218,217 @@ static int factorUpdatePredObjNames(const plan_pddl_ground_t *g,
     return ret;
 }
 
-static int factorConstructPredObjMaps(const plan_pddl_ground_t *g,
+static int cmpStr(const void *a, const void *b)
+{
+    const char *s1 = *(const char **)a;
+    const char *s2 = *(const char **)b;
+    return strcmp(s1, s2);
+}
+
+static char **factorSortUniqNames(const char *names, int names_size, int *size)
+{
+    char **arr;
+    int num_names, i, ins;
+
+    // Find the number of strings in names
+    for (i = 0, num_names = 0; i < names_size; ++i){
+        if (names[i] == 0x0)
+            ++num_names;
+    }
+
+    if (num_names == 0){
+        *size = 0;
+        return NULL;
+    }
+
+    // Create output array and assign strings
+    arr = BOR_ALLOC_ARR(char *, num_names);
+    arr[0] = (char *)names;
+    for (i = 1, ins = 1; i < names_size; ++i){
+        if (names[i] == 0x0 && ins < num_names)
+            arr[ins++] = (char *)(names + i + 1);
+    }
+
+    // Sort and uniq the array
+    qsort(arr, num_names, sizeof(char *), cmpStr);
+    for (i = 1, ins = 0; i < num_names; ++i){
+        if (strcmp(arr[i - 1], arr[i]) != 0)
+            arr[ins++] = arr[i - 1];
+    }
+    arr[ins++] = arr[num_names - 1];
+    num_names = ins;
+
+    *size = num_names;
+    return arr;
+}
+
+static void constructObjMap(plan_pddl_ground_t *g,
+                            const plan_ma_msg_t *msg)
+{
+    const plan_pddl_obj_t *loc_obj;
+    const char *str, *glob_name;
+    char **obj;
+    int str_size, obj_size, i, loc_id, glob_id;
+
+    // Get sorted object names
+    str = planMAMsgPDDLGroundObjName(msg, &str_size);
+    obj = factorSortUniqNames(str, str_size, &obj_size);
+
+    // Initialize mapping from global ID to local ID
+    g->glob_to_obj = BOR_ALLOC_ARR(int, obj_size);
+    for (i = 0; i < obj_size; ++i)
+        g->glob_to_obj[i] = -1;
+
+    // Initialize mapping from local ID to global ID
+    g->obj_to_glob = BOR_ALLOC_ARR(int, g->pddl->obj.size);
+    for (i = 0; i < g->pddl->obj.size; ++i)
+        g->obj_to_glob[i] = -1;
+
+    // Fill mapping
+    for (loc_id = 0; loc_id < g->pddl->obj.size; ++loc_id){
+        loc_obj = g->pddl->obj.obj + loc_id;
+        for (glob_id = 0; glob_id < obj_size; ++glob_id){
+            glob_name = obj[glob_id];
+            if (strcmp(loc_obj->name, glob_name) == 0){
+                g->obj_to_glob[loc_id] = glob_id;
+                g->glob_to_obj[glob_id] = loc_id;
+            }
+        }
+    }
+
+    for (i = 0; i < obj_size; ++i)
+        fprintf(stdout, "glob-to-obj: %d -> %d (%s)\n", i,
+                g->glob_to_obj[i],
+                obj[i]);
+    for (i = 0; i < g->pddl->obj.size; ++i)
+        fprintf(stdout, "obj-to-glob: %d -> %d (%s)\n", i,
+                g->obj_to_glob[i], g->pddl->obj.obj[i].name);
+
+    if (obj)
+        BOR_FREE(obj);
+}
+
+static void constructPredMap(plan_pddl_ground_t *g,
+                             const plan_ma_msg_t *msg)
+{
+    const plan_pddl_predicate_t *loc_pred;
+    const char *str, *glob_name;
+    char **pred;
+    int str_size, pred_size, i, loc_id, glob_id;
+
+    // Get sorted predect names
+    str = planMAMsgPDDLGroundPredName(msg, &str_size);
+    pred = factorSortUniqNames(str, str_size, &pred_size);
+
+    // Initialize mapping from global ID to local ID
+    g->glob_to_pred = BOR_ALLOC_ARR(int, pred_size);
+    for (i = 0; i < pred_size; ++i)
+        g->glob_to_pred[i] = -1;
+
+    // Initialize mapping from local ID to global ID
+    g->pred_to_glob = BOR_ALLOC_ARR(int, g->pddl->predicate.size);
+    for (i = 0; i < g->pddl->predicate.size; ++i)
+        g->pred_to_glob[i] = -1;
+
+    // Fill mapping
+    for (loc_id = 0; loc_id < g->pddl->predicate.size; ++loc_id){
+        loc_pred = g->pddl->predicate.pred + loc_id;
+        for (glob_id = 0; glob_id < pred_size; ++glob_id){
+            glob_name = pred[glob_id];
+            if (strcmp(loc_pred->name, glob_name) == 0){
+                g->pred_to_glob[loc_id] = glob_id;
+                g->glob_to_pred[glob_id] = loc_id;
+            }
+        }
+    }
+
+    for (i = 0; i < pred_size; ++i)
+        fprintf(stdout, "glob-to-pred: %d -> %d (%s)\n", i,
+                g->glob_to_pred[i],
+                pred[i]);
+    for (i = 0; i < g->pddl->predicate.size; ++i)
+        fprintf(stdout, "pred-to-glob: %d -> %d (%s)\n", i,
+                g->pred_to_glob[i], g->pddl->predicate.pred[i].name);
+
+    if (pred)
+        BOR_FREE(pred);
+}
+
+static int factorConstructPredObjMaps(plan_pddl_ground_t *g,
                                       plan_ma_comm_t *comm)
 {
-    plan_ma_msg_t *msg_in;
+    plan_ma_msg_t *msg;
     int ret;
 
-    msg_in = planMACommRecvBlock(comm, -1);
-    if (msg_in == NULL){
-        // TODO: Error
+    msg = planMACommRecvBlock(comm, -1);
+    if (msg == NULL){
+        ERR2_F(comm, "Received no message, expecting pddl-ground message.");
+        return -1;
+
+    }else if (planMAMsgType(msg) != PLAN_MA_MSG_PDDL_GROUND
+                || planMAMsgSubType(msg) != PLAN_MA_MSG_PDDL_GROUND_COMMON_MAPS){
+        ERR_F(comm, "Expecting pddl-ground message, received something"
+              " else. (type: %d, subtype: %d)", planMAMsgType(msg),
+              planMAMsgSubType(msg));
         return -1;
     }
 
-    fprintf(stderr, "END\n");
-    planMAMsgDel(msg_in);
+    // Send the message to the next node right away
+    ret = planMACommSendInRing(comm, msg);
 
-    ret = 0;
+    // and construct maps now to utilize parallel processing at least to
+    // some extent.
+    constructObjMap(g, msg);
+    constructPredMap(g, msg);
+
+    planMAMsgDel(msg);
+    fprintf(stderr, "END\n");
+
     return ret;
 }
 
-/** Determines a stable mapping between predicate and object IDs */
-static int factorDetermineMapping(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+static int factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 {
-    if (comm->node_id == 0){
-        if (factorSendPredObjNames(g, comm) != 0
-                || factorConstructPredObjMaps(g, comm) != 0){
-            return -1;
-        }
+    int state = STATE_START;
 
-    }else{
-        if (factorUpdatePredObjNames(g, comm) != 0){
-            return -1;
+    while (state != STATE_GROUND_END){
+        if (state == STATE_START){
+            if (factorSendPredObjNames(g, comm) != 0)
+                return -1;
+            state = STATE_WAIT_FOR_NAMES;
+
+        }else if (state == STATE_WAIT_FOR_NAMES){
+            if (factorConstructPredObjMaps(g, comm) != 0)
+                return -1;
+            state = STATE_GROUND;
+            state = STATE_GROUND_END;
+
+        }else if (state == STATE_GROUND){
+        }else if (state == STATE_WAIT_FOR_GROUNDED_FACTS){
+        }
+    }
+
+    return 0;
+}
+
+static int factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+{
+    int state = STATE_WAIT_FOR_NAMES;
+
+    while (state != STATE_GROUND_END){
+        if (state == STATE_WAIT_FOR_NAMES){
+            if (factorUpdatePredObjNames(g, comm) != 0)
+                return -1;
+            state = STATE_WAIT_FOR_NAME_MAP;
+
+        }else if (state == STATE_WAIT_FOR_NAME_MAP){
+            if (factorConstructPredObjMaps(g, comm) != 0)
+                return -1;
+            state = STATE_WAIT_FOR_GROUNDED_FACTS;
+            state = STATE_GROUND_END;
+
+        }else if (state == STATE_WAIT_FOR_GROUNDED_FACTS){
+        }else if (state == STATE_GROUND){
         }
     }
 
@@ -233,9 +437,10 @@ static int factorDetermineMapping(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 
 int planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 {
-    if (factorDetermineMapping(g, comm) != 0){
-        // TODO: Error
-        return -1;
+    if (comm->node_id == 0){
+        return factorMaster(g, comm);
+    }else{
+        return factorSlave(g, comm);
     }
 
     return 0;

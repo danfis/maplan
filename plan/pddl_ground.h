@@ -43,6 +43,11 @@ struct _plan_pddl_ground_t {
                             corresponding object ID */
     int *obj_to_agent; /*!< Mapping between object ID (owner ID) and
                             agent ID */
+
+    int *glob_to_obj;  /*!< Mapping from global obj ID to local ID */
+    int *obj_to_glob;  /*!< Inverse mapping to .glob_to_obj[] */
+    int *glob_to_pred; /*!< Mapping from global predicate ID to local ID */
+    int *pred_to_glob; /*!< Inverse mapping to .glob_to_pred[] */
 };
 typedef struct _plan_pddl_ground_t plan_pddl_ground_t;
 

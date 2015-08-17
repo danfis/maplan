@@ -109,7 +109,17 @@ extern "C" {
  * PDDL-ground sub-types
  */
 #define PLAN_MA_MSG_PDDL_GROUND_COMMON_MAPS 0x0
+#define PLAN_MA_MSG_PDDL_GROUND_FACTS       0x1
 
+struct _plan_ma_msg_pddl_fact_t {
+    uint32_t header;
+    int32_t pred;
+    int32_t *arg;
+    int arg_size;
+    int8_t neg;
+    int8_t stat;
+};
+typedef struct _plan_ma_msg_pddl_fact_t plan_ma_msg_pddl_fact_t;
 
 typedef struct _plan_ma_msg_op_t plan_ma_msg_op_t;
 typedef struct _plan_ma_msg_dtg_req_t plan_ma_msg_dtg_req_t;

@@ -117,6 +117,8 @@ struct _plan_ma_msg_t {
     int pddl_ground_pred_name_size;
     int8_t *pddl_ground_obj_name;
     int pddl_ground_obj_name_size;
+    plan_ma_msg_pddl_fact_t *pddl_fact;
+    int pddl_fact_size;
 };
 
 PLAN_MSG_SCHEMA_BEGIN(schema_pot_submatrix)
@@ -188,6 +190,17 @@ PLAN_MSG_SCHEMA_END(schema_dtg_req, plan_ma_msg_dtg_req_t, header)
 #define M_reachable 0x8u
 
 
+PLAN_MSG_SCHEMA_BEGIN(schema_pddl_fact)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pddl_fact_t, pred, INT32)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pddl_fact_t, arg, arg_size, INT32)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pddl_fact_t, neg, INT8)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pddl_fact_t, stat, INT8)
+PLAN_MSG_SCHEMA_END(schema_pddl_fact, plan_ma_msg_pddl_fact_t, header)
+#define M_pred 0x1u
+#define M_arg  0x2u
+#define M_neg  0x4u
+#define M_stat 0x8u
+
 PLAN_MSG_SCHEMA_BEGIN(schema_msg)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, type, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, agent_id, INT32)
@@ -218,6 +231,7 @@ PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, pddl_ground_pred_name,
                         pddl_ground_pred_name_size, INT8)
 PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, pddl_ground_obj_name,
                         pddl_ground_obj_name_size, INT8)
+PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_t, pddl_fact, pddl_fact_size, &schema_pddl_fact)
 PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_type                 0x000001u
 #define M_agent_id             0x000002u
@@ -246,6 +260,7 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 
 #define M_pddl_ground_pred_name 0x200000u
 #define M_pddl_ground_obj_name  0x400000u
+#define M_pddl_fact             0x800000u
 
 
 #define SET_VAL(msg, member, val) \

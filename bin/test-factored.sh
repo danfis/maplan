@@ -11,15 +11,15 @@ DOMAIN=depot
 PROBLEM=pfile1
 #DOMAIN=depot
 #PROBLEM=pfile9
-PROTO=~/dev/plan-data/codmap-2015/factored/$DOMAIN/$PROBLEM/
-VAL_DOMAIN=~/dev/plan-data/codmap-2015/seq/$DOMAIN/domain.pddl
-VAL_PROBLEM=~/dev/plan-data/codmap-2015/seq/$DOMAIN/${PROBLEM}.pddl
+PROTO=~/dev/plan-data/proto/codmap-2015-factor/$DOMAIN/$PROBLEM/
+VAL_DOMAIN=~/dev/plan-data/bench/codmap-2015/$DOMAIN/$PROBLEM/unfactor/domain.pddl
+VAL_PROBLEM=~/dev/plan-data/bench/codmap-2015/$DOMAIN/$PROBLEM/unfactor/problem.pddl
 MAX_CYCLES=1000
 
 AGENT_URLS=""
 idx=0
 for proto in $(ls $PROTO/*.proto); do
-    port=$((11100 + $idx))
+    port=$((18100 + $idx))
     AGENT_URLS="$AGENT_URLS --tcp 127.0.0.1:$port"
     idx=$(($idx + 1))
 done
@@ -68,6 +68,11 @@ while [ $cycle != $MAX_CYCLES ]; do
 
     cat $PLAN.[0-9] >$PLAN.9999
     if ! $VAL $VAL_DOMAIN $VAL_PROBLEM $PLAN.9999; then
+        break
+    fi
+
+    if grep Error $ERR.*; then
+        grep -n Error $ERR.*
         break
     fi
 

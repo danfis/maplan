@@ -266,6 +266,7 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
 plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
                                   const plan_part_state_t *goal,
                                   const plan_op_t *op, int op_size,
+                                  const plan_state_t *init_state,
                                   unsigned flags);
 
 /**

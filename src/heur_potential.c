@@ -49,6 +49,7 @@ static void factMapFree(fact_map_t *map);
 struct _plan_heur_potential_t {
     plan_heur_t heur;
     fact_map_t fact_map;
+    double *pot;
     plan_lp_t *lp;
 };
 typedef struct _plan_heur_potential_t plan_heur_potential_t;
@@ -62,10 +63,14 @@ static void lpInit(plan_heur_potential_t *h,
                    const plan_part_state_t *goal,
                    const plan_op_t *op, int op_size,
                    unsigned flags);
+static void lpSolve(plan_heur_potential_t *h,
+                    const plan_state_t *state,
+                    double *pot);
 
 plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
                                   const plan_part_state_t *goal,
                                   const plan_op_t *op, int op_size,
+                                  const plan_state_t *init_state,
                                   unsigned flags)
 {
     plan_heur_potential_t *heur;
@@ -75,7 +80,10 @@ plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
     _planHeurInit(&heur->heur, heurPotentialDel, heurPotential, NULL);
 
     factMapInit(&heur->fact_map, var, var_size, goal, op, op_size, flags);
+    heur->pot = BOR_CALLOC_ARR(double, heur->fact_map.size);
     lpInit(heur, var, var_size, goal, op, op_size, flags);
+    if (init_state != NULL)
+        lpSolve(heur, init_state, heur->pot);
 
     return &heur->heur;
 }
@@ -86,6 +94,8 @@ static void heurPotentialDel(plan_heur_t *_heur)
 
     if (h->lp)
         planLPDel(h->lp);
+    if (h->pot != NULL)
+        BOR_FREE(h->pot);
     factMapFree(&h->fact_map);
     _planHeurFree(&h->heur);
     BOR_FREE(h);
@@ -94,6 +104,17 @@ static void heurPotentialDel(plan_heur_t *_heur)
 static void heurPotential(plan_heur_t *_heur, const plan_state_t *state,
                           plan_heur_res_t *res)
 {
+    plan_heur_potential_t *h = HEUR(_heur);
+    int var, val;
+    double pot = 0.;
+
+    for (var = 0; var < h->fact_map.var_size; ++var){
+        val = planStateGet(state, var);
+        pot += h->pot[h->fact_map.var[var].val[val]];
+    }
+
+    res->heur = pot;
+    res->heur = BOR_MAX(0, res->heur);
 }
 
 static void lpSetOp(plan_heur_potential_t *h, int row_id,
@@ -196,6 +217,36 @@ static void lpInit(plan_heur_potential_t *h,
     }
 }
 
+static void lpSolve(plan_heur_potential_t *h,
+                    const plan_state_t *state,
+                    double *pot)
+{
+    int i, col;
+
+    // First zeroize objective
+    for (i = 0; i < h->fact_map.size; ++i)
+        planLPSetObj(h->lp, i, 0.);
+
+    // Then set simple objective
+    for (i = 0; i < h->fact_map.var_size; ++i){
+        col = planStateGet(state, i);
+        col = h->fact_map.var[i].val[col];
+        planLPSetObj(h->lp, col, 1.);
+    }
+
+    /*
+    fprintf(stderr, "SOL: %lf\n", planLPSolveObjVal(h->lp));
+    planLPWrite(h->lp, "xxx");
+    */
+
+    planLPSolve(h->lp, pot);
+    /*
+    for (i = 0; i < h->fact_map.size; ++i){
+        fprintf(stderr, "pot[%d]: %lf\n", i, pot[i]);
+    }
+    */
+}
+
 
 static void factMapInit(fact_map_t *map,
                         const plan_var_t *var, int var_size,
@@ -233,12 +284,14 @@ static void factMapInit(fact_map_t *map,
         }
     }
 
+    /*
     fprintf(stderr, "FACT-MAP SIZE: %d\n", map->size);
     for (i = 0; i < map->var_size; ++i){
         for (j = 0; j < map->var[i].range; ++j)
             fprintf(stderr, "[%d] %d --> %d\n", i, j, map->var[i].val[j]);
         fprintf(stderr, "[%d] max --> %d\n", i, map->var[i].max);
     }
+    */
 }
 
 static void factMapFree(fact_map_t *map)

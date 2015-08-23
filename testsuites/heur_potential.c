@@ -3,23 +3,15 @@
 #include "plan/heur.h"
 #include "state_pool.h"
 
-typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);
-
-static plan_heur_t *lmCutNew(plan_problem_t *p)
-{
-    return planHeurLMCutNew(p->var, p->var_size, p->goal,
-                            p->op, p->op_size, 0);
-}
-
 static void _runTest(const char *name, const char *proto,
-                     const char *states, int flags,
-                     new_heur_fn check_min_heur_fn)
+                     const char *states, int flags)
 {
     plan_problem_t *p;
     state_pool_t state_pool;
     plan_state_t *state;
     plan_heur_t *heur, *heur_check_min = NULL;
     plan_heur_res_t res, res_check_min;
+    plan_state_t *init_state;
     int i, si;
 
     printf("-----\n%s\n%s\n", name, proto);
@@ -27,15 +19,15 @@ static void _runTest(const char *name, const char *proto,
     state = planStateNew(p->state_pool->num_vars);
     statePoolInit(&state_pool, states);
 
+    init_state = planStateNew(p->state_pool->num_vars);
+    planStatePoolGetState(p->state_pool, p->initial_state, init_state);
     heur = planHeurPotentialNew(p->var, p->var_size, p->goal,
-                                p->op, p->op_size, flags);
+                                p->op, p->op_size, init_state, flags);
+    planStateDel(init_state);
     if (heur == NULL){
         fprintf(stderr, "Test Error: Cannot create a heuristic object!\n");
         goto run_test_end;
     }
-
-    if (check_min_heur_fn != NULL)
-        heur_check_min = check_min_heur_fn(p);
 
     for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
         //if (si != 7644)
@@ -77,17 +69,8 @@ run_test_end:
 static void runTest(const char *name, const char *proto,
                     const char *states, int flags)
 {
-    _runTest(name, proto, states, flags, NULL);
+    _runTest(name, proto, states, flags);
 }
-
-/*
-static void runTestCheckMin(const char *name, const char *proto,
-                            const char *states, int flags,
-                            new_heur_fn fn)
-{
-    _runTest(name, proto, states, flags, fn);
-}
-*/
 
 
 
@@ -95,16 +78,14 @@ TEST(testHeurPotential)
 {
     runTest("Potential", "proto/simple.proto",
             "states/simple.txt", 0);
-    /*
-    runTest("Flow", "proto/depot-pfile1.proto",
+    runTest("Potential", "proto/depot-pfile1.proto",
             "states/depot-pfile1.txt", 0);
-    runTest("Flow", "proto/depot-pfile5.proto",
+    runTest("Potential", "proto/depot-pfile5.proto",
             "states/depot-pfile5.txt", 0);
-    runTest("Flow", "proto/rovers-p03.proto",
+    runTest("Potential", "proto/rovers-p03.proto",
             "states/rovers-p03.txt", 0);
-    runTest("Flow", "proto/rovers-p15.proto",
+    runTest("Potential", "proto/rovers-p15.proto",
             "states/rovers-p15.txt", 0);
-    runTest("Flow", "proto/CityCar-p3-2-2-0-1.proto",
+    runTest("Potential", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", 0);
-    */
 }

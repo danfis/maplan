@@ -26,6 +26,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#ifdef PLAN_LP
+
 /** Forward declaration */
 typedef struct _plan_lp_t plan_lp_t;
 
@@ -114,6 +116,11 @@ double planLPSolveObjVal(plan_lp_t *lp);
  * Solves Integer Linear Program and returns objective value.
  */
 double planLPSolveILPObjVal(plan_lp_t *lp);
+
+#else /* PLAN_LP */
+
+void planNOLP(void);
+#endif /* PLAN_LP */
 
 #ifdef __cplusplus
 } /* extern "C" */

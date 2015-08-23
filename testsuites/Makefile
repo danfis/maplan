@@ -3,22 +3,20 @@ ifneq '$(DEBUG)' 'no'
   DEBUG := yes
 endif
 
--include ../Makefile.include
 -include ../Makefile.local
+-include ../Makefile.include
 
 CFLAGS += -I./ -I../
 CFLAGS += $(BORUVKA_CFLAGS)
 CFLAGS += $(PROTOBUF_CFLAGS)
 CFLAGS += $(NANOMSG_CFLAGS)
-CFLAGS += $(LP_SOLVE_CFLAGS)
-CFLAGS += $(CPLEX_CFLAGS)
+CFLAGS += $(LP_CFLAGS)
 LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -pthread
 LDFLAGS += $(BORUVKA_LDFLAGS)
 LDFLAGS += $(PROTOBUF_LDFLAGS)
 LDFLAGS += $(NANOMSG_LDFLAGS)
 LDFLAGS += -lstdc++
-LDFLAGS += $(LP_SOLVE_LDFLAGS)
-LDFLAGS += $(CPLEX_LDFLAGS)
+LDFLAGS += $(LP_LDFLAGS)
 
 CHECK_REG=cu/check-regressions
 CHECK_TS ?=

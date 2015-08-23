@@ -24,7 +24,7 @@
 #include "fact_id.h"
 #include "lp.h"
 
-#if defined(PLAN_USE_LP_SOLVE) || defined(PLAN_USE_CPLEX)
+#ifdef PLAN_LP
 
 #define BOUND_INF 1E30
 #define ROUND_EPS 1E-6
@@ -493,7 +493,7 @@ static plan_cost_t lpSolve(plan_lp_t *lp, const fact_t *facts,
     return h;
 }
 
-#else /* defined(PLAN_USE_LP_SOLVE) || defined(PLAN_USE_CPLEX) */
+#else /* PLAN_LP */
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
@@ -505,4 +505,4 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
     fflush(stderr);
     return NULL;
 }
-#endif /* defined(PLAN_USE_LP_SOLVE) || defined(PLAN_USE_CPLEX) */
+#endif /* PLAN_LP */

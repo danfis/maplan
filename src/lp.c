@@ -21,6 +21,8 @@
 #include "plan/config.h"
 #include "lp.h"
 
+#ifdef PLAN_LP
+
 #if defined(PLAN_USE_LP_SOLVE) && defined(PLAN_USE_CPLEX)
 # error "Only one LP solver can be defined!"
 #endif /* defined(PLAN_USE_LP_SOLVE) && defined(PLAN_USE_CPLEX) */
@@ -351,3 +353,11 @@ double planLPSolveILPObjVal(plan_lp_t *lp)
     return cplexObjVal(lp);
 #endif /* PLAN_USE_CPLEX */
 }
+
+#else /* PLAN_LP */
+
+#warning "LP Warning: No LP library defined!"
+void planNOLP(void)
+{
+}
+#endif /* PLAN_LP */

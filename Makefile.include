@@ -98,12 +98,10 @@ LP_SOLVE_CFLAGS ?=
 LP_SOLVE_LDFLAGS ?=
 ifneq '$(LP_SOLVE_CFLAGS)$(LP_SOLVE_LDFLAGS)' ''
   USE_LP_SOLVE := yes
-endif
-ifeq '$(USE_LP_SOLVE)' ''
+else
   ifeq '$(shell if test -f /usr/lib/liblpsolve55.so; then echo "yes"; fi;)' 'yes'
     LP_SOLVE_LDFLAGS = -llpsolve55
     USE_LP_SOLVE := yes
-    CONFIG_FLAGS += -DUSE_LP_SOLVE
   endif
 endif
 
@@ -111,7 +109,29 @@ CPLEX_CFLAGS ?=
 CPLEX_LDFLAGS ?=
 ifneq '$(CPLEX_CFLAGS)$(CPLEX_LDFLAGS)' ''
   USE_CPLEX := yes
-  CONFIG_FLAGS += -DUSE_CPLEX
+  USE_LP_SOLVE := no # CPLEX has precedence over lp-solve
+endif
+
+LP := no
+ifeq '$(USE_CPLEX)' 'yes'
+  LP := yes
+endif
+ifeq '$(USE_LP_SOLVE)' 'yes'
+  LP := yes
+endif
+
+ifeq '$(LP)' 'yes'
+  CONFIG_FLAGS += -DLP
+  ifeq '$(USE_CPLEX)' 'yes'
+    CONFIG_FLAGS += -DUSE_CPLEX
+    LP_CFLAGS = $(CPLEX_CFLAGS)
+    LP_LDFLAGS = $(CPLEX_LDFLAGS)
+  endif
+  ifeq '$(USE_LP_SOLVE)' 'yes'
+    CONFIG_FLAGS += -DUSE_LP_SOLVE
+    LP_CFLAGS = $(LP_SOLVE_CFLAGS)
+    LP_LDFLAGS = $(LP_SOLVE_LDFLAGS)
+  endif
 endif
 
 .DEFAULT_GOAL := all

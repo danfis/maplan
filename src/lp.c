@@ -354,11 +354,43 @@ double planLPSolveILPObjVal(plan_lp_t *lp)
 #endif /* PLAN_USE_CPLEX */
 }
 
+double planLPSolve(plan_lp_t *lp, double *obj)
+{
+#ifdef PLAN_USE_LP_SOLVE
+    lprec *l = (lprec *)lp;
+    int ret;
+
+    set_verbose(l, NEUTRAL);
+    ret = solve(l);
+    if (ret == OPTIMAL || ret == SUBOPTIMAL){
+        get_variables(l, obj);
+        return get_objective(l);
+    }
+
+    bzero(obj, sizeof(double) * get_Ncolumns(l));
+    return DBL_MAX;
+#endif /* PLAN_USE_LP_SOLVE */
+
+#ifdef PLAN_USE_CPLEX
+    int st, solst;
+    double ov;
+
+    st = CPXlpopt(lp->env, lp->lp);
+    if (st != 0)
+        cplexErr(lp, st, "Failed to optimize LP");
+
+    st = CPXsolution(lp->env, lp->lp, &solst, &ov, obj, NULL, NULL, NULL);
+    if (st != 0)
+        cplexErr(lp, st, "Cannot retrieve solution");
+    return ov;
+#endif /* PLAN_USE_CPLEX */
+}
+
 void planLPWrite(plan_lp_t *lp, const char *fn)
 {
 #ifdef PLAN_USE_LP_SOLVE
     lprec *l = (lprec *)lp;
-    write_lp(l, fn);
+    write_lp(l, (char *)fn);
 #endif /* PLAN_USE_LP_SOLVE */
 
 #ifdef PLAN_USE_CPLEX

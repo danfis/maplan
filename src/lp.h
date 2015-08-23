@@ -117,6 +117,12 @@ double planLPSolveObjVal(plan_lp_t *lp);
  */
 double planLPSolveILPObjVal(plan_lp_t *lp);
 
+/**
+ * Solves problem and returns objective value and values of each variable
+ * via obj argument.
+ */
+double planLPSolve(plan_lp_t *lp, double *obj);
+
 
 void planLPWrite(plan_lp_t *lp, const char *fn);
 

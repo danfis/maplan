@@ -22,6 +22,7 @@
 #include <plan/heur.h>
 
 #ifdef PLAN_LP
+#include "lp.h"
 
 struct _fact_var_map_t {
     int *val;
@@ -48,6 +49,7 @@ static void factMapFree(fact_map_t *map);
 struct _plan_heur_potential_t {
     plan_heur_t heur;
     fact_map_t fact_map;
+    plan_lp_t *lp;
 };
 typedef struct _plan_heur_potential_t plan_heur_potential_t;
 #define HEUR(parent) bor_container_of((parent), plan_heur_potential_t, heur)
@@ -55,6 +57,11 @@ typedef struct _plan_heur_potential_t plan_heur_potential_t;
 static void heurPotentialDel(plan_heur_t *_heur);
 static void heurPotential(plan_heur_t *_heur, const plan_state_t *state,
                           plan_heur_res_t *res);
+static void lpInit(plan_heur_potential_t *h,
+                   const plan_var_t *var, int var_size,
+                   const plan_part_state_t *goal,
+                   const plan_op_t *op, int op_size,
+                   unsigned flags);
 
 plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
                                   const plan_part_state_t *goal,
@@ -68,6 +75,7 @@ plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
     _planHeurInit(&heur->heur, heurPotentialDel, heurPotential, NULL);
 
     factMapInit(&heur->fact_map, var, var_size, goal, op, op_size, flags);
+    lpInit(heur, var, var_size, goal, op, op_size, flags);
 
     return &heur->heur;
 }
@@ -76,6 +84,8 @@ static void heurPotentialDel(plan_heur_t *_heur)
 {
     plan_heur_potential_t *h = HEUR(_heur);
 
+    if (h->lp)
+        planLPDel(h->lp);
     factMapFree(&h->fact_map);
     _planHeurFree(&h->heur);
     BOR_FREE(h);
@@ -84,6 +94,106 @@ static void heurPotentialDel(plan_heur_t *_heur)
 static void heurPotential(plan_heur_t *_heur, const plan_state_t *state,
                           plan_heur_res_t *res)
 {
+}
+
+static void lpSetOp(plan_heur_potential_t *h, int row_id,
+                    const plan_op_t *op)
+{
+    plan_var_id_t var;
+    plan_val_t val, pre_val;
+    int i, eff_id, pre_id;
+
+    PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
+        eff_id = h->fact_map.var[var].val[val];
+        pre_val = planPartStateGet(op->pre, var);
+        if (pre_val == PLAN_VAL_UNDEFINED){
+            pre_id = h->fact_map.var[var].max;
+        }else{
+            pre_id = h->fact_map.var[var].val[pre_val];
+        }
+
+        if (pre_id < 0 || eff_id < 0){
+            fprintf(stderr, "Error: Invalid variable IDs!\n");
+            exit(-1);
+        }
+
+        planLPSetCoef(h->lp, row_id, eff_id, -1.);
+        planLPSetCoef(h->lp, row_id, pre_id, 1.);
+    }
+
+    planLPSetRHS(h->lp, row_id, op->cost, 'L');
+}
+
+static void lpSetGoal(plan_heur_potential_t *h, int row_id,
+                      const plan_part_state_t *goal)
+{
+    int var, val, col;
+
+    for (var = 0; var < h->fact_map.var_size; ++var){
+        val = planPartStateGet(goal, var);
+        if (val == PLAN_VAL_UNDEFINED){
+            col = h->fact_map.var[var].max;
+        }else{
+            col = h->fact_map.var[var].val[val];
+        }
+        planLPSetCoef(h->lp, row_id, col, 1.);
+    }
+    planLPSetRHS(h->lp, row_id, 0., 'L');
+}
+
+static void lpSetMaxPot(plan_heur_potential_t *h, int row_id,
+                        int col_id, int maxpot_id)
+{
+    planLPSetCoef(h->lp, row_id, col_id, 1.);
+    planLPSetCoef(h->lp, row_id, maxpot_id, -1.);
+    planLPSetRHS(h->lp, row_id, 0., 'L');
+}
+
+static void lpInit(plan_heur_potential_t *h,
+                   const plan_var_t *var, int var_size,
+                   const plan_part_state_t *goal,
+                   const plan_op_t *op, int op_size,
+                   unsigned flags)
+{
+    unsigned lp_flags = 0u;
+    int i, j, num_maxpot, row_id;
+    const fact_var_map_t *fv;
+
+    // Copy cplex-num-threads flags
+    lp_flags |= (flags & (0x3fu << 8u));
+    // Set maximalization
+    lp_flags |= PLAN_LP_MAX;
+
+    for (num_maxpot = 0, i = 0; i < h->fact_map.var_size; ++i){
+        if (h->fact_map.var[i].max >= 0)
+            num_maxpot += h->fact_map.var[i].range;
+    }
+
+    // Number of rows is one per operator + one for the goal + (pot <
+    // maxpot) constraints.
+    // Number of columns was detected before in fact-map.
+    h->lp = planLPNew(op_size + 1 + num_maxpot, h->fact_map.size, lp_flags);
+
+    // Set all variables as free
+    for (i = 0; i < h->fact_map.size; ++i)
+        planLPSetVarFree(h->lp, i);
+
+    // Set operator constraints
+    for (row_id = 0; row_id < op_size; ++row_id)
+        lpSetOp(h, row_id, op + row_id);
+
+    // Set goal constraint
+    lpSetGoal(h, row_id++, goal);
+
+    // Set maxpot constraints
+    for (i = 0; i < h->fact_map.var_size; ++i){
+        fv = h->fact_map.var + i;
+        if (fv->max < 0)
+            continue;
+
+        for (j = 0; j < fv->range; ++j)
+            lpSetMaxPot(h, row_id++, fv->val[j], fv->max);
+    }
 }
 
 

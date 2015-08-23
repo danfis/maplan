@@ -21,7 +21,7 @@
 #include <plan/config.h>
 #include <plan/heur.h>
 
-#ifdef PLAN_USE_CPLEX
+#ifdef PLAN_LP
 
 struct _fact_var_map_t {
     int *val;
@@ -144,16 +144,14 @@ static void factMapFree(fact_map_t *map)
         BOR_FREE(map->var);
 }
 
-#else /* PLAN_USE_CPLEX */
-#warn "heur-potential needs CPLEX library."
+#else /* PLAN_LP */
 
 plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
                                   const plan_part_state_t *goal,
                                   const plan_op_t *op, int op_size,
                                   unsigned flags)
 {
-    fprintf(stderr, "Fatal Error: heur-potential needs CPLEX!\n");
-    exit(-1);
+    fprintf(stderr, "Fatal Error: heur-potential needs some LP library!\n");
     return NULL;
 }
-#endif /* PLAN_USE_CPLEX */
+#endif /* PLAN_LP */

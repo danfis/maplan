@@ -117,6 +117,9 @@ double planLPSolveObjVal(plan_lp_t *lp);
  */
 double planLPSolveILPObjVal(plan_lp_t *lp);
 
+
+void planLPWrite(plan_lp_t *lp, const char *fn);
+
 #else /* PLAN_LP */
 
 void planNOLP(void);

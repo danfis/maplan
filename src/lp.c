@@ -354,6 +354,22 @@ double planLPSolveILPObjVal(plan_lp_t *lp)
 #endif /* PLAN_USE_CPLEX */
 }
 
+void planLPWrite(plan_lp_t *lp, const char *fn)
+{
+#ifdef PLAN_USE_LP_SOLVE
+    lprec *l = (lprec *)lp;
+    write_lp(l, fn);
+#endif /* PLAN_USE_LP_SOLVE */
+
+#ifdef PLAN_USE_CPLEX
+    int st;
+
+    st = CPXwriteprob(lp->env, lp->lp, fn, "LP");
+    if (st != 0)
+        cplexErr(lp, st, "Failed to optimize ILP");
+#endif /* PLAN_USE_CPLEX */
+}
+
 #else /* PLAN_LP */
 
 #warning "LP Warning: No LP library defined!"

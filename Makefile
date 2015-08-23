@@ -66,6 +66,7 @@ OBJS += ma_search
 OBJS += ma_snapshot
 OBJS += ma_private_state
 OBJS += ma_state
+OBJS += lp
 
 CXX_OBJS  =
 CXX_OBJS += problem

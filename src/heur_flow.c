@@ -22,39 +22,9 @@
 #include <plan/heur.h>
 
 #include "fact_id.h"
+#include "lp.h"
 
-#if defined(PLAN_USE_LP_SOLVE) || defined(PLAN_USE_CPLEX)
-
-#ifdef PLAN_USE_CPLEX
-# include <ilcplex/cplex.h>
-struct _lp_cplex_t {
-    CPXENVptr env;
-    CPXLPptr lp;
-    int num_constrs;
-    int *idx;
-    double *rhs;
-};
-typedef struct _lp_cplex_t lp_cplex_t;
-# define LP_STRUCT lp_cplex_t
-# define LP_INIT lpCplexInit
-# define LP_FREE lpCplexFree
-# define LP_SOLVE lpCplexSolve
-# define PLAN_HEUR_FLOW_CPLEX
-
-# define CPLEX_NUM_THREADS(flags) (((flags) >> 8u) & 0x3fu)
-# define CPLEX_NUM_THREADS_AUTO 0x3fu
-#endif /* PLAN_USE_CPLEX */
-
-// Prefer CPLEX over LP_SOVE
-#if !defined(PLAN_USE_CPLEX) && defined(PLAN_USE_LP_SOLVE)
-# include <lpsolve/lp_lib.h>
-# define LP_STRUCT lprec *
-# define LP_INIT lpLPSolveInit
-# define LP_FREE lpLPSolveFree
-# define LP_SOLVE lpLPSolveSolve
-# define PLAN_HEUR_FLOW_LP_SOLVE
-#endif /* PLAN_USE_LP_SOLVE */
-
+#ifdef PLAN_LP
 
 #define BOUND_INF 1E30
 #define ROUND_EPS 1E-6
@@ -129,7 +99,7 @@ struct _plan_heur_flow_t {
     int use_ilp;            /*!< True if ILP instead of LP should be used */
     plan_fact_id_t fact_id; /*!< Translation from var-val pair to fact ID */
     fact_t *facts;          /*!< Array of fact related structures */
-    LP_STRUCT lp;           /*!< Pre-initialized (I)LP solver */
+    plan_lp_t *lp;          /*!< (I)LP solver */
     plan_heur_t *lm_cut;    /*!< LM-Cut heuristic used for landmarks */
 };
 typedef struct _plan_heur_flow_t plan_heur_flow_t;
@@ -150,27 +120,12 @@ static void factsInit(fact_t *facts, const plan_fact_id_t *fact_id,
 static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
                           const plan_state_t *state);
 
-
-/* lp_solve solver functions */
-#ifdef PLAN_HEUR_FLOW_LP_SOLVE
-static void lpLPSolveInit(lprec **lp, const fact_t *facts, int facts_size,
-                          const plan_op_t *op, int op_size, int use_ilp,
-                          unsigned flags);
-static void lpLPSolveFree(lprec **lp);
-static plan_cost_t lpLPSolveSolve(lprec **lp, const fact_t *facts,
-                                  int facts_size, int use_ilp,
-                                  const plan_landmark_set_t *ldms);
-#endif /* PLAN_HEUR_FLOW_LP_SOLVE */
-
-#ifdef PLAN_HEUR_FLOW_CPLEX
-static void lpCplexInit(lp_cplex_t *lp, const fact_t *facts, int facts_size,
-                        const plan_op_t *op, int op_size, int use_ilp,
-                        unsigned flags);
-static void lpCplexFree(lp_cplex_t *lp);
-static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
-                                int facts_size, int use_ilp,
-                                const plan_landmark_set_t *ldms);
-#endif /* PLAN_HEUR_FLOW_CPLEX */
+static plan_lp_t *lpInit(const fact_t *facts, int facts_size,
+                         const plan_op_t *op, int op_size, int use_ilp,
+                         unsigned flags);
+static plan_cost_t lpSolve(plan_lp_t *lp, const fact_t *facts,
+                           int facts_size, int use_ilp,
+                           const plan_landmark_set_t *ldms);
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
@@ -188,8 +143,8 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
     factsInit(hflow->facts, &hflow->fact_id, var, var_size, goal, op, op_size);
 
     // Initialize LP solver
-    LP_INIT(&hflow->lp, hflow->facts, hflow->fact_id.fact_size, op, op_size,
-            hflow->use_ilp, flags);
+    hflow->lp = lpInit(hflow->facts, hflow->fact_id.fact_size, op, op_size,
+                       hflow->use_ilp, flags);
 
     hflow->lm_cut = NULL;
     if (flags & PLAN_HEUR_FLOW_LANDMARKS_LM_CUT)
@@ -206,7 +161,7 @@ static void heurFlowDel(plan_heur_t *_heur)
 
     if (hflow->lm_cut != NULL)
         planHeurDel(hflow->lm_cut);
-    LP_FREE(&hflow->lp);
+    planLPDel(hflow->lp);
 
     for (i = 0; hflow->facts && i < hflow->fact_id.fact_size; ++i){
         if (hflow->facts[i].constr_idx)
@@ -237,8 +192,8 @@ static void heurFlow(plan_heur_t *_heur, const plan_state_t *state,
     }
 
     factsSetState(hflow->facts, &hflow->fact_id, state);
-    res->heur = LP_SOLVE(&hflow->lp, hflow->facts, hflow->fact_id.fact_size,
-                         hflow->use_ilp, ldms);
+    res->heur = lpSolve(hflow->lp, hflow->facts, hflow->fact_id.fact_size,
+                        hflow->use_ilp, ldms);
 
     // Free allocated landmarks
     if (hflow->lm_cut)
@@ -437,92 +392,76 @@ _bor_inline plan_cost_t _cost(plan_cost_t cost, unsigned flags)
     return cost;
 }
 
-#ifdef PLAN_HEUR_FLOW_LP_SOLVE
-static void lpLPSolveInit(lprec **_lp, const fact_t *facts, int facts_size,
-                          const plan_op_t *op, int op_size, int use_ilp,
-                          unsigned flags)
+static plan_lp_t *lpInit(const fact_t *facts, int facts_size,
+                         const plan_op_t *op, int op_size, int use_ilp,
+                         unsigned flags)
 {
-    lprec *lp;
+    plan_lp_t *lp;
     int i, r, c;
     double coef;
+    unsigned lp_flags = 0;
 
-    lp = make_lp(2 * facts_size, op_size);
-    set_minim(lp);
+    lp_flags |= (flags & (0x3fu << 8u));
+    lp = planLPNew(2 * facts_size, op_size, lp_flags);
 
     // Set up columns
     for (i = 0; i < op_size; ++i){
         if (use_ilp)
-            set_int(lp, i + 1, 1);
-        set_obj(lp, i + 1, _cost(op[i].cost, flags));
+            planLPSetVarInt(lp, i);
+        planLPSetObj(lp, i, _cost(op[i].cost, flags));
     }
 
     // Set up rows
     for (r = 0; r < facts_size; ++r){
         for (i = 0; i < facts[r].constr_len; ++i){
-            c = facts[r].constr_idx[i] + 1;
+            c = facts[r].constr_idx[i];
             coef = facts[r].constr_coef[i];
-            set_mat(lp, 2 * r + 1, c, coef);
-            set_mat(lp, 2 * r + 2, c, coef);
+            planLPSetCoef(lp, 2 * r, c, coef);
+            planLPSetCoef(lp, 2 * r + 1, c, coef);
         }
     }
 
-    *_lp = lp;
+    return lp;
 }
 
-static void lpLPSolveFree(lprec **lp)
-{
-    if (*lp)
-        delete_lp(*lp);
-}
-
-static void lpSolveAddLandmarks(lprec *lp, const plan_landmark_set_t *ldms)
+static void lpAddLandmarks(plan_lp_t *lp, const plan_landmark_set_t *ldms)
 {
     plan_landmark_t *ldm;
-    REAL *row = NULL;
-    int *colno = NULL;
-    int rowsize = 0, i, j;
+    int i, j, row_id;
 
-    if (ldms == NULL)
+    if (ldms == NULL || ldms->size == 0)
         return;
 
-    for (i = 0; i < ldms->size; ++i){
+
+    row_id = planLPNumRows(lp);
+    planLPAddRows(lp, ldms->size, NULL, NULL);
+    for (i = 0; i < ldms->size; ++i, ++row_id){
         ldm = ldms->landmark + i;
-        if (rowsize < ldm->size){
-            row = BOR_REALLOC_ARR(row, REAL, ldm->size);
-            colno = BOR_REALLOC_ARR(colno, int, ldm->size);
-            for (; rowsize < ldm->size; ++rowsize)
-                row[rowsize] = 1.;
-        }
+        planLPSetRHS(lp, row_id, 1., 'G');
         for (j = 0; j < ldm->size; ++j)
-            colno[j] = ldm->op_id[j] + 1;
-        add_constraintex(lp, ldm->size, row, colno, GE, 1.);
+            planLPSetCoef(lp, row_id, ldm->op_id[j], 1.);
     }
-
-    if (row != NULL)
-        BOR_FREE(row);
-    if (colno != NULL)
-        BOR_FREE(colno);
 }
 
-static void lpSolveDelLandmarks(lprec *lp, const plan_landmark_set_t *ldms)
+static void lpDelLandmarks(plan_lp_t *lp, const plan_landmark_set_t *ldms)
 {
-    int i;
+    int from, to;
 
-    if (ldms == NULL)
+    if (ldms == NULL || ldms->size == 0)
         return;
 
-    for (i = 0; i < ldms->size; ++i){
-        del_constraint(lp, get_Nrows(lp));
-    }
+    to = planLPNumRows(lp) - 1;
+    from = planLPNumRows(lp) - ldms->size;
+    planLPDelRows(lp, from, to);
 }
 
-static plan_cost_t lpLPSolveSolve(lprec **_lp, const fact_t *facts,
-                                  int facts_size, int use_ilp,
-                                  const plan_landmark_set_t *ldms)
+static plan_cost_t lpSolve(plan_lp_t *lp, const fact_t *facts,
+                           int facts_size, int use_ilp,
+                           const plan_landmark_set_t *ldms)
 {
-    lprec *lp = *_lp;
     plan_cost_t h = PLAN_HEUR_DEAD_END;
-    int i, ret;
+    int i;
+    double z;
 
     // Add row for each fact
     for (i = 0; i < facts_size; ++i){
@@ -531,268 +470,30 @@ static plan_cost_t lpLPSolveSolve(lprec **_lp, const fact_t *facts,
         upper = facts[i].upper_bound;
 
         if (lower == upper){
-            set_rh(lp, 2 * i + 1, lower);
-            set_rh(lp, 2 * i + 2, upper);
-            set_constr_type(lp, 2 * i + 1, EQ);
-            set_constr_type(lp, 2 * i + 2, EQ);
-
-        }else if (upper == BOUND_INF){
-            set_rh(lp, 2 * i + 1, lower);
-            set_constr_type(lp, 2 * i + 1, GE);
-            set_constr_type(lp, 2 * i + 2, FR);
+            planLPSetRHS(lp, 2 * i, lower, 'E');
+            planLPSetRHS(lp, 2 * i + 1, upper, 'E');
 
         }else{
-            set_rh(lp, 2 * i + 1, lower);
-            set_rh(lp, 2 * i + 2, upper);
-            set_constr_type(lp, 2 * i + 1, GE);
-            set_constr_type(lp, 2 * i + 2, LE);
+            planLPSetRHS(lp, 2 * i, lower, 'G');
+            planLPSetRHS(lp, 2 * i + 1, upper, 'L');
         }
     }
 
     // Add landmarks if provided
-    lpSolveAddLandmarks(lp, ldms);
-
-    set_verbose(lp, NEUTRAL);
-    ret = solve(lp);
-    if (ret == OPTIMAL || ret == SUBOPTIMAL)
-        h = roundOff(get_objective(lp));
-
-    lpSolveDelLandmarks(lp, ldms);
-    return h;
-}
-#endif /* PLAN_HEUR_FLOW_LP_SOLVE */
-
-
-#ifdef PLAN_HEUR_FLOW_CPLEX
-static void cplexErr(lp_cplex_t *lp, int status, const char *s)
-{
-    char errmsg[1024];
-    CPXgeterrorstring(lp->env, status, errmsg);
-    fprintf(stderr, "Error: CPLEX: %s: %s\n", s, errmsg);
-    exit(-1);
-}
-
-static void lpCplexInit(lp_cplex_t *lp, const fact_t *facts, int facts_size,
-                        const plan_op_t *op, int op_size, int use_ilp,
-                        unsigned flags)
-{
-    int st, *cbeg, *cind, num_constrs, num_nz, cur, i, j;
-    double *obj, *lb, *cval;
-    char *sense, *ctype = NULL;
-    int num_threads;
-
-    // Initialize CPLEX structures
-    lp->env = CPXopenCPLEX(&st);
-    if (lp->env == NULL)
-        cplexErr(lp, st, "Could not open CPLEX environment");
-
-    // Set number of processing threads
-    num_threads = CPLEX_NUM_THREADS(flags);
-    if (num_threads == CPLEX_NUM_THREADS_AUTO){
-        num_threads = 0;
-    }else if (num_threads == 0){
-        num_threads = 1;
-    }
-    st = CPXsetintparam(lp->env, CPX_PARAM_THREADS, num_threads);
-    if (st != 0)
-        cplexErr(lp, st, "Could not set number of threads");
-
-    lp->lp = CPXcreateprob(lp->env, &st, "heurflow");
-    if (lp->lp == NULL)
-        cplexErr(lp, st, "Could not create CPLEX problem");
-
-    // Set up minimaztion
-    CPXchgobjsen(lp->env, lp->lp, CPX_MIN);
-
-    // Set up variables
-    obj = BOR_ALLOC_ARR(double, op_size);
-    lb = BOR_CALLOC_ARR(double, op_size);
-    for (i = 0; i < op_size; ++i)
-        obj[i] = _cost(op[i].cost, flags);
+    lpAddLandmarks(lp, ldms);
 
     if (use_ilp){
-        ctype = BOR_ALLOC_ARR(char, op_size);
-        for (i = 0; i < op_size; ++i)
-            ctype[i] = 'I';
-    }
-
-    st = CPXnewcols(lp->env, lp->lp, op_size, obj, lb, NULL, ctype, NULL);
-    if (st != 0)
-        cplexErr(lp, st, "Could not initialize variables");
-    BOR_FREE(obj);
-    BOR_FREE(lb);
-    if (ctype)
-        BOR_FREE(ctype);
-
-    // Prepare data for constraints matrix
-    num_constrs = 2 * facts_size;
-    num_nz = 0;
-    for (i = 0; i < facts_size; ++i)
-        num_nz += facts[i].constr_len;
-    num_nz *= 2;
-
-    cbeg = BOR_ALLOC_ARR(int, num_constrs);
-    cind = BOR_ALLOC_ARR(int, num_nz);
-    cval = BOR_ALLOC_ARR(double, num_nz);
-    sense = BOR_ALLOC_ARR(char, num_constrs);
-
-    for (cur = 0, i = 0; i < facts_size; ++i){
-        cbeg[2 * i] = cur;
-        for (j = 0; j < facts[i].constr_len; ++j){
-            cind[cur] = facts[i].constr_idx[j];
-            cval[cur] = facts[i].constr_coef[j];
-            ++cur;
-        }
-
-        cbeg[2 * i + 1] = cur;
-        for (j = 0; j < facts[i].constr_len; ++j){
-            cind[cur] = facts[i].constr_idx[j];
-            cval[cur] = facts[i].constr_coef[j];
-            ++cur;
-        }
-
-        sense[2 * i] = 'G';
-        sense[2 * i + 1] = 'L';
-    }
-
-    st = CPXaddrows(lp->env, lp->lp, 0, num_constrs, num_nz, NULL, sense,
-                    cbeg, cind, cval, NULL, NULL);
-    if (st != 0)
-        cplexErr(lp, st, "Could not initialize constriant matrix");
-
-    BOR_FREE(cbeg);
-    BOR_FREE(cind);
-    BOR_FREE(cval);
-    BOR_FREE(sense);
-
-    lp->num_constrs = num_constrs;
-    lp->idx = BOR_ALLOC_ARR(int, num_constrs);
-    lp->rhs = BOR_ALLOC_ARR(double, num_constrs);
-    for (i = 0; i < num_constrs; ++i)
-        lp->idx[i] = i;
-}
-
-static void lpCplexFree(lp_cplex_t *lp)
-{
-    if (lp->lp)
-        CPXfreeprob(lp->env, &lp->lp);
-    if (lp->env)
-        CPXcloseCPLEX(&lp->env);
-    if (lp->idx)
-        BOR_FREE(lp->idx);
-    if (lp->rhs)
-        BOR_FREE(lp->rhs);
-}
-
-
-static void lpCplexAddLandmarks(lp_cplex_t *lp, const plan_landmark_set_t *ldms)
-{
-    plan_landmark_t *ldm;
-    int num_constrs, num_nz, i, row, ins, st;
-    double *rhs;
-    char *sense;
-    int *rbeg, *rind;
-    double *val;
-
-    if (ldms == NULL || ldms->size == 0)
-        return;
-
-    num_constrs = ldms->size;
-    for (num_nz = 0, i = 0; i < num_constrs; ++i)
-        num_nz += ldms->landmark[i].size;
-
-    rhs = BOR_ALLOC_ARR(double, num_constrs);
-    sense = BOR_ALLOC_ARR(char, num_constrs);
-    rbeg = BOR_ALLOC_ARR(int, num_constrs);
-    rind = BOR_ALLOC_ARR(int, num_nz);
-    val = BOR_ALLOC_ARR(double, num_nz);
-
-    for (ins = 0, row = 0; row < num_constrs; ++row){
-        ldm = ldms->landmark + row;
-
-        rbeg[row] = ins;
-        rhs[row] = 1.;
-        sense[row] = 'G';
-        for (i = 0; i < ldm->size; ++i){
-            rind[ins] = ldm->op_id[i];
-            val[ins] = 1.;
-            ++ins;
-        }
-    }
-
-    st = CPXaddrows(lp->env, lp->lp, 0, num_constrs, num_nz, rhs, sense,
-                    rbeg, rind, val, NULL, NULL);
-    if (st != 0){
-        fprintf(stderr, "Error: Could not add constraints to the CPLEX.\n");
-        exit(-1);
-    }
-
-    BOR_FREE(rhs);
-    BOR_FREE(sense);
-    BOR_FREE(rbeg);
-    BOR_FREE(rind);
-    BOR_FREE(val);
-}
-
-static void lpCplexDelLandmarks(lp_cplex_t *lp, const plan_landmark_set_t *ldms)
-{
-    int from, to;
-
-    if (ldms == NULL || ldms->size == 0)
-        return;
-
-    from = lp->num_constrs;
-    to = from + ldms->size - 1;
-    if (CPXdelrows(lp->env, lp->lp, from, to) != 0)
-        fprintf(stderr, "ERR\n");
-}
-
-static plan_cost_t lpCplexSolve(lp_cplex_t *lp, const fact_t *facts,
-                                int facts_size, int use_ilp,
-                                const plan_landmark_set_t *ldms)
-{
-    plan_cost_t h = PLAN_HEUR_DEAD_END;
-    int i, st, solst;
-    double z;
-
-    // Change lower and upper bounds
-    for (i = 0; i < facts_size; ++i){
-        lp->rhs[2 * i] = facts[i].lower_bound;
-        lp->rhs[2 * i + 1] = facts[i].upper_bound;
-    }
-
-    st = CPXchgrhs(lp->env, lp->lp, lp->num_constrs, lp->idx, lp->rhs);
-    if (st != 0)
-        cplexErr(lp, st, "Could not update constraint matrix");
-
-    // Add landmark constraints if requested
-    lpCplexAddLandmarks(lp, ldms);
-
-    // Optimize
-    if (use_ilp){
-        st = CPXmipopt(lp->env, lp->lp);
+        z = planLPSolveILPObjVal(lp);
     }else{
-        st = CPXlpopt(lp->env, lp->lp);
+        z = planLPSolveObjVal(lp);
     }
-    if (st != 0)
-        cplexErr(lp, st, "Failed to optimize LP");
+    h = roundOff(z);
 
-    // Read out solution
-    solst = CPXgetstat(lp->env, lp->lp);
-    if (solst != 0){
-        st = CPXgetobjval(lp->env, lp->lp, &z);
-        if (st == 0)
-            h = roundOff(z);
-    }
-
-    // Remove landmark constraints if they were added
-    lpCplexDelLandmarks(lp, ldms);
-    //CPXwriteprob(lp->env, lp->lp, "cplex", "LP");
+    lpDelLandmarks(lp, ldms);
     return h;
 }
-#endif /* PLAN_HEUR_FLOW_CPLEX */
 
-#else /* defined(PLAN_USE_LP_SOLVE) || defined(PLAN_USE_CPLEX) */
+#else /* PLAN_LP */
 
 plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
@@ -804,4 +505,4 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
     fflush(stderr);
     return NULL;
 }
-#endif /* defined(PLAN_USE_LP_SOLVE) || defined(PLAN_USE_CPLEX) */
+#endif /* PLAN_LP */

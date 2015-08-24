@@ -261,6 +261,15 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
                              unsigned flags);
 
 /**
+ * Potential based heuristics.
+ */
+plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
+                                  const plan_part_state_t *goal,
+                                  const plan_op_t *op, int op_size,
+                                  const plan_state_t *init_state,
+                                  unsigned flags);
+
+/**
  * Creates an multi-agent version of max heuristic.
  */
 plan_heur_t *planHeurMARelaxMaxNew(const plan_problem_t *agent_def,

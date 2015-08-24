@@ -54,6 +54,7 @@ OBJS += heur_relax_ff
 OBJS += heur_lm_cut
 OBJS += heur_dtg
 OBJS += heur_flow
+OBJS += heur_potential
 OBJS += heur_ma_ff
 OBJS += heur_ma_dtg
 OBJS += heur_ma_max
@@ -65,6 +66,7 @@ OBJS += ma_search
 OBJS += ma_snapshot
 OBJS += ma_private_state
 OBJS += ma_state
+OBJS += lp
 
 CXX_OBJS  =
 CXX_OBJS += problem
@@ -188,11 +190,11 @@ help:
 	@echo "    USE_LOCAL_NANOMSG = $(USE_LOCAL_NANOMSG)"
 	@echo "    NANOMSG_CFLAGS    = $(NANOMSG_CFLAGS)"
 	@echo "    NANOMSG_LDFLAGS   = $(NANOMSG_LDFLAGS)"
-	@echo "    LP_SOLVE_CFLAGS    = $(LP_SOLVE_CFLAGS)"
-	@echo "    LP_SOLVE_LDFLAGS   = $(LP_SOLVE_LDFLAGS)"
-	@echo "    USE_LP_SOLVE       = $(USE_LP_SOLVE)"
-	@echo "    CPLEX_CFLAGS       = $(CPLEX_CFLAGS)"
-	@echo "    CPLEX_LDFLAGS      = $(CPLEX_LDFLAGS)"
+	@echo ""
+	@echo "    LP                 = $(LP)"
+	@echo "    LP_CFLAGS          = $(LP_CFLAGS)"
+	@echo "    LP_LDFLAGS         = $(LP_LDFLAGS)"
 	@echo "    USE_CPLEX          = $(USE_CPLEX)"
+	@echo "    USE_LP_SOLVE       = $(USE_LP_SOLVE)"
 
 .PHONY: all clean check check-valgrind help doc install analyze examples submodule third-party

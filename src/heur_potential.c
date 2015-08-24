@@ -265,6 +265,9 @@ static void factMapInit(fact_map_t *map,
     map->var_size = var_size;
     for (i = 0; i < var_size; ++i){
         if (var[i].ma_privacy){
+            map->var[i].val = NULL;
+            map->var[i].range = 0;
+            map->var[i].max = -1;
             map->var[i].ma_privacy = 1;
             continue;
         }
@@ -278,6 +281,9 @@ static void factMapInit(fact_map_t *map,
 
     // Determine maxpot variables from the goal
     for (i = 0; i < var_size; ++i){
+        if (var[i].ma_privacy)
+            continue;
+
         if (!planPartStateIsSet(goal, i))
             map->var[i].max = map->size++;
     }

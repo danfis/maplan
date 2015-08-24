@@ -254,3 +254,19 @@ TEST(testHeurMADTG)
     runTestHeurMA("ma-dtg", "proto/rovers-p15.proto",
                   "states/rovers-p15.txt", NULL, planHeurMADTGNew, -1, NULL);
 }
+
+TEST(testHeurMAPotential)
+{
+    runTestHeurMA("ma-dtg", "proto/simple.proto",
+                  "states/simple.txt", NULL, planHeurMAPotentialNew, -1, NULL);
+    /*
+    runTestHeurMA("ma-dtg", "proto/depot-pfile1.proto",
+                  "states/depot-pfile1.txt", NULL, planHeurMADTGNew, -1, NULL);
+    runTestHeurMA("ma-dtg", "proto/depot-pfile5.proto",
+                  "states/depot-pfile5.txt", NULL, planHeurMADTGNew, 200, NULL);
+    runTestHeurMA("ma-dtg", "proto/rovers-p03.proto",
+                  "states/rovers-p03.txt", NULL, planHeurMADTGNew, -1, NULL);
+    runTestHeurMA("ma-dtg", "proto/rovers-p15.proto",
+                  "states/rovers-p15.txt", NULL, planHeurMADTGNew, -1, NULL);
+    */
+}

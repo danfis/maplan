@@ -5,6 +5,7 @@ TEST(testHeurMAFF);
 TEST(testHeurMAMax);
 TEST(testHeurMALMCut);
 TEST(testHeurMADTG);
+TEST(testHeurMAPotential);
 TEST(protobufTearDown);
 
 TEST_SUITE(TSHeurMA) {
@@ -12,6 +13,7 @@ TEST_SUITE(TSHeurMA) {
     TEST_ADD(testHeurMAMax),
     TEST_ADD(testHeurMALMCut),
     TEST_ADD(testHeurMADTG),
+    TEST_ADD(testHeurMAPotential),
     TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE
 };

@@ -75,6 +75,7 @@ static optdef_t opt_heur[] = {
     { "lm-cut-inc-local", opt_heur_all },
     { "lm-cut-inc-cache", opt_heur_lm_cut_inc_cache },
     { "flow", opt_heur_flow },
+    { "potential", opt_heur_all },
     { "ma-max", opt_empty },
     { "ma-ff", opt_empty },
     { "ma-lm-cut", opt_empty },
@@ -206,7 +207,7 @@ static void usage(const char *progname)
 "  HEUR OPTIONS:\n"
 "    The available heur algorithms are:\n"
 "        goalcount, add, max, ff, dtg, lm-cut, lm-cut-inc-local,\n"
-"        lm-cut-inc-cache, flow.\n"
+"        lm-cut-inc-cache, flow, potential.\n"
 "    Additionally for the multi-agent mode: ma-max, ma-ff, ma-lm-cut, ma-dtg\n"
 "\n"
 "    Options allowed for flow heuristic:\n"

@@ -20,6 +20,7 @@
 #ifndef __PLAN_LP_H__
 #define __PLAN_LP_H__
 
+#include <plan/config.h>
 #include <plan/op.h>
 
 #ifdef __cplusplus

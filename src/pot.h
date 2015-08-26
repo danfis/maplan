@@ -28,6 +28,25 @@ extern "C" {
 
 #ifdef PLAN_LP
 
+struct _plan_pot_constr_t {
+    int *var_id;    /*!< Non-zer variable IDs */
+    int *coef;      /*!< Non-zero coeficient (1 or -1) */
+    int coef_size;  /*!< Number of non-zero coeficients */
+    int rhs;        /*!< Right hand side of the constraint */
+    int op_id;      /*!< Corresponding operator ID */
+};
+typedef struct _plan_pot_constr_t plan_pot_constr_t;
+
+struct _plan_pot_prob_t {
+    plan_pot_constr_t goal;    /*!< Goal constraint */
+    plan_pot_constr_t *op;     /*!< Operators constriants */
+    int op_size;               /*!< Number of operators */
+    plan_pot_constr_t *maxpot; /*!< Max-pot constraints */
+    int maxpot_size;           /*!< Number of max-pot constraints */
+    unsigned lp_flags;         /*!< Prepared LP flags */
+};
+typedef struct _plan_pot_prob_t plan_pot_prob_t;
+
 struct _plan_pot_var_t {
     int *lp_var_id;    /*!< LP-variable ID for each variable value */
     int range;         /*!< Number of possible values */
@@ -43,7 +62,8 @@ struct _plan_pot_t {
     int lp_var_private;  /*!< First ID of the private LP variables */
     int ma_privacy_var;  /*!< Which variable is ma-privacy */
 
-    plan_lp_t *lp;       /*!< Prepared corresponding LP problem */
+    plan_pot_prob_t prob; /*!< Saved problem in sparse format */
+
     double *pot;         /*!< Potential for each lp-variable */
 };
 typedef struct _plan_pot_t plan_pot_t;

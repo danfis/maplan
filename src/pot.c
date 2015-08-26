@@ -25,13 +25,92 @@
 
 #ifdef PLAN_LP
 
-static void lpSetOp(plan_lp_t *lp, const plan_pot_t *pot, int row_id,
-                    const plan_op_t *op, unsigned flags)
+static void lpSetConstr(plan_lp_t *lp, int row_id,
+                        const plan_pot_constr_t *constr)
+{
+    int i;
+
+    for (i = 0; i < constr->coef_size; ++i)
+        planLPSetCoef(lp, row_id, constr->var_id[i], constr->coef[i]);
+    planLPSetRHS(lp, row_id, constr->rhs, 'L');
+}
+
+static plan_lp_t *lpNew(const plan_pot_t *pot)
+{
+    const plan_pot_prob_t *prob = &pot->prob;
+    plan_lp_t *lp;
+    unsigned lp_flags = 0u;
+    int i, row_id;
+
+    // Copy cplex-num-threads flags
+    lp_flags |= prob->lp_flags;
+    // Set maximalization
+    lp_flags |= PLAN_LP_MAX;
+
+    // Number of rows is one per operator + one for the goal + (pot <
+    // maxpot) constraints.
+    // Number of columns was detected before in fact-map.
+    lp = planLPNew(prob->op_size + prob->maxpot_size + 1,
+                   pot->lp_var_size, lp_flags);
+
+    // Set all variables as free
+    for (i = 0; i < pot->lp_var_size; ++i)
+        planLPSetVarFree(lp, i);
+
+    // Set operator constraints
+    for (row_id = 0; row_id < prob->op_size; ++row_id)
+        lpSetConstr(lp, row_id, prob->op + row_id);
+
+    // Set goal constraint
+    lpSetConstr(lp, row_id++, &prob->goal);
+
+    // Set maxpot constraints
+    for (i = 0; i < prob->maxpot_size; ++i)
+        lpSetConstr(lp, row_id++, prob->maxpot + i);
+
+    return lp;
+}
+
+static void probInitGoal(plan_pot_constr_t *constr,
+                         const plan_pot_t *pot,
+                         const plan_part_state_t *goal)
+{
+    int var, val, col;
+
+    constr->coef = BOR_ALLOC_ARR(int, pot->var_size);
+    constr->var_id = BOR_ALLOC_ARR(int, pot->var_size);
+    constr->coef_size = 0;
+    constr->rhs = 0;
+    constr->op_id = -1;
+
+    for (var = 0; var < pot->var_size; ++var){
+        if (var == pot->ma_privacy_var)
+            continue;
+
+        val = planPartStateGet(goal, var);
+        if (val == PLAN_VAL_UNDEFINED){
+            col = pot->var[var].lp_max_var_id;
+        }else{
+            col = pot->var[var].lp_var_id[val];
+        }
+
+        constr->coef[constr->coef_size] = 1;
+        constr->var_id[constr->coef_size++] = col;
+    }
+}
+
+static void probInitOp(plan_pot_constr_t *constr,
+                       const plan_pot_t *pot,
+                       const plan_op_t *op,
+                       unsigned heur_flags)
 {
     plan_var_id_t var;
     plan_val_t val, pre_val;
-    int i, eff_id, pre_id;
-    double cost;
+    int i, eff_id, pre_id, cost;
+
+    constr->var_id = BOR_ALLOC_ARR(int, 2 * pot->var_size);
+    constr->coef = BOR_ALLOC_ARR(int, 2 * pot->var_size);
+    constr->coef_size = 0;
 
     PLAN_PART_STATE_FOR_EACH(op->eff, i, var, val){
         eff_id = pot->var[var].lp_var_id[val];
@@ -47,94 +126,122 @@ static void lpSetOp(plan_lp_t *lp, const plan_pot_t *pot, int row_id,
             exit(-1);
         }
 
-        planLPSetCoef(lp, row_id, eff_id, -1.);
-        planLPSetCoef(lp, row_id, pre_id, 1.);
+        constr->coef[constr->coef_size]     = -1;
+        constr->var_id[constr->coef_size++] = eff_id;
+
+        constr->coef[constr->coef_size]     = 1;
+        constr->var_id[constr->coef_size++] = pre_id;
     }
 
     cost = op->cost;
-    if (flags & PLAN_HEUR_OP_UNIT_COST){
-        cost = 1.;
-    }else if (flags & PLAN_HEUR_OP_COST_PLUS_ONE){
-        cost = op->cost + 1.;
+    if (heur_flags & PLAN_HEUR_OP_UNIT_COST){
+        cost = 1;
+    }else if (heur_flags & PLAN_HEUR_OP_COST_PLUS_ONE){
+        cost = op->cost + 1;
     }
-    planLPSetRHS(lp, row_id, cost, 'L');
-}
+    constr->rhs = cost;
+    constr->op_id = op->global_id;
 
-static void lpSetGoal(plan_lp_t *lp, const plan_pot_t *pot, int row_id,
-                      const plan_part_state_t *goal)
-{
-    int var, val, col;
-
-    for (var = 0; var < pot->var_size; ++var){
-        if (var == pot->ma_privacy_var)
-            continue;
-
-        val = planPartStateGet(goal, var);
-        if (val == PLAN_VAL_UNDEFINED){
-            col = pot->var[var].lp_max_var_id;
-        }else{
-            col = pot->var[var].lp_var_id[val];
-        }
-        planLPSetCoef(lp, row_id, col, 1.);
+    if (constr->coef_size < 2 * pot->var_size){
+        constr->var_id = BOR_REALLOC_ARR(constr->var_id, int, constr->coef_size);
+        constr->coef = BOR_REALLOC_ARR(constr->coef, int, constr->coef_size);
     }
-    planLPSetRHS(lp, row_id, 0., 'L');
 }
 
-static void lpSetMaxPot(plan_lp_t *lp, int row_id, int col_id, int maxpot_id)
-{
-    planLPSetCoef(lp, row_id, col_id, 1.);
-    planLPSetCoef(lp, row_id, maxpot_id, -1.);
-    planLPSetRHS(lp, row_id, 0., 'L');
-}
-
-static plan_lp_t *lpNew(const plan_pot_t *pot,
-                        const plan_var_t *var, int var_size,
-                        const plan_part_state_t *goal,
+static void probInitOps(plan_pot_prob_t *prob,
+                        const plan_pot_t *pot,
                         const plan_op_t *op, int op_size,
                         unsigned heur_flags)
 {
-    plan_lp_t *lp;
-    unsigned lp_flags = 0u;
-    int i, j, size, row_id;
+    int i;
+
+    prob->op_size = op_size;
+    prob->op = BOR_CALLOC_ARR(plan_pot_constr_t, op_size);
+    for (i = 0; i < op_size; ++i)
+        probInitOp(prob->op + i, pot, op + i, heur_flags);
+}
+
+static int probInitMaxpot1(plan_pot_prob_t *prob,
+                           const plan_pot_t *pot, int var_id, int ins)
+{
     const plan_pot_var_t *pv;
+    plan_pot_constr_t *c;
+    int i;
 
-    // Copy cplex-num-threads flags
-    lp_flags |= (heur_flags & (0x3fu << 8u));
-    // Set maximalization
-    lp_flags |= PLAN_LP_MAX;
+    pv = pot->var + var_id;
+    for (i = 0; i < pv->range; ++i){
+        c = prob->maxpot + ins++;
 
-    // Number of rows is one per operator + one for the goal + (pot <
-    // maxpot) constraints.
-    // Number of columns was detected before in fact-map.
-    size = op_size + 1;
-    for (i = 0; i < pot->var_size; ++i){
+        c->var_id = BOR_ALLOC_ARR(int, 2);
+        c->coef = BOR_ALLOC_ARR(int, 2);
+        c->coef_size = 2;
+        c->var_id[0] = pv->lp_var_id[i];
+        c->coef[0] = 1;
+        c->var_id[1] = pv->lp_max_var_id;
+        c->coef[1] = -1;
+
+        c->rhs = 0;
+        c->op_id = -1;
+    }
+
+    return ins;
+}
+
+static void probInitMaxpot(plan_pot_prob_t *prob,
+                           const plan_pot_t *pot)
+{
+    int i, size, ins;
+
+    for (size = 0, i = 0; i < pot->var_size; ++i){
         if (pot->var[i].lp_max_var_id >= 0)
             size += pot->var[i].range;
     }
-    lp = planLPNew(size, pot->lp_var_size, lp_flags);
 
-    // Set all variables as free
-    for (i = 0; i < pot->lp_var_size; ++i)
-        planLPSetVarFree(lp, i);
-
-    // Set operator constraints
-    for (row_id = 0; row_id < op_size; ++row_id)
-        lpSetOp(lp, pot, row_id, op + row_id, heur_flags);
-
-    // Set goal constraint
-    lpSetGoal(lp, pot, row_id++, goal);
-
-    // Set maxpot constraints
-    for (i = 0; i < pot->var_size; ++i){
-        pv = pot->var + i;
-        if (pv->lp_max_var_id < 0)
-            continue;
-
-        for (j = 0; j < pv->range; ++j)
-            lpSetMaxPot(lp, row_id++, pv->lp_var_id[j], pv->lp_max_var_id);
+    prob->maxpot_size = size;
+    prob->maxpot = BOR_CALLOC_ARR(plan_pot_constr_t, size);
+    for (ins = 0, i = 0; i < pot->var_size; ++i){
+        if (pot->var[i].lp_max_var_id >= 0)
+            ins = probInitMaxpot1(prob, pot, i, ins);
     }
+}
 
-    return lp;
+static void probInit(plan_pot_prob_t *prob,
+                     const plan_pot_t *pot,
+                     const plan_part_state_t *goal,
+                     const plan_op_t *op, int op_size,
+                     unsigned heur_flags)
+{
+    bzero(prob, sizeof(*prob));
+    probInitGoal(&prob->goal, pot, goal);
+    probInitOps(prob, pot, op, op_size, heur_flags);
+    probInitMaxpot(prob, pot);
+    prob->lp_flags  = 0;
+    prob->lp_flags |= (heur_flags & (0x3fu << 8u));
+}
+
+static void probConstrFree(plan_pot_constr_t *constr)
+{
+    if (constr->var_id != NULL)
+        BOR_FREE(constr->var_id);
+    if (constr->coef != NULL)
+        BOR_FREE(constr->coef);
+}
+
+static void probFree(plan_pot_prob_t *prob)
+{
+    int i;
+
+    probConstrFree(&prob->goal);
+
+    for (i = 0; i < prob->op_size; ++i)
+        probConstrFree(prob->op + i);
+    if (prob->op != NULL)
+        BOR_FREE(prob->op);
+
+    for (i = 0; i < prob->maxpot_size; ++i)
+        probConstrFree(prob->maxpot + i);
+    if (prob->maxpot != NULL)
+        BOR_FREE(prob->maxpot);
 }
 
 static void determineMaxpotFromGoal(plan_pot_t *pot,
@@ -224,8 +331,8 @@ void planPotInit(plan_pot_t *pot,
     pot->lp_var_private = pot->lp_var_size;
     allocLPVarIDs(pot, 1);
 
-    // Prepare LP problem
-    pot->lp = lpNew(pot, var, var_size, goal, op, op_size, heur_flags);
+    // Construct problem
+    probInit(&pot->prob, pot, goal, op, op_size, heur_flags);
 }
 
 void planPotFree(plan_pot_t *pot)
@@ -239,8 +346,7 @@ void planPotFree(plan_pot_t *pot)
     if (pot->var != NULL)
         BOR_FREE(pot->var);
 
-    if (pot->lp != NULL)
-        planLPDel(pot->lp);
+    probFree(&pot->prob);
     if (pot->pot != NULL)
         BOR_FREE(pot->pot);
 }
@@ -248,14 +354,17 @@ void planPotFree(plan_pot_t *pot)
 void planPotCompute(plan_pot_t *pot, const plan_state_t *state)
 {
     int i, col;
+    plan_lp_t *lp;
 
     if (pot->pot == NULL)
         pot->pot = BOR_ALLOC_ARR(double, pot->lp_var_size);
 
+    lp = lpNew(pot);
+
     // First zeroize objective
     for (i = 0; i < pot->lp_var_size; ++i){
         pot->pot[i] = 0.;
-        planLPSetObj(pot->lp, i, 0.);
+        planLPSetObj(lp, i, 0.);
     }
 
     // Then set simple objective
@@ -265,10 +374,11 @@ void planPotCompute(plan_pot_t *pot, const plan_state_t *state)
 
         col = planStateGet(state, i);
         col = pot->var[i].lp_var_id[col];
-        planLPSetObj(pot->lp, col, 1.);
+        planLPSetObj(lp, col, 1.);
     }
 
-    planLPSolve(pot->lp, pot->pot);
+    planLPSolve(lp, pot->pot);
+    planLPDel(lp);
 }
 
 #else /* PLAN_LP */

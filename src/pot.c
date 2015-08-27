@@ -19,8 +19,8 @@
 
 #include <boruvka/alloc.h>
 
-#include <plan/heur.h>
-#include "pot.h"
+#include "plan/heur.h"
+#include "plan/pot.h"
 
 
 #ifdef PLAN_LP

@@ -22,7 +22,7 @@
 #include <plan/heur.h>
 
 #ifdef PLAN_LP
-#include "pot.h"
+#include "plan/pot.h"
 
 struct _plan_heur_potential_t {
     plan_heur_t heur;

@@ -21,8 +21,8 @@
 #include <plan/config.h>
 #include <plan/heur.h>
 
+#include "plan/lp.h"
 #include "fact_id.h"
-#include "lp.h"
 
 #ifdef PLAN_LP
 

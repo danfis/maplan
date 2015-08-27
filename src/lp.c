@@ -19,7 +19,7 @@
 
 #include <boruvka/alloc.h>
 #include "plan/config.h"
-#include "lp.h"
+#include "plan/lp.h"
 
 #ifdef PLAN_LP
 

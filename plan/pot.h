@@ -20,7 +20,7 @@
 #ifndef __PLAN_POT_H__
 #define __PLAN_POT_H__
 
-#include "lp.h"
+#include <plan/lp.h>
 
 #ifdef __cplusplus
 extern "C" {

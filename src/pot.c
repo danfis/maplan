@@ -381,6 +381,23 @@ void planPotCompute(plan_pot_t *pot, const plan_state_t *state)
     planLPDel(lp);
 }
 
+int planPotToVarIds(const plan_pot_t *pot, const plan_state_t *state,
+                    int *var_ids)
+{
+    int i, size = 0, v;
+
+    for (i = 0; i < pot->var_size; ++i){
+        if (i == pot->ma_privacy_var)
+            continue;
+
+        v = planStateGet(state, i);
+        v = pot->var[i].lp_var_id[v];
+        var_ids[size++] = v;
+    }
+
+    return size;
+}
+
 #else /* PLAN_LP */
 
 void planNOPot(void)

@@ -24,6 +24,7 @@
 #include <boruvka/core.h>
 
 #include <plan/path.h>
+#include <plan/pot.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,6 +85,9 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_DTG_REQUEST     0x000a
 #define PLAN_MA_MSG_HEUR_DTG_RESPONSE    0x0a00
 #define PLAN_MA_MSG_HEUR_DTG_REQRESPONSE 0x000b
+
+#define PLAN_MA_MSG_HEUR_POT_REQUEST  0x000c
+#define PLAN_MA_MSG_HEUR_POT_RESPONSE 0x0c00
 
 /**
  * Returns values for planMAMsgHeurType().
@@ -290,6 +294,12 @@ void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
  * Returns a new message unpacked from the given buffer.
  */
 plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
+
+
+void planMAMsgSetPotProb(plan_ma_msg_t *msg, const plan_pot_t *pot,
+                         const plan_state_t *state);
+void planMAMsgGetPotProb(const plan_ma_msg_t *msg, plan_pot_prob_t *prob,
+                         int *state_var_id, int *state_var_id_size);
 
 #ifdef __cplusplus
 } /* extern "C" */

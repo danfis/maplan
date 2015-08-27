@@ -88,6 +88,13 @@ void planPotFree(plan_pot_t *pot);
 void planPotCompute(plan_pot_t *pot, const plan_state_t *state);
 
 /**
+ * Convers state to the list of LP variable IDs.
+ * Returns number of facts stored in var_ids array.
+ */
+int planPotToVarIds(const plan_pot_t *pot, const plan_state_t *state,
+                    int *var_ids);
+
+/**
  * Returns computed potential for given variable-value pair.
  */
 _bor_inline double planPotPot(const plan_pot_t *pot, int var, int val);

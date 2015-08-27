@@ -227,7 +227,7 @@ static void probConstrFree(plan_pot_constr_t *constr)
         BOR_FREE(constr->coef);
 }
 
-static void probFree(plan_pot_prob_t *prob)
+void planPotProbFree(plan_pot_prob_t *prob)
 {
     int i;
 
@@ -346,7 +346,7 @@ void planPotFree(plan_pot_t *pot)
     if (pot->var != NULL)
         BOR_FREE(pot->var);
 
-    probFree(&pot->prob);
+    planPotProbFree(&pot->prob);
     if (pot->pot != NULL)
         BOR_FREE(pot->pot);
 }

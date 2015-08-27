@@ -47,6 +47,8 @@ struct _plan_pot_prob_t {
 };
 typedef struct _plan_pot_prob_t plan_pot_prob_t;
 
+void planPotProbFree(plan_pot_prob_t *prob);
+
 struct _plan_pot_var_t {
     int *lp_var_id;    /*!< LP-variable ID for each variable value */
     int range;         /*!< Number of possible values */

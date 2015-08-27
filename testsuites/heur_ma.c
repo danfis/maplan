@@ -257,7 +257,7 @@ TEST(testHeurMADTG)
 
 TEST(testHeurMAPotential)
 {
-    runTestHeurMA("ma-dtg", "proto/simple.proto",
+    runTestHeurMA("ma-potential", "proto/simple.proto",
                   "states/simple.txt", NULL, planHeurMAPotentialNew, -1, NULL);
     /*
     runTestHeurMA("ma-dtg", "proto/depot-pfile1.proto",

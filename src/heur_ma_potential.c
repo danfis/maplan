@@ -21,25 +21,31 @@
 #include "plan/search.h"
 #include "plan/heur.h"
 
-struct _results_t {
-    int from;
-    int to;
-    int *pot;
-    int pot_size;
-    int req;
+struct _agent_data_t {
+    plan_pot_prob_t prob; /*!< Other agent's pot-problem */
+    int have_prob;        /*!< True if the problem was already received */
+    int priv_var_from;    /*!< First ID where is mapped remote agent's
+                               first private LP variable */
+    int priv_var_to;      /*!< Last ID+1 of mapped last private LP variable */
+
+    double *pot;          /*!< Potentials transformed to the remote
+                               agent's problem. */
+    int pot_size;         /*!< Length of .pot[] */
+    int pot_requested;    /*!< True if potentials were requested before
+                               they were computed. */
 };
-typedef struct _results_t results_t;
+typedef struct _agent_data_t agent_data_t;
 
 struct _plan_heur_ma_potential_t {
     plan_heur_t heur;
     plan_pot_t pot;
 
-    int pot_pending;
-    plan_pot_prob_t *pot_prob;
-    int pot_prob_size;
+    int agent_id;
+    int agent_size;
+    agent_data_t *agent_data;
+    int init_heur;
+
     plan_state_t *state;
-    results_t *pot_res;
-    int pot_res_size;
 };
 typedef struct _plan_heur_ma_potential_t plan_heur_ma_potential_t;
 #define HEUR(parent) \
@@ -58,6 +64,8 @@ static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
 
 static void potStart(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
                      const plan_state_t *state);
+static void potRequestPot(plan_heur_ma_potential_t *h,
+                          plan_ma_comm_t *comm);
 static int potUpdate(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
                      const plan_ma_msg_t *msg);
 static int potCompute(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm);
@@ -75,11 +83,12 @@ plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *p)
     planStatePoolGetState(p->state_pool, p->initial_state, &state);
     planPotInit(&h->pot, p->var, p->var_size, p->goal,
                 p->op, p->op_size, &state, 0);
-    h->pot_pending = -1;
-    h->state = planStateNew(p->state_pool->num_vars);
 
-    h->pot_res_size = p->num_agents;
-    h->pot_res = BOR_CALLOC_ARR(results_t, p->num_agents);
+    h->agent_id = p->agent_id;
+    h->agent_size = p->num_agents;
+    h->agent_data = BOR_CALLOC_ARR(agent_data_t, h->agent_size);
+
+    h->state = planStateNew(p->state_pool->num_vars);
 
     return &h->heur;
 }
@@ -89,12 +98,13 @@ static void heurDel(plan_heur_t *heur)
     plan_heur_ma_potential_t *h = HEUR(heur);
     int i;
 
-    for (i = 0; i < h->pot_res_size; ++i){
-        if (h->pot_res[i].pot != NULL)
-            BOR_FREE(h->pot_res[i].pot);
+    for (i = 0; i < h->agent_size; ++i){
+        planPotProbFree(&h->agent_data[i].prob);
+        if (h->agent_data[i].pot != NULL)
+            BOR_FREE(h->agent_data[i].pot);
     }
-    if (h->pot_res != NULL)
-        BOR_FREE(h->pot_res);
+    if (h->agent_data)
+        BOR_FREE(h->agent_data);
 
     planStateDel(h->state);
     planPotFree(&h->pot);
@@ -147,12 +157,7 @@ static int heurHeurNode(plan_heur_t *heur,
         if (comm->node_id == 0){
             potStart(h, comm, h->state);
         }else{
-            plan_ma_msg_t *msg;
-            msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                               PLAN_MA_MSG_HEUR_POT_RESULTS_REQUEST,
-                               comm->node_id);
-            planMACommSendToNode(comm, 0, msg);
-            planMAMsgDel(msg);
+            potRequestPot(h, comm);
         }
         return -1;
     }
@@ -170,7 +175,8 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
     type = planMAMsgType(msg);
     subtype = planMAMsgSubType(msg);
 
-    if (type == PLAN_MA_MSG_HEUR && subtype == PLAN_MA_MSG_HEUR_POT_RESPONSE){
+    if (type == PLAN_MA_MSG_HEUR
+            && subtype == PLAN_MA_MSG_HEUR_POT_RESPONSE){
         if (potUpdate(h, comm, msg) == 0){
             res->heur = potCompute(h, comm);
             fprintf(stderr, "[%d] Init H: %d\n", comm->node_id, res->heur);
@@ -182,6 +188,7 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 
     if (type == PLAN_MA_MSG_HEUR
             && subtype == PLAN_MA_MSG_HEUR_POT_RESULTS_RESPONSE){
+        // TODO
         fprintf(stderr, "[%d] X\n", comm->node_id);
         return 0;
     }
@@ -189,28 +196,6 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
     fprintf(stderr, "[%d] Unexpected update message: %x/%x\n",
             comm->node_id, type, subtype);
     return -1;
-}
-
-static void sendResults(plan_heur_ma_potential_t *h,
-                        plan_ma_comm_t *comm,
-                        int agent_id)
-{
-    plan_ma_msg_t *mout;
-    results_t *res;
-
-    res = h->pot_res + agent_id;
-    if (res->pot == NULL){
-        res->req = 1;
-        return;
-    }
-
-    mout = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                        PLAN_MA_MSG_HEUR_POT_RESULTS_RESPONSE,
-                        comm->node_id);
-    planMAMsgSetPotPot(mout, res->pot, res->pot_size);
-    res->req = 0;
-    planMACommSendToNode(comm, agent_id, mout);
-    planMAMsgDel(mout);
 }
 
 static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
@@ -231,18 +216,16 @@ static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
         planMAMsgSetPotProb(mout, &h->pot);
         planMACommSendToNode(comm, planMAMsgAgent(msg), mout);
         planMAMsgDel(mout);
-        return;
-    }
 
-    if (type == PLAN_MA_MSG_HEUR
-            && subtype == PLAN_MA_MSG_HEUR_POT_RESULTS_REQUEST){
-        sendResults(h, comm, planMAMsgAgent(msg));
-        return;
-    }
+    }else if (type == PLAN_MA_MSG_HEUR
+                && subtype == PLAN_MA_MSG_HEUR_POT_RESULTS_REQUEST){
+        // TODO sendResults(h, comm, planMAMsgAgent(msg));
 
-    fprintf(stderr, "[%d] Unexpected request message: %x/%x\n",
-            comm->node_id, type, subtype);
-    fflush(stderr);
+    }else{
+        fprintf(stderr, "[%d] Unexpected request message: %x/%x\n",
+                comm->node_id, type, subtype);
+        fflush(stderr);
+    }
 }
 
 static void potStart(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
@@ -255,27 +238,39 @@ static void potStart(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
     planMAStateSetMAMsg2(h->heur.ma_state, state, msg);
     planMACommSendToAll(comm, msg);
     planMAMsgDel(msg);
+}
 
-    h->pot_pending = comm->node_size - 1;
-    h->pot_prob_size = comm->node_size;
-    h->pot_prob = BOR_CALLOC_ARR(plan_pot_prob_t, h->pot_prob_size);
+static void potRequestPot(plan_heur_ma_potential_t *h,
+                          plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg;
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                       PLAN_MA_MSG_HEUR_POT_RESULTS_REQUEST,
+                       comm->node_id);
+    planMACommSendToNode(comm, 0, msg);
+    planMAMsgDel(msg);
 }
 
 static int potUpdate(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
                      const plan_ma_msg_t *msg)
 {
-    planMAMsgGetPotProb(msg, h->pot_prob + planMAMsgAgent(msg));
+    int agent_id, i, cnt;
 
-    --h->pot_pending;
-    if (h->pot_pending == 0)
+    agent_id = planMAMsgAgent(msg);
+    planMAMsgGetPotProb(msg, &h->agent_data[agent_id].prob);
+    h->agent_data[agent_id].have_prob = 1;
+
+    for (cnt = 0, i = 0; i < h->agent_size; ++i)
+        cnt += h->agent_data[i].have_prob;
+
+    if (cnt == h->agent_size - 1)
         return 0;
     return -1;
 }
 
 static int probMergeConstr(plan_pot_constr_t **dst, int *dst_size,
                            plan_pot_constr_t *src, int src_size,
-                           int private_start_id, int offset,
-                           int rewrite)
+                           int private_start_id, int offset)
 {
     plan_pot_constr_t *d, *s;
     int i, j, from, max_id = 0;
@@ -286,17 +281,12 @@ static int probMergeConstr(plan_pot_constr_t **dst, int *dst_size,
     for (i = 0; i < src_size; ++i){
         d = (*dst) + i + from;
         s = src + i;
+
         *d = *s;
-
-        if (rewrite){
-            bzero(s, sizeof(*s));
-
-        }else{
-            d->var_id = BOR_ALLOC_ARR(int, d->coef_size);
-            d->coef = BOR_ALLOC_ARR(int, d->coef_size);
-            memcpy(d->var_id, s->var_id, sizeof(int) * d->coef_size);
-            memcpy(d->coef, s->coef, sizeof(int) * d->coef_size);
-        }
+        d->var_id = BOR_ALLOC_ARR(int, d->coef_size);
+        d->coef = BOR_ALLOC_ARR(int, d->coef_size);
+        memcpy(d->var_id, s->var_id, sizeof(int) * d->coef_size);
+        memcpy(d->coef, s->coef, sizeof(int) * d->coef_size);
 
         for (j = 0; j < d->coef_size; ++j){
             if (d->var_id[j] >= private_start_id)
@@ -342,7 +332,7 @@ static int probMergeGoal(plan_pot_constr_t *dst,
 }
 
 static int probMerge(plan_pot_prob_t *prob, plan_pot_prob_t *merge,
-                     int private_start_id, int offset, int rewrite)
+                     int private_start_id, int offset)
 {
     int i, var_id, size = 0, siz;
 
@@ -350,12 +340,12 @@ static int probMerge(plan_pot_prob_t *prob, plan_pot_prob_t *merge,
 
     siz = probMergeConstr(&prob->op, &prob->op_size,
                           merge->op, merge->op_size,
-                          private_start_id, offset, rewrite);
+                          private_start_id, offset);
     size = BOR_MAX(size, siz);
 
     siz = probMergeConstr(&prob->maxpot, &prob->maxpot_size,
                           merge->maxpot, merge->maxpot_size,
-                          private_start_id, offset, rewrite);
+                          private_start_id, offset);
     size = BOR_MAX(size, siz);
 
     if (prob->var_size < size){
@@ -377,77 +367,72 @@ static int probMerge(plan_pot_prob_t *prob, plan_pot_prob_t *merge,
     return size;
 }
 
-static void potSetPotRes(plan_heur_ma_potential_t *h,
-                         plan_ma_comm_t *comm, int lp_var_size)
+static void potSetAgentPot(const plan_heur_ma_potential_t *h,
+                           agent_data_t *data)
 {
-    results_t *res;
-    int size, i, j;
+    int size, i;
 
-    for (i = 0; i < h->pot_res_size; ++i){
-        if (i == comm->node_id)
-            continue;
+    data->pot_size  = h->pot.lp_var_private;
+    data->pot_size += data->priv_var_to - data->priv_var_from;
+    data->pot = BOR_ALLOC_ARR(double, data->pot_size);
 
-        res = h->pot_res + i;
+    // Copy public potentials -- these are common for all agents
+    for (i = 0; i < h->pot.lp_var_private; ++i)
+        data->pot[i] = h->pot.pot[i];
 
-        size  = h->pot.lp_var_private;
-        size += res->to - res->from;
-        res->pot = BOR_ALLOC_ARR(int, size);
-        res->pot_size = size;
-
-        // Copy public potentials -- these are common for all agents
-        for (j = 0; j < h->pot.lp_var_private; ++j)
-            res->pot[j] = h->pot.pot[j];
-
-        // Copy private parts
-        size = h->pot.lp_var_private;
-        for (j = res->from; j < res->to; ++j)
-            res->pot[size++] = h->pot.pot[i];
-
-        if (res->req)
-            sendResults(h, comm, i);
-    }
+    // Copy private parts
+    size = h->pot.lp_var_private;
+    for (i = data->priv_var_from; i < data->priv_var_to; ++i)
+        data->pot[size++] = h->pot.pot[i];
 }
 
 static int potCompute(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm)
 {
     plan_pot_prob_t prob;
-    int i, size, var_size, offset, heur = 0;
+    int i, size, var_size, offset;
     double dheur;
 
     bzero(&prob, sizeof(prob));
 
-    var_size = probMerge(&prob, &h->pot.prob, h->pot.lp_var_private, 0, 0);
-    for (i = 0; i < h->pot_prob_size; ++i){
-        if (i == comm->node_id)
+    // Merge all problems
+    var_size = probMerge(&prob, &h->pot.prob, h->pot.lp_var_private, 0);
+    for (i = 0; i < h->agent_size; ++i){
+        if (i == h->agent_id)
             continue;
 
         offset = var_size - h->pot.lp_var_private;
-        size = probMerge(&prob, h->pot_prob + i,
-                         h->pot.lp_var_private, offset, 1);
+        size = probMerge(&prob, &h->agent_data[i].prob,
+                         h->pot.lp_var_private, offset);
         var_size = BOR_MAX(var_size, size);
-        h->pot_res[i].from = h->pot.lp_var_private + offset;
-        h->pot_res[i].from = BOR_MAX(h->pot_res[i].from,
-                                     h->pot.lp_var_private);
-        h->pot_res[i].to   = var_size;
+
+        h->agent_data[i].priv_var_from = h->pot.lp_var_private + offset;
+        h->agent_data[i].priv_var_from = BOR_MAX(h->agent_data[i].priv_var_from,
+                                                 h->pot.lp_var_private);
+        h->agent_data[i].priv_var_to = var_size;
     }
 
+    // Compute LP program
     h->pot.pot = BOR_ALLOC_ARR(double, prob.var_size);
     planPotCompute2(&prob, h->pot.pot);
-    potSetPotRes(h, comm, var_size);
+
+    // Set potentials for all agents and send responses to already
+    // requested potentials.
+    for (i = 0; i < h->agent_size; ++i){
+        if (i == h->agent_id)
+            continue;
+
+        potSetAgentPot(h, h->agent_data + i);
+        // TODO: Send...
+    }
 
     for (dheur = 0., i = 0; i < prob.var_size; ++i){
         if (prob.state_coef[i] > 0)
             dheur += h->pot.pot[i];
     }
-    heur = dheur;
-    heur = BOR_MAX(heur, 0);
+    h->init_heur = dheur;
+    h->init_heur = BOR_MAX(h->init_heur, 0);
 
     planPotProbFree(&prob);
-    for (i = 0; i < h->pot_prob_size; ++i)
-        planPotProbFree(h->pot_prob + i);
-    BOR_FREE(h->pot_prob);
-    h->pot_prob = NULL;
-    h->pot_prob_size = 0;
 
-    return heur;
+    return h->init_heur;
 }

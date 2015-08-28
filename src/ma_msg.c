@@ -39,8 +39,8 @@ struct _plan_ma_msg_pot_prob_t {
     int op_size;
     plan_ma_msg_pot_constr_t *maxpot;
     int maxpot_size;
-    int32_t *state_var_id;
-    int state_var_id_size;
+    int32_t *state_coef;
+    int state_coef_size;
 };
 typedef struct _plan_ma_msg_pot_prob_t plan_ma_msg_pot_prob_t;
 
@@ -110,12 +110,12 @@ PLAN_MSG_SCHEMA_BEGIN(schema_pot_prob)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_pot_prob_t, goal, &schema_pot_constr)
 PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_pot_prob_t, op, op_size, &schema_pot_constr)
 PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_pot_prob_t, maxpot, maxpot_size, &schema_pot_constr)
-PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_prob_t, state_var_id, state_var_id_size, INT32)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_prob_t, state_coef, state_coef_size, INT32)
 PLAN_MSG_SCHEMA_END(schema_pot_prob, plan_ma_msg_pot_prob_t, header)
-#define M_pot_prob_goal         0x01u
-#define M_pot_prob_op           0x02u
-#define M_pot_prob_maxpot       0x04u
-#define M_pot_prob_state_var_id 0x08u
+#define M_pot_prob_goal       0x01u
+#define M_pot_prob_op         0x02u
+#define M_pot_prob_maxpot     0x04u
+#define M_pot_prob_state_coef 0x08u
 
 
 PLAN_MSG_SCHEMA_BEGIN(schema_op)
@@ -666,88 +666,9 @@ static void planMAMsgPotProbFree(plan_ma_msg_pot_prob_t *prob)
         planMAMsgPotConstrFree(prob->maxpot + i);
     if (prob->maxpot != NULL)
         BOR_FREE(prob->maxpot);
-}
 
-void planMAMsgAddPotProbGoal(plan_ma_msg_t *msg, int var_id)
-{
-    plan_ma_msg_pot_constr_t *c;
-
-    msg->header |= M_pot_prob;
-    msg->pot_prob.header |= M_pot_prob_goal;
-    c = &msg->pot_prob.goal;
-    c->header |= M_pot_constr_var_id;
-
-    ++c->var_id_size;
-    c->var_id = BOR_REALLOC_ARR(c->var_id, int32_t, c->var_id_size);
-    c->var_id[c->var_id_size - 1] = var_id;
-}
-
-plan_ma_msg_pot_constr_t *planMAMsgAddPotProbOp(plan_ma_msg_t *msg,
-                                                int size)
-{
-    int from;
-
-    msg->header |= M_pot_prob;
-    msg->pot_prob.header |= M_pot_prob_op;
-
-    from = msg->pot_prob.op_size;
-    msg->pot_prob.op_size += size;
-    msg->pot_prob.op = BOR_REALLOC_ARR(msg->pot_prob.op,
-                                       plan_ma_msg_pot_constr_t,
-                                       msg->pot_prob.op_size);
-
-    bzero(msg->pot_prob.op + from, sizeof(plan_ma_msg_pot_constr_t) * size);
-    return msg->pot_prob.op + from;
-}
-
-plan_ma_msg_pot_constr_t *planMAMsgAddPotProbMaxPot(plan_ma_msg_t *msg,
-                                                    int size)
-{
-    int from;
-
-    msg->header |= M_pot_prob;
-    msg->pot_prob.header |= M_pot_prob_maxpot;
-
-    from = msg->pot_prob.maxpot_size;
-    msg->pot_prob.maxpot_size += size;
-    msg->pot_prob.maxpot = BOR_REALLOC_ARR(msg->pot_prob.maxpot,
-                                           plan_ma_msg_pot_constr_t,
-                                           msg->pot_prob.maxpot_size);
-
-    bzero(msg->pot_prob.maxpot + from, sizeof(plan_ma_msg_pot_constr_t) * size);
-    return msg->pot_prob.maxpot + from;
-}
-
-void planMAMsgAddPotProbState(plan_ma_msg_t *msg, int var_id)
-{
-    msg->header |= M_pot_prob;
-    msg->pot_prob.header |= M_pot_prob_state_var_id;
-
-    ++msg->pot_prob.state_var_id_size;
-    msg->pot_prob.state_var_id = BOR_REALLOC_ARR(msg->pot_prob.state_var_id, int,
-                                                 msg->pot_prob.state_var_id_size);
-    msg->pot_prob.state_var_id[msg->pot_prob.state_var_id_size - 1] = var_id;
-}
-
-void planMAMsgPotConstrSetRHS(plan_ma_msg_pot_constr_t *c, int rhs)
-{
-    c->header |= M_pot_constr_rhs;
-    c->rhs = rhs;
-}
-
-void planMAMsgPotConstrAddCoef(plan_ma_msg_pot_constr_t *c,
-                               int coef, int var_id)
-{
-    c->header |= M_pot_constr_var_id;
-    c->header |= M_pot_constr_coef;
-
-    ++c->coef_size;
-    c->coef = BOR_REALLOC_ARR(c->coef, int8_t, c->coef_size);
-    c->coef[c->coef_size - 1] = coef;
-
-    ++c->var_id_size;
-    c->var_id = BOR_REALLOC_ARR(c->var_id, int32_t, c->var_id_size);
-    c->var_id[c->var_id_size - 1] = var_id;
+    if (prob->state_coef != NULL)
+        BOR_FREE(prob->state_coef);
 }
 
 static void potProbSetGoal(plan_ma_msg_pot_constr_t *dst,
@@ -783,12 +704,11 @@ static void potProbSetConstr(plan_ma_msg_pot_constr_t *dst,
     dst->rhs = src->rhs;
 }
 
-void planMAMsgSetPotProb(plan_ma_msg_t *msg, const plan_pot_t *pot,
-                         const plan_state_t *state)
+void planMAMsgSetPotProb(plan_ma_msg_t *msg, const plan_pot_t *pot)
 {
     const plan_pot_prob_t *prob = &pot->prob;
     plan_ma_msg_pot_prob_t *mprob = &msg->pot_prob;
-    int i, size, *var_ids;
+    int i;
 
     msg->header |= M_pot_prob;
 
@@ -807,19 +727,11 @@ void planMAMsgSetPotProb(plan_ma_msg_t *msg, const plan_pot_t *pot,
     for (i = 0; i < prob->maxpot_size; ++i)
         potProbSetConstr(mprob->maxpot + i, prob->maxpot + i);
 
-    if (state != NULL){
-        mprob->header |= M_pot_prob_state_var_id;
-
-        var_ids = BOR_ALLOC_ARR(int, pot->var_size);
-        size = planPotToVarIds(pot, state, var_ids);
-
-        mprob->state_var_id_size = size;
-        mprob->state_var_id = BOR_ALLOC_ARR(int32_t, size);
-        for (i = 0; i < size; ++i)
-            mprob->state_var_id[i] = var_ids[i];
-
-        BOR_FREE(var_ids);
-    }
+    mprob->header |= M_pot_prob_state_coef;
+    mprob->state_coef_size = prob->var_size;
+    mprob->state_coef = BOR_ALLOC_ARR(int32_t, prob->var_size);
+    for (i = 0; i < prob->var_size; ++i)
+        mprob->state_coef[i] = prob->state_coef[i];
 }
 
 static void potProbGetGoal(const plan_ma_msg_pot_constr_t *src,
@@ -830,7 +742,7 @@ static void potProbGetGoal(const plan_ma_msg_pot_constr_t *src,
     dst->coef_size = src->var_id_size;
     dst->var_id = BOR_ALLOC_ARR(int, dst->coef_size);
     dst->coef = BOR_ALLOC_ARR(int, dst->coef_size);
-    for (i = 0; i < src->coef_size; ++i){
+    for (i = 0; i < dst->coef_size; ++i){
         dst->var_id[i] = src->var_id[i];
         dst->coef[i] = 1;
     }
@@ -873,20 +785,9 @@ void planMAMsgGetPotProb(const plan_ma_msg_t *msg, plan_pot_prob_t *prob)
     prob->maxpot = BOR_CALLOC_ARR(plan_pot_constr_t, prob->maxpot_size);
     for (i = 0; i < prob->maxpot_size; ++i)
         potProbGetConstr(mprob->maxpot + i, prob->maxpot + i);
-}
 
-int planMAMsgPotProbStateVarIdSize(const plan_ma_msg_t *msg)
-{
-    const plan_ma_msg_pot_prob_t *mprob = &msg->pot_prob;
-    return mprob->state_var_id_size;
-}
-
-void planMAMsgPotProbStateVarId(const plan_ma_msg_t *msg,
-                                int *state_var_id)
-{
-    const plan_ma_msg_pot_prob_t *mprob = &msg->pot_prob;
-    int i;
-
-    for (i = 0; i < mprob->state_var_id_size; ++i)
-        state_var_id[i] = mprob->state_var_id[i];
+    prob->var_size = mprob->state_coef_size;
+    prob->state_coef = BOR_ALLOC_ARR(int, mprob->state_coef_size);
+    for (i = 0; i < mprob->state_coef_size; ++i)
+        prob->state_coef[i] = mprob->state_coef[i];
 }

@@ -374,6 +374,10 @@ void planPotInit(plan_pot_t *pot,
         }
     }
 
+    // Consider private variables only in a case of ma-privacy
+    for (i = 0; pot->ma_privacy_var == -1 && i < var_size; ++i)
+        pot->var[i].is_private = 0;
+
     // Determine which max-pot variables we need.
     // First from the goal.
     determineMaxpotFromGoal(pot, goal);

@@ -51,6 +51,7 @@ struct _plan_pot_prob_t {
 typedef struct _plan_pot_prob_t plan_pot_prob_t;
 
 void planPotProbFree(plan_pot_prob_t *prob);
+void planPotProbPrint(const plan_pot_prob_t *prob, FILE *fout);
 
 struct _plan_pot_var_t {
     int *lp_var_id;    /*!< LP-variable ID for each variable value */

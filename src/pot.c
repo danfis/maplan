@@ -268,6 +268,37 @@ void planPotProbFree(plan_pot_prob_t *prob)
         BOR_FREE(prob->state_coef);
 }
 
+void planPotConstrPrint(const plan_pot_constr_t *c, FILE *fout)
+{
+    int i;
+    fprintf(fout, "C: RHS = %d, op_id = %d\n", c->rhs, c->op_id);
+    for (i = 0; i < c->coef_size; ++i){
+        fprintf(fout, "    [%d] var_id: %d, coef: %d\n",
+                i, c->var_id[i], c->coef[i]);
+    }
+}
+
+void planPotProbPrint(const plan_pot_prob_t *prob, FILE *fout)
+{
+    int i;
+
+    fprintf(fout, "var_size: %d\n", prob->var_size);
+    fprintf(fout, "goal:\n");
+    planPotConstrPrint(&prob->goal, fout);
+    fprintf(fout, "op:\n");
+    for (i = 0; i < prob->op_size; ++i)
+        planPotConstrPrint(prob->op + i, fout);
+    fprintf(fout, "maxpot:\n");
+    for (i = 0; i < prob->maxpot_size; ++i)
+        planPotConstrPrint(prob->maxpot + i, fout);
+
+    fprintf(fout, "State:");
+    for (i = 0; i < prob->var_size; ++i)
+        fprintf(fout, " %d:%d", i, prob->state_coef[i]);
+    fprintf(fout, "\n");
+    fprintf(fout, "LP-flags: %x\n", prob->lp_flags);
+}
+
 static void determineMaxpotFromGoal(plan_pot_t *pot,
                                     const plan_part_state_t *goal)
 {

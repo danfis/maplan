@@ -263,6 +263,9 @@ void planPotProbFree(plan_pot_prob_t *prob)
         probConstrFree(prob->maxpot + i);
     if (prob->maxpot != NULL)
         BOR_FREE(prob->maxpot);
+
+    if (prob->state_coef)
+        BOR_FREE(prob->state_coef);
 }
 
 static void determineMaxpotFromGoal(plan_pot_t *pot,

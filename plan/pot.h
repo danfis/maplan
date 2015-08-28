@@ -90,9 +90,10 @@ void planPotInit(plan_pot_t *pot,
 void planPotFree(plan_pot_t *pot);
 
 /**
- * Compute potentials for the specified state.
+ * Compute potentials.
  */
 void planPotCompute(plan_pot_t *pot);
+void planPotCompute2(const plan_pot_prob_t *prob, double *pot);
 
 /**
  * Convers state to the list of LP variable IDs.

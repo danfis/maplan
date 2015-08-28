@@ -35,9 +35,8 @@ static void lpSetConstr(plan_lp_t *lp, int row_id,
     planLPSetRHS(lp, row_id, constr->rhs, 'L');
 }
 
-static plan_lp_t *lpNew(const plan_pot_t *pot)
+static plan_lp_t *lpNew(const plan_pot_prob_t *prob)
 {
-    const plan_pot_prob_t *prob = &pot->prob;
     plan_lp_t *lp;
     unsigned lp_flags = 0u;
     int i, row_id;
@@ -51,10 +50,10 @@ static plan_lp_t *lpNew(const plan_pot_t *pot)
     // maxpot) constraints.
     // Number of columns was detected before in fact-map.
     lp = planLPNew(prob->op_size + prob->maxpot_size + 1,
-                   pot->lp_var_size, lp_flags);
+                   prob->var_size, lp_flags);
 
     // Set all variables as free
-    for (i = 0; i < pot->lp_var_size; ++i)
+    for (i = 0; i < prob->var_size; ++i)
         planLPSetVarFree(lp, i);
 
     // Set operator constraints
@@ -411,26 +410,33 @@ void planPotFree(plan_pot_t *pot)
         BOR_FREE(pot->pot);
 }
 
-void planPotCompute(plan_pot_t *pot)
+void planPotCompute2(const plan_pot_prob_t *prob, double *pot)
 {
     int i;
     plan_lp_t *lp;
 
-    if (pot->pot == NULL)
-        pot->pot = BOR_ALLOC_ARR(double, pot->lp_var_size);
-
-    lp = lpNew(pot);
+    lp = lpNew(prob);
 
     // First zeroize potentials
-    for (i = 0; i < pot->lp_var_size; ++i)
-        pot->pot[i] = 0.;
+    for (i = 0; i < prob->var_size; ++i)
+        pot[i] = 0.;
 
     // Then set simple objective
-    for (i = 0; i < pot->prob.var_size; ++i)
-        planLPSetObj(lp, i, pot->prob.state_coef[i]);
+    for (i = 0; i < prob->var_size; ++i)
+        planLPSetObj(lp, i, prob->state_coef[i]);
 
-    planLPSolve(lp, pot->pot);
+    planLPSolve(lp, pot);
     planLPDel(lp);
+}
+
+void planPotCompute(plan_pot_t *pot)
+{
+    const plan_pot_prob_t *prob = &pot->prob;
+
+    if (pot->pot == NULL)
+        pot->pot = BOR_ALLOC_ARR(double, prob->var_size);
+
+    planPotCompute2(prob, pot->pot);
 }
 
 int planPotToVarIds(const plan_pot_t *pot, const plan_state_t *state,

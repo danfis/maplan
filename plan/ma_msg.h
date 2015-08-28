@@ -86,8 +86,10 @@ extern "C" {
 #define PLAN_MA_MSG_HEUR_DTG_RESPONSE    0x0a00
 #define PLAN_MA_MSG_HEUR_DTG_REQRESPONSE 0x000b
 
-#define PLAN_MA_MSG_HEUR_POT_REQUEST  0x000c
-#define PLAN_MA_MSG_HEUR_POT_RESPONSE 0x0c00
+#define PLAN_MA_MSG_HEUR_POT_REQUEST          0x000c
+#define PLAN_MA_MSG_HEUR_POT_RESPONSE         0x0c00
+#define PLAN_MA_MSG_HEUR_POT_RESULTS_REQUEST  0x000d
+#define PLAN_MA_MSG_HEUR_POT_RESULTS_RESPONSE 0x0d00
 
 /**
  * Returns values for planMAMsgHeurType().
@@ -298,6 +300,9 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 void planMAMsgSetPotProb(plan_ma_msg_t *msg, const plan_pot_t *pot);
 void planMAMsgGetPotProb(const plan_ma_msg_t *msg, plan_pot_prob_t *prob);
+void planMAMsgSetPotPot(plan_ma_msg_t *msg, const int *pot, int pot_size);
+int planMAMsgPotPotSize(const plan_ma_msg_t *msg);
+void planMAMsgPotPot(const plan_ma_msg_t *msg, int *pot);
 
 #ifdef __cplusplus
 } /* extern "C" */

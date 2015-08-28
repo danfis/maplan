@@ -259,7 +259,6 @@ TEST(testHeurMAPotential)
 {
     runTestHeurMA("ma-potential", "proto/simple.proto",
                   "states/simple.txt", NULL, planHeurMAPotentialNew, -1, NULL);
-    /*
     runTestHeurMA("ma-dtg", "proto/depot-pfile1.proto",
                   "states/depot-pfile1.txt", NULL, planHeurMADTGNew, -1, NULL);
     runTestHeurMA("ma-dtg", "proto/depot-pfile5.proto",
@@ -268,5 +267,4 @@ TEST(testHeurMAPotential)
                   "states/rovers-p03.txt", NULL, planHeurMADTGNew, -1, NULL);
     runTestHeurMA("ma-dtg", "proto/rovers-p15.proto",
                   "states/rovers-p15.txt", NULL, planHeurMADTGNew, -1, NULL);
-    */
 }

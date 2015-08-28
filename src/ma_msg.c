@@ -95,6 +95,8 @@ struct _plan_ma_msg_t {
     int op_size;
 
     plan_ma_msg_pot_prob_t pot_prob;
+    int32_t *pot_pot;
+    int pot_pot_size;
 };
 
 PLAN_MSG_SCHEMA_BEGIN(schema_pot_constr)
@@ -169,6 +171,7 @@ PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, dtg_req, &schema_dtg_req)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, search_res, INT32)
 PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_t, op, op_size, &schema_op)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, pot_prob, &schema_pot_prob)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, pot_pot, pot_pot_size, INT32)
 PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_type                 0x000001u
 #define M_agent_id             0x000002u
@@ -194,6 +197,7 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 
 #define M_op                   0x080000u
 #define M_pot_prob             0x100000u
+#define M_pot_pot              0x200000u
 
 
 #define SET_VAL(msg, member, val) \
@@ -790,4 +794,28 @@ void planMAMsgGetPotProb(const plan_ma_msg_t *msg, plan_pot_prob_t *prob)
     prob->state_coef = BOR_ALLOC_ARR(int, mprob->state_coef_size);
     for (i = 0; i < mprob->state_coef_size; ++i)
         prob->state_coef[i] = mprob->state_coef[i];
+}
+
+void planMAMsgSetPotPot(plan_ma_msg_t *msg, const int *pot, int pot_size)
+{
+    int i;
+
+    msg->header |= M_pot_pot;
+    msg->pot_pot = BOR_ALLOC_ARR(int32_t, pot_size);
+    msg->pot_pot_size = pot_size;
+    for (i = 0; i < pot_size; ++i)
+        msg->pot_pot[i] = pot[i];
+}
+
+int planMAMsgPotPotSize(const plan_ma_msg_t *msg)
+{
+    return msg->pot_pot_size;
+}
+
+void planMAMsgPotPot(const plan_ma_msg_t *msg, int *pot)
+{
+    int i;
+
+    for (i = 0; i < msg->pot_pot_size; ++i)
+        pot[i] = msg->pot_pot[i];
 }

@@ -23,7 +23,7 @@
 #include "plan/msg_schema.h"
 
 struct _plan_ma_msg_pot_constr_t {
-    uint64_t header;
+    uint32_t header;
     int32_t *var_id;
     int var_id_size;
     int8_t *coef;
@@ -33,7 +33,7 @@ struct _plan_ma_msg_pot_constr_t {
 typedef struct _plan_ma_msg_pot_constr_t plan_ma_msg_pot_constr_t;
 
 struct _plan_ma_msg_pot_prob_t {
-    uint64_t header;
+    uint32_t header;
     plan_ma_msg_pot_constr_t goal;
     plan_ma_msg_pot_constr_t *op;
     int op_size;

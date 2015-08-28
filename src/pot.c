@@ -205,16 +205,37 @@ static void probInitMaxpot(plan_pot_prob_t *prob,
     }
 }
 
+static void probInitState(plan_pot_prob_t *prob,
+                          const plan_pot_t *pot,
+                          const plan_state_t *state)
+{
+    int i, c;
+
+    for (i = 0; i < pot->var_size; ++i){
+        if (i == pot->ma_privacy_var)
+            continue;
+
+        c = planStateGet(state, i);
+        c = pot->var[i].lp_var_id[c];
+        prob->state_coef[c] = 1;
+    }
+}
+
 static void probInit(plan_pot_prob_t *prob,
                      const plan_pot_t *pot,
                      const plan_part_state_t *goal,
                      const plan_op_t *op, int op_size,
+                     const plan_state_t *state,
                      unsigned heur_flags)
 {
     bzero(prob, sizeof(*prob));
+    prob->var_size = pot->lp_var_size;
     probInitGoal(&prob->goal, pot, goal);
     probInitOps(prob, pot, op, op_size, heur_flags);
     probInitMaxpot(prob, pot);
+    prob->state_coef = BOR_CALLOC_ARR(int, prob->var_size);
+    if (state != NULL)
+        probInitState(prob, pot, state);
     prob->lp_flags  = 0;
     prob->lp_flags |= (heur_flags & (0x3fu << 8u));
 }
@@ -295,6 +316,7 @@ void planPotInit(plan_pot_t *pot,
                  const plan_var_t *var, int var_size,
                  const plan_part_state_t *goal,
                  const plan_op_t *op, int op_size,
+                 const plan_state_t *state,
                  unsigned heur_flags)
 {
     int i;
@@ -332,7 +354,7 @@ void planPotInit(plan_pot_t *pot,
     allocLPVarIDs(pot, 1);
 
     // Construct problem
-    probInit(&pot->prob, pot, goal, op, op_size, heur_flags);
+    probInit(&pot->prob, pot, goal, op, op_size, state, heur_flags);
 }
 
 void planPotFree(plan_pot_t *pot)
@@ -351,9 +373,9 @@ void planPotFree(plan_pot_t *pot)
         BOR_FREE(pot->pot);
 }
 
-void planPotCompute(plan_pot_t *pot, const plan_state_t *state)
+void planPotCompute(plan_pot_t *pot)
 {
-    int i, col;
+    int i;
     plan_lp_t *lp;
 
     if (pot->pot == NULL)
@@ -361,21 +383,13 @@ void planPotCompute(plan_pot_t *pot, const plan_state_t *state)
 
     lp = lpNew(pot);
 
-    // First zeroize objective
-    for (i = 0; i < pot->lp_var_size; ++i){
+    // First zeroize potentials
+    for (i = 0; i < pot->lp_var_size; ++i)
         pot->pot[i] = 0.;
-        planLPSetObj(lp, i, 0.);
-    }
 
     // Then set simple objective
-    for (i = 0; i < pot->var_size; ++i){
-        if (i == pot->ma_privacy_var)
-            continue;
-
-        col = planStateGet(state, i);
-        col = pot->var[i].lp_var_id[col];
-        planLPSetObj(lp, col, 1.);
-    }
+    for (i = 0; i < pot->prob.var_size; ++i)
+        planLPSetObj(lp, i, pot->prob.state_coef[i]);
 
     planLPSolve(lp, pot->pot);
     planLPDel(lp);

@@ -38,11 +38,14 @@ struct _plan_pot_constr_t {
 typedef struct _plan_pot_constr_t plan_pot_constr_t;
 
 struct _plan_pot_prob_t {
+    int var_size;              /*!< Number of LP variables */
     plan_pot_constr_t goal;    /*!< Goal constraint */
     plan_pot_constr_t *op;     /*!< Operators constriants */
     int op_size;               /*!< Number of operators */
     plan_pot_constr_t *maxpot; /*!< Max-pot constraints */
     int maxpot_size;           /*!< Number of max-pot constraints */
+    int *state_coef;           /*!< Coeficients corresponding to the state
+                                    for which are potentials computed. */
     unsigned lp_flags;         /*!< Prepared LP flags */
 };
 typedef struct _plan_pot_prob_t plan_pot_prob_t;
@@ -77,6 +80,7 @@ void planPotInit(plan_pot_t *pot,
                  const plan_var_t *var, int var_size,
                  const plan_part_state_t *goal,
                  const plan_op_t *op, int op_size,
+                 const plan_state_t *state,
                  unsigned heur_flags);
 
 /**
@@ -87,7 +91,7 @@ void planPotFree(plan_pot_t *pot);
 /**
  * Compute potentials for the specified state.
  */
-void planPotCompute(plan_pot_t *pot, const plan_state_t *state);
+void planPotCompute(plan_pot_t *pot);
 
 /**
  * Convers state to the list of LP variable IDs.

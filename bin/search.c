@@ -595,6 +595,8 @@ static plan_heur_t *_heurNew(const options_t *o,
         heur = planHeurMALMCutNew(prob);
     }else if (strcmp(name, "ma-dtg") == 0){
         heur = planHeurMADTGNew(prob);
+    }else if (strcmp(name, "ma-pot") == 0){
+        heur = planHeurMAPotentialNew(prob);
     }else{
         fprintf(stderr, "Error: Invalid heuristic type: `%s'\n", name);
     }

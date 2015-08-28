@@ -80,6 +80,7 @@ static optdef_t opt_heur[] = {
     { "ma-ff", opt_empty },
     { "ma-lm-cut", opt_empty },
     { "ma-dtg", opt_empty },
+    { "ma-pot", opt_empty },
 };
 static int opt_heur_size = sizeof(opt_heur) / sizeof(optdef_t);
 
@@ -208,7 +209,7 @@ static void usage(const char *progname)
 "    The available heur algorithms are:\n"
 "        goalcount, add, max, ff, dtg, lm-cut, lm-cut-inc-local,\n"
 "        lm-cut-inc-cache, flow, potential.\n"
-"    Additionally for the multi-agent mode: ma-max, ma-ff, ma-lm-cut, ma-dtg\n"
+"    Additionally for the multi-agent mode: ma-max, ma-ff, ma-lm-cut, ma-dtg, ma-pot\n"
 "\n"
 "    Options allowed for flow heuristic:\n"
 "           ilp    -- Integer linear programming instead of LP is used\n"

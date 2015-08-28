@@ -18,6 +18,7 @@
  */
 
 #include <boruvka/alloc.h>
+#include "plan/search.h"
 #include "plan/heur.h"
 
 struct _plan_heur_ma_potential_t {
@@ -34,8 +35,11 @@ typedef struct _plan_heur_ma_potential_t plan_heur_ma_potential_t;
     bor_container_of((parent), plan_heur_ma_potential_t, heur)
 
 static void heurDel(plan_heur_t *heur);
-static int heurHeur(plan_heur_t *heur, plan_ma_comm_t *comm,
-                    const plan_state_t *state, plan_heur_res_t *res);
+static int heurHeurNode(plan_heur_t *heur,
+                        plan_ma_comm_t *comm,
+                        plan_state_id_t state_id,
+                        plan_search_t *search,
+                        plan_heur_res_t *res);
 static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
                       const plan_ma_msg_t *msg, plan_heur_res_t *res);
 static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
@@ -55,7 +59,7 @@ plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *p)
     h = BOR_ALLOC(plan_heur_ma_potential_t);
     bzero(h, sizeof(*h));
     _planHeurInit(&h->heur, heurDel, NULL, NULL);
-    _planHeurMAInit(&h->heur, heurHeur, NULL, heurUpdate, heurRequest);
+    _planHeurMAInit(&h->heur, NULL, heurHeurNode, heurUpdate, heurRequest);
 
     planStatePoolGetState(p->state_pool, p->initial_state, &state);
     planPotInit(&h->pot, p->var, p->var_size, p->goal,
@@ -75,20 +79,53 @@ static void heurDel(plan_heur_t *heur)
     BOR_FREE(h);
 }
 
-static int heurHeur(plan_heur_t *heur, plan_ma_comm_t *comm,
-                    const plan_state_t *state, plan_heur_res_t *res)
+static int stateHeur(const plan_heur_ma_potential_t *h,
+                     const plan_state_t *state)
+{
+    int heur;
+
+    heur = planPotStatePot(&h->pot, state);
+    heur = BOR_MAX(heur, 0);
+    return heur;
+}
+
+static int privateHeur(const plan_heur_ma_potential_t *h,
+                       plan_state_space_t *state_space,
+                       plan_state_pool_t *state_pool,
+                       int parent_state_id)
+{
+    plan_state_space_node_t *node;
+    PLAN_STATE_STACK(state, state_pool->num_vars);
+    int heur;
+
+    if (parent_state_id < 0)
+        return 0;
+
+    node = planStateSpaceNode(state_space, parent_state_id);
+    planStatePoolGetState(state_pool, parent_state_id, &state);
+
+    heur = node->heuristic - stateHeur(h, &state);
+    return heur;
+}
+
+static int heurHeurNode(plan_heur_t *heur,
+                        plan_ma_comm_t *comm,
+                        plan_state_id_t state_id,
+                        plan_search_t *search,
+                        plan_heur_res_t *res)
 {
     plan_heur_ma_potential_t *h = HEUR(heur);
+    //plan_state_space_node_t *node;
+
+    //node = planStateSpaceNode(search->state_space, state_id);
+    planStatePoolGetState(search->state_pool, state_id, h->state);
 
     if (h->pot.pot == NULL){
-        planStateCopy(h->state, state);
-        potStart(h, comm, state);
+        potStart(h, comm, h->state);
         return -1;
     }
 
-    // TODO
-    res->heur = planPotStatePot(&h->pot, state);
-    res->heur = BOR_MAX(res->heur, 0);
+    res->heur = stateHeur(h, h->state);
     return 0;
 }
 
@@ -99,6 +136,7 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 
     if (potUpdate(h, comm, msg) == 0){
         res->heur = potCompute(h);
+        fprintf(stderr, "[%d] Init H: %d\n", comm->node_id, res->heur);
         return 0;
     }
 

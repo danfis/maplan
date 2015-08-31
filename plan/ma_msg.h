@@ -300,9 +300,11 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 void planMAMsgSetPotProb(plan_ma_msg_t *msg, const plan_pot_t *pot);
 void planMAMsgGetPotProb(const plan_ma_msg_t *msg, plan_pot_prob_t *prob);
-void planMAMsgSetPotPot(plan_ma_msg_t *msg, const int *pot, int pot_size);
+void planMAMsgSetPotPot(plan_ma_msg_t *msg, const double *pot, int pot_size);
 int planMAMsgPotPotSize(const plan_ma_msg_t *msg);
-void planMAMsgPotPot(const plan_ma_msg_t *msg, int *pot);
+void planMAMsgPotPot(const plan_ma_msg_t *msg, double *pot);
+void planMAMsgSetPotInitState(plan_ma_msg_t *msg, int heur);
+int planMAMsgPotInitState(const plan_ma_msg_t *msg);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -95,8 +95,9 @@ struct _plan_ma_msg_t {
     int op_size;
 
     plan_ma_msg_pot_prob_t pot_prob;
-    int32_t *pot_pot;
+    int64_t *pot_pot;
     int pot_pot_size;
+    int32_t pot_init_state;
 };
 
 PLAN_MSG_SCHEMA_BEGIN(schema_pot_constr)
@@ -171,7 +172,8 @@ PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, dtg_req, &schema_dtg_req)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, search_res, INT32)
 PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_t, op, op_size, &schema_op)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, pot_prob, &schema_pot_prob)
-PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, pot_pot, pot_pot_size, INT32)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, pot_pot, pot_pot_size, INT64)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, pot_init_state, INT32)
 PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_type                 0x000001u
 #define M_agent_id             0x000002u
@@ -198,6 +200,7 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_op                   0x080000u
 #define M_pot_prob             0x100000u
 #define M_pot_pot              0x200000u
+#define M_pot_init_state       0x400000u
 
 
 #define SET_VAL(msg, member, val) \
@@ -268,6 +271,14 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define GETTER_SETTER_OP(Name, member, type) \
     GETTER_OP(Name, member, type) \
     SETTER_OP(Name, member, type)
+
+#define pack754_32(f) (pack754((f), 32, 8))
+#define pack754_64(f) (pack754((f), 64, 11))
+#define unpack754_32(i) (unpack754((i), 32, 8))
+#define unpack754_64(i) (unpack754((i), 64, 11))
+
+static uint64_t pack754(long double f, unsigned bits, unsigned expbits);
+static long double unpack754(uint64_t i, unsigned bits, unsigned expbits);
 
 
 static int snapshot_token_counter = 0;
@@ -796,15 +807,15 @@ void planMAMsgGetPotProb(const plan_ma_msg_t *msg, plan_pot_prob_t *prob)
         prob->state_coef[i] = mprob->state_coef[i];
 }
 
-void planMAMsgSetPotPot(plan_ma_msg_t *msg, const int *pot, int pot_size)
+void planMAMsgSetPotPot(plan_ma_msg_t *msg, const double *pot, int pot_size)
 {
     int i;
 
     msg->header |= M_pot_pot;
-    msg->pot_pot = BOR_ALLOC_ARR(int32_t, pot_size);
+    msg->pot_pot = BOR_ALLOC_ARR(int64_t, pot_size);
     msg->pot_pot_size = pot_size;
     for (i = 0; i < pot_size; ++i)
-        msg->pot_pot[i] = pot[i];
+        msg->pot_pot[i] = pack754_64(pot[i]);
 }
 
 int planMAMsgPotPotSize(const plan_ma_msg_t *msg)
@@ -812,10 +823,76 @@ int planMAMsgPotPotSize(const plan_ma_msg_t *msg)
     return msg->pot_pot_size;
 }
 
-void planMAMsgPotPot(const plan_ma_msg_t *msg, int *pot)
+void planMAMsgPotPot(const plan_ma_msg_t *msg, double *pot)
 {
     int i;
 
     for (i = 0; i < msg->pot_pot_size; ++i)
-        pot[i] = msg->pot_pot[i];
+        pot[i] = unpack754_64(msg->pot_pot[i]);
+}
+
+void planMAMsgSetPotInitState(plan_ma_msg_t *msg, int heur)
+{
+    msg->header |= M_pot_init_state;
+    msg->pot_init_state = heur;
+}
+
+int planMAMsgPotInitState(const plan_ma_msg_t *msg)
+{
+    return msg->pot_init_state;
+}
+
+static uint64_t pack754(long double f, unsigned bits, unsigned expbits)
+{
+    long double fnorm;
+    int shift;
+    long long sign, exp, significand;
+    unsigned significandbits = bits - expbits - 1; // -1 for sign bit
+
+    if (f == 0.0) return 0; // get this special case out of the way
+
+    // check sign and begin normalization
+    if (f < 0) { sign = 1; fnorm = -f; }
+    else { sign = 0; fnorm = f; }
+
+    // get the normalized form of f and track the exponent
+    shift = 0;
+    while(fnorm >= 2.0) { fnorm /= 2.0; shift++; }
+    while(fnorm < 1.0) { fnorm *= 2.0; shift--; }
+    fnorm = fnorm - 1.0;
+
+    // calculate the binary form (non-float) of the significand data
+    significand = fnorm * ((1LL<<significandbits) + 0.5f);
+
+    // get the biased exponent
+    exp = shift + ((1<<(expbits-1)) - 1); // shift + bias
+
+    // return the final answer
+    return (sign<<(bits-1)) | (exp<<(bits-expbits-1)) | significand;
+}
+
+static long double unpack754(uint64_t i, unsigned bits, unsigned expbits)
+{
+    long double result;
+    long long shift;
+    unsigned bias;
+    unsigned significandbits = bits - expbits - 1; // -1 for sign bit
+
+    if (i == 0) return 0.0;
+
+    // pull the significand
+    result = (i&((1LL<<significandbits)-1)); // mask
+    result /= (1LL<<significandbits); // convert back to float
+    result += 1.0f; // add the one back on
+
+    // deal with the exponent
+    bias = (1<<(expbits-1)) - 1;
+    shift = ((i>>significandbits)&((1LL<<expbits)-1)) - bias;
+    while(shift > 0) { result *= 2.0; shift--; }
+    while(shift < 0) { result /= 2.0; shift++; }
+
+    // sign it
+    result *= (i>>(bits-1))&1? -1.0: 1.0;
+
+    return result;
 }

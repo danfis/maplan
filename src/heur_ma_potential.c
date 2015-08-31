@@ -62,6 +62,23 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg);
 
+static void sendResults(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
+                        int agent_id)
+{
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                       PLAN_MA_MSG_HEUR_POT_RESULTS_RESPONSE,
+                       comm->node_id);
+    planMAMsgSetPotPot(msg, h->agent_data[agent_id].pot,
+                       h->agent_data[agent_id].pot_size);
+    planMAMsgSetPotInitState(msg, h->init_heur);
+    planMACommSendToNode(comm, agent_id, msg);
+    planMAMsgDel(msg);
+
+    h->agent_data[agent_id].pot_requested = 0;
+}
+
 static void potStart(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
                      const plan_state_t *state);
 static void potRequestPot(plan_heur_ma_potential_t *h,
@@ -87,6 +104,7 @@ plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *p)
     h->agent_id = p->agent_id;
     h->agent_size = p->num_agents;
     h->agent_data = BOR_CALLOC_ARR(agent_data_t, h->agent_size);
+    h->init_heur = -1;
 
     h->state = planStateNew(p->state_pool->num_vars);
 
@@ -112,35 +130,6 @@ static void heurDel(plan_heur_t *heur)
     BOR_FREE(h);
 }
 
-static int stateHeur(const plan_heur_ma_potential_t *h,
-                     const plan_state_t *state)
-{
-    int heur;
-
-    heur = planPotStatePot(&h->pot, state);
-    heur = BOR_MAX(heur, 0);
-    return heur;
-}
-
-static int privateHeur(const plan_heur_ma_potential_t *h,
-                       plan_state_space_t *state_space,
-                       plan_state_pool_t *state_pool,
-                       int parent_state_id)
-{
-    plan_state_space_node_t *node;
-    PLAN_STATE_STACK(state, state_pool->num_vars);
-    int heur;
-
-    if (parent_state_id < 0)
-        return 0;
-
-    node = planStateSpaceNode(state_space, parent_state_id);
-    planStatePoolGetState(state_pool, parent_state_id, &state);
-
-    heur = node->heuristic - stateHeur(h, &state);
-    return heur;
-}
-
 static int heurHeurNode(plan_heur_t *heur,
                         plan_ma_comm_t *comm,
                         plan_state_id_t state_id,
@@ -148,9 +137,7 @@ static int heurHeurNode(plan_heur_t *heur,
                         plan_heur_res_t *res)
 {
     plan_heur_ma_potential_t *h = HEUR(heur);
-    //plan_state_space_node_t *node;
 
-    //node = planStateSpaceNode(search->state_space, state_id);
     planStatePoolGetState(search->state_pool, state_id, h->state);
 
     if (h->pot.pot == NULL){
@@ -162,7 +149,7 @@ static int heurHeurNode(plan_heur_t *heur,
         return -1;
     }
 
-    res->heur = stateHeur(h, h->state);
+    res->heur = planPotStatePot(&h->pot, h->state);
     return 0;
 }
 
@@ -170,7 +157,7 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
                       const plan_ma_msg_t *msg, plan_heur_res_t *res)
 {
     plan_heur_ma_potential_t *h = HEUR(heur);
-    int type, subtype;
+    int type, subtype, size;
 
     type = planMAMsgType(msg);
     subtype = planMAMsgSubType(msg);
@@ -179,7 +166,6 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
             && subtype == PLAN_MA_MSG_HEUR_POT_RESPONSE){
         if (potUpdate(h, comm, msg) == 0){
             res->heur = potCompute(h, comm);
-            fprintf(stderr, "[%d] Init H: %d\n", comm->node_id, res->heur);
             return 0;
         }
 
@@ -188,13 +174,16 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 
     if (type == PLAN_MA_MSG_HEUR
             && subtype == PLAN_MA_MSG_HEUR_POT_RESULTS_RESPONSE){
-        // TODO
-        fprintf(stderr, "[%d] X\n", comm->node_id);
+        size = planMAMsgPotPotSize(msg);
+        h->pot.pot = BOR_ALLOC_ARR(double, size);
+        planMAMsgPotPot(msg, h->pot.pot);
+        res->heur = planMAMsgPotInitState(msg);
         return 0;
     }
 
     fprintf(stderr, "[%d] Unexpected update message: %x/%x\n",
             comm->node_id, type, subtype);
+    fflush(stderr);
     return -1;
 }
 
@@ -204,7 +193,7 @@ static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
     plan_heur_ma_potential_t *h = HEUR(heur);
     PLAN_STATE_STACK(state, h->pot.var_size);
     plan_ma_msg_t *mout;
-    int type, subtype;
+    int type, subtype, agent_id;
 
     type = planMAMsgType(msg);
     subtype = planMAMsgSubType(msg);
@@ -219,7 +208,12 @@ static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
 
     }else if (type == PLAN_MA_MSG_HEUR
                 && subtype == PLAN_MA_MSG_HEUR_POT_RESULTS_REQUEST){
-        // TODO sendResults(h, comm, planMAMsgAgent(msg));
+        agent_id = planMAMsgAgent(msg);
+        if (h->init_heur >= 0){
+            sendResults(h, comm, agent_id);
+        }else{
+            h->agent_data[agent_id].pot_requested = 1;
+        }
 
     }else{
         fprintf(stderr, "[%d] Unexpected request message: %x/%x\n",
@@ -415,14 +409,12 @@ static int potCompute(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm)
     h->pot.pot = BOR_ALLOC_ARR(double, prob.var_size);
     planPotCompute2(&prob, h->pot.pot);
 
-    // Set potentials for all agents and send responses to already
-    // requested potentials.
+    // Set potentials for all agents
     for (i = 0; i < h->agent_size; ++i){
         if (i == h->agent_id)
             continue;
 
         potSetAgentPot(h, h->agent_data + i);
-        // TODO: Send...
     }
 
     for (dheur = 0., i = 0; i < prob.var_size; ++i){
@@ -433,6 +425,12 @@ static int potCompute(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm)
     h->init_heur = BOR_MAX(h->init_heur, 0);
 
     planPotProbFree(&prob);
+
+    // Response to all pending requests
+    for (i = 0; i < h->agent_size; ++i){
+        if (i != h->agent_id && h->agent_data[i].pot_requested)
+            sendResults(h, comm, i);
+    }
 
     return h->init_heur;
 }

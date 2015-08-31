@@ -63,23 +63,6 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
                         const plan_ma_msg_t *msg);
 
-static void sendResults(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
-                        int agent_id)
-{
-    plan_ma_msg_t *msg;
-
-    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
-                       PLAN_MA_MSG_HEUR_POT_RESULTS_RESPONSE,
-                       comm->node_id);
-    planMAMsgSetPotPot(msg, h->agent_data[agent_id].pot,
-                       h->agent_data[agent_id].pot_size);
-    planMAMsgSetPotInitState(msg, h->init_heur);
-    planMACommSendToNode(comm, agent_id, msg);
-    planMAMsgDel(msg);
-
-    h->agent_data[agent_id].pot_requested = 0;
-}
-
 static void potStart(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
                      const plan_state_t *state);
 static void potRequestPot(plan_heur_ma_potential_t *h,
@@ -87,6 +70,12 @@ static void potRequestPot(plan_heur_ma_potential_t *h,
 static int potUpdate(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
                      const plan_ma_msg_t *msg);
 static int potCompute(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm);
+
+static void sendResults(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
+                        int agent_id);
+static int heurHeur(const plan_heur_ma_potential_t *h,
+                    plan_state_id_t state_id,
+                    const plan_search_t *search);
 
 plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *p)
 {
@@ -131,25 +120,6 @@ static void heurDel(plan_heur_t *heur)
     planPotFree(&h->pot);
     _planHeurFree(&h->heur);
     BOR_FREE(h);
-}
-
-static int heurHeur(const plan_heur_ma_potential_t *h,
-                    plan_state_id_t state_id,
-                    const plan_search_t *search)
-{
-    plan_state_space_t *state_space = (plan_state_space_t *)search->state_space;
-    const plan_state_space_node_t *node, *parent_node;
-    int heur, local_heur, parent_heur, parent_stored_heur;
-
-    node = planStateSpaceNode(state_space, state_id);
-    parent_node = planStateSpaceNode(state_space, node->parent_state_id);
-    planStatePoolGetState(search->state_pool, node->parent_state_id, h->state2);
-
-    local_heur = planPotStatePot(&h->pot, h->state);
-    parent_heur = planPotStatePot(&h->pot, h->state2);
-    parent_stored_heur = parent_node->heuristic;
-    heur = local_heur + (parent_stored_heur - parent_heur);
-    return heur;
 }
 
 static int heurHeurNode(plan_heur_t *heur,
@@ -454,4 +424,40 @@ static int potCompute(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm)
     }
 
     return h->init_heur;
+}
+
+static void sendResults(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
+                        int agent_id)
+{
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
+                       PLAN_MA_MSG_HEUR_POT_RESULTS_RESPONSE,
+                       comm->node_id);
+    planMAMsgSetPotPot(msg, h->agent_data[agent_id].pot,
+                       h->agent_data[agent_id].pot_size);
+    planMAMsgSetPotInitState(msg, h->init_heur);
+    planMACommSendToNode(comm, agent_id, msg);
+    planMAMsgDel(msg);
+
+    h->agent_data[agent_id].pot_requested = 0;
+}
+
+static int heurHeur(const plan_heur_ma_potential_t *h,
+                    plan_state_id_t state_id,
+                    const plan_search_t *search)
+{
+    plan_state_space_t *state_space = (plan_state_space_t *)search->state_space;
+    const plan_state_space_node_t *node, *parent_node;
+    int heur, local_heur, parent_heur, parent_stored_heur;
+
+    node = planStateSpaceNode(state_space, state_id);
+    parent_node = planStateSpaceNode(state_space, node->parent_state_id);
+    planStatePoolGetState(search->state_pool, node->parent_state_id, h->state2);
+
+    local_heur = planPotStatePot(&h->pot, h->state);
+    parent_heur = planPotStatePot(&h->pot, h->state2);
+    parent_stored_heur = parent_node->heuristic;
+    heur = local_heur + (parent_stored_heur - parent_heur);
+    return heur;
 }

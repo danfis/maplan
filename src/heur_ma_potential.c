@@ -46,6 +46,7 @@ struct _plan_heur_ma_potential_t {
     int init_heur;
 
     plan_state_t *state;
+    plan_state_t *state2;
 };
 typedef struct _plan_heur_ma_potential_t plan_heur_ma_potential_t;
 #define HEUR(parent) \
@@ -99,7 +100,7 @@ plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *p)
 
     planStatePoolGetState(p->state_pool, p->initial_state, &state);
     planPotInit(&h->pot, p->var, p->var_size, p->goal,
-                p->op, p->op_size, &state, 0);
+                p->op, p->op_size, &state, 0, PLAN_POT_MA);
 
     h->agent_id = p->agent_id;
     h->agent_size = p->num_agents;
@@ -107,6 +108,7 @@ plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *p)
     h->init_heur = -1;
 
     h->state = planStateNew(p->state_pool->num_vars);
+    h->state2 = planStateNew(p->state_pool->num_vars);
 
     return &h->heur;
 }
@@ -125,9 +127,29 @@ static void heurDel(plan_heur_t *heur)
         BOR_FREE(h->agent_data);
 
     planStateDel(h->state);
+    planStateDel(h->state2);
     planPotFree(&h->pot);
     _planHeurFree(&h->heur);
     BOR_FREE(h);
+}
+
+static int heurHeur(const plan_heur_ma_potential_t *h,
+                    plan_state_id_t state_id,
+                    const plan_search_t *search)
+{
+    plan_state_space_t *state_space = (plan_state_space_t *)search->state_space;
+    const plan_state_space_node_t *node, *parent_node;
+    int heur, local_heur, parent_heur, parent_stored_heur;
+
+    node = planStateSpaceNode(state_space, state_id);
+    parent_node = planStateSpaceNode(state_space, node->parent_state_id);
+    planStatePoolGetState(search->state_pool, node->parent_state_id, h->state2);
+
+    local_heur = planPotStatePot(&h->pot, h->state);
+    parent_heur = planPotStatePot(&h->pot, h->state2);
+    parent_stored_heur = parent_node->heuristic;
+    heur = local_heur + (parent_stored_heur - parent_heur);
+    return heur;
 }
 
 static int heurHeurNode(plan_heur_t *heur,
@@ -149,7 +171,7 @@ static int heurHeurNode(plan_heur_t *heur,
         return -1;
     }
 
-    res->heur = planPotStatePot(&h->pot, h->state);
+    res->heur = heurHeur(h, state_id, search);
     return 0;
 }
 
@@ -422,7 +444,6 @@ static int potCompute(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm)
             dheur += h->pot.pot[i];
     }
     h->init_heur = dheur;
-    h->init_heur = BOR_MAX(h->init_heur, 0);
 
     planPotProbFree(&prob);
 

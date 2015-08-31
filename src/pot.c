@@ -350,7 +350,8 @@ void planPotInit(plan_pot_t *pot,
                  const plan_part_state_t *goal,
                  const plan_op_t *op, int op_size,
                  const plan_state_t *state,
-                 unsigned heur_flags)
+                 unsigned heur_flags,
+                 unsigned pot_flags)
 {
     int i;
 
@@ -383,6 +384,17 @@ void planPotInit(plan_pot_t *pot,
 
     // Then from the missing preconditions of operators
     determineMaxpotFromOps(pot, op, op_size);
+
+    // In case of multi-agent mode, add maxpot to all public variables,
+    // because we cannot know whether they are set by other agents or not
+    //  -- so add them everywhere (this can make LP program unnecessary
+    //  bigger but still correct).
+    if (pot_flags & PLAN_POT_MA){
+        for (i = 0; i < var_size; ++i){
+            if (i != pot->ma_privacy_var && !pot->var[i].is_private)
+                pot->var[i].lp_max_var_id = 0;
+        }
+    }
 
     // Now allocate LP variable IDs, first for public vars, then for
     // private ones.

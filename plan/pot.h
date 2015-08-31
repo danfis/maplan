@@ -28,6 +28,11 @@ extern "C" {
 
 #ifdef PLAN_LP
 
+/**
+ * Switches to multi-agent mode.
+ */
+#define PLAN_POT_MA 0x1u
+
 struct _plan_pot_constr_t {
     int *var_id;    /*!< Non-zer variable IDs */
     int *coef;      /*!< Non-zero coeficient (1 or -1) */
@@ -82,7 +87,8 @@ void planPotInit(plan_pot_t *pot,
                  const plan_part_state_t *goal,
                  const plan_op_t *op, int op_size,
                  const plan_state_t *state,
-                 unsigned heur_flags);
+                 unsigned heur_flags,
+                 unsigned pot_flags);
 
 /**
  * Frees allocated resources.

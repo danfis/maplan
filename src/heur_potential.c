@@ -48,7 +48,7 @@ plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
     bzero(heur, sizeof(*heur));
     _planHeurInit(&heur->heur, heurPotentialDel, heurPotential, NULL);
 
-    planPotInit(&heur->pot, var, var_size, goal, op, op_size, init_state, flags);
+    planPotInit(&heur->pot, var, var_size, goal, op, op_size, init_state, flags, 0);
     planPotCompute(&heur->pot);
 
     return &heur->heur;

@@ -135,6 +135,7 @@ static int astarInsertState(plan_search_astar_t *astar,
         return PLAN_SEARCH_CONT;
 
     // Set up costs for open-list -- ties are broken by heuristic value
+    heur = BOR_MAX(heur, 0);
     cost[0] = g_cost + heur; // f-value: f() = g() + h()
     cost[1] = heur; // tie-breaking value
 
@@ -213,10 +214,11 @@ static void planSearchAStarInsertNode(plan_search_t *search,
                                       plan_state_space_node_t *node)
 {
     plan_search_astar_t *astar = SEARCH_FROM_PARENT(search);
-    plan_cost_t cost[2];
+    plan_cost_t heur, cost[2];
 
-    cost[0] = node->cost + node->heuristic;
-    cost[1] = node->heuristic;
+    heur = BOR_MAX(node->heuristic, 0);
+    cost[0] = node->cost + heur;
+    cost[1] = heur;
 
     if (planStateSpaceNodeIsNew(node)){
         planStateSpaceOpen(search->state_space, node);

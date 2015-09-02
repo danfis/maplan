@@ -299,6 +299,8 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 
 void planMAMsgSetPotProb(plan_ma_msg_t *msg, const plan_pot_t *pot);
+void planMAMsgSetPotProb2(plan_ma_msg_t *msg, const plan_pot_t *pot,
+                          const plan_state_t *state);
 void planMAMsgGetPotProb(const plan_ma_msg_t *msg, plan_pot_prob_t *prob);
 void planMAMsgSetPotPot(plan_ma_msg_t *msg, const double *pot, int pot_size);
 int planMAMsgPotPotSize(const plan_ma_msg_t *msg);

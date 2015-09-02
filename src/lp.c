@@ -182,6 +182,27 @@ void planLPSetObj(plan_lp_t *lp, int i, double coef)
 #endif /* PLAN_USE_CPLEX */
 }
 
+void planLPSetVarRange(plan_lp_t *lp, int i, double lb, double ub)
+{
+#ifdef PLAN_USE_LP_SOLVE
+    lprec *l = (lprec *)lp;
+    set_lowbo(l, i + 1, lb);
+    set_upbo(l, i + 1, ub);
+#endif /* PLAN_USE_LP_SOLVE */
+
+#ifdef PLAN_USE_CPLEX
+    static const char lu[2] = { 'L', 'U' };
+    double bd[2] = { lb, ub };
+    int ind[2];
+    int st;
+
+    ind[0] = ind[1] = i;
+    st = CPXchgbds(lp->env, lp->lp, 2, ind, lu, bd);
+    if (st != 0)
+        cplexErr(lp, st, "Could not set variable as free.");
+#endif /* PLAN_USE_CPLEX */
+}
+
 void planLPSetVarFree(plan_lp_t *lp, int i)
 {
 #ifdef PLAN_USE_LP_SOLVE
@@ -190,15 +211,7 @@ void planLPSetVarFree(plan_lp_t *lp, int i)
 #endif /* PLAN_USE_LP_SOLVE */
 
 #ifdef PLAN_USE_CPLEX
-    static const char lu[2] = { 'L', 'U' };
-    static const double bd[2] = { -CPX_INFBOUND, CPX_INFBOUND };
-    int ind[2];
-    int st;
-
-    ind[0] = ind[1] = i;
-    st = CPXchgbds(lp->env, lp->lp, 2, ind, lu, bd);
-    if (st != 0)
-        cplexErr(lp, st, "Could not set variable as free.");
+    planLPSetVarRange(lp, i, -CPX_INFBOUND, CPX_INFBOUND);
 #endif /* PLAN_USE_CPLEX */
 }
 

@@ -581,7 +581,9 @@ static plan_heur_t *_heurNew(const options_t *o,
             flags |= PLAN_HEUR_FLOW_LANDMARKS_LM_CUT;
         heur = planHeurFlowNew(prob->var, prob->var_size,
                                prob->goal, op, op_size, flags);
-    }else if (strcmp(name, "potential") == 0){
+    }else if (strcmp(name, "pot") == 0){
+        if (optionsHeurOpt(o, "all-synt-states"))
+            flags |= PLAN_HEUR_POT_ALL_SYNTACTIC_STATES;
         state = planStateNew(prob->state_pool->num_vars);
         planStatePoolGetState(prob->state_pool, prob->initial_state, state);
         heur = planHeurPotentialNew(prob->var, prob->var_size,

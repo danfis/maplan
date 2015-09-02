@@ -68,6 +68,11 @@ void planLPDel(plan_lp_t *lp);
 void planLPSetObj(plan_lp_t *lp, int i, double coef);
 
 /**
+ * Sets i'th variable's range.
+ */
+void planLPSetVarRange(plan_lp_t *lp, int i, double lb, double ub);
+
+/**
  * Sets i'th variable as free.
  */
 void planLPSetVarFree(plan_lp_t *lp, int i);

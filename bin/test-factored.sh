@@ -2,19 +2,18 @@
 
 SEARCH_OPTS1="--max-time 840 --max-mem 7168 -s lazy -H ma-dtg"
 SEARCH_OPTS2="--max-time 840 --max-mem 7168 -s lazy -H ma-ff"
+SEARCH_OPTS1="--max-time 840 --max-mem 7168 -s lazy -H potential"
 
 CURDIR=$(dirname $0)
 SEARCH="$CURDIR/search"
 VAL="$CURDIR/../third-party/VAL/validate"
-OUT=/tmp/test-factored-out
-ERR=/tmp/test-factored-err
-PLAN=/tmp/test-factored-plan
+OUTDIR=/home/danfis/tmp/test-factor
 DOMAIN=depot
 PROBLEM=pfile1
-PROTO=~/dev/plan-data/codmap-2015/factored/$DOMAIN/$PROBLEM/
-VAL_DOMAIN=~/dev/plan-data/codmap-2015/seq/$DOMAIN/domain.pddl
-VAL_PROBLEM=~/dev/plan-data/codmap-2015/seq/$DOMAIN/${PROBLEM}.pddl
-MAX_CYCLES=1000
+PROTO=~/dev/plan-data/proto/codmap-2015-factor/$DOMAIN/$PROBLEM/
+VAL_DOMAIN=~/dev/plan-data/bench/codmap-2015/$DOMAIN/$PROBLEM/unfactor/domain.pddl
+VAL_PROBLEM=~/dev/plan-data/bench/codmap-2015/$DOMAIN/$PROBLEM/unfactor/problem.pddl
+MAX_CYCLES=1
 
 AGENT_URLS=""
 idx=0
@@ -24,11 +23,15 @@ for proto in $(ls $PROTO/*.proto); do
     idx=$(($idx + 1))
 done
 
+rm -rf $OUTDIR
+mkdir $OUTDIR
+
 cycle=0
 while [ $cycle != $MAX_CYCLES ]; do
-    rm -f $OUT.[0-9]*
-    rm -f $ERR.[0-9]*
-    rm -f $PLAN.[0-9]*
+    mkdir $OUTDIR/$cycle
+    OUT=$OUTDIR/$cycle/out
+    ERR=$OUTDIR/$cycle/err
+    PLAN=$OUTDIR/$cycle/plan
 
     pids=""
     idx=0

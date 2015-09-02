@@ -539,6 +539,7 @@ static plan_heur_t *_heurNew(const options_t *o,
                              const plan_problem_t *prob,
                              const plan_op_t *op, int op_size)
 {
+    plan_state_t *state;
     plan_heur_t *heur = NULL;
     unsigned flags = 0;
     unsigned flags2 = 0;
@@ -580,6 +581,12 @@ static plan_heur_t *_heurNew(const options_t *o,
             flags |= PLAN_HEUR_FLOW_LANDMARKS_LM_CUT;
         heur = planHeurFlowNew(prob->var, prob->var_size,
                                prob->goal, op, op_size, flags);
+    }else if (strcmp(name, "potential") == 0){
+        state = planStateNew(prob->state_pool->num_vars);
+        planStatePoolGetState(prob->state_pool, prob->initial_state, state);
+        heur = planHeurPotentialNew(prob->var, prob->var_size,
+                                    prob->goal, op, op_size, state, flags);
+        planStateDel(state);
     }else if (strcmp(name, "ma-max") == 0){
         heur = planHeurMARelaxMaxNew(prob, flags);
     }else if (strcmp(name, "ma-ff") == 0){
@@ -588,6 +595,8 @@ static plan_heur_t *_heurNew(const options_t *o,
         heur = planHeurMALMCutNew(prob);
     }else if (strcmp(name, "ma-dtg") == 0){
         heur = planHeurMADTGNew(prob);
+    }else if (strcmp(name, "ma-pot") == 0){
+        heur = planHeurMAPotentialNew(prob);
     }else{
         fprintf(stderr, "Error: Invalid heuristic type: `%s'\n", name);
     }

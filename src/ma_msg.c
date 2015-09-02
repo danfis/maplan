@@ -22,6 +22,28 @@
 #include "plan/ma_msg.h"
 #include "plan/msg_schema.h"
 
+struct _plan_ma_msg_pot_constr_t {
+    uint32_t header;
+    int32_t *var_id;
+    int var_id_size;
+    int8_t *coef;
+    int coef_size;
+    int32_t rhs;
+};
+typedef struct _plan_ma_msg_pot_constr_t plan_ma_msg_pot_constr_t;
+
+struct _plan_ma_msg_pot_prob_t {
+    uint32_t header;
+    plan_ma_msg_pot_constr_t goal;
+    plan_ma_msg_pot_constr_t *op;
+    int op_size;
+    plan_ma_msg_pot_constr_t *maxpot;
+    int maxpot_size;
+    int32_t *state_coef;
+    int state_coef_size;
+};
+typedef struct _plan_ma_msg_pot_prob_t plan_ma_msg_pot_prob_t;
+
 struct _plan_ma_msg_op_t {
     uint32_t header;
     int32_t op_id;
@@ -71,7 +93,32 @@ struct _plan_ma_msg_t {
 
     plan_ma_msg_op_t *op;
     int op_size;
+
+    plan_ma_msg_pot_prob_t pot_prob;
+    int64_t *pot_pot;
+    int pot_pot_size;
+    int32_t pot_init_state;
 };
+
+PLAN_MSG_SCHEMA_BEGIN(schema_pot_constr)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_constr_t, var_id, var_id_size, INT32)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_constr_t, coef, coef_size, INT8)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_constr_t, rhs, INT32)
+PLAN_MSG_SCHEMA_END(schema_pot_constr, plan_ma_msg_pot_constr_t, header)
+#define M_pot_constr_var_id 0x01u
+#define M_pot_constr_coef   0x02u
+#define M_pot_constr_rhs    0x04u
+
+PLAN_MSG_SCHEMA_BEGIN(schema_pot_prob)
+PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_pot_prob_t, goal, &schema_pot_constr)
+PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_pot_prob_t, op, op_size, &schema_pot_constr)
+PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_pot_prob_t, maxpot, maxpot_size, &schema_pot_constr)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_prob_t, state_coef, state_coef_size, INT32)
+PLAN_MSG_SCHEMA_END(schema_pot_prob, plan_ma_msg_pot_prob_t, header)
+#define M_pot_prob_goal       0x01u
+#define M_pot_prob_op         0x02u
+#define M_pot_prob_maxpot     0x04u
+#define M_pot_prob_state_coef 0x08u
 
 
 PLAN_MSG_SCHEMA_BEGIN(schema_op)
@@ -124,6 +171,9 @@ PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, heur_cost, INT32)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, dtg_req, &schema_dtg_req)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, search_res, INT32)
 PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_t, op, op_size, &schema_op)
+PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, pot_prob, &schema_pot_prob)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, pot_pot, pot_pot_size, INT64)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, pot_init_state, INT32)
 PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_type                 0x000001u
 #define M_agent_id             0x000002u
@@ -148,6 +198,9 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_search_res           0x040000u
 
 #define M_op                   0x080000u
+#define M_pot_prob             0x100000u
+#define M_pot_pot              0x200000u
+#define M_pot_init_state       0x400000u
 
 
 #define SET_VAL(msg, member, val) \
@@ -219,6 +272,14 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
     GETTER_OP(Name, member, type) \
     SETTER_OP(Name, member, type)
 
+#define pack754_32(f) (pack754((f), 32, 8))
+#define pack754_64(f) (pack754((f), 64, 11))
+#define unpack754_32(i) (unpack754((i), 32, 8))
+#define unpack754_64(i) (unpack754((i), 64, 11))
+
+static uint64_t pack754(long double f, unsigned bits, unsigned expbits);
+static long double unpack754(uint64_t i, unsigned bits, unsigned expbits);
+
 
 static int snapshot_token_counter = 0;
 
@@ -255,6 +316,7 @@ static void planMAMsgDTGReqCopy(plan_ma_msg_dtg_req_t *dst,
     }
 }
 
+static void planMAMsgPotProbFree(plan_ma_msg_pot_prob_t *prob);
 
 void planMAMsgInit(plan_ma_msg_t *msg, int type, int subtype, int agent_id)
 {
@@ -294,6 +356,7 @@ void planMAMsgFree(plan_ma_msg_t *msg)
     if (msg->heur_requested_agent != NULL)
         BOR_FREE(msg->heur_requested_agent);
     planMAMsgDTGReqFree(&msg->dtg_req);
+    planMAMsgPotProbFree(&msg->pot_prob);
 }
 
 plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
@@ -592,4 +655,244 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
     msg = BOR_ALLOC(plan_ma_msg_t);
     planMsgDecode(msg, &schema_msg, buf);
     return msg;
+}
+
+
+static void planMAMsgPotConstrFree(plan_ma_msg_pot_constr_t *c)
+{
+    if (c->var_id != NULL)
+        BOR_FREE(c->var_id);
+    if (c->coef != NULL)
+        BOR_FREE(c->coef);
+}
+
+static void planMAMsgPotProbFree(plan_ma_msg_pot_prob_t *prob)
+{
+    int i;
+
+    planMAMsgPotConstrFree(&prob->goal);
+
+    for (i = 0; i < prob->op_size; ++i)
+        planMAMsgPotConstrFree(prob->op + i);
+    if (prob->op != NULL)
+        BOR_FREE(prob->op);
+
+    for (i = 0; i < prob->maxpot_size; ++i)
+        planMAMsgPotConstrFree(prob->maxpot + i);
+    if (prob->maxpot != NULL)
+        BOR_FREE(prob->maxpot);
+
+    if (prob->state_coef != NULL)
+        BOR_FREE(prob->state_coef);
+}
+
+static void potProbSetGoal(plan_ma_msg_pot_constr_t *dst,
+                           const plan_pot_constr_t *src)
+{
+    int i;
+
+    dst->header |= M_pot_constr_var_id;
+    dst->var_id_size = src->coef_size;
+    dst->var_id = BOR_ALLOC_ARR(int32_t, dst->var_id_size);
+
+    for (i = 0; i < src->coef_size; ++i)
+        dst->var_id[i] = src->var_id[i];
+}
+
+static void potProbSetConstr(plan_ma_msg_pot_constr_t *dst,
+                             const plan_pot_constr_t *src)
+{
+    int i;
+
+    dst->header |= M_pot_constr_var_id;
+    dst->header |= M_pot_constr_coef;
+    dst->header |= M_pot_constr_rhs;
+
+    dst->var_id_size = dst->coef_size = src->coef_size;
+    dst->var_id = BOR_ALLOC_ARR(int32_t, dst->var_id_size);
+    dst->coef = BOR_ALLOC_ARR(int8_t, dst->coef_size);
+
+    for (i = 0; i < src->coef_size; ++i){
+        dst->var_id[i] = src->var_id[i];
+        dst->coef[i] = src->coef[i];
+    }
+    dst->rhs = src->rhs;
+}
+
+void planMAMsgSetPotProb(plan_ma_msg_t *msg, const plan_pot_t *pot)
+{
+    const plan_pot_prob_t *prob = &pot->prob;
+    plan_ma_msg_pot_prob_t *mprob = &msg->pot_prob;
+    int i;
+
+    msg->header |= M_pot_prob;
+
+    mprob->header |= M_pot_prob_goal;
+    potProbSetGoal(&mprob->goal, &prob->goal);
+
+    mprob->header |= M_pot_prob_op;
+    mprob->op_size = prob->op_size;
+    mprob->op = BOR_CALLOC_ARR(plan_ma_msg_pot_constr_t, mprob->op_size);
+    for (i = 0; i < prob->op_size; ++i)
+        potProbSetConstr(mprob->op + i, prob->op + i);
+
+    mprob->header |= M_pot_prob_maxpot;
+    mprob->maxpot_size = prob->maxpot_size;
+    mprob->maxpot = BOR_CALLOC_ARR(plan_ma_msg_pot_constr_t, mprob->maxpot_size);
+    for (i = 0; i < prob->maxpot_size; ++i)
+        potProbSetConstr(mprob->maxpot + i, prob->maxpot + i);
+
+    mprob->header |= M_pot_prob_state_coef;
+    mprob->state_coef_size = prob->var_size;
+    mprob->state_coef = BOR_ALLOC_ARR(int32_t, prob->var_size);
+    for (i = 0; i < prob->var_size; ++i)
+        mprob->state_coef[i] = prob->state_coef[i];
+}
+
+static void potProbGetGoal(const plan_ma_msg_pot_constr_t *src,
+                           plan_pot_constr_t *dst)
+{
+    int i;
+
+    dst->coef_size = src->var_id_size;
+    dst->var_id = BOR_ALLOC_ARR(int, dst->coef_size);
+    dst->coef = BOR_ALLOC_ARR(int, dst->coef_size);
+    for (i = 0; i < dst->coef_size; ++i){
+        dst->var_id[i] = src->var_id[i];
+        dst->coef[i] = 1;
+    }
+
+    dst->rhs = 0;
+    dst->op_id = -1;
+}
+
+static void potProbGetConstr(const plan_ma_msg_pot_constr_t *src,
+                             plan_pot_constr_t *dst)
+{
+    int i;
+
+    dst->coef_size = src->coef_size;
+    dst->var_id = BOR_ALLOC_ARR(int, dst->coef_size);
+    dst->coef = BOR_ALLOC_ARR(int, dst->coef_size);
+    for (i = 0; i < src->coef_size; ++i){
+        dst->var_id[i] = src->var_id[i];
+        dst->coef[i] = src->coef[i];
+    }
+
+    dst->rhs = src->rhs;
+    dst->op_id = -1;
+}
+
+void planMAMsgGetPotProb(const plan_ma_msg_t *msg, plan_pot_prob_t *prob)
+{
+    const plan_ma_msg_pot_prob_t *mprob = &msg->pot_prob;
+    int i;
+
+    bzero(prob, sizeof(*prob));
+    potProbGetGoal(&mprob->goal, &prob->goal);
+
+    prob->op_size = mprob->op_size;
+    prob->op = BOR_CALLOC_ARR(plan_pot_constr_t, prob->op_size);
+    for (i = 0; i < prob->op_size; ++i)
+        potProbGetConstr(mprob->op + i, prob->op + i);
+
+    prob->maxpot_size = mprob->maxpot_size;
+    prob->maxpot = BOR_CALLOC_ARR(plan_pot_constr_t, prob->maxpot_size);
+    for (i = 0; i < prob->maxpot_size; ++i)
+        potProbGetConstr(mprob->maxpot + i, prob->maxpot + i);
+
+    prob->var_size = mprob->state_coef_size;
+    prob->state_coef = BOR_ALLOC_ARR(int, mprob->state_coef_size);
+    for (i = 0; i < mprob->state_coef_size; ++i)
+        prob->state_coef[i] = mprob->state_coef[i];
+}
+
+void planMAMsgSetPotPot(plan_ma_msg_t *msg, const double *pot, int pot_size)
+{
+    int i;
+
+    msg->header |= M_pot_pot;
+    msg->pot_pot = BOR_ALLOC_ARR(int64_t, pot_size);
+    msg->pot_pot_size = pot_size;
+    for (i = 0; i < pot_size; ++i)
+        msg->pot_pot[i] = pack754_64(pot[i]);
+}
+
+int planMAMsgPotPotSize(const plan_ma_msg_t *msg)
+{
+    return msg->pot_pot_size;
+}
+
+void planMAMsgPotPot(const plan_ma_msg_t *msg, double *pot)
+{
+    int i;
+
+    for (i = 0; i < msg->pot_pot_size; ++i)
+        pot[i] = unpack754_64(msg->pot_pot[i]);
+}
+
+void planMAMsgSetPotInitState(plan_ma_msg_t *msg, int heur)
+{
+    msg->header |= M_pot_init_state;
+    msg->pot_init_state = heur;
+}
+
+int planMAMsgPotInitState(const plan_ma_msg_t *msg)
+{
+    return msg->pot_init_state;
+}
+
+static uint64_t pack754(long double f, unsigned bits, unsigned expbits)
+{
+    long double fnorm;
+    int shift;
+    long long sign, exp, significand;
+    unsigned significandbits = bits - expbits - 1; // -1 for sign bit
+
+    if (f == 0.0) return 0; // get this special case out of the way
+
+    // check sign and begin normalization
+    if (f < 0) { sign = 1; fnorm = -f; }
+    else { sign = 0; fnorm = f; }
+
+    // get the normalized form of f and track the exponent
+    shift = 0;
+    while(fnorm >= 2.0) { fnorm /= 2.0; shift++; }
+    while(fnorm < 1.0) { fnorm *= 2.0; shift--; }
+    fnorm = fnorm - 1.0;
+
+    // calculate the binary form (non-float) of the significand data
+    significand = fnorm * ((1LL<<significandbits) + 0.5f);
+
+    // get the biased exponent
+    exp = shift + ((1<<(expbits-1)) - 1); // shift + bias
+
+    // return the final answer
+    return (sign<<(bits-1)) | (exp<<(bits-expbits-1)) | significand;
+}
+
+static long double unpack754(uint64_t i, unsigned bits, unsigned expbits)
+{
+    long double result;
+    long long shift;
+    unsigned bias;
+    unsigned significandbits = bits - expbits - 1; // -1 for sign bit
+
+    if (i == 0) return 0.0;
+
+    // pull the significand
+    result = (i&((1LL<<significandbits)-1)); // mask
+    result /= (1LL<<significandbits); // convert back to float
+    result += 1.0f; // add the one back on
+
+    // deal with the exponent
+    bias = (1<<(expbits-1)) - 1;
+    shift = ((i>>significandbits)&((1LL<<expbits)-1)) - bias;
+    while(shift > 0) { result *= 2.0; shift--; }
+    while(shift < 0) { result /= 2.0; shift++; }
+
+    // sign it
+    result *= (i>>(bits-1))&1? -1.0: 1.0;
+
+    return result;
 }

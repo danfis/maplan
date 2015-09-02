@@ -41,6 +41,13 @@ TEST_SUITE(TSHeurFlow) {
     TEST_SUITE_CLOSURE
 };
 
+TEST(testHeurPotential);
+TEST_SUITE(TSHeurPotential) {
+    TEST_ADD(testHeurPotential),
+    TEST_ADD(protobufTearDown),
+    TEST_SUITE_CLOSURE
+};
+
 #define TEST_SUITE_ADD_HEUR \
     TEST_SUITE_ADD(TSHeurRelax), \
     TEST_SUITE_ADD(TSHeurGoalCount), \
@@ -50,6 +57,7 @@ TEST_SUITE(TSHeurFlow) {
     TEST_SUITE_ADD(TSHeurLMCut), \
     TEST_SUITE_ADD(TSHeurLMCutInc), \
     TEST_SUITE_ADD(TSHeurDTG), \
-    TEST_SUITE_ADD(TSHeurFlow)
+    TEST_SUITE_ADD(TSHeurFlow), \
+    TEST_SUITE_ADD(TSHeurPotential)
 
 #endif

@@ -5,6 +5,7 @@ TEST(testHeurAdmissibleLMCut);
 TEST(testHeurAdmissibleMax);
 TEST(testHeurAdmissibleFlow);
 TEST(testHeurAdmissibleFlowLandmarks);
+TEST(testHeurAdmissiblePotential);
 TEST(protobufTearDown);
 
 TEST_SUITE(TSHeurAdmissible){
@@ -12,6 +13,7 @@ TEST_SUITE(TSHeurAdmissible){
     TEST_ADD(testHeurAdmissibleMax),
     TEST_ADD(testHeurAdmissibleFlow),
     TEST_ADD(testHeurAdmissibleFlowLandmarks),
+    TEST_ADD(testHeurAdmissiblePotential),
     TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE
 };

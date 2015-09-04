@@ -250,6 +250,26 @@ static void probInitAllSyntacticStates(plan_pot_prob_t *prob,
     }
 }
 
+void planPotProbSetAllSyntacticStatesFromFactRange(plan_pot_prob_t *prob,
+                                                   const int *fact_range,
+                                                   int fact_range_size)
+{
+    int i, R, r;
+
+    R = 1;
+    for (i = 0; i < fact_range_size; ++i){
+        if (fact_range[i] > 0)
+            R = lcm(R, fact_range[i]);
+    }
+
+    for (i = 0; i < fact_range_size; ++i){
+        if (fact_range[i] > 0){
+            r = R / fact_range[i];
+            prob->state_coef[i] = r;
+        }
+    }
+}
+
 static void probInitState(plan_pot_prob_t *prob,
                           const plan_pot_t *pot,
                           const plan_state_t *state)

@@ -164,6 +164,7 @@ void planLPDel(plan_lp_t *lp)
     if (lp->env)
         CPXcloseCPLEX(&lp->env);
 #endif /* PLAN_USE_CPLEX */
+    BOR_FREE(lp);
 }
 
 void planLPSetObj(plan_lp_t *lp, int i, double coef)

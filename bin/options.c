@@ -60,6 +60,9 @@ static const char *opt_heur_lm_cut_inc_cache[] = {
 static const char *opt_heur_pot[] = {
     "proj", "loc", "glob", "op-cost1", "op-cost+1", "all-synt-states", NULL
 };
+static const char *opt_heur_ma_pot[] = {
+    "op-cost1", "op-cost+1", "all-synt-states", NULL
+};
 
 static optdef_t opt_search[] = {
     { "ehc", opt_search_ehc },
@@ -83,7 +86,7 @@ static optdef_t opt_heur[] = {
     { "ma-ff", opt_empty },
     { "ma-lm-cut", opt_empty },
     { "ma-dtg", opt_empty },
-    { "ma-pot", opt_empty },
+    { "ma-pot", opt_heur_ma_pot },
 };
 static int opt_heur_size = sizeof(opt_heur) / sizeof(optdef_t);
 

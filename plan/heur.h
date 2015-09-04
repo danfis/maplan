@@ -298,7 +298,8 @@ plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def);
 /**
  * Multi-agent potential heuristic.
  */
-plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *agent_def);
+plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *agent_def,
+                                    unsigned flags);
 
 /**
  * Deletes heuristics object.

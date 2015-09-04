@@ -57,6 +57,9 @@ typedef struct _plan_pot_prob_t plan_pot_prob_t;
 
 void planPotProbFree(plan_pot_prob_t *prob);
 void planPotProbPrint(const plan_pot_prob_t *prob, FILE *fout);
+void planPotProbSetAllSyntacticStatesFromFactRange(plan_pot_prob_t *prob,
+                                                   const int *fact_range,
+                                                   int fact_range_size);
 
 struct _plan_pot_var_t {
     int *lp_var_id;    /*!< LP-variable ID for each variable value */

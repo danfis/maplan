@@ -54,7 +54,7 @@ static plan_lp_t *lpNew(const plan_pot_prob_t *prob)
 
     // Set all variables as free
     for (i = 0; i < prob->var_size; ++i)
-        planLPSetVarFree(lp, i);
+        planLPSetVarRange(lp, i, -1E30, 1E7);
 
     // Set operator constraints
     for (row_id = 0; row_id < prob->op_size; ++row_id)
@@ -204,6 +204,72 @@ static void probInitMaxpot(plan_pot_prob_t *prob,
     }
 }
 
+static int gcd(int x, int y)
+{
+    if (x == 0)
+        return y;
+
+    while (y != 0){
+        if (x > y) {
+            x = x - y;
+        }else{
+            y = y - x;
+        }
+    }
+
+    return x;
+}
+
+static int lcm(int x, int y)
+{
+    return (x * y) / gcd(x, y);
+}
+
+static void probInitAllSyntacticStates(plan_pot_prob_t *prob,
+                                       const plan_pot_t *pot)
+{
+    int i, j, c, R, r;
+
+    R = 1;
+    for (i = 0; i < pot->var_size; ++i){
+        if (i == pot->ma_privacy_var)
+            continue;
+
+        R = lcm(R, pot->var[i].range);
+    }
+
+    for (i = 0; i < pot->var_size; ++i){
+        if (i == pot->ma_privacy_var)
+            continue;
+
+        r = R / pot->var[i].range;
+        for (j = 0; j < pot->var[i].range; ++j){
+            c = pot->var[i].lp_var_id[j];
+            prob->state_coef[c] = r;
+        }
+    }
+}
+
+void planPotProbSetAllSyntacticStatesFromFactRange(plan_pot_prob_t *prob,
+                                                   const int *fact_range,
+                                                   int fact_range_size)
+{
+    int i, R, r;
+
+    R = 1;
+    for (i = 0; i < fact_range_size; ++i){
+        if (fact_range[i] > 0)
+            R = lcm(R, fact_range[i]);
+    }
+
+    for (i = 0; i < fact_range_size; ++i){
+        if (fact_range[i] > 0){
+            r = R / fact_range[i];
+            prob->state_coef[i] = r;
+        }
+    }
+}
+
 static void probInitState(plan_pot_prob_t *prob,
                           const plan_pot_t *pot,
                           const plan_state_t *state)
@@ -233,8 +299,13 @@ static void probInit(plan_pot_prob_t *prob,
     probInitOps(prob, pot, op, op_size, heur_flags);
     probInitMaxpot(prob, pot);
     prob->state_coef = BOR_CALLOC_ARR(int, prob->var_size);
-    if (state != NULL)
+
+    if (heur_flags & PLAN_HEUR_POT_ALL_SYNTACTIC_STATES){
+        probInitAllSyntacticStates(prob, pot);
+    }else if (state != NULL){
         probInitState(prob, pot, state);
+    }
+
     prob->lp_flags  = 0;
     prob->lp_flags |= (heur_flags & (0x3fu << 8u));
 }

@@ -23,6 +23,11 @@
 
 struct _agent_data_t {
     plan_pot_prob_t prob; /*!< Other agent's pot-problem */
+    int *state_ids;       /*!< Var IDs of the state for which is potential
+                               computed */
+    int state_ids_size;
+    int *fact_range;      /*!< Range of the variable corresponding to the fact */
+    int fact_range_size;
     int have_prob;        /*!< True if the problem was already received */
     int priv_var_from;    /*!< First ID where is mapped remote agent's
                                first private LP variable */
@@ -44,6 +49,7 @@ struct _plan_heur_ma_potential_t {
     int agent_size;
     agent_data_t *agent_data;
     int init_heur;
+    unsigned flags;
 
     plan_state_t *state;
     plan_state_t *state2;
@@ -77,19 +83,21 @@ static int heurHeur(const plan_heur_ma_potential_t *h,
                     plan_state_id_t state_id,
                     const plan_search_t *search);
 
-plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *p)
+plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *p,
+                                    unsigned flags)
 {
     plan_heur_ma_potential_t *h;
     PLAN_STATE_STACK(state, p->state_pool->num_vars);
 
     h = BOR_ALLOC(plan_heur_ma_potential_t);
     bzero(h, sizeof(*h));
+    h->flags = flags;
     _planHeurInit(&h->heur, heurDel, NULL, NULL);
     _planHeurMAInit(&h->heur, NULL, heurHeurNode, heurUpdate, heurRequest);
 
     planStatePoolGetState(p->state_pool, p->initial_state, &state);
     planPotInit(&h->pot, p->var, p->var_size, p->goal,
-                p->op, p->op_size, &state, 0, PLAN_POT_MA);
+                p->op, p->op_size, &state, flags, PLAN_POT_MA);
 
     h->agent_id = p->agent_id;
     h->agent_size = p->num_agents;
@@ -111,6 +119,10 @@ static void heurDel(plan_heur_t *heur)
         planPotProbFree(&h->agent_data[i].prob);
         if (h->agent_data[i].pot != NULL)
             BOR_FREE(h->agent_data[i].pot);
+        if (h->agent_data[i].state_ids != NULL)
+            BOR_FREE(h->agent_data[i].state_ids);
+        if (h->agent_data[i].fact_range != NULL)
+            BOR_FREE(h->agent_data[i].fact_range);
     }
     if (h->agent_data)
         BOR_FREE(h->agent_data);
@@ -194,7 +206,7 @@ static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
         mout = planMAMsgNew(PLAN_MA_MSG_HEUR, PLAN_MA_MSG_HEUR_POT_RESPONSE,
                             comm->node_id);
         planMAStateGetFromMAMsg(h->heur.ma_state, msg, &state);
-        planMAMsgSetPotProb(mout, &h->pot);
+        planMAMsgSetPotProb(mout, &h->pot, &state);
         planMACommSendToNode(comm, planMAMsgAgent(msg), mout);
         planMAMsgDel(mout);
 
@@ -241,10 +253,18 @@ static int potUpdate(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
                      const plan_ma_msg_t *msg)
 {
     int agent_id, i, cnt;
+    agent_data_t *d;
 
     agent_id = planMAMsgAgent(msg);
-    planMAMsgGetPotProb(msg, &h->agent_data[agent_id].prob);
-    h->agent_data[agent_id].have_prob = 1;
+    d = h->agent_data + agent_id;
+    planMAMsgPotProb(msg, &d->prob);
+    d->state_ids_size = planMAMsgPotProbStateIdsSize(msg);
+    d->state_ids = BOR_ALLOC_ARR(int, d->state_ids_size);
+    planMAMsgPotProbStateIds(msg, d->state_ids);
+    d->fact_range_size = planMAMsgPotProbStateIdsSize(msg);
+    d->fact_range = BOR_ALLOC_ARR(int, d->fact_range_size);
+    planMAMsgPotProbStateIds(msg, d->fact_range);
+    d->have_prob = 1;
 
     for (cnt = 0, i = 0; i < h->agent_size; ++i)
         cnt += h->agent_data[i].have_prob;
@@ -320,7 +340,7 @@ static int probMergeGoal(plan_pot_constr_t *dst,
 static int probMerge(plan_pot_prob_t *prob, plan_pot_prob_t *merge,
                      int private_start_id, int offset)
 {
-    int i, var_id, size = 0, siz;
+    int size = 0, siz;
 
     size = probMergeGoal(&prob->goal, &merge->goal, private_start_id, offset);
 
@@ -334,23 +354,85 @@ static int probMerge(plan_pot_prob_t *prob, plan_pot_prob_t *merge,
                           private_start_id, offset);
     size = BOR_MAX(size, siz);
 
-    if (prob->var_size < size){
-        siz = prob->var_size;
+    if (prob->var_size < size)
         prob->var_size = size;
-        prob->state_coef = BOR_REALLOC_ARR(prob->state_coef, int,
-                                           prob->var_size);
-        bzero(prob->state_coef + siz, sizeof(int) * (size - siz));
-    }
-
-    for (i = 0; i < merge->var_size; ++i){
-        var_id = i;
-        if (var_id >= private_start_id)
-            var_id += offset;
-        if (merge->state_coef[i] == 1)
-            prob->state_coef[var_id] = 1;
-    }
 
     return size;
+}
+
+static int *factRangeNew(const plan_pot_t *pot, int *size)
+{
+    int *fact_range, i, j, range;
+
+    *size = pot->lp_var_size;
+    fact_range = BOR_CALLOC_ARR(int, pot->lp_var_size);
+    for (i = 0; i < pot->var_size; ++i){
+        if (i == pot->ma_privacy_var)
+            continue;
+
+        range = pot->var[i].range;
+        for (j = 0; j < pot->var[i].range; ++j)
+            fact_range[pot->var[i].lp_var_id[j]] = range;
+    }
+
+    return fact_range;
+}
+
+static void factRangeMerge(int **dst, int *dst_size,
+                           const int *src, int src_size,
+                           int var_size, int private_state_id, int offset)
+{
+    int i;
+
+    if (var_size <= *dst_size)
+        return;
+
+    *dst = BOR_REALLOC_ARR(*dst, int, var_size);
+    bzero((*dst) + *dst_size, sizeof(int) * (var_size - *dst_size));
+    *dst_size = var_size;
+
+    for (i = private_state_id; i < src_size; ++i)
+        (*dst)[i + offset] = src[i];
+}
+
+static int *stateIdsNew(const plan_pot_t *pot, const plan_state_t *state,
+                        int *size_out)
+{
+    int *ids, size, i, val;
+
+    size = 0;
+    ids = BOR_CALLOC_ARR(int, pot->var_size);
+    for (i = 0; i < pot->var_size; ++i){
+        if (i == pot->ma_privacy_var)
+            continue;
+
+        val = planStateGet(state, i);
+        ids[size++] = pot->var[i].lp_var_id[val];
+    }
+
+    *size_out = size;
+    return ids;
+}
+
+static void stateIdsMerge(int **dst, int *dst_size,
+                          const int *src, int src_size,
+                          int private_start_id, int offset)
+{
+    int i, size;
+
+    for (size = 0, i = 0; i < src_size; ++i){
+        if (src[i] >= private_start_id)
+            ++size;
+    }
+
+    if (size == 0)
+        return;
+
+    *dst = BOR_REALLOC_ARR(*dst, int, *dst_size + size);
+    for (i = 0; i < src_size; ++i){
+        if (src[i] >= private_start_id)
+            (*dst)[(*dst_size)++] = src[i] + offset;
+    }
 }
 
 static void potSetAgentPot(const plan_heur_ma_potential_t *h,
@@ -372,13 +454,44 @@ static void potSetAgentPot(const plan_heur_ma_potential_t *h,
         data->pot[size++] = h->pot.pot[i];
 }
 
+static void stateCoefInit(plan_pot_prob_t *prob, int var_size)
+{
+    if (prob->state_coef)
+        BOR_FREE(prob->state_coef);
+    prob->state_coef = BOR_CALLOC_ARR(int, var_size);
+}
+
+static void stateCoefSetInitState(plan_pot_prob_t *prob, int var_size,
+                                  const int *state_ids, int state_ids_size)
+{
+    int i;
+
+    stateCoefInit(prob, var_size);
+    for (i = 0; i < state_ids_size; ++i)
+        prob->state_coef[state_ids[i]] = 1;
+}
+
+static void stateCoefSetAllSyntStates(plan_pot_prob_t *prob, int var_size,
+                                      const int *fact_range, int fact_range_size)
+{
+    stateCoefInit(prob, var_size);
+    planPotProbSetAllSyntacticStatesFromFactRange(prob, fact_range,
+                                                  fact_range_size);
+}
+
 static int potCompute(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm)
 {
     plan_pot_prob_t prob;
     int i, size, var_size, offset;
+    int *fact_range, fact_range_size;
+    int *state_ids, state_ids_size;
     double dheur;
 
     bzero(&prob, sizeof(prob));
+
+    // Prepare structures
+    fact_range = factRangeNew(&h->pot, &fact_range_size);
+    state_ids = stateIdsNew(&h->pot, h->state, &state_ids_size);
 
     // Merge all problems
     var_size = probMerge(&prob, &h->pot.prob, h->pot.lp_var_private, 0);
@@ -390,11 +503,25 @@ static int potCompute(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm)
         size = probMerge(&prob, &h->agent_data[i].prob,
                          h->pot.lp_var_private, offset);
         var_size = BOR_MAX(var_size, size);
+        factRangeMerge(&fact_range, &fact_range_size,
+                       h->agent_data[i].fact_range,
+                       h->agent_data[i].fact_range_size,
+                       var_size, h->pot.lp_var_private, offset);
+        stateIdsMerge(&state_ids, &state_ids_size,
+                      h->agent_data[i].state_ids,
+                      h->agent_data[i].state_ids_size,
+                      h->pot.lp_var_private, offset);
 
         h->agent_data[i].priv_var_from = h->pot.lp_var_private + offset;
         h->agent_data[i].priv_var_from = BOR_MAX(h->agent_data[i].priv_var_from,
                                                  h->pot.lp_var_private);
         h->agent_data[i].priv_var_to = var_size;
+    }
+
+    if (h->flags & PLAN_HEUR_POT_ALL_SYNTACTIC_STATES){
+        stateCoefSetAllSyntStates(&prob, var_size, fact_range, fact_range_size);
+    }else{
+        stateCoefSetInitState(&prob, var_size, state_ids, state_ids_size);
     }
 
     // Compute LP program
@@ -409,13 +536,16 @@ static int potCompute(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm)
         potSetAgentPot(h, h->agent_data + i);
     }
 
-    for (dheur = 0., i = 0; i < prob.var_size; ++i){
-        if (prob.state_coef[i] > 0)
-            dheur += h->pot.pot[i];
-    }
+    // Compute heuristic for the initial state
+    for (dheur = 0., i = 0; i < state_ids_size; ++i)
+        dheur += h->pot.pot[state_ids[i]];
     h->init_heur = dheur;
 
     planPotProbFree(&prob);
+    if (fact_range)
+        BOR_FREE(fact_range);
+    if (state_ids)
+        BOR_FREE(state_ids);
 
     // Response to all pending requests
     for (i = 0; i < h->agent_size; ++i){

@@ -67,6 +67,11 @@ struct _plan_search_t;
 #define PLAN_HEUR_FLOW_CPLEX_NUM_THREADS(num) \
     ((((unsigned)(num)) & 0x3fu) << 8u)
 
+/**
+ * Turns on all-syntactic-states version of potential heuristic.
+ */
+#define PLAN_HEUR_POT_ALL_SYNTACTIC_STATES 0x40u
+
 /** Forward declaration */
 typedef struct _plan_heur_t plan_heur_t;
 
@@ -293,7 +298,8 @@ plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def);
 /**
  * Multi-agent potential heuristic.
  */
-plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *agent_def);
+plan_heur_t *planHeurMAPotentialNew(const plan_problem_t *agent_def,
+                                    unsigned flags);
 
 /**
  * Deletes heuristics object.

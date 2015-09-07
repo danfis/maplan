@@ -1,91 +1,59 @@
 #include <cu/cu.h>
 #include "plan/problem.h"
 #include "plan/heur.h"
+#include "plan/search.h"
 #include "state_pool.h"
 
-static void _runTest(const char *name, const char *proto,
-                     const char *states, int flags)
+static void runAStar(const char *proto, unsigned flags,
+                     int expected_cost)
 {
+    plan_search_astar_params_t params;
+    plan_search_t *search;
     plan_problem_t *p;
-    state_pool_t state_pool;
+    plan_path_t path;
     plan_state_t *state;
-    plan_heur_t *heur, *heur_check_min = NULL;
-    plan_heur_res_t res, res_check_min;
-    plan_state_t *init_state;
-    int i, si;
+    int cost;
 
-    printf("-----\n%s\n%s\n", name, proto);
     p = planProblemFromProto(proto, PLAN_PROBLEM_USE_CG);
     state = planStateNew(p->state_pool->num_vars);
-    statePoolInit(&state_pool, states);
+    planStatePoolGetState(p->state_pool, p->initial_state, state);
 
-    init_state = planStateNew(p->state_pool->num_vars);
-    planStatePoolGetState(p->state_pool, p->initial_state, init_state);
-    heur = planHeurPotentialNew(p->var, p->var_size, p->goal,
-                                p->op, p->op_size, init_state, flags);
-    planStateDel(init_state);
-    if (heur == NULL){
-        fprintf(stderr, "Test Error: Cannot create a heuristic object!\n");
-        goto run_test_end;
-    }
-
-    for (si = 0; statePoolNext(&state_pool, state) == 0; ++si){
-        //if (si != 7644)
-        //    continue;
-
-        planHeurResInit(&res);
-        planHeurState(heur, state, &res);
-
-        if (heur_check_min){
-            planHeurResInit(&res_check_min);
-            planHeurState(heur_check_min, state, &res_check_min);
-
-            assertTrue(res_check_min.heur <= res.heur);
-            if (!(res_check_min.heur <= res.heur)){
-                printf("%d: %d > %d!\n", si, res_check_min.heur, res.heur);
-            }
-
-        }else{
-            printf("[%d] %d ::", si, res.heur);
-            for (i = 0; i < planStateSize(state); ++i){
-                printf(" %d", planStateGet(state, i));
-            }
-            printf("\n");
-            fflush(stdout);
-        }
-    }
-
-run_test_end:
-    if (heur)
-        planHeurDel(heur);
-    if (heur_check_min)
-        planHeurDel(heur_check_min);
-    statePoolFree(&state_pool);
+    planSearchAStarParamsInit(&params);
+    params.search.heur = planHeurPotentialNew(p->var, p->var_size, p->goal,
+                                              p->op, p->op_size, state,
+                                              flags);
+    //params.search.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
+    //                                      p->op, p->op_size, flags);
     planStateDel(state);
+    params.search.heur_del = 1;
+    params.search.prob = p;
+    //params.search.progress.fn = stopSearch;
+    //params.search.progress.freq = max_steps;
+    search = planSearchAStarNew(&params);
+
+    planPathInit(&path);
+    planSearchRun(search, &path);
+    cost = planPathCost(&path);
+    planPathFree(&path);
+
+    planSearchDel(search);
     planProblemDel(p);
-    printf("-----\n");
+
+    if (cost != expected_cost)
+        fprintf(stderr, "%s: cost: %d, expected cost: %d\n",
+                proto, cost, expected_cost);
+    assertEquals(cost, expected_cost);
 }
-
-static void runTest(const char *name, const char *proto,
-                    const char *states, int flags)
-{
-    _runTest(name, proto, states, flags);
-}
-
-
 
 TEST(testHeurPotential)
 {
-    runTest("Potential", "proto/simple.proto",
-            "states/simple.txt", 0);
-    runTest("Potential", "proto/depot-pfile1.proto",
-            "states/depot-pfile1.txt", 0);
-    runTest("Potential", "proto/depot-pfile5.proto",
-            "states/depot-pfile5.txt", 0);
-    runTest("Potential", "proto/rovers-p03.proto",
-            "states/rovers-p03.txt", 0);
-    runTest("Potential", "proto/rovers-p15.proto",
-            "states/rovers-p15.txt", 0);
-    runTest("Potential", "proto/CityCar-p3-2-2-0-1.proto",
-            "states/citycar-p3-2-2-0-1.txt", 0);
+    runAStar("proto/simple.proto", 0, 10);
+    runAStar("proto/depot-pfile1.proto", 0, 10);
+    runAStar("proto/depot-pfile2.proto", 0, 15);
+    runAStar("proto/driverlog-pfile1.proto", 0, 7);
+    runAStar("proto/driverlog-pfile3.proto", 0, 12);
+    runAStar("proto/rovers-p01.proto", 0, 10);
+    runAStar("proto/rovers-p02.proto", 0, 8);
+    runAStar("proto/rovers-p03.proto", 0, 11);
+    runAStar("proto/sokoban-p01.proto", 0, 9);
 }

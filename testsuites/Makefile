@@ -41,6 +41,7 @@ OBJS += heur_lm_cut_inc.o
 OBJS += heur_dtg.o
 OBJS += heur_flow.o
 OBJS += heur_ma.o
+OBJS += heur_ma_pot.o
 OBJS += heur_potential.o
 OBJS += list_lazy.o
 OBJS += list.o

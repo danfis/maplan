@@ -9,6 +9,7 @@
 #include "search_astar.h"
 #include "heur.h"
 #include "heur_ma.h"
+#include "heur_ma_pot.h"
 #include "list_lazy.h"
 #include "list.h"
 #include "ma_comm_nanomsg.h"
@@ -35,6 +36,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSSearchAStar),
     TEST_SUITE_ADD_HEUR,
     TEST_SUITE_ADD(TSHeurMA),
+    TEST_SUITE_ADD(TSHeurMAPot),
     TEST_SUITE_ADD(TSListLazy),
     TEST_SUITE_ADD(TSList),
     TEST_SUITE_ADD(TSMACommNanomsg),

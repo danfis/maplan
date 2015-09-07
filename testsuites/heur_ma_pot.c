@@ -4,15 +4,15 @@
 #include "plan/ma_search.h"
 
 static const char *tcp_addr[] = {
-    "127.0.0.1:11910",
-    "127.0.0.1:11911",
-    "127.0.0.1:11912",
-    "127.0.0.1:11913",
-    "127.0.0.1:11914",
-    "127.0.0.1:11915",
-    "127.0.0.1:11916",
-    "127.0.0.1:11917",
-    "127.0.0.1:11918",
+    "127.0.0.1:13910",
+    "127.0.0.1:13911",
+    "127.0.0.1:13912",
+    "127.0.0.1:13913",
+    "127.0.0.1:13914",
+    "127.0.0.1:13915",
+    "127.0.0.1:13916",
+    "127.0.0.1:13917",
+    "127.0.0.1:13918",
 };
 
 struct _th_t {
@@ -108,13 +108,21 @@ static void runAStar(unsigned flags, int expected_cost,
 
 TEST(testHeurMAPot)
 {
-    runAStar(0, 10, 5, "proto/depot-pfile1-depot0.proto",
-                       "proto/depot-pfile1-distributor0.proto",
-                       "proto/depot-pfile1-distributor1.proto",
-                       "proto/depot-pfile1-truck0.proto",
-                       "proto/depot-pfile1-truck1.proto");
-    runAStar(0, 7, 2, "proto/driverlog-pfile1-driver1.proto",
-                      "proto/driverlog-pfile1-driver2.proto");
-    runAStar(0, 11, 2, "proto/rovers-p03-rover0.proto",
-                       "proto/rovers-p03-rover1.proto");
+    int i;
+
+    for (i = 0; i < 5; ++i){
+        runAStar(0, 10, 5,
+                 "proto/depot-pfile1-depot0.proto",
+                 "proto/depot-pfile1-distributor0.proto",
+                 "proto/depot-pfile1-distributor1.proto",
+                 "proto/depot-pfile1-truck0.proto",
+                 "proto/depot-pfile1-truck1.proto");
+
+        runAStar(0, 7, 2,
+                 "proto/driverlog-pfile1-driver1.proto",
+                 "proto/driverlog-pfile1-driver2.proto");
+        runAStar(0, 11, 2,
+                 "proto/rovers-p03-rover0.proto",
+                 "proto/rovers-p03-rover1.proto");
+    }
 }

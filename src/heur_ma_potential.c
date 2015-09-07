@@ -261,9 +261,9 @@ static int potUpdate(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
     d->state_ids_size = planMAMsgPotProbStateIdsSize(msg);
     d->state_ids = BOR_ALLOC_ARR(int, d->state_ids_size);
     planMAMsgPotProbStateIds(msg, d->state_ids);
-    d->fact_range_size = planMAMsgPotProbStateIdsSize(msg);
+    d->fact_range_size = planMAMsgPotProbFactRangeSize(msg);
     d->fact_range = BOR_ALLOC_ARR(int, d->fact_range_size);
-    planMAMsgPotProbStateIds(msg, d->fact_range);
+    planMAMsgPotProbFactRange(msg, d->fact_range);
     d->have_prob = 1;
 
     for (cnt = 0, i = 0; i < h->agent_size; ++i)

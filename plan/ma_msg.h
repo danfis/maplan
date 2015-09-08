@@ -108,8 +108,12 @@ extern "C" {
 /**
  * PDDL-ground sub-types
  */
-#define PLAN_MA_MSG_PDDL_GROUND_COMMON_MAPS 0x0
-#define PLAN_MA_MSG_PDDL_GROUND_FACTS       0x1
+#define PLAN_MA_MSG_PDDL_GROUND_COMMON_MAPS             0x0
+#define PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_NAMES_REQUEST  0x1
+#define PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_NAMES_RESPONSE 0x2
+#define PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP            0x3
+#define PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP_ACK        0x4
+#define PLAN_MA_MSG_PDDL_GROUND_FACTS                   0x5
 
 struct _plan_ma_msg_pddl_fact_t {
     uint32_t header;

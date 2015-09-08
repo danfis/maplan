@@ -45,7 +45,7 @@ struct _ground_th_t {
 };
 typedef struct _ground_th_t ground_th_t;
 
-static char *tcp_urls[] = {
+static const char *tcp_urls[] = {
     "127.0.0.1:21000",
     "127.0.0.1:21001",
     "127.0.0.1:21002",

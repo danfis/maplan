@@ -588,16 +588,41 @@ static void _pddlGroundAddName(int8_t **arr, int *arr_size, const char *name)
     *arr_size = size;
 }
 
+static void updateStrArr(const char *names, int names_size,
+                         char ***dst, int *dst_size)
+{
+    int num_names, i, size;
+
+    // Find the number of strings in names
+    for (i = 0, num_names = 0; i < names_size; ++i){
+        if (names[i] == 0x0)
+            ++num_names;
+    }
+
+    if (num_names == 0)
+        return;
+
+    // Create output array and assign strings
+    size = *dst_size + num_names;
+    *dst = BOR_REALLOC_ARR(*dst, char *, size);
+    (*dst)[(*dst_size)++] = (char *)names;
+    for (i = 1; i < names_size; ++i){
+        if (names[i] == 0x0 && (*dst_size) < size)
+            (*dst)[(*dst_size)++] = (char *)(names + i + 1);
+    }
+}
+
 void planMAMsgAddPDDLGroundPredName(plan_ma_msg_t *msg, const char *name)
 {
     _pddlGroundAddName(&msg->pddl_ground_pred_name,
                        &msg->pddl_ground_pred_name_size, name);
 }
 
-const char *planMAMsgPDDLGroundPredName(const plan_ma_msg_t *msg, int *size)
+void planMAMsgPDDLGroundPredName(const plan_ma_msg_t *msg,
+                                 char ***dst, int *dst_size)
 {
-    *size = msg->pddl_ground_pred_name_size;
-    return (const char *)msg->pddl_ground_pred_name;
+    updateStrArr((const char *)msg->pddl_ground_pred_name,
+                 msg->pddl_ground_pred_name_size, dst, dst_size);
 }
 
 void planMAMsgAddPDDLGroundObjName(plan_ma_msg_t *msg, const char *name)
@@ -606,10 +631,11 @@ void planMAMsgAddPDDLGroundObjName(plan_ma_msg_t *msg, const char *name)
                        &msg->pddl_ground_obj_name_size, name);
 }
 
-const char *planMAMsgPDDLGroundObjName(const plan_ma_msg_t *msg, int *size)
+void planMAMsgPDDLGroundObjName(const plan_ma_msg_t *msg,
+                                char ***dst, int *dst_size)
 {
-    *size = msg->pddl_ground_obj_name_size;
-    return (const char *)msg->pddl_ground_obj_name;
+    updateStrArr((const char *)msg->pddl_ground_obj_name,
+                 msg->pddl_ground_obj_name_size, dst, dst_size);
 }
 
 

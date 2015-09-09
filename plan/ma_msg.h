@@ -108,7 +108,6 @@ extern "C" {
 /**
  * PDDL-ground sub-types
  */
-#define PLAN_MA_MSG_PDDL_GROUND_COMMON_MAPS             0x0
 #define PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_NAMES_REQUEST  0x1
 #define PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_NAMES_RESPONSE 0x2
 #define PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP            0x3
@@ -233,9 +232,11 @@ int planMAMsgSearchRes(const plan_ma_msg_t *msg);
 void planMAMsgSetSearchRes(plan_ma_msg_t *msg, int res);
 
 void planMAMsgAddPDDLGroundPredName(plan_ma_msg_t *msg, const char *name);
-const char *planMAMsgPDDLGroundPredName(const plan_ma_msg_t *msg, int *size);
+void planMAMsgPDDLGroundPredName(const plan_ma_msg_t *msg,
+                                 char ***dst, int *dst_size);
 void planMAMsgAddPDDLGroundObjName(plan_ma_msg_t *msg, const char *name);
-const char *planMAMsgPDDLGroundObjName(const plan_ma_msg_t *msg, int *size);
+void planMAMsgPDDLGroundObjName(const plan_ma_msg_t *msg,
+                                char ***dst, int *dst_size);
 
 /**
  * Sets request for DTG heuristic.

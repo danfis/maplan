@@ -138,6 +138,7 @@ void planPDDLGround(plan_pddl_ground_t *g)
     determineAgents(g);
 }
 
+#if 0
 /** Adds predicate and object names into the message. */
 static void factorAddPredObjNames(const plan_pddl_ground_t *g,
                                   plan_ma_msg_t *msg)
@@ -387,50 +388,254 @@ static int factorConstructPredObjMaps(plan_pddl_ground_t *g,
 
     return ret;
 }
+#endif
+
+static int cmpStr(const void *a, const void *b)
+{
+    const char *s1 = *(const char **)a;
+    const char *s2 = *(const char **)b;
+    return strcmp(s1, s2);
+}
+
+static int factorSortUniqStrArr(char **arr, int arr_size)
+{
+    int i, ins;
+
+    // Sort and uniq the array
+    qsort(arr, arr_size, sizeof(char *), cmpStr);
+    for (i = 1, ins = 0; i < arr_size; ++i){
+        if (strcmp(arr[i - 1], arr[i]) != 0)
+            arr[ins++] = arr[i - 1];
+    }
+    arr[ins++] = arr[arr_size - 1];
+    return ins;
+}
+
+static void factorSendObjPredNamesRequest(plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_PDDL_GROUND,
+                       PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_NAMES_REQUEST,
+                       comm->node_id);
+    planMACommSendToAll(comm, msg);
+    planMAMsgDel(msg);
+}
+
+static void factorSendObjPredNamesResponse(const plan_pddl_ground_t *g,
+                                          plan_ma_comm_t *comm)
+{
+    const plan_pddl_predicates_t *preds;
+    const plan_pddl_objs_t *objs;
+    plan_ma_msg_t *msg;
+    int i;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_PDDL_GROUND,
+                       PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_NAMES_RESPONSE,
+                       comm->node_id);
+
+    preds = &g->pddl->predicate;
+    for (i = 0; i < preds->size; ++i){
+        if (!preds->pred[i].is_private)
+            planMAMsgAddPDDLGroundPredName(msg, preds->pred[i].name);
+    }
+
+    objs = &g->pddl->obj;
+    for (i = 0; i < objs->size; ++i){
+        if (!objs->obj[i].is_private)
+            planMAMsgAddPDDLGroundObjName(msg, objs->obj[i].name);
+    }
+
+    fprintf(stderr, "SEND obj-names to 0\n");
+    fflush(stderr);
+    planMACommSendToNode(comm, 0, msg);
+    planMAMsgDel(msg);
+}
+
+static void factorConstructMap(plan_pddl_ground_t *g,
+                               char **name, int name_size, int is_obj,
+                               int **to_glob, int **glob_to)
+{
+    const char *loc_name, *glob_name;
+    int i, loc_id, glob_id, loc_size;
+
+    if (is_obj){
+        loc_size = g->pddl->obj.size;
+    }else{
+        loc_size = g->pddl->predicate.size;
+    }
+
+    // Create and initialize mapping from global ID to local ID
+    *glob_to = BOR_ALLOC_ARR(int, name_size);
+    for (i = 0; i < name_size; ++i)
+        (*glob_to)[i] = -1;
+
+    // Create and initialize mapping from local ID to global ID
+    *to_glob = BOR_ALLOC_ARR(int, loc_size);
+    for (i = 0; i < loc_size; ++i)
+        (*to_glob)[i] = -1;
+
+    // Fill mapping
+    for (loc_id = 0; loc_id < loc_size; ++loc_id){
+        if (is_obj){
+            loc_name = g->pddl->obj.obj[loc_id].name;
+        }else{
+            loc_name = g->pddl->predicate.pred[loc_id].name;
+        }
+
+        for (glob_id = 0; glob_id < name_size; ++glob_id){
+            glob_name = name[glob_id];
+            if (strcmp(loc_name, glob_name) == 0){
+                (*to_glob)[loc_id] = glob_id;
+                (*glob_to)[glob_id] = loc_id;
+            }
+        }
+    }
+}
+
+static void factorConstructObjPredMap(plan_pddl_ground_t *g,
+                                      char **obj, int obj_size,
+                                      char **pred, int pred_size,
+                                      plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg;
+    int i;
+
+    // Sort and uniq global names
+    obj_size = factorSortUniqStrArr(obj, obj_size);
+    pred_size = factorSortUniqStrArr(pred, pred_size);
+
+    // Construct maps for both predicates and objects
+    factorConstructMap(g, obj, obj_size, 1,
+                       &g->obj_to_glob, &g->glob_to_obj);
+    factorConstructMap(g, pred, pred_size, 0,
+                       &g->pred_to_glob, &g->glob_to_pred);
+
+
+    if (comm == NULL)
+        return;
+
+    // Send maps to other agents
+    msg = planMAMsgNew(PLAN_MA_MSG_PDDL_GROUND,
+                       PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP,
+                       comm->node_id);
+    for (i = 0; i < obj_size; ++i)
+        planMAMsgAddPDDLGroundObjName(msg, obj[i]);
+    for (i = 0; i < pred_size; ++i)
+        planMAMsgAddPDDLGroundPredName(msg, pred[i]);
+    planMACommSendToAll(comm, msg);
+    planMAMsgDel(msg);
+}
+
+static void factorObjPredMapFromMsg(plan_pddl_ground_t *g,
+                                    const plan_ma_msg_t *msg)
+{
+    char **obj = NULL, **pred = NULL;
+    int obj_size = 0, pred_size = 0;
+
+    planMAMsgPDDLGroundObjName(msg, &obj, &obj_size);
+    planMAMsgPDDLGroundPredName(msg, &pred, &pred_size);
+    factorConstructObjPredMap(g, obj, obj_size, pred, pred_size, NULL);
+}
+
+static void factorSendObjPredMapAck(plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg;
+    msg = planMAMsgNew(PLAN_MA_MSG_PDDL_GROUND,
+                       PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP_ACK,
+                       comm->node_id);
+    planMACommSendToNode(comm, 0, msg);
+    planMAMsgDel(msg);
+}
 
 static int factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 {
-    int state = STATE_START;
+    char **pred, **obj;
+    plan_ma_msg_t *msg;
+    int type, subtype, pred_size, obj_size;
+    int wait;
 
-    while (state != STATE_GROUND_END){
-        if (state == STATE_START){
-            if (factorSendPredObjNames(g, comm) != 0)
-                return -1;
-            state = STATE_WAIT_FOR_NAMES;
+    pred = obj = NULL;
+    pred_size = obj_size = 0;
 
-        }else if (state == STATE_WAIT_FOR_NAMES){
-            if (factorConstructPredObjMaps(g, comm) != 0)
-                return -1;
-            state = STATE_GROUND;
-            state = STATE_GROUND_END;
+    // First send request for names of all public objects and predicates
+    factorSendObjPredNamesRequest(comm);
+    wait = comm->node_size - 1;
 
-        }else if (state == STATE_GROUND){
-        }else if (state == STATE_WAIT_FOR_GROUNDED_FACTS){
+    while ((msg = planMACommRecvBlock(comm, -1)) != NULL){
+        type = planMAMsgType(msg);
+        subtype = planMAMsgSubType(msg);
+
+        if (type == PLAN_MA_MSG_TERMINATE){
+            // TODO
+        }else if (type != PLAN_MA_MSG_PDDL_GROUND){
+            ERR_F(comm, "Expecting pddl-ground message, received something"
+                  " else. (type: %d, subtype: %d)", type, subtype);
         }
+
+        if (subtype == PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_NAMES_RESPONSE){
+            planMAMsgPDDLGroundPredName(msg, &pred, &pred_size);
+            planMAMsgPDDLGroundObjName(msg, &obj, &obj_size);
+
+            if (--wait == 0){
+                factorConstructObjPredMap(g, obj, obj_size,
+                                          pred, pred_size, comm);
+                wait = comm->node_size - 1;
+            }
+
+        }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP_ACK){
+            if (--wait == 0){
+                fprintf(stderr, "GROUND START\n");
+                fflush(stderr);
+            }
+
+        }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_FACTS){
+        }else{
+            ERR_F(comm, "Expecting pddl-ground message, received something"
+                  " else. (type: %d, subtype: %d)", type, subtype);
+        }
+
+        planMAMsgDel(msg);
     }
+
+    if (obj != NULL)
+        BOR_FREE(obj);
+    if (pred != NULL)
+        BOR_FREE(pred);
 
     return 0;
 }
 
 static int factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 {
-    int state = STATE_WAIT_FOR_NAMES;
+    plan_ma_msg_t *msg;
+    int type, subtype;
 
-    while (state != STATE_GROUND_END){
-        if (state == STATE_WAIT_FOR_NAMES){
-            if (factorUpdatePredObjNames(g, comm) != 0)
-                return -1;
-            state = STATE_WAIT_FOR_NAME_MAP;
+    while ((msg = planMACommRecvBlock(comm, -1)) != NULL){
+        type = planMAMsgType(msg);
+        subtype = planMAMsgSubType(msg);
 
-        }else if (state == STATE_WAIT_FOR_NAME_MAP){
-            if (factorConstructPredObjMaps(g, comm) != 0)
-                return -1;
-            state = STATE_WAIT_FOR_GROUNDED_FACTS;
-            state = STATE_GROUND_END;
-
-        }else if (state == STATE_WAIT_FOR_GROUNDED_FACTS){
-        }else if (state == STATE_GROUND){
+        if (type == PLAN_MA_MSG_TERMINATE){
+            // TODO
+        }else if (type != PLAN_MA_MSG_PDDL_GROUND){
+            ERR_F(comm, "Expecting pddl-ground message, received something"
+                  " else. (type: %d, subtype: %d)", type, subtype);
         }
+
+        if (subtype == PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_NAMES_REQUEST){
+            factorSendObjPredNamesResponse(g, comm);
+
+        }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP){
+            factorObjPredMapFromMsg(g, msg);
+            factorSendObjPredMapAck(comm);
+
+        }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_FACTS){
+        }else{
+            ERR_F(comm, "Expecting pddl-ground message, received something"
+                  " else. (type: %d, subtype: %d)", type, subtype);
+        }
+
+        planMAMsgDel(msg);
     }
 
     return 0;

@@ -25,6 +25,7 @@
 
 #include <plan/path.h>
 #include <plan/pot.h>
+#include <plan/pddl_fact.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -114,16 +115,7 @@ extern "C" {
 #define PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP_ACK        0x4
 #define PLAN_MA_MSG_PDDL_GROUND_FACTS                   0x5
 
-struct _plan_ma_msg_pddl_fact_t {
-    uint32_t header;
-    int32_t pred;
-    int32_t *arg;
-    int arg_size;
-    int8_t neg;
-    int8_t stat;
-};
 typedef struct _plan_ma_msg_pddl_fact_t plan_ma_msg_pddl_fact_t;
-
 typedef struct _plan_ma_msg_op_t plan_ma_msg_op_t;
 typedef struct _plan_ma_msg_dtg_req_t plan_ma_msg_dtg_req_t;
 typedef struct _plan_ma_msg_t plan_ma_msg_t;
@@ -237,6 +229,15 @@ void planMAMsgPDDLGroundPredName(const plan_ma_msg_t *msg,
 void planMAMsgAddPDDLGroundObjName(plan_ma_msg_t *msg, const char *name);
 void planMAMsgPDDLGroundObjName(const plan_ma_msg_t *msg,
                                 char ***dst, int *dst_size);
+int planMAMsgAddPDDLGroundFact(plan_ma_msg_t *msg,
+                               const plan_pddl_fact_t *fact,
+                               const int *obj_to_glob,
+                               const int *pred_to_glob);
+int planMAMsgPDDLGroundFactSize(const plan_ma_msg_t *msg);
+void planMAMsgPDDLGroundFact(const plan_ma_msg_t *msg, int id,
+                             const int *glob_to_obj,
+                             const int *glob_to_pred,
+                             plan_pddl_fact_t *fact);
 
 /**
  * Sets request for DTG heuristic.

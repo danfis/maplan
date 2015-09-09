@@ -510,3 +510,1126 @@ Init[13]:
 Init Func[0]:
 Metric: 0
 ---- Domain: pddl/depot-pfile1-factor/domain-driver1.pddl | pddl/depot-pfile1-factor/problem-driver1.pddl END ----
+---- Ground ----
+    |- pddl/depot-pfile1-factor/domain-depot0.pddl | pddl/depot-pfile1-factor/problem-depot0.pddl
+    |- pddl/depot-pfile1-factor/domain-distributor0.pddl | pddl/depot-pfile1-factor/problem-distributor0.pddl
+    |- pddl/depot-pfile1-factor/domain-distributor1.pddl | pddl/depot-pfile1-factor/problem-distributor1.pddl
+    |- pddl/depot-pfile1-factor/domain-driver0.pddl | pddl/depot-pfile1-factor/problem-driver0.pddl
+    |- pddl/depot-pfile1-factor/domain-driver1.pddl | pddl/depot-pfile1-factor/problem-driver1.pddl
+++++ pddl/depot-pfile1-factor/domain-depot0.pddl | pddl/depot-pfile1-factor/problem-depot0.pddl
+Facts[32]:
+    at: truck1 depot0
+    at: truck1 distributor1
+    at: truck1 distributor0
+    at: truck0 depot0
+    at: truck0 distributor1
+    at: truck0 distributor0
+    at: crate1 depot0
+    at: crate1 distributor1
+    at: crate1 distributor0
+    at: crate0 depot0
+    at: crate0 distributor1
+    at: crate0 distributor0
+    on: crate1 crate0
+    on: crate1 pallet1
+    on: crate1 pallet0
+    on: crate1 pallet2
+    on: crate0 crate1
+    on: crate0 pallet1
+    on: crate0 pallet0
+    on: crate0 pallet2
+    in: crate1 truck1
+    in: crate1 truck0
+    in: crate0 truck1
+    in: crate0 truck0
+    clear: crate1
+    clear: crate0
+    clear: pallet1
+    clear: pallet0
+    clear: pallet2
+    P:lifting: depot0 hoist0 crate1
+    P:lifting: depot0 hoist0 crate0
+    P:available: depot0 hoist0
+Actions[20]:
+drop depot0 hoist0 crate0 crate1 --> 0
+    pre[3]:
+        at: crate1 depot0
+        clear: crate1
+        P:lifting: depot0 hoist0 crate0
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate0 depot0
+        on: crate0 crate1
+        clear: crate0
+        P:available: depot0 hoist0
+    eff-del[2]:
+        clear: crate1
+        P:lifting: depot0 hoist0 crate0
+    cond-eff[0]:
+drop depot0 hoist0 crate0 pallet0 --> 0
+    pre[2]:
+        clear: pallet0
+        P:lifting: depot0 hoist0 crate0
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate0 depot0
+        on: crate0 pallet0
+        clear: crate0
+        P:available: depot0 hoist0
+    eff-del[2]:
+        clear: pallet0
+        P:lifting: depot0 hoist0 crate0
+    cond-eff[0]:
+drop depot0 hoist0 crate1 crate0 --> 0
+    pre[3]:
+        at: crate0 depot0
+        clear: crate0
+        P:lifting: depot0 hoist0 crate1
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate1 depot0
+        on: crate1 crate0
+        clear: crate1
+        P:available: depot0 hoist0
+    eff-del[2]:
+        clear: crate0
+        P:lifting: depot0 hoist0 crate1
+    cond-eff[0]:
+drop depot0 hoist0 crate1 pallet0 --> 0
+    pre[2]:
+        clear: pallet0
+        P:lifting: depot0 hoist0 crate1
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate1 depot0
+        on: crate1 pallet0
+        clear: crate1
+        P:available: depot0 hoist0
+    eff-del[2]:
+        clear: pallet0
+        P:lifting: depot0 hoist0 crate1
+    cond-eff[0]:
+lift depot0 hoist0 crate0 crate1 [owner: 0] --> 0
+    pre[4]:
+        at: crate0 depot0
+        on: crate0 crate1
+        clear: crate0
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[2]:
+        clear: crate1
+        P:lifting: depot0 hoist0 crate0
+    eff-del[4]:
+        at: crate0 depot0
+        on: crate0 crate1
+        clear: crate0
+        P:available: depot0 hoist0
+    cond-eff[0]:
+lift depot0 hoist0 crate0 pallet0 --> 0
+    pre[4]:
+        at: crate0 depot0
+        on: crate0 pallet0
+        clear: crate0
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet0
+        P:lifting: depot0 hoist0 crate0
+    eff-del[4]:
+        at: crate0 depot0
+        on: crate0 pallet0
+        clear: crate0
+        P:available: depot0 hoist0
+    cond-eff[0]:
+lift depot0 hoist0 crate0 pallet1 --> 0
+    pre[4]:
+        at: crate0 depot0
+        on: crate0 pallet1
+        clear: crate0
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet1
+        P:lifting: depot0 hoist0 crate0
+    eff-del[4]:
+        at: crate0 depot0
+        on: crate0 pallet1
+        clear: crate0
+        P:available: depot0 hoist0
+    cond-eff[0]:
+lift depot0 hoist0 crate0 pallet2 [owner: 0] --> 0
+    pre[4]:
+        at: crate0 depot0
+        on: crate0 pallet2
+        clear: crate0
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet2
+        P:lifting: depot0 hoist0 crate0
+    eff-del[4]:
+        at: crate0 depot0
+        on: crate0 pallet2
+        clear: crate0
+        P:available: depot0 hoist0
+    cond-eff[0]:
+lift depot0 hoist0 crate1 crate0 [owner: 0] --> 0
+    pre[4]:
+        at: crate1 depot0
+        on: crate1 crate0
+        clear: crate1
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[2]:
+        clear: crate0
+        P:lifting: depot0 hoist0 crate1
+    eff-del[4]:
+        at: crate1 depot0
+        on: crate1 crate0
+        clear: crate1
+        P:available: depot0 hoist0
+    cond-eff[0]:
+lift depot0 hoist0 crate1 pallet0 --> 0
+    pre[4]:
+        at: crate1 depot0
+        on: crate1 pallet0
+        clear: crate1
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet0
+        P:lifting: depot0 hoist0 crate1
+    eff-del[4]:
+        at: crate1 depot0
+        on: crate1 pallet0
+        clear: crate1
+        P:available: depot0 hoist0
+    cond-eff[0]:
+lift depot0 hoist0 crate1 pallet1 [owner: 0] --> 0
+    pre[4]:
+        at: crate1 depot0
+        on: crate1 pallet1
+        clear: crate1
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet1
+        P:lifting: depot0 hoist0 crate1
+    eff-del[4]:
+        at: crate1 depot0
+        on: crate1 pallet1
+        clear: crate1
+        P:available: depot0 hoist0
+    cond-eff[0]:
+lift depot0 hoist0 crate1 pallet2 [owner: 0] --> 0
+    pre[4]:
+        at: crate1 depot0
+        on: crate1 pallet2
+        clear: crate1
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet2
+        P:lifting: depot0 hoist0 crate1
+    eff-del[4]:
+        at: crate1 depot0
+        on: crate1 pallet2
+        clear: crate1
+        P:available: depot0 hoist0
+    cond-eff[0]:
+load depot0 hoist0 crate0 truck0 [owner: 0] --> 0
+    pre[2]:
+        at: truck0 depot0
+        P:lifting: depot0 hoist0 crate0
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate0 truck0
+        P:available: depot0 hoist0
+    eff-del[1]:
+        P:lifting: depot0 hoist0 crate0
+    cond-eff[0]:
+load depot0 hoist0 crate0 truck1 --> 0
+    pre[2]:
+        at: truck1 depot0
+        P:lifting: depot0 hoist0 crate0
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate0 truck1
+        P:available: depot0 hoist0
+    eff-del[1]:
+        P:lifting: depot0 hoist0 crate0
+    cond-eff[0]:
+load depot0 hoist0 crate1 truck0 [owner: 0] --> 0
+    pre[2]:
+        at: truck0 depot0
+        P:lifting: depot0 hoist0 crate1
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate1 truck0
+        P:available: depot0 hoist0
+    eff-del[1]:
+        P:lifting: depot0 hoist0 crate1
+    cond-eff[0]:
+load depot0 hoist0 crate1 truck1 --> 0
+    pre[2]:
+        at: truck1 depot0
+        P:lifting: depot0 hoist0 crate1
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate1 truck1
+        P:available: depot0 hoist0
+    eff-del[1]:
+        P:lifting: depot0 hoist0 crate1
+    cond-eff[0]:
+unload depot0 hoist0 crate0 truck0 [owner: 0] --> 0
+    pre[3]:
+        at: truck0 depot0
+        in: crate0 truck0
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: depot0 hoist0 crate0
+    eff-del[2]:
+        in: crate0 truck0
+        P:available: depot0 hoist0
+    cond-eff[0]:
+unload depot0 hoist0 crate0 truck1 [owner: 0] --> 0
+    pre[3]:
+        at: truck1 depot0
+        in: crate0 truck1
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: depot0 hoist0 crate0
+    eff-del[2]:
+        in: crate0 truck1
+        P:available: depot0 hoist0
+    cond-eff[0]:
+unload depot0 hoist0 crate1 truck0 [owner: 0] --> 0
+    pre[3]:
+        at: truck0 depot0
+        in: crate1 truck0
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: depot0 hoist0 crate1
+    eff-del[2]:
+        in: crate1 truck0
+        P:available: depot0 hoist0
+    cond-eff[0]:
+unload depot0 hoist0 crate1 truck1 --> 0
+    pre[3]:
+        at: truck1 depot0
+        in: crate1 truck1
+        P:available: depot0 hoist0
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: depot0 hoist0 crate1
+    eff-del[2]:
+        in: crate1 truck1
+        P:available: depot0 hoist0
+    cond-eff[0]:
+Agent size: 5
+++++ pddl/depot-pfile1-factor/domain-distributor0.pddl | pddl/depot-pfile1-factor/problem-distributor0.pddl
+Facts[32]:
+    at: truck1 depot0
+    at: truck1 distributor1
+    at: truck1 distributor0
+    at: truck0 depot0
+    at: truck0 distributor1
+    at: truck0 distributor0
+    at: crate1 depot0
+    at: crate1 distributor1
+    at: crate1 distributor0
+    at: crate0 depot0
+    at: crate0 distributor1
+    at: crate0 distributor0
+    on: crate1 crate0
+    on: crate1 pallet1
+    on: crate1 pallet0
+    on: crate1 pallet2
+    on: crate0 crate1
+    on: crate0 pallet1
+    on: crate0 pallet0
+    on: crate0 pallet2
+    in: crate1 truck1
+    in: crate1 truck0
+    in: crate0 truck1
+    in: crate0 truck0
+    clear: crate1
+    clear: crate0
+    clear: pallet1
+    clear: pallet0
+    clear: pallet2
+    P:lifting: distributor0 hoist1 crate1
+    P:lifting: distributor0 hoist1 crate0
+    P:available: distributor0 hoist1
+Actions[20]:
+drop distributor0 hoist1 crate0 crate1 --> 0
+    pre[3]:
+        at: crate1 distributor0
+        clear: crate1
+        P:lifting: distributor0 hoist1 crate0
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate0 distributor0
+        on: crate0 crate1
+        clear: crate0
+        P:available: distributor0 hoist1
+    eff-del[2]:
+        clear: crate1
+        P:lifting: distributor0 hoist1 crate0
+    cond-eff[0]:
+drop distributor0 hoist1 crate0 pallet1 --> 0
+    pre[2]:
+        clear: pallet1
+        P:lifting: distributor0 hoist1 crate0
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate0 distributor0
+        on: crate0 pallet1
+        clear: crate0
+        P:available: distributor0 hoist1
+    eff-del[2]:
+        clear: pallet1
+        P:lifting: distributor0 hoist1 crate0
+    cond-eff[0]:
+drop distributor0 hoist1 crate1 crate0 --> 0
+    pre[3]:
+        at: crate0 distributor0
+        clear: crate0
+        P:lifting: distributor0 hoist1 crate1
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate1 distributor0
+        on: crate1 crate0
+        clear: crate1
+        P:available: distributor0 hoist1
+    eff-del[2]:
+        clear: crate0
+        P:lifting: distributor0 hoist1 crate1
+    cond-eff[0]:
+drop distributor0 hoist1 crate1 pallet1 --> 0
+    pre[2]:
+        clear: pallet1
+        P:lifting: distributor0 hoist1 crate1
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate1 distributor0
+        on: crate1 pallet1
+        clear: crate1
+        P:available: distributor0 hoist1
+    eff-del[2]:
+        clear: pallet1
+        P:lifting: distributor0 hoist1 crate1
+    cond-eff[0]:
+lift distributor0 hoist1 crate0 crate1 --> 0
+    pre[4]:
+        at: crate0 distributor0
+        on: crate0 crate1
+        clear: crate0
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[2]:
+        clear: crate1
+        P:lifting: distributor0 hoist1 crate0
+    eff-del[4]:
+        at: crate0 distributor0
+        on: crate0 crate1
+        clear: crate0
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+lift distributor0 hoist1 crate0 pallet0 [owner: 0] --> 0
+    pre[4]:
+        at: crate0 distributor0
+        on: crate0 pallet0
+        clear: crate0
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet0
+        P:lifting: distributor0 hoist1 crate0
+    eff-del[4]:
+        at: crate0 distributor0
+        on: crate0 pallet0
+        clear: crate0
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+lift distributor0 hoist1 crate0 pallet1 --> 0
+    pre[4]:
+        at: crate0 distributor0
+        on: crate0 pallet1
+        clear: crate0
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet1
+        P:lifting: distributor0 hoist1 crate0
+    eff-del[4]:
+        at: crate0 distributor0
+        on: crate0 pallet1
+        clear: crate0
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+lift distributor0 hoist1 crate0 pallet2 [owner: 0] --> 0
+    pre[4]:
+        at: crate0 distributor0
+        on: crate0 pallet2
+        clear: crate0
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet2
+        P:lifting: distributor0 hoist1 crate0
+    eff-del[4]:
+        at: crate0 distributor0
+        on: crate0 pallet2
+        clear: crate0
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+lift distributor0 hoist1 crate1 crate0 --> 0
+    pre[4]:
+        at: crate1 distributor0
+        on: crate1 crate0
+        clear: crate1
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[2]:
+        clear: crate0
+        P:lifting: distributor0 hoist1 crate1
+    eff-del[4]:
+        at: crate1 distributor0
+        on: crate1 crate0
+        clear: crate1
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+lift distributor0 hoist1 crate1 pallet0 --> 0
+    pre[4]:
+        at: crate1 distributor0
+        on: crate1 pallet0
+        clear: crate1
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet0
+        P:lifting: distributor0 hoist1 crate1
+    eff-del[4]:
+        at: crate1 distributor0
+        on: crate1 pallet0
+        clear: crate1
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+lift distributor0 hoist1 crate1 pallet1 --> 0
+    pre[4]:
+        at: crate1 distributor0
+        on: crate1 pallet1
+        clear: crate1
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet1
+        P:lifting: distributor0 hoist1 crate1
+    eff-del[4]:
+        at: crate1 distributor0
+        on: crate1 pallet1
+        clear: crate1
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+lift distributor0 hoist1 crate1 pallet2 [owner: 0] --> 0
+    pre[4]:
+        at: crate1 distributor0
+        on: crate1 pallet2
+        clear: crate1
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet2
+        P:lifting: distributor0 hoist1 crate1
+    eff-del[4]:
+        at: crate1 distributor0
+        on: crate1 pallet2
+        clear: crate1
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+load distributor0 hoist1 crate0 truck0 [owner: 0] --> 0
+    pre[2]:
+        at: truck0 distributor0
+        P:lifting: distributor0 hoist1 crate0
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate0 truck0
+        P:available: distributor0 hoist1
+    eff-del[1]:
+        P:lifting: distributor0 hoist1 crate0
+    cond-eff[0]:
+load distributor0 hoist1 crate0 truck1 [owner: 0] --> 0
+    pre[2]:
+        at: truck1 distributor0
+        P:lifting: distributor0 hoist1 crate0
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate0 truck1
+        P:available: distributor0 hoist1
+    eff-del[1]:
+        P:lifting: distributor0 hoist1 crate0
+    cond-eff[0]:
+load distributor0 hoist1 crate1 truck0 [owner: 0] --> 0
+    pre[2]:
+        at: truck0 distributor0
+        P:lifting: distributor0 hoist1 crate1
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate1 truck0
+        P:available: distributor0 hoist1
+    eff-del[1]:
+        P:lifting: distributor0 hoist1 crate1
+    cond-eff[0]:
+load distributor0 hoist1 crate1 truck1 [owner: 0] --> 0
+    pre[2]:
+        at: truck1 distributor0
+        P:lifting: distributor0 hoist1 crate1
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate1 truck1
+        P:available: distributor0 hoist1
+    eff-del[1]:
+        P:lifting: distributor0 hoist1 crate1
+    cond-eff[0]:
+unload distributor0 hoist1 crate0 truck0 [owner: 0] --> 0
+    pre[3]:
+        at: truck0 distributor0
+        in: crate0 truck0
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: distributor0 hoist1 crate0
+    eff-del[2]:
+        in: crate0 truck0
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+unload distributor0 hoist1 crate0 truck1 [owner: 0] --> 0
+    pre[3]:
+        at: truck1 distributor0
+        in: crate0 truck1
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: distributor0 hoist1 crate0
+    eff-del[2]:
+        in: crate0 truck1
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+unload distributor0 hoist1 crate1 truck0 [owner: 0] --> 0
+    pre[3]:
+        at: truck0 distributor0
+        in: crate1 truck0
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: distributor0 hoist1 crate1
+    eff-del[2]:
+        in: crate1 truck0
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+unload distributor0 hoist1 crate1 truck1 [owner: 0] --> 0
+    pre[3]:
+        at: truck1 distributor0
+        in: crate1 truck1
+        P:available: distributor0 hoist1
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: distributor0 hoist1 crate1
+    eff-del[2]:
+        in: crate1 truck1
+        P:available: distributor0 hoist1
+    cond-eff[0]:
+Agent size: 5
+++++ pddl/depot-pfile1-factor/domain-distributor1.pddl | pddl/depot-pfile1-factor/problem-distributor1.pddl
+Facts[32]:
+    at: truck1 depot0
+    at: truck1 distributor1
+    at: truck1 distributor0
+    at: truck0 depot0
+    at: truck0 distributor1
+    at: truck0 distributor0
+    at: crate1 depot0
+    at: crate1 distributor1
+    at: crate1 distributor0
+    at: crate0 depot0
+    at: crate0 distributor1
+    at: crate0 distributor0
+    on: crate1 crate0
+    on: crate1 pallet1
+    on: crate1 pallet0
+    on: crate1 pallet2
+    on: crate0 crate1
+    on: crate0 pallet1
+    on: crate0 pallet0
+    on: crate0 pallet2
+    in: crate1 truck1
+    in: crate1 truck0
+    in: crate0 truck1
+    in: crate0 truck0
+    clear: crate1
+    clear: crate0
+    clear: pallet1
+    clear: pallet0
+    clear: pallet2
+    P:lifting: distributor1 hoist2 crate1
+    P:lifting: distributor1 hoist2 crate0
+    P:available: distributor1 hoist2
+Actions[20]:
+drop distributor1 hoist2 crate0 crate1 --> 0
+    pre[3]:
+        at: crate1 distributor1
+        clear: crate1
+        P:lifting: distributor1 hoist2 crate0
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate0 distributor1
+        on: crate0 crate1
+        clear: crate0
+        P:available: distributor1 hoist2
+    eff-del[2]:
+        clear: crate1
+        P:lifting: distributor1 hoist2 crate0
+    cond-eff[0]:
+drop distributor1 hoist2 crate0 pallet2 --> 0
+    pre[2]:
+        clear: pallet2
+        P:lifting: distributor1 hoist2 crate0
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate0 distributor1
+        on: crate0 pallet2
+        clear: crate0
+        P:available: distributor1 hoist2
+    eff-del[2]:
+        clear: pallet2
+        P:lifting: distributor1 hoist2 crate0
+    cond-eff[0]:
+drop distributor1 hoist2 crate1 crate0 --> 0
+    pre[3]:
+        at: crate0 distributor1
+        clear: crate0
+        P:lifting: distributor1 hoist2 crate1
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate1 distributor1
+        on: crate1 crate0
+        clear: crate1
+        P:available: distributor1 hoist2
+    eff-del[2]:
+        clear: crate0
+        P:lifting: distributor1 hoist2 crate1
+    cond-eff[0]:
+drop distributor1 hoist2 crate1 pallet2 --> 0
+    pre[2]:
+        clear: pallet2
+        P:lifting: distributor1 hoist2 crate1
+    pre-neg[0]:
+    eff-add[4]:
+        at: crate1 distributor1
+        on: crate1 pallet2
+        clear: crate1
+        P:available: distributor1 hoist2
+    eff-del[2]:
+        clear: pallet2
+        P:lifting: distributor1 hoist2 crate1
+    cond-eff[0]:
+lift distributor1 hoist2 crate0 crate1 [owner: 0] --> 0
+    pre[4]:
+        at: crate0 distributor1
+        on: crate0 crate1
+        clear: crate0
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[2]:
+        clear: crate1
+        P:lifting: distributor1 hoist2 crate0
+    eff-del[4]:
+        at: crate0 distributor1
+        on: crate0 crate1
+        clear: crate0
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+lift distributor1 hoist2 crate0 pallet0 [owner: 0] --> 0
+    pre[4]:
+        at: crate0 distributor1
+        on: crate0 pallet0
+        clear: crate0
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet0
+        P:lifting: distributor1 hoist2 crate0
+    eff-del[4]:
+        at: crate0 distributor1
+        on: crate0 pallet0
+        clear: crate0
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+lift distributor1 hoist2 crate0 pallet1 --> 0
+    pre[4]:
+        at: crate0 distributor1
+        on: crate0 pallet1
+        clear: crate0
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet1
+        P:lifting: distributor1 hoist2 crate0
+    eff-del[4]:
+        at: crate0 distributor1
+        on: crate0 pallet1
+        clear: crate0
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+lift distributor1 hoist2 crate0 pallet2 --> 0
+    pre[4]:
+        at: crate0 distributor1
+        on: crate0 pallet2
+        clear: crate0
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet2
+        P:lifting: distributor1 hoist2 crate0
+    eff-del[4]:
+        at: crate0 distributor1
+        on: crate0 pallet2
+        clear: crate0
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+lift distributor1 hoist2 crate1 crate0 [owner: 0] --> 0
+    pre[4]:
+        at: crate1 distributor1
+        on: crate1 crate0
+        clear: crate1
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[2]:
+        clear: crate0
+        P:lifting: distributor1 hoist2 crate1
+    eff-del[4]:
+        at: crate1 distributor1
+        on: crate1 crate0
+        clear: crate1
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+lift distributor1 hoist2 crate1 pallet0 --> 0
+    pre[4]:
+        at: crate1 distributor1
+        on: crate1 pallet0
+        clear: crate1
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet0
+        P:lifting: distributor1 hoist2 crate1
+    eff-del[4]:
+        at: crate1 distributor1
+        on: crate1 pallet0
+        clear: crate1
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+lift distributor1 hoist2 crate1 pallet1 [owner: 0] --> 0
+    pre[4]:
+        at: crate1 distributor1
+        on: crate1 pallet1
+        clear: crate1
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet1
+        P:lifting: distributor1 hoist2 crate1
+    eff-del[4]:
+        at: crate1 distributor1
+        on: crate1 pallet1
+        clear: crate1
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+lift distributor1 hoist2 crate1 pallet2 --> 0
+    pre[4]:
+        at: crate1 distributor1
+        on: crate1 pallet2
+        clear: crate1
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[2]:
+        clear: pallet2
+        P:lifting: distributor1 hoist2 crate1
+    eff-del[4]:
+        at: crate1 distributor1
+        on: crate1 pallet2
+        clear: crate1
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+load distributor1 hoist2 crate0 truck0 --> 0
+    pre[2]:
+        at: truck0 distributor1
+        P:lifting: distributor1 hoist2 crate0
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate0 truck0
+        P:available: distributor1 hoist2
+    eff-del[1]:
+        P:lifting: distributor1 hoist2 crate0
+    cond-eff[0]:
+load distributor1 hoist2 crate0 truck1 [owner: 0] --> 0
+    pre[2]:
+        at: truck1 distributor1
+        P:lifting: distributor1 hoist2 crate0
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate0 truck1
+        P:available: distributor1 hoist2
+    eff-del[1]:
+        P:lifting: distributor1 hoist2 crate0
+    cond-eff[0]:
+load distributor1 hoist2 crate1 truck0 --> 0
+    pre[2]:
+        at: truck0 distributor1
+        P:lifting: distributor1 hoist2 crate1
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate1 truck0
+        P:available: distributor1 hoist2
+    eff-del[1]:
+        P:lifting: distributor1 hoist2 crate1
+    cond-eff[0]:
+load distributor1 hoist2 crate1 truck1 [owner: 0] --> 0
+    pre[2]:
+        at: truck1 distributor1
+        P:lifting: distributor1 hoist2 crate1
+    pre-neg[0]:
+    eff-add[2]:
+        in: crate1 truck1
+        P:available: distributor1 hoist2
+    eff-del[1]:
+        P:lifting: distributor1 hoist2 crate1
+    cond-eff[0]:
+unload distributor1 hoist2 crate0 truck0 [owner: 0] --> 0
+    pre[3]:
+        at: truck0 distributor1
+        in: crate0 truck0
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: distributor1 hoist2 crate0
+    eff-del[2]:
+        in: crate0 truck0
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+unload distributor1 hoist2 crate0 truck1 [owner: 0] --> 0
+    pre[3]:
+        at: truck1 distributor1
+        in: crate0 truck1
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: distributor1 hoist2 crate0
+    eff-del[2]:
+        in: crate0 truck1
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+unload distributor1 hoist2 crate1 truck0 [owner: 0] --> 0
+    pre[3]:
+        at: truck0 distributor1
+        in: crate1 truck0
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: distributor1 hoist2 crate1
+    eff-del[2]:
+        in: crate1 truck0
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+unload distributor1 hoist2 crate1 truck1 [owner: 0] --> 0
+    pre[3]:
+        at: truck1 distributor1
+        in: crate1 truck1
+        P:available: distributor1 hoist2
+    pre-neg[0]:
+    eff-add[1]:
+        P:lifting: distributor1 hoist2 crate1
+    eff-del[2]:
+        in: crate1 truck1
+        P:available: distributor1 hoist2
+    cond-eff[0]:
+Agent size: 5
+++++ pddl/depot-pfile1-factor/domain-driver0.pddl | pddl/depot-pfile1-factor/problem-driver0.pddl
+Facts[29]:
+    at: truck1 depot0
+    at: truck1 distributor1
+    at: truck1 distributor0
+    at: truck0 depot0
+    at: truck0 distributor1
+    at: truck0 distributor0
+    at: crate1 depot0
+    at: crate1 distributor1
+    at: crate1 distributor0
+    at: crate0 depot0
+    at: crate0 distributor1
+    at: crate0 distributor0
+    on: crate1 crate0
+    on: crate1 pallet1
+    on: crate1 pallet0
+    on: crate1 pallet2
+    on: crate0 crate1
+    on: crate0 pallet1
+    on: crate0 pallet0
+    on: crate0 pallet2
+    in: crate1 truck1
+    in: crate1 truck0
+    in: crate0 truck1
+    in: crate0 truck0
+    clear: crate1
+    clear: crate0
+    clear: pallet1
+    clear: pallet0
+    clear: pallet2
+Actions[6]:
+drive driver0 truck0 depot0 distributor0 --> 0
+    pre[1]:
+        at: truck0 depot0
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck0 distributor0
+    eff-del[1]:
+        at: truck0 depot0
+    cond-eff[0]:
+drive driver0 truck0 depot0 distributor1 --> 0
+    pre[1]:
+        at: truck0 depot0
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck0 distributor1
+    eff-del[1]:
+        at: truck0 depot0
+    cond-eff[0]:
+drive driver0 truck0 distributor0 depot0 --> 0
+    pre[1]:
+        at: truck0 distributor0
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck0 depot0
+    eff-del[1]:
+        at: truck0 distributor0
+    cond-eff[0]:
+drive driver0 truck0 distributor0 distributor1 --> 0
+    pre[1]:
+        at: truck0 distributor0
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck0 distributor1
+    eff-del[1]:
+        at: truck0 distributor0
+    cond-eff[0]:
+drive driver0 truck0 distributor1 depot0 --> 0
+    pre[1]:
+        at: truck0 distributor1
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck0 depot0
+    eff-del[1]:
+        at: truck0 distributor1
+    cond-eff[0]:
+drive driver0 truck0 distributor1 distributor0 --> 0
+    pre[1]:
+        at: truck0 distributor1
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck0 distributor0
+    eff-del[1]:
+        at: truck0 distributor1
+    cond-eff[0]:
+Agent size: 5
+++++ pddl/depot-pfile1-factor/domain-driver1.pddl | pddl/depot-pfile1-factor/problem-driver1.pddl
+Facts[29]:
+    at: truck1 depot0
+    at: truck1 distributor1
+    at: truck1 distributor0
+    at: truck0 depot0
+    at: truck0 distributor1
+    at: truck0 distributor0
+    at: crate1 depot0
+    at: crate1 distributor1
+    at: crate1 distributor0
+    at: crate0 depot0
+    at: crate0 distributor1
+    at: crate0 distributor0
+    on: crate1 crate0
+    on: crate1 pallet1
+    on: crate1 pallet0
+    on: crate1 pallet2
+    on: crate0 crate1
+    on: crate0 pallet1
+    on: crate0 pallet0
+    on: crate0 pallet2
+    in: crate1 truck1
+    in: crate1 truck0
+    in: crate0 truck1
+    in: crate0 truck0
+    clear: crate1
+    clear: crate0
+    clear: pallet1
+    clear: pallet0
+    clear: pallet2
+Actions[6]:
+drive driver1 truck1 depot0 distributor0 --> 0
+    pre[1]:
+        at: truck1 depot0
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck1 distributor0
+    eff-del[1]:
+        at: truck1 depot0
+    cond-eff[0]:
+drive driver1 truck1 depot0 distributor1 --> 0
+    pre[1]:
+        at: truck1 depot0
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck1 distributor1
+    eff-del[1]:
+        at: truck1 depot0
+    cond-eff[0]:
+drive driver1 truck1 distributor0 depot0 --> 0
+    pre[1]:
+        at: truck1 distributor0
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck1 depot0
+    eff-del[1]:
+        at: truck1 distributor0
+    cond-eff[0]:
+drive driver1 truck1 distributor0 distributor1 --> 0
+    pre[1]:
+        at: truck1 distributor0
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck1 distributor1
+    eff-del[1]:
+        at: truck1 distributor0
+    cond-eff[0]:
+drive driver1 truck1 distributor1 depot0 --> 0
+    pre[1]:
+        at: truck1 distributor1
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck1 depot0
+    eff-del[1]:
+        at: truck1 distributor1
+    cond-eff[0]:
+drive driver1 truck1 distributor1 distributor0 --> 0
+    pre[1]:
+        at: truck1 distributor1
+    pre-neg[0]:
+    eff-add[1]:
+        at: truck1 distributor0
+    eff-del[1]:
+        at: truck1 distributor1
+    cond-eff[0]:
+Agent size: 5
+---- Ground END ----

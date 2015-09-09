@@ -79,7 +79,7 @@ static void testGround(int size, ...)
     va_list ap;
     plan_ma_comm_inproc_pool_t *comm_pool;
     ground_th_t th[size];
-    const char *dom, *prob;
+    const char *dom[size], *prob[size];
     int i;
 
     printf("---- Ground ----\n");
@@ -92,11 +92,11 @@ static void testGround(int size, ...)
         th[i].use_tcp = 0;
         th[i].comm_pool = comm_pool;
 
-        dom  = va_arg(ap, const char *);
-        prob = va_arg(ap, const char *);
+        dom[i]  = va_arg(ap, const char *);
+        prob[i] = va_arg(ap, const char *);
 
-        printf("    |- %s | %s\n", dom, prob);
-        th[i].pddl = planPDDLNew(dom, prob);
+        printf("    |- %s | %s\n", dom[i], prob[i]);
+        th[i].pddl = planPDDLNew(dom[i], prob[i]);
         if (th[i].pddl == NULL)
             return;
 
@@ -111,7 +111,7 @@ static void testGround(int size, ...)
         pthread_join(th[i].th, NULL);
 
     for (i = 0; i < size; ++i){
-        printf("++++++++++++++++\n");
+        printf("++++ %s | %s\n", dom[i], prob[i]);
         planPDDLGroundPrint(&th[i].ground, stdout);
         planPDDLGroundFree(&th[i].ground);
         planPDDLDel(th[i].pddl);

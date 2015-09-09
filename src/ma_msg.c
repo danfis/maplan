@@ -62,6 +62,15 @@ struct _plan_ma_msg_pot_t {
 };
 typedef struct _plan_ma_msg_pot_t plan_ma_msg_pot_t;
 
+struct _plan_ma_msg_pddl_fact_t {
+    uint32_t header;
+    int32_t pred;
+    int32_t *arg;
+    int arg_size;
+    int8_t neg;
+    int8_t stat;
+};
+
 struct _plan_ma_msg_op_t {
     uint32_t header;
     int32_t op_id;
@@ -119,6 +128,7 @@ struct _plan_ma_msg_t {
     int pddl_ground_obj_name_size;
     plan_ma_msg_pddl_fact_t *pddl_fact;
     int pddl_fact_size;
+    int pddl_fact_alloc;
 };
 
 PLAN_MSG_SCHEMA_BEGIN(schema_pot_submatrix)
@@ -427,6 +437,18 @@ void planMAMsgFree(plan_ma_msg_t *msg)
         BOR_FREE(msg->heur_requested_agent);
     planMAMsgDTGReqFree(&msg->dtg_req);
     planMAMsgPotFree(&msg->pot);
+
+    if (msg->pddl_ground_pred_name != NULL)
+        BOR_FREE(msg->pddl_ground_pred_name);
+    if (msg->pddl_ground_obj_name != NULL)
+        BOR_FREE(msg->pddl_ground_obj_name);
+
+    for (i = 0; i < msg->pddl_fact_size; ++i){
+        if (msg->pddl_fact[i].arg != NULL)
+            BOR_FREE(msg->pddl_fact[i].arg);
+    }
+    if (msg->pddl_fact != NULL)
+        BOR_FREE(msg->pddl_fact);
 }
 
 plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
@@ -446,6 +468,7 @@ void planMAMsgDel(plan_ma_msg_t *msg)
 plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg_in)
 {
     plan_ma_msg_t *msg;
+    plan_ma_msg_pddl_fact_t *f;
     int i;
 
     msg = BOR_ALLOC(plan_ma_msg_t);
@@ -491,6 +514,21 @@ plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg_in)
                    msg_in->pddl_ground_obj_name,
                    msg_in->pddl_ground_obj_name_size);
 
+    }
+
+    if (msg_in->pddl_fact != NULL){
+        msg->pddl_fact = NULL;
+        MEMCPY_ARR(msg, pddl_fact, msg_in->pddl_fact,
+                   msg_in->pddl_fact_size);
+
+        for (i = 0; i < msg->pddl_fact_size; ++i){
+            f = msg->pddl_fact + i;
+            if (f->arg != NULL){
+                f->arg = BOR_ALLOC_ARR(int, f->arg_size);
+                memcpy(f->arg, msg_in->pddl_fact[i].arg,
+                       sizeof(int) * f->arg_size);
+            }
+        }
     }
 
     return msg;
@@ -636,6 +674,76 @@ void planMAMsgPDDLGroundObjName(const plan_ma_msg_t *msg,
 {
     updateStrArr((const char *)msg->pddl_ground_obj_name,
                  msg->pddl_ground_obj_name_size, dst, dst_size);
+}
+
+int planMAMsgAddPDDLGroundFact(plan_ma_msg_t *msg,
+                               const plan_pddl_fact_t *fact,
+                               const int *obj_to_glob,
+                               const int *pred_to_glob)
+{
+    plan_ma_msg_pddl_fact_t *dst;
+    int i;
+
+    if (msg->pddl_fact_size >= msg->pddl_fact_alloc){
+        if (msg->pddl_fact_alloc == 0){
+            msg->pddl_fact_alloc = 16;
+        }else{
+            msg->pddl_fact_alloc *= 2;
+        }
+        msg->pddl_fact = BOR_REALLOC_ARR(msg->pddl_fact,
+                                         plan_ma_msg_pddl_fact_t,
+                                         msg->pddl_fact_alloc);
+    }
+
+    dst = msg->pddl_fact + msg->pddl_fact_size;
+    bzero(dst, sizeof(*dst));
+
+    dst->header |= M_pred;
+    dst->pred = pred_to_glob[fact->pred];
+    if (dst->pred < 0)
+        return -1;
+
+    dst->header |= M_arg;
+    dst->arg_size = fact->arg_size;
+    dst->arg = BOR_ALLOC_ARR(int, fact->arg_size);
+    for (i = 0; i < fact->arg_size; ++i){
+        dst->arg[i] = obj_to_glob[fact->arg[i]];
+        if (dst->arg[i] < 0){
+            BOR_FREE(dst->arg);
+            return -1;
+        }
+    }
+
+    dst->header |= M_neg;
+    dst->neg = fact->neg;
+
+    ++msg->pddl_fact_size;
+    return 0;
+}
+
+int planMAMsgPDDLGroundFactSize(const plan_ma_msg_t *msg)
+{
+    return msg->pddl_fact_size;
+}
+
+void planMAMsgPDDLGroundFact(const plan_ma_msg_t *msg, int id,
+                             const int *glob_to_obj,
+                             const int *glob_to_pred,
+                             plan_pddl_fact_t *fact)
+{
+    const plan_ma_msg_pddl_fact_t *src;
+    int i;
+
+    src = msg->pddl_fact + id;
+
+    bzero(fact, sizeof(*fact));
+    fact->pred = glob_to_pred[src->pred];
+
+    fact->arg_size = src->arg_size;
+    fact->arg = BOR_ALLOC_ARR(int, src->arg_size);
+    for (i = 0; i < src->arg_size; ++i)
+        fact->arg[i] = glob_to_obj[src->arg[i]];
+    fact->neg = src->neg;
 }
 
 

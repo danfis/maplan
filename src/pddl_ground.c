@@ -196,8 +196,6 @@ static void factorSendObjPredNamesResponse(const plan_pddl_ground_t *g,
             planMAMsgAddPDDLGroundObjName(msg, objs->obj[i].name);
     }
 
-    fprintf(stderr, "SEND obj-names to 0\n");
-    fflush(stderr);
     planMACommSendToNode(comm, 0, msg);
     planMAMsgDel(msg);
 }
@@ -286,6 +284,11 @@ static void factorObjPredMapFromMsg(plan_pddl_ground_t *g,
     planMAMsgPDDLGroundObjName(msg, &obj, &obj_size);
     planMAMsgPDDLGroundPredName(msg, &pred, &pred_size);
     factorConstructObjPredMap(g, obj, obj_size, pred, pred_size, NULL);
+
+    if (obj)
+        BOR_FREE(obj);
+    if (pred)
+        BOR_FREE(pred);
 }
 
 static void factorSendObjPredMapAck(plan_ma_comm_t *comm)
@@ -298,17 +301,58 @@ static void factorSendObjPredMapAck(plan_ma_comm_t *comm)
     planMAMsgDel(msg);
 }
 
-static int factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+static void factorSendGroundFacts(plan_pddl_ground_t *g,
+                                  plan_ma_comm_t *comm)
+{
+    plan_ma_msg_t *msg;
+    const plan_pddl_fact_t *fact;
+    int i, size;
+
+    msg = planMAMsgNew(PLAN_MA_MSG_PDDL_GROUND,
+                       PLAN_MA_MSG_PDDL_GROUND_FACTS,
+                       comm->node_id);
+
+    size = g->fact_pool.size;
+    for (i = 0; i < size; ++i){
+        fact = planPDDLFactPoolGet(&g->fact_pool, i);
+        if (fact->is_private)
+            continue;
+
+        planMAMsgAddPDDLGroundFact(msg, fact, g->obj_to_glob,
+                                   g->pred_to_glob);
+    }
+
+    planMACommSendInRing(comm, msg);
+    planMAMsgDel(msg);
+}
+
+static void factorRecvGroundFacts(plan_pddl_ground_t *g,
+                                  const plan_ma_msg_t *msg)
+{
+    plan_pddl_fact_t fact;
+    int i, size;
+
+    size = planMAMsgPDDLGroundFactSize(msg);
+    for (i = 0; i < size; ++i){
+        planMAMsgPDDLGroundFact(msg, i, g->glob_to_obj, g->glob_to_pred, &fact);
+        planPDDLFactPoolAdd(&g->fact_pool, &fact);
+        planPDDLFactFree(&fact);
+    }
+}
+
+static void factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 {
     plan_ma_terminate_t terminate;
+    plan_ma_msg_t *msg_names[comm->node_size];
     char **pred, **obj;
     plan_ma_msg_t *msg;
-    int type, subtype, pred_size, obj_size;
+    int i, type, subtype, pred_size, obj_size, num_facts;
     int wait;
 
     pred = obj = NULL;
     pred_size = obj_size = 0;
     planMATerminateInit(&terminate, NULL, NULL, NULL);
+    bzero(msg_names, sizeof(plan_ma_msg_t *) * comm->node_size);
 
     // First send request for names of all public objects and predicates
     factorSendObjPredNamesRequest(comm);
@@ -319,8 +363,12 @@ static int factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
         subtype = planMAMsgSubType(msg);
 
         if (type == PLAN_MA_MSG_TERMINATE){
-            if (planMATerminateProcessMsg(&terminate, msg, comm) == 1)
+            if (planMATerminateProcessMsg(&terminate, msg, comm) == 1){
+                planMAMsgDel(msg);
                 break;
+            }
+
+            planMAMsgDel(msg);
             continue;
 
         }else if (type != PLAN_MA_MSG_PDDL_GROUND){
@@ -332,6 +380,8 @@ static int factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
             // Save object and predicate names
             planMAMsgPDDLGroundPredName(msg, &pred, &pred_size);
             planMAMsgPDDLGroundObjName(msg, &obj, &obj_size);
+            msg_names[planMAMsgAgent(msg)] = msg;
+            msg = NULL;
 
             if (--wait == 0){
                 // We have received all object and predicate names.
@@ -343,18 +393,31 @@ static int factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 
         }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP_ACK){
             if (--wait == 0){
-                planMATerminateStart(&terminate, comm);
-                fprintf(stderr, "GROUND START\n");
-                fflush(stderr);
+                instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
+                factorSendGroundFacts(g, comm);
             }
 
         }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_FACTS){
+            num_facts = g->fact_pool.size;
+            factorRecvGroundFacts(g, msg);
+            instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
+            factorSendGroundFacts(g, comm);
+
+            if (num_facts == g->fact_pool.size)
+                planMATerminateStart(&terminate, comm);
+
         }else{
             ERR_F(comm, "Expecting pddl-ground message, received something"
                   " else. (type: %d, subtype: %d)", type, subtype);
         }
 
-        planMAMsgDel(msg);
+        if (msg != NULL)
+            planMAMsgDel(msg);
+    }
+
+    for (i = 0; i < comm->node_size; ++i){
+        if (msg_names[i] != NULL)
+            planMAMsgDel(msg_names[i]);
     }
 
     if (obj != NULL)
@@ -362,11 +425,9 @@ static int factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
     if (pred != NULL)
         BOR_FREE(pred);
     planMATerminateFree(&terminate);
-
-    return 0;
 }
 
-static int factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+static void factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
 {
     plan_ma_terminate_t terminate;
     plan_ma_msg_t *msg;
@@ -379,8 +440,12 @@ static int factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
         subtype = planMAMsgSubType(msg);
 
         if (type == PLAN_MA_MSG_TERMINATE){
-            if (planMATerminateProcessMsg(&terminate, msg, comm) == 1)
+            if (planMATerminateProcessMsg(&terminate, msg, comm) == 1){
+                planMAMsgDel(msg);
                 break;
+            }
+
+            planMAMsgDel(msg);
             continue;
 
         }else if (type != PLAN_MA_MSG_PDDL_GROUND){
@@ -396,6 +461,10 @@ static int factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
             factorSendObjPredMapAck(comm);
 
         }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_FACTS){
+            factorRecvGroundFacts(g, msg);
+            instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
+            factorSendGroundFacts(g, comm);
+
         }else{
             ERR_F(comm, "Expecting pddl-ground message, received something"
                   " else. (type: %d, subtype: %d)", type, subtype);
@@ -405,8 +474,6 @@ static int factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
     }
 
     planMATerminateFree(&terminate);
-
-    return 0;
 }
 
 int planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
@@ -418,18 +485,16 @@ int planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
     instActionsNegativePreconditions(g->pddl, &g->lift_action, &g->fact_pool);
 
     if (comm->node_id == 0){
-        return factorMaster(g, comm);
+        factorMaster(g, comm);
     }else{
-        return factorSlave(g, comm);
+        factorSlave(g, comm);
     }
 
-    return 0;
-
-    instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
-
-    //markStaticFacts(&g->fact_pool, &g->pddl->init_fact);
+    markStaticFacts(&g->fact_pool, &g->pddl->init_fact);
     planPDDLGroundActionPoolInst(&g->action_pool, &g->fact_pool);
-    //removeStatAndNegFacts(&g->fact_pool, &g->action_pool);
+    removeStatAndNegFacts(&g->fact_pool, &g->action_pool);
+    g->agent_size = comm->node_size;
+    return 0;
 }
 
 static int printCmpActions(const void *a, const void *b, void *ud)
@@ -472,12 +537,12 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
     }
 
     fprintf(fout, "Agent size: %d\n", g->agent_size);
-    for (i = 0; i < g->agent_size; ++i){
+    for (i = 0; g->agent_to_obj != NULL && i < g->agent_size; ++i){
         fprintf(fout, "    [%d -> %d] (%s)\n",
                 i, g->agent_to_obj[i],
                 g->pddl->obj.obj[g->agent_to_obj[i]].name);
     }
-    if (g->agent_size > 0){
+    if (g->agent_size > 0 && g->obj_to_agent != NULL){
         fprintf(fout, "    obj-to-agent:");
         for (i = 0; i < g->pddl->obj.size; ++i){
             if (g->obj_to_agent[i] >= 0)

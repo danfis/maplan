@@ -33,6 +33,31 @@ extern "C" {
  */
 #define PLAN_POT_MA 0x1u
 
+
+struct _plan_pot_submatrix_t {
+    int cols;   /*!< Number of columns in submatrix */
+    int rows;   /*!< Number of rows in submatrix */
+    int *c, *r; /*!< Non-zero coeficient on position (c[i], r[i]) */
+    int *coef;  /*!< Coeficient on position c[i], r[i] */
+    int size;   /*!< Number of non-zero coeficient encoded in c[], r[]
+                     arrays */
+    int alloc;
+};
+typedef struct _plan_pot_submatrix_t plan_pot_submatrix_t;
+
+struct _plan_pot_agent_t {
+    plan_pot_submatrix_t pub_op;  /*!< Public submatrix */
+    plan_pot_submatrix_t priv_op; /*!< Private submatrix */
+    plan_pot_submatrix_t maxpot;  /*!< max-pot submatrix */
+    int *op_cost;                 /*!< Operator costs (RHS), length is
+                                       priv.rows */
+    int *goal;                    /*!< Goal coeficients, length is priv.cols */
+    int *coef;                    /*!< Objective function coeficients, length
+                                       is priv.cols*/
+};
+typedef struct _plan_pot_agent_t plan_pot_agent_t;
+
+
 struct _plan_pot_constr_t {
     int *var_id;    /*!< Non-zer variable IDs */
     int *coef;      /*!< Non-zero coeficient (1 or -1) */
@@ -121,6 +146,20 @@ _bor_inline double planPotPot(const plan_pot_t *pot, int var, int val);
  */
 _bor_inline double planPotStatePot(const plan_pot_t *pot,
                                    const plan_state_t *state);
+
+
+/**
+ * Initializes agent potential structure.
+ */
+void planPotAgentInit(const plan_pot_t *pot,
+                      const plan_state_t *state,
+                      int fact_range_lcm,
+                      plan_pot_agent_t *agent_pot);
+
+/**
+ * Frees allocated resources.
+ */
+void planPotAgentFree(plan_pot_agent_t *agent_pot);
 
 /**** INLINES: ****/
 _bor_inline double planPotPot(const plan_pot_t *pot, int var, int val)

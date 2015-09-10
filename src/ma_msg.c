@@ -22,6 +22,29 @@
 #include "plan/ma_msg.h"
 #include "plan/msg_schema.h"
 
+struct _plan_ma_msg_pot_submatrix_t {
+    uint32_t header;
+    int32_t cols;
+    int32_t rows;
+    int32_t *coef;
+    int coef_size;
+};
+typedef struct _plan_ma_msg_pot_submatrix_t plan_ma_msg_pot_submatrix_t;
+
+struct _plan_ma_msg_pot_agent_t {
+    uint32_t header;
+    plan_ma_msg_pot_submatrix_t pub_op;
+    plan_ma_msg_pot_submatrix_t priv_op;
+    plan_ma_msg_pot_submatrix_t maxpot;
+    int32_t *op_cost;
+    int op_cost_size;
+    int32_t *goal;
+    int goal_size;
+    int32_t *coef;
+    int coef_size;
+};
+typedef struct _plan_ma_msg_pot_agent_t plan_ma_msg_pot_agent_t;
+
 struct _plan_ma_msg_pot_constr_t {
     uint32_t header;
     int32_t *var_id;
@@ -100,7 +123,32 @@ struct _plan_ma_msg_t {
     int64_t *pot_pot;
     int pot_pot_size;
     int32_t pot_init_state;
+    plan_ma_msg_pot_agent_t pot_agent;
 };
+
+PLAN_MSG_SCHEMA_BEGIN(schema_pot_submatrix)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_submatrix_t, cols, INT32)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_submatrix_t, rows, INT32)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_submatrix_t, coef, coef_size, INT32)
+PLAN_MSG_SCHEMA_END(schema_pot_submatrix, plan_ma_msg_pot_submatrix_t, header)
+#define M_pot_submatrix_cols 0x01u
+#define M_pot_submatrix_rows 0x02u
+#define M_pot_submatrix_coef 0x04u
+
+PLAN_MSG_SCHEMA_BEGIN(schema_pot_agent)
+PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_pot_agent_t, pub_op, &schema_pot_submatrix)
+PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_pot_agent_t, priv_op, &schema_pot_submatrix)
+PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_pot_agent_t, maxpot, &schema_pot_submatrix)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_agent_t, op_cost, op_cost_size, INT32)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_agent_t, goal, goal_size, INT32)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_agent_t, coef, coef_size, INT32)
+PLAN_MSG_SCHEMA_END(schema_pot_agent, plan_ma_msg_pot_agent_t, header)
+#define M_pot_agent_pub_op  0x01u
+#define M_pot_agent_priv_op 0x02u
+#define M_pot_agent_maxpot  0x04u
+#define M_pot_agent_op_cost 0x08u
+#define M_pot_agent_goal    0x10u
+#define M_pot_agent_coef    0x20u
 
 PLAN_MSG_SCHEMA_BEGIN(schema_pot_constr)
 PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_constr_t, var_id, var_id_size, INT32)
@@ -178,6 +226,7 @@ PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_t, op, op_size, &schema_op)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, pot_prob, &schema_pot_prob)
 PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, pot_pot, pot_pot_size, INT64)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, pot_init_state, INT32)
+PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, pot_agent, &schema_pot_agent)
 PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_type                 0x000001u
 #define M_agent_id             0x000002u
@@ -205,6 +254,7 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_pot_prob             0x100000u
 #define M_pot_pot              0x200000u
 #define M_pot_init_state       0x400000u
+#define M_pot_agent            0x800000u
 
 
 #define SET_VAL(msg, member, val) \
@@ -283,6 +333,7 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 
 static uint64_t pack754(long double f, unsigned bits, unsigned expbits);
 static long double unpack754(uint64_t i, unsigned bits, unsigned expbits);
+static void planMAMsgPotAgentFree(plan_ma_msg_pot_agent_t *mpa);
 
 
 static int snapshot_token_counter = 0;
@@ -363,6 +414,7 @@ void planMAMsgFree(plan_ma_msg_t *msg)
     planMAMsgPotProbFree(&msg->pot_prob);
     if (msg->pot_pot != NULL)
         BOR_FREE(msg->pot_pot);
+    planMAMsgPotAgentFree(&msg->pot_agent);
 }
 
 plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
@@ -888,6 +940,120 @@ void planMAMsgSetPotInitState(plan_ma_msg_t *msg, int heur)
 int planMAMsgPotInitState(const plan_ma_msg_t *msg)
 {
     return msg->pot_init_state;
+}
+
+static void potAgentSetSubmatrix(plan_ma_msg_pot_submatrix_t *ms,
+                                 const plan_pot_submatrix_t *s)
+{
+    int i, size;
+
+    ms->header |= M_pot_submatrix_cols;
+    ms->cols = s->cols;
+    ms->header |= M_pot_submatrix_rows;
+    ms->rows = s->rows;
+
+    if (s->cols * s->rows > 0){
+        ms->header |= M_pot_submatrix_coef;
+
+        size = s->cols * s->rows;
+        ms->coef_size = size;
+        ms->coef = BOR_ALLOC_ARR(int32_t, size);
+        for (i = 0; i < size; ++i)
+            ms->coef[i] = s->coef[i];
+    }
+}
+
+static void potAgentGetSubmatrix(const plan_ma_msg_pot_submatrix_t *ms,
+                                 plan_pot_submatrix_t *s)
+{
+    int i, size;
+
+    s->cols = ms->cols;
+    s->rows = ms->rows;
+
+    if (ms->cols * s->rows > 0){
+        size = ms->cols * ms->rows;
+        s->coef = BOR_ALLOC_ARR(int, size);
+        for (i = 0; i < size; ++i)
+            s->coef[i] = ms->coef[i];
+    }
+}
+
+static void planMAMsgPotAgentFree(plan_ma_msg_pot_agent_t *mpa)
+{
+    if (mpa->pub_op.coef)
+        BOR_FREE(mpa->pub_op.coef);
+    if (mpa->priv_op.coef)
+        BOR_FREE(mpa->priv_op.coef);
+    if (mpa->maxpot.coef)
+        BOR_FREE(mpa->maxpot.coef);
+
+    if (mpa->op_cost)
+        BOR_FREE(mpa->op_cost);
+    if (mpa->goal)
+        BOR_FREE(mpa->goal);
+    if (mpa->coef)
+        BOR_FREE(mpa->coef);
+}
+
+void planMAMsgSetPotAgent(plan_ma_msg_t *msg, const plan_pot_agent_t *pa)
+{
+    plan_ma_msg_pot_agent_t *mpa;
+    int i;
+
+    msg->header |= M_pot_agent;
+    mpa = &msg->pot_agent;
+
+    mpa->header |= M_pot_agent_pub_op;
+    potAgentSetSubmatrix(&mpa->pub_op, &pa->pub_op);
+    mpa->header |= M_pot_agent_priv_op;
+    potAgentSetSubmatrix(&mpa->priv_op, &pa->priv_op);
+    mpa->header |= M_pot_agent_maxpot;
+    potAgentSetSubmatrix(&mpa->maxpot, &pa->maxpot);
+
+    mpa->header |= M_pot_agent_op_cost;
+    mpa->op_cost_size = pa->pub_op.rows;
+    mpa->op_cost = BOR_ALLOC_ARR(int32_t, mpa->op_cost_size);
+    for (i = 0; i < mpa->op_cost_size; ++i)
+        mpa->op_cost[i] = pa->op_cost[i];
+
+    if (pa->priv_op.cols > 0){
+        mpa->header |= M_pot_agent_goal;
+        mpa->goal_size = pa->priv_op.cols;
+        mpa->goal = BOR_ALLOC_ARR(int32_t, mpa->goal_size);
+        for (i = 0; i < mpa->goal_size; ++i)
+            mpa->goal[i] = pa->goal[i];
+
+        mpa->header |= M_pot_agent_coef;
+        mpa->coef_size = pa->priv_op.cols;
+        mpa->coef = BOR_ALLOC_ARR(int32_t, mpa->coef_size);
+        for (i = 0; i < mpa->coef_size; ++i)
+            mpa->coef[i] = pa->coef[i];
+    }
+}
+
+void planMAMsgPotAgent(const plan_ma_msg_t *msg, plan_pot_agent_t *pa)
+{
+    const plan_ma_msg_pot_agent_t *mpa = &msg->pot_agent;
+    int i;
+
+    bzero(pa, sizeof(*pa));
+    potAgentGetSubmatrix(&mpa->pub_op, &pa->pub_op);
+    potAgentGetSubmatrix(&mpa->priv_op, &pa->priv_op);
+    potAgentGetSubmatrix(&mpa->maxpot, &pa->maxpot);
+
+    pa->op_cost = BOR_ALLOC_ARR(int, mpa->pub_op.rows);
+    for (i = 0; i < mpa->pub_op.rows; ++i)
+        pa->op_cost[i] = mpa->op_cost[i];
+
+    if (mpa->priv_op.cols > 0){
+        pa->goal = BOR_ALLOC_ARR(int, mpa->priv_op.cols);
+        pa->coef = BOR_ALLOC_ARR(int, mpa->priv_op.cols);
+        for (i = 0; i < mpa->priv_op.cols; ++i){
+            pa->goal[i] = mpa->goal[i];
+            pa->coef[i] = mpa->coef[i];
+        }
+    }
 }
 
 static uint64_t pack754(long double f, unsigned bits, unsigned expbits)

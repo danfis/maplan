@@ -548,7 +548,7 @@ static void submatrixInit(plan_pot_submatrix_t *s, int cols, int rows)
 
 static void submatrixAdd(plan_pot_submatrix_t *s, int c, int r, int coef)
 {
-    s->coef[s->rows * r + c] = coef;
+    s->coef[s->cols * r + c] = coef;
 }
 
 static void submatrixFree(plan_pot_submatrix_t *sm)

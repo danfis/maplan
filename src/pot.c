@@ -539,29 +539,20 @@ int planPotToVarIds(const plan_pot_t *pot, const plan_state_t *state,
     return size;
 }
 
+static void submatrixInit(plan_pot_submatrix_t *s, int cols, int rows)
+{
+    s->cols = cols;
+    s->rows = rows;
+    s->coef = BOR_CALLOC_ARR(int, cols * rows);
+}
+
 static void submatrixAdd(plan_pot_submatrix_t *s, int c, int r, int coef)
 {
-    if (s->size >= s->alloc){
-        if (s->alloc == 0){
-            s->alloc = 8;
-        }else{
-            s->alloc *= 2;
-        }
-        s->c = BOR_REALLOC_ARR(s->c, int, s->alloc);
-        s->r = BOR_REALLOC_ARR(s->r, int, s->alloc);
-        s->coef = BOR_REALLOC_ARR(s->coef, int, s->alloc);
-    }
-    s->c[s->size] = c;
-    s->r[s->size] = r;
-    s->coef[s->size++] = coef;
+    s->coef[s->rows * r + c] = coef;
 }
 
 static void submatrixFree(plan_pot_submatrix_t *sm)
 {
-    if (sm->c != NULL)
-        BOR_FREE(sm->c);
-    if (sm->r != NULL)
-        BOR_FREE(sm->r);
     if (sm->coef != NULL)
         BOR_FREE(sm->coef);
 }
@@ -572,10 +563,11 @@ static void potAgentSetOps(const plan_pot_t *pot, plan_pot_agent_t *agent_pot)
     int i, j;
 
     // First set up number of rows and columns for operators
-    agent_pot->pub_op.cols = pot->lp_var_private;
-    agent_pot->pub_op.rows = pot->prob.op_size;
-    agent_pot->priv_op.cols = pot->lp_var_size - pot->lp_var_private;
-    agent_pot->priv_op.rows = pot->prob.op_size;
+    submatrixInit(&agent_pot->pub_op,
+                  pot->lp_var_private, pot->prob.op_size);
+    submatrixInit(&agent_pot->priv_op,
+                  pot->lp_var_size - pot->lp_var_private,
+                  pot->prob.op_size);
     agent_pot->op_cost = BOR_CALLOC_ARR(int, agent_pot->pub_op.rows);
 
     // Set sparse matrices and RHS (operator costs)
@@ -601,8 +593,9 @@ static void potAgentSetMaxpot(const plan_pot_t *pot, plan_pot_agent_t *agent_pot
     const plan_pot_constr_t *cstr;
     int i, j;
 
-    agent_pot->maxpot.cols = pot->lp_var_size - pot->lp_var_private;
-    agent_pot->maxpot.rows = pot->prob.maxpot_size;
+    submatrixInit(&agent_pot->maxpot,
+                  pot->lp_var_size - pot->lp_var_private,
+                  pot->prob.maxpot_size);
 
     for (i = 0; i < pot->prob.maxpot_size; ++i){
         cstr = pot->prob.maxpot + i;

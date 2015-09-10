@@ -37,11 +37,7 @@ extern "C" {
 struct _plan_pot_submatrix_t {
     int cols;   /*!< Number of columns in submatrix */
     int rows;   /*!< Number of rows in submatrix */
-    int *c, *r; /*!< Non-zero coeficient on position (c[i], r[i]) */
-    int *coef;  /*!< Coeficient on position c[i], r[i] */
-    int size;   /*!< Number of non-zero coeficient encoded in c[], r[]
-                     arrays */
-    int alloc;
+    int *coef;  /*!< Coeficients of the matrix */
 };
 typedef struct _plan_pot_submatrix_t plan_pot_submatrix_t;
 

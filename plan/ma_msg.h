@@ -310,6 +310,16 @@ void planMAMsgPotProbStateIds(const plan_ma_msg_t *msg, int *state_ids);
 void planMAMsgPotPot(const plan_ma_msg_t *msg, double *pot);
 void planMAMsgSetPotInitState(plan_ma_msg_t *msg, int heur);
 int planMAMsgPotInitState(const plan_ma_msg_t *msg);
+
+void planMAMsgAddPotFactRange(plan_ma_msg_t *msg, int range);
+int planMAMsgPotFactRangeSize(const plan_ma_msg_t *msg);
+void planMAMsgPotFactRange(const plan_ma_msg_t *msg, int *fact_range);
+void planMAMsgSetPotLPPrivateVarSize(plan_ma_msg_t *msg, int var_size);
+int planMAMsgPotLPPrivateVarSize(const plan_ma_msg_t *msg);
+void planMAMsgSetPotFactRangeLCM(plan_ma_msg_t *msg, int val);
+int planMAMsgPotFactRangeLCM(const plan_ma_msg_t *msg);
+void planMAMsgSetPotLPVarSize(plan_ma_msg_t *msg, int val);
+int planMAMsgPotLPVarSize(const plan_ma_msg_t *msg);
 void planMAMsgSetPotAgent(plan_ma_msg_t *msg, const plan_pot_agent_t *pa);
 void planMAMsgPotAgent(const plan_ma_msg_t *msg, plan_pot_agent_t *pa);
 

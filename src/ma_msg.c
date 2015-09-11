@@ -45,6 +45,19 @@ struct _plan_ma_msg_pot_agent_t {
 };
 typedef struct _plan_ma_msg_pot_agent_t plan_ma_msg_pot_agent_t;
 
+struct _plan_ma_msg_pot_t {
+    uint32_t header;
+    int32_t *fact_range;
+    int fact_range_size;
+    int32_t lp_private_var_size;
+
+    int32_t fact_range_lcm;
+    int32_t lp_var_size;
+
+    plan_ma_msg_pot_agent_t agent;
+};
+typedef struct _plan_ma_msg_pot_t plan_ma_msg_pot_t;
+
 struct _plan_ma_msg_pot_constr_t {
     uint32_t header;
     int32_t *var_id;
@@ -123,7 +136,7 @@ struct _plan_ma_msg_t {
     int64_t *pot_pot;
     int pot_pot_size;
     int32_t pot_init_state;
-    plan_ma_msg_pot_agent_t pot_agent;
+    plan_ma_msg_pot_t pot;
 };
 
 PLAN_MSG_SCHEMA_BEGIN(schema_pot_submatrix)
@@ -149,6 +162,19 @@ PLAN_MSG_SCHEMA_END(schema_pot_agent, plan_ma_msg_pot_agent_t, header)
 #define M_pot_agent_op_cost 0x08u
 #define M_pot_agent_goal    0x10u
 #define M_pot_agent_coef    0x20u
+
+PLAN_MSG_SCHEMA_BEGIN(schema_pot)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_t, fact_range, fact_range_size, INT32)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, lp_private_var_size, INT32)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, fact_range_lcm, INT32)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, lp_var_size, INT32)
+PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_pot_t, agent, &schema_pot_agent)
+PLAN_MSG_SCHEMA_END(schema_pot, plan_ma_msg_pot_t, header)
+#define M_pot_fact_range          0x01u
+#define M_pot_lp_private_var_size 0x02u
+#define M_pot_fact_range_lcm      0x04u
+#define M_pot_lp_var_size         0x08u
+#define M_pot_agent               0x10u
 
 PLAN_MSG_SCHEMA_BEGIN(schema_pot_constr)
 PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_constr_t, var_id, var_id_size, INT32)
@@ -226,7 +252,7 @@ PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_t, op, op_size, &schema_op)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, pot_prob, &schema_pot_prob)
 PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_t, pot_pot, pot_pot_size, INT64)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, pot_init_state, INT32)
-PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, pot_agent, &schema_pot_agent)
+PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, pot, &schema_pot)
 PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_type                 0x000001u
 #define M_agent_id             0x000002u
@@ -254,7 +280,7 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_pot_prob             0x100000u
 #define M_pot_pot              0x200000u
 #define M_pot_init_state       0x400000u
-#define M_pot_agent            0x800000u
+#define M_pot                  0x800000u
 
 
 #define SET_VAL(msg, member, val) \
@@ -298,6 +324,12 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
             (msg)->member[i] = src[i]; \
     } while (0)
 
+#define CLONE_ARR(dst, src, size, type) \
+        do { \
+            (dst) = BOR_ALLOC_ARR(type, (size)); \
+            memcpy((dst), (src), sizeof(type) * (size)); \
+        } while (0)
+
 #define _GETTER(Base, msg_type, Name, member, type) \
     type plan##Base##Name(const msg_type *msg) \
     { \
@@ -333,7 +365,12 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 
 static uint64_t pack754(long double f, unsigned bits, unsigned expbits);
 static long double unpack754(uint64_t i, unsigned bits, unsigned expbits);
+static void planMAMsgPotFree(plan_ma_msg_pot_t *pot);
+static void planMAMsgPotClone(plan_ma_msg_pot_t *dst,
+                              const plan_ma_msg_pot_t *src);
 static void planMAMsgPotAgentFree(plan_ma_msg_pot_agent_t *mpa);
+static void planMAMsgPotAgentClone(plan_ma_msg_pot_agent_t *dst,
+                                   const plan_ma_msg_pot_agent_t *src);
 
 
 static int snapshot_token_counter = 0;
@@ -414,7 +451,7 @@ void planMAMsgFree(plan_ma_msg_t *msg)
     planMAMsgPotProbFree(&msg->pot_prob);
     if (msg->pot_pot != NULL)
         BOR_FREE(msg->pot_pot);
-    planMAMsgPotAgentFree(&msg->pot_agent);
+    planMAMsgPotFree(&msg->pot);
 }
 
 plan_ma_msg_t *planMAMsgNew(int type, int subtype, int agent_id)
@@ -463,6 +500,7 @@ plan_ma_msg_t *planMAMsgClone(const plan_ma_msg_t *msg_in)
     }
 
     planMAMsgDTGReqCopy(&msg->dtg_req, &msg_in->dtg_req);
+    planMAMsgPotClone(&msg->pot, &msg_in->pot);
 
     return msg;
 }
@@ -979,6 +1017,103 @@ static void potAgentGetSubmatrix(const plan_ma_msg_pot_submatrix_t *ms,
     }
 }
 
+static void planMAMsgPotFree(plan_ma_msg_pot_t *pot)
+{
+    planMAMsgPotAgentFree(&pot->agent);
+}
+
+static void planMAMsgPotClone(plan_ma_msg_pot_t *dst,
+                              const plan_ma_msg_pot_t *src)
+{
+    *dst = *src;
+
+    if (dst->fact_range != NULL)
+        CLONE_ARR(dst->fact_range, src->fact_range, src->fact_range_size, int32_t);
+    planMAMsgPotAgentClone(&dst->agent, &src->agent);
+}
+
+void planMAMsgAddPotFactRange(plan_ma_msg_t *msg, int range)
+{
+    plan_ma_msg_pot_t *pot;
+    int i;
+
+    msg->header |= M_pot;
+
+    pot = &msg->pot;
+    pot->header |= M_pot_fact_range;
+
+    for (i = 0; i < pot->fact_range_size; ++i){
+        if (pot->fact_range[i] == range)
+            return;
+    }
+
+    ++pot->fact_range_size;
+    pot->fact_range = BOR_REALLOC_ARR(pot->fact_range, int32_t,
+                                      pot->fact_range_size);
+    pot->fact_range[pot->fact_range_size - 1] = range;
+}
+
+int planMAMsgPotFactRangeSize(const plan_ma_msg_t *msg)
+{
+    const plan_ma_msg_pot_t *pot = &msg->pot;
+    return pot->fact_range_size;
+}
+
+void planMAMsgPotFactRange(const plan_ma_msg_t *msg, int *fact_range)
+{
+    const plan_ma_msg_pot_t *pot = &msg->pot;
+    int i;
+
+    for (i = 0; i < pot->fact_range_size; ++i)
+        fact_range[i] = pot->fact_range[i];
+}
+
+void planMAMsgSetPotLPPrivateVarSize(plan_ma_msg_t *msg, int var_size)
+{
+    plan_ma_msg_pot_t *pot = &msg->pot;
+
+    msg->header |= M_pot;
+    pot->header |= M_pot_lp_private_var_size;
+    pot->lp_private_var_size = var_size;
+}
+
+int planMAMsgPotLPPrivateVarSize(const plan_ma_msg_t *msg)
+{
+    const plan_ma_msg_pot_t *pot = &msg->pot;
+    return pot->lp_private_var_size;
+}
+
+void planMAMsgSetPotFactRangeLCM(plan_ma_msg_t *msg, int val)
+{
+    plan_ma_msg_pot_t *pot = &msg->pot;
+
+    msg->header |= M_pot;
+    pot->header |= M_pot_fact_range_lcm;
+    pot->fact_range_lcm = val;
+}
+
+int planMAMsgPotFactRangeLCM(const plan_ma_msg_t *msg)
+{
+    const plan_ma_msg_pot_t *pot = &msg->pot;
+    return pot->fact_range_lcm;
+}
+
+void planMAMsgSetPotLPVarSize(plan_ma_msg_t *msg, int val)
+{
+    plan_ma_msg_pot_t *pot = &msg->pot;
+
+    msg->header |= M_pot;
+    pot->header |= M_pot_lp_var_size;
+    pot->lp_var_size = val;
+}
+
+int planMAMsgPotLPVarSize(const plan_ma_msg_t *msg)
+{
+    const plan_ma_msg_pot_t *pot = &msg->pot;
+    return pot->lp_var_size;
+}
+
+
 static void planMAMsgPotAgentFree(plan_ma_msg_pot_agent_t *mpa)
 {
     if (mpa->pub_op.coef)
@@ -996,13 +1131,41 @@ static void planMAMsgPotAgentFree(plan_ma_msg_pot_agent_t *mpa)
         BOR_FREE(mpa->coef);
 }
 
+static void potSubmatrixClone(plan_ma_msg_pot_submatrix_t *sm)
+{
+    const int *src;
+
+    if (sm->coef != NULL){
+        src = sm->coef;
+        sm->coef = BOR_ALLOC_ARR(int32_t, sm->coef_size);
+        memcpy(sm->coef, src, sizeof(int32_t) * sm->coef_size);
+    }
+}
+
+static void planMAMsgPotAgentClone(plan_ma_msg_pot_agent_t *dst,
+                                   const plan_ma_msg_pot_agent_t *src)
+{
+    *dst = *src;
+
+    potSubmatrixClone(&dst->pub_op);
+    potSubmatrixClone(&dst->priv_op);
+    potSubmatrixClone(&dst->maxpot);
+    if (dst->op_cost != NULL)
+        CLONE_ARR(dst->op_cost, src->op_cost, src->op_cost_size, int32_t);
+    if (dst->goal != NULL)
+        CLONE_ARR(dst->goal, src->goal, src->goal_size, int32_t);
+    if (dst->coef != NULL)
+        CLONE_ARR(dst->coef, src->coef, src->coef_size, int32_t);
+}
+
 void planMAMsgSetPotAgent(plan_ma_msg_t *msg, const plan_pot_agent_t *pa)
 {
     plan_ma_msg_pot_agent_t *mpa;
     int i;
 
-    msg->header |= M_pot_agent;
-    mpa = &msg->pot_agent;
+    msg->header |= M_pot;
+    msg->pot.header |= M_pot_agent;
+    mpa = &msg->pot.agent;
 
     mpa->header |= M_pot_agent_pub_op;
     potAgentSetSubmatrix(&mpa->pub_op, &pa->pub_op);
@@ -1034,7 +1197,7 @@ void planMAMsgSetPotAgent(plan_ma_msg_t *msg, const plan_pot_agent_t *pa)
 
 void planMAMsgPotAgent(const plan_ma_msg_t *msg, plan_pot_agent_t *pa)
 {
-    const plan_ma_msg_pot_agent_t *mpa = &msg->pot_agent;
+    const plan_ma_msg_pot_agent_t *mpa = &msg->pot.agent;
     int i;
 
     bzero(pa, sizeof(*pa));

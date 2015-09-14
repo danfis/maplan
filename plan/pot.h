@@ -148,6 +148,7 @@ _bor_inline double planPotStatePot(const plan_pot_t *pot,
  * Initializes agent potential structure.
  */
 void planPotAgentInit(const plan_pot_t *pot,
+                      int lp_var_size, int var_offset,
                       const plan_state_t *state,
                       int fact_range_lcm,
                       plan_pot_agent_t *agent_pot);
@@ -156,6 +157,8 @@ void planPotAgentInit(const plan_pot_t *pot,
  * Frees allocated resources.
  */
 void planPotAgentFree(plan_pot_agent_t *agent_pot);
+
+void planPotAgentPrint(const plan_pot_agent_t *a, int sid, FILE *fout);
 
 /**** INLINES: ****/
 _bor_inline double planPotPot(const plan_pot_t *pot, int var, int val)

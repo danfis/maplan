@@ -53,6 +53,10 @@ struct _plan_ma_msg_pot_t {
 
     int32_t fact_range_lcm;
     int32_t lp_var_size;
+    int32_t lp_var_offset;
+    int64_t *pot;
+    int pot_size;
+    int32_t init_heur;
 
     plan_ma_msg_pot_agent_t agent;
 };
@@ -168,13 +172,19 @@ PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_t, fact_range, fact_range_size, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, lp_private_var_size, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, fact_range_lcm, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, lp_var_size, INT32)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, lp_var_offset, INT32)
+PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_t, pot, pot_size, INT64)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, init_heur, INT32)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_pot_t, agent, &schema_pot_agent)
 PLAN_MSG_SCHEMA_END(schema_pot, plan_ma_msg_pot_t, header)
 #define M_pot_fact_range          0x01u
 #define M_pot_lp_private_var_size 0x02u
 #define M_pot_fact_range_lcm      0x04u
 #define M_pot_lp_var_size         0x08u
-#define M_pot_agent               0x10u
+#define M_pot_lp_var_offset       0x10u
+#define M_pot_pot                 0x20u
+#define M_pot_init_heur           0x40u
+#define M_pot_agent               0x90u
 
 PLAN_MSG_SCHEMA_BEGIN(schema_pot_constr)
 PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_constr_t, var_id, var_id_size, INT32)
@@ -278,7 +288,7 @@ PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 
 #define M_op                   0x080000u
 #define M_pot_prob             0x100000u
-#define M_pot_pot              0x200000u
+#define M_pot_pot_             0x200000u
 #define M_pot_init_state       0x400000u
 #define M_pot                  0x800000u
 
@@ -945,23 +955,23 @@ void planMAMsgPotProbStateIds(const plan_ma_msg_t *msg, int *state_ids)
         state_ids[i] = msg->pot_prob.state_ids[i];
 }
 
-void planMAMsgSetPotPot(plan_ma_msg_t *msg, const double *pot, int pot_size)
+void planMAMsgSetPotPot_(plan_ma_msg_t *msg, const double *pot, int pot_size)
 {
     int i;
 
-    msg->header |= M_pot_pot;
+    msg->header |= M_pot_pot_;
     msg->pot_pot = BOR_ALLOC_ARR(int64_t, pot_size);
     msg->pot_pot_size = pot_size;
     for (i = 0; i < pot_size; ++i)
         msg->pot_pot[i] = pack754_64(pot[i]);
 }
 
-int planMAMsgPotPotSize(const plan_ma_msg_t *msg)
+int planMAMsgPotPotSize_(const plan_ma_msg_t *msg)
 {
     return msg->pot_pot_size;
 }
 
-void planMAMsgPotPot(const plan_ma_msg_t *msg, double *pot)
+void planMAMsgPotPot_(const plan_ma_msg_t *msg, double *pot)
 {
     int i;
 
@@ -1019,6 +1029,10 @@ static void potAgentGetSubmatrix(const plan_ma_msg_pot_submatrix_t *ms,
 
 static void planMAMsgPotFree(plan_ma_msg_pot_t *pot)
 {
+    if (pot->fact_range != NULL)
+        BOR_FREE(pot->fact_range);
+    if (pot->pot != NULL)
+        BOR_FREE(pot->pot);
     planMAMsgPotAgentFree(&pot->agent);
 }
 
@@ -1111,6 +1125,64 @@ int planMAMsgPotLPVarSize(const plan_ma_msg_t *msg)
 {
     const plan_ma_msg_pot_t *pot = &msg->pot;
     return pot->lp_var_size;
+}
+
+void planMAMsgSetPotLPVarOffset(plan_ma_msg_t *msg, int val)
+{
+    plan_ma_msg_pot_t *pot = &msg->pot;
+
+    msg->header |= M_pot;
+    pot->header |= M_pot_lp_var_offset;
+    pot->lp_var_offset = val;
+}
+
+int planMAMsgPotLPVarOffset(const plan_ma_msg_t *msg)
+{
+    const plan_ma_msg_pot_t *pot = &msg->pot;
+    return pot->lp_var_offset;
+}
+
+void planMAMsgSetPotPot(plan_ma_msg_t *msg, const double *src, int pot_size)
+{
+    plan_ma_msg_pot_t *pot = &msg->pot;
+    int i;
+
+    msg->header |= M_pot;
+    pot->header |= M_pot_pot;
+    pot->pot = BOR_ALLOC_ARR(int64_t, pot_size);
+    pot->pot_size = pot_size;
+    for (i = 0; i < pot_size; ++i)
+        pot->pot[i] = pack754_64(src[i]);
+}
+
+int planMAMsgPotPotSize(const plan_ma_msg_t *msg)
+{
+    const plan_ma_msg_pot_t *pot = &msg->pot;
+    return pot->pot_size;
+}
+
+void planMAMsgPotPot(const plan_ma_msg_t *msg, double *dst)
+{
+    const plan_ma_msg_pot_t *pot = &msg->pot;
+    int i;
+
+    for (i = 0; i < pot->pot_size; ++i)
+        dst[i] = unpack754_64(pot->pot[i]);
+}
+
+void planMAMsgSetPotInitHeur(plan_ma_msg_t *msg, int val)
+{
+    plan_ma_msg_pot_t *pot = &msg->pot;
+
+    msg->header |= M_pot;
+    pot->header |= M_pot_init_heur;
+    pot->init_heur = val;
+}
+
+int planMAMsgPotInitHeur(const plan_ma_msg_t *msg)
+{
+    const plan_ma_msg_pot_t *pot = &msg->pot;
+    return pot->init_heur;
 }
 
 

@@ -543,7 +543,8 @@ static void submatrixInit(plan_pot_submatrix_t *s, int cols, int rows)
 {
     s->cols = cols;
     s->rows = rows;
-    s->coef = BOR_CALLOC_ARR(int, cols * rows);
+    if (cols * rows > 0)
+        s->coef = BOR_CALLOC_ARR(int, cols * rows);
 }
 
 static void submatrixAdd(plan_pot_submatrix_t *s, int c, int r, int coef)
@@ -557,29 +558,32 @@ static void submatrixFree(plan_pot_submatrix_t *sm)
         BOR_FREE(sm->coef);
 }
 
-static void potAgentSetOps(const plan_pot_t *pot, plan_pot_agent_t *agent_pot)
+static void potAgentSetOps(const plan_pot_t *pot, int var_size, int offset,
+                           plan_pot_agent_t *agent_pot)
 {
     const plan_pot_constr_t *cstr;
-    int i, j;
+    int i, j, private;
+
+    private = 1;
+    if (pot->lp_var_size == pot->lp_var_private)
+        private = 0;
 
     // First set up number of rows and columns for operators
     submatrixInit(&agent_pot->pub_op,
                   pot->lp_var_private, pot->prob.op_size);
-    submatrixInit(&agent_pot->priv_op,
-                  pot->lp_var_size - pot->lp_var_private,
-                  pot->prob.op_size);
+    submatrixInit(&agent_pot->priv_op, private * var_size, pot->prob.op_size);
     agent_pot->op_cost = BOR_CALLOC_ARR(int, agent_pot->pub_op.rows);
 
     // Set sparse matrices and RHS (operator costs)
     for (i = 0; i < pot->prob.op_size; ++i){
         cstr = pot->prob.op + i;
         for (j = 0; j < cstr->coef_size; ++j){
-            if (cstr->var_id[j] >= pot->lp_var_private){
-                submatrixAdd(&agent_pot->priv_op,
-                             cstr->var_id[j] - pot->lp_var_private, i,
-                             cstr->coef[j]);
-            }else{
+            if (cstr->var_id[j] < pot->lp_var_private){
                 submatrixAdd(&agent_pot->pub_op, cstr->var_id[j], i,
+                             cstr->coef[j]);
+            }else if (private){
+                submatrixAdd(&agent_pot->priv_op,
+                             cstr->var_id[j] - pot->lp_var_private + offset, i,
                              cstr->coef[j]);
             }
         }
@@ -588,102 +592,116 @@ static void potAgentSetOps(const plan_pot_t *pot, plan_pot_agent_t *agent_pot)
     }
 }
 
-static void potAgentSetMaxpot(const plan_pot_t *pot, plan_pot_agent_t *agent_pot)
+static void potAgentSetMaxpot(const plan_pot_t *pot, int var_size, int offset,
+                              plan_pot_agent_t *agent_pot)
 {
     const plan_pot_constr_t *cstr;
-    int i, j;
+    int *private, private_size, use_private, i, j;
 
-    submatrixInit(&agent_pot->maxpot,
-                  pot->lp_var_size - pot->lp_var_private,
-                  pot->prob.maxpot_size);
+    if (pot->lp_var_size == pot->lp_var_private)
+        return;
 
+    private = BOR_ALLOC_ARR(int, pot->prob.maxpot_size);
+    private_size = 0;
     for (i = 0; i < pot->prob.maxpot_size; ++i){
         cstr = pot->prob.maxpot + i;
         for (j = 0; j < cstr->coef_size; ++j){
             if (cstr->var_id[j] >= pot->lp_var_private){
+                private[private_size++] = i;
+                break;
+            }
+        }
+    }
+
+    use_private = 1;
+    if (private_size == 0)
+        use_private = 0;
+
+    submatrixInit(&agent_pot->maxpot, use_private * var_size, private_size);
+    for (i = 0; i < private_size; ++i){
+        cstr = pot->prob.maxpot + private[i];
+        for (j = 0; j < cstr->coef_size; ++j){
+            if (cstr->var_id[j] >= pot->lp_var_private){
                 submatrixAdd(&agent_pot->maxpot,
-                             cstr->var_id[j] - pot->lp_var_private, i,
+                             cstr->var_id[j] - pot->lp_var_private + offset, i,
                              cstr->coef[j]);
             }
         }
     }
+
+    BOR_FREE(private);
 }
 
-static void potAgentSetGoal(const plan_pot_t *pot,
+static void potAgentSetGoal(const plan_pot_t *pot, int var_size, int offset,
                             plan_pot_agent_t *agent_pot)
 {
     const plan_pot_constr_t *goal;
-    int i, size;
-
-    size = pot->lp_var_size - pot->lp_var_private;
-    if (size == 0)
-        return;
+    int i, id;
 
     goal = &pot->prob.goal;
-    agent_pot->goal = BOR_CALLOC_ARR(int, size);
+    agent_pot->goal = BOR_CALLOC_ARR(int, var_size);
     for (i = 0; i < goal->coef_size; ++i){
-        if (goal->var_id[i] >= pot->lp_var_private)
-            agent_pot->goal[goal->var_id[i] - pot->lp_var_private] = goal->coef[i];
+        if (goal->var_id[i] >= pot->lp_var_private){
+            id = goal->var_id[i] - pot->lp_var_private + offset;
+            agent_pot->goal[id] = goal->coef[i];
+        }
     }
 }
 
-static void potAgentSetCoefAllSyntStates(const plan_pot_t *pot, int range_lcm,
+static void potAgentSetCoefAllSyntStates(const plan_pot_t *pot,
+                                         int var_size, int offset,
+                                         int range_lcm,
                                          plan_pot_agent_t *agent_pot)
 {
-    int i, j, c, id, size;
+    int i, j, c, id;
 
-    size = pot->lp_var_size - pot->lp_var_private;
-    if (size == 0)
-        return;
-
-    agent_pot->coef = BOR_CALLOC_ARR(int, size);
+    agent_pot->coef = BOR_CALLOC_ARR(int, var_size);
     for (i = 0; i < pot->var_size; ++i){
         if (i == pot->ma_privacy_var || !pot->var[i].is_private)
             continue;
 
         c = range_lcm / pot->var[i].range;
         for (j = 0; j < pot->var[i].range; ++j){
-            id = pot->var[i].lp_var_id[j] - pot->lp_var_private;
+            id = pot->var[i].lp_var_id[j] - pot->lp_var_private + offset;
             agent_pot->coef[id] = c;
         }
     }
 }
 
 static void potAgentSetCoefState(const plan_pot_t *pot,
+                                 int var_size, int offset,
                                  const plan_state_t *state,
                                  plan_pot_agent_t *agent_pot)
 {
-    int i, id, size;
+    int i, id;
 
-    size = pot->lp_var_size - pot->lp_var_private;
-    if (size == 0)
-        return;
-
-    agent_pot->coef = BOR_CALLOC_ARR(int, size);
+    agent_pot->coef = BOR_CALLOC_ARR(int, var_size);
     for (i = 0; i < pot->var_size; ++i){
         if (i == pot->ma_privacy_var || !pot->var[i].is_private)
             continue;
 
         id = planStateGet(state, i);
-        id = pot->var[i].lp_var_id[id] - pot->lp_var_private;
+        id = pot->var[i].lp_var_id[id] - pot->lp_var_private + offset;
         agent_pot->coef[id] = 1;
     }
 }
 
 void planPotAgentInit(const plan_pot_t *pot,
+                      int lp_var_size, int var_offset,
                       const plan_state_t *state,
                       int fact_range_lcm,
                       plan_pot_agent_t *agent_pot)
 {
     bzero(agent_pot, sizeof(*agent_pot));
-    potAgentSetOps(pot, agent_pot);
-    potAgentSetMaxpot(pot, agent_pot);
-    potAgentSetGoal(pot, agent_pot);
+    potAgentSetOps(pot, lp_var_size, var_offset, agent_pot);
+    potAgentSetMaxpot(pot, lp_var_size, var_offset, agent_pot);
+    potAgentSetGoal(pot, lp_var_size, var_offset, agent_pot);
 
     if (state != NULL){
-        potAgentSetCoefState(pot, state, agent_pot);
+        potAgentSetCoefState(pot, lp_var_size, var_offset, state, agent_pot);
     }else{
-        potAgentSetCoefAllSyntStates(pot, fact_range_lcm, agent_pot);
+        potAgentSetCoefAllSyntStates(pot, lp_var_size, var_offset,
+                                     fact_range_lcm, agent_pot);
     }
 }
 
@@ -699,6 +717,49 @@ void planPotAgentFree(plan_pot_agent_t *agent_pot)
         BOR_FREE(agent_pot->goal);
     if (agent_pot->coef != NULL)
         BOR_FREE(agent_pot->coef);
+}
+
+static void agentPrintSubmatrix(int id, const char *name,
+                                const plan_pot_submatrix_t *s,
+                                FILE *fout)
+{
+    int i, j;
+
+    fprintf(fout, "[%d] %s: cols: %d, rows: %d\n", id, name, s->cols,
+            s->rows);
+    if (s->rows * s->cols > 0)
+    for (i = 0; i < s->rows; ++i){
+        fprintf(fout, "[%d] %02d:", id, i);
+        for (j = 0; j < s->cols; ++j){
+            fprintf(fout, " %d", s->coef[i * s->cols + j]);
+        }
+        fprintf(fout, "\n");
+    }
+}
+
+void planPotAgentPrint(const plan_pot_agent_t *pa, int id, FILE *fout)
+{
+    int i;
+    fprintf(fout, "[%d]PA:\n", id);
+
+    agentPrintSubmatrix(id, "pub_op", &pa->pub_op, fout);
+    agentPrintSubmatrix(id, "priv_op", &pa->priv_op, fout);
+    agentPrintSubmatrix(id, "maxpot", &pa->maxpot, fout);
+
+    fprintf(fout, "[%d] op_cost:", id);
+    for (i = 0; i < pa->pub_op.rows; ++i)
+        fprintf(fout, " %d", pa->op_cost[i]);
+    fprintf(fout, "\n");
+
+    fprintf(fout, "[%d] goal:", id);
+    for (i = 0; i < pa->priv_op.cols; ++i)
+        fprintf(fout, " %d", pa->goal[i]);
+    fprintf(fout, "\n");
+
+    fprintf(fout, "[%d] coef:", id);
+    for (i = 0; i < pa->priv_op.cols; ++i)
+        fprintf(fout, " %d", pa->coef[i]);
+    fprintf(fout, "\n");
 }
 
 #else /* PLAN_LP */

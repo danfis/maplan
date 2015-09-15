@@ -304,19 +304,6 @@ void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size);
 plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size);
 
 
-void planMAMsgSetPotProb(plan_ma_msg_t *msg, const plan_pot_t *pot,
-                         const plan_state_t *state);
-void planMAMsgPotProb(const plan_ma_msg_t *msg, plan_pot_prob_t *prob);
-void planMAMsgSetPotPot_(plan_ma_msg_t *msg, const double *pot, int pot_size);
-int planMAMsgPotPotSize_(const plan_ma_msg_t *msg);
-int planMAMsgPotProbFactRangeSize(const plan_ma_msg_t *msg);
-void planMAMsgPotProbFactRange(const plan_ma_msg_t *msg, int *fact_range);
-int planMAMsgPotProbStateIdsSize(const plan_ma_msg_t *msg);
-void planMAMsgPotProbStateIds(const plan_ma_msg_t *msg, int *state_ids);
-void planMAMsgPotPot_(const plan_ma_msg_t *msg, double *pot);
-void planMAMsgSetPotInitState(plan_ma_msg_t *msg, int heur);
-int planMAMsgPotInitState(const plan_ma_msg_t *msg);
-
 void planMAMsgAddPotFactRange(plan_ma_msg_t *msg, int range);
 int planMAMsgPotFactRangeSize(const plan_ma_msg_t *msg);
 void planMAMsgPotFactRange(const plan_ma_msg_t *msg, int *fact_range);

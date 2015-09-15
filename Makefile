@@ -59,7 +59,6 @@ OBJS += heur_ma_ff
 OBJS += heur_ma_dtg
 OBJS += heur_ma_max
 OBJS += heur_ma_lm_cut
-OBJS += heur_ma_potential
 OBJS += heur_ma_pot
 OBJS += msg_schema
 OBJS += ma_msg

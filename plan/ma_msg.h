@@ -320,8 +320,11 @@ int planMAMsgPotPotSize(const plan_ma_msg_t *msg);
 void planMAMsgSetPotInitHeur(plan_ma_msg_t *msg, double val);
 double planMAMsgPotInitHeur(const plan_ma_msg_t *msg);
 void planMAMsgPotPot(const plan_ma_msg_t *msg, double *pot);
+
+#ifdef PLAN_LP
 void planMAMsgSetPotAgent(plan_ma_msg_t *msg, const plan_pot_agent_t *pa);
 void planMAMsgPotAgent(const plan_ma_msg_t *msg, plan_pot_agent_t *pa);
+#endif /* PLAN_LP */
 
 #ifdef __cplusplus
 } /* extern "C" */

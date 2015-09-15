@@ -703,6 +703,7 @@ plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)
 
 
 
+#ifdef PLAN_LP
 static void potAgentSetSubmatrix(plan_ma_msg_pot_submatrix_t *ms,
                                  const plan_pot_submatrix_t *s)
 {
@@ -739,6 +740,7 @@ static void potAgentGetSubmatrix(const plan_ma_msg_pot_submatrix_t *ms,
             s->coef[i] = ms->coef[i];
     }
 }
+#endif /* PLAN_LP */
 
 static void planMAMsgPotFree(plan_ma_msg_pot_t *pot)
 {
@@ -945,6 +947,7 @@ static void planMAMsgPotAgentClone(plan_ma_msg_pot_agent_t *dst,
         CLONE_ARR(dst->coef, src->coef, src->coef_size, int32_t);
 }
 
+#ifdef PLAN_LP
 void planMAMsgSetPotAgent(plan_ma_msg_t *msg, const plan_pot_agent_t *pa)
 {
     plan_ma_msg_pot_agent_t *mpa;
@@ -1005,6 +1008,7 @@ void planMAMsgPotAgent(const plan_ma_msg_t *msg, plan_pot_agent_t *pa)
         }
     }
 }
+#endif /* PLAN_LP */
 
 static uint64_t pack754(long double f, unsigned bits, unsigned expbits)
 {

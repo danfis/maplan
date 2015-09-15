@@ -23,6 +23,8 @@
 #include "plan/heur.h"
 #include "plan/pot.h"
 
+#ifdef PLAN_LP
+
 struct _lp_prog_t {
     int cols;   /*!< Number of colums (lp variables) */
     int A_rows; /*!< Number of rows in A (constranits) */
@@ -967,3 +969,15 @@ static void secureDecrypt(const matrix_t *m, double *pot, int pub_var_size)
 
     BOR_FREE(dst);
 }
+
+#else /* PLAN_LP */
+
+plan_heur_t *planHeurMAPotNew(const plan_problem_t *p, unsigned flags)
+{
+    fprintf(stderr, "Error: Cannot create Potential heuristic because no"
+                    " LP-solver was available during compilation!\n");
+    fflush(stderr);
+    return NULL;
+}
+
+#endif /* PLAN_LP */

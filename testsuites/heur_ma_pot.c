@@ -78,6 +78,8 @@ static void runAStar(unsigned flags, int expected_cost,
 
         planSearchAStarParamsInit(&sparams);
         sparams.search.heur = planHeurMAPotNew(p[i], flags);
+        if (sparams.search.heur == NULL)
+            return;
         sparams.search.heur_del = 1;
         sparams.search.prob = p[i];
         search[i] = planSearchAStarNew(&sparams);

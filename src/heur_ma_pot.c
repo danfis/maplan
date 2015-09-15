@@ -27,20 +27,21 @@
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 struct _lp_prog_t {
-    int cols;
-    int A_rows;
-    int *A;
-    int *rhs;
-    int *obj;
+    int cols;   /*!< Number of colums (lp variables) */
+    int A_rows; /*!< Number of rows in A (constranits) */
+    int *A;     /*!< Constraint matrix */
+    int *rhs;   /*!< Right hand side of constriants */
+    int *obj;   /*!< Objective function coeficients */
 };
 typedef struct _lp_prog_t lp_prog_t;
 
 struct _agent_data_t {
     plan_pot_agent_t pot;
-    int lp_private_var_size;
-    int lp_var_offset;
-    int pot_requested;    /*!< True if potentials were requested before
-                               they were computed. */
+    int lp_private_var_size; /*!< Number of LP variables for private parts
+                                  of slave agents */
+    int lp_var_offset;       /*!< Offset of private LP variables */
+    int pot_requested;       /*!< True if potentials were requested before
+                                  they were computed. */
 };
 typedef struct _agent_data_t agent_data_t;
 
@@ -48,21 +49,23 @@ struct _plan_heur_ma_pot_t {
     plan_heur_t heur;
     plan_pot_t pot;
 
-    int pending;
-    int agent_id;
-    int agent_size;
-    agent_data_t *agent_data;
-    int *fact_range;
-    int fact_range_size;
-    int fact_range_lcm;
-    int lp_var_size;
+    int agent_id;             /*!< ID of the current agent */
+    int agent_size;           /*!< Number of agents in cluster */
+    int pending;              /*!< Number of pending requests */
+    agent_data_t *agent_data; /*!< Data related to slave agents */
+    int *fact_range;          /*!< Array of fact (variable) ranges */
+    int fact_range_size;      /*!< Size of .fact_range[] */
+    int fact_range_lcm;       /*!< LCM of fact ranges */
+    int lp_var_size;          /*!< Overall number of LP variables over all
+                                   agents */
 
-    int init_heur;
-    int ready;
-    unsigned flags;
+    int init_heur;            /*!< Heuristic value for the initial state */
+    int ready;                /*!< True if the agent is ready to compute
+                                   heuristic value. */
+    unsigned flags;           /*!< Flags passed to the constructor */
 
-    plan_state_t *state;
-    plan_state_t *state2;
+    plan_state_t *state;      /*!< Pre-allocated state */
+    plan_state_t *state2;     /*!< Pre-allocated state */
 };
 typedef struct _plan_heur_ma_pot_t plan_heur_ma_pot_t;
 #define HEUR(parent) \
@@ -205,6 +208,9 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 
     if (type == PLAN_MA_MSG_HEUR
             && subtype == PLAN_MA_MSG_HEUR_POT_RESPONSE){
+        // Slave agent receives the heuristic value for the initial state
+        // and from now on it can compute the heuristics by itself.
+        // The potentials were received in init-heur request.
         h->init_heur = planMAMsgPotInitHeur(msg);
         res->heur = h->init_heur;
         h->ready = 1;
@@ -212,6 +218,7 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 
     }else if (type == PLAN_MA_MSG_HEUR
                 && subtype == PLAN_MA_MSG_HEUR_POT_INFO_RESPONSE){
+        // Slave agent reponded with basic info about itself.
         processInfo(h, msg);
         --h->pending;
         if (h->pending == 0){
@@ -222,6 +229,8 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 
     }else if (type == PLAN_MA_MSG_HEUR
                 && subtype == PLAN_MA_MSG_HEUR_POT_LP_RESPONSE){
+        // A slave agent responded with its part of the matrices needed for
+        // computation of potentials.
         planMAMsgPotAgent(msg, &h->agent_data[agent_id].pot);
         pthread_mutex_lock(&lock);
         planPotAgentPrint(&h->agent_data[agent_id].pot, comm->node_id, stderr);
@@ -235,6 +244,8 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 
     }else if (type == PLAN_MA_MSG_HEUR
                 && subtype == PLAN_MA_MSG_HEUR_POT_INIT_HEUR_RESPONSE){
+        // A slave agent responded with its private part of the heuristic
+        // value of the initial state.
         h->init_heur += planMAMsgPotInitHeur(msg);
         fprintf(stderr, "init-heur update: %d\n", h->init_heur);
         --h->pending;
@@ -265,18 +276,23 @@ static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
     agent_id = planMAMsgAgent(msg);
 
     if (type == PLAN_MA_MSG_HEUR && subtype == PLAN_MA_MSG_HEUR_POT_REQUEST){
+        // A slave agent requests heuristic value for the initial state.
         sendInitHeur(h, comm, agent_id);
 
     }else if (type == PLAN_MA_MSG_HEUR
                 && subtype == PLAN_MA_MSG_HEUR_POT_INFO_REQUEST){
+        // A master requested basic info about this agent.
         responseInfo(h, comm);
 
     }else if (type == PLAN_MA_MSG_HEUR
                 && subtype == PLAN_MA_MSG_HEUR_POT_LP_REQUEST){
+        // A master requested LP matrices.
         responseLP(h, comm, msg);
 
     }else if (type == PLAN_MA_MSG_HEUR
                 && subtype == PLAN_MA_MSG_HEUR_POT_INIT_HEUR_REQUEST){
+        // A master requested the private part of the heuristic value for
+        // the initial state.
         responseInitHeur(h, comm, msg);
 
     }else{

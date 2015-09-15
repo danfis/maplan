@@ -111,7 +111,7 @@ TEST(testHeurMAPot)
     int i;
     unsigned flags = 0u;
 
-    for (i = 0; i < 5; ++i){
+    for (i = 0; i < 1; ++i){
         runAStar(flags, 10, 5,
                  "proto/depot-pfile1-depot0.proto",
                  "proto/depot-pfile1-distributor0.proto",
@@ -128,7 +128,7 @@ TEST(testHeurMAPot)
     }
 
     flags = PLAN_HEUR_POT_ALL_SYNTACTIC_STATES;
-    for (i = 0; i < 5; ++i){
+    for (i = 0; i < 1; ++i){
         runAStar(flags, 10, 5,
                  "proto/depot-pfile1-depot0.proto",
                  "proto/depot-pfile1-distributor0.proto",

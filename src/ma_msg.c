@@ -56,7 +56,7 @@ struct _plan_ma_msg_pot_t {
     int32_t lp_var_offset;
     int64_t *pot;
     int pot_size;
-    int32_t init_heur;
+    int64_t init_heur;
 
     plan_ma_msg_pot_agent_t agent;
 };
@@ -174,7 +174,7 @@ PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, fact_range_lcm, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, lp_var_size, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, lp_var_offset, INT32)
 PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_t, pot, pot_size, INT64)
-PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, init_heur, INT32)
+PLAN_MSG_SCHEMA_ADD(plan_ma_msg_pot_t, init_heur, INT64)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_pot_t, agent, &schema_pot_agent)
 PLAN_MSG_SCHEMA_END(schema_pot, plan_ma_msg_pot_t, header)
 #define M_pot_fact_range          0x01u
@@ -1172,19 +1172,19 @@ void planMAMsgPotPot(const plan_ma_msg_t *msg, double *dst)
         dst[i] = unpack754_64(pot->pot[i]);
 }
 
-void planMAMsgSetPotInitHeur(plan_ma_msg_t *msg, int val)
+void planMAMsgSetPotInitHeur(plan_ma_msg_t *msg, double val)
 {
     plan_ma_msg_pot_t *pot = &msg->pot;
 
     msg->header |= M_pot;
     pot->header |= M_pot_init_heur;
-    pot->init_heur = val;
+    pot->init_heur = pack754_64(val);
 }
 
-int planMAMsgPotInitHeur(const plan_ma_msg_t *msg)
+double planMAMsgPotInitHeur(const plan_ma_msg_t *msg)
 {
     const plan_ma_msg_pot_t *pot = &msg->pot;
-    return pot->init_heur;
+    return unpack754_64(pot->init_heur);
 }
 
 

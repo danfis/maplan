@@ -18,6 +18,7 @@
  */
 
 #include <boruvka/alloc.h>
+#include <boruvka/rand.h>
 #include "plan/search.h"
 #include "plan/heur.h"
 #include "plan/pot.h"
@@ -34,6 +35,14 @@ struct _lp_prog_t {
     int *obj;   /*!< Objective function coeficients */
 };
 typedef struct _lp_prog_t lp_prog_t;
+
+struct _matrix_t {
+    int cols;
+    int rows;
+    int offset;
+    int *m;
+};
+typedef struct _matrix_t matrix_t;
 
 struct _agent_data_t {
     plan_pot_agent_t pot;
@@ -58,8 +67,9 @@ struct _plan_heur_ma_pot_t {
     int fact_range_lcm;       /*!< LCM of fact ranges */
     int lp_var_size;          /*!< Overall number of LP variables over all
                                    agents */
+    matrix_t secure;          /*!< Matrix for encryption/decryption */
 
-    int init_heur;            /*!< Heuristic value for the initial state */
+    double init_heur;         /*!< Heuristic value for the initial state */
     int ready;                /*!< True if the agent is ready to compute
                                    heuristic value. */
     unsigned flags;           /*!< Flags passed to the constructor */
@@ -126,6 +136,14 @@ static void lpProgSet(lp_prog_t *prog, const plan_heur_ma_pot_t *h);
 static void lpProgCompute(const lp_prog_t *prog, plan_heur_ma_pot_t *h);
 static void lpProgPrint(const lp_prog_t *prog, FILE *fout);
 
+/** Initialize secure matrix */
+static void secureInit(matrix_t *m, int num_private_vars, int num_vars,
+                       int private_offset);
+/** Encrypt private matrices */
+static void secureEncrypt(const matrix_t *m, plan_pot_agent_t *pot);
+/** Decrypt potentials */
+static void secureDecrypt(const matrix_t *m, double *pot, int pub_var_size);
+
 plan_heur_t *planHeurMAPotNew(const plan_problem_t *p, unsigned flags)
 {
     plan_heur_ma_pot_t *h;
@@ -164,6 +182,8 @@ static void heurDel(plan_heur_t *heur)
         BOR_FREE(h->agent_data);
     if (h->fact_range)
         BOR_FREE(h->fact_range);
+    if (h->secure.m != NULL)
+        BOR_FREE(h->secure.m);
 
     planStateDel(h->state);
     planStateDel(h->state2);
@@ -247,12 +267,13 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
         // A slave agent responded with its private part of the heuristic
         // value of the initial state.
         h->init_heur += planMAMsgPotInitHeur(msg);
-        fprintf(stderr, "init-heur update: %d\n", h->init_heur);
+        fprintf(stderr, "init-heur update: %lf\n", h->init_heur);
         --h->pending;
         if (h->pending == 0){
-            sendInitHeurToPending(h, comm);
-            res->heur = h->init_heur;
             h->ready = 1;
+            sendInitHeurToPending(h, comm);
+            fprintf(stderr, "INIT-HEUR: %lf\n", h->init_heur);
+            res->heur = h->init_heur;
             return 0;
         }
 
@@ -454,7 +475,6 @@ static void responseLP(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
     plan_ma_msg_t *mout;
     int var_size, var_offset, fact_range;
 
-    // TODO: secure
     var_size   = planMAMsgPotLPVarSize(msg);
     var_offset = planMAMsgPotLPVarOffset(msg);
     fact_range = planMAMsgPotFactRangeLCM(msg);
@@ -464,6 +484,13 @@ static void responseLP(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
     }else{
         planPotAgentInit(&h->pot, var_size, var_offset, &state, -1, &pot);
     }
+
+    if (h->pot.lp_var_private < h->pot.lp_var_size){
+        secureInit(&h->secure, h->pot.lp_var_size - h->pot.lp_var_private,
+                   var_size, var_offset);
+        secureEncrypt(&h->secure, &pot);
+    }
+
     pthread_mutex_lock(&lock);
     planPotAgentPrint(&pot, comm->node_id, stderr);
     pthread_mutex_unlock(&lock);
@@ -491,10 +518,14 @@ static void computePot(plan_heur_ma_pot_t *h)
     lpProgSet(&prog, h);
     lpProgPrint(&prog, stderr);
     lpProgCompute(&prog, h);
+    double s = 0.;
+    for (int i = 0; i < prog.cols; ++i)
+        s += prog.obj[i] * h->pot.pot[i];
+    fprintf(stderr, "LP: %lf\n", s);
     lpProgFree(&prog);
 
     h->init_heur = planPotStatePot(&h->pot, h->state);
-    fprintf(stderr, "init-heur: %d\n", h->init_heur);
+    fprintf(stderr, "init-heur: %lf\n", h->init_heur);
 }
 
 static void requestInitHeur(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm)
@@ -523,20 +554,18 @@ static void responseInitHeur(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
 {
     PLAN_STATE_STACK(state, h->pot.var_size);
     plan_ma_msg_t *mout;
-    int i, heur, v, offset, ins, size;
+    int i, v, offset, ins, size;
+    double heur;
 
     planMAStateGetFromMAMsg(h->heur.ma_state, msg, &state);
     offset = planMAMsgPotLPVarOffset(msg);
 
-    // TODO: secure
     if (h->pot.pot != NULL)
         BOR_FREE(h->pot.pot);
     h->pot.pot = BOR_ALLOC_ARR(double, planMAMsgPotPotSize(msg));
     planMAMsgPotPot(msg, h->pot.pot);
-    size = h->pot.lp_var_size - h->pot.lp_var_private;
-    ins = h->pot.lp_var_private;
-    for (i = 0; i < size; ++i)
-        h->pot.pot[ins++] = h->pot.pot[i + offset];
+    if (h->secure.m != NULL)
+        secureDecrypt(&h->secure, h->pot.pot, h->pot.lp_var_private);
 
     heur = 0;
     for (i = 0; i < h->pot.var_size; ++i){
@@ -545,6 +574,7 @@ static void responseInitHeur(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
         v = planStateGet(&state, i);
         heur += h->pot.pot[h->pot.var[i].lp_var_id[v]];
     }
+    fprintf(stderr, "H: %lf\n", heur);
 
     mout = planMAMsgNew(PLAN_MA_MSG_HEUR,
                         PLAN_MA_MSG_HEUR_POT_INIT_HEUR_RESPONSE,
@@ -559,7 +589,7 @@ static void sendInitHeur(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
 {
     plan_ma_msg_t *msg;
 
-    if (h->init_heur == -1){
+    if (!h->ready){
         // Potentials are not computed yet -- set agent as pending
         h->agent_data[agent_id].pot_requested = 1;
         return;
@@ -577,6 +607,7 @@ static void sendInitHeurToPending(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm)
 {
     int i;
 
+    fprintf(stderr, "to-all\n");
     for (i = 0; i < h->agent_size; ++i){
         if (i != h->agent_id && h->agent_data[i].pot_requested){
             sendInitHeur(h, comm, i);
@@ -824,4 +855,136 @@ static void lpProgCompute(const lp_prog_t *prog, plan_heur_ma_pot_t *h)
     h->pot.pot = BOR_CALLOC_ARR(double, prog->cols);
     planLPSolve(lp, h->pot.pot);
     planLPDel(lp);
+}
+
+
+
+static void secureAddRow(matrix_t *m, int dst_row, int add_row, int c)
+{
+    int i, src, dst;
+
+    src = m->cols * add_row;
+    dst = m->cols * dst_row;
+    for (i = 0; i < m->cols; ++i)
+        m->m[dst++] += m->m[src++] * c;
+}
+
+static int secureRandInt(bor_rand_t *rnd, int range)
+{
+    int v;
+
+    do {
+        v = borRand(rnd, 0, range);
+    } while (v < 0 || v >= range);
+    return v;
+}
+
+static void secureInit(matrix_t *m, int num_private_vars, int num_vars,
+                       int private_offset)
+{
+    bor_rand_t rnd;
+    int i, ins, rounds, src, dst, c;
+
+    if (num_private_vars == 0)
+        return;
+
+    m->cols = num_private_vars;
+    m->rows = num_vars;
+    m->offset = private_offset;
+    m->m = BOR_CALLOC_ARR(int, m->cols * m->rows);
+
+    // Create part of the unit matrix
+    ins = private_offset * m->cols;
+    for (i = 0; i < num_private_vars; ++i){
+        m->m[ins] = 1;// * (secureRandInt(&rnd, 10) + 1);
+        ins += m->cols + 1;
+    }
+
+    // And sum random rows so we preserve rank of the matrix
+    borRandInit(&rnd);
+    for (rounds = 0; rounds < num_private_vars; ++rounds){
+        src = secureRandInt(&rnd, num_private_vars);
+        dst = secureRandInt(&rnd, num_private_vars);
+        if (src == dst){
+            --rounds;
+            continue;
+        }
+
+        c = secureRandInt(&rnd, 2);
+        if (c == 0)
+            c = -1;
+        secureAddRow(m, dst + private_offset, src + private_offset, c);
+    }
+}
+
+static void secureEncryptSubmatrix(const matrix_t *m,
+                                   plan_pot_submatrix_t *sub)
+{
+    int *src, row, col, k, ins, sum;
+
+    if (sub->cols * sub->rows == 0)
+        return;
+
+    // Copy private part
+    src = BOR_ALLOC_ARR(int, m->cols * sub->rows);
+    ins = 0;
+    for (row = 0; row < sub->rows; ++row){
+        for (col = 0; col < m->cols; ++col)
+            src[ins++] = sub->coef[row * sub->cols + col + m->offset];
+    }
+
+    for (row = 0; row < sub->rows; ++row){
+        for (col = 0; col < sub->cols; ++col){
+            sum = 0;
+            for (k = 0; k < m->cols; ++k)
+                sum += m->m[col * m->cols + k] * src[row * m->cols + k];
+            sub->coef[row * sub->cols + col] = sum;
+        }
+    }
+
+    BOR_FREE(src);
+}
+
+static void secureEncryptArr(const matrix_t *m, int *arr)
+{
+    int *src, i, j, sum;
+
+    src = BOR_ALLOC_ARR(int, m->cols);
+    for (i = 0; i < m->cols; ++i)
+        src[i] = arr[m->offset + i];
+
+    for (i = 0; i < m->rows; ++i){
+        sum = 0;
+        for (j = 0; j < m->cols; ++j)
+            sum += src[j] * m->m[i * m->cols + j];
+        arr[i] = sum;
+    }
+    BOR_FREE(src);
+}
+
+static void secureEncrypt(const matrix_t *m, plan_pot_agent_t *pot)
+{
+    secureEncryptSubmatrix(m, &pot->priv_op);
+    secureEncryptSubmatrix(m, &pot->maxpot);
+    secureEncryptArr(m, pot->goal);
+    secureEncryptArr(m, pot->coef);
+}
+
+static void secureDecrypt(const matrix_t *m, double *pot, int pub_var_size)
+{
+    int i, j;
+    double sum, *dst;
+
+    dst = BOR_ALLOC_ARR(double, m->cols);
+    for (i = 0; i < m->cols; ++i){
+        sum = 0.;
+        for (j = 0; j < m->rows; ++j)
+            sum += pot[j] * m->m[j * m->cols + i];
+        dst[i] = sum;
+    }
+
+    for (i = 0; i < m->cols; ++i)
+        pot[i + pub_var_size] = dst[i];
+
+    BOR_FREE(dst);
 }

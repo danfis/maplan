@@ -22,6 +22,11 @@
 #include <boruvka/alloc.h>
 #include <plan/msg_schema.h>
 
+#define ARR_LEN_TYPE uint32_t
+#define ARR_LEN_TYPE_SIZE sizeof(ARR_LEN_TYPE)
+#define ARR_LEN_TO_LE htole32
+#define ARR_LEN_TO_H le32toh
+
 static int byte_size[20] = {
     /* _PLAN_MSG_SCHEMA_INT8 */  1,
     /* _PLAN_MSG_SCHEMA_INT32 */ 4,
@@ -34,16 +39,16 @@ static int byte_size[20] = {
     /* */ 0,
     /* _PLAN_MSG_SCHEMA_MSG */  0,
 /* ARR: */
-    /* _PLAN_MSG_SCHEMA_INT8 */  2,
-    /* _PLAN_MSG_SCHEMA_INT32 */ 2,
-    /* _PLAN_MSG_SCHEMA_INT64 */ 2,
+    /* _PLAN_MSG_SCHEMA_INT8 */  ARR_LEN_TYPE_SIZE,
+    /* _PLAN_MSG_SCHEMA_INT32 */ ARR_LEN_TYPE_SIZE,
+    /* _PLAN_MSG_SCHEMA_INT64 */ ARR_LEN_TYPE_SIZE,
     /* */ 0,
     /* */ 0,
     /* */ 0,
     /* */ 0,
     /* */ 0,
     /* */ 0,
-    /* _PLAN_MSG_SCHEMA_MSG */  2,
+    /* _PLAN_MSG_SCHEMA_MSG */  ARR_LEN_TYPE_SIZE,
 };
 
 #define HEADER(msg_struct, schema) \
@@ -102,24 +107,24 @@ _bor_inline uint32_t rHeader(unsigned char **rbuf)
 
 _bor_inline void wArrLen(unsigned char **wbuf, int len)
 {
-    uint16_t len16 = len;
+    ARR_LEN_TYPE len32 = len;
 
 #ifdef BOR_BIG_ENDIAN
-    len16 = htole16(len16);
+    len32 = ARR_LEN_TO_LE(len32);
 #endif
-    memcpy(*wbuf, &len16, 2);
-    *wbuf += 2;
+    memcpy(*wbuf, &len32, ARR_LEN_TYPE_SIZE);
+    *wbuf += ARR_LEN_TYPE_SIZE;
 }
 
 _bor_inline int rArrLen(unsigned char **rbuf)
 {
     int len;
 #ifdef BOR_BIG_ENDIAN
-    len = le16toh(*(uint16_t *)*rbuf);
+    len = ARR_LEN_TO_H(*(ARR_LEN_TYPE *)*rbuf);
 #else
-    len = *(uint16_t *)*rbuf;
+    len = *(ARR_LEN_TYPE *)*rbuf;
 #endif
-    *rbuf += 2;
+    *rbuf += ARR_LEN_TYPE_SIZE;
     return len;
 }
 

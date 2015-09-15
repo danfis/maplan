@@ -23,10 +23,6 @@
 #include "plan/heur.h"
 #include "plan/pot.h"
 
-// TODO: For debug
-#include <pthread.h>
-static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-
 struct _lp_prog_t {
     int cols;   /*!< Number of colums (lp variables) */
     int A_rows; /*!< Number of rows in A (constranits) */
@@ -134,7 +130,7 @@ static void lpProgFree(lp_prog_t *prog);
 static void lpProgSet(lp_prog_t *prog, const plan_heur_ma_pot_t *h);
 /** Compute LP program and stores results in main structure */
 static void lpProgCompute(const lp_prog_t *prog, plan_heur_ma_pot_t *h);
-static void lpProgPrint(const lp_prog_t *prog, FILE *fout);
+//static void lpProgPrint(const lp_prog_t *prog, FILE *fout);
 
 /** Initialize secure matrix */
 static void secureInit(matrix_t *m, int num_private_vars, int num_vars,
@@ -252,9 +248,6 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
         // A slave agent responded with its part of the matrices needed for
         // computation of potentials.
         planMAMsgPotAgent(msg, &h->agent_data[agent_id].pot);
-        pthread_mutex_lock(&lock);
-        planPotAgentPrint(&h->agent_data[agent_id].pot, comm->node_id, stderr);
-        pthread_mutex_unlock(&lock);
         --h->pending;
         if (h->pending == 0){
             computePot(h);
@@ -267,12 +260,10 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
         // A slave agent responded with its private part of the heuristic
         // value of the initial state.
         h->init_heur += planMAMsgPotInitHeur(msg);
-        fprintf(stderr, "init-heur update: %lf\n", h->init_heur);
         --h->pending;
         if (h->pending == 0){
             h->ready = 1;
             sendInitHeurToPending(h, comm);
-            fprintf(stderr, "INIT-HEUR: %lf\n", h->init_heur);
             res->heur = h->init_heur;
             return 0;
         }
@@ -435,14 +426,12 @@ static void processAllInfo(plan_heur_ma_pot_t *h)
     // Compute overall number of LP variables offset for each slave agent
     h->lp_var_size = h->pot.lp_var_size;
     offset = h->lp_var_size;
-    fprintf(stderr, "lp_var_size: %d, offset: %d\n", h->lp_var_size, offset);
     for (i = 0; i < h->agent_size; ++i){
         if (i != h->agent_id){
             h->lp_var_size += h->agent_data[i].lp_private_var_size;
             h->agent_data[i].lp_var_offset = offset;
             offset += h->agent_data[i].lp_private_var_size;
         }
-        fprintf(stderr, "%d lp_var_size: %d, offset: %d\n", i, h->lp_var_size, offset);
     }
 }
 
@@ -491,10 +480,6 @@ static void responseLP(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
         secureEncrypt(&h->secure, &pot);
     }
 
-    pthread_mutex_lock(&lock);
-    planPotAgentPrint(&pot, comm->node_id, stderr);
-    pthread_mutex_unlock(&lock);
-
     mout = planMAMsgNew(PLAN_MA_MSG_HEUR,
                         PLAN_MA_MSG_HEUR_POT_LP_RESPONSE,
                         comm->node_id);
@@ -516,16 +501,11 @@ static void computePot(plan_heur_ma_pot_t *h)
     // Compute LP program and set h->pot.pot
     lpProgInit(&prog, h);
     lpProgSet(&prog, h);
-    lpProgPrint(&prog, stderr);
+    //lpProgPrint(&prog, stderr);
     lpProgCompute(&prog, h);
-    double s = 0.;
-    for (int i = 0; i < prog.cols; ++i)
-        s += prog.obj[i] * h->pot.pot[i];
-    fprintf(stderr, "LP: %lf\n", s);
     lpProgFree(&prog);
 
     h->init_heur = planPotStatePot(&h->pot, h->state);
-    fprintf(stderr, "init-heur: %lf\n", h->init_heur);
 }
 
 static void requestInitHeur(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm)
@@ -554,11 +534,10 @@ static void responseInitHeur(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
 {
     PLAN_STATE_STACK(state, h->pot.var_size);
     plan_ma_msg_t *mout;
-    int i, v, offset, ins, size;
+    int i, v;
     double heur;
 
     planMAStateGetFromMAMsg(h->heur.ma_state, msg, &state);
-    offset = planMAMsgPotLPVarOffset(msg);
 
     if (h->pot.pot != NULL)
         BOR_FREE(h->pot.pot);
@@ -574,7 +553,6 @@ static void responseInitHeur(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
         v = planStateGet(&state, i);
         heur += h->pot.pot[h->pot.var[i].lp_var_id[v]];
     }
-    fprintf(stderr, "H: %lf\n", heur);
 
     mout = planMAMsgNew(PLAN_MA_MSG_HEUR,
                         PLAN_MA_MSG_HEUR_POT_INIT_HEUR_RESPONSE,
@@ -607,7 +585,6 @@ static void sendInitHeurToPending(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm)
 {
     int i;
 
-    fprintf(stderr, "to-all\n");
     for (i = 0; i < h->agent_size; ++i){
         if (i != h->agent_id && h->agent_data[i].pot_requested){
             sendInitHeur(h, comm, i);
@@ -635,6 +612,7 @@ static int heurHeur(const plan_heur_ma_pot_t *h,
     return heur;
 }
 
+/*
 static void lpProgPrint(const lp_prog_t *prog, FILE *fout)
 {
     int i, j;
@@ -656,6 +634,7 @@ static void lpProgPrint(const lp_prog_t *prog, FILE *fout)
         fprintf(fout, " %d", prog->obj[i]);
     fprintf(fout, "\n");
 }
+*/
 
 static void lpProgInit(lp_prog_t *prog, const plan_heur_ma_pot_t *h)
 {
@@ -896,7 +875,7 @@ static void secureInit(matrix_t *m, int num_private_vars, int num_vars,
     // Create part of the unit matrix
     ins = private_offset * m->cols;
     for (i = 0; i < num_private_vars; ++i){
-        m->m[ins] = 1;// * (secureRandInt(&rnd, 10) + 1);
+        m->m[ins] = 1;
         ins += m->cols + 1;
     }
 

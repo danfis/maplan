@@ -436,14 +436,18 @@ static void responseLP(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
     plan_pot_agent_t pot;
     PLAN_STATE_STACK(state, h->pot.var_size);
     plan_ma_msg_t *mout;
-    int var_size, var_offset;
+    int var_size, var_offset, fact_range;
 
-    // TODO: all-synt-states
     // TODO: secure
     var_size   = planMAMsgPotLPVarSize(msg);
     var_offset = planMAMsgPotLPVarOffset(msg);
+    fact_range = planMAMsgPotFactRangeLCM(msg);
     planMAStateGetFromMAMsg(h->heur.ma_state, msg, &state);
-    planPotAgentInit(&h->pot, var_size, var_offset, &state, -1, &pot);
+    if (h->flags & PLAN_HEUR_POT_ALL_SYNTACTIC_STATES){
+        planPotAgentInit(&h->pot, var_size, var_offset, NULL, fact_range, &pot);
+    }else{
+        planPotAgentInit(&h->pot, var_size, var_offset, &state, -1, &pot);
+    }
     pthread_mutex_lock(&lock);
     planPotAgentPrint(&pot, comm->node_id, stderr);
     pthread_mutex_unlock(&lock);
@@ -462,7 +466,9 @@ static void computePot(plan_heur_ma_pot_t *h)
 {
     lp_prog_t prog;
 
-    // TODO: Set up pot.state_coef for all-synt-states
+    // Set up pot.state_coef for all-synt-states
+    if (h->flags & PLAN_HEUR_POT_ALL_SYNTACTIC_STATES)
+        planPotSetAllSyntacticStatesRange(&h->pot, h->fact_range_lcm);
 
     // Compute LP program and set h->pot.pot
     lpProgInit(&prog, h);
@@ -506,6 +512,7 @@ static void responseInitHeur(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
     planMAStateGetFromMAMsg(h->heur.ma_state, msg, &state);
     offset = planMAMsgPotLPVarOffset(msg);
 
+    // TODO: secure
     if (h->pot.pot != NULL)
         BOR_FREE(h->pot.pot);
     h->pot.pot = BOR_ALLOC_ARR(double, planMAMsgPotPotSize(msg));

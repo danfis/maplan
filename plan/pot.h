@@ -133,6 +133,11 @@ int planPotToVarIds(const plan_pot_t *pot, const plan_state_t *state,
                     int *var_ids);
 
 /**
+ * Set pot->prob.state_coef from all-syntactic-states version of potential.
+ */
+void planPotSetAllSyntacticStatesRange(plan_pot_t *pot, int fact_range);
+
+/**
  * Returns computed potential for given variable-value pair.
  */
 _bor_inline double planPotPot(const plan_pot_t *pot, int var, int val);

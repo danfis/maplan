@@ -178,9 +178,9 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
 
     if (type == PLAN_MA_MSG_HEUR
             && subtype == PLAN_MA_MSG_HEUR_POT_RESULTS_RESPONSE){
-        size = planMAMsgPotPotSize(msg);
+        size = planMAMsgPotPotSize_(msg);
         h->pot.pot = BOR_ALLOC_ARR(double, size);
-        planMAMsgPotPot(msg, h->pot.pot);
+        planMAMsgPotPot_(msg, h->pot.pot);
         res->heur = planMAMsgPotInitState(msg);
         return 0;
     }
@@ -207,6 +207,7 @@ static void heurRequest(plan_heur_t *heur, plan_ma_comm_t *comm,
                             comm->node_id);
         planMAStateGetFromMAMsg(h->heur.ma_state, msg, &state);
         planMAMsgSetPotProb(mout, &h->pot, &state);
+
         planMACommSendToNode(comm, planMAMsgAgent(msg), mout);
         planMAMsgDel(mout);
 
@@ -564,7 +565,7 @@ static void sendResults(plan_heur_ma_potential_t *h, plan_ma_comm_t *comm,
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_POT_RESULTS_RESPONSE,
                        comm->node_id);
-    planMAMsgSetPotPot(msg, h->agent_data[agent_id].pot,
+    planMAMsgSetPotPot_(msg, h->agent_data[agent_id].pot,
                        h->agent_data[agent_id].pot_size);
     planMAMsgSetPotInitState(msg, h->init_heur);
     planMACommSendToNode(comm, agent_id, msg);

@@ -225,18 +225,10 @@ static int lcm(int x, int y)
     return (x * y) / gcd(x, y);
 }
 
-static void probInitAllSyntacticStates(plan_pot_prob_t *prob,
-                                       const plan_pot_t *pot)
+static void probInitAllSyntacticStatesRange(plan_pot_prob_t *prob, int R,
+                                            const plan_pot_t *pot)
 {
-    int i, j, c, R, r;
-
-    R = 1;
-    for (i = 0; i < pot->var_size; ++i){
-        if (i == pot->ma_privacy_var)
-            continue;
-
-        R = lcm(R, pot->var[i].range);
-    }
+    int i, j, c, r;
 
     for (i = 0; i < pot->var_size; ++i){
         if (i == pot->ma_privacy_var)
@@ -248,6 +240,22 @@ static void probInitAllSyntacticStates(plan_pot_prob_t *prob,
             prob->state_coef[c] = r;
         }
     }
+}
+
+static void probInitAllSyntacticStates(plan_pot_prob_t *prob,
+                                       const plan_pot_t *pot)
+{
+    int i, R;
+
+    R = 1;
+    for (i = 0; i < pot->var_size; ++i){
+        if (i == pot->ma_privacy_var)
+            continue;
+
+        R = lcm(R, pot->var[i].range);
+    }
+
+    probInitAllSyntacticStatesRange(prob, R, pot);
 }
 
 void planPotProbSetAllSyntacticStatesFromFactRange(plan_pot_prob_t *prob,
@@ -538,6 +546,12 @@ int planPotToVarIds(const plan_pot_t *pot, const plan_state_t *state,
 
     return size;
 }
+
+void planPotSetAllSyntacticStatesRange(plan_pot_t *pot, int fact_range)
+{
+    probInitAllSyntacticStatesRange(&pot->prob, fact_range, pot);
+}
+
 
 static void submatrixInit(plan_pot_submatrix_t *s, int cols, int rows)
 {

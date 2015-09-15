@@ -184,7 +184,7 @@ PLAN_MSG_SCHEMA_END(schema_pot, plan_ma_msg_pot_t, header)
 #define M_pot_lp_var_offset       0x10u
 #define M_pot_pot                 0x20u
 #define M_pot_init_heur           0x40u
-#define M_pot_agent               0x90u
+#define M_pot_agent               0x80u
 
 PLAN_MSG_SCHEMA_BEGIN(schema_pot_constr)
 PLAN_MSG_SCHEMA_ADD_ARR(plan_ma_msg_pot_constr_t, var_id, var_id_size, INT32)
@@ -1043,6 +1043,8 @@ static void planMAMsgPotClone(plan_ma_msg_pot_t *dst,
 
     if (dst->fact_range != NULL)
         CLONE_ARR(dst->fact_range, src->fact_range, src->fact_range_size, int32_t);
+    if (dst->pot != NULL)
+        CLONE_ARR(dst->pot, src->pot, src->pot_size, int64_t);
     planMAMsgPotAgentClone(&dst->agent, &src->agent);
 }
 

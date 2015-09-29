@@ -34,17 +34,14 @@ extern "C" {
 
 struct _plan_pddl_sas_fact_t {
     int id;
-    plan_pddl_ground_facts_t conflict;
-    plan_pddl_ground_facts_t single_edge;
-    plan_pddl_ground_facts_t *multi_edge;
-    int multi_edge_size;
-    int in_rank;
-    plan_var_id_t var;
-    plan_val_t val;
+    plan_pddl_ground_facts_t conflict; /*!< List of facts that are in
+                                            conflict with this fact. */
+    plan_pddl_ground_facts_t *edge;    /*!< List of out-edges */
+    int edge_size;                     /*!< Number of out-edges */
+    int indegree;                      /*!< In-degree on the whole graph */
 
-    int indegree;                   /*!< In-degree on the whole graph */
-    plan_pddl_ground_facts_t *edge; /*!< List of out-edges */
-    int edge_size;                  /*!< Number of out-edges */
+    plan_var_id_t var; /*!< Assigned variable ID */
+    plan_val_t val;    /*!< Assigned value */
 };
 typedef struct _plan_pddl_sas_fact_t plan_pddl_sas_fact_t;
 

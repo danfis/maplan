@@ -374,7 +374,6 @@ static int edgeState(const plan_pddl_ground_facts_t *fs, const int *I)
 }
 
 /** Returns:
- *    - -2 if there is conflict in an edge,
  *    - -1 if all edges are bound, or
  *    - id>=0 of the first unbound edge */
 static int nextUnboundEdge(const plan_pddl_sas_fact_t *f, const int *I)
@@ -383,8 +382,6 @@ static int nextUnboundEdge(const plan_pddl_sas_fact_t *f, const int *I)
 
     for (i = 0; i < f->edge_size; ++i){
         state = edgeState(f->edge + i, I);
-        if (state == -1)
-            return -2;
         if (state == 0)
             return i;
     }
@@ -486,9 +483,6 @@ static void processFact(plan_pddl_sas_t *sas, const plan_pddl_sas_fact_t *f,
     int i, eid;
 
     eid = nextUnboundEdge(f, I);
-    if (eid == -2)
-        return;
-
     if (eid == -1){
         // All edges are bound, close this fact and continue with the next
         // one.

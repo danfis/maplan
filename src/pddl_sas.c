@@ -229,6 +229,13 @@ static void sasFactFree(plan_pddl_sas_fact_t *f)
     }
     if (f->multi_edge != NULL)
         BOR_FREE(f->multi_edge);
+
+    for (i = 0; i < f->edge_size; ++i){
+        if (f->edge[i].fact != NULL)
+            BOR_FREE(f->edge[i].fact);
+    }
+    if (f->edge != NULL)
+        BOR_FREE(f->edge);
 }
 
 static void sasFactMergeConflict(plan_pddl_sas_fact_t *dst,
@@ -308,6 +315,20 @@ static void sasFactAddMultiEdge(plan_pddl_sas_fact_t *f,
     memcpy(dst->fact, fs->fact, sizeof(int) * fs->size);
 }
 
+static void sasFactAddEdge(plan_pddl_sas_fact_t *f,
+                           const plan_pddl_ground_facts_t *fs)
+{
+    plan_pddl_ground_facts_t *dst;
+
+    ++f->edge_size;
+    f->edge = BOR_REALLOC_ARR(f->edge, plan_pddl_ground_facts_t,
+                              f->edge_size);
+    dst = f->edge + f->edge_size - 1;
+    dst->size = fs->size;
+    dst->fact = BOR_ALLOC_ARR(int, fs->size);
+    memcpy(dst->fact, fs->fact, sizeof(int) * fs->size);
+}
+
 static void addActionEdges(plan_pddl_sas_t *sas,
                            const plan_pddl_ground_facts_t *del,
                            const plan_pddl_ground_facts_t *add)
@@ -318,15 +339,22 @@ static void addActionEdges(plan_pddl_sas_t *sas,
     for (i = 0; i < del->size; ++i){
         fact = sas->fact + del->fact[i];
 
+        // TODO: del
         if (add->size == 1){
             sasFactAddSingleEdge(fact, add->fact[0]);
         }else{
             sasFactAddMultiEdge(fact, add);
         }
+
+        sasFactAddEdge(fact, add);
     }
 
+    // TODO: del
     for (i = 0; i < add->size; ++i)
         ++sas->fact[add->fact[i]].in_rank;
+
+    for (i = 0; i < add->size; ++i)
+        ++sas->fact[add->fact[i]].indegree;
 }
 
 static void addConflicts(plan_pddl_sas_t *sas,
@@ -369,6 +397,7 @@ static void processAction(plan_pddl_sas_t *sas,
                           const plan_pddl_ground_facts_t *eff_add,
                           const plan_pddl_ground_facts_t *eff_del)
 {
+    // TODO: maybe only addConflicts(sas, eff_add) should be enough
     addActionEdges(sas, eff_del, eff_add);
     addConflicts(sas, eff_del);
     addConflicts(sas, eff_add);

@@ -41,6 +41,10 @@ struct _plan_pddl_sas_fact_t {
     int in_rank;
     plan_var_id_t var;
     plan_val_t val;
+
+    int indegree;                   /*!< In-degree on the whole graph */
+    plan_pddl_ground_facts_t *edge; /*!< List of out-edges */
+    int edge_size;                  /*!< Number of out-edges */
 };
 typedef struct _plan_pddl_sas_fact_t plan_pddl_sas_fact_t;
 

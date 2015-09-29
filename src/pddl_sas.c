@@ -332,6 +332,20 @@ static void writeFactIds(plan_pddl_ground_facts_t *dst,
 
 
 /*** FIND-INVARIANTS ***/
+/** Returns true if adding the fact to the component would cause conflict
+ *  with other facts. */
+static int factInConflict(const plan_pddl_sas_fact_t *f, const int *I)
+{
+    int i;
+
+    for (i = 0; i < f->conflict.size; ++i){
+        if (I[f->conflict.fact[i]] > 0)
+            return 1;
+    }
+
+    return 0;
+}
+
 /** Check if fact can be in the current invariant and if so the fact is
  *  added/removed from the component and the conflicting facts are
  *  removed/added from the component (depending on the val).
@@ -340,7 +354,7 @@ static int setFact(const plan_pddl_sas_fact_t *f, int *I, int val)
 {
     int i;
 
-    if (I[f->id] < 0)
+    if (I[f->id] < 0 || factInConflict(f, I))
         return 0;
 
     I[f->id] += val;
@@ -495,7 +509,7 @@ static void processFact(plan_pddl_sas_t *sas, const plan_pddl_sas_fact_t *f,
         for (i = 0; i < fs->size; ++i){
             next_fact = sas->fact + fs->fact[i];
 
-            if (setFact(next_fact, I, 1)){
+            if (I[next_fact->id] == 0 && setFact(next_fact, I, 1)){
                 processFact(sas, next_fact, C, I);
                 setFact(next_fact, I, -1);
             }

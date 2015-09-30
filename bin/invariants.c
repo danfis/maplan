@@ -44,11 +44,11 @@ int main(int argc, char *argv[])
 
     planPDDLGroundInit(&ground, pddl);
     planPDDLGround(&ground);
-    planPDDLGroundPrint(&ground, stdout);
+    //planPDDLGroundPrint(&ground, stdout);
 
     planPDDLSasInit(&sas, &ground);
     planPDDLSas(&sas, sas_flags);
-    planPDDLSasPrintFacts(&sas, &ground, stdout);
+    //planPDDLSasPrintFacts(&sas, &ground, stdout);
     planPDDLSasPrintInvariant(&sas, &ground, stdout);
     planPDDLSasPrintInvariantFD(&sas, &ground, stdout);
     planPDDLSasFree(&sas);

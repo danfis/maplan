@@ -36,6 +36,7 @@ struct _plan_pddl_sas_fact_t {
     int id;
     plan_pddl_ground_facts_t conflict; /*!< List of facts that are in
                                             conflict with this fact. */
+    int *neigh;
     plan_pddl_ground_facts_t *edge;    /*!< List of edges (add->del) */
     int edge_size;                     /*!< Number of edges */
 
@@ -53,9 +54,8 @@ struct _plan_pddl_sas_t {
     plan_pddl_sas_fact_t *fact; /*!< Array of fact related data */
     int fact_size;              /*!< Number of facts */
 
-    bor_extarr_t *inv_pool;   /*!< Pool of all invariants */
-    bor_htable_t *inv_htable; /*!< Hash table for invariants */
-    int inv_size;             /*!< Number of found invariants */
+    bor_list_t inv;           /*!< List of invariants */
+    int inv_size;             /*!< Number of invariants */
     plan_val_t *var_range;    /*!< Range for each variable */
     plan_var_id_t *var_order; /*!< Order of variables as suggested by
                                    causal-graph analysis. */

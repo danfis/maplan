@@ -18,23 +18,16 @@
  */
 
 #include <boruvka/alloc.h>
-#include <boruvka/hfunc.h>
 #include "plan/pddl_sas.h"
 #include "plan/causal_graph.h"
 
 struct _inv_t {
     int *fact;
     int size;
-    bor_htable_key_t key;
-    bor_list_t htable;
+    bor_list_t list;
 };
 typedef struct _inv_t inv_t;
 
-/** Computes hash key of the invariant */
-_bor_inline bor_htable_key_t invComputeHash(const inv_t *inv);
-/** Callbacks for hash table structure */
-static bor_htable_key_t invHash(const bor_list_t *k, void *_);
-static int invEq(const bor_list_t *k1, const bor_list_t *k2, void *_);
 /** Frees allocated resources of sas-fact */
 static void sasFactFree(plan_pddl_sas_fact_t *f);
 /** Add conflicts between all facts in fs */
@@ -59,7 +52,6 @@ static void causalGraph(plan_pddl_sas_t *sas);
 
 void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
 {
-    inv_t inv_init;
     int i;
 
     sas->ground = g;
@@ -70,13 +62,12 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
     for (i = 0; i < sas->fact_size; ++i){
         sas->fact[i].id = i;
         sas->fact[i].conflict.fact = BOR_CALLOC_ARR(int, sas->fact_size);
+        sas->fact[i].neigh = BOR_CALLOC_ARR(int, sas->fact_size);
         sas->fact[i].var = PLAN_VAR_ID_UNDEFINED;
         sas->fact[i].val = PLAN_VAL_UNDEFINED;
     }
 
-    bzero(&inv_init, sizeof(inv_init));
-    sas->inv_pool = borExtArrNew(sizeof(inv_init), NULL, &inv_init);
-    sas->inv_htable = borHTableNew(invHash, invEq, NULL);
+    borListInit(&sas->inv);
     sas->inv_size = 0;
 
     sas->var_range = NULL;
@@ -95,6 +86,7 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
 
 void planPDDLSasFree(plan_pddl_sas_t *sas)
 {
+    bor_list_t *item;
     inv_t *inv;
     int i;
 
@@ -108,13 +100,14 @@ void planPDDLSasFree(plan_pddl_sas_t *sas)
     if (sas->fact != NULL)
         BOR_FREE(sas->fact);
 
-    borHTableDel(sas->inv_htable);
-    for (i = 0; i < sas->inv_size; ++i){
-        inv = borExtArrGet(sas->inv_pool, i);
-        if (inv->fact != NULL)
+    while (!borListEmpty(&sas->inv)){
+        item = borListNext(&sas->inv);
+        inv = BOR_LIST_ENTRY(item, inv_t, list);
+        borListDel(&inv->list);
+        if (inv->fact)
             BOR_FREE(inv->fact);
+        BOR_FREE(inv);
     }
-    borExtArrDel(sas->inv_pool);
     if (sas->var_range != NULL)
         BOR_FREE(sas->var_range);
     if (sas->var_order != NULL)
@@ -140,11 +133,13 @@ void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
                                FILE *fout)
 {
     const plan_pddl_fact_t *fact;
+    bor_list_t *item;
     const inv_t *inv;
     int i, j;
 
-    for (i = 0; i < sas->inv_size; ++i){
-        inv = borExtArrGet(sas->inv_pool, i);
+    i = 0;
+    BOR_LIST_FOR_EACH(&sas->inv, item){
+        inv = BOR_LIST_ENTRY(item, inv_t, list);
         fprintf(fout, "Invariant %d:\n", i);
         for (j = 0; j < inv->size; ++j){
             fact = planPDDLFactPoolGet(&g->fact_pool, inv->fact[j]);
@@ -156,6 +151,41 @@ void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
                     sas->var_range[sas->fact[inv->fact[j]].var]);
             fprintf(fout, "\n");
         }
+
+        ++i;
+    }
+}
+
+void planPDDLSasPrintInvariantFD(const plan_pddl_sas_t *sas,
+                                 const plan_pddl_ground_t *g,
+                                 FILE *fout)
+{
+    const plan_pddl_fact_t *fact;
+    bor_list_t *item;
+    const inv_t *inv;
+    int i, j, k;
+
+    i = 0;
+    BOR_LIST_FOR_EACH(&sas->inv, item){
+        inv = BOR_LIST_ENTRY(item, inv_t, list);
+        fprintf(fout, "I: ");
+        for (j = 0; j < inv->size; ++j){
+            fact = planPDDLFactPoolGet(&g->fact_pool, inv->fact[j]);
+            if (j > 0)
+                fprintf(fout, ";");
+            fprintf(fout, "Atom ");
+            fprintf(fout, "%s(", g->pddl->predicate.pred[fact->pred].name);
+
+            for (k = 0; k < fact->arg_size; ++k){
+                if (k > 0)
+                    fprintf(fout, ", ");
+                fprintf(fout, "%s", g->pddl->obj.obj[fact->arg[k]].name);
+            }
+            fprintf(fout, ")");
+        }
+        fprintf(fout, "\n");
+
+        ++i;
     }
 }
 
@@ -195,33 +225,14 @@ void planPDDLSasPrintFacts(const plan_pddl_sas_t *sas,
 
 
 
-_bor_inline bor_htable_key_t invComputeHash(const inv_t *inv)
-{
-    return borCityHash_64(inv->fact, sizeof(int) * inv->size);
-}
-
-static bor_htable_key_t invHash(const bor_list_t *k, void *_)
-{
-    inv_t *inv = BOR_LIST_ENTRY(k, inv_t, htable);
-    return inv->key;
-}
-
-static int invEq(const bor_list_t *k1, const bor_list_t *k2, void *_)
-{
-    const inv_t *inv1 = BOR_LIST_ENTRY(k1, inv_t, htable);
-    const inv_t *inv2 = BOR_LIST_ENTRY(k2, inv_t, htable);
-
-    if (inv1->size != inv2->size)
-        return 0;
-    return memcmp(inv1->fact, inv2->fact, sizeof(int) * inv1->size) == 0;
-}
-
 static void sasFactFree(plan_pddl_sas_fact_t *f)
 {
     int i;
 
     if (f->conflict.fact)
         BOR_FREE(f->conflict.fact);
+    if (f->neigh)
+        BOR_FREE(f->neigh);
 
     for (i = 0; i < f->edge_size; ++i){
         if (f->edge[i].fact != NULL)
@@ -250,6 +261,7 @@ static void sasFactAddEdge(plan_pddl_sas_fact_t *f,
                            const plan_pddl_ground_facts_t *fs)
 {
     plan_pddl_ground_facts_t *dst;
+    int i;
 
     ++f->edge_size;
     f->edge = BOR_REALLOC_ARR(f->edge, plan_pddl_ground_facts_t,
@@ -258,6 +270,9 @@ static void sasFactAddEdge(plan_pddl_sas_fact_t *f,
     dst->size = fs->size;
     dst->fact = BOR_ALLOC_ARR(int, fs->size);
     memcpy(dst->fact, fs->fact, sizeof(int) * fs->size);
+
+    for (i = 0; i < fs->size; ++i)
+        f->neigh[fs->fact[i]] = 1;
 }
 
 static void sasFactsAddConflicts(plan_pddl_sas_t *sas,
@@ -394,23 +409,17 @@ static int edgeState(const plan_pddl_ground_facts_t *fs, const int *I)
     return 0;
 }
 
-/** Returns:
- *    - -2 if all there is an edge that has all facts in conflict,
- *    - -1 if all edges are bound, or
- *    - id>=0 of the first unbound edge */
-static int nextUnboundEdge(const plan_pddl_sas_fact_t *f, const int *I)
+/** Returns true if all edges of the fact are bound. */
+static int allEdgesBound(const plan_pddl_sas_fact_t *f, const int *I)
 {
-    int i, state;
+    int i;
 
     for (i = 0; i < f->edge_size; ++i){
-        state = edgeState(f->edge + i, I);
-        if (state == -1)
-            return -2;
-        if (state == 0)
-            return i;
+        if (edgeState(f->edge + i, I) != 1)
+            return 0;
     }
 
-    return -1;
+    return 1;
 }
 
 /** Returns true if the fact has at least one bound edge */
@@ -427,12 +436,109 @@ static int hasBoundEdge(const plan_pddl_sas_fact_t *f, const int *I)
     return 0;
 }
 
-/** Returns true if a new invariant was created */
+/** Returns true if inv1 is subset of inv2. */
+static int isSubInvariant(const inv_t *inv1, const inv_t *inv2)
+{
+    int i1, i2;
+
+    if (inv1->size > inv2->size)
+        return 0;
+
+    for (i1 = 0, i2 = 0; i1 < inv1->size && i2 < inv2->size;){
+        if (inv1->fact[i1] == inv2->fact[i2]){
+            ++i1;
+            ++i2;
+
+        }else if (inv1->fact[i1] < inv2->fact[i2]){
+            return 0;
+
+        }else{
+            ++i2;
+        }
+    }
+
+    if (i1 == inv1->size)
+        return 1;
+    return 0;
+}
+
+/** Returns true if invariant store in I is subset of inv2. */
+static int isSubInvariant2(const int *I, int size, const inv_t *inv2)
+{
+    int i1, i2;
+
+    for (i1 = 0, i2 = 0; i1 < size && i2 < inv2->size; ++i1){
+        if (I[i1] <= 0)
+            continue;
+
+        for (; i2 < inv2->size && i1 != inv2->fact[i2]; ++i2);
+        if (i2 < inv2->size && i1 == inv2->fact[i2]){
+            ++i2;
+        }else{
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+/** Returns true if the invariant is subset of an invariant already stored
+ *  in database. */
+static int hasSuperInvariant(const plan_pddl_sas_t *sas, const int *I)
+{
+    const bor_list_t *item;
+    const inv_t *inv2;
+
+    BOR_LIST_FOR_EACH(&sas->inv, item){
+        inv2 = BOR_LIST_ENTRY(item, inv_t, list);
+        if (isSubInvariant2(I, sas->fact_size, inv2))
+            return 1;
+    }
+
+    return 0;
+}
+
+/** Remove invariants that are subsets of inv. */
+static void removeSubInvariants(plan_pddl_sas_t *sas, const inv_t *inv)
+{
+    bor_list_t *item, *tmp;
+    inv_t *inv2;
+
+    BOR_LIST_FOR_EACH_SAFE(&sas->inv, item, tmp){
+        inv2 = BOR_LIST_ENTRY(item, inv_t, list);
+        if (isSubInvariant(inv2, inv)){
+            borListDel(&inv2->list);
+            --sas->inv_size;
+            if (inv2->fact)
+                BOR_FREE(inv2->fact);
+            BOR_FREE(inv2);
+        }
+    }
+}
+
+/** Returns true if the set of facts is really invariant. */
+static int checkInvariant(const plan_pddl_sas_t *sas, const int *I)
+{
+    int i;
+
+    for (i = 0; i < sas->fact_size; ++i){
+        if (I[i] > 0 && !allEdgesBound(sas->fact + i, I))
+            return 0;
+    }
+
+    return 1;
+}
+
+/** Returns true if a new invariant was created
+ *  or the invariant (possibly as sub-invariant) is already in the
+ *  database. */
 static int createInvariant(plan_pddl_sas_t *sas, const int *I)
 {
     inv_t *inv;
-    bor_list_t *ins;
     int i, size;
+
+    if (!checkInvariant(sas, I))
+        return 0;
 
     // Compute size of the component.
     for (i = 0, size = 0; i < sas->fact_size; ++i){
@@ -444,91 +550,94 @@ static int createInvariant(plan_pddl_sas_t *sas, const int *I)
     if (size <= 1)
         return 0;
 
+    // If the invariant stored in I is subset of an invariant already
+    // stored, just pretend that it was already added.
+    if (hasSuperInvariant(sas, I))
+        return 1;
+
     // Create invariant
-    inv = borExtArrGet(sas->inv_pool, sas->inv_size);
+    inv = BOR_ALLOC(inv_t);
     inv->fact = BOR_ALLOC_ARR(int, size);
     inv->size = 0;
+    borListInit(&inv->list);
     for (i = 0; i < sas->fact_size; ++i){
         if (I[i] > 0)
             inv->fact[inv->size++] = i;
     }
-    inv->key = invComputeHash(inv);
-    borListInit(&inv->htable);
 
-    // Insert the invariant to the hash table
-    ins = borHTableInsertUnique(sas->inv_htable, &inv->htable);
-    if (ins != NULL){
-        BOR_FREE(inv->fact);
-    }else{
-        ++sas->inv_size;
-    }
+    // Remove invariants that are subset of inv
+    removeSubInvariants(sas, inv);
+    borListAppend(&sas->inv, &inv->list);
+    ++sas->inv_size;
 
     return 1;
 }
 
-static int processNextFact(plan_pddl_sas_t *sas, int min_fact_id, int *C, int *I);
+
 static int processFact(plan_pddl_sas_t *sas, int min_fact_id,
-                       const plan_pddl_sas_fact_t *f, int *C, int *I)
+                       const plan_pddl_sas_fact_t *fact,
+                       int *C, int *I)
 {
-    const plan_pddl_ground_facts_t *fs;
-    plan_pddl_sas_fact_t *next_fact;
-    int i, eid, ret = 0;
+    int i, ret = 0;
+    int *conflict;
 
-    eid = nextUnboundEdge(f, I);
-    if (eid == -1){
-        // All edges are bound, close this fact and continue with the next
-        // one.
-        C[f->id] = 1;
-        ret |= processNextFact(sas, min_fact_id, C, I);
-        C[f->id] = 0;
 
-    }else if (eid >= 0){
-        // There is at least one unbound edge, process it.
-        fs = f->edge + eid;
-        for (i = 0; i < fs->size; ++i){
-            if (fs->fact[i] < min_fact_id)
-                continue;
+    /*
+    fprintf(stderr, "_processFact %d:", min_fact_id);
+    for (i = 0; i < sas->fact_size; ++i){
+        if (I[i] > 0)
+            fprintf(stderr, " %d", i);
+    }
+    fprintf(stderr, " -|- ");
+    for (i = 0; i < sas->fact_size; ++i){
+        if (I[i] < 0)
+            fprintf(stderr, " %d", i);
+    }
+    fprintf(stderr, "\n");
+    */
 
-            next_fact = sas->fact + fs->fact[i];
+    conflict = BOR_CALLOC_ARR(int, sas->fact_size);
 
-            if (I[next_fact->id] == 0 && setFact(next_fact, I, 1)){
-                ret |= processFact(sas, min_fact_id, next_fact, C, I);
-                setFact(next_fact, I, -1);
+    for (i = 0; i < sas->fact_size; ++i){
+        if (fact->neigh[i] && I[i] == 0){
+            if (setFact(sas->fact + i, I, 1)){
+                ret |= processFact(sas, min_fact_id, sas->fact + i, C, I);
+                setFact(sas->fact + i, I, -1);
             }
+
+            conflict[i] = 1;
+            I[i] = -1;
         }
     }
 
-    return ret;
-}
-
-static int processNextFact(plan_pddl_sas_t *sas, int min_fact_id,
-                           int *C, int *I)
-{
-    int i, ret = 0;
-
-    // Try to continue with recursion on the next fact that is assigned to
-    // the invariant but is not closed yet (hasn't bound all edges).
-    for (i = min_fact_id; i < sas->fact_size; ++i){
-        if (I[i] > 0 && !C[i])
-            return processFact(sas, min_fact_id, sas->fact + i, C, I);
+    if (!allEdgesBound(fact, I)){
+        BOR_FREE(conflict);
+        return ret;
     }
 
-    // Try to continue with the fact that can be added to the invariant,
-    // i.e., has already bound an edge but is not added to the invariant.
-    for (i = min_fact_id; i < sas->fact_size; ++i){
+    for (i = 0; i < sas->fact_size; ++i){
         if (I[i] == 0 && hasBoundEdge(sas->fact + i, I)){
             if (setFact(sas->fact + i, I, 1)){
                 ret |= processFact(sas, min_fact_id, sas->fact + i, C, I);
                 setFact(sas->fact + i, I, -1);
             }
+
+            conflict[i] = 1;
+            I[i] = -1;
         }
     }
 
-    // We don't need to create an invariant in case that some bigger
-    // invariant was already created.
-    if (ret == 0)
+    if (!ret){
         ret |= createInvariant(sas, I);
+        //fprintf(stderr, "RET: %d\n", ret);
+    }
 
+    for (i = 0; i < sas->fact_size; ++i){
+        if (conflict[i])
+            I[i] = 0;
+    }
+
+    BOR_FREE(conflict);
     return ret;
 }
 
@@ -540,6 +649,7 @@ static void findInvariants(plan_pddl_sas_t *sas)
         bzero(sas->comp, sizeof(int) * sas->fact_size);
         bzero(sas->close, sizeof(int) * sas->fact_size);
         setFact(sas->fact + i, sas->comp, 1);
+        fprintf(stderr, "I %d\n", i);
         processFact(sas, i, sas->fact + i, sas->close, sas->comp);
     }
 }
@@ -559,20 +669,22 @@ static int invariantCmp(const void *a, const void *b)
 static void invariantsToGroundFacts(plan_pddl_sas_t *sas,
                                     plan_pddl_ground_facts_t *fs)
 {
+    bor_list_t *item;
     inv_t *inv;
     plan_pddl_ground_facts_t *f;
-    int i;
+    int size;
 
-    for (i = 0; i < sas->inv_size; ++i){
-        inv = borExtArrGet(sas->inv_pool, i);
-        f = fs + i;
+    size = 0;
+    BOR_LIST_FOR_EACH(&sas->inv, item){
+        inv = BOR_LIST_ENTRY(item, inv_t, list);
+        f = fs + size;
         f->size = inv->size;
         f->fact = BOR_ALLOC_ARR(int, inv->size);
         memcpy(f->fact, inv->fact, sizeof(int) * inv->size);
+        ++size;
     }
 
-    qsort(fs, sas->inv_size, sizeof(plan_pddl_ground_facts_t),
-          invariantCmp);
+    qsort(fs, size, sizeof(plan_pddl_ground_facts_t), invariantCmp);
 }
 
 static void invariantGroundFactsFree(plan_pddl_sas_t *sas,

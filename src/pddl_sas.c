@@ -171,6 +171,7 @@ void planPDDLSasPrintFacts(const plan_pddl_sas_t *sas,
     for (i = 0; i < sas->fact_size; ++i){
         f = sas->fact + i;
         fact = planPDDLFactPoolGet(&g->fact_pool, i);
+        //fprintf(fout, "    [%d] ", i);
         fprintf(fout, "    ");
         planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
         if (f->var != PLAN_VAR_ID_UNDEFINED){
@@ -179,6 +180,14 @@ void planPDDLSasPrintFacts(const plan_pddl_sas_t *sas,
         }else{
             fprintf(fout, " var: %d", (int)PLAN_VAR_ID_UNDEFINED);
         }
+
+        /*
+        fprintf(fout, ", conflict:");
+        for (int j = 0; j < f->conflict.size; ++j){
+            fprintf(fout, " %d", f->conflict.fact[j]);
+        }
+        */
+
         fprintf(fout, "\n");
     }
 }
@@ -227,6 +236,7 @@ static void sasFactFinalize(plan_pddl_sas_t *sas,
 {
     int i;
 
+    f->conflict.size = 0;
     for (i = 0; i < sas->fact_size; ++i){
         if (f->conflict.fact[i])
             f->conflict.fact[f->conflict.size++] = i;
@@ -272,13 +282,10 @@ static void addActionEdges(plan_pddl_sas_t *sas,
     plan_pddl_sas_fact_t *fact;
     int i;
 
-    for (i = 0; i < del->size; ++i){
-        fact = sas->fact + del->fact[i];
-        sasFactAddEdge(fact, add);
+    for (i = 0; i < add->size; ++i){
+        fact = sas->fact + add->fact[i];
+        sasFactAddEdge(fact, del);
     }
-
-    for (i = 0; i < add->size; ++i)
-        ++sas->fact[add->fact[i]].indegree;
 }
 
 static void processAction(plan_pddl_sas_t *sas,
@@ -388,6 +395,7 @@ static int edgeState(const plan_pddl_ground_facts_t *fs, const int *I)
 }
 
 /** Returns:
+ *    - -2 if all there is an edge that has all facts in conflict,
  *    - -1 if all edges are bound, or
  *    - id>=0 of the first unbound edge */
 static int nextUnboundEdge(const plan_pddl_sas_fact_t *f, const int *I)
@@ -396,6 +404,8 @@ static int nextUnboundEdge(const plan_pddl_sas_fact_t *f, const int *I)
 
     for (i = 0; i < f->edge_size; ++i){
         state = edgeState(f->edge + i, I);
+        if (state == -1)
+            return -2;
         if (state == 0)
             return i;
     }
@@ -403,60 +413,26 @@ static int nextUnboundEdge(const plan_pddl_sas_fact_t *f, const int *I)
     return -1;
 }
 
-/** Update the indegree of the facts in component, i.e., number of edges
- *  that goes from the component to the facts. */
-static void updateIndeg(const plan_pddl_sas_fact_t *fact,
-                        const int *I, int *indeg)
+/** Returns true if the fact has at least one bound edge */
+static int hasBoundEdge(const plan_pddl_sas_fact_t *f, const int *I)
 {
-    const plan_pddl_ground_facts_t *edge;
-    int i, j;
+    int i, state;
 
-    for (i = 0; i < fact->edge_size; ++i){
-        edge = fact->edge + i;
-        for (j = 0; j < edge->size; ++j){
-            if (I[edge->fact[j]] > 0){
-                ++indeg[edge->fact[j]];
-                break;
-            }
-        }
+    for (i = 0; i < f->edge_size; ++i){
+        state = edgeState(f->edge + i, I);
+        if (state == 1)
+            return 1;
     }
+
+    return 0;
 }
 
-/** Returns true if the component is also an invariant. */
-static int checkInvariant(const plan_pddl_sas_t *sas, const int *I)
-{
-    int i, *indeg, ret = 1;
-
-    // Compute indegree of facts within the component
-    indeg = BOR_CALLOC_ARR(int, sas->fact_size);
-    for (i = 0; i < sas->fact_size; ++i){
-        if (I[i] > 0)
-            updateIndeg(sas->fact + i, I, indeg);
-    }
-
-    // Make sure that the indegree within the component is the same as
-    // within the whole graph.
-    for (i = 0; i < sas->fact_size; ++i){
-        if (I[i] > 0 && indeg[i] != sas->fact[i].indegree){
-            ret = 0;
-            break;
-        }
-    }
-
-    BOR_FREE(indeg);
-
-    return ret;
-}
-
-static void createInvariant(plan_pddl_sas_t *sas, const int *I)
+/** Returns true if a new invariant was created */
+static int createInvariant(plan_pddl_sas_t *sas, const int *I)
 {
     inv_t *inv;
     bor_list_t *ins;
     int i, size;
-
-    // Check that the component is also an invariant
-    if (!checkInvariant(sas, I))
-        return;
 
     // Compute size of the component.
     for (i = 0, size = 0; i < sas->fact_size; ++i){
@@ -466,7 +442,7 @@ static void createInvariant(plan_pddl_sas_t *sas, const int *I)
 
     // Ignore single fact invariants
     if (size <= 1)
-        return;
+        return 0;
 
     // Create invariant
     inv = borExtArrGet(sas->inv_pool, sas->inv_size);
@@ -486,49 +462,74 @@ static void createInvariant(plan_pddl_sas_t *sas, const int *I)
     }else{
         ++sas->inv_size;
     }
+
+    return 1;
 }
 
-static void processNextFact(plan_pddl_sas_t *sas, int *C, int *I);
-static void processFact(plan_pddl_sas_t *sas, const plan_pddl_sas_fact_t *f,
-                        int *C, int *I)
+static int processNextFact(plan_pddl_sas_t *sas, int min_fact_id, int *C, int *I);
+static int processFact(plan_pddl_sas_t *sas, int min_fact_id,
+                       const plan_pddl_sas_fact_t *f, int *C, int *I)
 {
     const plan_pddl_ground_facts_t *fs;
     plan_pddl_sas_fact_t *next_fact;
-    int i, eid;
+    int i, eid, ret = 0;
 
     eid = nextUnboundEdge(f, I);
     if (eid == -1){
         // All edges are bound, close this fact and continue with the next
         // one.
         C[f->id] = 1;
-        processNextFact(sas, C, I);
+        ret |= processNextFact(sas, min_fact_id, C, I);
         C[f->id] = 0;
 
-    }else{
+    }else if (eid >= 0){
+        // There is at least one unbound edge, process it.
         fs = f->edge + eid;
         for (i = 0; i < fs->size; ++i){
+            if (fs->fact[i] < min_fact_id)
+                continue;
+
             next_fact = sas->fact + fs->fact[i];
 
             if (I[next_fact->id] == 0 && setFact(next_fact, I, 1)){
-                processFact(sas, next_fact, C, I);
+                ret |= processFact(sas, min_fact_id, next_fact, C, I);
                 setFact(next_fact, I, -1);
             }
         }
     }
+
+    return ret;
 }
 
-static void processNextFact(plan_pddl_sas_t *sas, int *C, int *I)
+static int processNextFact(plan_pddl_sas_t *sas, int min_fact_id,
+                           int *C, int *I)
 {
-    int i;
+    int i, ret = 0;
 
-    for (i = 0; i < sas->fact_size; ++i){
-        if (I[i] > 0 && !C[i]){
-            processFact(sas, sas->fact + i, C, I);
-            return;
+    // Try to continue with recursion on the next fact that is assigned to
+    // the invariant but is not closed yet (hasn't bound all edges).
+    for (i = min_fact_id; i < sas->fact_size; ++i){
+        if (I[i] > 0 && !C[i])
+            return processFact(sas, min_fact_id, sas->fact + i, C, I);
+    }
+
+    // Try to continue with the fact that can be added to the invariant,
+    // i.e., has already bound an edge but is not added to the invariant.
+    for (i = min_fact_id; i < sas->fact_size; ++i){
+        if (I[i] == 0 && hasBoundEdge(sas->fact + i, I)){
+            if (setFact(sas->fact + i, I, 1)){
+                ret |= processFact(sas, min_fact_id, sas->fact + i, C, I);
+                setFact(sas->fact + i, I, -1);
+            }
         }
     }
 
-    createInvariant(sas, I);
+    // We don't need to create an invariant in case that some bigger
+    // invariant was already created.
+    if (ret == 0)
+        ret |= createInvariant(sas, I);
+
+    return ret;
 }
 
 static void findInvariants(plan_pddl_sas_t *sas)
@@ -539,7 +540,7 @@ static void findInvariants(plan_pddl_sas_t *sas)
         bzero(sas->comp, sizeof(int) * sas->fact_size);
         bzero(sas->close, sizeof(int) * sas->fact_size);
         setFact(sas->fact + i, sas->comp, 1);
-        processFact(sas, sas->fact + i, sas->close, sas->comp);
+        processFact(sas, i, sas->fact + i, sas->close, sas->comp);
     }
 }
 /*** FIND-INVARIANTS END ***/

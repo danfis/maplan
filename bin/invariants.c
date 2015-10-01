@@ -18,6 +18,7 @@
  */
 
 #include <boruvka/timer.h>
+#include <plan/problem.h>
 #include <plan/pddl_sas.h>
 
 int main(int argc, char *argv[])
@@ -59,5 +60,7 @@ int main(int argc, char *argv[])
     borTimerStop(&timer);
     fprintf(stderr, "Elapsed Time: %.2fs\n",
             borTimerElapsedInSF(&timer));
+
+    planShutdownProtobuf();
     return 0;
 }

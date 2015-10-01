@@ -34,9 +34,12 @@ extern "C" {
 
 struct _plan_pddl_sas_fact_t {
     int id;
-    plan_pddl_ground_facts_t conflict; /*!< List of facts that are in
-                                            conflict with this fact. */
-    int *neigh;
+    int fact_size;    /*!< Number of all facts */
+    int *conflict;    /*!< True for the fact that is in conflict */
+    int *must;        /*!< True for the fact that must be in invariant with
+                           this fact. */
+    int *may;         /*!< True for the fact that may be in invariant with
+                           this fact. */
     plan_pddl_ground_facts_t *edge;    /*!< List of edges (add->del) */
     int edge_size;                     /*!< Number of edges */
 

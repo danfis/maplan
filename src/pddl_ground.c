@@ -28,6 +28,8 @@
 #include "plan/ma_terminate.h"
 #include "pddl_err.h"
 
+/** Minimal number of a new facts to use full instAction() */
+#define MIN_NEW_FACTS_FULL_INST_ACTION 100
 
 #define STATE_START                     0
 #define STATE_WAIT_FOR_NAMES            1
@@ -825,22 +827,27 @@ static void instActions(const plan_pddl_lift_actions_t *actions,
                         const plan_pddl_t *pddl)
 {
     const plan_pddl_lift_action_t *lift_action;
-    int i, fact_id, size, num_facts;
+    int i, fact_id, size, num_facts, diff;
 
-    num_facts = fact_pool->size;
-    for (i = 0; i < actions->size; ++i){
-        lift_action = actions->action + i;
-        instAction(lift_action, fact_pool, action_pool, NULL, 0);
-    }
-
+    num_facts = 0;
     while (num_facts != fact_pool->size){
+        diff = fact_pool->size - num_facts;
         fact_id = num_facts;
-        size = fact_pool->size;
         num_facts = fact_pool->size;
-        for (; fact_id < size; ++fact_id){
+
+        if (diff >= MIN_NEW_FACTS_FULL_INST_ACTION){
             for (i = 0; i < actions->size; ++i){
                 lift_action = actions->action + i;
-                instActionFromFact(lift_action, fact_pool, action_pool, fact_id);
+                instAction(lift_action, fact_pool, action_pool, NULL, 0);
+            }
+
+        }else{
+            size = fact_pool->size;
+            for (; fact_id < size; ++fact_id){
+                for (i = 0; i < actions->size; ++i){
+                    lift_action = actions->action + i;
+                    instActionFromFact(lift_action, fact_pool, action_pool, fact_id);
+                }
             }
         }
     }

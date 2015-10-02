@@ -229,6 +229,8 @@ plan_pddl_lisp_t *planPDDLLispParse(const char *fn)
 
     lineno = 1;
     for (i = 0; i < (int)st.st_size && data[i] != '('; ++i){
+        if (data[i] == ';')
+            for (; i < (int)st.st_size && data[i] != '\n'; ++i);
         if (data[i] == '\n')
             ++lineno;
     }

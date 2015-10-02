@@ -32,16 +32,30 @@ extern "C" {
  */
 #define PLAN_PDDL_SAS_USE_CG 0x1u
 
+struct _plan_pddl_sas_fact_freq_t {
+    int fact;
+    int freq;
+};
+typedef struct _plan_pddl_sas_fact_freq_t plan_pddl_sas_fact_freq_t;
+
+struct _plan_pddl_sas_facts_freq_t {
+    int size;
+    plan_pddl_sas_fact_freq_t *fact;
+};
+typedef struct _plan_pddl_sas_facts_freq_t plan_pddl_sas_facts_freq_t;
+
 struct _plan_pddl_sas_fact_t {
     int id;
     int fact_size;    /*!< Number of all facts */
     int *conflict;    /*!< True for the fact that is in conflict */
     int *must;        /*!< True for the fact that must be in invariant with
                            this fact. */
-    int *may;         /*!< True for the fact that may be in invariant with
-                           this fact. */
-    plan_pddl_ground_facts_t *edge;    /*!< List of edges (add->del) */
-    int edge_size;                     /*!< Number of edges */
+
+    plan_pddl_ground_facts_t *edge;       /*!< List of edges (add->del) */
+    int edge_size;                        /*!< Number of edges */
+    plan_pddl_sas_facts_freq_t edge_fact; /*!< List of facts that are in
+                                            the fact's edges with number of
+                                            edges they are in */
 
     plan_var_id_t var; /*!< Assigned variable ID */
     plan_val_t val;    /*!< Assigned value */

@@ -72,7 +72,8 @@ static int setCB(const plan_pddl_lisp_node_t *root,
         }
 
         tid = add(t, root->child[i].value);
-        t->type[tid].parent = pid;
+        if (tid != 0)
+            t->type[tid].parent = pid;
     }
 
     return 0;

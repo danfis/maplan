@@ -617,11 +617,99 @@ static int factAddMust(plan_pddl_sas_t *sas,
     return 0;
 }
 
-static int refineFact(plan_pddl_sas_t *sas, plan_pddl_sas_fact_t *fact)
+/** Finds edges with one fact and adds this fact to the .must[] and marks
+ *  the edge for deletion. */
+static int refineFactSingleEdges(plan_pddl_sas_t *sas,
+                                 plan_pddl_sas_fact_t *fact)
+{
+    int i, fact_id, change = 0;
+
+    for (i = 0; i < fact->edge_size; ++i){
+        if (fact->edge[i].size == 1){
+            fact_id = fact->edge[i].fact[0];
+            fact->edge[i].size = 0;
+            change |= factAddMust(sas, fact, fact_id);
+        }
+    }
+
+    return change;
+}
+
+/** Removes conflicting facts from the edges or force "must" fact in the
+ *  edges. */
+static int refineFactConflictingEdges(plan_pddl_sas_t *sas,
+                                      plan_pddl_sas_fact_t *fact)
 {
     plan_pddl_ground_facts_t *edge;
+    int i, j, change = 0;
+
+    for (i = 0; i < fact->edge_size; ++i){
+        edge = fact->edge + i;
+        for (j = 0; j < edge->size; ++j){
+            if (fact->conflict[edge->fact[j]]){
+                removeFactFromEdge(edge, j);
+                change = 1;
+            }
+
+            if (fact->must[edge->fact[j]]){
+                keepOnlyFactInEdge(edge, j);
+                change = 1;
+                break;
+            }
+        }
+    }
+
+    return change;
+}
+
+/** Add "must" facts of "must" facts to the .must[] array. */
+static int refineFactAddMustsOfMusts(plan_pddl_sas_t *sas,
+                                     plan_pddl_sas_fact_t *fact)
+{
     const plan_pddl_sas_fact_t *fact2;
-    int i, j, change, anychange = 0, fact_id;
+    int i, j, change = 0;
+
+    for (i = 0; i < fact->fact_size; ++i){
+        if (fact->must[i]){
+            fact2 = sas->fact + i;
+            for (j = 0; j < fact2->fact_size; ++j){
+                if (fact2->must[j])
+                    change |= factAddMust(sas, fact, j);
+            }
+        }
+    }
+
+    return change;
+}
+
+/** Check if there is conflict between .must[] and .conflict[] and if so,
+ *  prevent this fact from being added to any invariant. */
+static int refineFactCheckConflict(plan_pddl_sas_t *sas,
+                                   plan_pddl_sas_fact_t *fact)
+{
+    int i;
+
+    for (i = 0; i < fact->fact_size; ++i){
+        if (fact->conflict[i] && fact->must[i]){
+            for (i = 0; i < fact->fact_size; ++i){
+                if (i != fact->id && !fact->conflict[i]){
+                    fact->conflict[i] = 1;
+                    sas->fact[i].conflict[fact->id] = 1;
+                }
+            }
+            bzero(fact->must, sizeof(int) * fact->fact_size);
+            for (i = 0; i < fact->edge_size; ++i)
+                fact->edge[i].size = 0;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int refineFact(plan_pddl_sas_t *sas, plan_pddl_sas_fact_t *fact)
+{
+    int change, anychange = 0;
 
     do {
         change = 0;
@@ -631,58 +719,18 @@ static int refineFact(plan_pddl_sas_t *sas, plan_pddl_sas_fact_t *fact)
 
         // Mark single-edges, add facts from them into .must[] array and add
         // conflicts from this fact.
-        for (i = 0; i < fact->edge_size; ++i){
-            if (fact->edge[i].size == 1){
-                fact_id = fact->edge[i].fact[0];
-                fact->edge[i].size = 0;
-                change |= factAddMust(sas, fact, fact_id);
-            }
-        }
+        change |= refineFactSingleEdges(sas, fact);
 
         // Remove conflicting facts from edges and if an edge contains a
         // must-fact keep only this fact.
-        for (i = 0; i < fact->edge_size; ++i){
-            edge = fact->edge + i;
-            for (j = 0; j < edge->size; ++j){
-                if (fact->conflict[edge->fact[j]]){
-                    removeFactFromEdge(edge, j);
-                    change = 1;
-                }
-
-                if (fact->must[edge->fact[j]]){
-                    keepOnlyFactInEdge(edge, j);
-                    break;
-                }
-            }
-        }
+        change |= refineFactConflictingEdges(sas, fact);
 
         // Add musts of musts in .must[] and add their conflicts.
-        for (i = 0; i < fact->fact_size; ++i){
-            if (fact->must[i]){
-                fact2 = sas->fact + i;
-                for (j = 0; j < fact2->fact_size; ++j){
-                    if (fact2->must[j])
-                        change |= factAddMust(sas, fact, j);
-                }
-            }
-        }
+        change |= refineFactAddMustsOfMusts(sas, fact);
 
         // If this fact must be in invariant with the same fact that it is
         // in conflict with, the fact cannot be in any invariant.
-        for (i = 0; i < fact->fact_size; ++i){
-            if (fact->conflict[i] && fact->must[i]){
-                for (i = 0; i < fact->fact_size; ++i){
-                    if (i != fact->id && !fact->conflict[i]){
-                        fact->conflict[i] = 1;
-                        sas->fact[i].conflict[fact->id] = 1;
-                    }
-                }
-                bzero(fact->must, sizeof(int) * fact->fact_size);
-                for (i = 0; i < fact->edge_size; ++i)
-                    fact->edge[i].size = 0;
-                return 1;
-            }
-        }
+        change |= refineFactCheckConflict(sas, fact);
 
         anychange |= change;
     } while (change);
@@ -735,12 +783,10 @@ static void refineFacts(plan_pddl_sas_t *sas)
             change |= refineFact(sas, sas->fact + i);
     } while (change);
 
-    for (i = 0; i < sas->fact_size; ++i){
+    for (i = 0; i < sas->fact_size; ++i)
         factSetEdgeFact(sas->fact + i);
-        pFact(sas->fact + i);
-    }
-    fprintf(stderr, "\n");
 }
+
 
 
 

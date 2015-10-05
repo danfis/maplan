@@ -517,12 +517,8 @@ static int setFact(const plan_pddl_sas_fact_t *f, int *I, int val)
 {
     int i;
 
-    if (I[f->id] < 0 || f->conflict[f->id] || factInConflict(f, I)){
-        if (val == -1){
-            fprintf(stderr, "HU?\n");
-        }
+    if (I[f->id] < 0 || f->conflict[f->id] || factInConflict(f, I))
         return 0;
-    }
 
     for (i = 0; i < f->fact_size; ++i){
         if (f->must[i])

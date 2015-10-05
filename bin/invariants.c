@@ -60,6 +60,8 @@ int main(int argc, char *argv[])
     borTimerStop(&timer);
     fprintf(stderr, "Elapsed Time: %.2fs\n",
             borTimerElapsedInSF(&timer));
+    fprintf(stdout, "Elapsed Time: %.2fs\n",
+            borTimerElapsedInSF(&timer));
 
     planShutdownProtobuf();
     return 0;

@@ -296,11 +296,23 @@ static void addActionEdges(plan_pddl_sas_t *sas,
                            const plan_pddl_ground_facts_t *add)
 {
     plan_pddl_sas_fact_t *fact;
-    int i;
+    int i, j;
 
     for (i = 0; i < add->size; ++i){
         fact = sas->fact + add->fact[i];
         sasFactAddEdge(fact, del);
+    }
+
+    if (del->size == 0){
+        for (i = 0; i < add->size; ++i){
+            fact = sas->fact + add->fact[i];
+            for (j = 0; j < sas->fact_size; ++j){
+                if (j != fact->id){
+                    fact->conflict[j] = 1;
+                    sas->fact[j].conflict[fact->id] = 1;
+                }
+            }
+        }
     }
 }
 
@@ -312,8 +324,6 @@ static void processAction(plan_pddl_sas_t *sas,
 {
     addActionEdges(sas, eff_del, eff_add);
     sasFactsAddConflicts(sas, eff_add);
-    sasFactsAddConflicts(sas, eff_del);
-    sasFactsAddConflicts(sas, pre);
 }
 
 static void processActions(plan_pddl_sas_t *sas,
@@ -1194,11 +1204,11 @@ static void findInvariants(plan_pddl_sas_t *sas)
         change = 0;
         for (i = 0; i < sas->fact_size; ++i)
             change |= refineFact(sas, sas->fact + i);
-        fprintf(stderr, "*");
+        for (i = 0; i < sas->fact_size; ++i)
+            pFact(sas->fact + i);
+        fprintf(stderr, "\n");
         fflush(stderr);
     } while (change);
-    fprintf(stderr, "\n");
-    fflush(stderr);
 
     /*
     for (i = 0; i < sas->fact_size; ++i)

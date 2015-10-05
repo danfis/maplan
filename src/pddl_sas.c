@@ -495,6 +495,47 @@ static int allEdgesBound(const plan_pddl_sas_fact_t *f, const int *I)
     return 1;
 }
 
+/** Returns true if adding the fact to the component would cause conflict
+ *  with other facts. */
+static int factInConflict(const plan_pddl_sas_fact_t *f, const int *I)
+{
+    int i;
+
+    for (i = 0; i < f->fact_size; ++i){
+        if (f->conflict[i] && I[i] > 0)
+            return 1;
+    }
+
+    return 0;
+}
+
+/** Check if fact can be in the current invariant and if so the fact is
+ *  added/removed from the component and the conflicting facts are
+ *  removed/added from the component (depending on the val).
+ *  Returns true if the operation was successful. */
+static int setFact(const plan_pddl_sas_fact_t *f, int *I, int val)
+{
+    int i;
+
+    if (I[f->id] < 0 || f->conflict[f->id] || factInConflict(f, I)){
+        if (val == -1){
+            fprintf(stderr, "HU?\n");
+        }
+        return 0;
+    }
+
+    for (i = 0; i < f->fact_size; ++i){
+        if (f->must[i])
+            I[i] += val;
+        if (f->conflict[i])
+            I[i] -= val;
+    }
+    return 1;
+}
+
+
+
+
 /** Returns true if inv1 is subset of inv2. */
 static int isSubInvariant(const inv_t *inv1, const inv_t *inv2)
 {
@@ -521,7 +562,7 @@ static int isSubInvariant(const inv_t *inv1, const inv_t *inv2)
     return 0;
 }
 
-/** Returns true if invariant store in I is subset of inv2. */
+/** Returns true if invariant stored in I is subset of inv2. */
 static int isSubInvariant2(const int *I, int size, const inv_t *inv2)
 {
     int i1, i2;
@@ -660,7 +701,6 @@ static int hasCommonFact(const inv_t *inv, const inv_t *inv2)
     return 0;
 }
 
-static int setFact(const plan_pddl_sas_fact_t *f, int *I, int val);
 /** Tries to merge invariant inv2 into inv. Returns true on success. */
 static int mergeInvariant(const plan_pddl_sas_t *sas,
                           inv_t *inv, const inv_t *inv2)
@@ -746,6 +786,8 @@ static void mergeInvariants(plan_pddl_sas_t *sas)
     }
 }
 
+
+
 static void removeEmptyEdges(plan_pddl_sas_fact_t *fact)
 {
     int i, ins;
@@ -814,39 +856,6 @@ static void keepOnlyFactInEdge(plan_pddl_ground_facts_t *fs, int i)
 {
     fs->fact[0] = fs->fact[i];
     fs->size = 0;
-}
-
-/** Extend fact's conflict array with conflicts from all facts that are in
- *  .must[] array. */
-static int addConflictsFromMust(plan_pddl_sas_t *sas,
-                                plan_pddl_sas_fact_t *fact)
-{
-    int i, change = 0;
-
-    for (i = 0; i < fact->fact_size; ++i){
-        if (fact->must[i])
-            change |= addConflictsFromFact(sas, fact, sas->fact + i);
-    }
-
-    return change;
-}
-
-static int numMustFacts(const plan_pddl_sas_fact_t *fact)
-{
-    int i, sum;
-
-    for (sum = 0, i = 0; i < fact->fact_size; ++i)
-        sum += fact->must[i];
-    return sum;
-}
-
-static int numConflictFacts(const plan_pddl_sas_fact_t *fact)
-{
-    int i, sum;
-
-    for (sum = 0, i = 0; i < fact->fact_size; ++i)
-        sum += fact->conflict[i];
-    return sum;
 }
 
 static int refineFact(plan_pddl_sas_t *sas, plan_pddl_sas_fact_t *fact)
@@ -962,42 +971,25 @@ static void factSetEdgeFact(plan_pddl_sas_fact_t *f)
     BOR_FREE(fs);
 }
 
-/** Returns true if adding the fact to the component would cause conflict
- *  with other facts. */
-static int factInConflict(const plan_pddl_sas_fact_t *f, const int *I)
+static void refineFacts(plan_pddl_sas_t *sas)
 {
-    int i;
+    int i, change;
 
-    for (i = 0; i < f->fact_size; ++i){
-        if (f->conflict[i] && I[i] > 0)
-            return 1;
+    do {
+        change = 0;
+        for (i = 0; i < sas->fact_size; ++i)
+            change |= refineFact(sas, sas->fact + i);
+        for (i = 0; i < sas->fact_size; ++i)
+            pFact(sas->fact + i);
+        fprintf(stderr, "\n");
+        fflush(stderr);
+    } while (change);
+
+    for (i = 0; i < sas->fact_size; ++i){
+        factSetEdgeFact(sas->fact + i);
+        pFact(sas->fact + i);
     }
-
-    return 0;
-}
-
-/** Check if fact can be in the current invariant and if so the fact is
- *  added/removed from the component and the conflicting facts are
- *  removed/added from the component (depending on the val).
- *  Returns true if the operation was successful. */
-static int setFact(const plan_pddl_sas_fact_t *f, int *I, int val)
-{
-    int i;
-
-    if (I[f->id] < 0 || f->conflict[f->id] || factInConflict(f, I)){
-        if (val == -1){
-            fprintf(stderr, "HU?\n");
-        }
-        return 0;
-    }
-
-    for (i = 0; i < f->fact_size; ++i){
-        if (f->must[i])
-            I[i] += val;
-        if (f->conflict[i])
-            I[i] -= val;
-    }
-    return 1;
+    fprintf(stderr, "\n");
 }
 
 static int createFactInvariants(plan_pddl_sas_t *sas,
@@ -1103,95 +1095,9 @@ static int createFactInvariants(plan_pddl_sas_t *sas,
     return created;
 }
 
-static void generateBoundEdges(plan_pddl_sas_t *sas,
-                               const plan_pddl_sas_fact_t *fact)
-{
-    int *I;
-
-    I = BOR_CALLOC_ARR(int, fact->fact_size);
-    BOR_FREE(I);
-}
-
-/*
-static int createFactInvariants(plan_pddl_sas_t *sas, const int *fact_ids,
-                                const plan_pddl_sas_fact_t *fact,
-                                int *I, int *C)
-{
-    int i, state, created = 0;
-
-    if (!setFact(fact, I, 1))
-        return 0;
-
-    if (allEdgesBound(fact, I)){
-        C[fact->id] = 1;
-        for (i = 0; i < sas->fact_size; ++i){
-            if (I[fact_ids[i]] > 0 && !C[fact_ids[i]]){
-                fprintf(stderr, ">> %d->%d\n", fact->id, fact_ids[i]);
-                created |= createFactInvariants(sas, fact_ids,
-                                                sas->fact + fact_ids[i],
-                                                I, C);
-            }
-        }
-
-        if (!created){
-            fprintf(stderr, "XXX:");
-            for (i = 0; i < sas->fact_size; ++i){
-                if (I[i] > 0)
-                    fprintf(stderr, " %d:%d", i, C[i]);
-            }
-            fprintf(stderr, "\n");
-            createInvariant(sas, I);
-            created = 1;
-        }
-        C[fact->id] = 0;
-
-    }else{
-
-        for (i = 0; i < fact->edge_size; ++i){
-            state = edgeState(fact->edge + i, I);
-            if (state == -1){
-                return created;
-
-            }else if (state == 0){
-                int j;
-                for (j = 0; j < fact->edge[i].size; ++j){
-                    if (setFact(sas->fact + fact->edge[i].fact[j], I, 1)){
-                        created |= createFactInvariants(sas, fact_ids,
-                                        fact,
-                                        I, C);
-                        setFact(sas->fact + fact->edge[i].fact[j], I, -1);
-                    }
-                }
-            }
-        }
-    }
-
-    setFact(fact, I, -1);
-
-    return created;
-}
-*/
-
-static int cmpFact(const void *a, const void *b, void *data)
-{
-    const plan_pddl_sas_t *sas = data;
-    int id1 = *(int *)a;
-    int id2 = *(int *)b;
-    const plan_pddl_sas_fact_t *f1 = sas->fact + id1;
-    const plan_pddl_sas_fact_t *f2 = sas->fact + id2;
-    int cmp;
-
-    cmp = f1->edge_size - f2->edge_size;
-    if (cmp == 0)
-        cmp = numMustFacts(f2) - numMustFacts(f1);
-    if (cmp == 0)
-        cmp = numConflictFacts(f2) - numConflictFacts(f1);
-    return cmp;
-}
-
 static void findInvariants(plan_pddl_sas_t *sas)
 {
-    int i, change, *I, *C;
+    int i, *I, *C;
 
     fprintf(stderr, "Num-facts: %d\n", sas->fact_size);
     fflush(stderr);
@@ -1200,26 +1106,7 @@ static void findInvariants(plan_pddl_sas_t *sas)
     fprintf(stderr, "\n");
     fflush(stderr);
 
-    do {
-        change = 0;
-        for (i = 0; i < sas->fact_size; ++i)
-            change |= refineFact(sas, sas->fact + i);
-        for (i = 0; i < sas->fact_size; ++i)
-            pFact(sas->fact + i);
-        fprintf(stderr, "\n");
-        fflush(stderr);
-    } while (change);
-
-    /*
-    for (i = 0; i < sas->fact_size; ++i)
-        factSetRepr(sas, sas->fact + i);
-    */
-
-    for (i = 0; i < sas->fact_size; ++i){
-        factSetEdgeFact(sas->fact + i);
-        pFact(sas->fact + i);
-    }
-    fprintf(stderr, "\n");
+    refineFacts(sas);
 
     I = BOR_CALLOC_ARR(int, sas->fact_size);
     C = BOR_CALLOC_ARR(int, sas->fact_size);
@@ -1242,384 +1129,7 @@ static void findInvariants(plan_pddl_sas_t *sas)
     mergeInvariants(sas);
 }
 
-#if 0
-/** Returns true if adding the fact to the component would cause conflict
- *  with other facts. */
-static int factInConflict(const plan_pddl_sas_fact_t *f, const int *I)
-{
-    int i;
-
-    for (i = 0; i < f->conflict.size; ++i){
-        if (I[f->conflict.fact[i]] > 0)
-            return 1;
-    }
-
-    return 0;
-}
-
-/** Check if fact can be in the current invariant and if so the fact is
- *  added/removed from the component and the conflicting facts are
- *  removed/added from the component (depending on the val).
- *  Returns true if the operation was successful. */
-static int setFact(const plan_pddl_sas_fact_t *f, int *I, int val)
-{
-    int i;
-
-    if (I[f->id] < 0 || factInConflict(f, I))
-        return 0;
-
-    I[f->id] += val;
-    for (i = 0; i < f->fact_size; ++i){
-        if (f->neigh[i] < 0)
-            I[i] -= val;
-    }
-    return 1;
-}
-
-static int hasConflictEdge(const plan_pddl_sas_fact_t *f, const int *I)
-{
-    int i;
-
-    for (i = 0; i < f->edge_size; ++i){
-        if (edgeState(f->edge + i, I) == -1)
-            return 1;
-    }
-
-    return 0;
-}
-
-/** Returns true if the fact has at least one bound edge */
-static int hasBoundEdge(const plan_pddl_sas_fact_t *f, const int *I)
-{
-    int i, state;
-
-    for (i = 0; i < f->edge_size; ++i){
-        state = edgeState(f->edge + i, I);
-        if (state == 1)
-            return 1;
-    }
-
-    return 0;
-}
-
-
-static int processFact(plan_pddl_sas_t *sas, int min_fact_id,
-                       const plan_pddl_sas_fact_t *fact,
-                       int *C, int *I)
-{
-    int i, ret = 0, chosen = 1;
-    int *conflict;
-
-    /*
-    fprintf(stderr, "call %d/%d:", min_fact_id, fact->id);
-    for (i = 0; i < sas->fact_size; ++i){
-        if (I[i] > 0)
-            fprintf(stderr, " %d", i);
-    }
-    fprintf(stderr, " -|- ");
-    for (i = 0; i < sas->fact_size; ++i){
-        if (I[i] < 0)
-            fprintf(stderr, " %d", i);
-    }
-    fprintf(stderr, "\n");
-    */
-
-    if (hasConflictEdge(fact, I)){
-        //fprintf(stderr, "<< C %d/%d\n", min_fact_id, fact->id);
-        return 0;
-    }
-
-    conflict = BOR_CALLOC_ARR(int, sas->fact_size);
-
-    if (allEdgesBound(fact, I)){
-        fprintf(stderr, "all-bound %d/%d:", min_fact_id, fact->id);
-        for (i = 0; i < sas->fact_size; ++i){
-            if (I[i] > 0)
-                fprintf(stderr, " %d", i);
-        }
-        fprintf(stderr, " -|- ");
-        for (i = 0; i < sas->fact_size; ++i){
-            if (I[i] < 0)
-                fprintf(stderr, " %d", i);
-        }
-        fprintf(stderr, "\n");
-        return 0;
-
-        C[fact->id] = 1;
-
-        for (i = 0; i < sas->fact_size; ++i){
-            if (I[i] > 0 && !C[i]){
-                ret |= processFact(sas, min_fact_id, sas->fact + i, C, I);
-
-                //fprintf(stderr, "|| ret: %d\n", ret);
-                conflict[i] = 1;
-                I[i] = -1;
-            }
-        }
-
-        /*
-        if (!ret)
-        for (i = min_fact_id; i < sas->fact_size; ++i){
-            if (I[i] == 0 && hasBoundEdge(sas->fact + i, I)){
-                if (setFact(sas->fact + i, I, 1)){
-                    ret |= processFact(sas, min_fact_id, sas->fact + i, C, I);
-                    setFact(sas->fact + i, I, -1);
-                }
-
-                conflict[i] = 1;
-                I[i] = -1;
-            }
-        }
-        */
-
-        if (!ret){
-            fprintf(stderr, "INV:");
-            for (i = 0; i < sas->fact_size; ++i){
-                if (I[i] > 0 && C[i])
-                    fprintf(stderr, " %d", i);
-                if (I[i] > 0 && !C[i])
-                    fprintf(stderr, " X%d", i);
-            }
-            fprintf(stderr, "\n");
-            ret = createInvariant(sas, I);
-        }
-
-        C[fact->id] = 0;
-        //fprintf(stderr, "<< %d/%d -- ret: %d\n", min_fact_id, fact->id, ret);
-        for (i = 0; i < sas->fact_size; ++i){
-            if (conflict[i])
-                I[i] = 0;
-        }
-        BOR_FREE(conflict);
-        return ret;
-    }
-
-    for (i = 0; i < sas->fact_size; ++i){
-        if (fact->neigh[i] && I[i] == 0){
-            if (setFact(sas->fact + i, I, 1)){
-                ret |= processFact(sas, min_fact_id, fact, C, I);
-                //fprintf(stderr, "[[ %d/%d\n", min_fact_id, fact->id);
-                setFact(sas->fact + i, I, -1);
-            }
-
-            conflict[i] = 1;
-            I[i] = -1;
-        }
-    }
-
-    /*
-    if (!allEdgesBound(fact, I)){
-        BOR_FREE(conflict);
-        return ret;
-    }
-    */
-    for (i = 0; i < sas->fact_size; ++i){
-        if (conflict[i])
-            I[i] = 0;
-    }
-    BOR_FREE(conflict);
-    //fprintf(stderr, "<< N %d/%d\n", min_fact_id, fact->id);
-    return ret;
-    /*
-    exit(-1);
-
-    for (i = 0; i < sas->fact_size; ++i){
-        if (I[i] == 0 && hasBoundEdge(sas->fact + i, I)){
-            if (setFact(sas->fact + i, I, 1)){
-                ret |= processFact(sas, min_fact_id, sas->fact + i, C, I);
-                setFact(sas->fact + i, I, -1);
-            }
-
-            conflict[i] = 1;
-            I[i] = -1;
-        }
-    }
-
-    if (!ret){
-        ret |= createInvariant(sas, I);
-        //fprintf(stderr, "RET: %d\n", ret);
-    }
-
-    for (i = 0; i < sas->fact_size; ++i){
-        if (conflict[i])
-            I[i] = 0;
-    }
-
-    BOR_FREE(conflict);
-    return ret;
-    */
-}
-
-
-static void removeConflictsFromEdges(plan_pddl_sas_fact_t *fact)
-{
-    plan_pddl_ground_facts_t *edge;
-    int i, j, ins;
-
-    for (i = 0; i < fact->edge_size; ++i){
-        edge = fact->edge + i;
-        for (j = 0, ins = 0; j < edge->size; ++j){
-            if (fact->neigh[edge->fact[j]] > 0)
-                edge->fact[ins++] = edge->fact[j];
-            /*
-               TODO
-            else
-                fprintf(stderr, "XXX %d %d\n", fact->id, j);
-            */
-        }
-        edge->size = ins;
-    }
-    uniqueEdges(fact);
-}
-
-static int pruneEdgesRec(plan_pddl_sas_t *sas, plan_pddl_sas_fact_t *fact,
-                         int *fs, int *conflict)
-{
-    int i, j, num_bounds = 0, *conf_local, *ban;
-
-    fprintf(stderr, "Y:");
-    for (i = 0; i < sas->fact_size; ++i){
-        if (fs[i] > 0){
-            fprintf(stderr, " %d", i);
-        }
-    }
-    fprintf(stderr, "\n");
-
-    if (allEdgesBound(fact, fs)){
-        fprintf(stderr, "X:");
-        conf_local = BOR_CALLOC_ARR(int, sas->fact_size);
-
-        for (i = 0; i < sas->fact_size; ++i){
-            if (fs[i] > 0){
-                for (j = 0; j < sas->fact_size; ++j){
-                    if (sas->fact[i].neigh[j] < 0)
-                        conf_local[j] += 1;
-                }
-                fprintf(stderr, " %d", i);
-            }
-        }
-        fprintf(stderr, "\n");
-
-        for (i = 0; i < sas->fact_size; ++i){
-            if (conf_local[i] > 0)
-                conflict[i] += 1;
-        }
-
-        BOR_FREE(conf_local);
-        return 1;
-    }
-
-    ban = BOR_CALLOC_ARR(int, sas->fact_size);
-    for (i = 0; i < sas->fact_size; ++i){
-        if (fact->neigh[i] > 0 && fs[i] == 0){
-            if (setFact(sas->fact + i, fs, 1)){
-                num_bounds += pruneEdgesRec(sas, fact, fs, conflict);
-                //fprintf(stderr, "[[ %d/%d\n", min_fact_id, fact->id);
-                setFact(sas->fact + i, fs, -1);
-            }
-
-            ban[i] = 1;
-            fs[i] = -1;
-        }
-    }
-
-    for (i = 0; i < sas->fact_size; ++i){
-        if (ban[i])
-            fs[i] = 0;
-    }
-
-    BOR_FREE(ban);
-    return num_bounds;
-}
-
-static int pruneEdges(plan_pddl_sas_t *sas, plan_pddl_sas_fact_t *fact)
-{
-    int *fs, *conflict, i, num_bounds, change = 0;
-
-    fs = BOR_CALLOC_ARR(int, sas->fact_size);
-    conflict = BOR_CALLOC_ARR(int, sas->fact_size);
-
-    num_bounds = pruneEdgesRec(sas, fact, fs, conflict);
-    fprintf(stderr, "Num bounds: %d\n", num_bounds);
-    if (num_bounds == 0){
-        for (i = 0; i < sas->fact_size; ++i){
-            if (i != fact->id)
-                fact->neigh[i] = -1;
-        }
-        change = 1;
-
-    }else{
-        for (i = 0; i < sas->fact_size; ++i){
-            if (conflict[i] == num_bounds && fact->neigh[i] >= 0){
-                fact->neigh[i] = -1;
-                change = 1;
-            }
-        }
-    }
-
-    BOR_FREE(conflict);
-    BOR_FREE(fs);
-
-    if (change)
-        removeConflictsFromEdges(sas->fact + i);
-    return change;
-}
-
-static void pFact(const plan_pddl_sas_t *sas, const plan_pddl_sas_fact_t *fact)
-{
-    int i, j, size = 0;
-    for (i = 0; i < sas->fact_size; ++i)
-        if (fact->neigh[i] > 0)
-            ++size;
-
-    fprintf(stderr, "Fact %d: neigh: %d, conflicts[%d]:",
-            fact->id, size, fact->conflict.size);
-
-    for (i = 0; i < sas->fact_size; ++i){
-        if (fact->neigh[i] < 0)
-            fprintf(stderr, " %d", i);
-    }
-
-    fprintf(stderr, ", edges[%d]:", fact->edge_size);
-    for (i = 0; i < fact->edge_size; ++i){
-        fprintf(stderr, " [");
-        for (j = 0; j < fact->edge[i].size; ++j){
-            if (j > 0)
-                fprintf(stderr, " ");
-            fprintf(stderr, "%d", fact->edge[i].fact[j]);
-        }
-        fprintf(stderr, "]");
-    }
-    fprintf(stderr, "\n");
-}
-
-static void findInvariants(plan_pddl_sas_t *sas)
-{
-    int i;
-
-    for (i = 0; i < sas->fact_size; ++i){
-        uniqueEdges(sas->fact + i);
-        pFact(sas, sas->fact + i);
-        removeConflictsFromEdges(sas->fact + i);
-        pFact(sas, sas->fact + i);
-        pruneEdges(sas, sas->fact + i);
-        pFact(sas, sas->fact + i);
-        fprintf(stderr, "\n");
-    }
-
-    exit(-1);
-    for (i = 0; i < sas->fact_size; ++i){
-        bzero(sas->comp, sizeof(int) * sas->fact_size);
-        bzero(sas->close, sizeof(int) * sas->fact_size);
-        setFact(sas->fact + i, sas->comp, 1);
-        fprintf(stderr, "I %d / %d\n", i, sas->fact_size);
-        processFact(sas, i, sas->fact + i, sas->close, sas->comp);
-    }
-        exit(-1);
-}
 /*** FIND-INVARIANTS END ***/
-#endif
-
 
 
 

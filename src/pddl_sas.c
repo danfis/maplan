@@ -858,6 +858,20 @@ static void keepOnlyFactInEdge(plan_pddl_ground_facts_t *fs, int i)
     fs->size = 0;
 }
 
+/** Adds fact_id into .mustp[] array if not already ther */
+static int factAddMust(plan_pddl_sas_t *sas,
+                       plan_pddl_sas_fact_t *fact,
+                       int fact_id)
+{
+    if (!fact->must[fact_id]){
+        fact->must[fact_id] = 1;
+        addConflictsFromFact(sas, fact, sas->fact + fact_id);
+        return 1;
+    }
+
+    return 0;
+}
+
 static int refineFact(plan_pddl_sas_t *sas, plan_pddl_sas_fact_t *fact)
 {
     plan_pddl_ground_facts_t *edge;
@@ -875,10 +889,8 @@ static int refineFact(plan_pddl_sas_t *sas, plan_pddl_sas_fact_t *fact)
         for (i = 0; i < fact->edge_size; ++i){
             if (fact->edge[i].size == 1){
                 fact_id = fact->edge[i].fact[0];
-                fact->must[fact_id] = 1;
-                addConflictsFromFact(sas, fact, sas->fact + fact_id);
                 fact->edge[i].size = 0;
-                change = 1;
+                change |= factAddMust(sas, fact, fact_id);
             }
         }
 
@@ -904,11 +916,8 @@ static int refineFact(plan_pddl_sas_t *sas, plan_pddl_sas_fact_t *fact)
             if (fact->must[i]){
                 fact2 = sas->fact + i;
                 for (j = 0; j < fact2->fact_size; ++j){
-                    if (fact2->must[j] && !fact->must[j]){
-                        fact->must[j] = 1;
-                        addConflictsFromFact(sas, fact, sas->fact + j);
-                        change = 1;
-                    }
+                    if (fact2->must[j])
+                        change |= factAddMust(sas, fact, j);
                 }
             }
         }

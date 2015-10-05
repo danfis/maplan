@@ -889,9 +889,7 @@ static int createFactInvariants(plan_pddl_sas_t *sas,
                                 int *I, int *C)
 {
     int i, created = 0, fact_id, done = 0;
-
-    if (!setFact(fact, I, 1))
-        return 0;
+    int *edge_conflict, edge_conflict_size;
 
     fprintf(stderr, "fact: %d\n", fact->id);
     /*
@@ -954,32 +952,38 @@ static int createFactInvariants(plan_pddl_sas_t *sas,
 
             done = 1;
             fprintf(stderr, "edge-only-fact: %d (%d)", fact_id, i);
-            if (setFact(sas->fact + fact_id, I, 1)){
+            if (I[fact_id] == 0 && setFact(sas->fact + fact_id, I, 1)){
                 fprintf(stderr, " YES :(\n");
-                created |= createFactInvariants(sas, sas->fact + fact_id, I, C);
+                created |= createFactInvariants(sas, fact, I, C);
                 setFact(sas->fact + fact_id, I, -1);
             }else{
                 fprintf(stderr, " NO :(\n");
             }
         }
 
+        if (fact->edge_fact.size > 0){
+        edge_conflict = BOR_ALLOC_ARR(int, fact->edge_fact.size);
+        edge_conflict_size = 0;
         for (i = 0; !done && i < fact->edge_fact.size; ++i){
             fact_id = fact->edge_fact.fact[i].fact;
-            if (setFact(sas->fact + fact_id, I, 1)){
-                created |= createFactInvariants(sas, sas->fact + fact_id, I, C);
+            if (I[fact_id] == 0 && setFact(sas->fact + fact_id, I, 1)){
+                created |= createFactInvariants(sas, fact, I, C);
                 setFact(sas->fact + fact_id, I, -1);
+                edge_conflict[edge_conflict_size++] = fact_id;
+                I[fact_id] = -1;
             }
             fprintf(stderr, "I[%d] = %d\n", fact_id, I[fact_id]);
-            I[fact_id] -= 1;
+            //I[fact_id] -= 1;
         }
 
-        for (i = 0; !done && i < fact->edge_fact.size; ++i){
-            fact_id = fact->edge_fact.fact[i].fact;
-            I[fact_id] += 1;
+        for (i = 0; !done && i < edge_conflict_size; ++i){
+            I[edge_conflict[i]] = 0;
+        }
+
+        BOR_FREE(edge_conflict);
         }
     }
 
-    setFact(fact, I, -1);
     return created;
 }
 
@@ -1105,7 +1109,10 @@ static void findInvariants(plan_pddl_sas_t *sas)
     C = BOR_CALLOC_ARR(int, sas->fact_size);
     for (i = 0; i < sas->fact_size; ++i){
         fprintf(stderr, "CFI %d\n", i);
+        setFact(sas->fact + i, I, 1);
         createFactInvariants(sas, sas->fact + i, I, C);
+        setFact(sas->fact + i, I, -1);
+
         for (int j = 0; j < sas->fact_size; ++j){
             if (I[j] != 0 || C[j] != 0){
                 fprintf(stderr, "ERR\n");

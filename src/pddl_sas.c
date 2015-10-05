@@ -630,6 +630,112 @@ static int createInvariant(plan_pddl_sas_t *sas, const int *I)
     return 1;
 }
 
+/** Returns true if the invariants have at least one common fact */
+static int hasCommonFact(const inv_t *inv, const inv_t *inv2)
+{
+    int i, j;
+
+    for (i = 0, j = 0; i < inv->size && j < inv2->size;){
+        if (inv->fact[i] == inv2->fact[j]){
+            fprintf(stderr, "Common: %d %d\n", inv->fact[i],
+                    inv2->fact[j]);
+            return 1;
+        }else if (inv->fact[i] < inv2->fact[j]){
+            ++i;
+        }else{
+            ++j;
+        }
+    }
+
+    return 0;
+}
+
+static int setFact(const plan_pddl_sas_fact_t *f, int *I, int val);
+/** Tries to merge invariant inv2 into inv. Returns true on success. */
+static int mergeInvariant(const plan_pddl_sas_t *sas,
+                          inv_t *inv, const inv_t *inv2)
+{
+    int *I, i, size, ret = 0;
+
+    fprintf(stderr, "merge-invariants\n");
+
+    // Check that there is at least one common fact
+    if (!hasCommonFact(inv, inv2))
+        return 0;
+
+    I = BOR_CALLOC_ARR(int, sas->fact_size);
+    for (i = 0; i < inv->size; ++i)
+        setFact(sas->fact + inv->fact[i], I, 1);
+    for (i = 0; i < inv2->size; ++i){
+        if (!setFact(sas->fact + inv2->fact[i], I, 1)){
+            BOR_FREE(I);
+            return 0;
+        }
+    }
+
+    if (checkInvariant(sas, I)){
+        fprintf(stderr, "inv:");
+        for (i = 0; i < inv->size; ++i)
+            fprintf(stderr, " %d", inv->fact[i]);
+        fprintf(stderr, "\ninv2:");
+        for (i = 0; i < inv2->size; ++i)
+            fprintf(stderr, " %d", inv2->fact[i]);
+        fprintf(stderr, "\n");
+
+        for (i = 0, size = 0; i < sas->fact_size; ++i){
+            if (I[i] > 0)
+                ++size;
+        }
+
+        inv->size = 0;
+        inv->fact = BOR_REALLOC_ARR(inv->fact, int, size);
+        for (i = 0; i < sas->fact_size; ++i){
+            if (I[i] > 0)
+                inv->fact[inv->size++] = i;
+        }
+        ret = 1;
+    }
+    BOR_FREE(I);
+
+    return ret;
+}
+
+static void mergeInvInvariants(plan_pddl_sas_t *sas, inv_t *inv)
+{
+    bor_list_t *item, *tmp;
+    inv_t *inv2;
+
+    item = borListNext(&inv->list);
+    while (item != &sas->inv){
+        inv2 = BOR_LIST_ENTRY(item, inv_t, list);
+        if (mergeInvariant(sas, inv, inv2)){
+            tmp = borListNext(item);
+            borListDel(item);
+            item = tmp;
+
+            if (inv2->fact)
+                BOR_FREE(inv2->fact);
+            BOR_FREE(inv2);
+        }else{
+            item = borListNext(item);
+        }
+    }
+}
+
+/** Try to merge invariants to get the biggest possible invariants */
+static void mergeInvariants(plan_pddl_sas_t *sas)
+{
+    bor_list_t *item;
+    inv_t *inv;
+
+    item = borListNext(&sas->inv);
+    while (item != &sas->inv){
+        inv = BOR_LIST_ENTRY(item, inv_t, list);
+        mergeInvInvariants(sas, inv);
+        item = borListNext(item);
+    }
+}
+
 static void removeEmptyEdges(plan_pddl_sas_fact_t *fact)
 {
     int i, ins;
@@ -1122,6 +1228,8 @@ static void findInvariants(plan_pddl_sas_t *sas)
     }
     BOR_FREE(C);
     BOR_FREE(I);
+
+    mergeInvariants(sas);
 }
 
 #if 0

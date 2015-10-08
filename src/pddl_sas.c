@@ -460,6 +460,19 @@ static int edgeInConflict(const plan_pddl_ground_facts_t *fs, const int *I)
     return 0;
 }
 
+/** Returns true if any fact's edge is fully in conflict. */
+static int anyEdgeInConflict(const plan_pddl_sas_fact_t *fact, const int *I)
+{
+    int i;
+
+    for (i = 0; i < fact->edge_size; ++i){
+        if (edgeInConflict(fact->edge + i, I))
+            return 1;
+    }
+
+    return 0;
+}
+
 /** Returns ID of the only fact that can bind this edge if it is not
  *  already bound. Returns -1 if edge is already bound or there is not only
  *  one way to bind it. */
@@ -936,18 +949,8 @@ static int createFactInvariants(plan_pddl_sas_t *sas,
     int i, created = 0, fact_id, done = 0;
     int *edge_conflict, edge_conflict_size;
 
-    fprintf(stderr, "fact: %d\n", fact->id);
-    /*
-    for (i = 0; i < sas->fact_size; ++i){
-        if (I[i] != 0)
-            fprintf(stderr, " %d:%d:%d", i, I[i], C[i]);
-    }
-    fprintf(stderr, "\n");
-    */
-
     if (allEdgesBound(fact, I)){
         C[fact->id] = 1;
-        fprintf(stderr, "ALL BOUND %d\n", fact->id);
         for (i = 0; i < sas->fact_size; ++i){
             if (I[i] > 0 && !C[i]){
                 created |= createFactInvariants(sas, sas->fact + i, I, C);
@@ -955,39 +958,14 @@ static int createFactInvariants(plan_pddl_sas_t *sas,
             }
         }
 
-        if (created == 0){
-            created = 1;
-            for (i = 0; i < sas->fact_size; ++i){
-                if (I[i] > 0 && !C[i]){
-                    created = 0;
-                    break;
-                }
-            }
-
-            if (created){
-                fprintf(stderr, "CCC\n");
-                createInvariant(sas, I);
-            }
-
-            fprintf(stderr, "INV:");
-            for (i = 0; i < sas->fact_size; ++i){
-                if (I[i] > 0){
-                    fprintf(stderr, " %d:%d", i, C[i]);
-                }
-            }
-            fprintf(stderr, "\n");
-            created = 1;
-        }
+        if (created == 0)
+            created |= createInvariant(sas, I);
         C[fact->id] = 0;
 
     }else{
         // Make sure that are no edges in conflict
-        for (i = 0; i < fact->edge_size; ++i){
-            if (edgeInConflict(fact->edge + i, I)){
-                done = 1;
-                break;
-            }
-        }
+        if (anyEdgeInConflict(fact, I))
+            return 0;
 
         // Try to find next edge that can be bound only by one fact
         for (i = 0; !done && i < fact->edge_size; ++i){

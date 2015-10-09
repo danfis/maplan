@@ -35,6 +35,40 @@ struct _inv_t {
 };
 typedef struct _inv_t inv_t;
 
+/** Sort and unique nodes within delset */
+static void sasDelsetUnique(plan_pddl_sas_delset_t *ds);
+/** Sort and unique all delsets */
+static void sasDelsetsUnique(plan_pddl_sas_node_t *node);
+/** Returns true if the delset is bound with respect to the enabled nodes */
+static int sasDelsetIsBound(const plan_pddl_sas_delset_t *ds, const int *ns);
+/** Deletes nodes set in ns. Returns 1 if the delset was completely
+ *  emptied, 0 otherwise. */
+static int sasDelsetDelNodes(plan_pddl_sas_delset_t *ds, const int *ns);
+
+
+/** Creates an array of nodes */
+static plan_pddl_sas_node_t *sasNodesNew(int node_size, int fact_size);
+/** Deletes allocated memory */
+static void sasNodesDel(plan_pddl_sas_node_t *nodes, int node_size);
+/** Initializes a node */
+static void sasNodeInit(plan_pddl_sas_node_t *node,
+                        int id, int node_size, int fact_size);
+/** Frees allocated memory */
+static void sasNodeFree(plan_pddl_sas_node_t *node);
+/** Add facts from the edge as delsets */
+static void sasNodeAddEdge(plan_pddl_sas_node_t *node,
+                           const plan_pddl_ground_facts_t *edge);
+/** Add facts from action edges as delsets into corresponding nodes */
+static void sasNodesAddActionEdges(plan_pddl_sas_t *sas,
+                                   const plan_pddl_ground_facts_t *del,
+                                   const plan_pddl_ground_facts_t *add);
+/** Add conflicts between facts as conflicts between corresponding nodes */
+static void sasNodesAddFactConflicts(plan_pddl_sas_t *sas,
+                                     const plan_pddl_ground_facts_t *fs);
+static void sasNodePrint(const plan_pddl_sas_node_t *node, FILE *fout);
+static void sasNodesPrint(const plan_pddl_sas_t *sas, FILE *fout);
+
+
 /** Frees allocated resources of sas-fact */
 static void sasFactFree(plan_pddl_sas_fact_t *f);
 /** Add conflicts between all facts in fs */
@@ -62,9 +96,13 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
     int i;
 
     sas->ground = g;
+
+    sas->node_size = g->fact_pool.size + 1;
+    sas->node = sasNodesNew(sas->node_size, g->fact_pool.size);
+    for (i = 0; i < g->fact_pool.size; ++i)
+        sas->node[i].inv[i] = 1;
+
     sas->fact_size = g->fact_pool.size;
-    sas->comp = BOR_ALLOC_ARR(int, sas->fact_size);
-    sas->close = BOR_ALLOC_ARR(int, sas->fact_size);
     sas->fact = BOR_CALLOC_ARR(plan_pddl_sas_fact_t, sas->fact_size);
     for (i = 0; i < sas->fact_size; ++i){
         sas->fact[i].id = i;
@@ -89,6 +127,7 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
 
     processActions(sas, &g->action_pool);
     sasFactsAddConflicts(sas, &sas->init);
+    sasNodesAddFactConflicts(sas, &sas->init);
     for (i = 0; i < sas->fact_size; ++i)
         sasFactFinalize(sas, sas->fact + i);
 }
@@ -99,10 +138,8 @@ void planPDDLSasFree(plan_pddl_sas_t *sas)
     inv_t *inv;
     int i;
 
-    if (sas->comp != NULL)
-        BOR_FREE(sas->comp);
-    if (sas->close != NULL)
-        BOR_FREE(sas->close);
+    if (sas->node)
+        sasNodesDel(sas->node, sas->node_size);
 
     for (i = 0; i < sas->fact_size; ++i)
         sasFactFree(sas->fact + i);
@@ -324,6 +361,9 @@ static void processAction(plan_pddl_sas_t *sas,
 {
     addActionEdges(sas, eff_del, eff_add);
     sasFactsAddConflicts(sas, eff_add);
+
+    sasNodesAddActionEdges(sas, eff_del, eff_add);
+    sasNodesAddFactConflicts(sas, eff_add);
 }
 
 static void processActions(plan_pddl_sas_t *sas,
@@ -448,6 +488,16 @@ static void edgeState(const plan_pddl_ground_facts_t *fs, const int *I,
             *conflict += 1;
         }
     }
+}
+
+/** Returns true if the edge is bound */
+static int edgeIsBound(const plan_pddl_ground_facts_t *fs, const int *I)
+{
+    int bound, unbound, conflict;
+    edgeState(fs, I, &bound, &unbound, &conflict);
+    if (bound > 0)
+        return 1;
+    return 0;
 }
 
 /** Returns true if all edge's facts are in conflict */
@@ -716,6 +766,67 @@ static int refineFactCheckConflict(plan_pddl_sas_t *sas,
     return 0;
 }
 
+static int factCopyEdges(plan_pddl_sas_fact_t *dst,
+                         const plan_pddl_sas_fact_t *src)
+{
+    plan_pddl_ground_facts_t *edge;
+    int i, oldsize;
+
+    if (src->edge_size == 0)
+        return 0;
+
+    oldsize = dst->edge_size;
+    dst->edge = BOR_REALLOC_ARR(dst->edge, plan_pddl_ground_facts_t,
+                                dst->edge_size + src->edge_size);
+    for (i = 0; i < src->edge_size; ++i){
+        if (edgeIsBound(src->edge + i, dst->must))
+            continue;
+
+        edge = dst->edge + dst->edge_size++;
+        edge->size = src->edge[i].size;
+        edge->fact = BOR_ALLOC_ARR(int, edge->size);
+        memcpy(edge->fact, src->edge[i].fact, sizeof(int) * edge->size);
+    }
+
+    uniqueEdges(dst);
+
+    return oldsize != dst->edge_size;
+}
+
+static int refineFactCopyEdges(plan_pddl_sas_t *sas,
+                               plan_pddl_sas_fact_t *fact)
+{
+    int change = 0;
+    int i;
+
+    for (i = 0; i < fact->fact_size; ++i){
+        if (fact->must[i] && i != fact->id)
+            change |= factCopyEdges(fact, sas->fact + i);
+    }
+    return change;
+}
+
+/** Remove edges that are already bound */
+static int refineFactRemoveBoundEdges(plan_pddl_sas_fact_t *fact)
+{
+    int i, change = 0;
+
+    for (i = 0; i < fact->edge_size; ++i){
+        if (edgeIsBound(fact->edge + i, fact->must)){
+            fact->edge[i].size = 0;
+            change = 1;
+        }
+    }
+
+    return change;
+}
+
+static int refineFactRemoveConflictingEdges(const plan_pddl_sas_t *sas,
+                                            plan_pddl_sas_fact_t *fact)
+{
+    return 0;
+}
+
 static int refineFact(plan_pddl_sas_t *sas, plan_pddl_sas_fact_t *fact)
 {
     int change, anychange = 0;
@@ -786,6 +897,7 @@ static void refineFacts(plan_pddl_sas_t *sas)
 {
     int i, change;
 
+    for (int j = 0; j < 4; ++j){
     do {
         change = 0;
         for (i = 0; i < sas->fact_size; ++i)
@@ -793,7 +905,15 @@ static void refineFacts(plan_pddl_sas_t *sas)
     } while (change);
 
     for (i = 0; i < sas->fact_size; ++i)
+        change |= refineFactCopyEdges(sas, sas->fact + i);
+    }
+
+    for (i = 0; i < sas->fact_size; ++i)
         factSetEdgeFact(sas->fact + i);
+
+    for (i = 0; i < sas->fact_size; ++i)
+        pFact(sas->fact + i);
+    fprintf(stderr, "\n");
 }
 
 
@@ -1111,6 +1231,8 @@ static void findInvariants(plan_pddl_sas_t *sas)
 {
     int i, *I, *C;
 
+    sasNodesPrint(sas, stderr);
+
     fprintf(stderr, "Num-facts: %d\n", sas->fact_size);
     fflush(stderr);
     for (i = 0; i < sas->fact_size; ++i)
@@ -1425,3 +1547,244 @@ static void causalGraph(plan_pddl_sas_t *sas)
 
     planCausalGraphDel(cg);
 }
+
+
+
+/*** DELSET ***/
+static int cmpDelset(const void *a, const void *b)
+{
+    const plan_pddl_sas_delset_t *ds1 = a;
+    const plan_pddl_sas_delset_t *ds2 = b;
+    int i, j;
+
+    for (i = 0, j = 0; i < ds1->size && j < ds2->size; ++i, ++j){
+        if (ds1->node[i] < ds2->node[j])
+            return -1;
+        if (ds1->node[i] > ds2->node[j])
+            return 1;
+    }
+    if (i == ds1->size && j == ds2->size)
+        return 0;
+    if (i == ds1->size)
+        return -1;
+    return 1;
+}
+
+static void sasDelsetUnique(plan_pddl_sas_delset_t *ds)
+{
+    int i, ins;
+
+    qsort(ds->node, ds->size, sizeof(int), cmpInt);
+    for (i = 1, ins = 0; i < ds->size; ++i){
+        if (ds->node[i] != ds->node[ins]){
+            ds->node[++ins] = ds->node[i];
+        }
+    }
+    ds->size = ins + 1;
+}
+
+static void sasDelsetsUnique(plan_pddl_sas_node_t *node)
+{
+    int i, ins;
+
+    qsort(node->delset, node->delset_size,
+          sizeof(plan_pddl_sas_delset_t), cmpDelset);
+    for (i = 1, ins = 0; i < node->delset_size; ++i){
+        if (cmpDelset(node->delset + i, node->delset + ins) == 0){
+            BOR_FREE(node->delset[i].node);
+        }else{
+            node->delset[++ins] = node->delset[i];
+        }
+    }
+
+    node->delset_size = ins + 1;
+}
+
+static int sasDelsetIsBound(const plan_pddl_sas_delset_t *ds, const int *ns)
+{
+    int i;
+
+    for (i = 0; i < ds->size; ++i){
+        if (ns[ds->node[i]])
+            return 1;
+    }
+
+    return 0;
+}
+
+static int sasDelsetDelNodes(plan_pddl_sas_delset_t *ds, const int *ns)
+{
+    int i, ins;
+
+    if (ds->size == 0)
+        return 0;
+
+    for (i = 0, ins = 0; i < ds->size; ++i){
+        if (!ns[ds->node[i]]){
+            ds->node[ins++] = ds->node[i];
+        }
+    }
+
+    ds->size = ins;
+    if (ds->size == 0)
+        return 1;
+    return 0;
+}
+
+/*** DELSET END ***/
+
+
+/*** NODE ***/
+static plan_pddl_sas_node_t *sasNodesNew(int node_size, int fact_size)
+{
+    plan_pddl_sas_node_t *nodes;
+    int i;
+
+    nodes = BOR_ALLOC_ARR(plan_pddl_sas_node_t, node_size);
+    for (i = 0; i < node_size; ++i)
+        sasNodeInit(nodes + i, i, node_size, fact_size);
+
+    return nodes;
+}
+
+static void sasNodesDel(plan_pddl_sas_node_t *nodes, int node_size)
+{
+    int i;
+
+    for (i = 0; i < node_size; ++i)
+        sasNodeFree(nodes + i);
+    BOR_FREE(nodes);
+}
+
+static void sasNodeInit(plan_pddl_sas_node_t *node,
+                        int id, int node_size, int fact_size)
+{
+    int i;
+
+    bzero(node, sizeof(*node));
+    node->id = id;
+    node->node_size = node_size;
+    node->fact_size = fact_size;
+
+    node->inv = BOR_CALLOC_ARR(int, fact_size);
+    node->conflict = BOR_CALLOC_ARR(int, node_size);
+    node->must = BOR_CALLOC_ARR(int, node_size);
+    node->must[node->id] = 1;
+
+    node->conflict_node_id = node_size - 1;
+    if (node->id == node->conflict_node_id){
+        for (i = 0; i < node_size; ++i){
+            if (i != node->id)
+                node->conflict[i] = 1;
+        }
+    }
+}
+
+static void sasNodeFree(plan_pddl_sas_node_t *node)
+{
+    if (node->inv)
+        BOR_FREE(node->inv);
+    if (node->conflict)
+        BOR_FREE(node->conflict);
+    if (node->must)
+        BOR_FREE(node->must);
+}
+
+static void sasNodeAddEdge(plan_pddl_sas_node_t *node,
+                           const plan_pddl_ground_facts_t *edge)
+{
+    plan_pddl_sas_delset_t *delset;
+
+    if (edge->size == 0){
+        node->must[node->conflict_node_id] = 1;
+
+    }else{
+        ++node->delset_size;
+        node->delset = BOR_REALLOC_ARR(node->delset, plan_pddl_sas_delset_t,
+                                       node->delset_size);
+        delset = node->delset + node->delset_size - 1;
+        delset->size = edge->size;
+        delset->node = BOR_ALLOC_ARR(int, delset->size);
+        memcpy(delset->node, edge->fact, sizeof(int) * delset->size);
+        sasDelsetUnique(delset);
+    }
+}
+
+static void sasNodesAddActionEdges(plan_pddl_sas_t *sas,
+                                   const plan_pddl_ground_facts_t *del,
+                                   const plan_pddl_ground_facts_t *add)
+{
+    plan_pddl_sas_node_t *node;
+    int i;
+
+    for (i = 0; i < add->size; ++i){
+        node = sas->node + add->fact[i];
+        sasNodeAddEdge(node, del);
+    }
+}
+
+static void sasNodesAddFactConflicts(plan_pddl_sas_t *sas,
+                                     const plan_pddl_ground_facts_t *fs)
+{
+    int i, j, f1, f2;
+
+    for (i = 0; i < fs->size; ++i){
+        f1 = fs->fact[i];
+        for (j = i + 1; j < fs->size; ++j){
+            f2 = fs->fact[j];
+            sas->node[f1].conflict[f2] = 1;
+            sas->node[f2].conflict[f1] = 1;
+        }
+    }
+}
+
+static void sasNodePrint(const plan_pddl_sas_node_t *node, FILE *fout)
+{
+    int i, j;
+
+    fprintf(fout, "Node %d", node->id);
+    if (node->id == node->conflict_node_id)
+        fprintf(fout, "*");
+    fprintf(fout, ": ");
+
+    fprintf(fout, "inv:");
+    for (i = 0; i < node->fact_size; ++i){
+        if (node->inv[i])
+            fprintf(fout, " %d", i);
+    }
+
+    fprintf(fout, ", conflict:");
+    for (i = 0; i < node->node_size; ++i){
+        if (node->conflict[i])
+            fprintf(fout, " %d", i);
+    }
+
+    fprintf(fout, ", must:");
+    for (i = 0; i < node->node_size; ++i){
+        if (node->must[i])
+            fprintf(fout, " %d", i);
+    }
+
+    fprintf(fout, ", delset:");
+    for (i = 0; i < node->delset_size; ++i){
+        fprintf(fout, " [");
+        for (j = 0; j < node->delset[i].size; ++j){
+            if (j != 0)
+                fprintf(fout, " ");
+            fprintf(fout, "%d", node->delset[i].node[j]);
+        }
+        fprintf(fout, "]");
+    }
+
+    fprintf(fout, "\n");
+}
+
+static void sasNodesPrint(const plan_pddl_sas_t *sas, FILE *fout)
+{
+    int i;
+
+    for (i = 0; i < sas->node_size; ++i)
+        sasNodePrint(sas->node + i, fout);
+    fprintf(fout, "\n");
+}
+/*** NODE END ***/

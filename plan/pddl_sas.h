@@ -48,14 +48,9 @@ struct _plan_pddl_sas_fact_t {
     int id;
     int fact_size;    /*!< Number of all facts */
     int *conflict;    /*!< True for the fact that is in conflict */
-    int *must;        /*!< True for the fact that must be in invariant with
-                           this fact. */
 
     plan_pddl_ground_facts_t *edge;       /*!< List of edges (add->del) */
     int edge_size;                        /*!< Number of edges */
-    plan_pddl_sas_facts_freq_t edge_fact; /*!< List of facts that are in
-                                            the fact's edges with number of
-                                            edges they are in */
 
     plan_var_id_t var; /*!< Assigned variable ID */
     plan_val_t val;    /*!< Assigned value */

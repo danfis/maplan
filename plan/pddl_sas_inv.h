@@ -45,6 +45,9 @@ typedef struct _plan_pddl_sas_inv_edge_t plan_pddl_sas_inv_edge_t;
 
 struct _plan_pddl_sas_inv_node_t {
     int id;
+    int repr;         /*!< Representative node -- node that represents the
+                           same invariant */
+    int new_id;       /*!< Assigned node ID in the new graph */
     int node_size;    /*!< Number of all nodes */
     int fact_size;    /*!< Number of all facts */
     int *inv;         /*!< True for facts that are invariant candidates */

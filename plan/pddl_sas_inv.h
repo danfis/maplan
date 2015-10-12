@@ -73,9 +73,6 @@ struct _plan_pddl_sas_inv_finder_t {
     int fact_size;
     plan_pddl_ground_facts_t fact_init;
 
-    plan_pddl_sas_inv_node_t *node;
-    int node_size;
-
     bor_list_t inv;
     int inv_size;
 };

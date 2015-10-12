@@ -109,6 +109,9 @@ static int nodesSetInv(plan_pddl_sas_inv_node_t *nodes, int nodes_size);
 static void nodesSetRepr(plan_pddl_sas_inv_node_t *nodes, int nodes_size);
 /** Gather edges belonging to the whole node sets defined by .must[] array */
 static void nodesGatherEdges(plan_pddl_sas_inv_node_t *node, int nodes_size);
+/** Prune node's edges from nodes that are superset of this node. */
+static void nodePruneSupersetEdges(plan_pddl_sas_inv_node_t *node,
+                                   plan_pddl_sas_inv_node_t *nodes);
 
 static void nodePrint(const plan_pddl_sas_inv_node_t *node, FILE *fout);
 static void nodesPrint(const plan_pddl_sas_inv_node_t *nodes, int nodes_size,
@@ -571,62 +574,6 @@ static void nodesFromFacts(const plan_pddl_sas_inv_fact_t *facts,
     *nodes_size_out = node_size;
 }
 
-static void nodePruneSubsetEdges(plan_pddl_sas_inv_node_t *node,
-                                 plan_pddl_sas_inv_node_t *nodes)
-{
-    int i, j, *super, super_size;
-
-    super = BOR_CALLOC_ARR(int, node->node_size);
-
-    // First gather node IDs that are present in edges
-    for (i = 0; i < node->edge_size; ++i){
-        for (j = 0; j < node->edge[i].size; ++j)
-            super[node->edge[i].node[j]] = 1;
-    }
-
-    // Now find supersets
-    for (i = 0; i < node->node_size; ++i){
-        if (super[i]){
-            if (i == node->id || !nodeInvSubset(node, nodes + i)){
-                super[i] = 0;
-            }
-        }
-    }
-
-    // Remove superset invariants from edges
-    for (i = 0; i < node->edge_size; ++i)
-        edgeRemoveNodes(node->edge + i, super);
-
-    // Squash list of superset invariants
-    super_size = 0;
-    for (i = 0; i < node->node_size; ++i){
-        if (super[i])
-            super[super_size++] = i;
-    }
-
-    if (super_size > 0){
-        // Add alternative nodes to the edges that already contains edge
-        // pointing to this node.
-        for (i = 0; i < node->node_size; ++i){
-            for (j = 0; j < nodes[i].edge_size; ++j){
-                edgeAddAlternativeNodes(nodes[i].edge + j, node->id,
-                                        super, super_size);
-            }
-        }
-    }
-
-    // Finally check if there were left an empty edges. If so mark this
-    // node as conflicting with any other node.
-    for (i = 0; i < node->edge_size; ++i){
-        if (node->edge[i].size == 0){
-            node->must[node->conflict_node_id] = 1;
-            break;
-        }
-    }
-
-    BOR_FREE(super);
-}
-
 static void nodesFromNodes(plan_pddl_sas_inv_node_t *src,
                            int src_size,
                            plan_pddl_sas_inv_node_t **dst,
@@ -684,7 +631,7 @@ static void nodesFromNodes(plan_pddl_sas_inv_node_t *src,
     nodesPrint(node, node_size, stderr);
 
     for (i = 0; i < node_size; ++i){
-        nodePruneSubsetEdges(node + i, node);
+        nodePruneSupersetEdges(node + i, node);
     }
 
     fprintf(stderr, "NEW NODES PRUNED\n");
@@ -900,6 +847,62 @@ static void nodesGatherEdges(plan_pddl_sas_inv_node_t *nodes, int nodes_size)
             }
         }
     }
+}
+
+static void nodePruneSupersetEdges(plan_pddl_sas_inv_node_t *node,
+                                   plan_pddl_sas_inv_node_t *nodes)
+{
+    int i, j, *super, super_size;
+
+    super = BOR_CALLOC_ARR(int, node->node_size);
+
+    // First gather node IDs that are present in edges
+    for (i = 0; i < node->edge_size; ++i){
+        for (j = 0; j < node->edge[i].size; ++j)
+            super[node->edge[i].node[j]] = 1;
+    }
+
+    // Now find supersets
+    for (i = 0; i < node->node_size; ++i){
+        if (super[i]){
+            if (i == node->id || !nodeInvSubset(node, nodes + i)){
+                super[i] = 0;
+            }
+        }
+    }
+
+    // Remove superset invariants from edges
+    for (i = 0; i < node->edge_size; ++i)
+        edgeRemoveNodes(node->edge + i, super);
+
+    // Squash list of superset invariants
+    super_size = 0;
+    for (i = 0; i < node->node_size; ++i){
+        if (super[i])
+            super[super_size++] = i;
+    }
+
+    if (super_size > 0){
+        // Add alternative nodes to the edges that already contains edge
+        // pointing to this node.
+        for (i = 0; i < node->node_size; ++i){
+            for (j = 0; j < nodes[i].edge_size; ++j){
+                edgeAddAlternativeNodes(nodes[i].edge + j, node->id,
+                                        super, super_size);
+            }
+        }
+    }
+
+    // Finally check if there were left an empty edges. If so mark this
+    // node as conflicting with any other node.
+    for (i = 0; i < node->edge_size; ++i){
+        if (node->edge[i].size == 0){
+            node->must[node->conflict_node_id] = 1;
+            break;
+        }
+    }
+
+    BOR_FREE(super);
 }
 
 static void nodePrint(const plan_pddl_sas_inv_node_t *node, FILE *fout)

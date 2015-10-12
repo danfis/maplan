@@ -22,6 +22,7 @@
 
 #include <plan/state.h>
 #include <plan/pddl_ground.h>
+#include <plan/pddl_sas_inv.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,65 +33,19 @@ extern "C" {
  */
 #define PLAN_PDDL_SAS_USE_CG 0x1u
 
-struct _plan_pddl_sas_fact_freq_t {
-    int fact;
-    int freq;
-};
-typedef struct _plan_pddl_sas_fact_freq_t plan_pddl_sas_fact_freq_t;
-
-struct _plan_pddl_sas_facts_freq_t {
-    int size;
-    plan_pddl_sas_fact_freq_t *fact;
-};
-typedef struct _plan_pddl_sas_facts_freq_t plan_pddl_sas_facts_freq_t;
-
 struct _plan_pddl_sas_fact_t {
-    int id;
-    int fact_size;    /*!< Number of all facts */
-    int *conflict;    /*!< True for the fact that is in conflict */
-
-    plan_pddl_ground_facts_t *edge;       /*!< List of edges (add->del) */
-    int edge_size;                        /*!< Number of edges */
-
     plan_var_id_t var; /*!< Assigned variable ID */
     plan_val_t val;    /*!< Assigned value */
 };
 typedef struct _plan_pddl_sas_fact_t plan_pddl_sas_fact_t;
 
-
-struct _plan_pddl_sas_delset_t {
-    int size;
-    int *node;
-};
-typedef struct _plan_pddl_sas_delset_t plan_pddl_sas_delset_t;
-
-struct _plan_pddl_sas_node_t {
-    int id;
-    int node_size;    /*!< Number of all nodes */
-    int fact_size;    /*!< Number of all facts */
-    int *inv;         /*!< True for facts that are invariant candidates */
-    int *conflict;    /*!< True for the node that is in conflict */
-    int *must;        /*!< True for the node that must be in invariant with
-                           this node. */
-
-    plan_pddl_sas_delset_t *delset;
-    int delset_size;
-    int conflict_node_id;
-};
-typedef struct _plan_pddl_sas_node_t plan_pddl_sas_node_t;
-
 struct _plan_pddl_sas_t {
     const plan_pddl_ground_t *ground;
-
-    plan_pddl_sas_node_t *node;
-    int node_size;
-    int conflict_node_id;
+    plan_pddl_sas_inv_finder_t inv_finder;
 
     plan_pddl_sas_fact_t *fact; /*!< Array of fact related data */
     int fact_size;              /*!< Number of facts */
 
-    bor_list_t inv;           /*!< List of invariants */
-    int inv_size;             /*!< Number of invariants */
     plan_val_t *var_range;    /*!< Range for each variable */
     plan_var_id_t *var_order; /*!< Order of variables as suggested by
                                    causal-graph analysis. */

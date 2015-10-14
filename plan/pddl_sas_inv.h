@@ -21,6 +21,7 @@
 #define __PLAN_PDDL_SAS_INV_H__
 
 #include <boruvka/list.h>
+#include <boruvka/htable.h>
 #include <plan/pddl_ground.h>
 
 #ifdef __cplusplus
@@ -64,6 +65,9 @@ struct _plan_pddl_sas_inv_t {
     int *fact;
     int size;
     bor_list_t list;
+
+    bor_list_t table;
+    bor_htable_key_t table_key;
 };
 typedef struct _plan_pddl_sas_inv_t plan_pddl_sas_inv_t;
 
@@ -72,6 +76,7 @@ struct _plan_pddl_sas_inv_finder_t {
     int fact_size;
     plan_pddl_ground_facts_t fact_init;
 
+    bor_htable_t *inv_table;
     bor_list_t inv;
     int inv_size;
 };

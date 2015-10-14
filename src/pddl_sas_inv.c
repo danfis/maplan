@@ -18,6 +18,7 @@
  */
 
 #include <boruvka/alloc.h>
+#include <boruvka/hfunc.h>
 #include "plan/pddl_sas_inv.h"
 
 /** Stores fact IDs from src to dst */
@@ -135,14 +136,9 @@ static void nodesPrint(const plan_pddl_sas_inv_node_t *nodes, int nodes_size,
 static plan_pddl_sas_inv_t *invNew(const int *fact, int fact_size);
 /** Frees allocated memory */
 static void invDel(plan_pddl_sas_inv_t *inv);
-/** Returns true if the invariant stored in fact[] array is subset of the
- *  invariant inv. */
-static int invIsSubset(const int *fact, int fact_size,
-                       const plan_pddl_sas_inv_t *inv);
-/** Returns true if list of invariants contains a superset of the invariant
- *  stored in the fact array. */
-static int invListHasSuperset(const bor_list_t *inv,
-                              const int *fact, int fact_size);
+/** Returns true if inv is subset of inv2 */
+static int invIsSubset(const plan_pddl_sas_inv_t *inv,
+                       const plan_pddl_sas_inv_t *inv2);
 /** Returns true if the invariants have at least one common fact */
 static int invHasCommonFact(const plan_pddl_sas_inv_t *inv,
                             const plan_pddl_sas_inv_t *inv2);
@@ -157,6 +153,13 @@ static int createInvariant(plan_pddl_sas_inv_finder_t *invf,
                            const plan_pddl_sas_inv_node_t *node);
 /** Try to merge invariants to get the biggest possible invariants */
 static void mergeInvariants(plan_pddl_sas_inv_finder_t *invf);
+/** Remove invariants that are subsets of other invariant. */
+static void pruneInvSubsets(plan_pddl_sas_inv_finder_t *invf);
+
+
+static bor_htable_key_t invTableHashCompute(const plan_pddl_sas_inv_t *inv);
+static bor_htable_key_t invTableHash(const bor_list_t *key, void *ud);
+static int invTableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud);
 
 
 void planPDDLSasInvFinderInit(plan_pddl_sas_inv_finder_t *invf,
@@ -171,6 +174,8 @@ void planPDDLSasInvFinderInit(plan_pddl_sas_inv_finder_t *invf,
     for (i = 0; i < invf->fact_size; ++i)
         factInit(invf->fact + i, i, invf->fact_size);
     borListInit(&invf->inv);
+    invf->inv_size = 0;
+    invf->inv_table = borHTableNew(invTableHash, invTableEq, NULL);
 
     storeFactIds(&invf->fact_init, (plan_pddl_fact_pool_t *)&g->fact_pool,
                  &g->pddl->init_fact);
@@ -190,6 +195,9 @@ void planPDDLSasInvFinderFree(plan_pddl_sas_inv_finder_t *invf)
         BOR_FREE(invf->fact);
     if (invf->fact_init.fact)
         BOR_FREE(invf->fact_init.fact);
+
+    if (invf->inv_table)
+        borHTableDel(invf->inv_table);
 
     while (!borListEmpty(&invf->inv)){
         item = borListNext(&invf->inv);
@@ -244,10 +252,7 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
     for (i = 0; i < node_size; ++i)
         createInvariant(invf, node + i);
     mergeInvariants(invf);
-
-    invf->inv_size = 0;
-    BOR_LIST_FOR_EACH(&invf->inv, item)
-        ++invf->inv_size;
+    pruneInvSubsets(invf);
 
     nodesDel(node, node_size);
 
@@ -1158,6 +1163,9 @@ static plan_pddl_sas_inv_t *invNew(const int *fact, int fact_size)
             inv->fact[inv->size++] = i;
     }
 
+    borListInit(&inv->table);
+    inv->table_key = invTableHashCompute(inv);
+
     return inv;
 }
 
@@ -1168,44 +1176,24 @@ static void invDel(plan_pddl_sas_inv_t *inv)
     BOR_FREE(inv);
 }
 
-static int invIsSubset(const int *fact, int fact_size,
+static int invIsSubset(const plan_pddl_sas_inv_t *inv,
                        const plan_pddl_sas_inv_t *inv2)
 {
-    int i1, i2;
+    int i, j;
 
-    for (i1 = 0, i2 = 0; i1 < fact_size && i2 < inv2->size; ++i1){
-        if (fact[i1] <= 0)
-            continue;
+    for (i = 0, j = 0; i < inv->size && j < inv2->size;){
+        if (inv->fact[i] == inv2->fact[j]){
+            ++i;
+            ++j;
 
-        for (; i2 < inv2->size && i1 != inv2->fact[i2]; ++i2);
-        if (i2 < inv2->size && i1 == inv2->fact[i2]){
-            ++i2;
-        }else{
+        }else if (inv->fact[i] < inv2->fact[j]){
             return 0;
+        }else{
+            ++j;
         }
     }
 
-    for (; i1 < fact_size; ++i1){
-        if (fact[i1] > 0)
-            return 0;
-    }
-
-    return 1;
-}
-
-static int invListHasSuperset(const bor_list_t *list,
-                              const int *fact, int fact_size)
-{
-    const bor_list_t *item;
-    const plan_pddl_sas_inv_t *inv;
-
-    BOR_LIST_FOR_EACH(list, item){
-        inv = BOR_LIST_ENTRY(item, plan_pddl_sas_inv_t, list);
-        if (invIsSubset(fact, fact_size, inv))
-            return 1;
-    }
-
-    return 0;
+    return i == inv->size;
 }
 
 static int invHasCommonFact(const plan_pddl_sas_inv_t *inv,
@@ -1410,8 +1398,8 @@ static void refineNodes(plan_pddl_sas_inv_node_t *node, int node_size)
         for (i = 0; i < node_size; ++i)
                 change |= refineNode(node + i, node);
         } while (change);
-    }
-    /*** REFINE END ***/
+}
+/*** REFINE END ***/
 
 
 /*** CREATE/MERGE-INVARIANT ***/
@@ -1468,15 +1456,78 @@ static int checkInvariant(const plan_pddl_sas_inv_finder_t *invf, const int *I)
     return 1;
 }
 
+static int checkMergedInvariant(const plan_pddl_sas_inv_finder_t *invf,
+                                const plan_pddl_sas_inv_t *inv1,
+                                const plan_pddl_sas_inv_t *inv2)
+{
+    int i, *I;
+
+    I = BOR_CALLOC_ARR(int, invf->fact_size);
+    for (i = 0; i < inv1->size; ++i)
+        I[inv1->fact[i]] = 1;
+    for (i = 0; i < inv2->size; ++i)
+        I[inv2->fact[i]] = 1;
+
+    for (i = 0; i < invf->fact_size; ++i){
+        if (!I[i])
+            continue;
+
+        if (factInConflict(invf->fact + i, I)
+                || !factAllEdgesBound(invf->fact + i, I)){
+            BOR_FREE(I);
+            return 0;
+        }
+    }
+
+    BOR_FREE(I);
+    return 1;
+}
+
+static int createUniqueInvariantFromFacts(plan_pddl_sas_inv_finder_t *invf,
+                                          const int *fact)
+{
+    plan_pddl_sas_inv_t *inv;
+    bor_list_t *item;
+
+    // Create a unique invariant and append it to the list
+    inv = invNew(fact, invf->fact_size);
+    item = borHTableInsertUnique(invf->inv_table, &inv->table);
+    if (item == NULL){
+        ++invf->inv_size;
+        borListAppend(&invf->inv, &inv->list);
+        return 1;
+
+    }else{
+        invDel(inv);
+        return 0;
+    }
+}
+
+static int createMergedInvariant(plan_pddl_sas_inv_finder_t *invf,
+                                 const plan_pddl_sas_inv_t *inv1,
+                                 const plan_pddl_sas_inv_t *inv2)
+{
+    int i, *fact, change = 0;
+
+    fact = BOR_CALLOC_ARR(int, invf->fact_size);
+    for (i = 0; i < inv1->size; ++i)
+        fact[inv1->fact[i]] = 1;
+    for (i = 0; i < inv2->size; ++i)
+        fact[inv2->fact[i]] = 1;
+    change = createUniqueInvariantFromFacts(invf, fact);
+    if (change)
+        fprintf(stderr, "MERGE\n");
+
+    BOR_FREE(fact);
+    return change;
+}
+
 static int createInvariant(plan_pddl_sas_inv_finder_t *invf,
                            const plan_pddl_sas_inv_node_t *node)
 {
-    plan_pddl_sas_inv_t *inv;
-    const int *fact = node->inv;
-
     // Check that the invariant is really invariant
     if (node->edge_size > 0 || node->conflict[node->id]){
-        if (checkInvariant(invf, fact)){
+        if (checkInvariant(invf, node->inv)){
             fprintf(stderr, "ERROR: Something is really wrong!\n");
         }
         return 0;
@@ -1486,86 +1537,79 @@ static int createInvariant(plan_pddl_sas_inv_finder_t *invf,
     if (nodeInvSize(node) <= 1)
         return 0;
 
-    // If the invariant stored in fact[] is subset of an invariant already
-    // stored, just pretend that it was already added.
-    if (invListHasSuperset(&invf->inv, fact, invf->fact_size))
-        return 1;
-
-    // Create invariant and append it to the list
-    inv = invNew(fact, invf->fact_size);
-    borListAppend(&invf->inv, &inv->list);
-    return 1;
+    // Create a unique invariant and append it to the list
+    return createUniqueInvariantFromFacts(invf, node->inv);
 }
 
-/** Tries to merge invariant inv2 into inv. Returns true on success. */
-static int mergeInvariant(const plan_pddl_sas_inv_finder_t *invf,
-                          plan_pddl_sas_inv_t *inv,
-                          const plan_pddl_sas_inv_t *inv2)
+static int mergeInvariantsTry(plan_pddl_sas_inv_finder_t *invf)
 {
-    int *I, i, size, ret = 0;
+    bor_list_t *item1, *item2;
+    plan_pddl_sas_inv_t *inv1, *inv2;
+    int change = 0;
 
-    // Check that there is at least one common fact
-    if (!invHasCommonFact(inv, inv2))
-        return 0;
-
-    I = BOR_CALLOC_ARR(int, invf->fact_size);
-    for (i = 0; i < inv->size; ++i)
-        I[inv->fact[i]] = 1;
-    for (i = 0; i < inv2->size; ++i)
-        I[inv2->fact[i]] = 1;
-
-    if (checkInvariant(invf, I)){
-        for (i = 0, size = 0; i < invf->fact_size; ++i){
-            if (I[i] > 0)
-                ++size;
-        }
-
-        inv->size = 0;
-        inv->fact = BOR_REALLOC_ARR(inv->fact, int, size);
-        for (i = 0; i < invf->fact_size; ++i){
-            if (I[i] > 0)
-                inv->fact[inv->size++] = i;
-        }
-        ret = 1;
-    }
-    BOR_FREE(I);
-
-    return ret;
-}
-
-static void mergeInvInvariants(plan_pddl_sas_inv_finder_t *invf,
-                               plan_pddl_sas_inv_t *inv)
-{
-    bor_list_t *item, *tmp;
-    plan_pddl_sas_inv_t *inv2;
-
-    item = borListNext(&inv->list);
-    while (item != &invf->inv){
-        inv2 = BOR_LIST_ENTRY(item, plan_pddl_sas_inv_t, list);
-        if (mergeInvariant(invf, inv, inv2)){
-            tmp = borListNext(item);
-            borListDel(item);
-            item = tmp;
-
-            if (inv2->fact)
-                BOR_FREE(inv2->fact);
-            BOR_FREE(inv2);
-        }else{
-            item = borListNext(item);
+    BOR_LIST_FOR_EACH(&invf->inv, item1){
+        inv1 = BOR_LIST_ENTRY(item1, plan_pddl_sas_inv_t, list);
+        BOR_LIST_FOR_EACH(&invf->inv, item2){
+            inv2 = BOR_LIST_ENTRY(item2, plan_pddl_sas_inv_t, list);
+            if (inv1 != inv2
+                    && invHasCommonFact(inv1, inv2)
+                    && !invIsSubset(inv1, inv2)
+                    && checkMergedInvariant(invf, inv1, inv2)){
+                change |= createMergedInvariant(invf, inv1, inv2);
+            }
         }
     }
+
+    return change;
 }
 
 static void mergeInvariants(plan_pddl_sas_inv_finder_t *invf)
 {
-    bor_list_t *item;
-    plan_pddl_sas_inv_t *inv;
+    while (mergeInvariantsTry(invf));
+}
 
-    item = borListNext(&invf->inv);
-    while (item != &invf->inv){
-        inv = BOR_LIST_ENTRY(item, plan_pddl_sas_inv_t, list);
-        mergeInvInvariants(invf, inv);
-        item = borListNext(item);
+static void pruneInvSubsets(plan_pddl_sas_inv_finder_t *invf)
+{
+    bor_list_t *item, *item2, *tmp;
+    plan_pddl_sas_inv_t *inv1, *inv2;
+
+    BOR_LIST_FOR_EACH(&invf->inv, item){
+        inv1 = bor_container_of(item, plan_pddl_sas_inv_t, list);
+        BOR_LIST_FOR_EACH_SAFE(&invf->inv, item2, tmp){
+            inv2 = bor_container_of(item2, plan_pddl_sas_inv_t, list);
+            if (inv1 != inv2 && invIsSubset(inv2, inv1)){
+                borListDel(&inv2->list);
+                borHTableErase(invf->inv_table, &inv2->table);
+                invDel(inv2);
+                --invf->inv_size;
+            }
+        }
     }
 }
 /*** CREATE/MERGE-INVARIANT END ***/
+
+
+static bor_htable_key_t invTableHashCompute(const plan_pddl_sas_inv_t *inv)
+{
+    return borCityHash_64(inv->fact, inv->size * sizeof(int));
+}
+
+static bor_htable_key_t invTableHash(const bor_list_t *key, void *ud)
+{
+    const plan_pddl_sas_inv_t *inv;
+
+    inv = bor_container_of(key, const plan_pddl_sas_inv_t, table);
+    return inv->table_key;
+}
+
+static int invTableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud)
+{
+    const plan_pddl_sas_inv_t *inv1, *inv2;
+
+    inv1 = bor_container_of(k1, const plan_pddl_sas_inv_t, table);
+    inv2 = bor_container_of(k2, const plan_pddl_sas_inv_t, table);
+
+    if (inv1->size != inv2->size)
+        return 0;
+    return memcmp(inv1->fact, inv2->fact, sizeof(int) * inv1->size) == 0;
+}

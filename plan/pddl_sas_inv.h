@@ -55,10 +55,8 @@ struct _plan_pddl_sas_inv_node_t {
     int *conflict;    /*!< True for the node that is in conflict */
     int *must;        /*!< True for the node that must be in invariant with
                            this node. */
-
-    int edge_occurrence;
-    int max_edge_occurrence;
-    int max_edge_occurrence_node_id;
+    int *edge_presence; /*!< Number of edges in which this node is present. */
+    int sum_edge_presence; /*!< Number of all edges this node is present in. */
 
     plan_pddl_sas_inv_edge_t *edge;
     int edge_size;

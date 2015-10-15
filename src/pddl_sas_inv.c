@@ -40,6 +40,7 @@ static void factAddEdge(plan_pddl_sas_inv_fact_t *f,
 /** Adds conflicts between all facts stored in fs. */
 static void factsAddConflicts(plan_pddl_sas_inv_fact_t *facts,
                               const plan_pddl_ground_facts_t *fs);
+static void factPrint(const plan_pddl_sas_inv_fact_t *f, FILE *fout);
 
 
 /** Sort and unique IDs stored in the edge. */
@@ -70,18 +71,17 @@ static int edgesAddEdges(plan_pddl_sas_inv_edge_t **dst, int *dst_size,
 
 
 /** Creates an array of nodes from list of facts. */
-static void nodesFromFacts(const plan_pddl_sas_inv_fact_t *facts,
-                           int facts_size,
-                           plan_pddl_sas_inv_node_t **nodes,
-                           int *nodes_size);
+static plan_pddl_sas_inv_node_t *nodesFromFacts(
+                const plan_pddl_sas_inv_fact_t *facts, int facts_size,
+                int *nodes_size_out);
 /** Creates an array of nodes from the already refined nodes. */
-static void nodesFromNodes(plan_pddl_sas_inv_node_t *src,
-                           int src_size,
-                           plan_pddl_sas_inv_node_t **dst,
-                           int *dst_size);
+static plan_pddl_sas_inv_node_t *nodesFromNodes(plan_pddl_sas_inv_node_t *src,
+                                                int src_size,
+                                                int *dst_size);
 /** Split one node and update all nodes. */
-static void nodesSplitOnEdge(const plan_pddl_sas_inv_node_t *src, int src_size,
-                             plan_pddl_sas_inv_node_t **dst, int *dst_size);
+static plan_pddl_sas_inv_node_t *nodesSplit(plan_pddl_sas_inv_node_t *src,
+                                            int src_size,
+                                            int *dst_size);
 /** Creates an array of nodes */
 static plan_pddl_sas_inv_node_t *nodesNew(int node_size, int fact_size);
 /** Deletes allocated memory */
@@ -103,6 +103,10 @@ static int nodeAddMust(plan_pddl_sas_inv_node_t *node, int add_id);
 /** Records conflict between two nodes */
 static int nodeAddConflict(plan_pddl_sas_inv_node_t *node,
                            plan_pddl_sas_inv_node_t *node2);
+/** Calls edgeAddAlternativeNodes() on all edges. */
+static void nodeAddAlternativeNodes(plan_pddl_sas_inv_node_t *node,
+                                    int node_id,
+                                    const int *nodes, int nodes_size);
 /** Returns true if the two nodes represent the same invariant. */
 static int nodeInvEq(const plan_pddl_sas_inv_node_t *n1,
                      const plan_pddl_sas_inv_node_t *n2);
@@ -124,9 +128,12 @@ static void nodePruneSupersetEdges(plan_pddl_sas_inv_node_t *node,
                                    plan_pddl_sas_inv_node_t *nodes);
 /** Returns true if there is a node that has at least one edge */
 static int nodesHasEdge(const plan_pddl_sas_inv_node_t *node, int node_size);
-/** Returns next split */
-static void nodesFindSplit(const plan_pddl_sas_inv_node_t *node, int node_size,
-                           int *node_id, int *node_split_id);
+/** Returns next split node. */
+static int nodesFindSplit(plan_pddl_sas_inv_node_t *node, int node_size);
+/** Counts edges the nodes are present in and store the counts in the
+ *  particular nodes. */
+static void nodesCountEdgePresence(plan_pddl_sas_inv_node_t *node,
+                                   int node_size);
 
 static void nodePrint(const plan_pddl_sas_inv_node_t *node, FILE *fout);
 static void nodesPrint(const plan_pddl_sas_inv_node_t *nodes, int nodes_size,
@@ -210,11 +217,11 @@ void planPDDLSasInvFinderFree(plan_pddl_sas_inv_finder_t *invf)
 
 void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
 {
-    plan_pddl_sas_inv_node_t *node, *next_node;
+    plan_pddl_sas_inv_node_t *node;
     bor_list_t *item;
-    int i, node_size, next_node_size;
+    int i, node_size;
 
-    nodesFromFacts(invf->fact, invf->fact_size, &node, &node_size);
+    node = nodesFromFacts(invf->fact, invf->fact_size, &node_size);
     fprintf(stderr, "INIT\n");
     nodesPrint(node, node_size, stderr);
 
@@ -222,32 +229,24 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
     refineNodes(node, node_size);
     nodesPrint(node, node_size, stderr);
 
-    //while (1){
-    int max_splits = node_size;
-    for (i = 0; i < max_splits; ++i){
+    while (1){
+    //int max_splits = node_size;
+    //for (i = 0; i < max_splits; ++i){
         while (nodesSetInv(node, node_size)){
             fprintf(stderr, "SET-INV\n");
             nodesPrint(node, node_size, stderr);
 
-            nodesFromNodes(node, node_size, &next_node, &next_node_size);
-            nodesDel(node, node_size);
-            node = next_node;
-            node_size = next_node_size;
-
+            node = nodesFromNodes(node, node_size, &node_size);
             refineNodes(node, node_size);
         }
 
         if (!nodesHasEdge(node, node_size))
             break;
-        /*
-        nodesSplitOnEdge(node, node_size, &next_node, &next_node_size);
-        node = next_node;
-        node_size = next_node_size;
+        node = nodesSplit(node, node_size, &node_size);
 
         fprintf(stderr, "REFINE\n");
         refineNodes(node, node_size);
         nodesPrint(node, node_size, stderr);
-        */
     }
 
     // TODO: Exponential extension.
@@ -400,6 +399,32 @@ static void factsAddConflicts(plan_pddl_sas_inv_fact_t *facts,
             facts[f2].conflict[f1] = 1;
         }
     }
+}
+
+static void factPrint(const plan_pddl_sas_inv_fact_t *fact, FILE *fout)
+{
+    int i, j;
+
+    fprintf(fout, "Fact %d:", fact->id);
+
+    fprintf(fout, "conflict:");
+    for (i = 0; i < fact->fact_size; ++i){
+        if (fact->conflict[i])
+            fprintf(fout, " %d", i);
+    }
+
+    fprintf(fout, ", edge[%d]:", fact->edge_size);
+    for (i = 0; i < fact->edge_size; ++i){
+        fprintf(fout, " [");
+        for (j = 0; j < fact->edge[i].size; ++j){
+            if (j != 0)
+                fprintf(fout, " ");
+            fprintf(fout, "%d", fact->edge[i].fact[j]);
+        }
+        fprintf(fout, "]");
+    }
+
+    fprintf(fout, "\n");
 }
 /*** FACT END ***/
 
@@ -653,10 +678,9 @@ static void edgesCopyMappedEdges(plan_pddl_sas_inv_edge_t **dst,
 
 
 /*** NODE ***/
-static void nodesFromFacts(const plan_pddl_sas_inv_fact_t *facts,
-                           int facts_size,
-                           plan_pddl_sas_inv_node_t **nodes_out,
-                           int *nodes_size_out)
+static plan_pddl_sas_inv_node_t *nodesFromFacts(
+                const plan_pddl_sas_inv_fact_t *facts, int facts_size,
+                int *nodes_size_out)
 {
     plan_pddl_sas_inv_node_t *nodes, *node;
     const plan_pddl_sas_inv_fact_t *fact;
@@ -683,73 +707,16 @@ static void nodesFromFacts(const plan_pddl_sas_inv_fact_t *facts,
         }
     }
 
-    *nodes_out = nodes;
     *nodes_size_out = node_size;
+    return nodes;
 }
 
-static void nodeEdgeOccurrenceStats(plan_pddl_sas_inv_node_t *node,
-                                    plan_pddl_sas_inv_node_t *nodes)
-{
-    int i, j, *occ;
-
-    if (node->edge_size == 0)
-        return;
-
-    occ = BOR_CALLOC_ARR(int, node->node_size);
-    for (i = 0; i < node->edge_size; ++i){
-        for (j = 0; j < node->edge[i].size; ++j)
-            ++occ[node->edge[i].node[j]];
-    }
-
-    for (i = 0; i < node->node_size; ++i){
-        if (occ[i] > 0){
-            nodes[i].edge_occurrence += occ[i];
-            if (nodes[i].max_edge_occurrence < occ[i]){
-                nodes[i].max_edge_occurrence = occ[i];
-                nodes[i].max_edge_occurrence_node_id = node->id;
-            }
-        }
-    }
-    BOR_FREE(occ);
-}
-
-static void nodesEdgeOccurrenceStats(plan_pddl_sas_inv_node_t *node,
-                                     int src_size)
-{
-    int i;
-
-    for (i = 0; i < src_size; ++i){
-        node[i].edge_occurrence = 0;
-        node[i].max_edge_occurrence = 0;
-        node[i].max_edge_occurrence_node_id = -1;
-    }
-
-    for (i = 0; i < src_size; ++i){
-        nodeEdgeOccurrenceStats(node + i, node);
-    }
-    for (i = 0; i < src_size; ++i){
-        fprintf(stderr, "Occurence Stats %d: num: %d, max: %d, max_id: %d,"
-                        " edge_size: %d, repr: %d, bazmek: %d\n",
-                i, node[i].edge_occurrence,
-                node[i].max_edge_occurrence,
-                node[i].max_edge_occurrence_node_id,
-                node[i].edge_size,
-                node[i].repr,
-                node[i].must[node[i].node_size - 1]);
-    }
-}
-
-static void nodesFromNodes(plan_pddl_sas_inv_node_t *src,
-                           int src_size,
-                           plan_pddl_sas_inv_node_t **dst,
-                           int *dst_size)
+static plan_pddl_sas_inv_node_t *nodesFromNodes(plan_pddl_sas_inv_node_t *src,
+                                                int src_size,
+                                                int *dst_size)
 {
     plan_pddl_sas_inv_node_t *node;
     int i, j, node_size, fact_size = src[0].fact_size;
-
-    nodesSetRepr(src, src_size);
-    fprintf(stderr, "SET-REPR\n");
-    nodesPrint(src, src_size, stderr);
 
     nodesGatherEdges(src, src_size);
     for (i = 0; i < src_size; ++i){
@@ -759,7 +726,9 @@ static void nodesFromNodes(plan_pddl_sas_inv_node_t *src,
     fprintf(stderr, "GATHER EDGES\n");
     nodesPrint(src, src_size, stderr);
 
-    nodesEdgeOccurrenceStats(src, src_size);
+    nodesSetRepr(src, src_size);
+    fprintf(stderr, "SET-REPR\n");
+    nodesPrint(src, src_size, stderr);
 
     node_size = 0;
     for (i = 0; i < src_size; ++i){
@@ -804,13 +773,83 @@ static void nodesFromNodes(plan_pddl_sas_inv_node_t *src,
     fprintf(stderr, "NEW NODES PRUNED\n");
     nodesPrint(node, node_size, stderr);
 
-    *dst = node;
+    nodesDel(src, src_size);
     *dst_size = node_size;
+    return node;
 }
 
-static void nodesSplitOnEdge(const plan_pddl_sas_inv_node_t *src, int src_size,
-                             plan_pddl_sas_inv_node_t **dst, int *dst_size)
+static plan_pddl_sas_inv_node_t *nodesSplit(plan_pddl_sas_inv_node_t *src,
+                                            int src_size,
+                                            int *dst_size)
 {
+    plan_pddl_sas_inv_node_t *node;
+    int i, j, split_node, node_size;
+    int *alt;
+
+    // Find the node we use for splitting.
+    split_node = nodesFindSplit(src, src_size);
+    fprintf(stderr, "SPLIT NODE: %d, ", split_node);
+
+    // Make space for alternative node Ids
+    alt = BOR_ALLOC_ARR(int, src_size);
+
+    // Compute number of nodes in the new set and set alternative node ID
+    node_size = src_size;
+    for (i = 0; i < src_size; ++i){
+        alt[i] = -1;
+        if (src[split_node].edge_presence[i] > 0){
+            alt[i] = (node_size - 1);
+            ++node_size;
+            fprintf(stderr, " %d:%d", i, src[split_node].edge_presence[i]);
+        }
+    }
+    fprintf(stderr, "\n");
+
+    // Allocate new nodes and initialize the nodes
+    node = BOR_ALLOC_ARR(plan_pddl_sas_inv_node_t, node_size);
+    for (i = 0; i < node_size; ++i)
+        nodeInit(node + i, i, node_size, src[0].fact_size);
+
+    // Copy old nodes
+    for (i = 0; i < src_size - 1; ++i)
+        nodeCopy(node + i, src + i);
+
+    // Add alternative node IDs into edges and into conflict
+    for (i = 0; i < src_size; ++i){
+        for (j = 0; j < src_size; ++j){
+            if (alt[j] >= 0){
+                nodeAddAlternativeNodes(node + i, j, alt + j, 1);
+            }
+        }
+    }
+
+    // Initialize a new nodes and update the old ones.
+    for (i = 0; i < src_size; ++i){
+        if (alt[i] >= 0){
+            nodeCopy(node + alt[i], node + i);
+            nodeAddConflict(node + alt[i], node + split_node);
+            nodeAddMust(node + i, split_node);
+        }
+    }
+
+    // Add alternative node IDs into edges and into conflict
+    for (i = 0; i < node_size; ++i){
+        for (j = 0; j < src_size; ++j){
+            if (alt[j] >= 0 && node[i].conflict[j])
+                nodeAddConflict(node + i, node + alt[j]);
+        }
+    }
+
+    fprintf(stderr, "SPLIT NODES:\n");
+    nodesPrint(node, node_size, stderr);
+    fprintf(stderr, "\n");
+
+    BOR_FREE(alt);
+
+    nodesDel(src, src_size);
+    *dst_size = node_size;
+    return node;
+#if 0
     plan_pddl_sas_inv_node_t *node;
     int split_node, splitting_node, new_node;
     int i, j, node_size, fact_size = src[0].fact_size;
@@ -847,8 +886,10 @@ static void nodesSplitOnEdge(const plan_pddl_sas_inv_node_t *src, int src_size,
     fprintf(stderr, "SPLIT NODES\n");
     nodesPrint(node, node_size, stderr);
 
-    *dst = node;
+    nodesDel(src, src_size);
     *dst_size = node_size;
+    return node;
+#endif
 }
 
 static plan_pddl_sas_inv_node_t *nodesNew(int node_size, int fact_size)
@@ -888,6 +929,8 @@ static void nodeInit(plan_pddl_sas_inv_node_t *node,
     node->conflict = BOR_CALLOC_ARR(int, node_size);
     node->must = BOR_CALLOC_ARR(int, node_size);
     node->must[node->id] = 1;
+    node->edge_presence = BOR_CALLOC_ARR(int, node_size);
+    node->sum_edge_presence = 0;
 
     node->conflict_node_id = node_size - 1;
     if (node->id == node->conflict_node_id){
@@ -996,6 +1039,16 @@ static int nodeAddConflict(plan_pddl_sas_inv_node_t *node,
     return 0;
 }
 
+static void nodeAddAlternativeNodes(plan_pddl_sas_inv_node_t *node,
+                                    int node_id,
+                                    const int *nodes, int nodes_size)
+{
+    int i;
+
+    for (i = 0; i < node->edge_size; ++i)
+        edgeAddAlternativeNodes(node->edge + i, node_id, nodes, nodes_size);
+}
+
 static int nodeInvEq(const plan_pddl_sas_inv_node_t *n1,
                      const plan_pddl_sas_inv_node_t *n2)
 {
@@ -1009,7 +1062,7 @@ static int nodeInvSubset(const plan_pddl_sas_inv_node_t *n1,
 {
     int i;
 
-    for (i = 0; i < n1->node_size; ++i){
+    for (i = 0; i < n1->fact_size; ++i){
         if (n1->inv[i] && !n2->inv[i])
             return 0;
     }
@@ -1054,7 +1107,8 @@ static void nodesSetRepr(plan_pddl_sas_inv_node_t *nodes, int nodes_size)
     for (i = 0; i < nodes_size; ++i){
         if (nodes[i].repr >= 0)
             continue;
-        if (nodes[i].must[nodes[i].conflict_node_id]){
+        if (i != nodes[i].conflict_node_id
+                && nodes[i].must[nodes[i].conflict_node_id]){
             nodes[i].repr = nodes[i].conflict_node_id;
             continue;
         }
@@ -1106,12 +1160,15 @@ static void nodePruneSupersetEdges(plan_pddl_sas_inv_node_t *node,
             super[node->edge[i].node[j]] = 1;
     }
 
+    fprintf(stderr, "ID%d:: %d\n", node->id, super_size);
     // Now find supersets
     for (i = 0; i < node->node_size; ++i){
         if (super[i]){
+            fprintf(stderr, "super %d", i);
             if (i == node->id || !nodeInvSubset(node, nodes + i)){
                 super[i] = 0;
             }
+            fprintf(stderr, "-> %d\n", super[i]);
         }
     }
 
@@ -1127,14 +1184,11 @@ static void nodePruneSupersetEdges(plan_pddl_sas_inv_node_t *node,
     }
 
     if (super_size > 0){
+        fprintf(stderr, "ID%d: super_size: %d\n", node->id, super_size);
         // Add alternative nodes to the edges that already contains edge
         // pointing to this node.
-        for (i = 0; i < node->node_size; ++i){
-            for (j = 0; j < nodes[i].edge_size; ++j){
-                edgeAddAlternativeNodes(nodes[i].edge + j, node->id,
-                                        super, super_size);
-            }
-        }
+        for (i = 0; i < node->node_size; ++i)
+            nodeAddAlternativeNodes(nodes + i, node->id, super, super_size);
     }
 
     // Finally check if there were left an empty edges. If so mark this
@@ -1161,15 +1215,38 @@ static int nodesHasEdge(const plan_pddl_sas_inv_node_t *node, int node_size)
     return 0;
 }
 
-static void nodesFindSplit(const plan_pddl_sas_inv_node_t *node, int node_size,
-                           int *node_id, int *node_split_id)
+static int nodesFindSplit(plan_pddl_sas_inv_node_t *node, int node_size)
 {
-    int i;
+    int i, max_sum = -1, max_id = 0;
+
+    nodesCountEdgePresence(node, node_size);
 
     for (i = 0; i < node_size; ++i){
-        if (node[i].edge_size > 0){
-            *node_id = i;
-            *node_split_id = node[i].edge[0].node[0];
+        if (node[i].sum_edge_presence > max_sum){
+            max_sum = node[i].sum_edge_presence;
+            max_id = i;
+        }
+    }
+
+    return max_id;
+}
+
+static void nodesCountEdgePresence(plan_pddl_sas_inv_node_t *node,
+                                   int node_size)
+{
+    int i, j, k;
+
+    for (i = 0; i < node_size; ++i){
+        bzero(node[i].edge_presence, sizeof(int) * node_size);
+        node[i].sum_edge_presence = 0;
+    }
+
+    for (i = 0; i < node_size; ++i){
+        for (j = 0; j < node[i].edge_size; ++j){
+            for (k = 0; k < node[i].edge[j].size; ++k){
+                ++node[node[i].edge[j].node[k]].edge_presence[i];
+                ++node[node[i].edge[j].node[k]].sum_edge_presence;
+            }
         }
     }
 }
@@ -1204,7 +1281,7 @@ static void nodePrint(const plan_pddl_sas_inv_node_t *node, FILE *fout)
             fprintf(fout, " %d", i);
     }
 
-    fprintf(fout, ", edge:");
+    fprintf(fout, ", edge[%d]:", node->edge_size);
     for (i = 0; i < node->edge_size; ++i){
         fprintf(fout, " [");
         for (j = 0; j < node->edge[i].size; ++j){
@@ -1538,10 +1615,14 @@ static int checkInvariant(const plan_pddl_sas_inv_finder_t *invf, const int *I)
         if (!I[i])
             continue;
 
-        if (factInConflict(invf->fact + i, I))
+        if (factInConflict(invf->fact + i, I)){
+            fprintf(stderr, "FIC %d\n", i);
             return 0;
-        if (!factAllEdgesBound(invf->fact + i, I))
+        }
+        if (!factAllEdgesBound(invf->fact + i, I)){
+            fprintf(stderr, "!BOUND %d\n", i);
             return 0;
+        }
     }
 
     return 1;
@@ -1622,6 +1703,20 @@ static int createInvariant(plan_pddl_sas_inv_finder_t *invf,
             fprintf(stderr, "ERROR: Something is really wrong!\n");
         }
         return 0;
+
+    }else{
+        fprintf(stderr, "C\n");
+        if (!checkInvariant(invf, node->inv)){
+            fprintf(stderr, "ERROR: Something is really really wrong!\n");
+            int i;
+            for (i = 0; i < node->fact_size; ++i){
+                if (node->inv[i]){
+                    factPrint(invf->fact + i, stderr);
+                }
+            }
+            nodePrint(node, stderr);
+            fprintf(stderr, "\n");
+        }
     }
 
     // Skip invariants counting only one fact

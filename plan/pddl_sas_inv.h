@@ -56,8 +56,13 @@ struct _plan_pddl_sas_inv_node_t {
     int *must;        /*!< True for the node that must be in invariant with
                            this node. */
 
+    int edge_occurrence;
+    int max_edge_occurrence;
+    int max_edge_occurrence_node_id;
+
     plan_pddl_sas_inv_edge_t *edge;
     int edge_size;
+    int conflict_node_id;
 };
 typedef struct _plan_pddl_sas_inv_node_t plan_pddl_sas_inv_node_t;
 

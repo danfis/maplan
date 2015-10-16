@@ -29,6 +29,7 @@ static void storeFactIds(plan_pddl_ground_facts_t *dst,
 static void processActions(plan_pddl_sas_inv_finder_t *invf,
                            const plan_pddl_ground_action_pool_t *pool);
 
+#if 0
 /** Sort and unique IDs stored in the edge. */
 static void edgeUnique(plan_pddl_sas_inv_edge_t *edge);
 /** Sort and unique edges in the array */
@@ -124,6 +125,7 @@ static void nodesCountEdgePresence(plan_pddl_sas_inv_node_t *node,
 static void nodePrint(const plan_pddl_sas_inv_node_t *node, FILE *fout);
 static void nodesPrint(const plan_pddl_sas_inv_node_t *nodes, int nodes_size,
                        FILE *fout);
+#endif
 
 
 /** Creates a new invariant from the facts stored in binary array */
@@ -140,7 +142,7 @@ static int invHasCommonFact(const plan_pddl_sas_inv_t *inv,
 
 static int refineRemoveCoveredEdges(plan_pddl_sas_inv_node_t *node);
 static int refineRemoveConflictNodesFromEdges(plan_pddl_sas_inv_node_t *node);
-static void refineNodes(plan_pddl_sas_inv_node_t *node, int node_size);
+static void refineNodes(plan_pddl_sas_inv_nodes_t *ns);
 
 
 static int createInvariant(plan_pddl_sas_inv_finder_t *invf,
@@ -194,17 +196,21 @@ void planPDDLSasInvFinderFree(plan_pddl_sas_inv_finder_t *invf)
 
 void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
 {
-    plan_pddl_sas_inv_node_t *node;
-    bor_list_t *item;
-    int i, node_size;
+    plan_pddl_sas_inv_nodes_t nodes;
+    int i;
 
-    node = nodesFromFacts(&invf->facts, &node_size);
+    planPDDLSasInvNodesInitFromFacts(&nodes, &invf->facts);
     fprintf(stderr, "INIT\n");
-    nodesPrint(node, node_size, stderr);
+    planPDDLSasInvNodesPrint(&nodes, stderr);
 
-    fprintf(stderr, "REFINE\n");
-    refineNodes(node, node_size);
-    nodesPrint(node, node_size, stderr);
+    do {
+        refineNodes(&nodes);
+        fprintf(stderr, "REFINE\n");
+        planPDDLSasInvNodesPrint(&nodes, stderr);
+    } while (planPDDLSasInvNodesReinit(&nodes));
+
+    planPDDLSasInvNodesSplit(&nodes);
+    /* TODO
 
     while (1){
     //int max_splits = node_size;
@@ -230,14 +236,17 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
     //       Instead of recursion use splittin a node into two node with
     //       one node from edge put in M and C.
     //       Use certain heuristic for selection of splitting node.
+    */
 
-    for (i = 0; i < node_size; ++i)
-        createInvariant(invf, node + i);
+    for (i = 0; i < nodes.node_size; ++i)
+        createInvariant(invf, nodes.node + i);
     mergeInvariants(invf);
     pruneInvSubsets(invf);
 
-    nodesDel(node, node_size);
+    planPDDLSasInvNodesFree(&nodes);
 
+
+    bor_list_t *item;
     plan_pddl_sas_inv_t *inv;
     BOR_LIST_FOR_EACH(&invf->inv, item)
     {
@@ -559,6 +568,7 @@ static void edgesCopyMappedEdges(plan_pddl_sas_inv_edge_t **dst,
 
 
 /*** NODE ***/
+#if 0
 static plan_pddl_sas_inv_node_t *nodesFromFacts(
                 const plan_pddl_sas_inv_facts_t *fs,
                 int *nodes_size_out)
@@ -1184,6 +1194,7 @@ static void nodesPrint(const plan_pddl_sas_inv_node_t *nodes, int nodes_size,
         nodePrint(nodes + i, fout);
     fprintf(fout, "\n");
 }
+#endif
 /*** NODE END ***/
 
 
@@ -1266,170 +1277,22 @@ static int invHasCommonFact(const plan_pddl_sas_inv_t *inv,
 
 
 /*** REFINE ***/
-static int refineRemoveCoveredEdges(plan_pddl_sas_inv_node_t *node)
-{
-    int i, change = 0;
-
-    for (i = 0; i < node->edge_size; ++i){
-        if (edgeIsCovered(node->edge + i, node->must)){
-            node->edge[i].size = 0;
-            change = 1;
-        }
-    }
-
-    if (change)
-        nodeRemoveEmptyEdges(node);
-    return change;
-}
-
-static int refineRemoveConflictNodesFromEdges(plan_pddl_sas_inv_node_t *node)
-{
-    int i, change = 0;
-
-    for (i = 0; i < node->edge_size; ++i){
-        if (edgeRemoveNodes(node->edge + i, node->conflict)){
-            change = 1;
-            if (node->edge[i].size == 0){
-                node->must[node->conflict_node_id] = 1;
-                fprintf(stderr, "CONFLICT!! %d\n", node->id);
-            }
-        }
-    }
-
-    if (change)
-        nodeRemoveEmptyEdges(node);
-    return change;
-}
-
-static void refineAddConflictsFromSuperEdge(const plan_pddl_sas_inv_edge_t *sub,
-                                            const plan_pddl_sas_inv_edge_t *super,
-                                            plan_pddl_sas_inv_node_t *node,
-                                            plan_pddl_sas_inv_node_t *nodes)
-{
-    int i, j;
-
-    for (i = 0, j = 0; i < sub->size && j < super->size;){
-        if (sub->node[i] == super->node[j]){
-            ++i;
-            ++j;
-
-        }else if (sub->node[i] < super->node[j]){
-            ++i;
-        }else{
-            nodeAddConflict(node, nodes + super->node[j]);
-            ++j;
-        }
-    }
-
-    for (; j < super->size; ++j)
-        nodeAddConflict(node, nodes + super->node[j]);
-}
-
-static int refinePruneSuperEdges(plan_pddl_sas_inv_node_t *node,
-                                 plan_pddl_sas_inv_node_t *nodes)
-{
-    int i, j, ins, change = 0;
-
-    for (i = 0; i < node->edge_size; ++i){
-        if (node->edge[i].size == 0)
-            continue;
-
-        for (j = 0; j < node->edge_size; ++j){
-            if (i == j || node->edge[j].size == 0)
-                continue;
-
-            if (edgeIsSubset(node->edge + i, node->edge + j)){
-                refineAddConflictsFromSuperEdge(node->edge + i,
-                                                node->edge + j,
-                                                node, nodes);
-                BOR_FREE(node->edge[j].node);
-                node->edge[j].node = NULL;
-                node->edge[j].size = 0;
-                change = 1;
-
-            }
-        }
-    }
-
-    for (i = 0, ins = 0; i < node->edge_size; ++i){
-        if (node->edge[i].size > 0)
-            node->edge[ins++] = node->edge[i];
-    }
-
-    node->edge_size = ins;
-
-    return change;
-}
-
-static int refineAddMustFromSingleEdges(plan_pddl_sas_inv_node_t *node)
-{
-    int i, change = 0;
-
-    for (i = 0; i < node->edge_size; ++i){
-        if (node->edge[i].size == 1
-                && nodeAddMust(node, node->edge[i].node[0]))
-            change = 1;
-    }
-
-    return change;
-}
-
-static int refineAddMustsOfMusts(plan_pddl_sas_inv_node_t *node,
-                                 const plan_pddl_sas_inv_node_t *nodes)
-{
-    const plan_pddl_sas_inv_node_t *node2;
-    int i, j, change = 0;
-
-    for (i = 0; i < node->node_size; ++i){
-        if (!node->must[i] || i == node->id)
-            continue;
-
-        node2 = nodes + i;
-        for (j = 0; j < node2->node_size; ++j){
-            if (node2->must[j] && nodeAddMust(node, j))
-                change = 1;
-        }
-    }
-
-    return change;
-}
-
-static int refineAddConflictsOfMusts(plan_pddl_sas_inv_node_t *node,
-                                     plan_pddl_sas_inv_node_t *nodes)
-{
-    const plan_pddl_sas_inv_node_t *node2;
-    int i, j, change = 0;
-
-    for (i = 0; i < node->node_size; ++i){
-        if (!node->must[i] && i != node->id)
-            continue;
-
-        node2 = nodes + i;
-        for (j = 0; j < node2->node_size; ++j){
-            if (node2->conflict[j] && nodeAddConflict(node, nodes + j))
-                change = 1;
-        }
-    }
-
-    return change;
-}
-
 static int refineNode(plan_pddl_sas_inv_node_t *node,
-                      plan_pddl_sas_inv_node_t *nodes)
+                      plan_pddl_sas_inv_nodes_t *ns)
 {
     int change, anychange = 0;
 
     do {
         change = 0;
 
-        edgesUnique(&node->edge, &node->edge_size);
+        planPDDLSasInvNodeUniqueEdges(node);
 
-        change |= refineRemoveCoveredEdges(node);
-        change |= refineRemoveConflictNodesFromEdges(node);
-        change |= refinePruneSuperEdges(node, nodes);
-        change |= refineAddMustFromSingleEdges(node);
-        change |= refineAddMustsOfMusts(node, nodes);
-        change |= refineAddConflictsOfMusts(node, nodes);
+        change |= planPDDLSasInvNodeRemoveCoveredEdges(node);
+        change |= planPDDLSasInvNodeRemoveConflictNodesFromEdges(node);
+        change |= planPDDLSasInvNodePruneSuperEdges(node, ns);
+        change |= planPDDLSasInvNodeAddMustFromSingleEdges(node);
+        change |= planPDDLSasInvNodeAddMustsOfMusts(node, ns);
+        change |= planPDDLSasInvNodeAddConflictsOfMusts(node, ns);
 
         anychange |= change;
     } while (change);
@@ -1437,14 +1300,14 @@ static int refineNode(plan_pddl_sas_inv_node_t *node,
     return anychange;
 }
 
-static void refineNodes(plan_pddl_sas_inv_node_t *node, int node_size)
+static void refineNodes(plan_pddl_sas_inv_nodes_t *ns)
 {
     int i, change;
 
     do {
         change = 0;
-        for (i = 0; i < node_size; ++i)
-            change |= refineNode(node + i, node);
+        for (i = 0; i < ns->node_size; ++i)
+            change |= refineNode(ns->node + i, ns);
     } while (change);
 }
 /*** REFINE END ***/
@@ -1512,7 +1375,7 @@ static int createInvariant(plan_pddl_sas_inv_finder_t *invf,
                            const plan_pddl_sas_inv_node_t *node)
 {
     // Check that the invariant is really invariant
-    if (node->edge_size > 0 || node->conflict[node->id]){
+    if (node->edges.edge_size > 0 || node->conflict[node->id]){
         if (planPDDLSasInvFactsCheckInvariant(&invf->facts, node->inv)){
             fprintf(stderr, "ERROR: Something is really wrong!\n");
         }
@@ -1528,13 +1391,13 @@ static int createInvariant(plan_pddl_sas_inv_finder_t *invf,
                     planPDDLSasInvFactPrint(invf->facts.fact + i, stderr);
                 }
             }
-            nodePrint(node, stderr);
+            planPDDLSasInvNodePrint(node, stderr);
             fprintf(stderr, "\n");
         }
     }
 
     // Skip invariants counting only one fact
-    if (nodeInvSize(node) <= 1)
+    if (planPDDLSasInvNodeInvSize(node) <= 1)
         return 0;
 
     // Create a unique invariant and append it to the list

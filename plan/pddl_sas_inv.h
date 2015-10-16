@@ -24,36 +24,11 @@
 #include <boruvka/htable.h>
 #include <plan/pddl_ground.h>
 #include <plan/pddl_sas_inv_fact.h>
+#include <plan/pddl_sas_inv_node.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-struct _plan_pddl_sas_inv_edge_t {
-    int size;
-    int *node;
-};
-typedef struct _plan_pddl_sas_inv_edge_t plan_pddl_sas_inv_edge_t;
-
-struct _plan_pddl_sas_inv_node_t {
-    int id;
-    int repr;         /*!< Representative node -- node that represents the
-                           same invariant */
-    int new_id;       /*!< Assigned node ID in the new graph */
-    int node_size;    /*!< Number of all nodes */
-    int fact_size;    /*!< Number of all facts */
-    int *inv;         /*!< True for facts that are invariant candidates */
-    int *conflict;    /*!< True for the node that is in conflict */
-    int *must;        /*!< True for the node that must be in invariant with
-                           this node. */
-    int *edge_presence; /*!< Number of edges in which this node is present. */
-    int sum_edge_presence; /*!< Number of all edges this node is present in. */
-
-    plan_pddl_sas_inv_edge_t *edge;
-    int edge_size;
-    int conflict_node_id;
-};
-typedef struct _plan_pddl_sas_inv_node_t plan_pddl_sas_inv_node_t;
 
 struct _plan_pddl_sas_inv_t {
     int *fact;

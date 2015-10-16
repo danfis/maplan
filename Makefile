@@ -28,6 +28,7 @@ OBJS += pddl
 OBJS += pddl_ground
 OBJS += pddl_sas
 OBJS += pddl_sas_inv
+OBJS += pddl_sas_inv_fact
 OBJS += var
 OBJS += state
 OBJS += part_state

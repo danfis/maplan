@@ -29,20 +29,6 @@ static void storeFactIds(plan_pddl_ground_facts_t *dst,
 static void processActions(plan_pddl_sas_inv_finder_t *invf,
                            const plan_pddl_ground_action_pool_t *pool);
 
-
-/** Initializes fact structure. */
-static void factInit(plan_pddl_sas_inv_fact_t *f, int id, int fact_size);
-/** Frees allocated memory. */
-static void factFree(plan_pddl_sas_inv_fact_t *f);
-/** Adds edge to the fact */
-static void factAddEdge(plan_pddl_sas_inv_fact_t *f,
-                        const plan_pddl_ground_facts_t *fs);
-/** Adds conflicts between all facts stored in fs. */
-static void factsAddConflicts(plan_pddl_sas_inv_fact_t *facts,
-                              const plan_pddl_ground_facts_t *fs);
-static void factPrint(const plan_pddl_sas_inv_fact_t *f, FILE *fout);
-
-
 /** Sort and unique IDs stored in the edge. */
 static void edgeUnique(plan_pddl_sas_inv_edge_t *edge);
 /** Sort and unique edges in the array */
@@ -72,7 +58,7 @@ static int edgesAddEdges(plan_pddl_sas_inv_edge_t **dst, int *dst_size,
 
 /** Creates an array of nodes from list of facts. */
 static plan_pddl_sas_inv_node_t *nodesFromFacts(
-                const plan_pddl_sas_inv_fact_t *facts, int facts_size,
+                const plan_pddl_sas_inv_facts_t *fs,
                 int *nodes_size_out);
 /** Creates an array of nodes from the already refined nodes. */
 static plan_pddl_sas_inv_node_t *nodesFromNodes(plan_pddl_sas_inv_node_t *src,
@@ -173,14 +159,9 @@ static int invTableEq(const bor_list_t *k1, const bor_list_t *k2, void *ud);
 void planPDDLSasInvFinderInit(plan_pddl_sas_inv_finder_t *invf,
                               const plan_pddl_ground_t *g)
 {
-    int i;
-
     bzero(invf, sizeof(*invf));
 
-    invf->fact_size = g->fact_pool.size;
-    invf->fact = BOR_ALLOC_ARR(plan_pddl_sas_inv_fact_t, invf->fact_size);
-    for (i = 0; i < invf->fact_size; ++i)
-        factInit(invf->fact + i, i, invf->fact_size);
+    planPDDLSasInvFactsInit(&invf->facts, g->fact_pool.size);
     borListInit(&invf->inv);
     invf->inv_size = 0;
     invf->inv_table = borHTableNew(invTableHash, invTableEq, NULL);
@@ -188,19 +169,15 @@ void planPDDLSasInvFinderInit(plan_pddl_sas_inv_finder_t *invf,
     storeFactIds(&invf->fact_init, (plan_pddl_fact_pool_t *)&g->fact_pool,
                  &g->pddl->init_fact);
     processActions(invf, &g->action_pool);
-    factsAddConflicts(invf->fact, &invf->fact_init);
+    planPDDLSasInvFactsAddConflicts(&invf->facts, &invf->fact_init);
 }
 
 void planPDDLSasInvFinderFree(plan_pddl_sas_inv_finder_t *invf)
 {
     plan_pddl_sas_inv_t *inv;
     bor_list_t *item;
-    int i;
 
-    for (i = 0; i < invf->fact_size; ++i)
-        factFree(invf->fact + i);
-    if (invf->fact)
-        BOR_FREE(invf->fact);
+    planPDDLSasInvFactsFree(&invf->facts);
     if (invf->fact_init.fact)
         BOR_FREE(invf->fact_init.fact);
 
@@ -221,7 +198,7 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
     bor_list_t *item;
     int i, node_size;
 
-    node = nodesFromFacts(invf->fact, invf->fact_size, &node_size);
+    node = nodesFromFacts(&invf->facts, &node_size);
     fprintf(stderr, "INIT\n");
     nodesPrint(node, node_size, stderr);
 
@@ -301,27 +278,17 @@ static void processAction(plan_pddl_sas_inv_finder_t *invf,
                           const plan_pddl_ground_facts_t *eff_add,
                           const plan_pddl_ground_facts_t *eff_del)
 {
-    plan_pddl_sas_inv_fact_t *fact;
-    int i, j;
-
+    int i;
 
     if (eff_del->size == 0){
         for (i = 0; i < eff_add->size; ++i){
-            fact = invf->fact + eff_add->fact[i];
-            for (j = 0; j < invf->fact_size; ++j){
-                if (j != fact->id){
-                    fact->conflict[j] = 1;
-                    invf->fact[j].conflict[fact->id] = 1;
-                }
-            }
+            planPDDLSasInvFactsAddConflictsWithAll(&invf->facts,
+                                                   eff_add->fact[i]);
         }
 
     }else{
-        for (i = 0; i < eff_add->size; ++i){
-            fact = invf->fact + eff_add->fact[i];
-            factAddEdge(fact, eff_del);
-        }
-        factsAddConflicts(invf->fact, eff_add);
+        planPDDLSasInvFactsAddEdges(&invf->facts, eff_add, eff_del);
+        planPDDLSasInvFactsAddConflicts(&invf->facts, eff_add);
     }
 }
 
@@ -343,92 +310,6 @@ static void processActions(plan_pddl_sas_inv_finder_t *invf,
         }
     }
 }
-
-
-/*** FACT ***/
-static void factInit(plan_pddl_sas_inv_fact_t *f, int id, int fact_size)
-{
-    bzero(f, sizeof(*f));
-    f->id = id;
-    f->fact_size = fact_size;
-    f->conflict = BOR_CALLOC_ARR(int, fact_size);
-}
-
-static void factFree(plan_pddl_sas_inv_fact_t *f)
-{
-    int i;
-
-    if (f->conflict)
-        BOR_FREE(f->conflict);
-
-    for (i = 0; i < f->edge_size; ++i){
-        if (f->edge[i].fact)
-            BOR_FREE(f->edge[i].fact);
-    }
-    if (f->edge)
-        BOR_FREE(f->edge);
-}
-
-static void factAddEdge(plan_pddl_sas_inv_fact_t *f,
-                        const plan_pddl_ground_facts_t *fs)
-{
-    plan_pddl_ground_facts_t *dst;
-
-    if (fs->size == 0)
-        return;
-
-    ++f->edge_size;
-    f->edge = BOR_REALLOC_ARR(f->edge, plan_pddl_ground_facts_t,
-                              f->edge_size);
-    dst = f->edge + f->edge_size - 1;
-    dst->size = fs->size;
-    dst->fact = BOR_ALLOC_ARR(int, fs->size);
-    memcpy(dst->fact, fs->fact, sizeof(int) * fs->size);
-}
-
-static void factsAddConflicts(plan_pddl_sas_inv_fact_t *facts,
-                              const plan_pddl_ground_facts_t *fs)
-{
-    int i, j, f1, f2;
-
-    for (i = 0; i < fs->size; ++i){
-        f1 = fs->fact[i];
-        for (j = i + 1; j < fs->size; ++j){
-            f2 = fs->fact[j];
-            facts[f1].conflict[f2] = 1;
-            facts[f2].conflict[f1] = 1;
-        }
-    }
-}
-
-static void factPrint(const plan_pddl_sas_inv_fact_t *fact, FILE *fout)
-{
-    int i, j;
-
-    fprintf(fout, "Fact %d:", fact->id);
-
-    fprintf(fout, "conflict:");
-    for (i = 0; i < fact->fact_size; ++i){
-        if (fact->conflict[i])
-            fprintf(fout, " %d", i);
-    }
-
-    fprintf(fout, ", edge[%d]:", fact->edge_size);
-    for (i = 0; i < fact->edge_size; ++i){
-        fprintf(fout, " [");
-        for (j = 0; j < fact->edge[i].size; ++j){
-            if (j != 0)
-                fprintf(fout, " ");
-            fprintf(fout, "%d", fact->edge[i].fact[j]);
-        }
-        fprintf(fout, "]");
-    }
-
-    fprintf(fout, "\n");
-}
-/*** FACT END ***/
-
-
 
 
 /*** EDGE ***/
@@ -679,21 +560,21 @@ static void edgesCopyMappedEdges(plan_pddl_sas_inv_edge_t **dst,
 
 /*** NODE ***/
 static plan_pddl_sas_inv_node_t *nodesFromFacts(
-                const plan_pddl_sas_inv_fact_t *facts, int facts_size,
+                const plan_pddl_sas_inv_facts_t *fs,
                 int *nodes_size_out)
 {
     plan_pddl_sas_inv_node_t *nodes, *node;
     const plan_pddl_sas_inv_fact_t *fact;
-    int i, j, node_size = facts_size + 1;
+    int i, j, node_size = fs->fact_size + 1;
 
     nodes = BOR_ALLOC_ARR(plan_pddl_sas_inv_node_t, node_size);
     for (i = 0; i < node_size; ++i)
-        nodeInit(nodes + i, i, node_size, facts_size);
+        nodeInit(nodes + i, i, node_size, fs->fact_size);
 
-    for (i = 0; i < facts_size; ++i){
+    for (i = 0; i < fs->fact_size; ++i){
         node = nodes + i;
-        fact = facts + i;
-        memcpy(node->conflict, fact->conflict, sizeof(int) * facts_size);
+        fact = fs->fact + i;
+        memcpy(node->conflict, fact->conflict, sizeof(int) * fs->fact_size);
         node->inv[i] = 1;
 
         node->edge_size = fact->edge_size;
@@ -1160,7 +1041,6 @@ static void nodePruneSupersetEdges(plan_pddl_sas_inv_node_t *node,
             super[node->edge[i].node[j]] = 1;
     }
 
-    fprintf(stderr, "ID%d:: %d\n", node->id, super_size);
     // Now find supersets
     for (i = 0; i < node->node_size; ++i){
         if (super[i]){
@@ -1571,88 +1451,22 @@ static void refineNodes(plan_pddl_sas_inv_node_t *node, int node_size)
 
 
 /*** CREATE/MERGE-INVARIANT ***/
-static int factEdgeIsBound(const plan_pddl_ground_facts_t *edge, const int *I)
-{
-    int i;
-
-    for (i = 0; i < edge->size; ++i){
-        if (I[edge->fact[i]])
-            return 1;
-    }
-
-    return 0;
-}
-
-static int factAllEdgesBound(const plan_pddl_sas_inv_fact_t *fact, const int *I)
-{
-    int i;
-
-    for (i = 0; i < fact->edge_size; ++i){
-        if (!factEdgeIsBound(fact->edge + i, I))
-            return 0;
-    }
-
-    return 1;
-}
-
-static int factInConflict(const plan_pddl_sas_inv_fact_t *fact, const int *I)
-{
-    int i;
-
-    for (i = 0; i < fact->fact_size; ++i){
-        if (I[i] && fact->conflict[i])
-            return 1;
-    }
-
-    return 0;
-}
-
-static int checkInvariant(const plan_pddl_sas_inv_finder_t *invf, const int *I)
-{
-    int i;
-
-    for (i = 0; i < invf->fact_size; ++i){
-        if (!I[i])
-            continue;
-
-        if (factInConflict(invf->fact + i, I)){
-            fprintf(stderr, "FIC %d\n", i);
-            return 0;
-        }
-        if (!factAllEdgesBound(invf->fact + i, I)){
-            fprintf(stderr, "!BOUND %d\n", i);
-            return 0;
-        }
-    }
-
-    return 1;
-}
-
 static int checkMergedInvariant(const plan_pddl_sas_inv_finder_t *invf,
                                 const plan_pddl_sas_inv_t *inv1,
                                 const plan_pddl_sas_inv_t *inv2)
 {
-    int i, *I;
+    int i, *I, res;
 
-    I = BOR_CALLOC_ARR(int, invf->fact_size);
+    I = BOR_CALLOC_ARR(int, invf->facts.fact_size);
     for (i = 0; i < inv1->size; ++i)
         I[inv1->fact[i]] = 1;
     for (i = 0; i < inv2->size; ++i)
         I[inv2->fact[i]] = 1;
 
-    for (i = 0; i < invf->fact_size; ++i){
-        if (!I[i])
-            continue;
-
-        if (factInConflict(invf->fact + i, I)
-                || !factAllEdgesBound(invf->fact + i, I)){
-            BOR_FREE(I);
-            return 0;
-        }
-    }
+    res = planPDDLSasInvFactsCheckInvariant(&invf->facts, I);
 
     BOR_FREE(I);
-    return 1;
+    return res;
 }
 
 static int createUniqueInvariantFromFacts(plan_pddl_sas_inv_finder_t *invf,
@@ -1662,7 +1476,7 @@ static int createUniqueInvariantFromFacts(plan_pddl_sas_inv_finder_t *invf,
     bor_list_t *item;
 
     // Create a unique invariant and append it to the list
-    inv = invNew(fact, invf->fact_size);
+    inv = invNew(fact, invf->facts.fact_size);
     item = borHTableInsertUnique(invf->inv_table, &inv->table);
     if (item == NULL){
         ++invf->inv_size;
@@ -1681,7 +1495,7 @@ static int createMergedInvariant(plan_pddl_sas_inv_finder_t *invf,
 {
     int i, *fact, change = 0;
 
-    fact = BOR_CALLOC_ARR(int, invf->fact_size);
+    fact = BOR_CALLOC_ARR(int, invf->facts.fact_size);
     for (i = 0; i < inv1->size; ++i)
         fact[inv1->fact[i]] = 1;
     for (i = 0; i < inv2->size; ++i)
@@ -1699,19 +1513,19 @@ static int createInvariant(plan_pddl_sas_inv_finder_t *invf,
 {
     // Check that the invariant is really invariant
     if (node->edge_size > 0 || node->conflict[node->id]){
-        if (checkInvariant(invf, node->inv)){
+        if (planPDDLSasInvFactsCheckInvariant(&invf->facts, node->inv)){
             fprintf(stderr, "ERROR: Something is really wrong!\n");
         }
         return 0;
 
     }else{
         fprintf(stderr, "C\n");
-        if (!checkInvariant(invf, node->inv)){
+        if (!planPDDLSasInvFactsCheckInvariant(&invf->facts, node->inv)){
             fprintf(stderr, "ERROR: Something is really really wrong!\n");
             int i;
             for (i = 0; i < node->fact_size; ++i){
                 if (node->inv[i]){
-                    factPrint(invf->fact + i, stderr);
+                    planPDDLSasInvFactPrint(invf->facts.fact + i, stderr);
                 }
             }
             nodePrint(node, stderr);

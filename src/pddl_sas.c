@@ -327,7 +327,7 @@ static void setVarNeg(plan_pddl_sas_t *sas)
     var_done = BOR_CALLOC_ARR(int, sas->var_size);
     for (i = 0; i < sas->fact_size; ++i){
         fact = sas->fact + i;
-        inv_fact = sas->inv_finder.fact + i;
+        inv_fact = sas->inv_finder.facts.fact + i;
         if (var_done[fact->var])
             continue;
 

@@ -23,20 +23,11 @@
 #include <boruvka/list.h>
 #include <boruvka/htable.h>
 #include <plan/pddl_ground.h>
+#include <plan/pddl_sas_inv_fact.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-struct _plan_pddl_sas_inv_fact_t {
-    int id;
-    int fact_size;    /*!< Number of all facts */
-    int *conflict;    /*!< True for the fact that is in conflict */
-
-    plan_pddl_ground_facts_t *edge;       /*!< List of edges (add->del) */
-    int edge_size;                        /*!< Number of edges */
-};
-typedef struct _plan_pddl_sas_inv_fact_t plan_pddl_sas_inv_fact_t;
 
 struct _plan_pddl_sas_inv_edge_t {
     int size;
@@ -75,8 +66,7 @@ struct _plan_pddl_sas_inv_t {
 typedef struct _plan_pddl_sas_inv_t plan_pddl_sas_inv_t;
 
 struct _plan_pddl_sas_inv_finder_t {
-    plan_pddl_sas_inv_fact_t *fact;
-    int fact_size;
+    plan_pddl_sas_inv_facts_t facts;
     plan_pddl_ground_facts_t fact_init;
 
     bor_htable_t *inv_table;

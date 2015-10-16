@@ -87,10 +87,8 @@ void planPDDLSasInvNodesFree(plan_pddl_sas_inv_nodes_t *nodes);
  *              are not in any edge of any other node.
  *        TODO: callback?
  * Remove nodes that cannot for an invariant anymore.
- *
- * Returns 0 if reinit is not needed, 1 if reinit was performed.
  */
-int planPDDLSasInvNodesReinit(plan_pddl_sas_inv_nodes_t *ns);
+void planPDDLSasInvNodesReinit(plan_pddl_sas_inv_nodes_t *ns);
 
 /**
  * Split nodes and create a new strucutre.

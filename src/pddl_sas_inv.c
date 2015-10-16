@@ -139,10 +139,7 @@ static int invIsSubset(const plan_pddl_sas_inv_t *inv,
 static int invHasCommonFact(const plan_pddl_sas_inv_t *inv,
                             const plan_pddl_sas_inv_t *inv2);
 
-
-static int refineRemoveCoveredEdges(plan_pddl_sas_inv_node_t *node);
-static int refineRemoveConflictNodesFromEdges(plan_pddl_sas_inv_node_t *node);
-static void refineNodes(plan_pddl_sas_inv_nodes_t *ns);
+static int refineNodes(plan_pddl_sas_inv_nodes_t *ns);
 
 
 static int createInvariant(plan_pddl_sas_inv_finder_t *invf,
@@ -203,11 +200,11 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
     fprintf(stderr, "INIT\n");
     planPDDLSasInvNodesPrint(&nodes, stderr);
 
-    do {
-        refineNodes(&nodes);
+    while (refineNodes(&nodes)){
         fprintf(stderr, "REFINE\n");
         planPDDLSasInvNodesPrint(&nodes, stderr);
-    } while (planPDDLSasInvNodesReinit(&nodes));
+        planPDDLSasInvNodesReinit(&nodes);
+    }
 
     planPDDLSasInvNodesSplit(&nodes);
     /* TODO
@@ -1300,15 +1297,18 @@ static int refineNode(plan_pddl_sas_inv_node_t *node,
     return anychange;
 }
 
-static void refineNodes(plan_pddl_sas_inv_nodes_t *ns)
+static int refineNodes(plan_pddl_sas_inv_nodes_t *ns)
 {
-    int i, change;
+    int i, change, anychange = 0;
 
     do {
         change = 0;
         for (i = 0; i < ns->node_size; ++i)
             change |= refineNode(ns->node + i, ns);
+        anychange |= change;
     } while (change);
+
+    return anychange;
 }
 /*** REFINE END ***/
 

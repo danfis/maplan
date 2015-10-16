@@ -29,6 +29,8 @@ static void edgeInit(plan_pddl_sas_inv_edge_t *e,
 static void edgeFree(plan_pddl_sas_inv_edge_t *e);
 /** Sort and unique IDs stored in the edge. */
 static void edgeUnique(plan_pddl_sas_inv_edge_t *edge);
+/** Returns true if node_id is present in the edge. */
+static int edgeHasNode(const plan_pddl_sas_inv_edge_t *e, int node_id);
 /** Returns true if the edge is covered by any node from ns_bool[]. */
 static int edgeIsCovered(const plan_pddl_sas_inv_edge_t *edge,
                          const int *ns_bool);
@@ -65,6 +67,18 @@ static void edgeAddConflictsFromSuperEdge(const plan_pddl_sas_inv_edge_t *sub,
                                           const plan_pddl_sas_inv_edge_t *super,
                                           plan_pddl_sas_inv_node_t *node,
                                           plan_pddl_sas_inv_nodes_t *ns);
+
+/** Adds node to the edge if not already there. */
+static void edgeAddNode(plan_pddl_sas_inv_edge_t *e, int node_id);
+static void edgeAddAlternativeNode(plan_pddl_sas_inv_edge_t *e,
+                                   int test_id, int add_id);
+/** Adds nodes if test_id already in e. */
+static void edgeAddAlternativeNodes(plan_pddl_sas_inv_edge_t *e,
+                                    int test_id,
+                                    const int *add_bool, int add_size);
+static void edgesAddAlternativeNodes(plan_pddl_sas_inv_edges_t *es,
+                                     int test_id,
+                                     const int *add_bool, int add_size);
 
 
 /** Initializes a single node. */
@@ -136,7 +150,7 @@ void planPDDLSasInvNodesFree(plan_pddl_sas_inv_nodes_t *ns)
     BOR_FREE(ns->node);
 }
 
-int planPDDLSasInvNodesReinit(plan_pddl_sas_inv_nodes_t *ns)
+void planPDDLSasInvNodesReinit(plan_pddl_sas_inv_nodes_t *ns)
 {
     plan_pddl_sas_inv_nodes_t old_ns;
     int i, new_node_size;
@@ -145,8 +159,7 @@ int planPDDLSasInvNodesReinit(plan_pddl_sas_inv_nodes_t *ns)
     fprintf(stderr, "GATHER EDGES\n");
     planPDDLSasInvNodesPrint(ns, stderr);
 
-    if (!nodesSetInv(ns))
-        return 0;
+    nodesSetInv(ns);
     fprintf(stderr, "SET-INV\n");
     planPDDLSasInvNodesPrint(ns, stderr);
 
@@ -170,7 +183,6 @@ int planPDDLSasInvNodesReinit(plan_pddl_sas_inv_nodes_t *ns)
     planPDDLSasInvNodesPrint(ns, stderr);
 
     planPDDLSasInvNodesFree(&old_ns);
-    return 1;
 }
 
 void planPDDLSasInvNodesSplit(plan_pddl_sas_inv_nodes_t *ns)
@@ -420,6 +432,20 @@ static void edgeUnique(plan_pddl_sas_inv_edge_t *edge)
     edge->size = ins + 1;
 }
 
+static int edgeHasNode(const plan_pddl_sas_inv_edge_t *e, int node_id)
+{
+    int i;
+
+    for (i = 0; i < e->size; ++i){
+        if (e->node[i] == node_id)
+            return 1;
+        if (e->node[i] > node_id)
+            return 0;
+    }
+
+    return 0;
+}
+
 static int edgeIsCovered(const plan_pddl_sas_inv_edge_t *edge, const int *ns)
 {
     int i;
@@ -491,6 +517,43 @@ static void edgeAddConflictsFromSuperEdge(const plan_pddl_sas_inv_edge_t *sub,
 
     for (; j < super->size; ++j)
         nodeAddConflict(node, ns->node + super->node[j]);
+}
+
+static void edgeAddNode(plan_pddl_sas_inv_edge_t *e, int node_id)
+{
+    if (edgeHasNode(e, node_id))
+        return;
+
+    if (e->size >= e->alloc){
+        e->alloc *= 2;
+        e->node = BOR_REALLOC_ARR(e->node, int, e->alloc);
+    }
+    e->node[e->size++] = node_id;
+}
+
+static void edgeAddAlternativeNodes(plan_pddl_sas_inv_edge_t *e,
+                                    int test_id,
+                                    const int *add_bool, int add_size)
+{
+    int i;
+
+    if (!edgeHasNode(e, test_id))
+        return;
+
+    for (i = 0; i < add_size; ++i){
+        if (add_bool[i])
+            edgeAddNode(e, i);
+    }
+}
+
+static void edgesAddAlternativeNodes(plan_pddl_sas_inv_edges_t *es,
+                                     int test_id,
+                                     const int *add_bool, int add_size)
+{
+    int i;
+
+    for (i = 0; i < es->edge_size; ++i)
+        edgeAddAlternativeNodes(es->edge + i, test_id, add_bool, add_size);
 }
 
 

@@ -93,6 +93,9 @@ static void nodeCopyMapped(plan_pddl_sas_inv_node_t *dst,
 /** Returns true if nodes' .inv[] equal */
 static int nodeInvEq(const plan_pddl_sas_inv_node_t *n1,
                      const plan_pddl_sas_inv_node_t *n2);
+/** Returns true if n1.inv is subset of n2.inv */
+static int nodeInvSubset(const plan_pddl_sas_inv_node_t *n1,
+                         const plan_pddl_sas_inv_node_t *n2);
 /** Adds edges from src to dst. */
 static void nodeAddEdgesFromOtherNode(plan_pddl_sas_inv_node_t *dst,
                                       const plan_pddl_sas_inv_node_t *src,
@@ -118,6 +121,7 @@ static void nodesSetRepr(plan_pddl_sas_inv_nodes_t *ns);
 static int nodesSetNewId(plan_pddl_sas_inv_nodes_t *ns);
 /** Finds best split node -- heuristic. */
 static int nodesFindSplit(const plan_pddl_sas_inv_nodes_t *ns);
+static void nodesPruneEdgesFromSupersets(plan_pddl_sas_inv_nodes_t *ns);
 
 void planPDDLSasInvNodesInitFromFacts(plan_pddl_sas_inv_nodes_t *ns,
                                       const plan_pddl_sas_inv_facts_t *fs)
@@ -180,6 +184,10 @@ void planPDDLSasInvNodesReinit(plan_pddl_sas_inv_nodes_t *ns)
     }
 
     fprintf(stderr, "REINIT\n");
+    planPDDLSasInvNodesPrint(ns, stderr);
+
+    nodesPruneEdgesFromSupersets(ns);
+    fprintf(stderr, "REMOVE SUPERSETS\n");
     planPDDLSasInvNodesPrint(ns, stderr);
 
     planPDDLSasInvNodesFree(&old_ns);
@@ -748,6 +756,19 @@ static int nodeInvEq(const plan_pddl_sas_inv_node_t *n1,
     return cmp == 0;
 }
 
+static int nodeInvSubset(const plan_pddl_sas_inv_node_t *n1,
+                         const plan_pddl_sas_inv_node_t *n2)
+{
+    int i;
+
+    for (i = 0; i < n1->fact_size; ++i){
+        if (n1->inv[i] && !n2->inv[i])
+            return 0;
+    }
+
+    return 1;
+}
+
 static void nodeAddEdgesFromOtherNode(plan_pddl_sas_inv_node_t *dst,
                                       const plan_pddl_sas_inv_node_t *src,
                                       plan_pddl_sas_inv_nodes_t *ns)
@@ -952,5 +973,53 @@ static int nodesFindSplit(const plan_pddl_sas_inv_nodes_t *ns)
     BOR_FREE(count);
 
     return split_node;
+}
+
+static void nodePruneEdgesFromSupersets(plan_pddl_sas_inv_node_t *node,
+                                        plan_pddl_sas_inv_nodes_t *ns)
+{
+    const plan_pddl_sas_inv_edge_t *edge;
+    int i, j, *super;
+
+    super = BOR_CALLOC_ARR(int, ns->node_size);
+
+    // First gather node IDs that are present in edges
+    for (i = 0; i < node->edges.edge_size; ++i){
+        edge = node->edges.edge + i;
+        for (j = 0; j < edge->size; ++j){
+            if (node->id != edge->node[j])
+                super[edge->node[j]] = 1;
+        }
+    }
+
+    // Now find supersets
+    for (i = 0; i < node->node_size; ++i){
+        if (super[i] && !nodeInvSubset(node, ns->node + i))
+            super[i] = 0;
+    }
+
+    // Remove superset invariants
+    for (i = 0; i < node->edges.edge_size; ++i){
+        edgeRemoveNodes(node->edges.edge + i, super);
+        if (node->edges.edge[i].size == 0)
+            node->must[CONFLICT_NODE_ID] = 1;
+    }
+
+    // Add alternative nodes to the edges that already contains edge
+    // pointing to this node.
+    for (i = 0; i < node->node_size; ++i){
+        edgesAddAlternativeNodes(&ns->node[i].edges, node->id,
+                                 super, ns->node_size);
+    }
+
+    BOR_FREE(super);
+}
+
+static void nodesPruneEdgesFromSupersets(plan_pddl_sas_inv_nodes_t *ns)
+{
+    int i;
+
+    for (i = 0; i < ns->node_size; ++i)
+        nodePruneEdgesFromSupersets(ns->node + i, ns);
 }
 /*** NODE END ***/

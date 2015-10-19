@@ -104,14 +104,10 @@ int planPDDLSasInvFactsCheckInvariant(const plan_pddl_sas_inv_facts_t *fs,
         if (!facts_bool[i])
             continue;
 
-        if (factsInConflict(fs, i, facts_bool)){
-            fprintf(stderr, "FIC %d\n", i);
+        if (factsInConflict(fs, i, facts_bool))
             return 0;
-        }
-        if (!factAllEdgesBound(fs->fact + i, facts_bool)){
-            fprintf(stderr, "!BOUND %d\n", i);
+        if (!factAllEdgesBound(fs->fact + i, facts_bool))
             return 0;
-        }
     }
 
     return 1;

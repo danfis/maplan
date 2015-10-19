@@ -98,16 +98,11 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
     int i;
 
     planPDDLSasInvNodesInitFromFacts(&nodes, &invf->facts);
-    fprintf(stderr, "INIT\n");
-    planPDDLSasInvNodesPrint(&nodes, stderr);
 
     // TODO: Limited number of iterations
     do {
-        while (refineNodes(&nodes)){
-            fprintf(stderr, "REFINE\n");
-            planPDDLSasInvNodesPrint(&nodes, stderr);
+        while (refineNodes(&nodes))
             planPDDLSasInvNodesReinit(&nodes);
-        }
     } while (planPDDLSasInvNodesSplit(&nodes) == 0);
 
     for (i = 0; i < nodes.node_size; ++i)
@@ -116,19 +111,6 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
     pruneInvSubsets(invf);
 
     planPDDLSasInvNodesFree(&nodes);
-
-
-    bor_list_t *item;
-    plan_pddl_sas_inv_t *inv;
-    BOR_LIST_FOR_EACH(&invf->inv, item)
-    {
-        inv = BOR_LIST_ENTRY(item, plan_pddl_sas_inv_t, list);
-        int i;
-        fprintf(stderr, "INV:");
-        for (i = 0; i < inv->size; ++i)
-            fprintf(stderr, " %d", inv->fact[i]);
-        fprintf(stderr, "\n");
-    }
 }
 
 
@@ -361,8 +343,6 @@ static int createMergedInvariant(plan_pddl_sas_inv_finder_t *invf,
     for (i = 0; i < inv2->size; ++i)
         fact[inv2->fact[i]] = 1;
     change = createUniqueInvariantFromFacts(invf, fact);
-    if (change)
-        fprintf(stderr, "MERGE\n");
 
     BOR_FREE(fact);
     return change;
@@ -379,7 +359,6 @@ static int createInvariant(plan_pddl_sas_inv_finder_t *invf,
         return 0;
 
     }else{
-        fprintf(stderr, "C\n");
         if (!planPDDLSasInvFactsCheckInvariant(&invf->facts, node->inv)){
             fprintf(stderr, "ERROR: Something is really really wrong!\n");
             int i;

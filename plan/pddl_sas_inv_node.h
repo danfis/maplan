@@ -78,9 +78,6 @@ void planPDDLSasInvNodesFree(plan_pddl_sas_inv_nodes_t *nodes);
  *     1. nodes that cannot form an invariant are removed,
  *     2. each node gathers edges from all nodes in its .must[]
  *     3. duplicates are removed
- *     4. TODO: create invariants from nodes that have no edges and that
- *              are not in any edge of any other node.
- *        TODO: callback?
  * Remove nodes that cannot for an invariant anymore.
  */
 void planPDDLSasInvNodesReinit(plan_pddl_sas_inv_nodes_t *ns);

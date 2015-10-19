@@ -759,7 +759,6 @@ static void nodeInit(plan_pddl_sas_inv_node_t *node,
 {
     int i;
 
-    // TODO: conflicting node will be 0
     bzero(node, sizeof(*node));
     node->id = id;
     node->repr = -1;
@@ -853,7 +852,6 @@ static void nodeAddEdgesFromOtherNode(plan_pddl_sas_inv_node_t *dst,
         return;
 
     for (i = 0; i < src->edges.edge_size; ++i){
-        // TODO: if edgeIsCovered(), edgeInConflict()
         if (!edgeIsCovered(src->edges.edge + i, dst->must)){
             id = edgesAdd(&dst->edges, src->edges.edge + i);
             edgeRemoveNodes(dst->edges.edge + id, dst->conflict);

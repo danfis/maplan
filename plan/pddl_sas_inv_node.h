@@ -92,8 +92,9 @@ void planPDDLSasInvNodesReinit(plan_pddl_sas_inv_nodes_t *ns);
 
 /**
  * Split nodes and create a new strucutre.
+ * Returns 0 if nodes were split.
  */
-void planPDDLSasInvNodesSplit(plan_pddl_sas_inv_nodes_t *ns);
+int planPDDLSasInvNodesSplit(plan_pddl_sas_inv_nodes_t *ns);
 
 /**
  * Returns number of facts in the .inv[].

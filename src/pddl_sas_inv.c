@@ -200,13 +200,14 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
     fprintf(stderr, "INIT\n");
     planPDDLSasInvNodesPrint(&nodes, stderr);
 
-    while (refineNodes(&nodes)){
-        fprintf(stderr, "REFINE\n");
-        planPDDLSasInvNodesPrint(&nodes, stderr);
-        planPDDLSasInvNodesReinit(&nodes);
-    }
+    do {
+        while (refineNodes(&nodes)){
+            fprintf(stderr, "REFINE\n");
+            planPDDLSasInvNodesPrint(&nodes, stderr);
+            planPDDLSasInvNodesReinit(&nodes);
+        }
+    } while (planPDDLSasInvNodesSplit(&nodes) == 0);
 
-    planPDDLSasInvNodesSplit(&nodes);
     /* TODO
 
     while (1){

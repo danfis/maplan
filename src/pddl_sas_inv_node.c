@@ -976,7 +976,7 @@ static void nodesSetRepr(plan_pddl_sas_inv_nodes_t *ns)
 
         // Conflicting nodes set as representative of special
         // conflict-node and free its edges.
-        if (node->conflict[node->id]){
+        if (node->conflict[node->id] || node->must[CONFLICT_NODE_ID]){
             node->repr = CONFLICT_NODE_ID;
             edgesFree(&node->edges);
             continue;

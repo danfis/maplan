@@ -812,8 +812,6 @@ static void nodeInit(plan_pddl_sas_inv_node_t *node,
     node->conflict = BOR_CALLOC_ARR(int, node_size);
     node->must = BOR_CALLOC_ARR(int, node_size);
     node->must[node->id] = 1;
-    node->edge_presence = BOR_CALLOC_ARR(int, node_size);
-    node->sum_edge_presence = 0;
 
     if (node->id == CONFLICT_NODE_ID){
         for (i = 0; i < node_size; ++i){
@@ -836,7 +834,6 @@ static void nodeFree(plan_pddl_sas_inv_node_t *node)
     if (node->must)
         BOR_FREE(node->must);
     edgesFree(&node->edges);
-    // TODO: edge_presence
 }
 
 static void nodeCopyInvConflictEdges(plan_pddl_sas_inv_node_t *dst,

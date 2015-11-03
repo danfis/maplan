@@ -301,6 +301,11 @@ plan_heur_t *planHeurMADTGNew(const plan_problem_t *agent_def);
 plan_heur_t *planHeurMAPotNew(const plan_problem_t *p, unsigned flags);
 
 /**
+ * Multi-agent potential heuristic on projections.
+ */
+plan_heur_t *planHeurMAPotProjNew(const plan_problem_t *p, unsigned flags);
+
+/**
  * Deletes heuristics object.
  */
 void planHeurDel(plan_heur_t *heur);

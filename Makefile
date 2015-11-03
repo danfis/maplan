@@ -60,6 +60,7 @@ OBJS += heur_ma_dtg
 OBJS += heur_ma_max
 OBJS += heur_ma_lm_cut
 OBJS += heur_ma_pot
+OBJS += heur_ma_pot_proj
 OBJS += msg_schema
 OBJS += ma_msg
 OBJS += ma_comm_nanomsg

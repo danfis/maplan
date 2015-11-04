@@ -100,23 +100,13 @@ static int heurHeurNode(plan_heur_t *heur,
                         plan_heur_res_t *res)
 {
     plan_heur_ma_pot_proj_t *h = HEUR(heur);
-    plan_state_space_node_t *node;
 
     planStatePoolGetState(search->state_pool, state_id, h->state);
-    node = planStateSpaceNode(search->state_space, state_id);
-
     h->heur_val = planPotStatePot(&h->pot, h->state);
 
-    if (node->op == NULL || node->op->is_private){
-        res->heur = h->heur_val;
-        res->heur = BOR_MAX(0, res->heur);
-        return 0;
-
-    }else{
-        h->pending = h->agent_size - 1;
-        requestStateHeur(h, comm, h->state);
-        return -1;
-    }
+    h->pending = h->agent_size - 1;
+    requestStateHeur(h, comm, h->state);
+    return -1;
 }
 
 static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,

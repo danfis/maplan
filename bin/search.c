@@ -601,6 +601,10 @@ static plan_heur_t *_heurNew(const options_t *o,
         if (optionsHeurOpt(o, "all-synt-states"))
             flags |= PLAN_HEUR_POT_ALL_SYNTACTIC_STATES;
         heur = planHeurMAPotNew(prob, flags);
+    }else if (strcmp(name, "ma-pot-proj") == 0){
+        if (optionsHeurOpt(o, "all-synt-states"))
+            flags |= PLAN_HEUR_POT_ALL_SYNTACTIC_STATES;
+        heur = planHeurMAPotProjNew(prob, flags);
     }else{
         fprintf(stderr, "Error: Invalid heuristic type: `%s'\n", name);
     }

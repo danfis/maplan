@@ -87,6 +87,7 @@ static optdef_t opt_heur[] = {
     { "ma-lm-cut", opt_empty },
     { "ma-dtg", opt_empty },
     { "ma-pot", opt_heur_ma_pot },
+    { "ma-pot-proj", opt_heur_ma_pot },
 };
 static int opt_heur_size = sizeof(opt_heur) / sizeof(optdef_t);
 

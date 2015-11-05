@@ -145,4 +145,39 @@ TEST(testHeurMAPot)
                  "proto/rovers-p03-rover0.proto",
                  "proto/rovers-p03-rover1.proto");
     }
+
+    flags = PLAN_HEUR_POT_ENCRYPTION_OFF;
+    for (i = 0; i < 3; ++i){
+        runAStar(flags, 10, 5,
+                 "proto/depot-pfile1-depot0.proto",
+                 "proto/depot-pfile1-distributor0.proto",
+                 "proto/depot-pfile1-distributor1.proto",
+                 "proto/depot-pfile1-truck0.proto",
+                 "proto/depot-pfile1-truck1.proto");
+
+        runAStar(flags, 7, 2,
+                 "proto/driverlog-pfile1-driver1.proto",
+                 "proto/driverlog-pfile1-driver2.proto");
+        runAStar(flags, 11, 2,
+                 "proto/rovers-p03-rover0.proto",
+                 "proto/rovers-p03-rover1.proto");
+    }
+
+    flags = PLAN_HEUR_POT_ENCRYPTION_OFF;
+    flags |= PLAN_HEUR_POT_ALL_SYNTACTIC_STATES;
+    for (i = 0; i < 3; ++i){
+        runAStar(flags, 10, 5,
+                 "proto/depot-pfile1-depot0.proto",
+                 "proto/depot-pfile1-distributor0.proto",
+                 "proto/depot-pfile1-distributor1.proto",
+                 "proto/depot-pfile1-truck0.proto",
+                 "proto/depot-pfile1-truck1.proto");
+
+        runAStar(flags, 7, 2,
+                 "proto/driverlog-pfile1-driver1.proto",
+                 "proto/driverlog-pfile1-driver2.proto");
+        runAStar(flags, 11, 2,
+                 "proto/rovers-p03-rover0.proto",
+                 "proto/rovers-p03-rover1.proto");
+    }
 }

@@ -600,6 +600,10 @@ static plan_heur_t *_heurNew(const options_t *o,
     }else if (strcmp(name, "ma-pot") == 0){
         if (optionsHeurOpt(o, "all-synt-states"))
             flags |= PLAN_HEUR_POT_ALL_SYNTACTIC_STATES;
+        if (optionsHeurOpt(o, "encrypt-off"))
+            flags |= PLAN_HEUR_POT_ENCRYPTION_OFF;
+        if (optionsHeurOpt(o, "print-init-time"))
+            flags |= PLAN_HEUR_POT_PRINT_INIT_TIME;
         heur = planHeurMAPotNew(prob, flags);
     }else if (strcmp(name, "ma-pot-proj") == 0){
         if (optionsHeurOpt(o, "all-synt-states"))

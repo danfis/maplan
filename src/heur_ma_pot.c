@@ -39,6 +39,7 @@ struct _matrix_t {
     int rows;
     int offset;
     int *m;
+    int unit;
 };
 typedef struct _matrix_t matrix_t;
 
@@ -74,6 +75,8 @@ struct _plan_heur_ma_pot_t {
 
     plan_state_t *state;      /*!< Pre-allocated state */
     plan_state_t *state2;     /*!< Pre-allocated state */
+
+    bor_timer_t timer;
 };
 typedef struct _plan_heur_ma_pot_t plan_heur_ma_pot_t;
 #define HEUR(parent) \
@@ -136,7 +139,7 @@ static void lpProgCompute(const lp_prog_t *prog, plan_heur_ma_pot_t *h);
 
 /** Initialize secure matrix */
 static void secureInit(matrix_t *m, int num_private_vars, int num_vars,
-                       int private_offset);
+                       int private_offset, unsigned flags);
 /** Encrypt private matrices */
 static void secureEncrypt(const matrix_t *m, plan_pot_agent_t *pot);
 /** Decrypt potentials */
@@ -202,6 +205,8 @@ static int heurHeurNode(plan_heur_t *heur,
 
     if (!h->ready){
         if (comm->node_id == 0){
+            if (h->flags & PLAN_HEUR_POT_PRINT_INIT_TIME)
+                borTimerStart(&h->timer);
             requestInfo(comm);
             h->pending = comm->node_size - 1;
         }else{
@@ -267,6 +272,11 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
             h->ready = 1;
             sendInitHeurToPending(h, comm);
             res->heur = h->init_heur;
+            if (h->flags & PLAN_HEUR_POT_PRINT_INIT_TIME){
+                borTimerStop(&h->timer);
+                fprintf(stderr, "[%d] Heur init time: %0.4lf s\n",
+                        comm->node_id, borTimerElapsedInSF(&h->timer));
+            }
             return 0;
         }
 
@@ -478,7 +488,7 @@ static void responseLP(plan_heur_ma_pot_t *h, plan_ma_comm_t *comm,
 
     if (h->pot.lp_var_private < h->pot.lp_var_size){
         secureInit(&h->secure, h->pot.lp_var_size - h->pot.lp_var_private,
-                   var_size, var_offset);
+                   var_size, var_offset, h->flags);
         secureEncrypt(&h->secure, &pot);
     }
 
@@ -861,7 +871,7 @@ static int secureRandInt(bor_rand_t *rnd, int range)
 }
 
 static void secureInit(matrix_t *m, int num_private_vars, int num_vars,
-                       int private_offset)
+                       int private_offset, unsigned flags)
 {
     bor_rand_t rnd;
     int i, ins, rounds, src, dst, c;
@@ -873,6 +883,12 @@ static void secureInit(matrix_t *m, int num_private_vars, int num_vars,
     m->rows = num_vars;
     m->offset = private_offset;
     m->m = BOR_CALLOC_ARR(int, m->cols * m->rows);
+    m->unit = 0;
+
+    if (flags & PLAN_HEUR_POT_ENCRYPTION_OFF){
+        m->unit = 1;
+        return;
+    }
 
     // Create part of the unit matrix
     ins = private_offset * m->cols;
@@ -906,6 +922,9 @@ static void secureEncryptSubmatrix(const matrix_t *m,
     if (sub->cols * sub->rows == 0)
         return;
 
+    if (m->unit)
+        return;
+
     // Copy private part
     src = BOR_ALLOC_ARR(int, m->cols * sub->rows);
     ins = 0;
@@ -930,6 +949,9 @@ static void secureEncryptArr(const matrix_t *m, int *arr)
 {
     int *src, i, j, sum;
 
+    if (m->unit)
+        return;
+
     src = BOR_ALLOC_ARR(int, m->cols);
     for (i = 0; i < m->cols; ++i)
         src[i] = arr[m->offset + i];
@@ -945,6 +967,8 @@ static void secureEncryptArr(const matrix_t *m, int *arr)
 
 static void secureEncrypt(const matrix_t *m, plan_pot_agent_t *pot)
 {
+    if (m->unit)
+        return;
     secureEncryptSubmatrix(m, &pot->priv_op);
     secureEncryptSubmatrix(m, &pot->maxpot);
     secureEncryptArr(m, pot->goal);
@@ -955,6 +979,12 @@ static void secureDecrypt(const matrix_t *m, double *pot, int pub_var_size)
 {
     int i, j;
     double sum, *dst;
+
+    if (m->unit){
+        for (i = 0; i < m->cols; ++i)
+            pot[i + pub_var_size] = pot[i + m->offset];
+        return;
+    }
 
     dst = BOR_ALLOC_ARR(double, m->cols);
     for (i = 0; i < m->cols; ++i){

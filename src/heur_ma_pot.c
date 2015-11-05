@@ -75,6 +75,8 @@ struct _plan_heur_ma_pot_t {
 
     plan_state_t *state;      /*!< Pre-allocated state */
     plan_state_t *state2;     /*!< Pre-allocated state */
+
+    bor_timer_t timer;
 };
 typedef struct _plan_heur_ma_pot_t plan_heur_ma_pot_t;
 #define HEUR(parent) \
@@ -203,6 +205,8 @@ static int heurHeurNode(plan_heur_t *heur,
 
     if (!h->ready){
         if (comm->node_id == 0){
+            if (h->flags & PLAN_HEUR_POT_PRINT_INIT_TIME)
+                borTimerStart(&h->timer);
             requestInfo(comm);
             h->pending = comm->node_size - 1;
         }else{
@@ -268,6 +272,11 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
             h->ready = 1;
             sendInitHeurToPending(h, comm);
             res->heur = h->init_heur;
+            if (h->flags & PLAN_HEUR_POT_PRINT_INIT_TIME){
+                borTimerStop(&h->timer);
+                fprintf(stderr, "[%d] Heur init time: %0.4lf s\n",
+                        comm->node_id, borTimerElapsedInSF(&h->timer));
+            }
             return 0;
         }
 

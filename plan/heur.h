@@ -77,6 +77,11 @@ struct _plan_search_t;
  */
 #define PLAN_HEUR_POT_ENCRYPTION_OFF 0x80u
 
+/**
+ * Print time of the computation of the potentials in the initial step.
+ */
+#define PLAN_HEUR_POT_PRINT_INIT_TIME 0x100u
+
 /** Forward declaration */
 typedef struct _plan_heur_t plan_heur_t;
 

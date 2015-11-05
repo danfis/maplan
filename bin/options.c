@@ -61,7 +61,8 @@ static const char *opt_heur_pot[] = {
     "proj", "loc", "glob", "op-cost1", "op-cost+1", "all-synt-states", NULL
 };
 static const char *opt_heur_ma_pot[] = {
-    "op-cost1", "op-cost+1", "all-synt-states", "encrypt-off", NULL
+    "op-cost1", "op-cost+1", "all-synt-states", "encrypt-off",
+    "print-init-time", NULL
 };
 static const char *opt_heur_ma_pot_proj[] = {
     "op-cost1", "op-cost+1", "all-synt-states", NULL

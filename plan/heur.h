@@ -72,6 +72,11 @@ struct _plan_search_t;
  */
 #define PLAN_HEUR_POT_ALL_SYNTACTIC_STATES 0x40u
 
+/**
+ * Turns off encryption of matrices for ma-pot heuristic.
+ */
+#define PLAN_HEUR_POT_ENCRYPTION_OFF 0x80u
+
 /** Forward declaration */
 typedef struct _plan_heur_t plan_heur_t;
 

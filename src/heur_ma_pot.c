@@ -25,6 +25,8 @@
 
 #ifdef PLAN_LP
 
+#define EPS 1E-3
+
 struct _lp_prog_t {
     int cols;   /*!< Number of colums (lp variables) */
     int A_rows; /*!< Number of rows in A (constranits) */
@@ -235,7 +237,7 @@ static int heurUpdate(plan_heur_t *heur, plan_ma_comm_t *comm,
         // and from now on it can compute the heuristics by itself.
         // The potentials were received in init-heur request.
         h->init_heur = planMAMsgPotInitHeur(msg);
-        res->heur = h->init_heur;
+        res->heur = ceil(h->init_heur - EPS);
         h->ready = 1;
         return 0;
 
@@ -611,7 +613,8 @@ static int heurHeur(const plan_heur_ma_pot_t *h,
 {
     plan_state_space_t *state_space = (plan_state_space_t *)search->state_space;
     const plan_state_space_node_t *node, *parent_node;
-    int heur, local_heur, parent_heur, parent_stored_heur;
+    double local_heur, parent_heur, parent_stored_heur;
+    int heur;
 
     node = planStateSpaceNode(state_space, state_id);
     parent_node = planStateSpaceNode(state_space, node->parent_state_id);

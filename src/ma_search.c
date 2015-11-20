@@ -453,7 +453,6 @@ static void publicStateSend(plan_ma_search_t *ma,
                             plan_state_space_node_t *node)
 {
     int i;
-    const pub_state_data_t *pub_state;
     plan_ma_msg_t *msg;
 
     if (node->op == NULL || node->op->is_private)
@@ -461,12 +460,6 @@ static void publicStateSend(plan_ma_search_t *ma,
 
     // Don't send states that are worse than the best goal so far
     if (node->cost >= ma->goal_cost)
-        return;
-
-    // Do not resend public states from other agents
-    pub_state = planStatePoolData(ma->search->state_pool,
-                                  ma->pub_state_reg, node->state_id);
-    if (pub_state->agent_id != -1)
         return;
 
     msg = planMAMsgNew(PLAN_MA_MSG_PUBLIC_STATE, 0, ma->comm->node_id);

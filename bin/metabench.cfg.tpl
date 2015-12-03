@@ -6,7 +6,7 @@ cplex-libdir = /home/danfis/tmp/cplex/lib/x86-64_linux/static_pic
 #cplex-includedir = /software/cplex-126/cplex/include
 #cplex-libdir = /software/cplex-126/cplex/lib/x86-64_linux/static_pic
 #search = lazy-ff ma-lazy-ff
-search = ma-lazy-ff
+search = lazy-ff-factor
 
 [metabench-search-lazy-ff]
 type = seq
@@ -18,7 +18,7 @@ repeat = 5
 bench = ipc-2006 ipc-2014-sat
 cluster = luna
 
-[metabench-search-ma-lazy-ff]
+[metabench-search-lazy-ff-unfactor]
 type = unfactored
 search = lazy
 heur = ff
@@ -26,6 +26,16 @@ max-time = 1800
 max-mem = 8192
 repeat = 5
 bench = codmap-2015-unfactored
+cluster = luna
+
+[metabench-search-lazy-ff-factor]
+type = factored
+search = lazy
+heur = ff
+max-time = 1800
+max-mem = 8192
+repeat = 5
+bench = codmap-2015-factored
 cluster = luna
 
 

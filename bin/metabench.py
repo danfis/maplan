@@ -207,6 +207,48 @@ def shEmpty(cfg, path):
     fout.write(sh)
     fout.close()
 
+def shAllocPorts(cfg, path):
+    sh = '''#!/bin/bash
+START=$(date +%s%N)
+cd {0};
+
+count=0
+node_id=0
+for node in $(cat $PBS_NODEFILE); do
+    ip=$(dig +short $node);
+
+    port=$(($RANDOM % 10000 + 10000));
+    while nc -z $ip $port; do
+        port=$(($RANDOM % 10000 + 10000));
+        count=$(($count + 1))
+        if [ $count = 20 ]; then
+            rm -f {0}/ports.*;
+            exit -1;
+        fi
+    done
+
+    port2=$(($RANDOM % 10000 + 10000));
+    while nc -z $ip $port2; do
+        port2=$(($RANDOM % 10000 + 10000));
+        count=$(($count + 1))
+        if [ $count = 20 ]; then
+            rm -f {0}/ports.*;
+            exit -1;
+        fi
+    done
+
+    echo "$ip $port $port2" >{0}/ports.$node_id
+    node_id=$(($node_id + 1))
+done;
+
+touch {0}/alloc-ports.done
+END=$(date +%s%N)
+echo $(($END - $START)) >{0}/alloc-ports.nanotime
+'''.format(path)
+    fout = open(os.path.join(path, 'alloc-ports.sh'), 'w')
+    fout.write(sh)
+    fout.close()
+
 def shTranslateSeq(cfg, path):
     sh = '''#!/bin/bash
 START=$(date +%s%N)
@@ -234,6 +276,40 @@ PYTHONPATH={2}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.
 touch {0}/translate.done;
 END=$(date +%s%N)
 echo $(($END - $START)) >{0}/translate.nanotime
+'''.format(path, cfg.translate_py, cfg.protobuf_egg)
+    fout = open(os.path.join(path, 'translate.sh'), 'w')
+    fout.write(sh)
+    fout.close()
+
+def shTranslateFactor(cfg, path):
+    sh = '''#!/bin/bash
+START=$(date +%s%N)
+cd {0};
+
+node_id=$PBS_NODENUM
+
+num_agents=$(cat num-agents)
+agent_id=0
+agent_url=""
+while [ $agent_id != $num_agents ]; do
+    a=($(cat ports.$agent_id))
+    ip=${{a[0]}}
+    port=${{a[1]}}
+    port2=${{a[2]}}
+    agent_url="$agent_url --agent-url tcp://$ip:$port2"
+
+    agent_id=$(($agent_id + 1))
+done
+
+PYTHONPATH={2}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
+{1} --proto --output {0}/problem.${{node_id}}.proto \\
+    $agent_url \\
+    --agent-id $node_id \\
+    {0}/domain.${{node_id}}.pddl {0}/problem.${{node_id}}.pddl \\
+        >{0}/translate.${{node_id}}.out 2>{0}/translate.${{node_id}}.err
+touch {0}/translate.${{node_id}}.done;
+END=$(date +%s%N)
+echo $(($END - $START)) >{0}/translate.${{node_id}}.nanotime
 '''.format(path, cfg.translate_py, cfg.protobuf_egg)
     fout = open(os.path.join(path, 'translate.sh'), 'w')
     fout.write(sh)
@@ -300,6 +376,46 @@ echo $(($END - $START)) >{0}/search.nanotime
     fout.write(sh)
     fout.close()
 
+def shMaplanFactor(cfg, cfg_search, path):
+    sh = '''#!/bin/bash
+START=$(date +%s%N)
+cd {0};
+
+node_id=$PBS_NODENUM
+
+num_agents=$(cat num-agents)
+agent_id=0
+tcp=""
+while [ $agent_id != $num_agents ]; do
+    a=($(cat ports.$agent_id))
+    ip=${{a[0]}}
+    port=${{a[1]}}
+    port2=${{a[2]}}
+    tcp="$tcp --tcp $ip:$port2"
+
+    agent_id=$(($agent_id + 1))
+done
+
+{1} -p {0}/problem.${{node_id}}.proto \\
+    -s {2} \\
+    -H {3} \\
+    --max-time {4} \\
+    --max-mem {5} \\
+    --ma-factor \\
+    $tcp \\
+    --tcp-id $node_id \\
+    -o {0}/plan.${{node_id}}.out \\
+    --print-heur-init \\
+    >{0}/search.${{node_id}}.out 2>{0}/search.${{node_id}}.err
+touch {0}/search.${{node_id}}.done;
+END=$(date +%s%N)
+echo $(($END - $START)) >{0}/search.${{node_id}}.nanotime
+'''.format(path, cfg.search_bin, cfg_search.search, cfg_search.heur,
+           cfg_search.max_time, cfg_search.max_mem)
+    fout = open(os.path.join(path, 'search.sh'), 'w')
+    fout.write(sh)
+    fout.close()
+
 def shSeq(cfg, cfg_search, path):
     sh = '''#!/bin/bash
 START=$(date +%s%N)
@@ -307,6 +423,44 @@ cd {0};
 bash translate.sh
 bash search.sh
 bash validate.sh
+
+touch {0}/done;
+END=$(date +%s%N)
+echo $(($END - $START)) >{0}/nanotime
+'''.format(path)
+    fout = open(os.path.join(path, 'run.sh'), 'w')
+    fout.write(sh)
+    fout.close()
+
+def shFactorRun(cfg, cfg_search, path):
+    sh = '''#!/bin/bash
+START=$(date +%s%N)
+cd {0};
+
+node_id=$PBS_NODENUM
+bash translate.sh
+bash search.sh
+#bash validate.sh
+
+touch {0}/done.$node_id;
+END=$(date +%s%N)
+echo $(($END - $START)) >{0}/nanotime.$node_id
+'''.format(path)
+    fout = open(os.path.join(path, 'factor-run.sh'), 'w')
+    fout.write(sh)
+    fout.close()
+
+def shFactor(cfg, path):
+    sh = '''#!/bin/bash
+START=$(date +%s%N)
+cd {0};
+bash alloc-ports.sh
+if [ ! -f {0}/ports.0 ]; then
+    echo "No ports allocated!"
+    exit -1
+fi
+
+pbsdsh -- bash {0}/factor-run.sh
 
 touch {0}/done;
 END=$(date +%s%N)
@@ -344,6 +498,25 @@ def createTasksUnfactor(topdir, cfg, cfg_search, cfg_bench, domain, problem, pdd
     shMaplanUnfactor(cfg, cfg_search, topdir)
     shSeq(cfg, cfg_search, topdir)
 
+def createTasksFactor(topdir, cfg, cfg_search, cfg_bench, domain, problem, pddl):
+    p('Creating', topdir)
+    num_agents = len(pddl['domain'])
+    for i in range(num_agents):
+        dom = 'domain.{0}.pddl'.format(i)
+        prob = 'problem.{0}.pddl'.format(i)
+        shutil.copyfile(pddl['domain'][i], os.path.join(topdir, dom))
+        shutil.copyfile(pddl['problem'][i], os.path.join(topdir, prob))
+    with open(os.path.join(topdir, 'num-agents'), 'w') as fout:
+        fout.write('{0}'.format(num_agents))
+        fout.close()
+
+    shAllocPorts(cfg, topdir)
+    shTranslateFactor(cfg, topdir)
+    #shValidateSeq(cfg, topdir)
+    shMaplanFactor(cfg, cfg_search, topdir)
+    shFactorRun(cfg, cfg_search, topdir)
+    shFactor(cfg, topdir)
+
 def createTasksProblem(topdir, cfg, cfg_search, cfg_bench, domain, problem):
     dst = os.path.join(topdir, problem)
     if not os.path.isdir(dst):
@@ -359,6 +532,9 @@ def createTasksProblem(topdir, cfg, cfg_search, cfg_bench, domain, problem):
         elif cfg_search.type in ['unfactored', 'unfactor']:
             createTasksUnfactor(dst2, cfg, cfg_search, cfg_bench,
                                 domain, problem, cfg_bench.pddl[domain][problem])
+        elif cfg_search.type in ['factored', 'factor']:
+            createTasksFactor(dst2, cfg, cfg_search, cfg_bench,
+                              domain, problem, cfg_bench.pddl[domain][problem])
         else:
             raise Exception('Unkown type {0}'.format(cfg_search.type))
 
@@ -424,6 +600,10 @@ def qsubCmd(cfg, cfg_search, root):
         ppn = numAgents(os.path.join(root, 'problem.addl'))
         ppn = min(ppn + 1, 16)
         nodes = 1
+    elif cfg_search.type in ['factored', 'factor']:
+        nodes = int(open(os.path.join(root, 'num-agents'), 'r').read())
+        nodes = min(nodes, 35)
+        ppn = 1
     else:
         raise Exception('TODO')
 

@@ -3,18 +3,39 @@ repo = https://github.com/danfis/maplan
 commit = master
 cplex-includedir = /home/danfis/tmp/cplex/include
 cplex-libdir = /home/danfis/tmp/cplex/lib/x86-64_linux/static_pic
-bench = ipc-2006 ipc-2014-sat codmap-2015-factored codmap-2015-unfactored
+#cplex-includedir = /software/cplex-126/cplex/include
+#cplex-libdir = /software/cplex-126/cplex/lib/x86-64_linux/static_pic
+#search = lazy-ff ma-lazy-ff
+search = ma-lazy-ff
 
-[metabench-search-1]
-validate = true
+[metabench-search-lazy-ff]
 type = seq
 search = lazy
 heur = ff
 max-time = 1800
 max-mem = 8192
 repeat = 5
-bench = ipc-2006 ipc-2014-sat codmap-2015-factored codmap-2015-unfactored
+bench = ipc-2006 ipc-2014-sat
+cluster = luna
 
+[metabench-search-ma-lazy-ff]
+type = unfactored
+search = lazy
+heur = ff
+max-time = 1800
+max-mem = 8192
+repeat = 5
+bench = codmap-2015-unfactored
+cluster = luna
+
+
+[metabench-test-seq]
+path = /home/danfis/dev/plan-data/raw/test-seq
+type = seq
+
+[metabench-test-unfactor]
+path = /home/danfis/dev/plan-data/raw/test-unfactor
+type = unfactored
 
 [metabench-ipc-2006]
 path = /home/danfis/dev/plan-data/raw/ipc-2006

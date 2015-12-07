@@ -6,7 +6,19 @@ cplex-libdir = /home/danfis/tmp/cplex/lib/x86-64_linux/static_pic
 #cplex-includedir = /software/cplex-126/cplex/include
 #cplex-libdir = /software/cplex-126/cplex/lib/x86-64_linux/static_pic
 #search = lazy-ff ma-lazy-ff
-search = lazy-ff-factor
+search = all-seq lazy-ff
+
+[metabench-search-all-seq]
+combine = true
+type = seq
+search = lazy ehc astar
+heur = goalcount add max ff dtg lm-cut lm-cut-inc-local lm-cut-inc-cache
+       lm-cut-inc-cache:prune flow flow:lm-cut flot:ilp potential
+max-time = 1800
+max-mem = 8192
+repeat = 10
+bench = ipc-2011-sat ipc-2011-opt ipc-2014-sat ipc-2014-opt
+cluster = luna
 
 [metabench-search-lazy-ff]
 type = seq
@@ -49,6 +61,14 @@ type = unfactored
 
 [metabench-ipc-2006]
 path = /home/danfis/dev/plan-data/raw/ipc-2006
+type = seq
+
+[metabench-ipc-2011-sat]
+path = /home/danfis/dev/plan-data/raw/ipc-2011/seq-sat
+type = seq
+
+[metabench-ipc-2011-opt]
+path = /home/danfis/dev/plan-data/raw/ipc-2011/seq-opt
 type = seq
 
 [metabench-ipc-2014-sat]

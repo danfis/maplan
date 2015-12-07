@@ -5,16 +5,39 @@ import sys
 import os
 import subprocess
 import time
+import datetime
 import shutil
 import re
+import logging
 import ConfigParser as cfgparser
 from matopddl import PlanningProblem
 
 global_start_time = time.time()
 
+class Logger(object):
+    def __init__(self, dst):
+        self.out = sys.stdout
+        self.fout = open(dst, 'a')
+
+    def write(self, buf):
+        self.fout.write(buf)
+        self.fout.flush()
+        self.out.write(buf)
+        self.out.flush()
+
+    def flush(self):
+        self.fout.flush()
+        self.out.flush()
+
+def initLogging(log_dst):
+    sys.stdout = Logger(log_dst)
+    #sys.stderr = sys.stdout
+
 def p(*args):
     t = time.time()
-    sys.stdout.write('[{0:.3f}] '.format(t - global_start_time))
+    stime = '[{0:.3f}] '.format(t - global_start_time)
+    prefix = str(datetime.datetime.now()) + ' ' + stime
+    sys.stdout.write(prefix)
     print(*args)
     sys.stdout.flush()
 
@@ -113,12 +136,19 @@ class ConfigBench(object):
 
 
 class ConfigSearch(object):
-    def __init__(self, cfg, name):
-        self.name = name
+    def __init__(self, cfg, name, search = None, heur = None, name2 = None):
+        if name2 is None:
+            self.name = name
+        else:
+            self.name = name2
         self.section = 'metabench-search-' + name
         self.type = cfg.get(self.section, 'type')
-        self.search = cfg.get(self.section, 'search')
-        self.heur = cfg.get(self.section, 'heur')
+        self.search = search
+        if search is None:
+            self.search = cfg.get(self.section, 'search')
+        self.heur = heur
+        if heur is None:
+            self.heur = cfg.get(self.section, 'heur')
         self.max_time = cfg.getint(self.section, 'max-time')
         self.max_mem = cfg.getint(self.section, 'max-mem')
         self.repeat = cfg.getint(self.section, 'repeat')
@@ -154,10 +184,28 @@ class Config(object):
         if self.cfg.has_option('metabench', 'cplex-libdir'):
             self.cplex_libdir = self.cfg.get('metabench', 'cplex-libdir')
 
-        self.search = self.cfg.get('metabench', 'search')
-        self.search = self.search.split()
-        self.search = [ConfigSearch(self.cfg, x) for x in self.search]
+        search = self.cfg.get('metabench', 'search')
+        search = search.split()
+        self.search = []
+        for s in search:
+            self.search += self._parseSearch(s)
 
+    def _parseSearch(self, name):
+        section = 'metabench-search-' + name
+        if self.cfg.has_option(section, 'combine') \
+           and self.cfg.getboolean(section, 'combine'):
+            search = self.cfg.get(section, 'search').split()
+            heur = self.cfg.get(section, 'heur').split()
+            out = []
+            for s in search:
+                for h in heur:
+                    name2 = name + '-' + s + '-' + h
+                    name2 = name2.replace(':', '-')
+                    out += [ConfigSearch(self.cfg, name, s, h, name2)]
+            return out
+
+        else:
+            return [ConfigSearch(self.cfg, name)]
 
 def repoClone(path, dst):
     runCmd('git clone {0} {1}'.format(path, dst))
@@ -499,6 +547,9 @@ def createTasksUnfactor(topdir, cfg, cfg_search, cfg_bench, domain, problem, pdd
     shSeq(cfg, cfg_search, topdir)
 
 def createTasksFactor(topdir, cfg, cfg_search, cfg_bench, domain, problem, pddl):
+    if os.path.exists(os.path.join(topdir, 'domain.0.pddl')):
+        p('Skipping:', topdir, 'already created')
+        return;
     p('Creating', topdir)
     num_agents = len(pddl['domain'])
     for i in range(num_agents):
@@ -639,6 +690,9 @@ def qsub(cfg):
 
 
 def main(topdir):
+    initLogging(os.path.join(topdir, 'metabench.log'))
+    p('========== START ==========')
+
     cfg = Config(topdir)
     if not os.path.exists(cfg.repodir):
         compileMaplan(cfg)

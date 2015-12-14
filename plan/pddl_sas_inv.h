@@ -47,6 +47,7 @@ struct _plan_pddl_sas_inv_finder_t {
     bor_htable_t *inv_table;
     bor_list_t inv;
     int inv_size;
+    const plan_pddl_ground_t *g;
 };
 typedef struct _plan_pddl_sas_inv_finder_t plan_pddl_sas_inv_finder_t;
 

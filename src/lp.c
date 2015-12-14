@@ -389,7 +389,9 @@ double planLPSolve(plan_lp_t *lp, double *obj)
     int st, solst;
     double ov;
 
-    st = CPXlpopt(lp->env, lp->lp);
+    //st = CPXlpopt(lp->env, lp->lp);
+    // TODO
+    st = CPXmipopt(lp->env, lp->lp);
     if (st != 0)
         cplexErr(lp, st, "Failed to optimize LP");
 

@@ -65,6 +65,7 @@ void planPDDLSasInvFinderInit(plan_pddl_sas_inv_finder_t *invf,
     borListInit(&invf->inv);
     invf->inv_size = 0;
     invf->inv_table = borHTableNew(invTableHash, invTableEq, NULL);
+    invf->g = g;
 
     storeFactIds(&invf->fact_init, (plan_pddl_fact_pool_t *)&g->fact_pool,
                  &g->pddl->init_fact);
@@ -92,11 +93,113 @@ void planPDDLSasInvFinderFree(plan_pddl_sas_inv_finder_t *invf)
     }
 }
 
+#include <boruvka/timer.h>
 void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
 {
     plan_pddl_sas_inv_nodes_t nodes;
     int i;
 
+    bor_timer_t timer;
+    {
+        plan_lp_t *lp;
+        int i;
+
+        borTimerStart(&timer);
+        fprintf(stderr, "%lx %d\n", (long)invf->g, invf->g->action_pool.size);
+        lp = planLPNew(2 * invf->g->action_pool.size, invf->facts.fact_size, PLAN_LP_MAX);
+        for (i = 0; i < invf->facts.fact_size; ++i){
+            planLPSetObj(lp, i, 1.);
+            planLPSetVarRange(lp, i, 0, 1);
+            planLPSetVarInt(lp, i);
+        }
+
+        for (i = 0; i < invf->g->action_pool.size; ++i){
+            const plan_pddl_ground_action_t *a;
+            int j;
+            a = planPDDLGroundActionPoolGet(&invf->g->action_pool, i);
+            for (j = 0; j < a->eff_add.size; ++j)
+                planLPSetCoef(lp, 2 * i, a->eff_add.fact[j], 1.);
+            for (j = 0; j < a->eff_del.size; ++j)
+                planLPSetCoef(lp, 2 * i, a->eff_del.fact[j], -1.);
+            planLPSetRHS(lp, 2 * i, 0., 'L');
+
+            for (j = 0; j < a->eff_del.size; ++j)
+                planLPSetCoef(lp, 2 * i + 1, a->eff_del.fact[j], 1.);
+            planLPSetRHS(lp, 2 * i + 1, 1., 'L');
+        }
+
+        int j, add = 2 * i;
+        double rhs = 2.;
+        char sense = 'G';
+        /*
+        planLPAddRows(lp, 1, &rhs, &sense);
+        for (j = 0; j < invf->facts.fact_size; ++j)
+            planLPSetCoef(lp, add, j, 1.);
+        ++add;
+        */
+
+        rhs = 1.;
+        sense = 'L';
+        planLPAddRows(lp, 1, &rhs, &sense);
+        for (j = 0; j < invf->fact_init.size; ++j){
+            planLPSetCoef(lp, add, invf->fact_init.fact[j], 1.);
+            /*
+            int k;
+            for (k = j + 1; k < invf->fact_init.size; ++k){
+                planLPAddRows(lp, 1, &rhs, &sense);
+                planLPSetCoef(lp, add, invf->fact_init.fact[j], 1.);
+                planLPSetCoef(lp, add, invf->fact_init.fact[k], 1.);
+                ++add;
+            }
+            */
+        }
+        ++add;
+
+        double sol[invf->facts.fact_size];
+        while (1){
+        double z = planLPSolve(lp, sol);
+        if (z < 1.1)
+            break;
+
+        fprintf(stderr, "Z: %lf :: ", z);
+        for (i = 0; i < invf->facts.fact_size; ++i){
+            //fprintf(stderr, "S[%d]: %lf\n", i, sol[i]);
+            if (sol[i] > 0.){
+                plan_pddl_fact_t *f;
+                f = planPDDLFactPoolGet(&invf->g->fact_pool, i);
+                fprintf(stderr, " ");
+                planPDDLFactPrint(&invf->g->pddl->predicate,
+                                  &invf->g->pddl->obj,
+                                  f, stderr);
+                /*
+                fprintf(stderr, "    ");
+                planPDDLFactPrint(&invf->g->pddl->predicate,
+                                  &invf->g->pddl->obj,
+                                  f, stderr);
+                fprintf(stderr, "\n");
+                */
+            }
+        }
+        fprintf(stderr, "\n");
+        //z = z - 0.5;
+        sense = 'G';
+        double zero = 0.;
+        planLPAddRows(lp, 1, &zero, &sense);
+        for (i = 0; i < invf->facts.fact_size; ++i){
+            if (sol[i] > 0.)
+                planLPSetCoef(lp, add, i, -1.);
+            else
+                planLPSetCoef(lp, add, i, z);
+        }
+        ++add;
+        }
+
+        planLPDel(lp);
+        borTimerStop(&timer);
+        fprintf(stderr, "Elapsed: %lf\n", borTimerElapsedInSF(&timer));
+    }
+
+    borTimerStart(&timer);
     planPDDLSasInvNodesInitFromFacts(&nodes, &invf->facts);
 
     // TODO: Limited number of iterations
@@ -111,6 +214,8 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
     pruneInvSubsets(invf);
 
     planPDDLSasInvNodesFree(&nodes);
+    borTimerStop(&timer);
+    fprintf(stderr, "Elapsed2: %lf\n", borTimerElapsedInSF(&timer));
 }
 
 

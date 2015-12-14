@@ -4,21 +4,22 @@
 #include "plan/ma_search.h"
 
 static const char *tcp_addr[] = {
-    "127.0.0.1:13910",
-    "127.0.0.1:13911",
-    "127.0.0.1:13912",
-    "127.0.0.1:13913",
-    "127.0.0.1:13914",
-    "127.0.0.1:13915",
-    "127.0.0.1:13916",
-    "127.0.0.1:13917",
-    "127.0.0.1:13918",
+    "127.0.0.1:14910",
+    "127.0.0.1:14911",
+    "127.0.0.1:14912",
+    "127.0.0.1:14913",
+    "127.0.0.1:14914",
+    "127.0.0.1:14915",
+    "127.0.0.1:14916",
+    "127.0.0.1:14917",
+    "127.0.0.1:14918",
 };
 
 struct _th_t {
     pthread_t th;
+    int id;
+    int size;
     plan_search_t *search;
-    plan_ma_comm_t *comm;
     int cost;
 };
 typedef struct _th_t th_t;
@@ -26,13 +27,19 @@ typedef struct _th_t th_t;
 static void *runTh(void *data)
 {
     th_t *th = data;
+    plan_ma_comm_t *comm;
+
+    comm = planMACommTCPNew(th->id, th->size, tcp_addr, 0);
+    if (comm == NULL)
+        exit(-1);
+
     plan_ma_search_params_t param;
     plan_ma_search_t *s;
     plan_path_t path;
 
     planMASearchParamsInit(&param);
     param.search = th->search;
-    param.comm = th->comm;
+    param.comm = comm;
     param.verify_solution = 1;
 
     s = planMASearchNew(&param);
@@ -43,6 +50,7 @@ static void *runTh(void *data)
     planPathFree(&path);
 
     planMASearchDel(s);
+    planMACommDel(comm);
 
     return NULL;
 }
@@ -51,7 +59,6 @@ static void runAStar(unsigned flags, int expected_cost,
                      int num_proto, ...)
 {
     plan_problem_t *p[num_proto];
-    plan_ma_comm_t *comm[num_proto];
     plan_search_t *search[num_proto];
     plan_search_astar_params_t sparams;
     th_t th[num_proto];
@@ -72,10 +79,6 @@ static void runAStar(unsigned flags, int expected_cost,
             exit(-1);
         }
 
-        comm[i] = planMACommTCPNew(i, num_proto, tcp_addr);
-        if (comm[i] == NULL)
-            exit(-1);
-
         planSearchAStarParamsInit(&sparams);
         sparams.search.heur = planHeurMAPotNew(p[i], flags);
         if (sparams.search.heur == NULL)
@@ -84,8 +87,9 @@ static void runAStar(unsigned flags, int expected_cost,
         sparams.search.prob = p[i];
         search[i] = planSearchAStarNew(&sparams);
 
+        th[i].id = i;
+        th[i].size = num_proto;
         th[i].search = search[i];
-        th[i].comm = comm[i];
         th[i].cost = -1;
     }
     va_end(ap);
@@ -103,7 +107,6 @@ static void runAStar(unsigned flags, int expected_cost,
 
     for (i = 0; i < num_proto; ++i){
         planSearchDel(search[i]);
-        planMACommDel(comm[i]);
         planProblemDel(p[i]);
     }
 }

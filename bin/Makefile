@@ -21,12 +21,14 @@ endif
 OBJS  = search.o
 OBJS += options.o
 
-TARGETS = search
+TARGETS = search invariants
 
 all: $(TARGETS)
 
 search: ../libplan.a $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
+invariants: ../libplan.a invariants.c
+	$(CC) $(CFLAGS) -o $@ invariants.c $(LDFLAGS)
 ma-search: ma-search.c ../libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 

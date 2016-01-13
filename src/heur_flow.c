@@ -482,11 +482,7 @@ static plan_cost_t lpSolve(plan_lp_t *lp, const fact_t *facts,
     // Add landmarks if provided
     lpAddLandmarks(lp, ldms);
 
-    if (use_ilp){
-        z = planLPSolveILPObjVal(lp);
-    }else{
-        z = planLPSolveObjVal(lp);
-    }
+    z = planLPSolve(lp, NULL);
     h = roundOff(z);
 
     lpDelLandmarks(lp, ldms);

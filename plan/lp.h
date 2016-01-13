@@ -114,16 +114,6 @@ void planLPDelRows(plan_lp_t *lp, int begin, int end);
 int planLPNumRows(const plan_lp_t *lp);
 
 /**
- * Solves problem and returns objective value.
- */
-double planLPSolveObjVal(plan_lp_t *lp);
-
-/**
- * Solves Integer Linear Program and returns objective value.
- */
-double planLPSolveILPObjVal(plan_lp_t *lp);
-
-/**
  * Solves problem and returns objective value and values of each variable
  * via obj argument.
  */

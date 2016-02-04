@@ -95,6 +95,11 @@ struct _plan_problem_agents_t {
 typedef struct _plan_problem_agents_t plan_problem_agents_t;
 
 /**
+ * Loads planning problem from the fast-downward file.
+ */
+plan_problem_t *planProblemFromFD(const char *fn);
+
+/**
  * Loads problem definition from protbuf format.
  * For flags see PLAN_PROBLEM_* macros.
  */

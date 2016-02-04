@@ -144,6 +144,7 @@ plan_succ_gen_t *planSuccGenFromFD(FILE *fin,
 {
     plan_succ_gen_t *sg;
     sg = BOR_ALLOC(plan_succ_gen_t);
+    bzero(sg, sizeof(*sg));
     sg->num_operators = 0;
     sg->root = treeFromFD(fin, vars, op, &sg->num_operators);
     return sg;

@@ -153,6 +153,21 @@ class ConfigSearch(object):
         self.max_mem = cfg.getint(self.section, 'max-mem')
         self.repeat = cfg.getint(self.section, 'repeat')
         self.cluster = cfg.get(self.section, 'cluster')
+        self.fd_translate_py = None
+        self.fd_preprocess = None
+        self.fd_translate_cplex = False
+
+        if cfg.has_option(self.section, 'fd-translate-py') \
+           or cfg.has_option(self.section, 'fd-preprocess'):
+            if not cfg.has_option(self.section, 'fd-translate-py') \
+               or not cfg.has_option(self.section, 'fd-preprocess'):
+                err('If you want to use FD preprocessor, both ' \
+                     + 'fd-translate-py and fd-preprocess must be defined!')
+        if cfg.has_option(self.section, 'fd-translate-py'):
+            self.fd_translate_py = cfg.get(self.section, 'fd-translate-py')
+            self.fd_preprocess = cfg.get(self.section, 'fd-preprocess')
+        if cfg.has_option(self.section, 'fd-translate-cplex'):
+            self.fd_translate_cplex = cfg.getboolean(self.section, 'fd-translate-cplex')
 
         self.bench = cfg.get(self.section, 'bench')
         self.bench = self.bench.split()
@@ -302,13 +317,34 @@ def shTranslateSeq(cfg, path):
 START=$(date +%s%N)
 cd {0};
 PYTHONPATH={2}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
-{1} --proto --output {0}/problem.proto \\
+python2 {1} --proto --output {0}/problem.proto \\
     {0}/domain.pddl {0}/problem.pddl \\
         >{0}/translate.out 2>{0}/translate.err
 touch {0}/translate.done;
 END=$(date +%s%N)
 echo $(($END - $START)) >{0}/translate.nanotime
 '''.format(path, cfg.translate_py, cfg.protobuf_egg)
+    fout = open(os.path.join(path, 'translate.sh'), 'w')
+    fout.write(sh)
+    fout.close()
+
+def shTranslateFDSeq(cfg, cfg_search, path):
+    cplex = ''
+    if cfg_search.fd_translate_cplex:
+        cplex = '--cplex'
+    sh = '''#!/bin/bash
+START=$(date +%s%N)
+cd {0};
+PYTHONPATH={3}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
+python2 {1} {2} {0}/domain.pddl {0}/problem.pddl \\
+        >{0}/fd-translate.out 2>{0}/fd-translate.err
+{4} <{0}/output.sas >{0}/fd-preprocess.out 2>{0}/fd-preprocess.err
+mv {0}/output {0}/problem.fd
+touch {0}/translate.done;
+END=$(date +%s%N)
+echo $(($END - $START)) >{0}/translate.nanotime
+'''.format(path, cfg_search.fd_translate_py, cplex, cfg.protobuf_egg,
+           cfg_search.fd_preprocess)
     fout = open(os.path.join(path, 'translate.sh'), 'w')
     fout.write(sh)
     fout.close()
@@ -386,6 +422,27 @@ def shMaplanSeq(cfg, cfg_search, path):
 START=$(date +%s%N)
 cd {0};
 {1} -p {0}/problem.proto \\
+    -s {2} \\
+    -H {3} \\
+    --max-time {4} \\
+    --max-mem {5} \\
+    -o {0}/plan.out \\
+    --print-heur-init \\
+    >{0}/search.out 2>{0}/search.err
+touch {0}/search.done;
+END=$(date +%s%N)
+echo $(($END - $START)) >{0}/search.nanotime
+'''.format(path, cfg.search_bin, cfg_search.search, cfg_search.heur,
+           cfg_search.max_time, cfg_search.max_mem)
+    fout = open(os.path.join(path, 'search.sh'), 'w')
+    fout.write(sh)
+    fout.close()
+
+def shMaplanFDSeq(cfg, cfg_search, path):
+    sh = '''#!/bin/bash
+START=$(date +%s%N)
+cd {0};
+{1} --fd-problem {0}/problem.fd \\
     -s {2} \\
     -H {3} \\
     --max-time {4} \\
@@ -526,9 +583,15 @@ def createTasksSeq(topdir, cfg, cfg_search, cfg_bench, domain, problem, pddl):
     p('Creating', topdir)
     shutil.copyfile(pddl['domain'], os.path.join(topdir, 'domain.pddl'))
     shutil.copyfile(pddl['problem'], os.path.join(topdir, 'problem.pddl'))
-    shTranslateSeq(cfg, topdir)
+    if cfg_search.fd_translate_py is not None:
+        shTranslateFDSeq(cfg, cfg_search, topdir)
+    else:
+        shTranslateSeq(cfg, topdir)
     shValidateSeq(cfg, topdir)
-    shMaplanSeq(cfg, cfg_search, topdir)
+    if cfg_search.fd_translate_py is not None:
+        shMaplanFDSeq(cfg, cfg_search, topdir)
+    else:
+        shMaplanSeq(cfg, cfg_search, topdir)
     shSeq(cfg, cfg_search, topdir)
 
 def createTasksUnfactor(topdir, cfg, cfg_search, cfg_bench, domain, problem, pddl):

@@ -1,12 +1,13 @@
 [metabench]
 repo = https://github.com/danfis/maplan
 commit = master
-cplex-includedir = /home/danfis/tmp/cplex/include
-cplex-libdir = /home/danfis/tmp/cplex/lib/x86-64_linux/static_pic
+cplex-includedir = /opt/cplex-1263/cplex/include
+cplex-libdir = /opt/cplex-1263/cplex/lib/x86-64_linux/static_pic/
 #cplex-includedir = /software/cplex-126/cplex/include
 #cplex-libdir = /software/cplex-126/cplex/lib/x86-64_linux/static_pic
 #search = lazy-ff ma-lazy-ff
-search = all-seq lazy-ff
+#search = all-seq lazy-ff
+search = fd-opt fd-cplex-opt
 
 [metabench-search-all-seq]
 combine = true
@@ -50,9 +51,35 @@ repeat = 5
 bench = codmap-2015-factored
 cluster = luna
 
+[metabench-search-fd-opt]
+type = seq
+search = astar
+heur = lm-cut
+fd-translate-py = /home/danfis/dev/fast-downward-work/src/build/bin/translate/translate.py
+fd-preprocess = /home/danfis/dev/fast-downward-work/src/build/bin/preprocess
+fd-translate-cplex = true
+max-time = 1800
+max-mem = 8192
+repeat = 1
+bench = test-seq
+cluster = luna
+
+[metabench-search-fd-cplex-opt]
+type = seq
+search = astar
+heur = lm-cut
+fd-translate-py = /home/danfis/dev/fast-downward-work/src/build/bin/translate/translate.py
+fd-preprocess = /home/danfis/dev/fast-downward-work/src/build/bin/preprocess
+fd-translate-cplex = true
+max-time = 1800
+max-mem = 8192
+repeat = 1
+bench = test-seq
+cluster = luna
+
 
 [metabench-test-seq]
-path = /home/danfis/dev/plan-data/raw/test-seq
+path = /home/danfis/dev/pddl-data/test-seq
 type = seq
 
 [metabench-test-unfactor]

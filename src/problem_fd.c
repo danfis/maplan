@@ -338,11 +338,13 @@ static int loadFDBase(plan_problem_t *plan, FILE *fin,
     if (fdAxioms(plan, fin) != 0)
         return -1;
 
-    if (fdAssert(fin, "begin_SG") != 0)
-        return -1;
-    plan->succ_gen = planSuccGenFromFD(fin, plan->var, plan->op);
-    if (fdAssert(fin, "end_SG") != 0)
-        return -1;
+    if (fdAssert(fin, "begin_SG") == 0){
+        plan->succ_gen = planSuccGenFromFD(fin, plan->var, plan->op);
+        if (fdAssert(fin, "end_SG") != 0)
+            return -1;
+    }else{
+        plan->succ_gen = planSuccGenNew(plan->op, plan->op_size, NULL);
+    }
 
     if (use_metric_out)
         *use_metric_out = use_metric;

@@ -380,7 +380,7 @@ static plan_cost_t applyInitLandmarks(plan_heur_lm_cut_t *heur,
     }
 
     // Update relaxation heuristic
-    planHeurRelaxIncMax(&heur->relax, op_changed, size);
+    planHeurRelaxIncMaxFull(&heur->relax, op_changed, size);
 
     return h;
 }
@@ -392,7 +392,7 @@ static void lmCutState(plan_heur_lm_cut_t *heur, const plan_state_t *state,
     plan_cost_t h = 0;
 
     // Compute initial h^max
-    planHeurRelax(&heur->relax, state);
+    planHeurRelaxFull(&heur->relax, state);
 
     // If landmarks are given, apply them before continuing with LM-Cut and
     // set up initial heuristic value accordingly.
@@ -433,7 +433,7 @@ static void lmCutState(plan_heur_lm_cut_t *heur, const plan_state_t *state,
 
         // Performat incremental h^max computation using changed operator
         // costs
-        planHeurRelaxIncMax(&heur->relax, heur->cut.op, heur->cut.size);
+        planHeurRelaxIncMaxFull(&heur->relax, heur->cut.op, heur->cut.size);
     }
 
     res->heur = h;

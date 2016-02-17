@@ -112,6 +112,8 @@ static int readOpts(int argc, char *argv[])
                 "Print this help.");
     optsAddDesc("problem", 'p', OPTS_STR, &o->proto, NULL,
                 "Path to a problem definition in .proto format.");
+    optsAddDesc("fd-problem", 0x0, OPTS_STR, &o->fd, NULL,
+                "Path to a problem definition in Fast Downward's format.");
     optsAddDesc("search", 's', OPTS_STR, &o->search, NULL,
                 "Define search algorithm. See below for options. (default: astar)");
     optsAddDesc("heur", 'H', OPTS_STR, &o->heur, NULL,
@@ -383,7 +385,9 @@ options_t *options(int argc, char *argv[])
         return NULL;
     }
 
-    if (o->proto == NULL && (o->pddl_domain == NULL || o->pddl_problem == NULL)){
+    if (o->proto == NULL
+            && o->fd == NULL
+            && (o->pddl_domain == NULL || o->pddl_problem == NULL)){
         fprintf(stderr, "Error: Problem file not specified! (see -p"
                         " option)\n\n");
         usage(argv[0]);

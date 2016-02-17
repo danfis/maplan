@@ -26,6 +26,7 @@ struct _options_t {
     int ma_factor;
     int ma_factor_dir;
     char *proto;
+    char *fd;
     char *pddl_domain;
     char *pddl_problem;
     char *output;

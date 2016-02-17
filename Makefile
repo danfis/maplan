@@ -13,6 +13,7 @@ CXXFLAGS += -Wno-long-long
 TARGETS  = libplan.a
 
 OBJS  = problem
+OBJS += problem_fd
 OBJS += problem_pddl
 OBJS += pddl_lisp
 OBJS += pddl_require

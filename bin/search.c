@@ -425,10 +425,17 @@ static int loadProblemSeq(const options_t *o)
     int flags;
 
     flags = PLAN_PROBLEM_USE_CG;
+    problem = NULL;
     if (o->proto != NULL){
         problem = planProblemFromProto(o->proto, flags);
         if (problem == NULL){
             fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
+            return -1;
+        }
+    }else if (o->fd != NULL){
+        problem = planProblemFromFD(o->fd);
+        if (problem == NULL){
+            fprintf(stderr, "Error: Could not load file `%s'\n", o->fd);
             return -1;
         }
     }else{

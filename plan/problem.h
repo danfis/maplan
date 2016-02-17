@@ -100,6 +100,10 @@ typedef struct _plan_problem_agents_t plan_problem_agents_t;
 plan_problem_t *planProblemFromPDDL(const char *domain_pddl,
                                     const char *problem_pddl,
                                     unsigned flags);
+/**
+ * Loads planning problem from the fast-downward file.
+ */
+plan_problem_t *planProblemFromFD(const char *fn);
 
 /**
  * Loads problem definition from protbuf format.

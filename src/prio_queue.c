@@ -65,6 +65,7 @@ void planPrioQueuePush(plan_prio_queue_t *q, int key, int value)
             planBucketQueueToHeapQueue(&q->bucket_queue, &q->heap_queue);
             planBucketQueueFree(&q->bucket_queue);
             q->bucket = 0;
+            planHeapQueuePush(&q->heap_queue, key, value);
         }else{
             planBucketQueuePush(&q->bucket_queue, key, value);
         }

@@ -78,7 +78,8 @@ static void inferInvs(const char *domain_fn, const char *problem_fn)
 {
     plan_pddl_t *d;
     plan_pddl_ground_t ground;
-    plan_pddl_inv_finder_t invf;
+    bor_list_t inv;
+    int inv_size;
 
     printf("---- Invariants %s | %s ----\n", domain_fn, problem_fn);
     d = planPDDLNew(domain_fn, problem_fn);
@@ -88,10 +89,11 @@ static void inferInvs(const char *domain_fn, const char *problem_fn)
     planPDDLGroundInit(&ground, d);
     planPDDLGround(&ground);
 
-    planPDDLInvFinderInit(&invf, &ground);
-    planPDDLInvFinder(&invf);
-    printInvs(&invf.inv, invf.inv_size, &ground);
-    planPDDLInvFinderFree(&invf);
+    borListInit(&inv);
+    inv_size = planPDDLInvFind(&ground, &inv);
+    if (inv_size > 0)
+        printInvs(&inv, inv_size, &ground);
+    planPDDLInvFreeList(&inv);
 
     //planPDDLGroundPrint(&ground, stdout);
     planPDDLGroundFree(&ground);

@@ -21,6 +21,7 @@
 #define __PLAN_PDDL_INV_H__
 
 #include <boruvka/list.h>
+#include <boruvka/htable.h>
 #include <plan/pddl_ground.h>
 #include <plan/lp.h>
 
@@ -35,32 +36,17 @@ struct _plan_pddl_inv_t {
 };
 typedef struct _plan_pddl_inv_t plan_pddl_inv_t;
 
-struct _plan_pddl_inv_finder_t {
-    bor_list_t inv; /*!< List of invariants */
-    int inv_size;   /*!< Number of inferred invariants */
-    plan_lp_t *lp;  /*!< Linear program for inferring invariants */
-    int fact_size;  /*!< Number of facts */
-
-    const plan_pddl_ground_t *g; /*!< Reference to grounded problem */
-};
-typedef struct _plan_pddl_inv_finder_t plan_pddl_inv_finder_t;
-
+/**
+ * Free all invariants from the list.
+ */
+void planPDDLInvFreeList(bor_list_t *list);
 
 /**
- * Initializes invariant finder structure.
+ * Finds invariants in grounded problem and adds them in the output list
+ * inv that should be already initialized using borListInit().
+ * Returns number of found invariants.
  */
-void planPDDLInvFinderInit(plan_pddl_inv_finder_t *invf,
-                           const plan_pddl_ground_t *g);
-
-/**
- * Frees allocated memory.
- */
-void planPDDLInvFinderFree(plan_pddl_inv_finder_t *invf);
-
-/**
- * Finds and stores invariants.
- */
-void planPDDLInvFinder(plan_pddl_inv_finder_t *invf);
+int planPDDLInvFind(const plan_pddl_ground_t *g, bor_list_t *inv);
 
 #ifdef __cplusplus
 } /* extern "C" */

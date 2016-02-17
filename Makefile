@@ -27,6 +27,7 @@ OBJS += pddl_lift_action
 OBJS += pddl_ground_action
 OBJS += pddl
 OBJS += pddl_ground
+OBJS += pddl_inv
 OBJS += pddl_sas
 OBJS += pddl_sas_inv
 OBJS += pddl_sas_inv_fact

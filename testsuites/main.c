@@ -23,6 +23,7 @@
 #include "lisp_file.h"
 #include "pddl.h"
 #include "pddl_factor.h"
+#include "pddl_inv.h"
 
 TEST(protobufTearDown)
 {
@@ -53,6 +54,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSLispFile),
     TEST_SUITE_ADD(TSPDDL),
     TEST_SUITE_ADD(TSPDDLFactor),
+    TEST_SUITE_ADD(TSPDDLInv),
     TEST_SUITES_CLOSURE
 };
 

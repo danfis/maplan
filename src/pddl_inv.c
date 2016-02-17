@@ -42,6 +42,7 @@ int planPDDLInvFind(const plan_pddl_ground_t *g, bor_list_t *inv)
 {
     plan_lp_t *lp;
     const plan_pddl_ground_action_t *action;
+    const plan_pddl_ground_facts_t *add, *del, *pre;
     int i, row, j, k, fact_id, inv_size;
     double z, *sol, one = 1.;
     char sense = 'G';
@@ -58,16 +59,23 @@ int planPDDLInvFind(const plan_pddl_ground_t *g, bor_list_t *inv)
     // Add constraint for each action
     for (row = 0; row < g->action_pool.size; ++row){
         action = planPDDLGroundActionPoolGet(&g->action_pool, row);
-        for (j = 0; j < action->eff_add.size; ++j)
-            planLPSetCoef(lp, row, action->eff_add.fact[j], 1.);
+        add = &action->eff_add;
+        del = &action->eff_del;
+        pre = &action->pre;
 
-        // TODO
-        for (j = 0; j < action->eff_del.size; ++j){
-            for (k = 0; k < action->pre.size; ++k){
-                if (action->eff_del.fact[j] == action->pre.fact[k]){
-                    planLPSetCoef(lp, row, action->eff_del.fact[j], -1.);
-                    break;
-                }
+        for (j = 0; j < add->size; ++j)
+            planLPSetCoef(lp, row, add->fact[j], 1.);
+
+        // (facts in del and pre are always sorted)
+        for (j = 0, k = 0; j < del->size && k < pre->size;){
+            if (del->fact[j] == pre->fact[k]){
+                planLPSetCoef(lp, row, del->fact[j], -1.);
+                ++j;
+                ++k;
+            }else if (del->fact[j] < pre->fact[k]){
+                ++j;
+            }else{ // del->fact[j] > pre->fact[k]
+                ++k;
             }
         }
         planLPSetRHS(lp, row, 0., 'L');

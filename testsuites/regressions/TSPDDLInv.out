@@ -8,7 +8,6 @@ Inv 0:
     lifting: hoist0 crate0
     lifting: hoist1 crate0
     lifting: hoist2 crate0
-    on: crate0 crate0
 Inv 1:
     at: crate1 depot0
     at: crate1 distributor0
@@ -18,7 +17,6 @@ Inv 1:
     lifting: hoist0 crate1
     lifting: hoist1 crate1
     lifting: hoist2 crate1
-    on: crate1 crate1
 Inv 2:
     at: truck0 depot0
     at: truck0 distributor0
@@ -46,7 +44,6 @@ Inv 7:
     lifting: hoist0 crate0
     lifting: hoist1 crate0
     lifting: hoist2 crate0
-    on: crate0 crate0
     on: crate1 crate0
 Inv 8:
     clear: crate1
@@ -56,7 +53,6 @@ Inv 8:
     lifting: hoist1 crate1
     lifting: hoist2 crate1
     on: crate0 crate1
-    on: crate1 crate1
 Inv 9:
     clear: pallet0
     on: crate0 pallet0
@@ -75,7 +71,6 @@ Inv 12:
     lifting: hoist0 crate0
     lifting: hoist1 crate0
     lifting: hoist2 crate0
-    on: crate0 crate0
     on: crate0 crate1
     on: crate0 pallet0
     on: crate0 pallet1
@@ -87,7 +82,6 @@ Inv 13:
     lifting: hoist1 crate1
     lifting: hoist2 crate1
     on: crate1 crate0
-    on: crate1 crate1
     on: crate1 pallet0
     on: crate1 pallet1
     on: crate1 pallet2
@@ -102,7 +96,6 @@ Inv 0:
     lifting: hoist0 crate0
     lifting: hoist1 crate0
     lifting: hoist2 crate0
-    on: crate0 crate0
 Inv 1:
     at: crate1 depot0
     at: crate1 distributor0
@@ -112,7 +105,6 @@ Inv 1:
     lifting: hoist0 crate1
     lifting: hoist1 crate1
     lifting: hoist2 crate1
-    on: crate1 crate1
 Inv 2:
     at: crate2 depot0
     at: crate2 distributor0
@@ -122,7 +114,6 @@ Inv 2:
     lifting: hoist0 crate2
     lifting: hoist1 crate2
     lifting: hoist2 crate2
-    on: crate2 crate2
 Inv 3:
     at: crate3 depot0
     at: crate3 distributor0
@@ -132,7 +123,6 @@ Inv 3:
     lifting: hoist0 crate3
     lifting: hoist1 crate3
     lifting: hoist2 crate3
-    on: crate3 crate3
 Inv 4:
     at: truck0 depot0
     at: truck0 distributor0
@@ -166,7 +156,6 @@ Inv 9:
     lifting: hoist0 crate0
     lifting: hoist1 crate0
     lifting: hoist2 crate0
-    on: crate0 crate0
     on: crate1 crate0
     on: crate2 crate0
     on: crate3 crate0
@@ -178,7 +167,6 @@ Inv 10:
     lifting: hoist1 crate1
     lifting: hoist2 crate1
     on: crate0 crate1
-    on: crate1 crate1
     on: crate2 crate1
     on: crate3 crate1
 Inv 11:
@@ -190,7 +178,6 @@ Inv 11:
     lifting: hoist2 crate2
     on: crate0 crate2
     on: crate1 crate2
-    on: crate2 crate2
     on: crate3 crate2
 Inv 12:
     clear: crate3
@@ -202,7 +189,6 @@ Inv 12:
     on: crate0 crate3
     on: crate1 crate3
     on: crate2 crate3
-    on: crate3 crate3
 Inv 13:
     clear: pallet0
     on: crate0 pallet0
@@ -227,7 +213,6 @@ Inv 16:
     lifting: hoist0 crate0
     lifting: hoist1 crate0
     lifting: hoist2 crate0
-    on: crate0 crate0
     on: crate0 crate1
     on: crate0 crate2
     on: crate0 crate3
@@ -241,7 +226,6 @@ Inv 17:
     lifting: hoist1 crate1
     lifting: hoist2 crate1
     on: crate1 crate0
-    on: crate1 crate1
     on: crate1 crate2
     on: crate1 crate3
     on: crate1 pallet0
@@ -255,7 +239,6 @@ Inv 18:
     lifting: hoist2 crate2
     on: crate2 crate0
     on: crate2 crate1
-    on: crate2 crate2
     on: crate2 crate3
     on: crate2 pallet0
     on: crate2 pallet1
@@ -269,7 +252,6 @@ Inv 19:
     on: crate3 crate0
     on: crate3 crate1
     on: crate3 crate2
-    on: crate3 crate3
     on: crate3 pallet0
     on: crate3 pallet1
     on: crate3 pallet2
@@ -284,7 +266,6 @@ Inv 0:
     lifting: hoist0 crate0
     lifting: hoist1 crate0
     lifting: hoist2 crate0
-    on: crate0 crate0
 Inv 1:
     at: crate1 depot0
     at: crate1 distributor0
@@ -294,7 +275,6 @@ Inv 1:
     lifting: hoist0 crate1
     lifting: hoist1 crate1
     lifting: hoist2 crate1
-    on: crate1 crate1
 Inv 2:
     at: crate2 depot0
     at: crate2 distributor0
@@ -304,7 +284,6 @@ Inv 2:
     lifting: hoist0 crate2
     lifting: hoist1 crate2
     lifting: hoist2 crate2
-    on: crate2 crate2
 Inv 3:
     at: crate3 depot0
     at: crate3 distributor0
@@ -314,7 +293,6 @@ Inv 3:
     lifting: hoist0 crate3
     lifting: hoist1 crate3
     lifting: hoist2 crate3
-    on: crate3 crate3
 Inv 4:
     at: crate4 depot0
     at: crate4 distributor0
@@ -324,7 +302,6 @@ Inv 4:
     lifting: hoist0 crate4
     lifting: hoist1 crate4
     lifting: hoist2 crate4
-    on: crate4 crate4
 Inv 5:
     at: crate5 depot0
     at: crate5 distributor0
@@ -334,7 +311,6 @@ Inv 5:
     lifting: hoist0 crate5
     lifting: hoist1 crate5
     lifting: hoist2 crate5
-    on: crate5 crate5
 Inv 6:
     at: crate6 depot0
     at: crate6 distributor0
@@ -344,7 +320,6 @@ Inv 6:
     lifting: hoist0 crate6
     lifting: hoist1 crate6
     lifting: hoist2 crate6
-    on: crate6 crate6
 Inv 7:
     at: crate7 depot0
     at: crate7 distributor0
@@ -354,7 +329,6 @@ Inv 7:
     lifting: hoist0 crate7
     lifting: hoist1 crate7
     lifting: hoist2 crate7
-    on: crate7 crate7
 Inv 8:
     at: crate8 depot0
     at: crate8 distributor0
@@ -364,7 +338,6 @@ Inv 8:
     lifting: hoist0 crate8
     lifting: hoist1 crate8
     lifting: hoist2 crate8
-    on: crate8 crate8
 Inv 9:
     at: crate9 depot0
     at: crate9 distributor0
@@ -374,7 +347,6 @@ Inv 9:
     lifting: hoist0 crate9
     lifting: hoist1 crate9
     lifting: hoist2 crate9
-    on: crate9 crate9
 Inv 10:
     at: truck0 depot0
     at: truck0 distributor0
@@ -426,7 +398,6 @@ Inv 15:
     lifting: hoist0 crate0
     lifting: hoist1 crate0
     lifting: hoist2 crate0
-    on: crate0 crate0
     on: crate1 crate0
     on: crate2 crate0
     on: crate3 crate0
@@ -444,7 +415,6 @@ Inv 16:
     lifting: hoist1 crate1
     lifting: hoist2 crate1
     on: crate0 crate1
-    on: crate1 crate1
     on: crate2 crate1
     on: crate3 crate1
     on: crate4 crate1
@@ -462,7 +432,6 @@ Inv 17:
     lifting: hoist2 crate2
     on: crate0 crate2
     on: crate1 crate2
-    on: crate2 crate2
     on: crate3 crate2
     on: crate4 crate2
     on: crate5 crate2
@@ -480,7 +449,6 @@ Inv 18:
     on: crate0 crate3
     on: crate1 crate3
     on: crate2 crate3
-    on: crate3 crate3
     on: crate4 crate3
     on: crate5 crate3
     on: crate6 crate3
@@ -498,7 +466,6 @@ Inv 19:
     on: crate1 crate4
     on: crate2 crate4
     on: crate3 crate4
-    on: crate4 crate4
     on: crate5 crate4
     on: crate6 crate4
     on: crate7 crate4
@@ -516,7 +483,6 @@ Inv 20:
     on: crate2 crate5
     on: crate3 crate5
     on: crate4 crate5
-    on: crate5 crate5
     on: crate6 crate5
     on: crate7 crate5
     on: crate8 crate5
@@ -534,7 +500,6 @@ Inv 21:
     on: crate3 crate6
     on: crate4 crate6
     on: crate5 crate6
-    on: crate6 crate6
     on: crate7 crate6
     on: crate8 crate6
     on: crate9 crate6
@@ -552,7 +517,6 @@ Inv 22:
     on: crate4 crate7
     on: crate5 crate7
     on: crate6 crate7
-    on: crate7 crate7
     on: crate8 crate7
     on: crate9 crate7
 Inv 23:
@@ -570,7 +534,6 @@ Inv 23:
     on: crate5 crate8
     on: crate6 crate8
     on: crate7 crate8
-    on: crate8 crate8
     on: crate9 crate8
 Inv 24:
     clear: crate9
@@ -588,7 +551,6 @@ Inv 24:
     on: crate6 crate9
     on: crate7 crate9
     on: crate8 crate9
-    on: crate9 crate9
 Inv 25:
     clear: pallet0
     on: crate0 pallet0
@@ -631,7 +593,6 @@ Inv 28:
     lifting: hoist0 crate0
     lifting: hoist1 crate0
     lifting: hoist2 crate0
-    on: crate0 crate0
     on: crate0 crate1
     on: crate0 crate2
     on: crate0 crate3
@@ -651,7 +612,6 @@ Inv 29:
     lifting: hoist1 crate1
     lifting: hoist2 crate1
     on: crate1 crate0
-    on: crate1 crate1
     on: crate1 crate2
     on: crate1 crate3
     on: crate1 crate4
@@ -671,7 +631,6 @@ Inv 30:
     lifting: hoist2 crate2
     on: crate2 crate0
     on: crate2 crate1
-    on: crate2 crate2
     on: crate2 crate3
     on: crate2 crate4
     on: crate2 crate5
@@ -691,7 +650,6 @@ Inv 31:
     on: crate3 crate0
     on: crate3 crate1
     on: crate3 crate2
-    on: crate3 crate3
     on: crate3 crate4
     on: crate3 crate5
     on: crate3 crate6
@@ -711,7 +669,6 @@ Inv 32:
     on: crate4 crate1
     on: crate4 crate2
     on: crate4 crate3
-    on: crate4 crate4
     on: crate4 crate5
     on: crate4 crate6
     on: crate4 crate7
@@ -731,7 +688,6 @@ Inv 33:
     on: crate5 crate2
     on: crate5 crate3
     on: crate5 crate4
-    on: crate5 crate5
     on: crate5 crate6
     on: crate5 crate7
     on: crate5 crate8
@@ -751,7 +707,6 @@ Inv 34:
     on: crate6 crate3
     on: crate6 crate4
     on: crate6 crate5
-    on: crate6 crate6
     on: crate6 crate7
     on: crate6 crate8
     on: crate6 crate9
@@ -771,7 +726,6 @@ Inv 35:
     on: crate7 crate4
     on: crate7 crate5
     on: crate7 crate6
-    on: crate7 crate7
     on: crate7 crate8
     on: crate7 crate9
     on: crate7 pallet0
@@ -791,7 +745,6 @@ Inv 36:
     on: crate8 crate5
     on: crate8 crate6
     on: crate8 crate7
-    on: crate8 crate8
     on: crate8 crate9
     on: crate8 pallet0
     on: crate8 pallet1
@@ -811,7 +764,6 @@ Inv 37:
     on: crate9 crate6
     on: crate9 crate7
     on: crate9 crate8
-    on: crate9 crate9
     on: crate9 pallet0
     on: crate9 pallet1
     on: crate9 pallet2
@@ -1034,3 +986,5 @@ Inv 11:
     passengers: slow1-0 n1
     passengers: slow1-0 n2
 ---- Invariants pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl END ----
+---- Invariants pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl ----
+---- Invariants pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl END ----

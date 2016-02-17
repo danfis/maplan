@@ -79,6 +79,12 @@ int planPDDLInvFind(const plan_pddl_ground_t *g, bor_list_t *inv)
             }
         }
         planLPSetRHS(lp, row, 0., 'L');
+
+        // Refuse to infer invariants for problems with conditional effects
+        if (action->cond_eff.size > 0){
+            planLPDel(lp);
+            return 0;
+        }
     }
 
     // Add constraint for the initial state

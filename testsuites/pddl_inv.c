@@ -109,6 +109,6 @@ TEST(testPDDLInv)
     inferInvs("pddl/driverlog-domain.pddl", "pddl/driverlog-pfile1.pddl");
     inferInvs("pddl/openstacks-p03-domain.pddl", "pddl/openstacks-p03.pddl");
     inferInvs("pddl/rovers-domain.pddl", "pddl/rovers-p01.pddl");
-    //inferInvs("pddl/CityCar-domain.pddl", "pddl/CityCar-p3-2-2-0-1.pddl");
     inferInvs("pddl/elevators08-domain.pddl", "pddl/elevators08-p01.pddl");
+    inferInvs("pddl/CityCar-domain.pddl", "pddl/CityCar-p3-2-2-0-1.pddl");
 }

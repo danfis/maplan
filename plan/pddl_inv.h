@@ -21,8 +21,8 @@
 #define __PLAN_PDDL_INV_H__
 
 #include <boruvka/list.h>
-#include <boruvka/htable.h>
 #include <plan/pddl_ground.h>
+#include <plan/lp.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,16 +32,14 @@ struct _plan_pddl_inv_t {
     int *fact;
     int size;
     bor_list_t list;
-
-    bor_list_t table;
-    bor_htable_key_t table_key;
 };
 typedef struct _plan_pddl_inv_t plan_pddl_inv_t;
 
 struct _plan_pddl_inv_finder_t {
-    bor_htable_t *inv_table; /*!< Hash table of invariants */
-    bor_list_t inv;          /*!< List of invariants */
-    int inv_size;            /*!< Number of inferred invariants */
+    bor_list_t inv; /*!< List of invariants */
+    int inv_size;   /*!< Number of inferred invariants */
+    plan_lp_t *lp;  /*!< Linear program for inferring invariants */
+    int fact_size;  /*!< Number of facts */
 
     const plan_pddl_ground_t *g; /*!< Reference to grounded problem */
 };

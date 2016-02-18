@@ -30,7 +30,8 @@ static int invCmp(const void *a, const void *b)
     return p1->size - p2->size;
 }
 
-static void printInvs(bor_list_t *invs, int size, const plan_pddl_ground_t *g)
+static void printInvs(bor_list_t *invs, int size, const plan_pddl_ground_t *g,
+                      const plan_pddl_t *pddl)
 {
     const plan_pddl_inv_t *inv;
     const plan_pddl_fact_t *fact;
@@ -49,9 +50,9 @@ static void printInvs(bor_list_t *invs, int size, const plan_pddl_ground_t *g)
             ins = 0;
             if (fact->neg)
                 ins = sprintf(fs, "N:");
-            ins += sprintf(fs + ins, "%s:", g->pddl->predicate.pred[fact->pred].name);
+            ins += sprintf(fs + ins, "%s:", pddl->predicate.pred[fact->pred].name);
             for (k = 0; k < fact->arg_size; ++k)
-                ins += sprintf(fs + ins, " %s", g->pddl->obj.obj[fact->arg[k]].name);
+                ins += sprintf(fs + ins, " %s", pddl->obj.obj[fact->arg[k]].name);
             is[i].inv[j] = strdup(fs);
         }
         qsort(is[i].inv, is[i].size, sizeof(char *), strCmp);
@@ -86,13 +87,12 @@ static void inferInvs(const char *domain_fn, const char *problem_fn)
     if (d == NULL)
         return;
 
-    planPDDLGroundInit(&ground, d);
-    planPDDLGround(&ground);
+    planPDDLGround(&ground, d);
 
     borListInit(&inv);
     inv_size = planPDDLInvFind(&ground, &inv);
     if (inv_size > 0)
-        printInvs(&inv, inv_size, &ground);
+        printInvs(&inv, inv_size, &ground, d);
     planPDDLInvFreeList(&inv);
 
     //planPDDLGroundPrint(&ground, stdout);

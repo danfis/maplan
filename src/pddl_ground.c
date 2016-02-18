@@ -38,7 +38,6 @@
 #define STATE_WAIT_FOR_GROUNDED_FACTS   4
 #define STATE_GROUND_END                1000
 
-
 /** Instantiates actions using facts in fact pool. */
 static void instActions(const plan_pddl_lift_actions_t *actions,
                         plan_pddl_fact_pool_t *fact_pool,
@@ -51,7 +50,12 @@ static void instActionsNegativePreconditions(const plan_pddl_t *pddl,
                                              plan_pddl_fact_pool_t *fact_pool);
 /** Finds out how many agents there are and creates all mappings between
  *  agents and objects */
-static void determineAgents(plan_pddl_ground_t *g);
+static void determineAgents(plan_pddl_ground_t *g, const plan_pddl_t *pddl);
+
+/** Copy fact IDs from src to dst that are present in fact_pool. */
+static void setReachableFactIds(plan_pddl_ground_facts_t *dst,
+                                plan_pddl_fact_pool_t *fact_pool,
+                                const plan_pddl_facts_t *src);
 
 /** Flip flag of the facts that are static facts.
  *  Static facts are those that are in the init state and are never changed
@@ -93,7 +97,6 @@ static void removeStatAndNegFacts(plan_pddl_fact_pool_t *fact_pool,
 void planPDDLGroundInit(plan_pddl_ground_t *g, const plan_pddl_t *pddl)
 {
     bzero(g, sizeof(*g));
-    g->pddl = pddl;
     planPDDLFactPoolInit(&g->fact_pool, pddl->predicate.size);
     planPDDLGroundActionPoolInit(&g->action_pool, &pddl->predicate, &pddl->obj);
 
@@ -111,6 +114,11 @@ void planPDDLGroundFree(plan_pddl_ground_t *g)
     planPDDLGroundActionPoolFree(&g->action_pool);
     planPDDLLiftActionsFree(&g->lift_action);
 
+    if (g->goal.fact != NULL)
+        BOR_FREE(g->goal.fact);
+    if (g->init.fact != NULL)
+        BOR_FREE(g->init.fact);
+
     if (g->agent_to_obj != NULL)
         BOR_FREE(g->agent_to_obj);
     if (g->obj_to_agent != NULL)
@@ -126,21 +134,44 @@ void planPDDLGroundFree(plan_pddl_ground_t *g)
         BOR_FREE(g->pred_to_glob);
 }
 
-void planPDDLGround(plan_pddl_ground_t *g)
+void planPDDLGround(plan_pddl_ground_t *g, const plan_pddl_t *pddl)
 {
-    planPDDLLiftActionsInit(&g->lift_action, &g->pddl->action,
-                            &g->pddl->type_obj, &g->pddl->init_func,
-                            g->pddl->obj.size, g->pddl->predicate.eq_pred);
+    planPDDLGroundInit(g, pddl);
+    planPDDLLiftActionsInit(&g->lift_action, &pddl->action,
+                            &pddl->type_obj, &pddl->init_func,
+                            pddl->obj.size, pddl->predicate.eq_pred);
 
-    planPDDLFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
-    instActionsNegativePreconditions(g->pddl, &g->lift_action, &g->fact_pool);
-    instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
-    markStaticFacts(&g->fact_pool, &g->pddl->init_fact);
+    planPDDLFactPoolAddFacts(&g->fact_pool, &pddl->init_fact);
+    instActionsNegativePreconditions(pddl, &g->lift_action, &g->fact_pool);
+    instActions(&g->lift_action, &g->fact_pool, &g->action_pool, pddl);
+    markStaticFacts(&g->fact_pool, &pddl->init_fact);
     planPDDLGroundActionPoolInst(&g->action_pool, &g->fact_pool);
     removeStatAndNegFacts(&g->fact_pool, &g->action_pool);
-    determineAgents(g);
+    determineAgents(g, pddl);
+
+    setReachableFactIds(&g->init, &g->fact_pool, &pddl->init_fact);
+    setReachableFactIds(&g->goal, &g->fact_pool, &pddl->goal);
 }
 
+static void setReachableFactIds(plan_pddl_ground_facts_t *dst,
+                                plan_pddl_fact_pool_t *fact_pool,
+                                const plan_pddl_facts_t *src)
+{
+    int i, fact_id;
+
+    dst->size = 0;
+    dst->fact = BOR_ALLOC_ARR(int, src->size);
+    for (i = 0; i < src->size; ++i){
+        fact_id = planPDDLFactPoolFind(fact_pool, src->fact + i);
+        if (fact_id >= 0){
+            dst->fact[dst->size++] = fact_id;
+        }
+    }
+
+    if (dst->size != src->size){
+        dst->fact = BOR_REALLOC_ARR(dst->fact, int, dst->size);
+    }
+}
 
 static int cmpStr(const void *a, const void *b)
 {
@@ -175,7 +206,8 @@ static void factorSendObjPredNamesRequest(plan_ma_comm_t *comm)
 }
 
 static void factorSendObjPredNamesResponse(const plan_pddl_ground_t *g,
-                                          plan_ma_comm_t *comm)
+                                           const plan_pddl_t *pddl,
+                                           plan_ma_comm_t *comm)
 {
     const plan_pddl_predicates_t *preds;
     const plan_pddl_objs_t *objs;
@@ -186,13 +218,13 @@ static void factorSendObjPredNamesResponse(const plan_pddl_ground_t *g,
                        PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_NAMES_RESPONSE,
                        comm->node_id);
 
-    preds = &g->pddl->predicate;
+    preds = &pddl->predicate;
     for (i = 0; i < preds->size; ++i){
         if (!preds->pred[i].is_private)
             planMAMsgAddPDDLGroundPredName(msg, preds->pred[i].name);
     }
 
-    objs = &g->pddl->obj;
+    objs = &pddl->obj;
     for (i = 0; i < objs->size; ++i){
         if (!objs->obj[i].is_private)
             planMAMsgAddPDDLGroundObjName(msg, objs->obj[i].name);
@@ -202,7 +234,7 @@ static void factorSendObjPredNamesResponse(const plan_pddl_ground_t *g,
     planMAMsgDel(msg);
 }
 
-static void factorConstructMap(plan_pddl_ground_t *g,
+static void factorConstructMap(plan_pddl_ground_t *g, const plan_pddl_t *pddl,
                                char **name, int name_size, int is_obj,
                                int **to_glob, int **glob_to)
 {
@@ -210,9 +242,9 @@ static void factorConstructMap(plan_pddl_ground_t *g,
     int i, loc_id, glob_id, loc_size;
 
     if (is_obj){
-        loc_size = g->pddl->obj.size;
+        loc_size = pddl->obj.size;
     }else{
-        loc_size = g->pddl->predicate.size;
+        loc_size = pddl->predicate.size;
     }
 
     // Create and initialize mapping from global ID to local ID
@@ -228,9 +260,9 @@ static void factorConstructMap(plan_pddl_ground_t *g,
     // Fill mapping
     for (loc_id = 0; loc_id < loc_size; ++loc_id){
         if (is_obj){
-            loc_name = g->pddl->obj.obj[loc_id].name;
+            loc_name = pddl->obj.obj[loc_id].name;
         }else{
-            loc_name = g->pddl->predicate.pred[loc_id].name;
+            loc_name = pddl->predicate.pred[loc_id].name;
         }
 
         for (glob_id = 0; glob_id < name_size; ++glob_id){
@@ -244,6 +276,7 @@ static void factorConstructMap(plan_pddl_ground_t *g,
 }
 
 static void factorConstructObjPredMap(plan_pddl_ground_t *g,
+                                      const plan_pddl_t *pddl,
                                       char **obj, int obj_size,
                                       char **pred, int pred_size,
                                       plan_ma_comm_t *comm)
@@ -256,9 +289,9 @@ static void factorConstructObjPredMap(plan_pddl_ground_t *g,
     pred_size = factorSortUniqStrArr(pred, pred_size);
 
     // Construct maps for both predicates and objects
-    factorConstructMap(g, obj, obj_size, 1,
+    factorConstructMap(g, pddl, obj, obj_size, 1,
                        &g->obj_to_glob, &g->glob_to_obj);
-    factorConstructMap(g, pred, pred_size, 0,
+    factorConstructMap(g, pddl, pred, pred_size, 0,
                        &g->pred_to_glob, &g->glob_to_pred);
 
 
@@ -278,6 +311,7 @@ static void factorConstructObjPredMap(plan_pddl_ground_t *g,
 }
 
 static void factorObjPredMapFromMsg(plan_pddl_ground_t *g,
+                                    const plan_pddl_t *pddl,
                                     const plan_ma_msg_t *msg)
 {
     char **obj = NULL, **pred = NULL;
@@ -285,7 +319,7 @@ static void factorObjPredMapFromMsg(plan_pddl_ground_t *g,
 
     planMAMsgPDDLGroundObjName(msg, &obj, &obj_size);
     planMAMsgPDDLGroundPredName(msg, &pred, &pred_size);
-    factorConstructObjPredMap(g, obj, obj_size, pred, pred_size, NULL);
+    factorConstructObjPredMap(g, pddl, obj, obj_size, pred, pred_size, NULL);
 
     if (obj)
         BOR_FREE(obj);
@@ -342,7 +376,8 @@ static void factorRecvGroundFacts(plan_pddl_ground_t *g,
     }
 }
 
-static void factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+static void factorMaster(plan_pddl_ground_t *g, const plan_pddl_t *pddl,
+                         plan_ma_comm_t *comm)
 {
     plan_ma_terminate_t terminate;
     plan_ma_msg_t *msg_names[comm->node_size];
@@ -388,21 +423,21 @@ static void factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
             if (--wait == 0){
                 // We have received all object and predicate names.
                 // Construct maps and send them to othe agents.
-                factorConstructObjPredMap(g, obj, obj_size,
+                factorConstructObjPredMap(g, pddl, obj, obj_size,
                                           pred, pred_size, comm);
                 wait = comm->node_size - 1;
             }
 
         }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP_ACK){
             if (--wait == 0){
-                instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
+                instActions(&g->lift_action, &g->fact_pool, &g->action_pool, pddl);
                 factorSendGroundFacts(g, comm);
             }
 
         }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_FACTS){
             num_facts = g->fact_pool.size;
             factorRecvGroundFacts(g, msg);
-            instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
+            instActions(&g->lift_action, &g->fact_pool, &g->action_pool, pddl);
             factorSendGroundFacts(g, comm);
 
             if (num_facts == g->fact_pool.size)
@@ -429,7 +464,8 @@ static void factorMaster(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
     planMATerminateFree(&terminate);
 }
 
-static void factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+static void factorSlave(plan_pddl_ground_t *g, const plan_pddl_t *pddl,
+                        plan_ma_comm_t *comm)
 {
     plan_ma_terminate_t terminate;
     plan_ma_msg_t *msg;
@@ -456,15 +492,15 @@ static void factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
         }
 
         if (subtype == PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_NAMES_REQUEST){
-            factorSendObjPredNamesResponse(g, comm);
+            factorSendObjPredNamesResponse(g, pddl, comm);
 
         }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_OBJ_PRED_MAP){
-            factorObjPredMapFromMsg(g, msg);
+            factorObjPredMapFromMsg(g, pddl, msg);
             factorSendObjPredMapAck(comm);
 
         }else if (subtype == PLAN_MA_MSG_PDDL_GROUND_FACTS){
             factorRecvGroundFacts(g, msg);
-            instActions(&g->lift_action, &g->fact_pool, &g->action_pool, g->pddl);
+            instActions(&g->lift_action, &g->fact_pool, &g->action_pool, pddl);
             factorSendGroundFacts(g, comm);
 
         }else{
@@ -478,21 +514,23 @@ static void factorSlave(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
     planMATerminateFree(&terminate);
 }
 
-int planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm)
+int planPDDLGroundFactor(plan_pddl_ground_t *g, const plan_pddl_t *pddl,
+                         plan_ma_comm_t *comm)
 {
-    planPDDLLiftActionsInit(&g->lift_action, &g->pddl->action,
-                            &g->pddl->type_obj, &g->pddl->init_func,
-                            g->pddl->obj.size, g->pddl->predicate.eq_pred);
-    planPDDLFactPoolAddFacts(&g->fact_pool, &g->pddl->init_fact);
-    instActionsNegativePreconditions(g->pddl, &g->lift_action, &g->fact_pool);
+    planPDDLGroundInit(g, pddl);
+    planPDDLLiftActionsInit(&g->lift_action, &pddl->action,
+                            &pddl->type_obj, &pddl->init_func,
+                            pddl->obj.size, pddl->predicate.eq_pred);
+    planPDDLFactPoolAddFacts(&g->fact_pool, &pddl->init_fact);
+    instActionsNegativePreconditions(pddl, &g->lift_action, &g->fact_pool);
 
     if (comm->node_id == 0){
-        factorMaster(g, comm);
+        factorMaster(g, pddl, comm);
     }else{
-        factorSlave(g, comm);
+        factorSlave(g, pddl, comm);
     }
 
-    markStaticFacts(&g->fact_pool, &g->pddl->init_fact);
+    markStaticFacts(&g->fact_pool, &pddl->init_fact);
     planPDDLGroundActionPoolInst(&g->action_pool, &g->fact_pool);
     removeStatAndNegFacts(&g->fact_pool, &g->action_pool);
     g->agent_size = comm->node_size;
@@ -509,7 +547,8 @@ static int printCmpActions(const void *a, const void *b, void *ud)
     return strcmp(a1->name, a2->name);
 }
 
-void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
+void planPDDLGroundPrint(const plan_pddl_ground_t *g,
+                         const plan_pddl_t *pddl, FILE *fout)
 {
     const plan_pddl_fact_t *fact;
     const plan_pddl_ground_action_t *action;
@@ -527,26 +566,26 @@ void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout)
     for (i = 0; i < g->fact_pool.size; ++i){
         fact = planPDDLFactPoolGet(&g->fact_pool, i);
         fprintf(fout, "    ");
-        planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
+        planPDDLFactPrint(&pddl->predicate, &pddl->obj, fact, fout);
         fprintf(fout, "\n");
     }
 
     fprintf(fout, "Actions[%d]:\n", g->action_pool.size);
     for (i = 0; i < g->action_pool.size; ++i){
         action = planPDDLGroundActionPoolGet(&g->action_pool, action_ids[i]);
-        planPDDLGroundActionPrint(action, &g->fact_pool, &g->pddl->predicate,
-                                  &g->pddl->obj, fout);
+        planPDDLGroundActionPrint(action, &g->fact_pool, &pddl->predicate,
+                                  &pddl->obj, fout);
     }
 
     fprintf(fout, "Agent size: %d\n", g->agent_size);
     for (i = 0; g->agent_to_obj != NULL && i < g->agent_size; ++i){
         fprintf(fout, "    [%d -> %d] (%s)\n",
                 i, g->agent_to_obj[i],
-                g->pddl->obj.obj[g->agent_to_obj[i]].name);
+                pddl->obj.obj[g->agent_to_obj[i]].name);
     }
     if (g->agent_size > 0 && g->obj_to_agent != NULL){
         fprintf(fout, "    obj-to-agent:");
-        for (i = 0; i < g->pddl->obj.size; ++i){
+        for (i = 0; i < pddl->obj.size; ++i){
             if (g->obj_to_agent[i] >= 0)
                 fprintf(fout, " (%d->%d)", i, g->obj_to_agent[i]);
         }
@@ -963,13 +1002,13 @@ static void setOpOwners(plan_pddl_ground_action_pool_t *action_pool, int *obj)
     }
 }
 
-static void determineAgents(plan_pddl_ground_t *g)
+static void determineAgents(plan_pddl_ground_t *g, const plan_pddl_t *pddl)
 {
     int i;
 
     // Initialize mapping from object to agent
-    g->obj_to_agent = BOR_ALLOC_ARR(int, g->pddl->obj.size);
-    for (i = 0; i < g->pddl->obj.size; ++i)
+    g->obj_to_agent = BOR_ALLOC_ARR(int, pddl->obj.size);
+    for (i = 0; i < pddl->obj.size; ++i)
         g->obj_to_agent[i] = -1;
 
     // Find out all owners of facts and actions
@@ -978,14 +1017,14 @@ static void determineAgents(plan_pddl_ground_t *g)
 
     // Determine number of owners and assign agent ID
     g->agent_size = 0;
-    for (i = 0; i < g->pddl->obj.size; ++i){
+    for (i = 0; i < pddl->obj.size; ++i){
         if (g->obj_to_agent[i] == 0)
             g->obj_to_agent[i] = g->agent_size++;
     }
 
     // Create mapping from agent ID to object ID
     g->agent_to_obj = BOR_ALLOC_ARR(int, g->agent_size);
-    for (i = 0; i < g->pddl->obj.size; ++i){
+    for (i = 0; i < pddl->obj.size; ++i){
         if (g->obj_to_agent[i] >= 0)
             g->agent_to_obj[g->obj_to_agent[i]] = i;
     }

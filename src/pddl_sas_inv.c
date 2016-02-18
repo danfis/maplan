@@ -67,10 +67,8 @@ void planPDDLSasInvFinderInit(plan_pddl_sas_inv_finder_t *invf,
     invf->inv_table = borHTableNew(invTableHash, invTableEq, NULL);
     invf->g = g;
 
-    storeFactIds(&invf->fact_init, (plan_pddl_fact_pool_t *)&g->fact_pool,
-                 &g->pddl->init_fact);
     processActions(invf, &g->action_pool);
-    planPDDLSasInvFactsAddConflicts(&invf->facts, &invf->fact_init);
+    planPDDLSasInvFactsAddConflicts(&invf->facts, &g->init);
 }
 
 void planPDDLSasInvFinderFree(plan_pddl_sas_inv_finder_t *invf)
@@ -79,8 +77,6 @@ void planPDDLSasInvFinderFree(plan_pddl_sas_inv_finder_t *invf)
     bor_list_t *item;
 
     planPDDLSasInvFactsFree(&invf->facts);
-    if (invf->fact_init.fact)
-        BOR_FREE(invf->fact_init.fact);
 
     if (invf->inv_table)
         borHTableDel(invf->inv_table);
@@ -141,8 +137,8 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
         rhs = 1.;
         sense = 'L';
         planLPAddRows(lp, 1, &rhs, &sense);
-        for (j = 0; j < invf->fact_init.size; ++j){
-            planLPSetCoef(lp, add, invf->fact_init.fact[j], 1.);
+        for (j = 0; j < invf->g->init.size; ++j){
+            planLPSetCoef(lp, add, invf->g->init.fact[j], 1.);
             /*
             int k;
             for (k = j + 1; k < invf->fact_init.size; ++k){
@@ -170,10 +166,10 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
                 plan_pddl_fact_t *f;
                 f = planPDDLFactPoolGet(&invf->g->fact_pool, i);
                 fprintf(stderr, " ");
+                /*
                 planPDDLFactPrint(&invf->g->pddl->predicate,
                                   &invf->g->pddl->obj,
                                   f, stderr);
-                /*
                 fprintf(stderr, "    ");
                 planPDDLFactPrint(&invf->g->pddl->predicate,
                                   &invf->g->pddl->obj,

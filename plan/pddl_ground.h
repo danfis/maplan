@@ -33,10 +33,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 struct _plan_pddl_ground_t {
-    const plan_pddl_t *pddl;
     plan_pddl_fact_pool_t fact_pool;
     plan_pddl_ground_action_pool_t action_pool;
     plan_pddl_lift_actions_t lift_action;
+    plan_pddl_ground_facts_t init; /*!< List of facts in initial state */
+    plan_pddl_ground_facts_t goal; /*!< List of facts in goal */
 
     int agent_size;    /*!< Number of agents defined in PDDL */
     int *agent_to_obj; /*!< Mapping between agent ID and the
@@ -52,26 +53,23 @@ struct _plan_pddl_ground_t {
 typedef struct _plan_pddl_ground_t plan_pddl_ground_t;
 
 /**
- * Initialize the main structure.
+ * Grounds pddl problem.
  */
-void planPDDLGroundInit(plan_pddl_ground_t *g, const plan_pddl_t *pddl);
+void planPDDLGround(plan_pddl_ground_t *g, const plan_pddl_t *pddl);
+
+/**
+ * Grounds factored pddl problems.
+ */
+int planPDDLGroundFactor(plan_pddl_ground_t *g, const plan_pddl_t *pddl,
+                         plan_ma_comm_t *comm);
 
 /**
  * Frees allocated resources.
  */
 void planPDDLGroundFree(plan_pddl_ground_t *g);
 
-/**
- * Grounds pddl problem.
- */
-void planPDDLGround(plan_pddl_ground_t *g);
-
-/**
- * Grounds factored pddl problems.
- */
-int planPDDLGroundFactor(plan_pddl_ground_t *g, plan_ma_comm_t *comm);
-
-void planPDDLGroundPrint(const plan_pddl_ground_t *g, FILE *fout);
+void planPDDLGroundPrint(const plan_pddl_ground_t *g,
+                         const plan_pddl_t *pddl, FILE *fout);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -69,7 +69,7 @@ static void *groundTh(void *arg)
     }else{
         comm = planMACommInprocNew(th->comm_pool, th->id);
     }
-    planPDDLGroundFactor(&th->ground, comm);
+    planPDDLGroundFactor(&th->ground, th->pddl, comm);
     planMACommDel(comm);
     return NULL;
 }
@@ -99,8 +99,6 @@ static void testGround(int size, ...)
         th[i].pddl = planPDDLNew(dom[i], prob[i]);
         if (th[i].pddl == NULL)
             return;
-
-        planPDDLGroundInit(&th[i].ground, th[i].pddl);
     }
     va_end(ap);
 
@@ -112,7 +110,7 @@ static void testGround(int size, ...)
 
     for (i = 0; i < size; ++i){
         printf("++++ %s | %s\n", dom[i], prob[i]);
-        planPDDLGroundPrint(&th[i].ground, stdout);
+        planPDDLGroundPrint(&th[i].ground, th[i].pddl, stdout);
         planPDDLGroundFree(&th[i].ground);
         planPDDLDel(th[i].pddl);
     }

@@ -4,16 +4,19 @@
 #include <plan/pddl_ground.h>
 #include <plan/pddl_sas.h>
 
-static void formatFactName(const plan_pddl_sas_t *sas, int fact_id, char *dst)
+static void formatFactName(const plan_pddl_sas_t *sas,
+                           const plan_pddl_ground_t *ground,
+                           const plan_pddl_t *pddl,
+                           int fact_id, char *dst)
 {
     const plan_pddl_fact_t *fact;
     const plan_pddl_predicate_t *pred;
     plan_pddl_fact_pool_t *fact_pool;
     int i, len;
 
-    fact_pool = (plan_pddl_fact_pool_t *)&sas->ground->fact_pool;
+    fact_pool = (plan_pddl_fact_pool_t *)&ground->fact_pool;
     fact = planPDDLFactPoolGet(fact_pool, fact_id);
-    pred = sas->ground->pddl->predicate.pred + fact->pred;
+    pred = pddl->predicate.pred + fact->pred;
 
     len = sprintf(dst, "%s(", pred->name);
     dst += len;
@@ -24,14 +27,15 @@ static void formatFactName(const plan_pddl_sas_t *sas, int fact_id, char *dst)
             dst += len;
         }
 
-        len = sprintf(dst, "%s", sas->ground->pddl->obj.obj[fact->arg[i]].name);
+        len = sprintf(dst, "%s", pddl->obj.obj[fact->arg[i]].name);
         dst += len;
     }
 
     sprintf(dst, ")");
 }
 
-static int createVar(plan_problem_t *p, const plan_pddl_sas_t *sas)
+static int createVar(plan_problem_t *p, const plan_pddl_sas_t *sas,
+                     const plan_pddl_ground_t *ground, const plan_pddl_t *pddl)
 {
     char name[1024];
     plan_var_t *var;
@@ -50,7 +54,7 @@ static int createVar(plan_problem_t *p, const plan_pddl_sas_t *sas)
             continue;
 
         var = p->var + sas->fact[i].var;
-        formatFactName(sas, i, name);
+        formatFactName(sas, ground, pddl, i, name);
         planVarSetValName(var, sas->fact[i].val, name);
     }
 
@@ -64,7 +68,8 @@ static int createVar(plan_problem_t *p, const plan_pddl_sas_t *sas)
     return 0;
 }
 
-static int createStatePool(plan_problem_t *p, const plan_pddl_sas_t *sas)
+static int createStatePool(plan_problem_t *p, const plan_pddl_sas_t *sas,
+                           const plan_pddl_ground_t *ground)
 {
     plan_state_t *state;
     int i, fact_id;
@@ -75,8 +80,8 @@ static int createStatePool(plan_problem_t *p, const plan_pddl_sas_t *sas)
     for (i = 0; i < p->var_size; ++i)
         planStateSet(state, i, p->var[i].range - 1);
 
-    for (i = 0; i < sas->init.size; ++i){
-        fact_id = sas->init.fact[i];
+    for (i = 0; i < ground->init.size; ++i){
+        fact_id = ground->init.fact[i];
         if (sas->fact[fact_id].var != PLAN_VAR_ID_UNDEFINED){
             planStateSet(state, sas->fact[fact_id].var,
                                 sas->fact[fact_id].val);
@@ -86,8 +91,8 @@ static int createStatePool(plan_problem_t *p, const plan_pddl_sas_t *sas)
     planStateDel(state);
 
     p->goal = planPartStateNew(p->var_size);
-    for (i = 0; i < sas->goal.size; ++i){
-        fact_id = sas->goal.fact[i];
+    for (i = 0; i < ground->goal.size; ++i){
+        fact_id = ground->goal.fact[i];
         if (sas->fact[fact_id].var == PLAN_VAR_ID_UNDEFINED){
             fprintf(stderr, "Problem Error: Invalid goal!\n");
             return -1;
@@ -229,7 +234,9 @@ static void opAddCondEff(plan_op_t *op, const plan_problem_t *p,
 }
 
 static int setOp(plan_op_t *op, const plan_problem_t *p,
-                 const plan_pddl_sas_t *sas, int metric,
+                 const plan_pddl_sas_t *sas,
+                 const plan_pddl_ground_t *ground,
+                 int metric,
                  const plan_pddl_ground_action_t *action)
 {
     int i;
@@ -260,8 +267,8 @@ static int setOp(plan_op_t *op, const plan_problem_t *p,
         opAddCondEff(op, p, sas, action->cond_eff.cond_eff + i);
 
     if (action->owner >= 0){
-        planOpAddOwner(op, sas->ground->obj_to_agent[action->owner]);
-        op->owner = sas->ground->obj_to_agent[action->owner];
+        planOpAddOwner(op, ground->obj_to_agent[action->owner]);
+        op->owner = ground->obj_to_agent[action->owner];
     }
 
     return 0;
@@ -269,6 +276,7 @@ static int setOp(plan_op_t *op, const plan_problem_t *p,
 
 static void addOp(plan_problem_t *p, int *alloc_size,
                   const plan_pddl_sas_t *sas,
+                  const plan_pddl_ground_t *ground,
                   int metric, const plan_pddl_ground_action_t *action)
 {
     plan_op_t *op;
@@ -279,7 +287,7 @@ static void addOp(plan_problem_t *p, int *alloc_size,
     }
 
     op = p->op + p->op_size;
-    if (setOp(op, p, sas, metric, action) == 0)
+    if (setOp(op, p, sas, ground, metric, action) == 0)
         ++p->op_size;
 }
 
@@ -303,6 +311,7 @@ static int preNegNumOps(const plan_pddl_sas_t *sas,
 }
 
 static void addOpPreNegWrite(plan_problem_t *p, const plan_pddl_sas_t *sas,
+                             const plan_pddl_ground_t *ground,
                              int metric, const plan_pddl_ground_action_t *action,
                              const plan_val_t *bound)
 {
@@ -310,7 +319,7 @@ static void addOpPreNegWrite(plan_problem_t *p, const plan_pddl_sas_t *sas,
     int i, fact_id, var, val;
 
     op = p->op + p->op_size;
-    if (setOp(op, p, sas, metric, action) != 0)
+    if (setOp(op, p, sas, ground, metric, action) != 0)
         return;
 
     ++p->op_size;
@@ -324,6 +333,7 @@ static void addOpPreNegWrite(plan_problem_t *p, const plan_pddl_sas_t *sas,
 }
 
 static void addOpPreNeg2(plan_problem_t *p, const plan_pddl_sas_t *sas,
+                         const plan_pddl_ground_t *ground,
                          int metric, const plan_pddl_ground_action_t *action,
                          plan_val_t *bound, int pre_i)
 {
@@ -332,7 +342,7 @@ static void addOpPreNeg2(plan_problem_t *p, const plan_pddl_sas_t *sas,
     plan_val_t val;
 
     if (pre_i >= action->pre_neg.size){
-        addOpPreNegWrite(p, sas, metric, action, bound);
+        addOpPreNegWrite(p, sas, ground, metric, action, bound);
         return;
     }
 
@@ -340,18 +350,19 @@ static void addOpPreNeg2(plan_problem_t *p, const plan_pddl_sas_t *sas,
     var = sas->fact[fact_id].var;
     val = sas->fact[fact_id].val;
     if (var == PLAN_VAR_ID_UNDEFINED)
-        addOpPreNeg2(p, sas, metric, action, bound, pre_i + 1);
+        addOpPreNeg2(p, sas, ground, metric, action, bound, pre_i + 1);
 
     for (i = 0; i < p->var[var].range; ++i){
         if (i == val)
             continue;
         bound[pre_i] = i;
-        addOpPreNeg2(p, sas, metric, action, bound, pre_i + 1);
+        addOpPreNeg2(p, sas, ground, metric, action, bound, pre_i + 1);
     }
 }
 
 static void addOpPreNeg(plan_problem_t *p, int *alloc_size,
                         const plan_pddl_sas_t *sas,
+                        const plan_pddl_ground_t *ground,
                         int metric, const plan_pddl_ground_action_t *action)
 {
     plan_val_t bound[action->pre_neg.size];
@@ -363,7 +374,7 @@ static void addOpPreNeg(plan_problem_t *p, int *alloc_size,
         p->op = BOR_REALLOC_ARR(p->op, plan_op_t, *alloc_size);
     }
 
-    addOpPreNeg2(p, sas, metric, action, bound, 0);
+    addOpPreNeg2(p, sas, ground, metric, action, bound, 0);
 }
 
 
@@ -565,22 +576,23 @@ static void setPrivateVarAndOp(plan_problem_t *p)
 }
 
 static int createOps(plan_problem_t *p, const plan_pddl_sas_t *sas,
-                     unsigned flags)
+                     const plan_pddl_ground_t *ground,
+                     const plan_pddl_t *pddl, unsigned flags)
 {
     const plan_pddl_ground_action_t *action;
     int i, metric, alloc_size;
 
-    metric = sas->ground->pddl->metric;
+    metric = pddl->metric;
 
-    alloc_size = sas->ground->action_pool.size;
+    alloc_size = ground->action_pool.size;
     p->op = BOR_ALLOC_ARR(plan_op_t, alloc_size);
     p->op_size = 0;
-    for (i = 0; i < sas->ground->action_pool.size; ++i){
-        action = planPDDLGroundActionPoolGet(&sas->ground->action_pool, i);
+    for (i = 0; i < ground->action_pool.size; ++i){
+        action = planPDDLGroundActionPoolGet(&ground->action_pool, i);
         if (action->pre_neg.size > 0){
-            addOpPreNeg(p, &alloc_size, sas, metric, action);
+            addOpPreNeg(p, &alloc_size, sas, ground, metric, action);
         }else{
-            addOp(p, &alloc_size, sas, metric, action);
+            addOp(p, &alloc_size, sas, ground, metric, action);
         }
     }
 
@@ -609,14 +621,15 @@ static int createSuccGen(plan_problem_t *p)
 }
 
 static int loadFromPDDL(plan_problem_t *p, const plan_pddl_sas_t *sas,
-                        unsigned flags)
+                        const plan_pddl_ground_t *ground,
+                        const plan_pddl_t *pddl, unsigned flags)
 {
     planProblemInit(p);
     p->ma_privacy_var = -1;
 
-    if (createVar(p, sas)
-            || createStatePool(p, sas) != 0
-            || createOps(p, sas, flags) != 0
+    if (createVar(p, sas, ground, pddl)
+            || createStatePool(p, sas, ground) != 0
+            || createOps(p, sas, ground, pddl, flags) != 0
             || createSuccGen(p) != 0){
         return -1;
     }
@@ -641,13 +654,11 @@ plan_problem_t *planProblemFromPDDL(const char *domain_pddl,
     if (pddl == NULL)
         return NULL;
 
-    planPDDLGroundInit(&ground, pddl);
-    planPDDLGround(&ground);
-    planPDDLSasInit(&sas, &ground);
-    planPDDLSas(&sas, sas_flags);
+    planPDDLGround(&ground, pddl);
+    planPDDLSas(&sas, &ground, sas_flags);
 
     p = BOR_ALLOC(plan_problem_t);
-    if (loadFromPDDL(p, &sas, flags) != 0){
+    if (loadFromPDDL(p, &sas, &ground, pddl, flags) != 0){
         planProblemDel(p);
         return NULL;
     }
@@ -752,11 +763,12 @@ static void createAgentProjOps(plan_problem_t *dst, const plan_problem_t *src)
 }
 
 static void initAgentProblem(plan_problem_t *p, int id,
-                             const plan_pddl_ground_t *ground)
+                             const plan_pddl_ground_t *ground,
+                             const plan_pddl_t *pddl)
 {
     const char *name;
 
-    name = ground->pddl->obj.obj[ground->agent_to_obj[id]].name;
+    name = pddl->obj.obj[ground->agent_to_obj[id]].name;
 
     bzero(p, sizeof(*p));
     planProblemInit(p);
@@ -811,15 +823,13 @@ plan_problem_agents_t *planProblemUnfactorFromPDDL(const char *domain_pddl,
     if (pddl == NULL)
         return NULL;
 
-    planPDDLGroundInit(&ground, pddl);
-    planPDDLGround(&ground);
-    planPDDLSasInit(&sas, &ground);
-    planPDDLSas(&sas, sas_flags);
+    planPDDLGround(&ground, pddl);
+    planPDDLSas(&sas, &ground, sas_flags);
 
     p = BOR_ALLOC(plan_problem_agents_t);
     bzero(p, sizeof(*p));
 
-    if (loadFromPDDL(&p->glob, &sas, flags) != 0){
+    if (loadFromPDDL(&p->glob, &sas, &ground, pddl, flags) != 0){
         planProblemAgentsDel(p);
         return NULL;
     }
@@ -827,7 +837,7 @@ plan_problem_agents_t *planProblemUnfactorFromPDDL(const char *domain_pddl,
     p->agent_size = ground.agent_size;
     p->agent = BOR_CALLOC_ARR(plan_problem_t, p->agent_size);
     for (i = 0; i < p->agent_size; ++i){
-        initAgentProblem(p->agent + i, i, &ground);
+        initAgentProblem(p->agent + i, i, &ground, pddl);
         createAgentProblem(p->agent + i, &p->glob, flags);
     }
 

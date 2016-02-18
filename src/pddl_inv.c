@@ -43,7 +43,7 @@ int planPDDLInvFind(const plan_pddl_ground_t *g, bor_list_t *inv)
     plan_lp_t *lp;
     const plan_pddl_ground_action_t *action;
     const plan_pddl_ground_facts_t *add, *del, *pre;
-    int i, row, j, k, fact_id, inv_size;
+    int i, row, j, k, inv_size;
     double z, *sol, one = 1.;
     char sense = 'G';
 
@@ -88,13 +88,8 @@ int planPDDLInvFind(const plan_pddl_ground_t *g, bor_list_t *inv)
     }
 
     // Add constraint for the initial state
-    for (i = 0; i < g->pddl->init_fact.size; ++i){
-        fact_id = planPDDLFactPoolFind((plan_pddl_fact_pool_t *)&g->fact_pool,
-                                       g->pddl->init_fact.fact + i);
-        if (fact_id >= 0){
-            planLPSetCoef(lp, row, fact_id, 1.);
-        }
-    }
+    for (i = 0; i < g->init.size; ++i)
+        planLPSetCoef(lp, row, g->init.fact[i], 1.);
     planLPSetRHS(lp, row, 1., 'E');
 
     // Find all invariants in cycle

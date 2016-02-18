@@ -42,7 +42,6 @@ typedef struct _plan_pddl_sas_inv_t plan_pddl_sas_inv_t;
 
 struct _plan_pddl_sas_inv_finder_t {
     plan_pddl_sas_inv_facts_t facts;
-    plan_pddl_ground_facts_t fact_init;
 
     bor_htable_t *inv_table;
     bor_list_t inv;

@@ -52,16 +52,14 @@ static void testGround(const char *domain_fn, const char *problem_fn)
     if (d == NULL)
         return;
 
-    planPDDLGroundInit(&ground, d);
-    planPDDLGround(&ground);
+    planPDDLGround(&ground, d);
 
-    planPDDLSasInit(&sas, &ground);
-    planPDDLSas(&sas, sas_flags);
-    planPDDLSasPrintInvariant(&sas, &ground, stdout);
-    planPDDLSasPrintFacts(&sas, &ground, stdout);
+    planPDDLSas(&sas, &ground, sas_flags);
+    planPDDLSasPrintInvariant(&sas, &ground, d, stdout);
+    planPDDLSasPrintFacts(&sas, &ground, d, stdout);
     planPDDLSasFree(&sas);
 
-    planPDDLGroundPrint(&ground, stdout);
+    planPDDLGroundPrint(&ground, d, stdout);
     planPDDLGroundFree(&ground);
     planPDDLDel(d);
     printf("---- Ground %s | %s END ----\n", domain_fn, problem_fn);

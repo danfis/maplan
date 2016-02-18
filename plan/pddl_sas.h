@@ -40,7 +40,6 @@ struct _plan_pddl_sas_fact_t {
 typedef struct _plan_pddl_sas_fact_t plan_pddl_sas_fact_t;
 
 struct _plan_pddl_sas_t {
-    const plan_pddl_ground_t *ground;
     plan_pddl_sas_inv_finder_t inv_finder;
 
     plan_pddl_sas_fact_t *fact; /*!< Array of fact related data */
@@ -50,21 +49,20 @@ struct _plan_pddl_sas_t {
     plan_var_id_t *var_order; /*!< Order of variables as suggested by
                                    causal-graph analysis. */
     int var_size;             /*!< Number of variables */
-
-    plan_pddl_ground_facts_t init; /*!< List of facts in initial state */
-    plan_pddl_ground_facts_t goal; /*!< List of facts in goal */
 };
 typedef struct _plan_pddl_sas_t plan_pddl_sas_t;
 
-void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g);
 void planPDDLSasFree(plan_pddl_sas_t *sas);
 
-void planPDDLSas(plan_pddl_sas_t *sas, unsigned flags);
+void planPDDLSas(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g,
+                 unsigned flags);
 void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
                                const plan_pddl_ground_t *g,
+                               const plan_pddl_t *pddl,
                                FILE *fout);
 void planPDDLSasPrintFacts(const plan_pddl_sas_t *sas,
                            const plan_pddl_ground_t *g,
+                           const plan_pddl_t *pddl,
                            FILE *fout);
 
 #ifdef __cplusplus

@@ -35,13 +35,13 @@ static void writeFactIds(plan_pddl_ground_facts_t *dst,
 /** Transforms invariants into sas variables */
 static void invariantToVar(plan_pddl_sas_t *sas);
 /** Applies simplifications received from causal graph */
-static void causalGraph(plan_pddl_sas_t *sas);
+static void causalGraph(plan_pddl_sas_t *sas,
+                        const plan_pddl_ground_t *ground);
 
 void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
 {
     int i;
 
-    sas->ground = g;
     planPDDLSasInvFinderInit(&sas->inv_finder, g);
 
     sas->fact_size = g->fact_pool.size;
@@ -54,10 +54,6 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
     sas->var_range = NULL;
     sas->var_order = NULL;
     sas->var_size = 0;
-    writeFactIds(&sas->goal, (plan_pddl_fact_pool_t *)&g->fact_pool,
-                 &g->pddl->goal);
-    writeFactIds(&sas->init, (plan_pddl_fact_pool_t *)&g->fact_pool,
-                 &g->pddl->init_fact);
 }
 
 void planPDDLSasFree(plan_pddl_sas_t *sas)
@@ -69,26 +65,25 @@ void planPDDLSasFree(plan_pddl_sas_t *sas)
         BOR_FREE(sas->var_range);
     if (sas->var_order != NULL)
         BOR_FREE(sas->var_order);
-    if (sas->goal.fact != NULL)
-        BOR_FREE(sas->goal.fact);
-    if (sas->init.fact != NULL)
-        BOR_FREE(sas->init.fact);
 
     planPDDLSasInvFinderFree(&sas->inv_finder);
 }
 
-void planPDDLSas(plan_pddl_sas_t *sas, unsigned flags)
+void planPDDLSas(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g,
+                 unsigned flags)
 {
+    planPDDLSasInit(sas, g);
     planPDDLSasInvFinder(&sas->inv_finder);
     invariantToVar(sas);
 
     if (flags & PLAN_PDDL_SAS_USE_CG){
-        causalGraph(sas);
+        causalGraph(sas, g);
     }
 }
 
 void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
                                const plan_pddl_ground_t *g,
+                               const plan_pddl_t *pddl,
                                FILE *fout)
 {
     const plan_pddl_fact_t *fact;
@@ -103,7 +98,7 @@ void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
         for (j = 0; j < inv->size; ++j){
             fact = planPDDLFactPoolGet(&g->fact_pool, inv->fact[j]);
             fprintf(fout, "    ");
-            planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
+            planPDDLFactPrint(&pddl->predicate, &pddl->obj, fact, fout);
             fprintf(fout, " var: %d, val: %d/%d",
                     sas->fact[inv->fact[j]].var,
                     sas->fact[inv->fact[j]].val,
@@ -117,6 +112,7 @@ void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
 
 void planPDDLSasPrintInvariantFD(const plan_pddl_sas_t *sas,
                                  const plan_pddl_ground_t *g,
+                                 const plan_pddl_t *pddl,
                                  FILE *fout)
 {
     const plan_pddl_fact_t *fact;
@@ -133,12 +129,12 @@ void planPDDLSasPrintInvariantFD(const plan_pddl_sas_t *sas,
             if (j > 0)
                 fprintf(fout, ";");
             fprintf(fout, "Atom ");
-            fprintf(fout, "%s(", g->pddl->predicate.pred[fact->pred].name);
+            fprintf(fout, "%s(", pddl->predicate.pred[fact->pred].name);
 
             for (k = 0; k < fact->arg_size; ++k){
                 if (k > 0)
                     fprintf(fout, ", ");
-                fprintf(fout, "%s", g->pddl->obj.obj[fact->arg[k]].name);
+                fprintf(fout, "%s", pddl->obj.obj[fact->arg[k]].name);
             }
             fprintf(fout, ")");
         }
@@ -150,6 +146,7 @@ void planPDDLSasPrintInvariantFD(const plan_pddl_sas_t *sas,
 
 void planPDDLSasPrintFacts(const plan_pddl_sas_t *sas,
                            const plan_pddl_ground_t *g,
+                           const plan_pddl_t *pddl,
                            FILE *fout)
 {
     const plan_pddl_fact_t *fact;
@@ -162,7 +159,7 @@ void planPDDLSasPrintFacts(const plan_pddl_sas_t *sas,
         fact = planPDDLFactPoolGet(&g->fact_pool, i);
         fprintf(fout, "    [%d] ", i);
         //fprintf(fout, "    ");
-        planPDDLFactPrint(&g->pddl->predicate, &g->pddl->obj, fact, fout);
+        planPDDLFactPrint(&pddl->predicate, &pddl->obj, fact, fout);
         if (f->var != PLAN_VAR_ID_UNDEFINED){
             fprintf(fout, " var: %d, val: %d/%d", (int)f->var, (int)f->val,
                     (int)sas->var_range[f->var]);
@@ -421,7 +418,8 @@ static void causalGraphBuildAddAction(const plan_pddl_sas_t *sas,
     }
 }
 
-static plan_causal_graph_t *causalGraphBuild(const plan_pddl_sas_t *sas)
+static plan_causal_graph_t *causalGraphBuild(const plan_pddl_sas_t *sas,
+                                             const plan_pddl_ground_t *ground)
 {
     plan_causal_graph_t *cg;
     plan_causal_graph_build_t cg_build;
@@ -430,8 +428,8 @@ static plan_causal_graph_t *causalGraphBuild(const plan_pddl_sas_t *sas)
     int i;
 
     planCausalGraphBuildInit(&cg_build);
-    for (i = 0; i < sas->ground->action_pool.size; ++i){
-        action = planPDDLGroundActionPoolGet(&sas->ground->action_pool, i);
+    for (i = 0; i < ground->action_pool.size; ++i){
+        action = planPDDLGroundActionPoolGet(&ground->action_pool, i);
         causalGraphBuildAddAction(sas, action, &cg_build);
     }
 
@@ -440,9 +438,9 @@ static plan_causal_graph_t *causalGraphBuild(const plan_pddl_sas_t *sas)
     planCausalGraphBuildFree(&cg_build);
 
     goal = planPartStateNew(sas->var_size);
-    for (i = 0; i < sas->goal.size; ++i){
-        planPartStateSet(goal, sas->fact[sas->goal.fact[i]].var,
-                               sas->fact[sas->goal.fact[i]].val);
+    for (i = 0; i < ground->goal.size; ++i){
+        planPartStateSet(goal, sas->fact[ground->goal.fact[i]].var,
+                               sas->fact[ground->goal.fact[i]].val);
     }
     planCausalGraph(cg, goal);
     planPartStateDel(goal);
@@ -450,14 +448,15 @@ static plan_causal_graph_t *causalGraphBuild(const plan_pddl_sas_t *sas)
     return cg;
 }
 
-static void causalGraph(plan_pddl_sas_t *sas)
+static void causalGraph(plan_pddl_sas_t *sas,
+                        const plan_pddl_ground_t *ground)
 {
     plan_causal_graph_t *cg;
     plan_var_id_t *var_map;
     int i, var_size;
     plan_val_t *var_range;
 
-    cg = causalGraphBuild(sas);
+    cg = causalGraphBuild(sas, ground);
 
     // Create mapping from old var ID to the new ID
     var_map = (plan_var_id_t *)alloca(sizeof(plan_var_id_t) * sas->var_size);

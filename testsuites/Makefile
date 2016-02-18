@@ -16,7 +16,7 @@ LDFLAGS += $(PROTOBUF_LDFLAGS)
 LDFLAGS += -lstdc++
 LDFLAGS += $(LP_LDFLAGS)
 
-CHECK_REG=cu/check-regressions
+CHECK_REG=cu/cu-check-regressions
 CHECK_TS ?=
 
 TARGETS = test optimal-cost msg-schema-gen msg-schema-load

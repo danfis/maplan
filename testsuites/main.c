@@ -61,6 +61,7 @@ TEST_SUITES {
 int main(int argc, char *argv[])
 {
     CU_SET_OUT_PREFIX("regressions/");
+    CU_SET_OUT_PER_TEST(1);
     CU_RUN(argc, argv);
 
     planShutdownProtobuf();

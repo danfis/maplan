@@ -55,6 +55,7 @@ OBJS += msg_schema.o
 OBJS += lisp_file.o
 OBJS += pddl.o
 OBJS += pddl_factor.o
+OBJS += pddl_inv.o
 
 all: $(TARGETS)
 

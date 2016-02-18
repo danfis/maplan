@@ -156,8 +156,10 @@ void planPDDLSasInvFinder(plan_pddl_sas_inv_finder_t *invf)
         ++add;
 
         double sol[invf->facts.fact_size];
+        double z;
         while (1){
-        double z = planLPSolve(lp, sol);
+        if (planLPSolve(lp, &z, sol) != 0)
+            break;
         if (z < 1.1)
             break;
 

@@ -847,7 +847,10 @@ static void lpProgCompute(const lp_prog_t *prog, plan_heur_ma_pot_t *h)
         planLPSetObj(lp, i, prog->obj[i]);
 
     h->pot.pot = BOR_CALLOC_ARR(double, prog->cols);
-    planLPSolve(lp, h->pot.pot);
+    if (planLPSolve(lp, NULL, h->pot.pot) != 0){
+        fprintf(stderr, "Error: LP has no solution!\n");
+        exit(-1);
+    }
     planLPDel(lp);
 }
 

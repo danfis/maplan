@@ -1,0 +1,990 @@
+---- Invariants pddl/depot-domain.pddl | pddl/depot-pfile1.pddl ----
+Inv 0:
+    at: crate0 depot0
+    at: crate0 distributor0
+    at: crate0 distributor1
+    in: crate0 truck0
+    in: crate0 truck1
+    lifting: hoist0 crate0
+    lifting: hoist1 crate0
+    lifting: hoist2 crate0
+Inv 1:
+    at: crate1 depot0
+    at: crate1 distributor0
+    at: crate1 distributor1
+    in: crate1 truck0
+    in: crate1 truck1
+    lifting: hoist0 crate1
+    lifting: hoist1 crate1
+    lifting: hoist2 crate1
+Inv 2:
+    at: truck0 depot0
+    at: truck0 distributor0
+    at: truck0 distributor1
+Inv 3:
+    at: truck1 depot0
+    at: truck1 distributor0
+    at: truck1 distributor1
+Inv 4:
+    available: hoist0
+    lifting: hoist0 crate0
+    lifting: hoist0 crate1
+Inv 5:
+    available: hoist1
+    lifting: hoist1 crate0
+    lifting: hoist1 crate1
+Inv 6:
+    available: hoist2
+    lifting: hoist2 crate0
+    lifting: hoist2 crate1
+Inv 7:
+    clear: crate0
+    in: crate0 truck0
+    in: crate0 truck1
+    lifting: hoist0 crate0
+    lifting: hoist1 crate0
+    lifting: hoist2 crate0
+    on: crate1 crate0
+Inv 8:
+    clear: crate1
+    in: crate1 truck0
+    in: crate1 truck1
+    lifting: hoist0 crate1
+    lifting: hoist1 crate1
+    lifting: hoist2 crate1
+    on: crate0 crate1
+Inv 9:
+    clear: pallet0
+    on: crate0 pallet0
+    on: crate1 pallet0
+Inv 10:
+    clear: pallet1
+    on: crate0 pallet1
+    on: crate1 pallet1
+Inv 11:
+    clear: pallet2
+    on: crate0 pallet2
+    on: crate1 pallet2
+Inv 12:
+    in: crate0 truck0
+    in: crate0 truck1
+    lifting: hoist0 crate0
+    lifting: hoist1 crate0
+    lifting: hoist2 crate0
+    on: crate0 crate1
+    on: crate0 pallet0
+    on: crate0 pallet1
+    on: crate0 pallet2
+Inv 13:
+    in: crate1 truck0
+    in: crate1 truck1
+    lifting: hoist0 crate1
+    lifting: hoist1 crate1
+    lifting: hoist2 crate1
+    on: crate1 crate0
+    on: crate1 pallet0
+    on: crate1 pallet1
+    on: crate1 pallet2
+---- Invariants pddl/depot-domain.pddl | pddl/depot-pfile1.pddl END ----
+---- Invariants pddl/depot-domain.pddl | pddl/depot-pfile2.pddl ----
+Inv 0:
+    at: crate0 depot0
+    at: crate0 distributor0
+    at: crate0 distributor1
+    in: crate0 truck0
+    in: crate0 truck1
+    lifting: hoist0 crate0
+    lifting: hoist1 crate0
+    lifting: hoist2 crate0
+Inv 1:
+    at: crate1 depot0
+    at: crate1 distributor0
+    at: crate1 distributor1
+    in: crate1 truck0
+    in: crate1 truck1
+    lifting: hoist0 crate1
+    lifting: hoist1 crate1
+    lifting: hoist2 crate1
+Inv 2:
+    at: crate2 depot0
+    at: crate2 distributor0
+    at: crate2 distributor1
+    in: crate2 truck0
+    in: crate2 truck1
+    lifting: hoist0 crate2
+    lifting: hoist1 crate2
+    lifting: hoist2 crate2
+Inv 3:
+    at: crate3 depot0
+    at: crate3 distributor0
+    at: crate3 distributor1
+    in: crate3 truck0
+    in: crate3 truck1
+    lifting: hoist0 crate3
+    lifting: hoist1 crate3
+    lifting: hoist2 crate3
+Inv 4:
+    at: truck0 depot0
+    at: truck0 distributor0
+    at: truck0 distributor1
+Inv 5:
+    at: truck1 depot0
+    at: truck1 distributor0
+    at: truck1 distributor1
+Inv 6:
+    available: hoist0
+    lifting: hoist0 crate0
+    lifting: hoist0 crate1
+    lifting: hoist0 crate2
+    lifting: hoist0 crate3
+Inv 7:
+    available: hoist1
+    lifting: hoist1 crate0
+    lifting: hoist1 crate1
+    lifting: hoist1 crate2
+    lifting: hoist1 crate3
+Inv 8:
+    available: hoist2
+    lifting: hoist2 crate0
+    lifting: hoist2 crate1
+    lifting: hoist2 crate2
+    lifting: hoist2 crate3
+Inv 9:
+    clear: crate0
+    in: crate0 truck0
+    in: crate0 truck1
+    lifting: hoist0 crate0
+    lifting: hoist1 crate0
+    lifting: hoist2 crate0
+    on: crate1 crate0
+    on: crate2 crate0
+    on: crate3 crate0
+Inv 10:
+    clear: crate1
+    in: crate1 truck0
+    in: crate1 truck1
+    lifting: hoist0 crate1
+    lifting: hoist1 crate1
+    lifting: hoist2 crate1
+    on: crate0 crate1
+    on: crate2 crate1
+    on: crate3 crate1
+Inv 11:
+    clear: crate2
+    in: crate2 truck0
+    in: crate2 truck1
+    lifting: hoist0 crate2
+    lifting: hoist1 crate2
+    lifting: hoist2 crate2
+    on: crate0 crate2
+    on: crate1 crate2
+    on: crate3 crate2
+Inv 12:
+    clear: crate3
+    in: crate3 truck0
+    in: crate3 truck1
+    lifting: hoist0 crate3
+    lifting: hoist1 crate3
+    lifting: hoist2 crate3
+    on: crate0 crate3
+    on: crate1 crate3
+    on: crate2 crate3
+Inv 13:
+    clear: pallet0
+    on: crate0 pallet0
+    on: crate1 pallet0
+    on: crate2 pallet0
+    on: crate3 pallet0
+Inv 14:
+    clear: pallet1
+    on: crate0 pallet1
+    on: crate1 pallet1
+    on: crate2 pallet1
+    on: crate3 pallet1
+Inv 15:
+    clear: pallet2
+    on: crate0 pallet2
+    on: crate1 pallet2
+    on: crate2 pallet2
+    on: crate3 pallet2
+Inv 16:
+    in: crate0 truck0
+    in: crate0 truck1
+    lifting: hoist0 crate0
+    lifting: hoist1 crate0
+    lifting: hoist2 crate0
+    on: crate0 crate1
+    on: crate0 crate2
+    on: crate0 crate3
+    on: crate0 pallet0
+    on: crate0 pallet1
+    on: crate0 pallet2
+Inv 17:
+    in: crate1 truck0
+    in: crate1 truck1
+    lifting: hoist0 crate1
+    lifting: hoist1 crate1
+    lifting: hoist2 crate1
+    on: crate1 crate0
+    on: crate1 crate2
+    on: crate1 crate3
+    on: crate1 pallet0
+    on: crate1 pallet1
+    on: crate1 pallet2
+Inv 18:
+    in: crate2 truck0
+    in: crate2 truck1
+    lifting: hoist0 crate2
+    lifting: hoist1 crate2
+    lifting: hoist2 crate2
+    on: crate2 crate0
+    on: crate2 crate1
+    on: crate2 crate3
+    on: crate2 pallet0
+    on: crate2 pallet1
+    on: crate2 pallet2
+Inv 19:
+    in: crate3 truck0
+    in: crate3 truck1
+    lifting: hoist0 crate3
+    lifting: hoist1 crate3
+    lifting: hoist2 crate3
+    on: crate3 crate0
+    on: crate3 crate1
+    on: crate3 crate2
+    on: crate3 pallet0
+    on: crate3 pallet1
+    on: crate3 pallet2
+---- Invariants pddl/depot-domain.pddl | pddl/depot-pfile2.pddl END ----
+---- Invariants pddl/depot-domain.pddl | pddl/depot-pfile5.pddl ----
+Inv 0:
+    at: crate0 depot0
+    at: crate0 distributor0
+    at: crate0 distributor1
+    in: crate0 truck0
+    in: crate0 truck1
+    lifting: hoist0 crate0
+    lifting: hoist1 crate0
+    lifting: hoist2 crate0
+Inv 1:
+    at: crate1 depot0
+    at: crate1 distributor0
+    at: crate1 distributor1
+    in: crate1 truck0
+    in: crate1 truck1
+    lifting: hoist0 crate1
+    lifting: hoist1 crate1
+    lifting: hoist2 crate1
+Inv 2:
+    at: crate2 depot0
+    at: crate2 distributor0
+    at: crate2 distributor1
+    in: crate2 truck0
+    in: crate2 truck1
+    lifting: hoist0 crate2
+    lifting: hoist1 crate2
+    lifting: hoist2 crate2
+Inv 3:
+    at: crate3 depot0
+    at: crate3 distributor0
+    at: crate3 distributor1
+    in: crate3 truck0
+    in: crate3 truck1
+    lifting: hoist0 crate3
+    lifting: hoist1 crate3
+    lifting: hoist2 crate3
+Inv 4:
+    at: crate4 depot0
+    at: crate4 distributor0
+    at: crate4 distributor1
+    in: crate4 truck0
+    in: crate4 truck1
+    lifting: hoist0 crate4
+    lifting: hoist1 crate4
+    lifting: hoist2 crate4
+Inv 5:
+    at: crate5 depot0
+    at: crate5 distributor0
+    at: crate5 distributor1
+    in: crate5 truck0
+    in: crate5 truck1
+    lifting: hoist0 crate5
+    lifting: hoist1 crate5
+    lifting: hoist2 crate5
+Inv 6:
+    at: crate6 depot0
+    at: crate6 distributor0
+    at: crate6 distributor1
+    in: crate6 truck0
+    in: crate6 truck1
+    lifting: hoist0 crate6
+    lifting: hoist1 crate6
+    lifting: hoist2 crate6
+Inv 7:
+    at: crate7 depot0
+    at: crate7 distributor0
+    at: crate7 distributor1
+    in: crate7 truck0
+    in: crate7 truck1
+    lifting: hoist0 crate7
+    lifting: hoist1 crate7
+    lifting: hoist2 crate7
+Inv 8:
+    at: crate8 depot0
+    at: crate8 distributor0
+    at: crate8 distributor1
+    in: crate8 truck0
+    in: crate8 truck1
+    lifting: hoist0 crate8
+    lifting: hoist1 crate8
+    lifting: hoist2 crate8
+Inv 9:
+    at: crate9 depot0
+    at: crate9 distributor0
+    at: crate9 distributor1
+    in: crate9 truck0
+    in: crate9 truck1
+    lifting: hoist0 crate9
+    lifting: hoist1 crate9
+    lifting: hoist2 crate9
+Inv 10:
+    at: truck0 depot0
+    at: truck0 distributor0
+    at: truck0 distributor1
+Inv 11:
+    at: truck1 depot0
+    at: truck1 distributor0
+    at: truck1 distributor1
+Inv 12:
+    available: hoist0
+    lifting: hoist0 crate0
+    lifting: hoist0 crate1
+    lifting: hoist0 crate2
+    lifting: hoist0 crate3
+    lifting: hoist0 crate4
+    lifting: hoist0 crate5
+    lifting: hoist0 crate6
+    lifting: hoist0 crate7
+    lifting: hoist0 crate8
+    lifting: hoist0 crate9
+Inv 13:
+    available: hoist1
+    lifting: hoist1 crate0
+    lifting: hoist1 crate1
+    lifting: hoist1 crate2
+    lifting: hoist1 crate3
+    lifting: hoist1 crate4
+    lifting: hoist1 crate5
+    lifting: hoist1 crate6
+    lifting: hoist1 crate7
+    lifting: hoist1 crate8
+    lifting: hoist1 crate9
+Inv 14:
+    available: hoist2
+    lifting: hoist2 crate0
+    lifting: hoist2 crate1
+    lifting: hoist2 crate2
+    lifting: hoist2 crate3
+    lifting: hoist2 crate4
+    lifting: hoist2 crate5
+    lifting: hoist2 crate6
+    lifting: hoist2 crate7
+    lifting: hoist2 crate8
+    lifting: hoist2 crate9
+Inv 15:
+    clear: crate0
+    in: crate0 truck0
+    in: crate0 truck1
+    lifting: hoist0 crate0
+    lifting: hoist1 crate0
+    lifting: hoist2 crate0
+    on: crate1 crate0
+    on: crate2 crate0
+    on: crate3 crate0
+    on: crate4 crate0
+    on: crate5 crate0
+    on: crate6 crate0
+    on: crate7 crate0
+    on: crate8 crate0
+    on: crate9 crate0
+Inv 16:
+    clear: crate1
+    in: crate1 truck0
+    in: crate1 truck1
+    lifting: hoist0 crate1
+    lifting: hoist1 crate1
+    lifting: hoist2 crate1
+    on: crate0 crate1
+    on: crate2 crate1
+    on: crate3 crate1
+    on: crate4 crate1
+    on: crate5 crate1
+    on: crate6 crate1
+    on: crate7 crate1
+    on: crate8 crate1
+    on: crate9 crate1
+Inv 17:
+    clear: crate2
+    in: crate2 truck0
+    in: crate2 truck1
+    lifting: hoist0 crate2
+    lifting: hoist1 crate2
+    lifting: hoist2 crate2
+    on: crate0 crate2
+    on: crate1 crate2
+    on: crate3 crate2
+    on: crate4 crate2
+    on: crate5 crate2
+    on: crate6 crate2
+    on: crate7 crate2
+    on: crate8 crate2
+    on: crate9 crate2
+Inv 18:
+    clear: crate3
+    in: crate3 truck0
+    in: crate3 truck1
+    lifting: hoist0 crate3
+    lifting: hoist1 crate3
+    lifting: hoist2 crate3
+    on: crate0 crate3
+    on: crate1 crate3
+    on: crate2 crate3
+    on: crate4 crate3
+    on: crate5 crate3
+    on: crate6 crate3
+    on: crate7 crate3
+    on: crate8 crate3
+    on: crate9 crate3
+Inv 19:
+    clear: crate4
+    in: crate4 truck0
+    in: crate4 truck1
+    lifting: hoist0 crate4
+    lifting: hoist1 crate4
+    lifting: hoist2 crate4
+    on: crate0 crate4
+    on: crate1 crate4
+    on: crate2 crate4
+    on: crate3 crate4
+    on: crate5 crate4
+    on: crate6 crate4
+    on: crate7 crate4
+    on: crate8 crate4
+    on: crate9 crate4
+Inv 20:
+    clear: crate5
+    in: crate5 truck0
+    in: crate5 truck1
+    lifting: hoist0 crate5
+    lifting: hoist1 crate5
+    lifting: hoist2 crate5
+    on: crate0 crate5
+    on: crate1 crate5
+    on: crate2 crate5
+    on: crate3 crate5
+    on: crate4 crate5
+    on: crate6 crate5
+    on: crate7 crate5
+    on: crate8 crate5
+    on: crate9 crate5
+Inv 21:
+    clear: crate6
+    in: crate6 truck0
+    in: crate6 truck1
+    lifting: hoist0 crate6
+    lifting: hoist1 crate6
+    lifting: hoist2 crate6
+    on: crate0 crate6
+    on: crate1 crate6
+    on: crate2 crate6
+    on: crate3 crate6
+    on: crate4 crate6
+    on: crate5 crate6
+    on: crate7 crate6
+    on: crate8 crate6
+    on: crate9 crate6
+Inv 22:
+    clear: crate7
+    in: crate7 truck0
+    in: crate7 truck1
+    lifting: hoist0 crate7
+    lifting: hoist1 crate7
+    lifting: hoist2 crate7
+    on: crate0 crate7
+    on: crate1 crate7
+    on: crate2 crate7
+    on: crate3 crate7
+    on: crate4 crate7
+    on: crate5 crate7
+    on: crate6 crate7
+    on: crate8 crate7
+    on: crate9 crate7
+Inv 23:
+    clear: crate8
+    in: crate8 truck0
+    in: crate8 truck1
+    lifting: hoist0 crate8
+    lifting: hoist1 crate8
+    lifting: hoist2 crate8
+    on: crate0 crate8
+    on: crate1 crate8
+    on: crate2 crate8
+    on: crate3 crate8
+    on: crate4 crate8
+    on: crate5 crate8
+    on: crate6 crate8
+    on: crate7 crate8
+    on: crate9 crate8
+Inv 24:
+    clear: crate9
+    in: crate9 truck0
+    in: crate9 truck1
+    lifting: hoist0 crate9
+    lifting: hoist1 crate9
+    lifting: hoist2 crate9
+    on: crate0 crate9
+    on: crate1 crate9
+    on: crate2 crate9
+    on: crate3 crate9
+    on: crate4 crate9
+    on: crate5 crate9
+    on: crate6 crate9
+    on: crate7 crate9
+    on: crate8 crate9
+Inv 25:
+    clear: pallet0
+    on: crate0 pallet0
+    on: crate1 pallet0
+    on: crate2 pallet0
+    on: crate3 pallet0
+    on: crate4 pallet0
+    on: crate5 pallet0
+    on: crate6 pallet0
+    on: crate7 pallet0
+    on: crate8 pallet0
+    on: crate9 pallet0
+Inv 26:
+    clear: pallet1
+    on: crate0 pallet1
+    on: crate1 pallet1
+    on: crate2 pallet1
+    on: crate3 pallet1
+    on: crate4 pallet1
+    on: crate5 pallet1
+    on: crate6 pallet1
+    on: crate7 pallet1
+    on: crate8 pallet1
+    on: crate9 pallet1
+Inv 27:
+    clear: pallet2
+    on: crate0 pallet2
+    on: crate1 pallet2
+    on: crate2 pallet2
+    on: crate3 pallet2
+    on: crate4 pallet2
+    on: crate5 pallet2
+    on: crate6 pallet2
+    on: crate7 pallet2
+    on: crate8 pallet2
+    on: crate9 pallet2
+Inv 28:
+    in: crate0 truck0
+    in: crate0 truck1
+    lifting: hoist0 crate0
+    lifting: hoist1 crate0
+    lifting: hoist2 crate0
+    on: crate0 crate1
+    on: crate0 crate2
+    on: crate0 crate3
+    on: crate0 crate4
+    on: crate0 crate5
+    on: crate0 crate6
+    on: crate0 crate7
+    on: crate0 crate8
+    on: crate0 crate9
+    on: crate0 pallet0
+    on: crate0 pallet1
+    on: crate0 pallet2
+Inv 29:
+    in: crate1 truck0
+    in: crate1 truck1
+    lifting: hoist0 crate1
+    lifting: hoist1 crate1
+    lifting: hoist2 crate1
+    on: crate1 crate0
+    on: crate1 crate2
+    on: crate1 crate3
+    on: crate1 crate4
+    on: crate1 crate5
+    on: crate1 crate6
+    on: crate1 crate7
+    on: crate1 crate8
+    on: crate1 crate9
+    on: crate1 pallet0
+    on: crate1 pallet1
+    on: crate1 pallet2
+Inv 30:
+    in: crate2 truck0
+    in: crate2 truck1
+    lifting: hoist0 crate2
+    lifting: hoist1 crate2
+    lifting: hoist2 crate2
+    on: crate2 crate0
+    on: crate2 crate1
+    on: crate2 crate3
+    on: crate2 crate4
+    on: crate2 crate5
+    on: crate2 crate6
+    on: crate2 crate7
+    on: crate2 crate8
+    on: crate2 crate9
+    on: crate2 pallet0
+    on: crate2 pallet1
+    on: crate2 pallet2
+Inv 31:
+    in: crate3 truck0
+    in: crate3 truck1
+    lifting: hoist0 crate3
+    lifting: hoist1 crate3
+    lifting: hoist2 crate3
+    on: crate3 crate0
+    on: crate3 crate1
+    on: crate3 crate2
+    on: crate3 crate4
+    on: crate3 crate5
+    on: crate3 crate6
+    on: crate3 crate7
+    on: crate3 crate8
+    on: crate3 crate9
+    on: crate3 pallet0
+    on: crate3 pallet1
+    on: crate3 pallet2
+Inv 32:
+    in: crate4 truck0
+    in: crate4 truck1
+    lifting: hoist0 crate4
+    lifting: hoist1 crate4
+    lifting: hoist2 crate4
+    on: crate4 crate0
+    on: crate4 crate1
+    on: crate4 crate2
+    on: crate4 crate3
+    on: crate4 crate5
+    on: crate4 crate6
+    on: crate4 crate7
+    on: crate4 crate8
+    on: crate4 crate9
+    on: crate4 pallet0
+    on: crate4 pallet1
+    on: crate4 pallet2
+Inv 33:
+    in: crate5 truck0
+    in: crate5 truck1
+    lifting: hoist0 crate5
+    lifting: hoist1 crate5
+    lifting: hoist2 crate5
+    on: crate5 crate0
+    on: crate5 crate1
+    on: crate5 crate2
+    on: crate5 crate3
+    on: crate5 crate4
+    on: crate5 crate6
+    on: crate5 crate7
+    on: crate5 crate8
+    on: crate5 crate9
+    on: crate5 pallet0
+    on: crate5 pallet1
+    on: crate5 pallet2
+Inv 34:
+    in: crate6 truck0
+    in: crate6 truck1
+    lifting: hoist0 crate6
+    lifting: hoist1 crate6
+    lifting: hoist2 crate6
+    on: crate6 crate0
+    on: crate6 crate1
+    on: crate6 crate2
+    on: crate6 crate3
+    on: crate6 crate4
+    on: crate6 crate5
+    on: crate6 crate7
+    on: crate6 crate8
+    on: crate6 crate9
+    on: crate6 pallet0
+    on: crate6 pallet1
+    on: crate6 pallet2
+Inv 35:
+    in: crate7 truck0
+    in: crate7 truck1
+    lifting: hoist0 crate7
+    lifting: hoist1 crate7
+    lifting: hoist2 crate7
+    on: crate7 crate0
+    on: crate7 crate1
+    on: crate7 crate2
+    on: crate7 crate3
+    on: crate7 crate4
+    on: crate7 crate5
+    on: crate7 crate6
+    on: crate7 crate8
+    on: crate7 crate9
+    on: crate7 pallet0
+    on: crate7 pallet1
+    on: crate7 pallet2
+Inv 36:
+    in: crate8 truck0
+    in: crate8 truck1
+    lifting: hoist0 crate8
+    lifting: hoist1 crate8
+    lifting: hoist2 crate8
+    on: crate8 crate0
+    on: crate8 crate1
+    on: crate8 crate2
+    on: crate8 crate3
+    on: crate8 crate4
+    on: crate8 crate5
+    on: crate8 crate6
+    on: crate8 crate7
+    on: crate8 crate9
+    on: crate8 pallet0
+    on: crate8 pallet1
+    on: crate8 pallet2
+Inv 37:
+    in: crate9 truck0
+    in: crate9 truck1
+    lifting: hoist0 crate9
+    lifting: hoist1 crate9
+    lifting: hoist2 crate9
+    on: crate9 crate0
+    on: crate9 crate1
+    on: crate9 crate2
+    on: crate9 crate3
+    on: crate9 crate4
+    on: crate9 crate5
+    on: crate9 crate6
+    on: crate9 crate7
+    on: crate9 crate8
+    on: crate9 pallet0
+    on: crate9 pallet1
+    on: crate9 pallet2
+---- Invariants pddl/depot-domain.pddl | pddl/depot-pfile5.pddl END ----
+---- Invariants pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl ----
+Inv 0:
+    at: driver1 p1-0
+    at: driver1 p1-2
+    at: driver1 s0
+    at: driver1 s1
+    at: driver1 s2
+    driving: driver1 truck1
+    driving: driver1 truck2
+Inv 1:
+    at: driver2 p1-0
+    at: driver2 p1-2
+    at: driver2 s0
+    at: driver2 s1
+    at: driver2 s2
+    driving: driver2 truck1
+    driving: driver2 truck2
+Inv 2:
+    at: package1 s0
+    at: package1 s1
+    at: package1 s2
+    in: package1 truck1
+    in: package1 truck2
+Inv 3:
+    at: package2 s0
+    at: package2 s1
+    at: package2 s2
+    in: package2 truck1
+    in: package2 truck2
+Inv 4:
+    at: truck1 s0
+    at: truck1 s1
+    at: truck1 s2
+Inv 5:
+    at: truck2 s0
+    at: truck2 s1
+    at: truck2 s2
+Inv 6:
+    driving: driver1 truck1
+    driving: driver2 truck1
+    empty: truck1
+Inv 7:
+    driving: driver1 truck2
+    driving: driver2 truck2
+    empty: truck2
+---- Invariants pddl/driverlog-domain.pddl | pddl/driverlog-pfile1.pddl END ----
+---- Invariants pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl ----
+Inv 0:
+    made: p1
+    not-made: p1
+Inv 1:
+    made: p2
+    not-made: p2
+Inv 2:
+    made: p3
+    not-made: p3
+Inv 3:
+    made: p4
+    not-made: p4
+Inv 4:
+    made: p5
+    not-made: p5
+Inv 5:
+    shipped: o1
+    started: o1
+    waiting: o1
+Inv 6:
+    shipped: o2
+    started: o2
+    waiting: o2
+Inv 7:
+    shipped: o3
+    started: o3
+    waiting: o3
+Inv 8:
+    shipped: o4
+    started: o4
+    waiting: o4
+Inv 9:
+    shipped: o5
+    started: o5
+    waiting: o5
+Inv 10:
+    stacks-avail: n0
+    stacks-avail: n1
+    stacks-avail: n2
+    stacks-avail: n3
+    stacks-avail: n4
+    stacks-avail: n5
+---- Invariants pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl END ----
+---- Invariants pddl/rovers-domain.pddl | pddl/rovers-p01.pddl ----
+Inv 0:
+    at: rover0 waypoint0
+    at: rover0 waypoint1
+    at: rover0 waypoint2
+    at: rover0 waypoint3
+Inv 1:
+    at_rock_sample: waypoint1
+    have_rock_analysis: rover0 waypoint1
+Inv 2:
+    at_rock_sample: waypoint2
+    have_rock_analysis: rover0 waypoint2
+Inv 3:
+    at_rock_sample: waypoint3
+    have_rock_analysis: rover0 waypoint3
+Inv 4:
+    at_soil_sample: waypoint0
+    have_soil_analysis: rover0 waypoint0
+Inv 5:
+    at_soil_sample: waypoint2
+    have_soil_analysis: rover0 waypoint2
+Inv 6:
+    at_soil_sample: waypoint3
+    have_soil_analysis: rover0 waypoint3
+Inv 7:
+    empty: rover0store
+    full: rover0store
+---- Invariants pddl/rovers-domain.pddl | pddl/rovers-p01.pddl END ----
+---- Invariants pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl ----
+Inv 0:
+    boarded: p0 fast0
+    boarded: p0 fast1
+    boarded: p0 slow0-0
+    boarded: p0 slow1-0
+    passenger-at: p0 n0
+    passenger-at: p0 n1
+    passenger-at: p0 n2
+    passenger-at: p0 n3
+    passenger-at: p0 n4
+    passenger-at: p0 n5
+    passenger-at: p0 n6
+    passenger-at: p0 n7
+    passenger-at: p0 n8
+Inv 1:
+    boarded: p1 fast0
+    boarded: p1 fast1
+    boarded: p1 slow0-0
+    boarded: p1 slow1-0
+    passenger-at: p1 n0
+    passenger-at: p1 n1
+    passenger-at: p1 n2
+    passenger-at: p1 n3
+    passenger-at: p1 n4
+    passenger-at: p1 n5
+    passenger-at: p1 n6
+    passenger-at: p1 n7
+    passenger-at: p1 n8
+Inv 2:
+    boarded: p2 fast0
+    boarded: p2 fast1
+    boarded: p2 slow0-0
+    boarded: p2 slow1-0
+    passenger-at: p2 n0
+    passenger-at: p2 n1
+    passenger-at: p2 n2
+    passenger-at: p2 n3
+    passenger-at: p2 n4
+    passenger-at: p2 n5
+    passenger-at: p2 n6
+    passenger-at: p2 n7
+    passenger-at: p2 n8
+Inv 3:
+    boarded: p3 fast0
+    boarded: p3 fast1
+    boarded: p3 slow0-0
+    boarded: p3 slow1-0
+    passenger-at: p3 n0
+    passenger-at: p3 n1
+    passenger-at: p3 n2
+    passenger-at: p3 n3
+    passenger-at: p3 n4
+    passenger-at: p3 n5
+    passenger-at: p3 n6
+    passenger-at: p3 n7
+    passenger-at: p3 n8
+Inv 4:
+    lift-at: fast0 n0
+    lift-at: fast0 n2
+    lift-at: fast0 n4
+    lift-at: fast0 n6
+    lift-at: fast0 n8
+Inv 5:
+    lift-at: fast1 n0
+    lift-at: fast1 n2
+    lift-at: fast1 n4
+    lift-at: fast1 n6
+    lift-at: fast1 n8
+Inv 6:
+    lift-at: slow0-0 n0
+    lift-at: slow0-0 n1
+    lift-at: slow0-0 n2
+    lift-at: slow0-0 n3
+    lift-at: slow0-0 n4
+Inv 7:
+    lift-at: slow1-0 n4
+    lift-at: slow1-0 n5
+    lift-at: slow1-0 n6
+    lift-at: slow1-0 n7
+    lift-at: slow1-0 n8
+Inv 8:
+    passengers: fast0 n0
+    passengers: fast0 n1
+    passengers: fast0 n2
+    passengers: fast0 n3
+Inv 9:
+    passengers: fast1 n0
+    passengers: fast1 n1
+    passengers: fast1 n2
+    passengers: fast1 n3
+Inv 10:
+    passengers: slow0-0 n0
+    passengers: slow0-0 n1
+    passengers: slow0-0 n2
+Inv 11:
+    passengers: slow1-0 n0
+    passengers: slow1-0 n1
+    passengers: slow1-0 n2
+---- Invariants pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl END ----
+---- Invariants pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl ----
+---- Invariants pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl END ----

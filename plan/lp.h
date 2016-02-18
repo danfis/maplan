@@ -83,6 +83,11 @@ void planLPSetVarFree(plan_lp_t *lp, int i);
 void planLPSetVarInt(plan_lp_t *lp, int i);
 
 /**
+ * Sets i'th variable as binary.
+ */
+void planLPSetVarBinary(plan_lp_t *lp, int i);
+
+/**
  * Sets coefficient for row's constraint and col's variable.
  */
 void planLPSetCoef(plan_lp_t *lp, int row, int col, double coef);
@@ -114,10 +119,12 @@ void planLPDelRows(plan_lp_t *lp, int begin, int end);
 int planLPNumRows(const plan_lp_t *lp);
 
 /**
- * Solves problem and returns objective value and values of each variable
- * via obj argument.
+ * Solves (I)LP problem.
+ * Return 0 if problem was solved, -1 if the problem has no solution.
+ * Objective value is returned via argument val and values of each variable
+ * via argument obj if non-NULL.
  */
-double planLPSolve(plan_lp_t *lp, double *obj);
+int planLPSolve(plan_lp_t *lp, double *val, double *obj);
 
 
 void planLPWrite(plan_lp_t *lp, const char *fn);

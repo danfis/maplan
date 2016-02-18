@@ -213,7 +213,17 @@ static int invariantCmp(const void *a, const void *b)
 {
     const plan_pddl_ground_facts_t *f1 = a;
     const plan_pddl_ground_facts_t *f2 = b;
-    return f2->size - f1->size;
+    int i, cmp = f2->size - f1->size;
+
+    if (cmp == 0){
+        for (i = 0; i < f1->size; ++i){
+            cmp = f1->fact[i] - f2->fact[i];
+            if (cmp != 0)
+                return cmp;
+        }
+    }
+
+    return cmp;
 }
 
 static void invariantsToGroundFacts(plan_pddl_sas_t *sas,

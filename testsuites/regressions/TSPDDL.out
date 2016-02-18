@@ -2354,72 +2354,44 @@ Metric: 1
 ---- Domain: pddl/CityCar-domain.unfactor.pddl | pddl/CityCar-p3-2-2-0-1.unfactor.pddl END ----
 ---- Ground pddl/depot-domain.pddl | pddl/depot-pfile1.pddl ----
 Invariant 0:
-    at: truck0 depot0 var: 13, val: 0/3
-    at: truck0 distributor0 var: 13, val: 1/3
-    at: truck0 distributor1 var: 13, val: 2/3
+    on: crate0 pallet0 var: 1, val: 0/9
+    on: crate0 pallet1 var: 1, val: 1/9
+    on: crate0 pallet2 var: 1, val: 2/9
+    on: crate0 crate1 var: 1, val: 3/9
+    in: crate0 truck0 var: 1, val: 4/9
+    in: crate0 truck1 var: 1, val: 5/9
+    lifting: hoist0 crate0 var: 1, val: 6/9
+    lifting: hoist1 crate0 var: 1, val: 7/9
+    lifting: hoist2 crate0 var: 1, val: 8/9
 Invariant 1:
-    at: truck1 depot0 var: 12, val: 0/3
-    at: truck1 distributor0 var: 12, val: 1/3
-    at: truck1 distributor1 var: 12, val: 2/3
+    on: crate1 pallet0 var: 0, val: 0/9
+    on: crate1 pallet1 var: 0, val: 1/9
+    on: crate1 pallet2 var: 0, val: 2/9
+    on: crate1 crate0 var: 0, val: 3/9
+    in: crate1 truck0 var: 0, val: 4/9
+    in: crate1 truck1 var: 0, val: 5/9
+    lifting: hoist0 crate1 var: 0, val: 6/9
+    lifting: hoist1 crate1 var: 0, val: 7/9
+    lifting: hoist2 crate1 var: 0, val: 8/9
 Invariant 2:
-    at: crate0 depot0 var: 8, val: 0/4
-    at: crate0 distributor0 var: 8, val: 1/4
-    at: crate0 distributor1 var: 8, val: 2/4
+    at: crate0 depot0 var: 9, val: 0/4
+    at: crate0 distributor0 var: 9, val: 1/4
+    at: crate0 distributor1 var: 9, val: 2/4
     in: crate0 truck0 var: 1, val: 4/9
     in: crate0 truck1 var: 1, val: 5/9
     lifting: hoist0 crate0 var: 1, val: 6/9
     lifting: hoist1 crate0 var: 1, val: 7/9
     lifting: hoist2 crate0 var: 1, val: 8/9
 Invariant 3:
-    at: crate1 depot0 var: 9, val: 0/4
-    at: crate1 distributor0 var: 9, val: 1/4
-    at: crate1 distributor1 var: 9, val: 2/4
+    at: crate1 depot0 var: 8, val: 0/4
+    at: crate1 distributor0 var: 8, val: 1/4
+    at: crate1 distributor1 var: 8, val: 2/4
     in: crate1 truck0 var: 0, val: 4/9
     in: crate1 truck1 var: 0, val: 5/9
     lifting: hoist0 crate1 var: 0, val: 6/9
     lifting: hoist1 crate1 var: 0, val: 7/9
     lifting: hoist2 crate1 var: 0, val: 8/9
 Invariant 4:
-    on: crate0 pallet0 var: 1, val: 0/9
-    on: crate0 pallet1 var: 1, val: 1/9
-    on: crate0 pallet2 var: 1, val: 2/9
-    on: crate0 crate1 var: 1, val: 3/9
-    in: crate0 truck0 var: 1, val: 4/9
-    in: crate0 truck1 var: 1, val: 5/9
-    lifting: hoist0 crate0 var: 1, val: 6/9
-    lifting: hoist1 crate0 var: 1, val: 7/9
-    lifting: hoist2 crate0 var: 1, val: 8/9
-Invariant 5:
-    on: crate0 pallet0 var: 1, val: 0/9
-    on: crate1 pallet0 var: 0, val: 0/9
-    clear: pallet0 var: 11, val: 0/2
-Invariant 6:
-    on: crate0 pallet1 var: 1, val: 1/9
-    on: crate1 pallet1 var: 0, val: 1/9
-    clear: pallet1 var: 7, val: 0/2
-Invariant 7:
-    on: crate0 pallet2 var: 1, val: 2/9
-    on: crate1 pallet2 var: 0, val: 2/9
-    clear: pallet2 var: 6, val: 0/2
-Invariant 8:
-    on: crate0 crate1 var: 1, val: 3/9
-    in: crate1 truck0 var: 0, val: 4/9
-    in: crate1 truck1 var: 0, val: 5/9
-    lifting: hoist0 crate1 var: 0, val: 6/9
-    lifting: hoist1 crate1 var: 0, val: 7/9
-    lifting: hoist2 crate1 var: 0, val: 8/9
-    clear: crate1 var: 4, val: 0/2
-Invariant 9:
-    on: crate1 pallet0 var: 0, val: 0/9
-    on: crate1 pallet1 var: 0, val: 1/9
-    on: crate1 pallet2 var: 0, val: 2/9
-    on: crate1 crate0 var: 0, val: 3/9
-    in: crate1 truck0 var: 0, val: 4/9
-    in: crate1 truck1 var: 0, val: 5/9
-    lifting: hoist0 crate1 var: 0, val: 6/9
-    lifting: hoist1 crate1 var: 0, val: 7/9
-    lifting: hoist2 crate1 var: 0, val: 8/9
-Invariant 10:
     on: crate1 crate0 var: 0, val: 3/9
     in: crate0 truck0 var: 1, val: 4/9
     in: crate0 truck1 var: 1, val: 5/9
@@ -2427,57 +2399,85 @@ Invariant 10:
     lifting: hoist1 crate0 var: 1, val: 7/9
     lifting: hoist2 crate0 var: 1, val: 8/9
     clear: crate0 var: 5, val: 0/2
-Invariant 11:
-    lifting: hoist0 crate0 var: 1, val: 6/9
+Invariant 5:
+    on: crate0 crate1 var: 1, val: 3/9
+    in: crate1 truck0 var: 0, val: 4/9
+    in: crate1 truck1 var: 0, val: 5/9
     lifting: hoist0 crate1 var: 0, val: 6/9
-    available: hoist0 var: 10, val: 0/2
-Invariant 12:
-    lifting: hoist1 crate0 var: 1, val: 7/9
     lifting: hoist1 crate1 var: 0, val: 7/9
-    available: hoist1 var: 3, val: 0/2
-Invariant 13:
+    lifting: hoist2 crate1 var: 0, val: 8/9
+    clear: crate1 var: 4, val: 0/2
+Invariant 6:
     lifting: hoist2 crate0 var: 1, val: 8/9
     lifting: hoist2 crate1 var: 0, val: 8/9
     available: hoist2 var: 2, val: 0/2
-SAS Facts[38]:
-    at: truck0 depot0 var: 13, val: 0/3
-    at: truck0 distributor0 var: 13, val: 1/3
-    at: truck0 distributor1 var: 13, val: 2/3
+Invariant 7:
+    lifting: hoist0 crate0 var: 1, val: 6/9
+    lifting: hoist0 crate1 var: 0, val: 6/9
+    available: hoist0 var: 10, val: 0/2
+Invariant 8:
+    lifting: hoist1 crate0 var: 1, val: 7/9
+    lifting: hoist1 crate1 var: 0, val: 7/9
+    available: hoist1 var: 3, val: 0/2
+Invariant 9:
+    on: crate0 pallet2 var: 1, val: 2/9
+    on: crate1 pallet2 var: 0, val: 2/9
+    clear: pallet2 var: 6, val: 0/2
+Invariant 10:
     at: truck1 depot0 var: 12, val: 0/3
     at: truck1 distributor0 var: 12, val: 1/3
     at: truck1 distributor1 var: 12, val: 2/3
-    at: crate0 depot0 var: 8, val: 0/4
-    at: crate0 distributor0 var: 8, val: 1/4
-    at: crate0 distributor1 var: 8, val: 2/4
-    at: crate1 depot0 var: 9, val: 0/4
-    at: crate1 distributor0 var: 9, val: 1/4
-    at: crate1 distributor1 var: 9, val: 2/4
+Invariant 11:
+    at: truck0 depot0 var: 13, val: 0/3
+    at: truck0 distributor0 var: 13, val: 1/3
+    at: truck0 distributor1 var: 13, val: 2/3
+Invariant 12:
     on: crate0 pallet0 var: 1, val: 0/9
-    on: crate0 pallet1 var: 1, val: 1/9
-    on: crate0 pallet2 var: 1, val: 2/9
-    on: crate0 crate1 var: 1, val: 3/9
     on: crate1 pallet0 var: 0, val: 0/9
-    on: crate1 pallet1 var: 0, val: 1/9
-    on: crate1 pallet2 var: 0, val: 2/9
-    on: crate1 crate0 var: 0, val: 3/9
-    in: crate0 truck0 var: 1, val: 4/9
-    in: crate0 truck1 var: 1, val: 5/9
-    in: crate1 truck0 var: 0, val: 4/9
-    in: crate1 truck1 var: 0, val: 5/9
-    lifting: hoist0 crate0 var: 1, val: 6/9
-    lifting: hoist0 crate1 var: 0, val: 6/9
-    lifting: hoist1 crate0 var: 1, val: 7/9
-    lifting: hoist1 crate1 var: 0, val: 7/9
-    lifting: hoist2 crate0 var: 1, val: 8/9
-    lifting: hoist2 crate1 var: 0, val: 8/9
-    available: hoist0 var: 10, val: 0/2
-    available: hoist1 var: 3, val: 0/2
-    available: hoist2 var: 2, val: 0/2
     clear: pallet0 var: 11, val: 0/2
+Invariant 13:
+    on: crate0 pallet1 var: 1, val: 1/9
+    on: crate1 pallet1 var: 0, val: 1/9
     clear: pallet1 var: 7, val: 0/2
-    clear: pallet2 var: 6, val: 0/2
-    clear: crate0 var: 5, val: 0/2
-    clear: crate1 var: 4, val: 0/2
+SAS Facts[38]:
+    [0] at: truck0 depot0 var: 13, val: 0/3
+    [1] at: truck0 distributor0 var: 13, val: 1/3
+    [2] at: truck0 distributor1 var: 13, val: 2/3
+    [3] at: truck1 depot0 var: 12, val: 0/3
+    [4] at: truck1 distributor0 var: 12, val: 1/3
+    [5] at: truck1 distributor1 var: 12, val: 2/3
+    [6] at: crate0 depot0 var: 9, val: 0/4
+    [7] at: crate0 distributor0 var: 9, val: 1/4
+    [8] at: crate0 distributor1 var: 9, val: 2/4
+    [9] at: crate1 depot0 var: 8, val: 0/4
+    [10] at: crate1 distributor0 var: 8, val: 1/4
+    [11] at: crate1 distributor1 var: 8, val: 2/4
+    [12] on: crate0 pallet0 var: 1, val: 0/9
+    [13] on: crate0 pallet1 var: 1, val: 1/9
+    [14] on: crate0 pallet2 var: 1, val: 2/9
+    [15] on: crate0 crate1 var: 1, val: 3/9
+    [16] on: crate1 pallet0 var: 0, val: 0/9
+    [17] on: crate1 pallet1 var: 0, val: 1/9
+    [18] on: crate1 pallet2 var: 0, val: 2/9
+    [19] on: crate1 crate0 var: 0, val: 3/9
+    [20] in: crate0 truck0 var: 1, val: 4/9
+    [21] in: crate0 truck1 var: 1, val: 5/9
+    [22] in: crate1 truck0 var: 0, val: 4/9
+    [23] in: crate1 truck1 var: 0, val: 5/9
+    [24] lifting: hoist0 crate0 var: 1, val: 6/9
+    [25] lifting: hoist0 crate1 var: 0, val: 6/9
+    [26] lifting: hoist1 crate0 var: 1, val: 7/9
+    [27] lifting: hoist1 crate1 var: 0, val: 7/9
+    [28] lifting: hoist2 crate0 var: 1, val: 8/9
+    [29] lifting: hoist2 crate1 var: 0, val: 8/9
+    [30] available: hoist0 var: 10, val: 0/2
+    [31] available: hoist1 var: 3, val: 0/2
+    [32] available: hoist2 var: 2, val: 0/2
+    [33] clear: pallet0 var: 11, val: 0/2
+    [34] clear: pallet1 var: 7, val: 0/2
+    [35] clear: pallet2 var: 6, val: 0/2
+    [36] clear: crate0 var: 5, val: 0/2
+    [37] clear: crate1 var: 4, val: 0/2
 Facts[38]:
     at: truck0 depot0
     at: truck0 distributor0
@@ -3464,79 +3464,79 @@ Agent size: 0
 ---- Ground pddl/depot-domain.pddl | pddl/depot-pfile1.pddl END ----
 ---- Ground pddl/openstacks-p03-domain.pddl | pddl/openstacks-p03.pddl ----
 Invariant 0:
-    waiting: o1 var: 5, val: 0/3
-    started: o1 var: 5, val: 1/3
-    shipped: o1 var: 5, val: 2/3
+    stacks-avail: n0 var: 0, val: 0/6
+    stacks-avail: n1 var: 0, val: 1/6
+    stacks-avail: n2 var: 0, val: 2/6
+    stacks-avail: n3 var: 0, val: 3/6
+    stacks-avail: n4 var: 0, val: 4/6
+    stacks-avail: n5 var: 0, val: 5/6
 Invariant 1:
-    waiting: o2 var: 2, val: 0/3
-    started: o2 var: 2, val: 1/3
-    shipped: o2 var: 2, val: 2/3
-Invariant 2:
-    waiting: o3 var: 4, val: 0/3
-    started: o3 var: 4, val: 1/3
-    shipped: o3 var: 4, val: 2/3
-Invariant 3:
-    waiting: o4 var: 1, val: 0/3
-    started: o4 var: 1, val: 1/3
-    shipped: o4 var: 1, val: 2/3
-Invariant 4:
-    waiting: o5 var: 3, val: 0/3
-    started: o5 var: 3, val: 1/3
-    shipped: o5 var: 3, val: 2/3
-Invariant 5:
-    made: p1 var: 10, val: 0/2
-    not-made: p1 var: 10, val: 1/2
-Invariant 6:
-    made: p2 var: 7, val: 0/2
-    not-made: p2 var: 7, val: 1/2
-Invariant 7:
-    made: p3 var: 6, val: 0/2
-    not-made: p3 var: 6, val: 1/2
-Invariant 8:
-    made: p4 var: 9, val: 0/2
-    not-made: p4 var: 9, val: 1/2
-Invariant 9:
-    made: p5 var: 8, val: 0/2
-    not-made: p5 var: 8, val: 1/2
-Invariant 10:
-    stacks-avail: n0 var: 0, val: 0/6
-    stacks-avail: n1 var: 0, val: 1/6
-    stacks-avail: n2 var: 0, val: 2/6
-    stacks-avail: n3 var: 0, val: 3/6
-    stacks-avail: n4 var: 0, val: 4/6
-    stacks-avail: n5 var: 0, val: 5/6
-SAS Facts[31]:
     waiting: o1 var: 5, val: 0/3
-    waiting: o2 var: 2, val: 0/3
-    waiting: o3 var: 4, val: 0/3
-    waiting: o4 var: 1, val: 0/3
-    waiting: o5 var: 3, val: 0/3
     started: o1 var: 5, val: 1/3
-    started: o2 var: 2, val: 1/3
-    started: o3 var: 4, val: 1/3
-    started: o4 var: 1, val: 1/3
-    started: o5 var: 3, val: 1/3
     shipped: o1 var: 5, val: 2/3
+Invariant 2:
+    waiting: o2 var: 2, val: 0/3
+    started: o2 var: 2, val: 1/3
     shipped: o2 var: 2, val: 2/3
+Invariant 3:
+    waiting: o3 var: 4, val: 0/3
+    started: o3 var: 4, val: 1/3
     shipped: o3 var: 4, val: 2/3
+Invariant 4:
+    waiting: o4 var: 1, val: 0/3
+    started: o4 var: 1, val: 1/3
     shipped: o4 var: 1, val: 2/3
+Invariant 5:
+    waiting: o5 var: 3, val: 0/3
+    started: o5 var: 3, val: 1/3
     shipped: o5 var: 3, val: 2/3
+Invariant 6:
     made: p1 var: 10, val: 0/2
-    made: p2 var: 7, val: 0/2
-    made: p3 var: 6, val: 0/2
-    made: p4 var: 9, val: 0/2
-    made: p5 var: 8, val: 0/2
     not-made: p1 var: 10, val: 1/2
+Invariant 7:
+    made: p2 var: 7, val: 0/2
     not-made: p2 var: 7, val: 1/2
+Invariant 8:
+    made: p3 var: 6, val: 0/2
     not-made: p3 var: 6, val: 1/2
+Invariant 9:
+    made: p4 var: 9, val: 0/2
     not-made: p4 var: 9, val: 1/2
+Invariant 10:
+    made: p5 var: 8, val: 0/2
     not-made: p5 var: 8, val: 1/2
-    stacks-avail: n0 var: 0, val: 0/6
-    stacks-avail: n1 var: 0, val: 1/6
-    stacks-avail: n2 var: 0, val: 2/6
-    stacks-avail: n3 var: 0, val: 3/6
-    stacks-avail: n4 var: 0, val: 4/6
-    stacks-avail: n5 var: 0, val: 5/6
+SAS Facts[31]:
+    [0] waiting: o1 var: 5, val: 0/3
+    [1] waiting: o2 var: 2, val: 0/3
+    [2] waiting: o3 var: 4, val: 0/3
+    [3] waiting: o4 var: 1, val: 0/3
+    [4] waiting: o5 var: 3, val: 0/3
+    [5] started: o1 var: 5, val: 1/3
+    [6] started: o2 var: 2, val: 1/3
+    [7] started: o3 var: 4, val: 1/3
+    [8] started: o4 var: 1, val: 1/3
+    [9] started: o5 var: 3, val: 1/3
+    [10] shipped: o1 var: 5, val: 2/3
+    [11] shipped: o2 var: 2, val: 2/3
+    [12] shipped: o3 var: 4, val: 2/3
+    [13] shipped: o4 var: 1, val: 2/3
+    [14] shipped: o5 var: 3, val: 2/3
+    [15] made: p1 var: 10, val: 0/2
+    [16] made: p2 var: 7, val: 0/2
+    [17] made: p3 var: 6, val: 0/2
+    [18] made: p4 var: 9, val: 0/2
+    [19] made: p5 var: 8, val: 0/2
+    [20] not-made: p1 var: 10, val: 1/2
+    [21] not-made: p2 var: 7, val: 1/2
+    [22] not-made: p3 var: 6, val: 1/2
+    [23] not-made: p4 var: 9, val: 1/2
+    [24] not-made: p5 var: 8, val: 1/2
+    [25] stacks-avail: n0 var: 0, val: 0/6
+    [26] stacks-avail: n1 var: 0, val: 1/6
+    [27] stacks-avail: n2 var: 0, val: 2/6
+    [28] stacks-avail: n3 var: 0, val: 3/6
+    [29] stacks-avail: n4 var: 0, val: 4/6
+    [30] stacks-avail: n5 var: 0, val: 5/6
 Facts[31]:
     waiting: o1
     waiting: o2
@@ -4314,57 +4314,57 @@ Invariant 1:
     empty: rover0store var: 1, val: 0/2
     full: rover0store var: 1, val: 1/2
 Invariant 2:
-    have_soil_analysis: rover0 waypoint0 var: 6, val: 0/2
-    at_soil_sample: waypoint0 var: 6, val: 1/2
+    have_rock_analysis: rover0 waypoint1 var: 6, val: 0/2
+    at_rock_sample: waypoint1 var: 6, val: 1/2
 Invariant 3:
-    have_soil_analysis: rover0 waypoint2 var: 5, val: 0/2
-    at_soil_sample: waypoint2 var: 5, val: 1/2
+    have_rock_analysis: rover0 waypoint2 var: 5, val: 0/2
+    at_rock_sample: waypoint2 var: 5, val: 1/2
 Invariant 4:
-    have_soil_analysis: rover0 waypoint3 var: 4, val: 0/2
-    at_soil_sample: waypoint3 var: 4, val: 1/2
+    have_rock_analysis: rover0 waypoint3 var: 4, val: 0/2
+    at_rock_sample: waypoint3 var: 4, val: 1/2
 Invariant 5:
-    have_rock_analysis: rover0 waypoint1 var: 3, val: 0/2
-    at_rock_sample: waypoint1 var: 3, val: 1/2
+    have_soil_analysis: rover0 waypoint0 var: 3, val: 0/2
+    at_soil_sample: waypoint0 var: 3, val: 1/2
 Invariant 6:
-    have_rock_analysis: rover0 waypoint2 var: 2, val: 0/2
-    at_rock_sample: waypoint2 var: 2, val: 1/2
+    have_soil_analysis: rover0 waypoint3 var: 0, val: 0/2
+    at_soil_sample: waypoint3 var: 0, val: 1/2
 Invariant 7:
-    have_rock_analysis: rover0 waypoint3 var: 0, val: 0/2
-    at_rock_sample: waypoint3 var: 0, val: 1/2
+    have_soil_analysis: rover0 waypoint2 var: 2, val: 0/2
+    at_soil_sample: waypoint2 var: 2, val: 1/2
 SAS Facts[33]:
-    at: rover0 waypoint0 var: 12, val: 0/4
-    at: rover0 waypoint1 var: 12, val: 1/4
-    at: rover0 waypoint2 var: 12, val: 2/4
-    at: rover0 waypoint3 var: 12, val: 3/4
-    empty: rover0store var: 1, val: 0/2
-    have_rock_analysis: rover0 waypoint1 var: 3, val: 0/2
-    have_rock_analysis: rover0 waypoint2 var: 2, val: 0/2
-    have_rock_analysis: rover0 waypoint3 var: 0, val: 0/2
-    have_soil_analysis: rover0 waypoint0 var: 6, val: 0/2
-    have_soil_analysis: rover0 waypoint2 var: 5, val: 0/2
-    have_soil_analysis: rover0 waypoint3 var: 4, val: 0/2
-    full: rover0store var: 1, val: 1/2
-    calibrated: camera0 rover0 var: 11, val: 0/2
-    have_image: rover0 objective0 colour var: -1
-    have_image: rover0 objective0 high_res var: -1
-    have_image: rover0 objective1 colour var: -1
-    have_image: rover0 objective1 high_res var: 10, val: 0/2
-    communicated_soil_data: waypoint0 var: -1
-    communicated_soil_data: waypoint2 var: 9, val: 0/2
-    communicated_soil_data: waypoint3 var: -1
-    communicated_rock_data: waypoint1 var: -1
-    communicated_rock_data: waypoint2 var: -1
-    communicated_rock_data: waypoint3 var: 8, val: 0/2
-    communicated_image_data: objective0 colour var: -1
-    communicated_image_data: objective0 high_res var: -1
-    communicated_image_data: objective1 colour var: -1
-    communicated_image_data: objective1 high_res var: 7, val: 0/2
-    at_soil_sample: waypoint0 var: 6, val: 1/2
-    at_soil_sample: waypoint2 var: 5, val: 1/2
-    at_soil_sample: waypoint3 var: 4, val: 1/2
-    at_rock_sample: waypoint1 var: 3, val: 1/2
-    at_rock_sample: waypoint2 var: 2, val: 1/2
-    at_rock_sample: waypoint3 var: 0, val: 1/2
+    [0] at: rover0 waypoint0 var: 12, val: 0/4
+    [1] at: rover0 waypoint1 var: 12, val: 1/4
+    [2] at: rover0 waypoint2 var: 12, val: 2/4
+    [3] at: rover0 waypoint3 var: 12, val: 3/4
+    [4] empty: rover0store var: 1, val: 0/2
+    [5] have_rock_analysis: rover0 waypoint1 var: 6, val: 0/2
+    [6] have_rock_analysis: rover0 waypoint2 var: 5, val: 0/2
+    [7] have_rock_analysis: rover0 waypoint3 var: 4, val: 0/2
+    [8] have_soil_analysis: rover0 waypoint0 var: 3, val: 0/2
+    [9] have_soil_analysis: rover0 waypoint2 var: 2, val: 0/2
+    [10] have_soil_analysis: rover0 waypoint3 var: 0, val: 0/2
+    [11] full: rover0store var: 1, val: 1/2
+    [12] calibrated: camera0 rover0 var: 11, val: 0/2
+    [13] have_image: rover0 objective0 colour var: -1
+    [14] have_image: rover0 objective0 high_res var: -1
+    [15] have_image: rover0 objective1 colour var: -1
+    [16] have_image: rover0 objective1 high_res var: 10, val: 0/2
+    [17] communicated_soil_data: waypoint0 var: -1
+    [18] communicated_soil_data: waypoint2 var: 9, val: 0/2
+    [19] communicated_soil_data: waypoint3 var: -1
+    [20] communicated_rock_data: waypoint1 var: -1
+    [21] communicated_rock_data: waypoint2 var: -1
+    [22] communicated_rock_data: waypoint3 var: 8, val: 0/2
+    [23] communicated_image_data: objective0 colour var: -1
+    [24] communicated_image_data: objective0 high_res var: -1
+    [25] communicated_image_data: objective1 colour var: -1
+    [26] communicated_image_data: objective1 high_res var: 7, val: 0/2
+    [27] at_soil_sample: waypoint0 var: 3, val: 1/2
+    [28] at_soil_sample: waypoint2 var: 2, val: 1/2
+    [29] at_soil_sample: waypoint3 var: 0, val: 1/2
+    [30] at_rock_sample: waypoint1 var: 6, val: 1/2
+    [31] at_rock_sample: waypoint2 var: 5, val: 1/2
+    [32] at_rock_sample: waypoint3 var: 4, val: 1/2
 Facts[33]:
     at: rover0 waypoint0
     at: rover0 waypoint1
@@ -5006,319 +5006,269 @@ take_image rover0 waypoint3 objective1 camera0 high_res --> 0
 Agent size: 0
 ---- Ground pddl/rovers-domain.pddl | pddl/rovers-p01.pddl END ----
 ---- Ground pddl/CityCar-domain.pddl | pddl/CityCar-p3-2-2-0-1.pddl ----
-Invariant 0:
-    at_car_jun: car0 junction0-0 var: 1, val: 0/24
-    at_car_jun: car0 junction0-1 var: 1, val: 1/24
-    at_car_jun: car0 junction0-2 var: 1, val: 2/24
-    at_car_jun: car0 junction1-0 var: 1, val: 3/24
-    at_car_jun: car0 junction1-1 var: 1, val: 4/24
-    at_car_jun: car0 junction1-2 var: 1, val: 5/24
-    at_car_jun: car0 junction2-0 var: 1, val: 6/24
-    at_car_jun: car0 junction2-1 var: 1, val: 7/24
-    at_car_jun: car0 junction2-2 var: 1, val: 8/24
-    at_car_road: car0 road0 var: 1, val: 9/24
-    at_car_road: car0 road1 var: 1, val: 10/24
-    at_car_road: car0 road2 var: 1, val: 11/24
-    at_car_road: car0 road3 var: 1, val: 12/24
-    at_car_road: car0 road4 var: 1, val: 13/24
-    starting: car0 garage0 var: 1, val: 14/24
-    arrived: car0 junction0-0 var: 1, val: 15/24
-    arrived: car0 junction0-1 var: 1, val: 16/24
-    arrived: car0 junction0-2 var: 1, val: 17/24
-    arrived: car0 junction1-0 var: 1, val: 18/24
-    arrived: car0 junction1-1 var: 1, val: 19/24
-    arrived: car0 junction1-2 var: 1, val: 20/24
-    arrived: car0 junction2-0 var: 1, val: 21/24
-    arrived: car0 junction2-1 var: 1, val: 22/24
-    arrived: car0 junction2-2 var: 1, val: 23/24
-Invariant 1:
-    at_car_jun: car1 junction0-0 var: 0, val: 0/24
-    at_car_jun: car1 junction0-1 var: 0, val: 1/24
-    at_car_jun: car1 junction0-2 var: 0, val: 2/24
-    at_car_jun: car1 junction1-0 var: 0, val: 3/24
-    at_car_jun: car1 junction1-1 var: 0, val: 4/24
-    at_car_jun: car1 junction1-2 var: 0, val: 5/24
-    at_car_jun: car1 junction2-0 var: 0, val: 6/24
-    at_car_jun: car1 junction2-1 var: 0, val: 7/24
-    at_car_jun: car1 junction2-2 var: 0, val: 8/24
-    at_car_road: car1 road0 var: 0, val: 9/24
-    at_car_road: car1 road1 var: 0, val: 10/24
-    at_car_road: car1 road2 var: 0, val: 11/24
-    at_car_road: car1 road3 var: 0, val: 12/24
-    at_car_road: car1 road4 var: 0, val: 13/24
-    starting: car1 garage1 var: 0, val: 14/24
-    arrived: car1 junction0-0 var: 0, val: 15/24
-    arrived: car1 junction0-1 var: 0, val: 16/24
-    arrived: car1 junction0-2 var: 0, val: 17/24
-    arrived: car1 junction1-0 var: 0, val: 18/24
-    arrived: car1 junction1-1 var: 0, val: 19/24
-    arrived: car1 junction1-2 var: 0, val: 20/24
-    arrived: car1 junction2-0 var: 0, val: 21/24
-    arrived: car1 junction2-1 var: 0, val: 22/24
-    arrived: car1 junction2-2 var: 0, val: 23/24
 SAS Facts[262]:
-    at_car_jun: car0 junction0-0 var: 1, val: 0/24
-    at_car_jun: car0 junction0-1 var: 1, val: 1/24
-    at_car_jun: car0 junction0-2 var: 1, val: 2/24
-    at_car_jun: car0 junction1-0 var: 1, val: 3/24
-    at_car_jun: car0 junction1-1 var: 1, val: 4/24
-    at_car_jun: car0 junction1-2 var: 1, val: 5/24
-    at_car_jun: car0 junction2-0 var: 1, val: 6/24
-    at_car_jun: car0 junction2-1 var: 1, val: 7/24
-    at_car_jun: car0 junction2-2 var: 1, val: 8/24
-    at_car_jun: car1 junction0-0 var: 0, val: 0/24
-    at_car_jun: car1 junction0-1 var: 0, val: 1/24
-    at_car_jun: car1 junction0-2 var: 0, val: 2/24
-    at_car_jun: car1 junction1-0 var: 0, val: 3/24
-    at_car_jun: car1 junction1-1 var: 0, val: 4/24
-    at_car_jun: car1 junction1-2 var: 0, val: 5/24
-    at_car_jun: car1 junction2-0 var: 0, val: 6/24
-    at_car_jun: car1 junction2-1 var: 0, val: 7/24
-    at_car_jun: car1 junction2-2 var: 0, val: 8/24
-    at_car_road: car0 road0 var: 1, val: 9/24
-    at_car_road: car0 road1 var: 1, val: 10/24
-    at_car_road: car0 road2 var: 1, val: 11/24
-    at_car_road: car0 road3 var: 1, val: 12/24
-    at_car_road: car0 road4 var: 1, val: 13/24
-    at_car_road: car1 road0 var: 0, val: 9/24
-    at_car_road: car1 road1 var: 0, val: 10/24
-    at_car_road: car1 road2 var: 0, val: 11/24
-    at_car_road: car1 road3 var: 0, val: 12/24
-    at_car_road: car1 road4 var: 0, val: 13/24
-    starting: car0 garage0 var: 1, val: 14/24
-    starting: car1 garage1 var: 0, val: 14/24
-    arrived: car0 junction0-0 var: 1, val: 15/24
-    arrived: car0 junction0-1 var: 1, val: 16/24
-    arrived: car0 junction0-2 var: 1, val: 17/24
-    arrived: car0 junction1-0 var: 1, val: 18/24
-    arrived: car0 junction1-1 var: 1, val: 19/24
-    arrived: car0 junction1-2 var: 1, val: 20/24
-    arrived: car0 junction2-0 var: 1, val: 21/24
-    arrived: car0 junction2-1 var: 1, val: 22/24
-    arrived: car0 junction2-2 var: 1, val: 23/24
-    arrived: car1 junction0-0 var: 0, val: 15/24
-    arrived: car1 junction0-1 var: 0, val: 16/24
-    arrived: car1 junction0-2 var: 0, val: 17/24
-    arrived: car1 junction1-0 var: 0, val: 18/24
-    arrived: car1 junction1-1 var: 0, val: 19/24
-    arrived: car1 junction1-2 var: 0, val: 20/24
-    arrived: car1 junction2-0 var: 0, val: 21/24
-    arrived: car1 junction2-1 var: 0, val: 22/24
-    arrived: car1 junction2-2 var: 0, val: 23/24
-    road_connect: road0 junction0-0 junction0-1 var: 215, val: 0/2
-    road_connect: road0 junction0-0 junction1-0 var: 214, val: 0/2
-    road_connect: road0 junction0-0 junction1-1 var: 213, val: 0/2
-    road_connect: road0 junction0-1 junction0-0 var: 212, val: 0/2
-    road_connect: road0 junction0-1 junction0-2 var: 211, val: 0/2
-    road_connect: road0 junction0-1 junction1-0 var: 210, val: 0/2
-    road_connect: road0 junction0-1 junction1-1 var: 209, val: 0/2
-    road_connect: road0 junction0-1 junction1-2 var: 208, val: 0/2
-    road_connect: road0 junction0-2 junction0-1 var: 207, val: 0/2
-    road_connect: road0 junction0-2 junction1-1 var: 206, val: 0/2
-    road_connect: road0 junction0-2 junction1-2 var: 205, val: 0/2
-    road_connect: road0 junction1-0 junction0-0 var: 204, val: 0/2
-    road_connect: road0 junction1-0 junction0-1 var: 203, val: 0/2
-    road_connect: road0 junction1-0 junction1-1 var: 202, val: 0/2
-    road_connect: road0 junction1-0 junction2-0 var: 201, val: 0/2
-    road_connect: road0 junction1-0 junction2-1 var: 200, val: 0/2
-    road_connect: road0 junction1-1 junction0-0 var: 199, val: 0/2
-    road_connect: road0 junction1-1 junction0-1 var: 198, val: 0/2
-    road_connect: road0 junction1-1 junction0-2 var: 197, val: 0/2
-    road_connect: road0 junction1-1 junction1-0 var: 196, val: 0/2
-    road_connect: road0 junction1-1 junction1-2 var: 195, val: 0/2
-    road_connect: road0 junction1-1 junction2-0 var: 194, val: 0/2
-    road_connect: road0 junction1-1 junction2-1 var: 193, val: 0/2
-    road_connect: road0 junction1-1 junction2-2 var: 192, val: 0/2
-    road_connect: road0 junction1-2 junction0-1 var: 191, val: 0/2
-    road_connect: road0 junction1-2 junction0-2 var: 190, val: 0/2
-    road_connect: road0 junction1-2 junction1-1 var: 188, val: 0/2
-    road_connect: road0 junction1-2 junction2-1 var: 187, val: 0/2
-    road_connect: road0 junction1-2 junction2-2 var: 186, val: 0/2
-    road_connect: road0 junction2-0 junction1-0 var: 185, val: 0/2
-    road_connect: road0 junction2-0 junction1-1 var: 184, val: 0/2
-    road_connect: road0 junction2-0 junction2-1 var: 183, val: 0/2
-    road_connect: road0 junction2-1 junction1-0 var: 182, val: 0/2
-    road_connect: road0 junction2-1 junction1-1 var: 181, val: 0/2
-    road_connect: road0 junction2-1 junction1-2 var: 180, val: 0/2
-    road_connect: road0 junction2-1 junction2-0 var: 179, val: 0/2
-    road_connect: road0 junction2-1 junction2-2 var: 178, val: 0/2
-    road_connect: road0 junction2-2 junction1-1 var: 177, val: 0/2
-    road_connect: road0 junction2-2 junction1-2 var: 176, val: 0/2
-    road_connect: road0 junction2-2 junction2-1 var: 175, val: 0/2
-    road_connect: road1 junction0-0 junction0-1 var: 174, val: 0/2
-    road_connect: road1 junction0-0 junction1-0 var: 173, val: 0/2
-    road_connect: road1 junction0-0 junction1-1 var: 172, val: 0/2
-    road_connect: road1 junction0-1 junction0-0 var: 171, val: 0/2
-    road_connect: road1 junction0-1 junction0-2 var: 170, val: 0/2
-    road_connect: road1 junction0-1 junction1-0 var: 169, val: 0/2
-    road_connect: road1 junction0-1 junction1-1 var: 168, val: 0/2
-    road_connect: road1 junction0-1 junction1-2 var: 167, val: 0/2
-    road_connect: road1 junction0-2 junction0-1 var: 166, val: 0/2
-    road_connect: road1 junction0-2 junction1-1 var: 165, val: 0/2
-    road_connect: road1 junction0-2 junction1-2 var: 164, val: 0/2
-    road_connect: road1 junction1-0 junction0-0 var: 163, val: 0/2
-    road_connect: road1 junction1-0 junction0-1 var: 162, val: 0/2
-    road_connect: road1 junction1-0 junction1-1 var: 161, val: 0/2
-    road_connect: road1 junction1-0 junction2-0 var: 160, val: 0/2
-    road_connect: road1 junction1-0 junction2-1 var: 159, val: 0/2
-    road_connect: road1 junction1-1 junction0-0 var: 158, val: 0/2
-    road_connect: road1 junction1-1 junction0-1 var: 157, val: 0/2
-    road_connect: road1 junction1-1 junction0-2 var: 156, val: 0/2
-    road_connect: road1 junction1-1 junction1-0 var: 155, val: 0/2
-    road_connect: road1 junction1-1 junction1-2 var: 154, val: 0/2
-    road_connect: road1 junction1-1 junction2-0 var: 153, val: 0/2
-    road_connect: road1 junction1-1 junction2-1 var: 152, val: 0/2
-    road_connect: road1 junction1-1 junction2-2 var: 151, val: 0/2
-    road_connect: road1 junction1-2 junction0-1 var: 150, val: 0/2
-    road_connect: road1 junction1-2 junction0-2 var: 149, val: 0/2
-    road_connect: road1 junction1-2 junction1-1 var: 147, val: 0/2
-    road_connect: road1 junction1-2 junction2-1 var: 146, val: 0/2
-    road_connect: road1 junction1-2 junction2-2 var: 145, val: 0/2
-    road_connect: road1 junction2-0 junction1-0 var: 144, val: 0/2
-    road_connect: road1 junction2-0 junction1-1 var: 143, val: 0/2
-    road_connect: road1 junction2-0 junction2-1 var: 142, val: 0/2
-    road_connect: road1 junction2-1 junction1-0 var: 141, val: 0/2
-    road_connect: road1 junction2-1 junction1-1 var: 140, val: 0/2
-    road_connect: road1 junction2-1 junction1-2 var: 139, val: 0/2
-    road_connect: road1 junction2-1 junction2-0 var: 138, val: 0/2
-    road_connect: road1 junction2-1 junction2-2 var: 137, val: 0/2
-    road_connect: road1 junction2-2 junction1-1 var: 136, val: 0/2
-    road_connect: road1 junction2-2 junction1-2 var: 135, val: 0/2
-    road_connect: road1 junction2-2 junction2-1 var: 134, val: 0/2
-    road_connect: road2 junction0-0 junction0-1 var: 133, val: 0/2
-    road_connect: road2 junction0-0 junction1-0 var: 132, val: 0/2
-    road_connect: road2 junction0-0 junction1-1 var: 131, val: 0/2
-    road_connect: road2 junction0-1 junction0-0 var: 130, val: 0/2
-    road_connect: road2 junction0-1 junction0-2 var: 129, val: 0/2
-    road_connect: road2 junction0-1 junction1-0 var: 128, val: 0/2
-    road_connect: road2 junction0-1 junction1-1 var: 127, val: 0/2
-    road_connect: road2 junction0-1 junction1-2 var: 126, val: 0/2
-    road_connect: road2 junction0-2 junction0-1 var: 125, val: 0/2
-    road_connect: road2 junction0-2 junction1-1 var: 124, val: 0/2
-    road_connect: road2 junction0-2 junction1-2 var: 123, val: 0/2
-    road_connect: road2 junction1-0 junction0-0 var: 122, val: 0/2
-    road_connect: road2 junction1-0 junction0-1 var: 121, val: 0/2
-    road_connect: road2 junction1-0 junction1-1 var: 120, val: 0/2
-    road_connect: road2 junction1-0 junction2-0 var: 119, val: 0/2
-    road_connect: road2 junction1-0 junction2-1 var: 118, val: 0/2
-    road_connect: road2 junction1-1 junction0-0 var: 117, val: 0/2
-    road_connect: road2 junction1-1 junction0-1 var: 116, val: 0/2
-    road_connect: road2 junction1-1 junction0-2 var: 115, val: 0/2
-    road_connect: road2 junction1-1 junction1-0 var: 114, val: 0/2
-    road_connect: road2 junction1-1 junction1-2 var: 113, val: 0/2
-    road_connect: road2 junction1-1 junction2-0 var: 112, val: 0/2
-    road_connect: road2 junction1-1 junction2-1 var: 111, val: 0/2
-    road_connect: road2 junction1-1 junction2-2 var: 110, val: 0/2
-    road_connect: road2 junction1-2 junction0-1 var: 109, val: 0/2
-    road_connect: road2 junction1-2 junction0-2 var: 108, val: 0/2
-    road_connect: road2 junction1-2 junction1-1 var: 106, val: 0/2
-    road_connect: road2 junction1-2 junction2-1 var: 105, val: 0/2
-    road_connect: road2 junction1-2 junction2-2 var: 104, val: 0/2
-    road_connect: road2 junction2-0 junction1-0 var: 103, val: 0/2
-    road_connect: road2 junction2-0 junction1-1 var: 102, val: 0/2
-    road_connect: road2 junction2-0 junction2-1 var: 101, val: 0/2
-    road_connect: road2 junction2-1 junction1-0 var: 100, val: 0/2
-    road_connect: road2 junction2-1 junction1-1 var: 99, val: 0/2
-    road_connect: road2 junction2-1 junction1-2 var: 98, val: 0/2
-    road_connect: road2 junction2-1 junction2-0 var: 97, val: 0/2
-    road_connect: road2 junction2-1 junction2-2 var: 96, val: 0/2
-    road_connect: road2 junction2-2 junction1-1 var: 95, val: 0/2
-    road_connect: road2 junction2-2 junction1-2 var: 94, val: 0/2
-    road_connect: road2 junction2-2 junction2-1 var: 93, val: 0/2
-    road_connect: road3 junction0-0 junction0-1 var: 92, val: 0/2
-    road_connect: road3 junction0-0 junction1-0 var: 91, val: 0/2
-    road_connect: road3 junction0-0 junction1-1 var: 90, val: 0/2
-    road_connect: road3 junction0-1 junction0-0 var: 89, val: 0/2
-    road_connect: road3 junction0-1 junction0-2 var: 88, val: 0/2
-    road_connect: road3 junction0-1 junction1-0 var: 87, val: 0/2
-    road_connect: road3 junction0-1 junction1-1 var: 86, val: 0/2
-    road_connect: road3 junction0-1 junction1-2 var: 85, val: 0/2
-    road_connect: road3 junction0-2 junction0-1 var: 84, val: 0/2
-    road_connect: road3 junction0-2 junction1-1 var: 83, val: 0/2
-    road_connect: road3 junction0-2 junction1-2 var: 82, val: 0/2
-    road_connect: road3 junction1-0 junction0-0 var: 81, val: 0/2
-    road_connect: road3 junction1-0 junction0-1 var: 80, val: 0/2
-    road_connect: road3 junction1-0 junction1-1 var: 79, val: 0/2
-    road_connect: road3 junction1-0 junction2-0 var: 78, val: 0/2
-    road_connect: road3 junction1-0 junction2-1 var: 77, val: 0/2
-    road_connect: road3 junction1-1 junction0-0 var: 76, val: 0/2
-    road_connect: road3 junction1-1 junction0-1 var: 75, val: 0/2
-    road_connect: road3 junction1-1 junction0-2 var: 74, val: 0/2
-    road_connect: road3 junction1-1 junction1-0 var: 73, val: 0/2
-    road_connect: road3 junction1-1 junction1-2 var: 72, val: 0/2
-    road_connect: road3 junction1-1 junction2-0 var: 71, val: 0/2
-    road_connect: road3 junction1-1 junction2-1 var: 70, val: 0/2
-    road_connect: road3 junction1-1 junction2-2 var: 69, val: 0/2
-    road_connect: road3 junction1-2 junction0-1 var: 68, val: 0/2
-    road_connect: road3 junction1-2 junction0-2 var: 67, val: 0/2
-    road_connect: road3 junction1-2 junction1-1 var: 65, val: 0/2
-    road_connect: road3 junction1-2 junction2-1 var: 64, val: 0/2
-    road_connect: road3 junction1-2 junction2-2 var: 63, val: 0/2
-    road_connect: road3 junction2-0 junction1-0 var: 62, val: 0/2
-    road_connect: road3 junction2-0 junction1-1 var: 61, val: 0/2
-    road_connect: road3 junction2-0 junction2-1 var: 60, val: 0/2
-    road_connect: road3 junction2-1 junction1-0 var: 59, val: 0/2
-    road_connect: road3 junction2-1 junction1-1 var: 58, val: 0/2
-    road_connect: road3 junction2-1 junction1-2 var: 57, val: 0/2
-    road_connect: road3 junction2-1 junction2-0 var: 56, val: 0/2
-    road_connect: road3 junction2-1 junction2-2 var: 55, val: 0/2
-    road_connect: road3 junction2-2 junction1-1 var: 54, val: 0/2
-    road_connect: road3 junction2-2 junction1-2 var: 53, val: 0/2
-    road_connect: road3 junction2-2 junction2-1 var: 52, val: 0/2
-    road_connect: road4 junction0-0 junction0-1 var: 51, val: 0/2
-    road_connect: road4 junction0-0 junction1-0 var: 50, val: 0/2
-    road_connect: road4 junction0-0 junction1-1 var: 49, val: 0/2
-    road_connect: road4 junction0-1 junction0-0 var: 48, val: 0/2
-    road_connect: road4 junction0-1 junction0-2 var: 47, val: 0/2
-    road_connect: road4 junction0-1 junction1-0 var: 46, val: 0/2
-    road_connect: road4 junction0-1 junction1-1 var: 45, val: 0/2
-    road_connect: road4 junction0-1 junction1-2 var: 44, val: 0/2
-    road_connect: road4 junction0-2 junction0-1 var: 43, val: 0/2
-    road_connect: road4 junction0-2 junction1-1 var: 42, val: 0/2
-    road_connect: road4 junction0-2 junction1-2 var: 41, val: 0/2
-    road_connect: road4 junction1-0 junction0-0 var: 40, val: 0/2
-    road_connect: road4 junction1-0 junction0-1 var: 39, val: 0/2
-    road_connect: road4 junction1-0 junction1-1 var: 38, val: 0/2
-    road_connect: road4 junction1-0 junction2-0 var: 37, val: 0/2
-    road_connect: road4 junction1-0 junction2-1 var: 36, val: 0/2
-    road_connect: road4 junction1-1 junction0-0 var: 35, val: 0/2
-    road_connect: road4 junction1-1 junction0-1 var: 34, val: 0/2
-    road_connect: road4 junction1-1 junction0-2 var: 33, val: 0/2
-    road_connect: road4 junction1-1 junction1-0 var: 32, val: 0/2
-    road_connect: road4 junction1-1 junction1-2 var: 31, val: 0/2
-    road_connect: road4 junction1-1 junction2-0 var: 30, val: 0/2
-    road_connect: road4 junction1-1 junction2-1 var: 29, val: 0/2
-    road_connect: road4 junction1-1 junction2-2 var: 28, val: 0/2
-    road_connect: road4 junction1-2 junction0-1 var: 27, val: 0/2
-    road_connect: road4 junction1-2 junction0-2 var: 26, val: 0/2
-    road_connect: road4 junction1-2 junction1-1 var: 24, val: 0/2
-    road_connect: road4 junction1-2 junction2-1 var: 23, val: 0/2
-    road_connect: road4 junction1-2 junction2-2 var: 22, val: 0/2
-    road_connect: road4 junction2-0 junction1-0 var: 21, val: 0/2
-    road_connect: road4 junction2-0 junction1-1 var: 20, val: 0/2
-    road_connect: road4 junction2-0 junction2-1 var: 19, val: 0/2
-    road_connect: road4 junction2-1 junction1-0 var: 18, val: 0/2
-    road_connect: road4 junction2-1 junction1-1 var: 17, val: 0/2
-    road_connect: road4 junction2-1 junction1-2 var: 16, val: 0/2
-    road_connect: road4 junction2-1 junction2-0 var: 15, val: 0/2
-    road_connect: road4 junction2-1 junction2-2 var: 14, val: 0/2
-    road_connect: road4 junction2-2 junction1-1 var: 13, val: 0/2
-    road_connect: road4 junction2-2 junction1-2 var: 12, val: 0/2
-    road_connect: road4 junction2-2 junction2-1 var: 11, val: 0/2
-    clear: junction0-0 var: 9, val: 0/2
-    clear: junction0-1 var: 6, val: 0/2
-    clear: junction0-2 var: 10, val: 0/2
-    clear: junction1-0 var: 5, val: 0/2
-    clear: junction1-1 var: 2, val: 0/2
-    clear: junction1-2 var: 4, val: 0/2
-    clear: junction2-0 var: 8, val: 0/2
-    clear: junction2-1 var: 3, val: 0/2
-    clear: junction2-2 var: 7, val: 0/2
-    in_place: road0 var: 189, val: 0/2
-    in_place: road1 var: 148, val: 0/2
-    in_place: road2 var: 107, val: 0/2
-    in_place: road3 var: 66, val: 0/2
-    in_place: road4 var: 25, val: 0/2
+    [0] at_car_jun: car0 junction0-0 var: 33, val: 0/2
+    [1] at_car_jun: car0 junction0-1 var: 30, val: 0/2
+    [2] at_car_jun: car0 junction0-2 var: 36, val: 0/2
+    [3] at_car_jun: car0 junction1-0 var: 25, val: 0/2
+    [4] at_car_jun: car0 junction1-1 var: 3, val: 0/2
+    [5] at_car_jun: car0 junction1-2 var: 18, val: 0/2
+    [6] at_car_jun: car0 junction2-0 var: 26, val: 0/2
+    [7] at_car_jun: car0 junction2-1 var: 5, val: 0/2
+    [8] at_car_jun: car0 junction2-2 var: 21, val: 0/2
+    [9] at_car_jun: car1 junction0-0 var: 32, val: 0/2
+    [10] at_car_jun: car1 junction0-1 var: 29, val: 0/2
+    [11] at_car_jun: car1 junction0-2 var: 35, val: 0/2
+    [12] at_car_jun: car1 junction1-0 var: 10, val: 0/2
+    [13] at_car_jun: car1 junction1-1 var: 1, val: 0/2
+    [14] at_car_jun: car1 junction1-2 var: 6, val: 0/2
+    [15] at_car_jun: car1 junction2-0 var: 13, val: 0/2
+    [16] at_car_jun: car1 junction2-1 var: 0, val: 0/2
+    [17] at_car_jun: car1 junction2-2 var: 8, val: 0/2
+    [18] at_car_road: car0 road0 var: 27, val: 0/2
+    [19] at_car_road: car0 road1 var: 24, val: 0/2
+    [20] at_car_road: car0 road2 var: 23, val: 0/2
+    [21] at_car_road: car0 road3 var: 22, val: 0/2
+    [22] at_car_road: car0 road4 var: 20, val: 0/2
+    [23] at_car_road: car1 road0 var: 17, val: 0/2
+    [24] at_car_road: car1 road1 var: 14, val: 0/2
+    [25] at_car_road: car1 road2 var: 12, val: 0/2
+    [26] at_car_road: car1 road3 var: 11, val: 0/2
+    [27] at_car_road: car1 road4 var: 9, val: 0/2
+    [28] starting: car0 garage0 var: 243, val: 0/2
+    [29] starting: car1 garage1 var: 242, val: 0/2
+    [30] arrived: car0 junction0-0 var: -1
+    [31] arrived: car0 junction0-1 var: -1
+    [32] arrived: car0 junction0-2 var: -1
+    [33] arrived: car0 junction1-0 var: -1
+    [34] arrived: car0 junction1-1 var: -1
+    [35] arrived: car0 junction1-2 var: -1
+    [36] arrived: car0 junction2-0 var: 245, val: 0/2
+    [37] arrived: car0 junction2-1 var: -1
+    [38] arrived: car0 junction2-2 var: -1
+    [39] arrived: car1 junction0-0 var: -1
+    [40] arrived: car1 junction0-1 var: -1
+    [41] arrived: car1 junction0-2 var: -1
+    [42] arrived: car1 junction1-0 var: -1
+    [43] arrived: car1 junction1-1 var: -1
+    [44] arrived: car1 junction1-2 var: -1
+    [45] arrived: car1 junction2-0 var: -1
+    [46] arrived: car1 junction2-1 var: 244, val: 0/2
+    [47] arrived: car1 junction2-2 var: -1
+    [48] road_connect: road0 junction0-0 junction0-1 var: 241, val: 0/2
+    [49] road_connect: road0 junction0-0 junction1-0 var: 240, val: 0/2
+    [50] road_connect: road0 junction0-0 junction1-1 var: 239, val: 0/2
+    [51] road_connect: road0 junction0-1 junction0-0 var: 238, val: 0/2
+    [52] road_connect: road0 junction0-1 junction0-2 var: 237, val: 0/2
+    [53] road_connect: road0 junction0-1 junction1-0 var: 236, val: 0/2
+    [54] road_connect: road0 junction0-1 junction1-1 var: 235, val: 0/2
+    [55] road_connect: road0 junction0-1 junction1-2 var: 234, val: 0/2
+    [56] road_connect: road0 junction0-2 junction0-1 var: 233, val: 0/2
+    [57] road_connect: road0 junction0-2 junction1-1 var: 232, val: 0/2
+    [58] road_connect: road0 junction0-2 junction1-2 var: 231, val: 0/2
+    [59] road_connect: road0 junction1-0 junction0-0 var: 230, val: 0/2
+    [60] road_connect: road0 junction1-0 junction0-1 var: 229, val: 0/2
+    [61] road_connect: road0 junction1-0 junction1-1 var: 228, val: 0/2
+    [62] road_connect: road0 junction1-0 junction2-0 var: 227, val: 0/2
+    [63] road_connect: road0 junction1-0 junction2-1 var: 226, val: 0/2
+    [64] road_connect: road0 junction1-1 junction0-0 var: 225, val: 0/2
+    [65] road_connect: road0 junction1-1 junction0-1 var: 224, val: 0/2
+    [66] road_connect: road0 junction1-1 junction0-2 var: 223, val: 0/2
+    [67] road_connect: road0 junction1-1 junction1-0 var: 222, val: 0/2
+    [68] road_connect: road0 junction1-1 junction1-2 var: 221, val: 0/2
+    [69] road_connect: road0 junction1-1 junction2-0 var: 220, val: 0/2
+    [70] road_connect: road0 junction1-1 junction2-1 var: 219, val: 0/2
+    [71] road_connect: road0 junction1-1 junction2-2 var: 218, val: 0/2
+    [72] road_connect: road0 junction1-2 junction0-1 var: 217, val: 0/2
+    [73] road_connect: road0 junction1-2 junction0-2 var: 216, val: 0/2
+    [74] road_connect: road0 junction1-2 junction1-1 var: 214, val: 0/2
+    [75] road_connect: road0 junction1-2 junction2-1 var: 213, val: 0/2
+    [76] road_connect: road0 junction1-2 junction2-2 var: 212, val: 0/2
+    [77] road_connect: road0 junction2-0 junction1-0 var: 211, val: 0/2
+    [78] road_connect: road0 junction2-0 junction1-1 var: 210, val: 0/2
+    [79] road_connect: road0 junction2-0 junction2-1 var: 209, val: 0/2
+    [80] road_connect: road0 junction2-1 junction1-0 var: 208, val: 0/2
+    [81] road_connect: road0 junction2-1 junction1-1 var: 207, val: 0/2
+    [82] road_connect: road0 junction2-1 junction1-2 var: 206, val: 0/2
+    [83] road_connect: road0 junction2-1 junction2-0 var: 205, val: 0/2
+    [84] road_connect: road0 junction2-1 junction2-2 var: 204, val: 0/2
+    [85] road_connect: road0 junction2-2 junction1-1 var: 203, val: 0/2
+    [86] road_connect: road0 junction2-2 junction1-2 var: 202, val: 0/2
+    [87] road_connect: road0 junction2-2 junction2-1 var: 201, val: 0/2
+    [88] road_connect: road1 junction0-0 junction0-1 var: 200, val: 0/2
+    [89] road_connect: road1 junction0-0 junction1-0 var: 199, val: 0/2
+    [90] road_connect: road1 junction0-0 junction1-1 var: 198, val: 0/2
+    [91] road_connect: road1 junction0-1 junction0-0 var: 197, val: 0/2
+    [92] road_connect: road1 junction0-1 junction0-2 var: 196, val: 0/2
+    [93] road_connect: road1 junction0-1 junction1-0 var: 195, val: 0/2
+    [94] road_connect: road1 junction0-1 junction1-1 var: 194, val: 0/2
+    [95] road_connect: road1 junction0-1 junction1-2 var: 193, val: 0/2
+    [96] road_connect: road1 junction0-2 junction0-1 var: 192, val: 0/2
+    [97] road_connect: road1 junction0-2 junction1-1 var: 191, val: 0/2
+    [98] road_connect: road1 junction0-2 junction1-2 var: 190, val: 0/2
+    [99] road_connect: road1 junction1-0 junction0-0 var: 189, val: 0/2
+    [100] road_connect: road1 junction1-0 junction0-1 var: 188, val: 0/2
+    [101] road_connect: road1 junction1-0 junction1-1 var: 187, val: 0/2
+    [102] road_connect: road1 junction1-0 junction2-0 var: 186, val: 0/2
+    [103] road_connect: road1 junction1-0 junction2-1 var: 185, val: 0/2
+    [104] road_connect: road1 junction1-1 junction0-0 var: 184, val: 0/2
+    [105] road_connect: road1 junction1-1 junction0-1 var: 183, val: 0/2
+    [106] road_connect: road1 junction1-1 junction0-2 var: 182, val: 0/2
+    [107] road_connect: road1 junction1-1 junction1-0 var: 181, val: 0/2
+    [108] road_connect: road1 junction1-1 junction1-2 var: 180, val: 0/2
+    [109] road_connect: road1 junction1-1 junction2-0 var: 179, val: 0/2
+    [110] road_connect: road1 junction1-1 junction2-1 var: 178, val: 0/2
+    [111] road_connect: road1 junction1-1 junction2-2 var: 177, val: 0/2
+    [112] road_connect: road1 junction1-2 junction0-1 var: 176, val: 0/2
+    [113] road_connect: road1 junction1-2 junction0-2 var: 175, val: 0/2
+    [114] road_connect: road1 junction1-2 junction1-1 var: 173, val: 0/2
+    [115] road_connect: road1 junction1-2 junction2-1 var: 172, val: 0/2
+    [116] road_connect: road1 junction1-2 junction2-2 var: 171, val: 0/2
+    [117] road_connect: road1 junction2-0 junction1-0 var: 170, val: 0/2
+    [118] road_connect: road1 junction2-0 junction1-1 var: 169, val: 0/2
+    [119] road_connect: road1 junction2-0 junction2-1 var: 168, val: 0/2
+    [120] road_connect: road1 junction2-1 junction1-0 var: 167, val: 0/2
+    [121] road_connect: road1 junction2-1 junction1-1 var: 166, val: 0/2
+    [122] road_connect: road1 junction2-1 junction1-2 var: 165, val: 0/2
+    [123] road_connect: road1 junction2-1 junction2-0 var: 164, val: 0/2
+    [124] road_connect: road1 junction2-1 junction2-2 var: 163, val: 0/2
+    [125] road_connect: road1 junction2-2 junction1-1 var: 162, val: 0/2
+    [126] road_connect: road1 junction2-2 junction1-2 var: 161, val: 0/2
+    [127] road_connect: road1 junction2-2 junction2-1 var: 160, val: 0/2
+    [128] road_connect: road2 junction0-0 junction0-1 var: 159, val: 0/2
+    [129] road_connect: road2 junction0-0 junction1-0 var: 158, val: 0/2
+    [130] road_connect: road2 junction0-0 junction1-1 var: 157, val: 0/2
+    [131] road_connect: road2 junction0-1 junction0-0 var: 156, val: 0/2
+    [132] road_connect: road2 junction0-1 junction0-2 var: 155, val: 0/2
+    [133] road_connect: road2 junction0-1 junction1-0 var: 154, val: 0/2
+    [134] road_connect: road2 junction0-1 junction1-1 var: 153, val: 0/2
+    [135] road_connect: road2 junction0-1 junction1-2 var: 152, val: 0/2
+    [136] road_connect: road2 junction0-2 junction0-1 var: 151, val: 0/2
+    [137] road_connect: road2 junction0-2 junction1-1 var: 150, val: 0/2
+    [138] road_connect: road2 junction0-2 junction1-2 var: 149, val: 0/2
+    [139] road_connect: road2 junction1-0 junction0-0 var: 148, val: 0/2
+    [140] road_connect: road2 junction1-0 junction0-1 var: 147, val: 0/2
+    [141] road_connect: road2 junction1-0 junction1-1 var: 146, val: 0/2
+    [142] road_connect: road2 junction1-0 junction2-0 var: 145, val: 0/2
+    [143] road_connect: road2 junction1-0 junction2-1 var: 144, val: 0/2
+    [144] road_connect: road2 junction1-1 junction0-0 var: 143, val: 0/2
+    [145] road_connect: road2 junction1-1 junction0-1 var: 142, val: 0/2
+    [146] road_connect: road2 junction1-1 junction0-2 var: 141, val: 0/2
+    [147] road_connect: road2 junction1-1 junction1-0 var: 140, val: 0/2
+    [148] road_connect: road2 junction1-1 junction1-2 var: 139, val: 0/2
+    [149] road_connect: road2 junction1-1 junction2-0 var: 138, val: 0/2
+    [150] road_connect: road2 junction1-1 junction2-1 var: 137, val: 0/2
+    [151] road_connect: road2 junction1-1 junction2-2 var: 136, val: 0/2
+    [152] road_connect: road2 junction1-2 junction0-1 var: 135, val: 0/2
+    [153] road_connect: road2 junction1-2 junction0-2 var: 134, val: 0/2
+    [154] road_connect: road2 junction1-2 junction1-1 var: 132, val: 0/2
+    [155] road_connect: road2 junction1-2 junction2-1 var: 131, val: 0/2
+    [156] road_connect: road2 junction1-2 junction2-2 var: 130, val: 0/2
+    [157] road_connect: road2 junction2-0 junction1-0 var: 129, val: 0/2
+    [158] road_connect: road2 junction2-0 junction1-1 var: 128, val: 0/2
+    [159] road_connect: road2 junction2-0 junction2-1 var: 127, val: 0/2
+    [160] road_connect: road2 junction2-1 junction1-0 var: 126, val: 0/2
+    [161] road_connect: road2 junction2-1 junction1-1 var: 125, val: 0/2
+    [162] road_connect: road2 junction2-1 junction1-2 var: 124, val: 0/2
+    [163] road_connect: road2 junction2-1 junction2-0 var: 123, val: 0/2
+    [164] road_connect: road2 junction2-1 junction2-2 var: 122, val: 0/2
+    [165] road_connect: road2 junction2-2 junction1-1 var: 121, val: 0/2
+    [166] road_connect: road2 junction2-2 junction1-2 var: 120, val: 0/2
+    [167] road_connect: road2 junction2-2 junction2-1 var: 119, val: 0/2
+    [168] road_connect: road3 junction0-0 junction0-1 var: 118, val: 0/2
+    [169] road_connect: road3 junction0-0 junction1-0 var: 117, val: 0/2
+    [170] road_connect: road3 junction0-0 junction1-1 var: 116, val: 0/2
+    [171] road_connect: road3 junction0-1 junction0-0 var: 115, val: 0/2
+    [172] road_connect: road3 junction0-1 junction0-2 var: 114, val: 0/2
+    [173] road_connect: road3 junction0-1 junction1-0 var: 113, val: 0/2
+    [174] road_connect: road3 junction0-1 junction1-1 var: 112, val: 0/2
+    [175] road_connect: road3 junction0-1 junction1-2 var: 111, val: 0/2
+    [176] road_connect: road3 junction0-2 junction0-1 var: 110, val: 0/2
+    [177] road_connect: road3 junction0-2 junction1-1 var: 109, val: 0/2
+    [178] road_connect: road3 junction0-2 junction1-2 var: 108, val: 0/2
+    [179] road_connect: road3 junction1-0 junction0-0 var: 107, val: 0/2
+    [180] road_connect: road3 junction1-0 junction0-1 var: 106, val: 0/2
+    [181] road_connect: road3 junction1-0 junction1-1 var: 105, val: 0/2
+    [182] road_connect: road3 junction1-0 junction2-0 var: 104, val: 0/2
+    [183] road_connect: road3 junction1-0 junction2-1 var: 103, val: 0/2
+    [184] road_connect: road3 junction1-1 junction0-0 var: 102, val: 0/2
+    [185] road_connect: road3 junction1-1 junction0-1 var: 101, val: 0/2
+    [186] road_connect: road3 junction1-1 junction0-2 var: 100, val: 0/2
+    [187] road_connect: road3 junction1-1 junction1-0 var: 99, val: 0/2
+    [188] road_connect: road3 junction1-1 junction1-2 var: 98, val: 0/2
+    [189] road_connect: road3 junction1-1 junction2-0 var: 97, val: 0/2
+    [190] road_connect: road3 junction1-1 junction2-1 var: 96, val: 0/2
+    [191] road_connect: road3 junction1-1 junction2-2 var: 95, val: 0/2
+    [192] road_connect: road3 junction1-2 junction0-1 var: 94, val: 0/2
+    [193] road_connect: road3 junction1-2 junction0-2 var: 93, val: 0/2
+    [194] road_connect: road3 junction1-2 junction1-1 var: 91, val: 0/2
+    [195] road_connect: road3 junction1-2 junction2-1 var: 90, val: 0/2
+    [196] road_connect: road3 junction1-2 junction2-2 var: 89, val: 0/2
+    [197] road_connect: road3 junction2-0 junction1-0 var: 88, val: 0/2
+    [198] road_connect: road3 junction2-0 junction1-1 var: 87, val: 0/2
+    [199] road_connect: road3 junction2-0 junction2-1 var: 86, val: 0/2
+    [200] road_connect: road3 junction2-1 junction1-0 var: 85, val: 0/2
+    [201] road_connect: road3 junction2-1 junction1-1 var: 84, val: 0/2
+    [202] road_connect: road3 junction2-1 junction1-2 var: 83, val: 0/2
+    [203] road_connect: road3 junction2-1 junction2-0 var: 82, val: 0/2
+    [204] road_connect: road3 junction2-1 junction2-2 var: 81, val: 0/2
+    [205] road_connect: road3 junction2-2 junction1-1 var: 80, val: 0/2
+    [206] road_connect: road3 junction2-2 junction1-2 var: 79, val: 0/2
+    [207] road_connect: road3 junction2-2 junction2-1 var: 78, val: 0/2
+    [208] road_connect: road4 junction0-0 junction0-1 var: 77, val: 0/2
+    [209] road_connect: road4 junction0-0 junction1-0 var: 76, val: 0/2
+    [210] road_connect: road4 junction0-0 junction1-1 var: 75, val: 0/2
+    [211] road_connect: road4 junction0-1 junction0-0 var: 74, val: 0/2
+    [212] road_connect: road4 junction0-1 junction0-2 var: 73, val: 0/2
+    [213] road_connect: road4 junction0-1 junction1-0 var: 72, val: 0/2
+    [214] road_connect: road4 junction0-1 junction1-1 var: 71, val: 0/2
+    [215] road_connect: road4 junction0-1 junction1-2 var: 70, val: 0/2
+    [216] road_connect: road4 junction0-2 junction0-1 var: 69, val: 0/2
+    [217] road_connect: road4 junction0-2 junction1-1 var: 68, val: 0/2
+    [218] road_connect: road4 junction0-2 junction1-2 var: 67, val: 0/2
+    [219] road_connect: road4 junction1-0 junction0-0 var: 66, val: 0/2
+    [220] road_connect: road4 junction1-0 junction0-1 var: 65, val: 0/2
+    [221] road_connect: road4 junction1-0 junction1-1 var: 64, val: 0/2
+    [222] road_connect: road4 junction1-0 junction2-0 var: 63, val: 0/2
+    [223] road_connect: road4 junction1-0 junction2-1 var: 62, val: 0/2
+    [224] road_connect: road4 junction1-1 junction0-0 var: 61, val: 0/2
+    [225] road_connect: road4 junction1-1 junction0-1 var: 60, val: 0/2
+    [226] road_connect: road4 junction1-1 junction0-2 var: 59, val: 0/2
+    [227] road_connect: road4 junction1-1 junction1-0 var: 58, val: 0/2
+    [228] road_connect: road4 junction1-1 junction1-2 var: 57, val: 0/2
+    [229] road_connect: road4 junction1-1 junction2-0 var: 56, val: 0/2
+    [230] road_connect: road4 junction1-1 junction2-1 var: 55, val: 0/2
+    [231] road_connect: road4 junction1-1 junction2-2 var: 54, val: 0/2
+    [232] road_connect: road4 junction1-2 junction0-1 var: 53, val: 0/2
+    [233] road_connect: road4 junction1-2 junction0-2 var: 52, val: 0/2
+    [234] road_connect: road4 junction1-2 junction1-1 var: 50, val: 0/2
+    [235] road_connect: road4 junction1-2 junction2-1 var: 49, val: 0/2
+    [236] road_connect: road4 junction1-2 junction2-2 var: 48, val: 0/2
+    [237] road_connect: road4 junction2-0 junction1-0 var: 47, val: 0/2
+    [238] road_connect: road4 junction2-0 junction1-1 var: 46, val: 0/2
+    [239] road_connect: road4 junction2-0 junction2-1 var: 45, val: 0/2
+    [240] road_connect: road4 junction2-1 junction1-0 var: 44, val: 0/2
+    [241] road_connect: road4 junction2-1 junction1-1 var: 43, val: 0/2
+    [242] road_connect: road4 junction2-1 junction1-2 var: 42, val: 0/2
+    [243] road_connect: road4 junction2-1 junction2-0 var: 41, val: 0/2
+    [244] road_connect: road4 junction2-1 junction2-2 var: 40, val: 0/2
+    [245] road_connect: road4 junction2-2 junction1-1 var: 39, val: 0/2
+    [246] road_connect: road4 junction2-2 junction1-2 var: 38, val: 0/2
+    [247] road_connect: road4 junction2-2 junction2-1 var: 37, val: 0/2
+    [248] clear: junction0-0 var: 31, val: 0/2
+    [249] clear: junction0-1 var: 28, val: 0/2
+    [250] clear: junction0-2 var: 34, val: 0/2
+    [251] clear: junction1-0 var: 15, val: 0/2
+    [252] clear: junction1-1 var: 2, val: 0/2
+    [253] clear: junction1-2 var: 7, val: 0/2
+    [254] clear: junction2-0 var: 19, val: 0/2
+    [255] clear: junction2-1 var: 4, val: 0/2
+    [256] clear: junction2-2 var: 16, val: 0/2
+    [257] in_place: road0 var: 215, val: 0/2
+    [258] in_place: road1 var: 174, val: 0/2
+    [259] in_place: road2 var: 133, val: 0/2
+    [260] in_place: road3 var: 92, val: 0/2
+    [261] in_place: road4 var: 51, val: 0/2
 Facts[262]:
     at_car_jun: car0 junction0-0
     at_car_jun: car0 junction0-1
@@ -22645,134 +22595,134 @@ Invariant 3:
     boarded: p3 slow0-0 var: 3, val: 11/13
     boarded: p3 slow1-0 var: 3, val: 12/13
 Invariant 4:
-    lift-at: fast0 n0 var: 11, val: 0/5
-    lift-at: fast0 n2 var: 11, val: 1/5
-    lift-at: fast0 n4 var: 11, val: 2/5
-    lift-at: fast0 n6 var: 11, val: 3/5
-    lift-at: fast0 n8 var: 11, val: 4/5
+    lift-at: fast1 n0 var: 10, val: 0/5
+    lift-at: fast1 n2 var: 10, val: 1/5
+    lift-at: fast1 n4 var: 10, val: 2/5
+    lift-at: fast1 n6 var: 10, val: 3/5
+    lift-at: fast1 n8 var: 10, val: 4/5
 Invariant 5:
-    lift-at: fast1 n0 var: 10, val: 0/5
-    lift-at: fast1 n2 var: 10, val: 1/5
-    lift-at: fast1 n4 var: 10, val: 2/5
-    lift-at: fast1 n6 var: 10, val: 3/5
-    lift-at: fast1 n8 var: 10, val: 4/5
-Invariant 6:
-    lift-at: slow0-0 n0 var: 9, val: 0/5
-    lift-at: slow0-0 n1 var: 9, val: 1/5
-    lift-at: slow0-0 n2 var: 9, val: 2/5
-    lift-at: slow0-0 n3 var: 9, val: 3/5
-    lift-at: slow0-0 n4 var: 9, val: 4/5
-Invariant 7:
-    lift-at: slow1-0 n4 var: 8, val: 0/5
-    lift-at: slow1-0 n5 var: 8, val: 1/5
-    lift-at: slow1-0 n6 var: 8, val: 2/5
-    lift-at: slow1-0 n7 var: 8, val: 3/5
-    lift-at: slow1-0 n8 var: 8, val: 4/5
-Invariant 8:
-    passengers: fast0 n0 var: 1, val: 0/4
-    passengers: fast0 n1 var: 1, val: 1/4
-    passengers: fast0 n2 var: 1, val: 2/4
-    passengers: fast0 n3 var: 1, val: 3/4
-Invariant 9:
-    passengers: fast1 n0 var: 0, val: 0/4
-    passengers: fast1 n1 var: 0, val: 1/4
-    passengers: fast1 n2 var: 0, val: 2/4
-    passengers: fast1 n3 var: 0, val: 3/4
-Invariant 10:
-    passengers: slow0-0 n0 var: 7, val: 0/3
-    passengers: slow0-0 n1 var: 7, val: 1/3
-    passengers: slow0-0 n2 var: 7, val: 2/3
-Invariant 11:
-    passengers: slow1-0 n0 var: 2, val: 0/3
-    passengers: slow1-0 n1 var: 2, val: 1/3
-    passengers: slow1-0 n2 var: 2, val: 2/3
-SAS Facts[86]:
-    passenger-at: p0 n0 var: 6, val: 0/13
-    passenger-at: p0 n1 var: 6, val: 1/13
-    passenger-at: p0 n2 var: 6, val: 2/13
-    passenger-at: p0 n3 var: 6, val: 3/13
-    passenger-at: p0 n4 var: 6, val: 4/13
-    passenger-at: p0 n5 var: 6, val: 5/13
-    passenger-at: p0 n6 var: 6, val: 6/13
-    passenger-at: p0 n7 var: 6, val: 7/13
-    passenger-at: p0 n8 var: 6, val: 8/13
-    passenger-at: p1 n0 var: 5, val: 0/13
-    passenger-at: p1 n1 var: 5, val: 1/13
-    passenger-at: p1 n2 var: 5, val: 2/13
-    passenger-at: p1 n3 var: 5, val: 3/13
-    passenger-at: p1 n4 var: 5, val: 4/13
-    passenger-at: p1 n5 var: 5, val: 5/13
-    passenger-at: p1 n6 var: 5, val: 6/13
-    passenger-at: p1 n7 var: 5, val: 7/13
-    passenger-at: p1 n8 var: 5, val: 8/13
-    passenger-at: p2 n0 var: 4, val: 0/13
-    passenger-at: p2 n1 var: 4, val: 1/13
-    passenger-at: p2 n2 var: 4, val: 2/13
-    passenger-at: p2 n3 var: 4, val: 3/13
-    passenger-at: p2 n4 var: 4, val: 4/13
-    passenger-at: p2 n5 var: 4, val: 5/13
-    passenger-at: p2 n6 var: 4, val: 6/13
-    passenger-at: p2 n7 var: 4, val: 7/13
-    passenger-at: p2 n8 var: 4, val: 8/13
-    passenger-at: p3 n0 var: 3, val: 0/13
-    passenger-at: p3 n1 var: 3, val: 1/13
-    passenger-at: p3 n2 var: 3, val: 2/13
-    passenger-at: p3 n3 var: 3, val: 3/13
-    passenger-at: p3 n4 var: 3, val: 4/13
-    passenger-at: p3 n5 var: 3, val: 5/13
-    passenger-at: p3 n6 var: 3, val: 6/13
-    passenger-at: p3 n7 var: 3, val: 7/13
-    passenger-at: p3 n8 var: 3, val: 8/13
-    boarded: p0 fast0 var: 6, val: 9/13
-    boarded: p0 fast1 var: 6, val: 10/13
-    boarded: p0 slow0-0 var: 6, val: 11/13
-    boarded: p0 slow1-0 var: 6, val: 12/13
-    boarded: p1 fast0 var: 5, val: 9/13
-    boarded: p1 fast1 var: 5, val: 10/13
-    boarded: p1 slow0-0 var: 5, val: 11/13
-    boarded: p1 slow1-0 var: 5, val: 12/13
-    boarded: p2 fast0 var: 4, val: 9/13
-    boarded: p2 fast1 var: 4, val: 10/13
-    boarded: p2 slow0-0 var: 4, val: 11/13
-    boarded: p2 slow1-0 var: 4, val: 12/13
-    boarded: p3 fast0 var: 3, val: 9/13
-    boarded: p3 fast1 var: 3, val: 10/13
-    boarded: p3 slow0-0 var: 3, val: 11/13
-    boarded: p3 slow1-0 var: 3, val: 12/13
     lift-at: fast0 n0 var: 11, val: 0/5
     lift-at: fast0 n2 var: 11, val: 1/5
     lift-at: fast0 n4 var: 11, val: 2/5
     lift-at: fast0 n6 var: 11, val: 3/5
     lift-at: fast0 n8 var: 11, val: 4/5
-    lift-at: fast1 n0 var: 10, val: 0/5
-    lift-at: fast1 n2 var: 10, val: 1/5
-    lift-at: fast1 n4 var: 10, val: 2/5
-    lift-at: fast1 n6 var: 10, val: 3/5
-    lift-at: fast1 n8 var: 10, val: 4/5
-    lift-at: slow0-0 n0 var: 9, val: 0/5
-    lift-at: slow0-0 n1 var: 9, val: 1/5
-    lift-at: slow0-0 n2 var: 9, val: 2/5
-    lift-at: slow0-0 n3 var: 9, val: 3/5
-    lift-at: slow0-0 n4 var: 9, val: 4/5
+Invariant 6:
     lift-at: slow1-0 n4 var: 8, val: 0/5
     lift-at: slow1-0 n5 var: 8, val: 1/5
     lift-at: slow1-0 n6 var: 8, val: 2/5
     lift-at: slow1-0 n7 var: 8, val: 3/5
     lift-at: slow1-0 n8 var: 8, val: 4/5
-    passengers: fast0 n0 var: 1, val: 0/4
-    passengers: fast0 n1 var: 1, val: 1/4
-    passengers: fast0 n2 var: 1, val: 2/4
-    passengers: fast0 n3 var: 1, val: 3/4
+Invariant 7:
+    lift-at: slow0-0 n0 var: 9, val: 0/5
+    lift-at: slow0-0 n1 var: 9, val: 1/5
+    lift-at: slow0-0 n2 var: 9, val: 2/5
+    lift-at: slow0-0 n3 var: 9, val: 3/5
+    lift-at: slow0-0 n4 var: 9, val: 4/5
+Invariant 8:
     passengers: fast1 n0 var: 0, val: 0/4
     passengers: fast1 n1 var: 0, val: 1/4
     passengers: fast1 n2 var: 0, val: 2/4
     passengers: fast1 n3 var: 0, val: 3/4
-    passengers: slow0-0 n0 var: 7, val: 0/3
-    passengers: slow0-0 n1 var: 7, val: 1/3
-    passengers: slow0-0 n2 var: 7, val: 2/3
+Invariant 9:
+    passengers: fast0 n0 var: 1, val: 0/4
+    passengers: fast0 n1 var: 1, val: 1/4
+    passengers: fast0 n2 var: 1, val: 2/4
+    passengers: fast0 n3 var: 1, val: 3/4
+Invariant 10:
     passengers: slow1-0 n0 var: 2, val: 0/3
     passengers: slow1-0 n1 var: 2, val: 1/3
     passengers: slow1-0 n2 var: 2, val: 2/3
+Invariant 11:
+    passengers: slow0-0 n0 var: 7, val: 0/3
+    passengers: slow0-0 n1 var: 7, val: 1/3
+    passengers: slow0-0 n2 var: 7, val: 2/3
+SAS Facts[86]:
+    [0] passenger-at: p0 n0 var: 6, val: 0/13
+    [1] passenger-at: p0 n1 var: 6, val: 1/13
+    [2] passenger-at: p0 n2 var: 6, val: 2/13
+    [3] passenger-at: p0 n3 var: 6, val: 3/13
+    [4] passenger-at: p0 n4 var: 6, val: 4/13
+    [5] passenger-at: p0 n5 var: 6, val: 5/13
+    [6] passenger-at: p0 n6 var: 6, val: 6/13
+    [7] passenger-at: p0 n7 var: 6, val: 7/13
+    [8] passenger-at: p0 n8 var: 6, val: 8/13
+    [9] passenger-at: p1 n0 var: 5, val: 0/13
+    [10] passenger-at: p1 n1 var: 5, val: 1/13
+    [11] passenger-at: p1 n2 var: 5, val: 2/13
+    [12] passenger-at: p1 n3 var: 5, val: 3/13
+    [13] passenger-at: p1 n4 var: 5, val: 4/13
+    [14] passenger-at: p1 n5 var: 5, val: 5/13
+    [15] passenger-at: p1 n6 var: 5, val: 6/13
+    [16] passenger-at: p1 n7 var: 5, val: 7/13
+    [17] passenger-at: p1 n8 var: 5, val: 8/13
+    [18] passenger-at: p2 n0 var: 4, val: 0/13
+    [19] passenger-at: p2 n1 var: 4, val: 1/13
+    [20] passenger-at: p2 n2 var: 4, val: 2/13
+    [21] passenger-at: p2 n3 var: 4, val: 3/13
+    [22] passenger-at: p2 n4 var: 4, val: 4/13
+    [23] passenger-at: p2 n5 var: 4, val: 5/13
+    [24] passenger-at: p2 n6 var: 4, val: 6/13
+    [25] passenger-at: p2 n7 var: 4, val: 7/13
+    [26] passenger-at: p2 n8 var: 4, val: 8/13
+    [27] passenger-at: p3 n0 var: 3, val: 0/13
+    [28] passenger-at: p3 n1 var: 3, val: 1/13
+    [29] passenger-at: p3 n2 var: 3, val: 2/13
+    [30] passenger-at: p3 n3 var: 3, val: 3/13
+    [31] passenger-at: p3 n4 var: 3, val: 4/13
+    [32] passenger-at: p3 n5 var: 3, val: 5/13
+    [33] passenger-at: p3 n6 var: 3, val: 6/13
+    [34] passenger-at: p3 n7 var: 3, val: 7/13
+    [35] passenger-at: p3 n8 var: 3, val: 8/13
+    [36] boarded: p0 fast0 var: 6, val: 9/13
+    [37] boarded: p0 fast1 var: 6, val: 10/13
+    [38] boarded: p0 slow0-0 var: 6, val: 11/13
+    [39] boarded: p0 slow1-0 var: 6, val: 12/13
+    [40] boarded: p1 fast0 var: 5, val: 9/13
+    [41] boarded: p1 fast1 var: 5, val: 10/13
+    [42] boarded: p1 slow0-0 var: 5, val: 11/13
+    [43] boarded: p1 slow1-0 var: 5, val: 12/13
+    [44] boarded: p2 fast0 var: 4, val: 9/13
+    [45] boarded: p2 fast1 var: 4, val: 10/13
+    [46] boarded: p2 slow0-0 var: 4, val: 11/13
+    [47] boarded: p2 slow1-0 var: 4, val: 12/13
+    [48] boarded: p3 fast0 var: 3, val: 9/13
+    [49] boarded: p3 fast1 var: 3, val: 10/13
+    [50] boarded: p3 slow0-0 var: 3, val: 11/13
+    [51] boarded: p3 slow1-0 var: 3, val: 12/13
+    [52] lift-at: fast0 n0 var: 11, val: 0/5
+    [53] lift-at: fast0 n2 var: 11, val: 1/5
+    [54] lift-at: fast0 n4 var: 11, val: 2/5
+    [55] lift-at: fast0 n6 var: 11, val: 3/5
+    [56] lift-at: fast0 n8 var: 11, val: 4/5
+    [57] lift-at: fast1 n0 var: 10, val: 0/5
+    [58] lift-at: fast1 n2 var: 10, val: 1/5
+    [59] lift-at: fast1 n4 var: 10, val: 2/5
+    [60] lift-at: fast1 n6 var: 10, val: 3/5
+    [61] lift-at: fast1 n8 var: 10, val: 4/5
+    [62] lift-at: slow0-0 n0 var: 9, val: 0/5
+    [63] lift-at: slow0-0 n1 var: 9, val: 1/5
+    [64] lift-at: slow0-0 n2 var: 9, val: 2/5
+    [65] lift-at: slow0-0 n3 var: 9, val: 3/5
+    [66] lift-at: slow0-0 n4 var: 9, val: 4/5
+    [67] lift-at: slow1-0 n4 var: 8, val: 0/5
+    [68] lift-at: slow1-0 n5 var: 8, val: 1/5
+    [69] lift-at: slow1-0 n6 var: 8, val: 2/5
+    [70] lift-at: slow1-0 n7 var: 8, val: 3/5
+    [71] lift-at: slow1-0 n8 var: 8, val: 4/5
+    [72] passengers: fast0 n0 var: 1, val: 0/4
+    [73] passengers: fast0 n1 var: 1, val: 1/4
+    [74] passengers: fast0 n2 var: 1, val: 2/4
+    [75] passengers: fast0 n3 var: 1, val: 3/4
+    [76] passengers: fast1 n0 var: 0, val: 0/4
+    [77] passengers: fast1 n1 var: 0, val: 1/4
+    [78] passengers: fast1 n2 var: 0, val: 2/4
+    [79] passengers: fast1 n3 var: 0, val: 3/4
+    [80] passengers: slow0-0 n0 var: 7, val: 0/3
+    [81] passengers: slow0-0 n1 var: 7, val: 1/3
+    [82] passengers: slow0-0 n2 var: 7, val: 2/3
+    [83] passengers: slow1-0 n0 var: 2, val: 0/3
+    [84] passengers: slow1-0 n1 var: 2, val: 1/3
+    [85] passengers: slow1-0 n2 var: 2, val: 2/3
 Facts[86]:
     passenger-at: p0 n0
     passenger-at: p0 n1
@@ -28785,62 +28735,44 @@ Agent size: 0
 ---- Ground pddl/elevators08-domain.pddl | pddl/elevators08-p01.pddl END ----
 ---- Ground pddl/depot-domain.unfactor.pddl | pddl/depot-pfile1.unfactor.pddl ----
 Invariant 0:
-    at: truck1 depot0 var: 13, val: 0/3
-    at: truck1 distributor1 var: 13, val: 1/3
-    at: truck1 distributor0 var: 13, val: 2/3
+    on: crate1 crate0 var: 1, val: 0/9
+    on: crate1 pallet1 var: 1, val: 1/9
+    on: crate1 pallet0 var: 1, val: 2/9
+    on: crate1 pallet2 var: 1, val: 3/9
+    in: crate1 truck1 var: 1, val: 4/9
+    in: crate1 truck0 var: 1, val: 5/9
+    P[2]:lifting: depot0 hoist0 crate1 var: 1, val: 6/9
+    P[8]:lifting: distributor1 hoist2 crate1 var: 1, val: 7/9
+    P[9]:lifting: distributor0 hoist1 crate1 var: 1, val: 8/9
 Invariant 1:
-    at: truck0 depot0 var: 12, val: 0/3
-    at: truck0 distributor1 var: 12, val: 1/3
-    at: truck0 distributor0 var: 12, val: 2/3
+    on: crate0 crate1 var: 0, val: 0/9
+    on: crate0 pallet1 var: 0, val: 1/9
+    on: crate0 pallet0 var: 0, val: 2/9
+    on: crate0 pallet2 var: 0, val: 3/9
+    in: crate0 truck1 var: 0, val: 4/9
+    in: crate0 truck0 var: 0, val: 5/9
+    P[2]:lifting: depot0 hoist0 crate0 var: 0, val: 6/9
+    P[8]:lifting: distributor1 hoist2 crate0 var: 0, val: 7/9
+    P[9]:lifting: distributor0 hoist1 crate0 var: 0, val: 8/9
 Invariant 2:
-    at: crate1 depot0 var: 8, val: 0/4
-    at: crate1 distributor1 var: 8, val: 1/4
-    at: crate1 distributor0 var: 8, val: 2/4
+    at: crate1 depot0 var: 9, val: 0/4
+    at: crate1 distributor1 var: 9, val: 1/4
+    at: crate1 distributor0 var: 9, val: 2/4
     in: crate1 truck1 var: 1, val: 4/9
     in: crate1 truck0 var: 1, val: 5/9
     P[2]:lifting: depot0 hoist0 crate1 var: 1, val: 6/9
     P[8]:lifting: distributor1 hoist2 crate1 var: 1, val: 7/9
     P[9]:lifting: distributor0 hoist1 crate1 var: 1, val: 8/9
 Invariant 3:
-    at: crate0 depot0 var: 9, val: 0/4
-    at: crate0 distributor1 var: 9, val: 1/4
-    at: crate0 distributor0 var: 9, val: 2/4
+    at: crate0 depot0 var: 8, val: 0/4
+    at: crate0 distributor1 var: 8, val: 1/4
+    at: crate0 distributor0 var: 8, val: 2/4
     in: crate0 truck1 var: 0, val: 4/9
     in: crate0 truck0 var: 0, val: 5/9
     P[2]:lifting: depot0 hoist0 crate0 var: 0, val: 6/9
     P[8]:lifting: distributor1 hoist2 crate0 var: 0, val: 7/9
     P[9]:lifting: distributor0 hoist1 crate0 var: 0, val: 8/9
 Invariant 4:
-    on: crate1 crate0 var: 1, val: 0/9
-    in: crate0 truck1 var: 0, val: 4/9
-    in: crate0 truck0 var: 0, val: 5/9
-    clear: crate0 var: 4, val: 0/2
-    P[2]:lifting: depot0 hoist0 crate0 var: 0, val: 6/9
-    P[8]:lifting: distributor1 hoist2 crate0 var: 0, val: 7/9
-    P[9]:lifting: distributor0 hoist1 crate0 var: 0, val: 8/9
-Invariant 5:
-    on: crate1 crate0 var: 1, val: 0/9
-    on: crate1 pallet1 var: 1, val: 1/9
-    on: crate1 pallet0 var: 1, val: 2/9
-    on: crate1 pallet2 var: 1, val: 3/9
-    in: crate1 truck1 var: 1, val: 4/9
-    in: crate1 truck0 var: 1, val: 5/9
-    P[2]:lifting: depot0 hoist0 crate1 var: 1, val: 6/9
-    P[8]:lifting: distributor1 hoist2 crate1 var: 1, val: 7/9
-    P[9]:lifting: distributor0 hoist1 crate1 var: 1, val: 8/9
-Invariant 6:
-    on: crate1 pallet1 var: 1, val: 1/9
-    on: crate0 pallet1 var: 0, val: 1/9
-    clear: pallet1 var: 11, val: 0/2
-Invariant 7:
-    on: crate1 pallet0 var: 1, val: 2/9
-    on: crate0 pallet0 var: 0, val: 2/9
-    clear: pallet0 var: 7, val: 0/2
-Invariant 8:
-    on: crate1 pallet2 var: 1, val: 3/9
-    on: crate0 pallet2 var: 0, val: 3/9
-    clear: pallet2 var: 6, val: 0/2
-Invariant 9:
     on: crate0 crate1 var: 0, val: 0/9
     in: crate1 truck1 var: 1, val: 4/9
     in: crate1 truck0 var: 1, val: 5/9
@@ -28848,67 +28780,85 @@ Invariant 9:
     P[2]:lifting: depot0 hoist0 crate1 var: 1, val: 6/9
     P[8]:lifting: distributor1 hoist2 crate1 var: 1, val: 7/9
     P[9]:lifting: distributor0 hoist1 crate1 var: 1, val: 8/9
-Invariant 10:
-    on: crate0 crate1 var: 0, val: 0/9
-    on: crate0 pallet1 var: 0, val: 1/9
-    on: crate0 pallet0 var: 0, val: 2/9
-    on: crate0 pallet2 var: 0, val: 3/9
+Invariant 5:
+    on: crate1 crate0 var: 1, val: 0/9
     in: crate0 truck1 var: 0, val: 4/9
     in: crate0 truck0 var: 0, val: 5/9
+    clear: crate0 var: 4, val: 0/2
     P[2]:lifting: depot0 hoist0 crate0 var: 0, val: 6/9
     P[8]:lifting: distributor1 hoist2 crate0 var: 0, val: 7/9
     P[9]:lifting: distributor0 hoist1 crate0 var: 0, val: 8/9
-Invariant 11:
-    P[2]:lifting: depot0 hoist0 crate1 var: 1, val: 6/9
-    P[2]:lifting: depot0 hoist0 crate0 var: 0, val: 6/9
-    P[2]:available: depot0 hoist0 var: 3, val: 0/2
-Invariant 12:
-    P[8]:lifting: distributor1 hoist2 crate1 var: 1, val: 7/9
-    P[8]:lifting: distributor1 hoist2 crate0 var: 0, val: 7/9
-    P[8]:available: distributor1 hoist2 var: 2, val: 0/2
-Invariant 13:
-    P[9]:lifting: distributor0 hoist1 crate1 var: 1, val: 8/9
-    P[9]:lifting: distributor0 hoist1 crate0 var: 0, val: 8/9
-    P[9]:available: distributor0 hoist1 var: 10, val: 0/2
-SAS Facts[38]:
+Invariant 6:
     at: truck1 depot0 var: 13, val: 0/3
     at: truck1 distributor1 var: 13, val: 1/3
     at: truck1 distributor0 var: 13, val: 2/3
+Invariant 7:
+    P[9]:lifting: distributor0 hoist1 crate1 var: 1, val: 8/9
+    P[9]:lifting: distributor0 hoist1 crate0 var: 0, val: 8/9
+    P[9]:available: distributor0 hoist1 var: 10, val: 0/2
+Invariant 8:
+    P[2]:lifting: depot0 hoist0 crate1 var: 1, val: 6/9
+    P[2]:lifting: depot0 hoist0 crate0 var: 0, val: 6/9
+    P[2]:available: depot0 hoist0 var: 3, val: 0/2
+Invariant 9:
+    P[8]:lifting: distributor1 hoist2 crate1 var: 1, val: 7/9
+    P[8]:lifting: distributor1 hoist2 crate0 var: 0, val: 7/9
+    P[8]:available: distributor1 hoist2 var: 2, val: 0/2
+Invariant 10:
+    on: crate1 pallet2 var: 1, val: 3/9
+    on: crate0 pallet2 var: 0, val: 3/9
+    clear: pallet2 var: 6, val: 0/2
+Invariant 11:
     at: truck0 depot0 var: 12, val: 0/3
     at: truck0 distributor1 var: 12, val: 1/3
     at: truck0 distributor0 var: 12, val: 2/3
-    at: crate1 depot0 var: 8, val: 0/4
-    at: crate1 distributor1 var: 8, val: 1/4
-    at: crate1 distributor0 var: 8, val: 2/4
-    at: crate0 depot0 var: 9, val: 0/4
-    at: crate0 distributor1 var: 9, val: 1/4
-    at: crate0 distributor0 var: 9, val: 2/4
-    on: crate1 crate0 var: 1, val: 0/9
-    on: crate1 pallet1 var: 1, val: 1/9
+Invariant 12:
     on: crate1 pallet0 var: 1, val: 2/9
-    on: crate1 pallet2 var: 1, val: 3/9
-    on: crate0 crate1 var: 0, val: 0/9
-    on: crate0 pallet1 var: 0, val: 1/9
     on: crate0 pallet0 var: 0, val: 2/9
-    on: crate0 pallet2 var: 0, val: 3/9
-    in: crate1 truck1 var: 1, val: 4/9
-    in: crate1 truck0 var: 1, val: 5/9
-    in: crate0 truck1 var: 0, val: 4/9
-    in: crate0 truck0 var: 0, val: 5/9
-    clear: crate1 var: 5, val: 0/2
-    clear: crate0 var: 4, val: 0/2
-    clear: pallet1 var: 11, val: 0/2
     clear: pallet0 var: 7, val: 0/2
-    clear: pallet2 var: 6, val: 0/2
-    P[2]:lifting: depot0 hoist0 crate1 var: 1, val: 6/9
-    P[2]:lifting: depot0 hoist0 crate0 var: 0, val: 6/9
-    P[8]:lifting: distributor1 hoist2 crate1 var: 1, val: 7/9
-    P[8]:lifting: distributor1 hoist2 crate0 var: 0, val: 7/9
-    P[9]:lifting: distributor0 hoist1 crate1 var: 1, val: 8/9
-    P[9]:lifting: distributor0 hoist1 crate0 var: 0, val: 8/9
-    P[2]:available: depot0 hoist0 var: 3, val: 0/2
-    P[8]:available: distributor1 hoist2 var: 2, val: 0/2
-    P[9]:available: distributor0 hoist1 var: 10, val: 0/2
+Invariant 13:
+    on: crate1 pallet1 var: 1, val: 1/9
+    on: crate0 pallet1 var: 0, val: 1/9
+    clear: pallet1 var: 11, val: 0/2
+SAS Facts[38]:
+    [0] at: truck1 depot0 var: 13, val: 0/3
+    [1] at: truck1 distributor1 var: 13, val: 1/3
+    [2] at: truck1 distributor0 var: 13, val: 2/3
+    [3] at: truck0 depot0 var: 12, val: 0/3
+    [4] at: truck0 distributor1 var: 12, val: 1/3
+    [5] at: truck0 distributor0 var: 12, val: 2/3
+    [6] at: crate1 depot0 var: 9, val: 0/4
+    [7] at: crate1 distributor1 var: 9, val: 1/4
+    [8] at: crate1 distributor0 var: 9, val: 2/4
+    [9] at: crate0 depot0 var: 8, val: 0/4
+    [10] at: crate0 distributor1 var: 8, val: 1/4
+    [11] at: crate0 distributor0 var: 8, val: 2/4
+    [12] on: crate1 crate0 var: 1, val: 0/9
+    [13] on: crate1 pallet1 var: 1, val: 1/9
+    [14] on: crate1 pallet0 var: 1, val: 2/9
+    [15] on: crate1 pallet2 var: 1, val: 3/9
+    [16] on: crate0 crate1 var: 0, val: 0/9
+    [17] on: crate0 pallet1 var: 0, val: 1/9
+    [18] on: crate0 pallet0 var: 0, val: 2/9
+    [19] on: crate0 pallet2 var: 0, val: 3/9
+    [20] in: crate1 truck1 var: 1, val: 4/9
+    [21] in: crate1 truck0 var: 1, val: 5/9
+    [22] in: crate0 truck1 var: 0, val: 4/9
+    [23] in: crate0 truck0 var: 0, val: 5/9
+    [24] clear: crate1 var: 5, val: 0/2
+    [25] clear: crate0 var: 4, val: 0/2
+    [26] clear: pallet1 var: 11, val: 0/2
+    [27] clear: pallet0 var: 7, val: 0/2
+    [28] clear: pallet2 var: 6, val: 0/2
+    [29] P[2]:lifting: depot0 hoist0 crate1 var: 1, val: 6/9
+    [30] P[2]:lifting: depot0 hoist0 crate0 var: 0, val: 6/9
+    [31] P[8]:lifting: distributor1 hoist2 crate1 var: 1, val: 7/9
+    [32] P[8]:lifting: distributor1 hoist2 crate0 var: 0, val: 7/9
+    [33] P[9]:lifting: distributor0 hoist1 crate1 var: 1, val: 8/9
+    [34] P[9]:lifting: distributor0 hoist1 crate0 var: 0, val: 8/9
+    [35] P[2]:available: depot0 hoist0 var: 3, val: 0/2
+    [36] P[8]:available: distributor1 hoist2 var: 2, val: 0/2
+    [37] P[9]:available: distributor0 hoist1 var: 10, val: 0/2
 Facts[38]:
     at: truck1 depot0
     at: truck1 distributor1
@@ -29901,82 +29851,82 @@ Agent size: 5
 ---- Ground pddl/depot-domain.unfactor.pddl | pddl/depot-pfile1.unfactor.pddl END ----
 ---- Ground pddl/driverlog-domain.unfactor.pddl | pddl/driverlog-pfile1.unfactor.pddl ----
 Invariant 0:
+    P[10]:at: driver2 s2 var: 2, val: 0/7
+    P[10]:at: driver2 s1 var: 2, val: 1/7
+    P[10]:at: driver2 s0 var: 2, val: 2/7
+    P[10]:at: driver2 p1-2 var: 2, val: 3/7
+    P[10]:at: driver2 p1-0 var: 2, val: 4/7
+    P[10]:driving: driver2 truck1 var: 2, val: 5/7
+    P[10]:driving: driver2 truck2 var: 2, val: 6/7
+Invariant 1:
+    P[9]:at: driver1 s2 var: 3, val: 0/7
+    P[9]:at: driver1 s1 var: 3, val: 1/7
+    P[9]:at: driver1 s0 var: 3, val: 2/7
+    P[9]:at: driver1 p1-2 var: 3, val: 3/7
+    P[9]:at: driver1 p1-0 var: 3, val: 4/7
+    P[9]:driving: driver1 truck1 var: 3, val: 5/7
+    P[9]:driving: driver1 truck2 var: 3, val: 6/7
+Invariant 2:
     in: package1 truck1 var: 7, val: 0/5
     in: package1 truck2 var: 7, val: 1/5
     at: package1 s2 var: 7, val: 2/5
     at: package1 s1 var: 7, val: 3/5
     at: package1 s0 var: 7, val: 4/5
-Invariant 1:
+Invariant 3:
     in: package2 truck1 var: 6, val: 0/5
     in: package2 truck2 var: 6, val: 1/5
     at: package2 s2 var: 6, val: 2/5
     at: package2 s1 var: 6, val: 3/5
     at: package2 s0 var: 6, val: 4/5
-Invariant 2:
-    empty: truck1 var: 4, val: 0/2
-    P[9]:driving: driver1 truck1 var: 3, val: 5/7
-    P[10]:driving: driver2 truck1 var: 2, val: 5/7
-Invariant 3:
-    empty: truck2 var: 0, val: 0/2
-    P[9]:driving: driver1 truck2 var: 3, val: 6/7
-    P[10]:driving: driver2 truck2 var: 2, val: 6/7
 Invariant 4:
     at: truck1 s2 var: 5, val: 0/3
     at: truck1 s1 var: 5, val: 1/3
     at: truck1 s0 var: 5, val: 2/3
 Invariant 5:
-    at: truck2 s2 var: 1, val: 0/3
-    at: truck2 s1 var: 1, val: 1/3
-    at: truck2 s0 var: 1, val: 2/3
-Invariant 6:
-    P[9]:at: driver1 s2 var: 3, val: 0/7
-    P[9]:at: driver1 s1 var: 3, val: 1/7
-    P[9]:at: driver1 s0 var: 3, val: 2/7
-    P[9]:at: driver1 p1-2 var: 3, val: 3/7
-    P[9]:at: driver1 p1-0 var: 3, val: 4/7
-    P[9]:driving: driver1 truck1 var: 3, val: 5/7
-    P[9]:driving: driver1 truck2 var: 3, val: 6/7
-Invariant 7:
-    P[10]:at: driver2 s2 var: 2, val: 0/7
-    P[10]:at: driver2 s1 var: 2, val: 1/7
-    P[10]:at: driver2 s0 var: 2, val: 2/7
-    P[10]:at: driver2 p1-2 var: 2, val: 3/7
-    P[10]:at: driver2 p1-0 var: 2, val: 4/7
-    P[10]:driving: driver2 truck1 var: 2, val: 5/7
-    P[10]:driving: driver2 truck2 var: 2, val: 6/7
-SAS Facts[32]:
-    in: package1 truck1 var: 7, val: 0/5
-    in: package1 truck2 var: 7, val: 1/5
-    in: package2 truck1 var: 6, val: 0/5
-    in: package2 truck2 var: 6, val: 1/5
     empty: truck1 var: 4, val: 0/2
+    P[9]:driving: driver1 truck1 var: 3, val: 5/7
+    P[10]:driving: driver2 truck1 var: 2, val: 5/7
+Invariant 6:
     empty: truck2 var: 0, val: 0/2
-    at: truck1 s2 var: 5, val: 0/3
-    at: truck1 s1 var: 5, val: 1/3
-    at: truck1 s0 var: 5, val: 2/3
+    P[9]:driving: driver1 truck2 var: 3, val: 6/7
+    P[10]:driving: driver2 truck2 var: 2, val: 6/7
+Invariant 7:
     at: truck2 s2 var: 1, val: 0/3
     at: truck2 s1 var: 1, val: 1/3
     at: truck2 s0 var: 1, val: 2/3
-    at: package1 s2 var: 7, val: 2/5
-    at: package1 s1 var: 7, val: 3/5
-    at: package1 s0 var: 7, val: 4/5
-    at: package2 s2 var: 6, val: 2/5
-    at: package2 s1 var: 6, val: 3/5
-    at: package2 s0 var: 6, val: 4/5
-    P[9]:at: driver1 s2 var: 3, val: 0/7
-    P[9]:at: driver1 s1 var: 3, val: 1/7
-    P[9]:at: driver1 s0 var: 3, val: 2/7
-    P[9]:at: driver1 p1-2 var: 3, val: 3/7
-    P[9]:at: driver1 p1-0 var: 3, val: 4/7
-    P[10]:at: driver2 s2 var: 2, val: 0/7
-    P[10]:at: driver2 s1 var: 2, val: 1/7
-    P[10]:at: driver2 s0 var: 2, val: 2/7
-    P[10]:at: driver2 p1-2 var: 2, val: 3/7
-    P[10]:at: driver2 p1-0 var: 2, val: 4/7
-    P[9]:driving: driver1 truck1 var: 3, val: 5/7
-    P[9]:driving: driver1 truck2 var: 3, val: 6/7
-    P[10]:driving: driver2 truck1 var: 2, val: 5/7
-    P[10]:driving: driver2 truck2 var: 2, val: 6/7
+SAS Facts[32]:
+    [0] in: package1 truck1 var: 7, val: 0/5
+    [1] in: package1 truck2 var: 7, val: 1/5
+    [2] in: package2 truck1 var: 6, val: 0/5
+    [3] in: package2 truck2 var: 6, val: 1/5
+    [4] empty: truck1 var: 4, val: 0/2
+    [5] empty: truck2 var: 0, val: 0/2
+    [6] at: truck1 s2 var: 5, val: 0/3
+    [7] at: truck1 s1 var: 5, val: 1/3
+    [8] at: truck1 s0 var: 5, val: 2/3
+    [9] at: truck2 s2 var: 1, val: 0/3
+    [10] at: truck2 s1 var: 1, val: 1/3
+    [11] at: truck2 s0 var: 1, val: 2/3
+    [12] at: package1 s2 var: 7, val: 2/5
+    [13] at: package1 s1 var: 7, val: 3/5
+    [14] at: package1 s0 var: 7, val: 4/5
+    [15] at: package2 s2 var: 6, val: 2/5
+    [16] at: package2 s1 var: 6, val: 3/5
+    [17] at: package2 s0 var: 6, val: 4/5
+    [18] P[9]:at: driver1 s2 var: 3, val: 0/7
+    [19] P[9]:at: driver1 s1 var: 3, val: 1/7
+    [20] P[9]:at: driver1 s0 var: 3, val: 2/7
+    [21] P[9]:at: driver1 p1-2 var: 3, val: 3/7
+    [22] P[9]:at: driver1 p1-0 var: 3, val: 4/7
+    [23] P[10]:at: driver2 s2 var: 2, val: 0/7
+    [24] P[10]:at: driver2 s1 var: 2, val: 1/7
+    [25] P[10]:at: driver2 s0 var: 2, val: 2/7
+    [26] P[10]:at: driver2 p1-2 var: 2, val: 3/7
+    [27] P[10]:at: driver2 p1-0 var: 2, val: 4/7
+    [28] P[9]:driving: driver1 truck1 var: 3, val: 5/7
+    [29] P[9]:driving: driver1 truck2 var: 3, val: 6/7
+    [30] P[10]:driving: driver2 truck1 var: 2, val: 5/7
+    [31] P[10]:driving: driver2 truck2 var: 2, val: 6/7
 Facts[32]:
     in: package1 truck1
     in: package1 truck2
@@ -31220,20 +31170,6 @@ Invariant 0:
     P[14]:boarded: p2 slow0-0 var: 6, val: 11/13
     P[15]:boarded: p2 slow1-0 var: 6, val: 12/13
 Invariant 1:
-    passenger-at: p3 n8 var: 5, val: 0/13
-    passenger-at: p3 n0 var: 5, val: 1/13
-    passenger-at: p3 n1 var: 5, val: 2/13
-    passenger-at: p3 n2 var: 5, val: 3/13
-    passenger-at: p3 n3 var: 5, val: 4/13
-    passenger-at: p3 n4 var: 5, val: 5/13
-    passenger-at: p3 n5 var: 5, val: 6/13
-    passenger-at: p3 n6 var: 5, val: 7/13
-    P[15]:passenger-at: p3 n7 var: 5, val: 8/13
-    P[12]:boarded: p3 fast0 var: 5, val: 9/13
-    P[13]:boarded: p3 fast1 var: 5, val: 10/13
-    P[14]:boarded: p3 slow0-0 var: 5, val: 11/13
-    P[15]:boarded: p3 slow1-0 var: 5, val: 12/13
-Invariant 2:
     passenger-at: p0 n8 var: 4, val: 0/13
     passenger-at: p0 n0 var: 4, val: 1/13
     passenger-at: p0 n1 var: 4, val: 2/13
@@ -31247,6 +31183,20 @@ Invariant 2:
     P[13]:boarded: p0 fast1 var: 4, val: 10/13
     P[14]:boarded: p0 slow0-0 var: 4, val: 11/13
     P[15]:boarded: p0 slow1-0 var: 4, val: 12/13
+Invariant 2:
+    passenger-at: p3 n8 var: 5, val: 0/13
+    passenger-at: p3 n0 var: 5, val: 1/13
+    passenger-at: p3 n1 var: 5, val: 2/13
+    passenger-at: p3 n2 var: 5, val: 3/13
+    passenger-at: p3 n3 var: 5, val: 4/13
+    passenger-at: p3 n4 var: 5, val: 5/13
+    passenger-at: p3 n5 var: 5, val: 6/13
+    passenger-at: p3 n6 var: 5, val: 7/13
+    P[15]:passenger-at: p3 n7 var: 5, val: 8/13
+    P[12]:boarded: p3 fast0 var: 5, val: 9/13
+    P[13]:boarded: p3 fast1 var: 5, val: 10/13
+    P[14]:boarded: p3 slow0-0 var: 5, val: 11/13
+    P[15]:boarded: p3 slow1-0 var: 5, val: 12/13
 Invariant 3:
     passenger-at: p1 n8 var: 3, val: 0/13
     passenger-at: p1 n0 var: 3, val: 1/13
@@ -31268,128 +31218,128 @@ Invariant 4:
     P[12]:lift-at: fast0 n4 var: 11, val: 3/5
     P[12]:lift-at: fast0 n6 var: 11, val: 4/5
 Invariant 5:
-    P[13]:lift-at: fast1 n8 var: 10, val: 0/5
-    P[13]:lift-at: fast1 n0 var: 10, val: 1/5
-    P[13]:lift-at: fast1 n2 var: 10, val: 2/5
-    P[13]:lift-at: fast1 n4 var: 10, val: 3/5
-    P[13]:lift-at: fast1 n6 var: 10, val: 4/5
+    P[14]:lift-at: slow0-0 n0 var: 9, val: 0/5
+    P[14]:lift-at: slow0-0 n1 var: 9, val: 1/5
+    P[14]:lift-at: slow0-0 n2 var: 9, val: 2/5
+    P[14]:lift-at: slow0-0 n3 var: 9, val: 3/5
+    P[14]:lift-at: slow0-0 n4 var: 9, val: 4/5
 Invariant 6:
-    P[14]:lift-at: slow0-0 n0 var: 9, val: 0/5
-    P[14]:lift-at: slow0-0 n1 var: 9, val: 1/5
-    P[14]:lift-at: slow0-0 n2 var: 9, val: 2/5
-    P[14]:lift-at: slow0-0 n3 var: 9, val: 3/5
-    P[14]:lift-at: slow0-0 n4 var: 9, val: 4/5
-Invariant 7:
     P[15]:lift-at: slow1-0 n8 var: 8, val: 0/5
     P[15]:lift-at: slow1-0 n4 var: 8, val: 1/5
     P[15]:lift-at: slow1-0 n5 var: 8, val: 2/5
     P[15]:lift-at: slow1-0 n6 var: 8, val: 3/5
     P[15]:lift-at: slow1-0 n7 var: 8, val: 4/5
-Invariant 8:
-    P[12]:passengers: fast0 n0 var: 1, val: 0/4
-    P[12]:passengers: fast0 n1 var: 1, val: 1/4
-    P[12]:passengers: fast0 n2 var: 1, val: 2/4
-    P[12]:passengers: fast0 n3 var: 1, val: 3/4
-Invariant 9:
-    P[13]:passengers: fast1 n0 var: 0, val: 0/4
-    P[13]:passengers: fast1 n1 var: 0, val: 1/4
-    P[13]:passengers: fast1 n2 var: 0, val: 2/4
-    P[13]:passengers: fast1 n3 var: 0, val: 3/4
-Invariant 10:
-    P[14]:passengers: slow0-0 n0 var: 7, val: 0/3
-    P[14]:passengers: slow0-0 n1 var: 7, val: 1/3
-    P[14]:passengers: slow0-0 n2 var: 7, val: 2/3
-Invariant 11:
-    P[15]:passengers: slow1-0 n0 var: 2, val: 0/3
-    P[15]:passengers: slow1-0 n1 var: 2, val: 1/3
-    P[15]:passengers: slow1-0 n2 var: 2, val: 2/3
-SAS Facts[86]:
-    passenger-at: p2 n8 var: 6, val: 0/13
-    passenger-at: p2 n0 var: 6, val: 1/13
-    passenger-at: p2 n1 var: 6, val: 2/13
-    passenger-at: p2 n2 var: 6, val: 3/13
-    passenger-at: p2 n3 var: 6, val: 4/13
-    passenger-at: p2 n4 var: 6, val: 5/13
-    passenger-at: p2 n5 var: 6, val: 6/13
-    passenger-at: p2 n6 var: 6, val: 7/13
-    P[15]:passenger-at: p2 n7 var: 6, val: 8/13
-    passenger-at: p3 n8 var: 5, val: 0/13
-    passenger-at: p3 n0 var: 5, val: 1/13
-    passenger-at: p3 n1 var: 5, val: 2/13
-    passenger-at: p3 n2 var: 5, val: 3/13
-    passenger-at: p3 n3 var: 5, val: 4/13
-    passenger-at: p3 n4 var: 5, val: 5/13
-    passenger-at: p3 n5 var: 5, val: 6/13
-    passenger-at: p3 n6 var: 5, val: 7/13
-    P[15]:passenger-at: p3 n7 var: 5, val: 8/13
-    passenger-at: p0 n8 var: 4, val: 0/13
-    passenger-at: p0 n0 var: 4, val: 1/13
-    passenger-at: p0 n1 var: 4, val: 2/13
-    passenger-at: p0 n2 var: 4, val: 3/13
-    passenger-at: p0 n3 var: 4, val: 4/13
-    passenger-at: p0 n4 var: 4, val: 5/13
-    passenger-at: p0 n5 var: 4, val: 6/13
-    passenger-at: p0 n6 var: 4, val: 7/13
-    P[15]:passenger-at: p0 n7 var: 4, val: 8/13
-    passenger-at: p1 n8 var: 3, val: 0/13
-    passenger-at: p1 n0 var: 3, val: 1/13
-    passenger-at: p1 n1 var: 3, val: 2/13
-    passenger-at: p1 n2 var: 3, val: 3/13
-    passenger-at: p1 n3 var: 3, val: 4/13
-    passenger-at: p1 n4 var: 3, val: 5/13
-    passenger-at: p1 n5 var: 3, val: 6/13
-    passenger-at: p1 n6 var: 3, val: 7/13
-    P[15]:passenger-at: p1 n7 var: 3, val: 8/13
-    P[12]:lift-at: fast0 n8 var: 11, val: 0/5
-    P[12]:lift-at: fast0 n0 var: 11, val: 1/5
-    P[12]:lift-at: fast0 n2 var: 11, val: 2/5
-    P[12]:lift-at: fast0 n4 var: 11, val: 3/5
-    P[12]:lift-at: fast0 n6 var: 11, val: 4/5
+Invariant 7:
     P[13]:lift-at: fast1 n8 var: 10, val: 0/5
     P[13]:lift-at: fast1 n0 var: 10, val: 1/5
     P[13]:lift-at: fast1 n2 var: 10, val: 2/5
     P[13]:lift-at: fast1 n4 var: 10, val: 3/5
     P[13]:lift-at: fast1 n6 var: 10, val: 4/5
-    P[14]:lift-at: slow0-0 n0 var: 9, val: 0/5
-    P[14]:lift-at: slow0-0 n1 var: 9, val: 1/5
-    P[14]:lift-at: slow0-0 n2 var: 9, val: 2/5
-    P[14]:lift-at: slow0-0 n3 var: 9, val: 3/5
-    P[14]:lift-at: slow0-0 n4 var: 9, val: 4/5
-    P[15]:lift-at: slow1-0 n8 var: 8, val: 0/5
-    P[15]:lift-at: slow1-0 n4 var: 8, val: 1/5
-    P[15]:lift-at: slow1-0 n5 var: 8, val: 2/5
-    P[15]:lift-at: slow1-0 n6 var: 8, val: 3/5
-    P[15]:lift-at: slow1-0 n7 var: 8, val: 4/5
-    P[12]:boarded: p2 fast0 var: 6, val: 9/13
-    P[13]:boarded: p2 fast1 var: 6, val: 10/13
-    P[14]:boarded: p2 slow0-0 var: 6, val: 11/13
-    P[15]:boarded: p2 slow1-0 var: 6, val: 12/13
-    P[12]:boarded: p3 fast0 var: 5, val: 9/13
-    P[13]:boarded: p3 fast1 var: 5, val: 10/13
-    P[14]:boarded: p3 slow0-0 var: 5, val: 11/13
-    P[15]:boarded: p3 slow1-0 var: 5, val: 12/13
-    P[12]:boarded: p0 fast0 var: 4, val: 9/13
-    P[13]:boarded: p0 fast1 var: 4, val: 10/13
-    P[14]:boarded: p0 slow0-0 var: 4, val: 11/13
-    P[15]:boarded: p0 slow1-0 var: 4, val: 12/13
-    P[12]:boarded: p1 fast0 var: 3, val: 9/13
-    P[13]:boarded: p1 fast1 var: 3, val: 10/13
-    P[14]:boarded: p1 slow0-0 var: 3, val: 11/13
-    P[15]:boarded: p1 slow1-0 var: 3, val: 12/13
-    P[12]:passengers: fast0 n0 var: 1, val: 0/4
-    P[12]:passengers: fast0 n1 var: 1, val: 1/4
-    P[12]:passengers: fast0 n2 var: 1, val: 2/4
-    P[12]:passengers: fast0 n3 var: 1, val: 3/4
+Invariant 8:
     P[13]:passengers: fast1 n0 var: 0, val: 0/4
     P[13]:passengers: fast1 n1 var: 0, val: 1/4
     P[13]:passengers: fast1 n2 var: 0, val: 2/4
     P[13]:passengers: fast1 n3 var: 0, val: 3/4
-    P[14]:passengers: slow0-0 n0 var: 7, val: 0/3
-    P[14]:passengers: slow0-0 n1 var: 7, val: 1/3
-    P[14]:passengers: slow0-0 n2 var: 7, val: 2/3
+Invariant 9:
+    P[12]:passengers: fast0 n0 var: 1, val: 0/4
+    P[12]:passengers: fast0 n1 var: 1, val: 1/4
+    P[12]:passengers: fast0 n2 var: 1, val: 2/4
+    P[12]:passengers: fast0 n3 var: 1, val: 3/4
+Invariant 10:
     P[15]:passengers: slow1-0 n0 var: 2, val: 0/3
     P[15]:passengers: slow1-0 n1 var: 2, val: 1/3
     P[15]:passengers: slow1-0 n2 var: 2, val: 2/3
+Invariant 11:
+    P[14]:passengers: slow0-0 n0 var: 7, val: 0/3
+    P[14]:passengers: slow0-0 n1 var: 7, val: 1/3
+    P[14]:passengers: slow0-0 n2 var: 7, val: 2/3
+SAS Facts[86]:
+    [0] passenger-at: p2 n8 var: 6, val: 0/13
+    [1] passenger-at: p2 n0 var: 6, val: 1/13
+    [2] passenger-at: p2 n1 var: 6, val: 2/13
+    [3] passenger-at: p2 n2 var: 6, val: 3/13
+    [4] passenger-at: p2 n3 var: 6, val: 4/13
+    [5] passenger-at: p2 n4 var: 6, val: 5/13
+    [6] passenger-at: p2 n5 var: 6, val: 6/13
+    [7] passenger-at: p2 n6 var: 6, val: 7/13
+    [8] P[15]:passenger-at: p2 n7 var: 6, val: 8/13
+    [9] passenger-at: p3 n8 var: 5, val: 0/13
+    [10] passenger-at: p3 n0 var: 5, val: 1/13
+    [11] passenger-at: p3 n1 var: 5, val: 2/13
+    [12] passenger-at: p3 n2 var: 5, val: 3/13
+    [13] passenger-at: p3 n3 var: 5, val: 4/13
+    [14] passenger-at: p3 n4 var: 5, val: 5/13
+    [15] passenger-at: p3 n5 var: 5, val: 6/13
+    [16] passenger-at: p3 n6 var: 5, val: 7/13
+    [17] P[15]:passenger-at: p3 n7 var: 5, val: 8/13
+    [18] passenger-at: p0 n8 var: 4, val: 0/13
+    [19] passenger-at: p0 n0 var: 4, val: 1/13
+    [20] passenger-at: p0 n1 var: 4, val: 2/13
+    [21] passenger-at: p0 n2 var: 4, val: 3/13
+    [22] passenger-at: p0 n3 var: 4, val: 4/13
+    [23] passenger-at: p0 n4 var: 4, val: 5/13
+    [24] passenger-at: p0 n5 var: 4, val: 6/13
+    [25] passenger-at: p0 n6 var: 4, val: 7/13
+    [26] P[15]:passenger-at: p0 n7 var: 4, val: 8/13
+    [27] passenger-at: p1 n8 var: 3, val: 0/13
+    [28] passenger-at: p1 n0 var: 3, val: 1/13
+    [29] passenger-at: p1 n1 var: 3, val: 2/13
+    [30] passenger-at: p1 n2 var: 3, val: 3/13
+    [31] passenger-at: p1 n3 var: 3, val: 4/13
+    [32] passenger-at: p1 n4 var: 3, val: 5/13
+    [33] passenger-at: p1 n5 var: 3, val: 6/13
+    [34] passenger-at: p1 n6 var: 3, val: 7/13
+    [35] P[15]:passenger-at: p1 n7 var: 3, val: 8/13
+    [36] P[12]:lift-at: fast0 n8 var: 11, val: 0/5
+    [37] P[12]:lift-at: fast0 n0 var: 11, val: 1/5
+    [38] P[12]:lift-at: fast0 n2 var: 11, val: 2/5
+    [39] P[12]:lift-at: fast0 n4 var: 11, val: 3/5
+    [40] P[12]:lift-at: fast0 n6 var: 11, val: 4/5
+    [41] P[13]:lift-at: fast1 n8 var: 10, val: 0/5
+    [42] P[13]:lift-at: fast1 n0 var: 10, val: 1/5
+    [43] P[13]:lift-at: fast1 n2 var: 10, val: 2/5
+    [44] P[13]:lift-at: fast1 n4 var: 10, val: 3/5
+    [45] P[13]:lift-at: fast1 n6 var: 10, val: 4/5
+    [46] P[14]:lift-at: slow0-0 n0 var: 9, val: 0/5
+    [47] P[14]:lift-at: slow0-0 n1 var: 9, val: 1/5
+    [48] P[14]:lift-at: slow0-0 n2 var: 9, val: 2/5
+    [49] P[14]:lift-at: slow0-0 n3 var: 9, val: 3/5
+    [50] P[14]:lift-at: slow0-0 n4 var: 9, val: 4/5
+    [51] P[15]:lift-at: slow1-0 n8 var: 8, val: 0/5
+    [52] P[15]:lift-at: slow1-0 n4 var: 8, val: 1/5
+    [53] P[15]:lift-at: slow1-0 n5 var: 8, val: 2/5
+    [54] P[15]:lift-at: slow1-0 n6 var: 8, val: 3/5
+    [55] P[15]:lift-at: slow1-0 n7 var: 8, val: 4/5
+    [56] P[12]:boarded: p2 fast0 var: 6, val: 9/13
+    [57] P[13]:boarded: p2 fast1 var: 6, val: 10/13
+    [58] P[14]:boarded: p2 slow0-0 var: 6, val: 11/13
+    [59] P[15]:boarded: p2 slow1-0 var: 6, val: 12/13
+    [60] P[12]:boarded: p3 fast0 var: 5, val: 9/13
+    [61] P[13]:boarded: p3 fast1 var: 5, val: 10/13
+    [62] P[14]:boarded: p3 slow0-0 var: 5, val: 11/13
+    [63] P[15]:boarded: p3 slow1-0 var: 5, val: 12/13
+    [64] P[12]:boarded: p0 fast0 var: 4, val: 9/13
+    [65] P[13]:boarded: p0 fast1 var: 4, val: 10/13
+    [66] P[14]:boarded: p0 slow0-0 var: 4, val: 11/13
+    [67] P[15]:boarded: p0 slow1-0 var: 4, val: 12/13
+    [68] P[12]:boarded: p1 fast0 var: 3, val: 9/13
+    [69] P[13]:boarded: p1 fast1 var: 3, val: 10/13
+    [70] P[14]:boarded: p1 slow0-0 var: 3, val: 11/13
+    [71] P[15]:boarded: p1 slow1-0 var: 3, val: 12/13
+    [72] P[12]:passengers: fast0 n0 var: 1, val: 0/4
+    [73] P[12]:passengers: fast0 n1 var: 1, val: 1/4
+    [74] P[12]:passengers: fast0 n2 var: 1, val: 2/4
+    [75] P[12]:passengers: fast0 n3 var: 1, val: 3/4
+    [76] P[13]:passengers: fast1 n0 var: 0, val: 0/4
+    [77] P[13]:passengers: fast1 n1 var: 0, val: 1/4
+    [78] P[13]:passengers: fast1 n2 var: 0, val: 2/4
+    [79] P[13]:passengers: fast1 n3 var: 0, val: 3/4
+    [80] P[14]:passengers: slow0-0 n0 var: 7, val: 0/3
+    [81] P[14]:passengers: slow0-0 n1 var: 7, val: 1/3
+    [82] P[14]:passengers: slow0-0 n2 var: 7, val: 2/3
+    [83] P[15]:passengers: slow1-0 n0 var: 2, val: 0/3
+    [84] P[15]:passengers: slow1-0 n1 var: 2, val: 1/3
+    [85] P[15]:passengers: slow1-0 n2 var: 2, val: 2/3
 Facts[86]:
     passenger-at: p2 n8
     passenger-at: p2 n0
@@ -37407,208 +37357,208 @@ Agent size: 4
 ---- Ground pddl/elevators08-domain.unfactor.pddl | pddl/elevators08-p01.unfactor.pddl END ----
 ---- Ground pddl/rovers-domain.unfactor.pddl | pddl/rovers-p10.unfactor.pddl ----
 Invariant 0:
-    at_rock_sample: waypoint6 var: 12, val: 0/3
-    P[25]:have_rock_analysis: rover0 waypoint6 var: 12, val: 1/3
-    P[28]:have_rock_analysis: rover3 waypoint6 var: 12, val: 2/3
+    P[25]:at: rover0 waypoint6 var: 41, val: 0/7
+    P[25]:at: rover0 waypoint5 var: 41, val: 1/7
+    P[25]:at: rover0 waypoint2 var: 41, val: 2/7
+    P[25]:at: rover0 waypoint0 var: 41, val: 3/7
+    P[25]:at: rover0 waypoint1 var: 41, val: 4/7
+    P[25]:at: rover0 waypoint3 var: 41, val: 5/7
+    P[25]:at: rover0 waypoint4 var: 41, val: 6/7
 Invariant 1:
-    at_rock_sample: waypoint0 var: 4, val: 0/4
-    P[25]:have_rock_analysis: rover0 waypoint0 var: 4, val: 1/4
-    P[27]:have_rock_analysis: rover2 waypoint0 var: 4, val: 2/4
-    P[28]:have_rock_analysis: rover3 waypoint0 var: 4, val: 3/4
+    P[28]:at: rover3 waypoint6 var: 40, val: 0/7
+    P[28]:at: rover3 waypoint5 var: 40, val: 1/7
+    P[28]:at: rover3 waypoint2 var: 40, val: 2/7
+    P[28]:at: rover3 waypoint0 var: 40, val: 3/7
+    P[28]:at: rover3 waypoint1 var: 40, val: 4/7
+    P[28]:at: rover3 waypoint3 var: 40, val: 5/7
+    P[28]:at: rover3 waypoint4 var: 40, val: 6/7
 Invariant 2:
-    at_rock_sample: waypoint1 var: 3, val: 0/4
-    P[25]:have_rock_analysis: rover0 waypoint1 var: 3, val: 1/4
-    P[27]:have_rock_analysis: rover2 waypoint1 var: 3, val: 2/4
-    P[28]:have_rock_analysis: rover3 waypoint1 var: 3, val: 3/4
+    P[27]:at: rover2 waypoint5 var: 39, val: 0/6
+    P[27]:at: rover2 waypoint2 var: 39, val: 1/6
+    P[27]:at: rover2 waypoint0 var: 39, val: 2/6
+    P[27]:at: rover2 waypoint1 var: 39, val: 3/6
+    P[27]:at: rover2 waypoint3 var: 39, val: 4/6
+    P[27]:at: rover2 waypoint4 var: 39, val: 5/6
 Invariant 3:
-    at_rock_sample: waypoint3 var: 2, val: 0/4
-    P[25]:have_rock_analysis: rover0 waypoint3 var: 2, val: 1/4
-    P[27]:have_rock_analysis: rover2 waypoint3 var: 2, val: 2/4
-    P[28]:have_rock_analysis: rover3 waypoint3 var: 2, val: 3/4
+    at_soil_sample: waypoint6 var: 8, val: 0/4
+    P[25]:have_soil_analysis: rover0 waypoint6 var: 8, val: 1/4
+    P[26]:have_soil_analysis: rover1 waypoint6 var: 8, val: 2/4
+    P[28]:have_soil_analysis: rover3 waypoint6 var: 8, val: 3/4
 Invariant 4:
     at_rock_sample: waypoint4 var: 1, val: 0/4
     P[25]:have_rock_analysis: rover0 waypoint4 var: 1, val: 1/4
     P[27]:have_rock_analysis: rover2 waypoint4 var: 1, val: 2/4
     P[28]:have_rock_analysis: rover3 waypoint4 var: 1, val: 3/4
 Invariant 5:
-    at_soil_sample: waypoint6 var: 8, val: 0/4
-    P[25]:have_soil_analysis: rover0 waypoint6 var: 8, val: 1/4
-    P[26]:have_soil_analysis: rover1 waypoint6 var: 8, val: 2/4
-    P[28]:have_soil_analysis: rover3 waypoint6 var: 8, val: 3/4
+    at_soil_sample: waypoint0 var: 7, val: 0/4
+    P[25]:have_soil_analysis: rover0 waypoint0 var: 7, val: 1/4
+    P[26]:have_soil_analysis: rover1 waypoint0 var: 7, val: 2/4
+    P[28]:have_soil_analysis: rover3 waypoint0 var: 7, val: 3/4
 Invariant 6:
-    at_soil_sample: waypoint0 var: 7, val: 0/4
-    P[25]:have_soil_analysis: rover0 waypoint0 var: 7, val: 1/4
-    P[26]:have_soil_analysis: rover1 waypoint0 var: 7, val: 2/4
-    P[28]:have_soil_analysis: rover3 waypoint0 var: 7, val: 3/4
-Invariant 7:
-    at_soil_sample: waypoint3 var: 11, val: 0/3
-    P[25]:have_soil_analysis: rover0 waypoint3 var: 11, val: 1/3
-    P[28]:have_soil_analysis: rover3 waypoint3 var: 11, val: 2/3
-Invariant 8:
-    at_soil_sample: waypoint4 var: 10, val: 0/3
-    P[25]:have_soil_analysis: rover0 waypoint4 var: 10, val: 1/3
-    P[28]:have_soil_analysis: rover3 waypoint4 var: 10, val: 2/3
-Invariant 9:
-    empty: rover3store var: 6, val: 0/2
-    full: rover3store var: 6, val: 1/2
-Invariant 10:
-    empty: rover0store var: 5, val: 0/2
-    full: rover0store var: 5, val: 1/2
-Invariant 11:
-    empty: rover2store var: 0, val: 0/2
-    full: rover2store var: 0, val: 1/2
-Invariant 12:
-    empty: rover1store var: 9, val: 0/2
-    full: rover1store var: 9, val: 1/2
-Invariant 13:
-    P[25]:at: rover0 waypoint6 var: 41, val: 0/7
-    P[25]:at: rover0 waypoint5 var: 41, val: 1/7
-    P[25]:at: rover0 waypoint2 var: 41, val: 2/7
-    P[25]:at: rover0 waypoint0 var: 41, val: 3/7
-    P[25]:at: rover0 waypoint1 var: 41, val: 4/7
-    P[25]:at: rover0 waypoint3 var: 41, val: 5/7
-    P[25]:at: rover0 waypoint4 var: 41, val: 6/7
-Invariant 14:
-    P[26]:at: rover1 waypoint6 var: 38, val: 0/4
-    P[26]:at: rover1 waypoint2 var: 38, val: 1/4
-    P[26]:at: rover1 waypoint0 var: 38, val: 2/4
-    P[26]:at: rover1 waypoint1 var: 38, val: 3/4
-Invariant 15:
-    P[27]:at: rover2 waypoint5 var: 39, val: 0/6
-    P[27]:at: rover2 waypoint2 var: 39, val: 1/6
-    P[27]:at: rover2 waypoint0 var: 39, val: 2/6
-    P[27]:at: rover2 waypoint1 var: 39, val: 3/6
-    P[27]:at: rover2 waypoint3 var: 39, val: 4/6
-    P[27]:at: rover2 waypoint4 var: 39, val: 5/6
-Invariant 16:
-    P[28]:at: rover3 waypoint6 var: 40, val: 0/7
-    P[28]:at: rover3 waypoint5 var: 40, val: 1/7
-    P[28]:at: rover3 waypoint2 var: 40, val: 2/7
-    P[28]:at: rover3 waypoint0 var: 40, val: 3/7
-    P[28]:at: rover3 waypoint1 var: 40, val: 4/7
-    P[28]:at: rover3 waypoint3 var: 40, val: 5/7
-    P[28]:at: rover3 waypoint4 var: 40, val: 6/7
-SAS Facts[120]:
-    at_rock_sample: waypoint6 var: 12, val: 0/3
-    at_rock_sample: waypoint0 var: 4, val: 0/4
-    at_rock_sample: waypoint1 var: 3, val: 0/4
     at_rock_sample: waypoint3 var: 2, val: 0/4
-    at_rock_sample: waypoint4 var: 1, val: 0/4
-    at_soil_sample: waypoint6 var: 8, val: 0/4
-    at_soil_sample: waypoint0 var: 7, val: 0/4
-    at_soil_sample: waypoint3 var: 11, val: 0/3
-    at_soil_sample: waypoint4 var: 10, val: 0/3
-    communicated_image_data: objective2 low_res var: -1
-    communicated_image_data: objective2 colour var: 37, val: 0/2
-    communicated_image_data: objective2 high_res var: -1
-    communicated_image_data: objective3 low_res var: 36, val: 0/2
-    communicated_image_data: objective3 colour var: 35, val: 0/2
-    communicated_image_data: objective3 high_res var: -1
-    communicated_image_data: objective1 low_res var: -1
-    communicated_image_data: objective1 colour var: -1
-    communicated_image_data: objective1 high_res var: -1
-    communicated_image_data: objective0 low_res var: -1
-    communicated_image_data: objective0 colour var: -1
-    communicated_image_data: objective0 high_res var: -1
-    communicated_rock_data: waypoint6 var: -1
-    communicated_rock_data: waypoint0 var: 34, val: 0/2
-    communicated_rock_data: waypoint1 var: 33, val: 0/2
-    communicated_rock_data: waypoint3 var: 32, val: 0/2
-    communicated_rock_data: waypoint4 var: 31, val: 0/2
-    communicated_soil_data: waypoint6 var: 30, val: 0/2
-    communicated_soil_data: waypoint0 var: 29, val: 0/2
-    communicated_soil_data: waypoint3 var: 28, val: 0/2
-    communicated_soil_data: waypoint4 var: 27, val: 0/2
-    empty: rover3store var: 6, val: 0/2
-    empty: rover0store var: 5, val: 0/2
-    empty: rover2store var: 0, val: 0/2
-    empty: rover1store var: 9, val: 0/2
-    full: rover3store var: 6, val: 1/2
-    full: rover0store var: 5, val: 1/2
-    full: rover2store var: 0, val: 1/2
-    full: rover1store var: 9, val: 1/2
-    P[25]:at: rover0 waypoint6 var: 41, val: 0/7
-    P[25]:at: rover0 waypoint5 var: 41, val: 1/7
-    P[25]:at: rover0 waypoint2 var: 41, val: 2/7
-    P[25]:at: rover0 waypoint0 var: 41, val: 3/7
-    P[25]:at: rover0 waypoint1 var: 41, val: 4/7
-    P[25]:at: rover0 waypoint3 var: 41, val: 5/7
-    P[25]:at: rover0 waypoint4 var: 41, val: 6/7
+    P[25]:have_rock_analysis: rover0 waypoint3 var: 2, val: 1/4
+    P[27]:have_rock_analysis: rover2 waypoint3 var: 2, val: 2/4
+    P[28]:have_rock_analysis: rover3 waypoint3 var: 2, val: 3/4
+Invariant 7:
+    at_rock_sample: waypoint0 var: 4, val: 0/4
+    P[25]:have_rock_analysis: rover0 waypoint0 var: 4, val: 1/4
+    P[27]:have_rock_analysis: rover2 waypoint0 var: 4, val: 2/4
+    P[28]:have_rock_analysis: rover3 waypoint0 var: 4, val: 3/4
+Invariant 8:
     P[26]:at: rover1 waypoint6 var: 38, val: 0/4
     P[26]:at: rover1 waypoint2 var: 38, val: 1/4
     P[26]:at: rover1 waypoint0 var: 38, val: 2/4
     P[26]:at: rover1 waypoint1 var: 38, val: 3/4
-    P[27]:at: rover2 waypoint5 var: 39, val: 0/6
-    P[27]:at: rover2 waypoint2 var: 39, val: 1/6
-    P[27]:at: rover2 waypoint0 var: 39, val: 2/6
-    P[27]:at: rover2 waypoint1 var: 39, val: 3/6
-    P[27]:at: rover2 waypoint3 var: 39, val: 4/6
-    P[27]:at: rover2 waypoint4 var: 39, val: 5/6
-    P[28]:at: rover3 waypoint6 var: 40, val: 0/7
-    P[28]:at: rover3 waypoint5 var: 40, val: 1/7
-    P[28]:at: rover3 waypoint2 var: 40, val: 2/7
-    P[28]:at: rover3 waypoint0 var: 40, val: 3/7
-    P[28]:at: rover3 waypoint1 var: 40, val: 4/7
-    P[28]:at: rover3 waypoint3 var: 40, val: 5/7
-    P[28]:at: rover3 waypoint4 var: 40, val: 6/7
-    P[25]:have_rock_analysis: rover0 waypoint6 var: 12, val: 1/3
-    P[25]:have_rock_analysis: rover0 waypoint0 var: 4, val: 1/4
+Invariant 9:
+    at_rock_sample: waypoint1 var: 3, val: 0/4
     P[25]:have_rock_analysis: rover0 waypoint1 var: 3, val: 1/4
-    P[25]:have_rock_analysis: rover0 waypoint3 var: 2, val: 1/4
-    P[25]:have_rock_analysis: rover0 waypoint4 var: 1, val: 1/4
-    P[27]:have_rock_analysis: rover2 waypoint0 var: 4, val: 2/4
     P[27]:have_rock_analysis: rover2 waypoint1 var: 3, val: 2/4
-    P[27]:have_rock_analysis: rover2 waypoint3 var: 2, val: 2/4
-    P[27]:have_rock_analysis: rover2 waypoint4 var: 1, val: 2/4
-    P[28]:have_rock_analysis: rover3 waypoint6 var: 12, val: 2/3
-    P[28]:have_rock_analysis: rover3 waypoint0 var: 4, val: 3/4
     P[28]:have_rock_analysis: rover3 waypoint1 var: 3, val: 3/4
-    P[28]:have_rock_analysis: rover3 waypoint3 var: 2, val: 3/4
-    P[28]:have_rock_analysis: rover3 waypoint4 var: 1, val: 3/4
-    P[25]:have_soil_analysis: rover0 waypoint6 var: 8, val: 1/4
-    P[25]:have_soil_analysis: rover0 waypoint0 var: 7, val: 1/4
+Invariant 10:
+    at_rock_sample: waypoint6 var: 12, val: 0/3
+    P[25]:have_rock_analysis: rover0 waypoint6 var: 12, val: 1/3
+    P[28]:have_rock_analysis: rover3 waypoint6 var: 12, val: 2/3
+Invariant 11:
+    at_soil_sample: waypoint3 var: 11, val: 0/3
     P[25]:have_soil_analysis: rover0 waypoint3 var: 11, val: 1/3
-    P[25]:have_soil_analysis: rover0 waypoint4 var: 10, val: 1/3
-    P[26]:have_soil_analysis: rover1 waypoint6 var: 8, val: 2/4
-    P[26]:have_soil_analysis: rover1 waypoint0 var: 7, val: 2/4
-    P[28]:have_soil_analysis: rover3 waypoint6 var: 8, val: 3/4
-    P[28]:have_soil_analysis: rover3 waypoint0 var: 7, val: 3/4
     P[28]:have_soil_analysis: rover3 waypoint3 var: 11, val: 2/3
+Invariant 12:
+    at_soil_sample: waypoint4 var: 10, val: 0/3
+    P[25]:have_soil_analysis: rover0 waypoint4 var: 10, val: 1/3
     P[28]:have_soil_analysis: rover3 waypoint4 var: 10, val: 2/3
-    P[26]:calibrated: camera2 rover1 var: 26, val: 0/2
-    P[26]:calibrated: camera0 rover1 var: 25, val: 0/2
-    P[26]:calibrated: camera1 rover1 var: 24, val: 0/2
-    P[26]:calibrated: camera3 rover1 var: 23, val: 0/2
-    P[27]:calibrated: camera4 rover2 var: 22, val: 0/2
-    P[28]:calibrated: camera5 rover3 var: 21, val: 0/2
-    P[26]:have_image: rover1 objective2 low_res var: -1
-    P[26]:have_image: rover1 objective2 colour var: 20, val: 0/2
-    P[26]:have_image: rover1 objective2 high_res var: -1
-    P[26]:have_image: rover1 objective3 low_res var: 19, val: 0/2
-    P[26]:have_image: rover1 objective3 colour var: 18, val: 0/2
-    P[26]:have_image: rover1 objective3 high_res var: -1
-    P[26]:have_image: rover1 objective1 low_res var: -1
-    P[26]:have_image: rover1 objective1 colour var: -1
-    P[26]:have_image: rover1 objective1 high_res var: -1
-    P[26]:have_image: rover1 objective0 low_res var: -1
-    P[26]:have_image: rover1 objective0 colour var: -1
-    P[26]:have_image: rover1 objective0 high_res var: -1
-    P[27]:have_image: rover2 objective2 colour var: 17, val: 0/2
-    P[27]:have_image: rover2 objective3 colour var: 16, val: 0/2
-    P[27]:have_image: rover2 objective1 colour var: -1
-    P[27]:have_image: rover2 objective0 colour var: -1
-    P[28]:have_image: rover3 objective2 low_res var: -1
-    P[28]:have_image: rover3 objective2 colour var: 15, val: 0/2
-    P[28]:have_image: rover3 objective2 high_res var: -1
-    P[28]:have_image: rover3 objective3 low_res var: 14, val: 0/2
-    P[28]:have_image: rover3 objective3 colour var: 13, val: 0/2
-    P[28]:have_image: rover3 objective3 high_res var: -1
-    P[28]:have_image: rover3 objective1 low_res var: -1
-    P[28]:have_image: rover3 objective1 colour var: -1
-    P[28]:have_image: rover3 objective1 high_res var: -1
-    P[28]:have_image: rover3 objective0 low_res var: -1
-    P[28]:have_image: rover3 objective0 colour var: -1
-    P[28]:have_image: rover3 objective0 high_res var: -1
+Invariant 13:
+    empty: rover3store var: 6, val: 0/2
+    full: rover3store var: 6, val: 1/2
+Invariant 14:
+    empty: rover1store var: 9, val: 0/2
+    full: rover1store var: 9, val: 1/2
+Invariant 15:
+    empty: rover0store var: 5, val: 0/2
+    full: rover0store var: 5, val: 1/2
+Invariant 16:
+    empty: rover2store var: 0, val: 0/2
+    full: rover2store var: 0, val: 1/2
+SAS Facts[120]:
+    [0] at_rock_sample: waypoint6 var: 12, val: 0/3
+    [1] at_rock_sample: waypoint0 var: 4, val: 0/4
+    [2] at_rock_sample: waypoint1 var: 3, val: 0/4
+    [3] at_rock_sample: waypoint3 var: 2, val: 0/4
+    [4] at_rock_sample: waypoint4 var: 1, val: 0/4
+    [5] at_soil_sample: waypoint6 var: 8, val: 0/4
+    [6] at_soil_sample: waypoint0 var: 7, val: 0/4
+    [7] at_soil_sample: waypoint3 var: 11, val: 0/3
+    [8] at_soil_sample: waypoint4 var: 10, val: 0/3
+    [9] communicated_image_data: objective2 low_res var: -1
+    [10] communicated_image_data: objective2 colour var: 37, val: 0/2
+    [11] communicated_image_data: objective2 high_res var: -1
+    [12] communicated_image_data: objective3 low_res var: 36, val: 0/2
+    [13] communicated_image_data: objective3 colour var: 35, val: 0/2
+    [14] communicated_image_data: objective3 high_res var: -1
+    [15] communicated_image_data: objective1 low_res var: -1
+    [16] communicated_image_data: objective1 colour var: -1
+    [17] communicated_image_data: objective1 high_res var: -1
+    [18] communicated_image_data: objective0 low_res var: -1
+    [19] communicated_image_data: objective0 colour var: -1
+    [20] communicated_image_data: objective0 high_res var: -1
+    [21] communicated_rock_data: waypoint6 var: -1
+    [22] communicated_rock_data: waypoint0 var: 34, val: 0/2
+    [23] communicated_rock_data: waypoint1 var: 33, val: 0/2
+    [24] communicated_rock_data: waypoint3 var: 32, val: 0/2
+    [25] communicated_rock_data: waypoint4 var: 31, val: 0/2
+    [26] communicated_soil_data: waypoint6 var: 30, val: 0/2
+    [27] communicated_soil_data: waypoint0 var: 29, val: 0/2
+    [28] communicated_soil_data: waypoint3 var: 28, val: 0/2
+    [29] communicated_soil_data: waypoint4 var: 27, val: 0/2
+    [30] empty: rover3store var: 6, val: 0/2
+    [31] empty: rover0store var: 5, val: 0/2
+    [32] empty: rover2store var: 0, val: 0/2
+    [33] empty: rover1store var: 9, val: 0/2
+    [34] full: rover3store var: 6, val: 1/2
+    [35] full: rover0store var: 5, val: 1/2
+    [36] full: rover2store var: 0, val: 1/2
+    [37] full: rover1store var: 9, val: 1/2
+    [38] P[25]:at: rover0 waypoint6 var: 41, val: 0/7
+    [39] P[25]:at: rover0 waypoint5 var: 41, val: 1/7
+    [40] P[25]:at: rover0 waypoint2 var: 41, val: 2/7
+    [41] P[25]:at: rover0 waypoint0 var: 41, val: 3/7
+    [42] P[25]:at: rover0 waypoint1 var: 41, val: 4/7
+    [43] P[25]:at: rover0 waypoint3 var: 41, val: 5/7
+    [44] P[25]:at: rover0 waypoint4 var: 41, val: 6/7
+    [45] P[26]:at: rover1 waypoint6 var: 38, val: 0/4
+    [46] P[26]:at: rover1 waypoint2 var: 38, val: 1/4
+    [47] P[26]:at: rover1 waypoint0 var: 38, val: 2/4
+    [48] P[26]:at: rover1 waypoint1 var: 38, val: 3/4
+    [49] P[27]:at: rover2 waypoint5 var: 39, val: 0/6
+    [50] P[27]:at: rover2 waypoint2 var: 39, val: 1/6
+    [51] P[27]:at: rover2 waypoint0 var: 39, val: 2/6
+    [52] P[27]:at: rover2 waypoint1 var: 39, val: 3/6
+    [53] P[27]:at: rover2 waypoint3 var: 39, val: 4/6
+    [54] P[27]:at: rover2 waypoint4 var: 39, val: 5/6
+    [55] P[28]:at: rover3 waypoint6 var: 40, val: 0/7
+    [56] P[28]:at: rover3 waypoint5 var: 40, val: 1/7
+    [57] P[28]:at: rover3 waypoint2 var: 40, val: 2/7
+    [58] P[28]:at: rover3 waypoint0 var: 40, val: 3/7
+    [59] P[28]:at: rover3 waypoint1 var: 40, val: 4/7
+    [60] P[28]:at: rover3 waypoint3 var: 40, val: 5/7
+    [61] P[28]:at: rover3 waypoint4 var: 40, val: 6/7
+    [62] P[25]:have_rock_analysis: rover0 waypoint6 var: 12, val: 1/3
+    [63] P[25]:have_rock_analysis: rover0 waypoint0 var: 4, val: 1/4
+    [64] P[25]:have_rock_analysis: rover0 waypoint1 var: 3, val: 1/4
+    [65] P[25]:have_rock_analysis: rover0 waypoint3 var: 2, val: 1/4
+    [66] P[25]:have_rock_analysis: rover0 waypoint4 var: 1, val: 1/4
+    [67] P[27]:have_rock_analysis: rover2 waypoint0 var: 4, val: 2/4
+    [68] P[27]:have_rock_analysis: rover2 waypoint1 var: 3, val: 2/4
+    [69] P[27]:have_rock_analysis: rover2 waypoint3 var: 2, val: 2/4
+    [70] P[27]:have_rock_analysis: rover2 waypoint4 var: 1, val: 2/4
+    [71] P[28]:have_rock_analysis: rover3 waypoint6 var: 12, val: 2/3
+    [72] P[28]:have_rock_analysis: rover3 waypoint0 var: 4, val: 3/4
+    [73] P[28]:have_rock_analysis: rover3 waypoint1 var: 3, val: 3/4
+    [74] P[28]:have_rock_analysis: rover3 waypoint3 var: 2, val: 3/4
+    [75] P[28]:have_rock_analysis: rover3 waypoint4 var: 1, val: 3/4
+    [76] P[25]:have_soil_analysis: rover0 waypoint6 var: 8, val: 1/4
+    [77] P[25]:have_soil_analysis: rover0 waypoint0 var: 7, val: 1/4
+    [78] P[25]:have_soil_analysis: rover0 waypoint3 var: 11, val: 1/3
+    [79] P[25]:have_soil_analysis: rover0 waypoint4 var: 10, val: 1/3
+    [80] P[26]:have_soil_analysis: rover1 waypoint6 var: 8, val: 2/4
+    [81] P[26]:have_soil_analysis: rover1 waypoint0 var: 7, val: 2/4
+    [82] P[28]:have_soil_analysis: rover3 waypoint6 var: 8, val: 3/4
+    [83] P[28]:have_soil_analysis: rover3 waypoint0 var: 7, val: 3/4
+    [84] P[28]:have_soil_analysis: rover3 waypoint3 var: 11, val: 2/3
+    [85] P[28]:have_soil_analysis: rover3 waypoint4 var: 10, val: 2/3
+    [86] P[26]:calibrated: camera2 rover1 var: 26, val: 0/2
+    [87] P[26]:calibrated: camera0 rover1 var: 25, val: 0/2
+    [88] P[26]:calibrated: camera1 rover1 var: 24, val: 0/2
+    [89] P[26]:calibrated: camera3 rover1 var: 23, val: 0/2
+    [90] P[27]:calibrated: camera4 rover2 var: 22, val: 0/2
+    [91] P[28]:calibrated: camera5 rover3 var: 21, val: 0/2
+    [92] P[26]:have_image: rover1 objective2 low_res var: -1
+    [93] P[26]:have_image: rover1 objective2 colour var: 20, val: 0/2
+    [94] P[26]:have_image: rover1 objective2 high_res var: -1
+    [95] P[26]:have_image: rover1 objective3 low_res var: 19, val: 0/2
+    [96] P[26]:have_image: rover1 objective3 colour var: 18, val: 0/2
+    [97] P[26]:have_image: rover1 objective3 high_res var: -1
+    [98] P[26]:have_image: rover1 objective1 low_res var: -1
+    [99] P[26]:have_image: rover1 objective1 colour var: -1
+    [100] P[26]:have_image: rover1 objective1 high_res var: -1
+    [101] P[26]:have_image: rover1 objective0 low_res var: -1
+    [102] P[26]:have_image: rover1 objective0 colour var: -1
+    [103] P[26]:have_image: rover1 objective0 high_res var: -1
+    [104] P[27]:have_image: rover2 objective2 colour var: 17, val: 0/2
+    [105] P[27]:have_image: rover2 objective3 colour var: 16, val: 0/2
+    [106] P[27]:have_image: rover2 objective1 colour var: -1
+    [107] P[27]:have_image: rover2 objective0 colour var: -1
+    [108] P[28]:have_image: rover3 objective2 low_res var: -1
+    [109] P[28]:have_image: rover3 objective2 colour var: 15, val: 0/2
+    [110] P[28]:have_image: rover3 objective2 high_res var: -1
+    [111] P[28]:have_image: rover3 objective3 low_res var: 14, val: 0/2
+    [112] P[28]:have_image: rover3 objective3 colour var: 13, val: 0/2
+    [113] P[28]:have_image: rover3 objective3 high_res var: -1
+    [114] P[28]:have_image: rover3 objective1 low_res var: -1
+    [115] P[28]:have_image: rover3 objective1 colour var: -1
+    [116] P[28]:have_image: rover3 objective1 high_res var: -1
+    [117] P[28]:have_image: rover3 objective0 low_res var: -1
+    [118] P[28]:have_image: rover3 objective0 colour var: -1
+    [119] P[28]:have_image: rover3 objective0 high_res var: -1
 Facts[120]:
     at_rock_sample: waypoint6
     at_rock_sample: waypoint0
@@ -41379,319 +41329,269 @@ Agent size: 4
     obj-to-agent: (25->0) (26->1) (27->2) (28->3)
 ---- Ground pddl/rovers-domain.unfactor.pddl | pddl/rovers-p10.unfactor.pddl END ----
 ---- Ground pddl/CityCar-domain.unfactor.pddl | pddl/CityCar-p3-2-2-0-1.unfactor.pddl ----
-Invariant 0:
-    at_car_jun: car0 junction0-0 var: 1, val: 0/24
-    at_car_jun: car0 junction0-1 var: 1, val: 1/24
-    at_car_jun: car0 junction0-2 var: 1, val: 2/24
-    at_car_jun: car0 junction1-0 var: 1, val: 3/24
-    at_car_jun: car0 junction1-1 var: 1, val: 4/24
-    at_car_jun: car0 junction1-2 var: 1, val: 5/24
-    at_car_jun: car0 junction2-0 var: 1, val: 6/24
-    at_car_jun: car0 junction2-1 var: 1, val: 7/24
-    at_car_jun: car0 junction2-2 var: 1, val: 8/24
-    at_car_road: car0 road0 var: 1, val: 9/24
-    at_car_road: car0 road1 var: 1, val: 10/24
-    at_car_road: car0 road2 var: 1, val: 11/24
-    at_car_road: car0 road3 var: 1, val: 12/24
-    at_car_road: car0 road4 var: 1, val: 13/24
-    P[9]:starting: car0 garage0 var: 1, val: 14/24
-    P[9]:arrived: car0 junction0-0 var: 1, val: 15/24
-    P[9]:arrived: car0 junction0-1 var: 1, val: 16/24
-    P[9]:arrived: car0 junction0-2 var: 1, val: 17/24
-    P[9]:arrived: car0 junction1-0 var: 1, val: 18/24
-    P[9]:arrived: car0 junction1-1 var: 1, val: 19/24
-    P[9]:arrived: car0 junction1-2 var: 1, val: 20/24
-    P[9]:arrived: car0 junction2-0 var: 1, val: 21/24
-    P[9]:arrived: car0 junction2-1 var: 1, val: 22/24
-    P[9]:arrived: car0 junction2-2 var: 1, val: 23/24
-Invariant 1:
-    at_car_jun: car1 junction0-0 var: 0, val: 0/24
-    at_car_jun: car1 junction0-1 var: 0, val: 1/24
-    at_car_jun: car1 junction0-2 var: 0, val: 2/24
-    at_car_jun: car1 junction1-0 var: 0, val: 3/24
-    at_car_jun: car1 junction1-1 var: 0, val: 4/24
-    at_car_jun: car1 junction1-2 var: 0, val: 5/24
-    at_car_jun: car1 junction2-0 var: 0, val: 6/24
-    at_car_jun: car1 junction2-1 var: 0, val: 7/24
-    at_car_jun: car1 junction2-2 var: 0, val: 8/24
-    at_car_road: car1 road0 var: 0, val: 9/24
-    at_car_road: car1 road1 var: 0, val: 10/24
-    at_car_road: car1 road2 var: 0, val: 11/24
-    at_car_road: car1 road3 var: 0, val: 12/24
-    at_car_road: car1 road4 var: 0, val: 13/24
-    P[10]:starting: car1 garage1 var: 0, val: 14/24
-    P[10]:arrived: car1 junction0-0 var: 0, val: 15/24
-    P[10]:arrived: car1 junction0-1 var: 0, val: 16/24
-    P[10]:arrived: car1 junction0-2 var: 0, val: 17/24
-    P[10]:arrived: car1 junction1-0 var: 0, val: 18/24
-    P[10]:arrived: car1 junction1-1 var: 0, val: 19/24
-    P[10]:arrived: car1 junction1-2 var: 0, val: 20/24
-    P[10]:arrived: car1 junction2-0 var: 0, val: 21/24
-    P[10]:arrived: car1 junction2-1 var: 0, val: 22/24
-    P[10]:arrived: car1 junction2-2 var: 0, val: 23/24
 SAS Facts[262]:
-    road_connect: road0 junction0-0 junction0-1 var: 215, val: 0/2
-    road_connect: road0 junction0-0 junction1-0 var: 214, val: 0/2
-    road_connect: road0 junction0-0 junction1-1 var: 213, val: 0/2
-    road_connect: road0 junction0-1 junction0-0 var: 212, val: 0/2
-    road_connect: road0 junction0-1 junction0-2 var: 211, val: 0/2
-    road_connect: road0 junction0-1 junction1-0 var: 210, val: 0/2
-    road_connect: road0 junction0-1 junction1-1 var: 209, val: 0/2
-    road_connect: road0 junction0-1 junction1-2 var: 208, val: 0/2
-    road_connect: road0 junction0-2 junction0-1 var: 207, val: 0/2
-    road_connect: road0 junction0-2 junction1-1 var: 206, val: 0/2
-    road_connect: road0 junction0-2 junction1-2 var: 205, val: 0/2
-    road_connect: road0 junction1-0 junction0-0 var: 204, val: 0/2
-    road_connect: road0 junction1-0 junction0-1 var: 203, val: 0/2
-    road_connect: road0 junction1-0 junction1-1 var: 202, val: 0/2
-    road_connect: road0 junction1-0 junction2-0 var: 201, val: 0/2
-    road_connect: road0 junction1-0 junction2-1 var: 200, val: 0/2
-    road_connect: road0 junction1-1 junction0-0 var: 199, val: 0/2
-    road_connect: road0 junction1-1 junction0-1 var: 198, val: 0/2
-    road_connect: road0 junction1-1 junction0-2 var: 197, val: 0/2
-    road_connect: road0 junction1-1 junction1-0 var: 196, val: 0/2
-    road_connect: road0 junction1-1 junction1-2 var: 195, val: 0/2
-    road_connect: road0 junction1-1 junction2-0 var: 194, val: 0/2
-    road_connect: road0 junction1-1 junction2-1 var: 193, val: 0/2
-    road_connect: road0 junction1-1 junction2-2 var: 192, val: 0/2
-    road_connect: road0 junction1-2 junction0-1 var: 191, val: 0/2
-    road_connect: road0 junction1-2 junction0-2 var: 190, val: 0/2
-    road_connect: road0 junction1-2 junction1-1 var: 188, val: 0/2
-    road_connect: road0 junction1-2 junction2-1 var: 187, val: 0/2
-    road_connect: road0 junction1-2 junction2-2 var: 186, val: 0/2
-    road_connect: road0 junction2-0 junction1-0 var: 185, val: 0/2
-    road_connect: road0 junction2-0 junction1-1 var: 184, val: 0/2
-    road_connect: road0 junction2-0 junction2-1 var: 183, val: 0/2
-    road_connect: road0 junction2-1 junction1-0 var: 182, val: 0/2
-    road_connect: road0 junction2-1 junction1-1 var: 181, val: 0/2
-    road_connect: road0 junction2-1 junction1-2 var: 180, val: 0/2
-    road_connect: road0 junction2-1 junction2-0 var: 179, val: 0/2
-    road_connect: road0 junction2-1 junction2-2 var: 178, val: 0/2
-    road_connect: road0 junction2-2 junction1-1 var: 177, val: 0/2
-    road_connect: road0 junction2-2 junction1-2 var: 176, val: 0/2
-    road_connect: road0 junction2-2 junction2-1 var: 175, val: 0/2
-    road_connect: road1 junction0-0 junction0-1 var: 174, val: 0/2
-    road_connect: road1 junction0-0 junction1-0 var: 173, val: 0/2
-    road_connect: road1 junction0-0 junction1-1 var: 172, val: 0/2
-    road_connect: road1 junction0-1 junction0-0 var: 171, val: 0/2
-    road_connect: road1 junction0-1 junction0-2 var: 170, val: 0/2
-    road_connect: road1 junction0-1 junction1-0 var: 169, val: 0/2
-    road_connect: road1 junction0-1 junction1-1 var: 168, val: 0/2
-    road_connect: road1 junction0-1 junction1-2 var: 167, val: 0/2
-    road_connect: road1 junction0-2 junction0-1 var: 166, val: 0/2
-    road_connect: road1 junction0-2 junction1-1 var: 165, val: 0/2
-    road_connect: road1 junction0-2 junction1-2 var: 164, val: 0/2
-    road_connect: road1 junction1-0 junction0-0 var: 163, val: 0/2
-    road_connect: road1 junction1-0 junction0-1 var: 162, val: 0/2
-    road_connect: road1 junction1-0 junction1-1 var: 161, val: 0/2
-    road_connect: road1 junction1-0 junction2-0 var: 160, val: 0/2
-    road_connect: road1 junction1-0 junction2-1 var: 159, val: 0/2
-    road_connect: road1 junction1-1 junction0-0 var: 158, val: 0/2
-    road_connect: road1 junction1-1 junction0-1 var: 157, val: 0/2
-    road_connect: road1 junction1-1 junction0-2 var: 156, val: 0/2
-    road_connect: road1 junction1-1 junction1-0 var: 155, val: 0/2
-    road_connect: road1 junction1-1 junction1-2 var: 154, val: 0/2
-    road_connect: road1 junction1-1 junction2-0 var: 153, val: 0/2
-    road_connect: road1 junction1-1 junction2-1 var: 152, val: 0/2
-    road_connect: road1 junction1-1 junction2-2 var: 151, val: 0/2
-    road_connect: road1 junction1-2 junction0-1 var: 150, val: 0/2
-    road_connect: road1 junction1-2 junction0-2 var: 149, val: 0/2
-    road_connect: road1 junction1-2 junction1-1 var: 147, val: 0/2
-    road_connect: road1 junction1-2 junction2-1 var: 146, val: 0/2
-    road_connect: road1 junction1-2 junction2-2 var: 145, val: 0/2
-    road_connect: road1 junction2-0 junction1-0 var: 144, val: 0/2
-    road_connect: road1 junction2-0 junction1-1 var: 143, val: 0/2
-    road_connect: road1 junction2-0 junction2-1 var: 142, val: 0/2
-    road_connect: road1 junction2-1 junction1-0 var: 141, val: 0/2
-    road_connect: road1 junction2-1 junction1-1 var: 140, val: 0/2
-    road_connect: road1 junction2-1 junction1-2 var: 139, val: 0/2
-    road_connect: road1 junction2-1 junction2-0 var: 138, val: 0/2
-    road_connect: road1 junction2-1 junction2-2 var: 137, val: 0/2
-    road_connect: road1 junction2-2 junction1-1 var: 136, val: 0/2
-    road_connect: road1 junction2-2 junction1-2 var: 135, val: 0/2
-    road_connect: road1 junction2-2 junction2-1 var: 134, val: 0/2
-    road_connect: road2 junction0-0 junction0-1 var: 133, val: 0/2
-    road_connect: road2 junction0-0 junction1-0 var: 132, val: 0/2
-    road_connect: road2 junction0-0 junction1-1 var: 131, val: 0/2
-    road_connect: road2 junction0-1 junction0-0 var: 130, val: 0/2
-    road_connect: road2 junction0-1 junction0-2 var: 129, val: 0/2
-    road_connect: road2 junction0-1 junction1-0 var: 128, val: 0/2
-    road_connect: road2 junction0-1 junction1-1 var: 127, val: 0/2
-    road_connect: road2 junction0-1 junction1-2 var: 126, val: 0/2
-    road_connect: road2 junction0-2 junction0-1 var: 125, val: 0/2
-    road_connect: road2 junction0-2 junction1-1 var: 124, val: 0/2
-    road_connect: road2 junction0-2 junction1-2 var: 123, val: 0/2
-    road_connect: road2 junction1-0 junction0-0 var: 122, val: 0/2
-    road_connect: road2 junction1-0 junction0-1 var: 121, val: 0/2
-    road_connect: road2 junction1-0 junction1-1 var: 120, val: 0/2
-    road_connect: road2 junction1-0 junction2-0 var: 119, val: 0/2
-    road_connect: road2 junction1-0 junction2-1 var: 118, val: 0/2
-    road_connect: road2 junction1-1 junction0-0 var: 117, val: 0/2
-    road_connect: road2 junction1-1 junction0-1 var: 116, val: 0/2
-    road_connect: road2 junction1-1 junction0-2 var: 115, val: 0/2
-    road_connect: road2 junction1-1 junction1-0 var: 114, val: 0/2
-    road_connect: road2 junction1-1 junction1-2 var: 113, val: 0/2
-    road_connect: road2 junction1-1 junction2-0 var: 112, val: 0/2
-    road_connect: road2 junction1-1 junction2-1 var: 111, val: 0/2
-    road_connect: road2 junction1-1 junction2-2 var: 110, val: 0/2
-    road_connect: road2 junction1-2 junction0-1 var: 109, val: 0/2
-    road_connect: road2 junction1-2 junction0-2 var: 108, val: 0/2
-    road_connect: road2 junction1-2 junction1-1 var: 106, val: 0/2
-    road_connect: road2 junction1-2 junction2-1 var: 105, val: 0/2
-    road_connect: road2 junction1-2 junction2-2 var: 104, val: 0/2
-    road_connect: road2 junction2-0 junction1-0 var: 103, val: 0/2
-    road_connect: road2 junction2-0 junction1-1 var: 102, val: 0/2
-    road_connect: road2 junction2-0 junction2-1 var: 101, val: 0/2
-    road_connect: road2 junction2-1 junction1-0 var: 100, val: 0/2
-    road_connect: road2 junction2-1 junction1-1 var: 99, val: 0/2
-    road_connect: road2 junction2-1 junction1-2 var: 98, val: 0/2
-    road_connect: road2 junction2-1 junction2-0 var: 97, val: 0/2
-    road_connect: road2 junction2-1 junction2-2 var: 96, val: 0/2
-    road_connect: road2 junction2-2 junction1-1 var: 95, val: 0/2
-    road_connect: road2 junction2-2 junction1-2 var: 94, val: 0/2
-    road_connect: road2 junction2-2 junction2-1 var: 93, val: 0/2
-    road_connect: road3 junction0-0 junction0-1 var: 92, val: 0/2
-    road_connect: road3 junction0-0 junction1-0 var: 91, val: 0/2
-    road_connect: road3 junction0-0 junction1-1 var: 90, val: 0/2
-    road_connect: road3 junction0-1 junction0-0 var: 89, val: 0/2
-    road_connect: road3 junction0-1 junction0-2 var: 88, val: 0/2
-    road_connect: road3 junction0-1 junction1-0 var: 87, val: 0/2
-    road_connect: road3 junction0-1 junction1-1 var: 86, val: 0/2
-    road_connect: road3 junction0-1 junction1-2 var: 85, val: 0/2
-    road_connect: road3 junction0-2 junction0-1 var: 84, val: 0/2
-    road_connect: road3 junction0-2 junction1-1 var: 83, val: 0/2
-    road_connect: road3 junction0-2 junction1-2 var: 82, val: 0/2
-    road_connect: road3 junction1-0 junction0-0 var: 81, val: 0/2
-    road_connect: road3 junction1-0 junction0-1 var: 80, val: 0/2
-    road_connect: road3 junction1-0 junction1-1 var: 79, val: 0/2
-    road_connect: road3 junction1-0 junction2-0 var: 78, val: 0/2
-    road_connect: road3 junction1-0 junction2-1 var: 77, val: 0/2
-    road_connect: road3 junction1-1 junction0-0 var: 76, val: 0/2
-    road_connect: road3 junction1-1 junction0-1 var: 75, val: 0/2
-    road_connect: road3 junction1-1 junction0-2 var: 74, val: 0/2
-    road_connect: road3 junction1-1 junction1-0 var: 73, val: 0/2
-    road_connect: road3 junction1-1 junction1-2 var: 72, val: 0/2
-    road_connect: road3 junction1-1 junction2-0 var: 71, val: 0/2
-    road_connect: road3 junction1-1 junction2-1 var: 70, val: 0/2
-    road_connect: road3 junction1-1 junction2-2 var: 69, val: 0/2
-    road_connect: road3 junction1-2 junction0-1 var: 68, val: 0/2
-    road_connect: road3 junction1-2 junction0-2 var: 67, val: 0/2
-    road_connect: road3 junction1-2 junction1-1 var: 65, val: 0/2
-    road_connect: road3 junction1-2 junction2-1 var: 64, val: 0/2
-    road_connect: road3 junction1-2 junction2-2 var: 63, val: 0/2
-    road_connect: road3 junction2-0 junction1-0 var: 62, val: 0/2
-    road_connect: road3 junction2-0 junction1-1 var: 61, val: 0/2
-    road_connect: road3 junction2-0 junction2-1 var: 60, val: 0/2
-    road_connect: road3 junction2-1 junction1-0 var: 59, val: 0/2
-    road_connect: road3 junction2-1 junction1-1 var: 58, val: 0/2
-    road_connect: road3 junction2-1 junction1-2 var: 57, val: 0/2
-    road_connect: road3 junction2-1 junction2-0 var: 56, val: 0/2
-    road_connect: road3 junction2-1 junction2-2 var: 55, val: 0/2
-    road_connect: road3 junction2-2 junction1-1 var: 54, val: 0/2
-    road_connect: road3 junction2-2 junction1-2 var: 53, val: 0/2
-    road_connect: road3 junction2-2 junction2-1 var: 52, val: 0/2
-    road_connect: road4 junction0-0 junction0-1 var: 51, val: 0/2
-    road_connect: road4 junction0-0 junction1-0 var: 50, val: 0/2
-    road_connect: road4 junction0-0 junction1-1 var: 49, val: 0/2
-    road_connect: road4 junction0-1 junction0-0 var: 48, val: 0/2
-    road_connect: road4 junction0-1 junction0-2 var: 46, val: 0/2
-    road_connect: road4 junction0-1 junction1-0 var: 45, val: 0/2
-    road_connect: road4 junction0-1 junction1-1 var: 44, val: 0/2
-    road_connect: road4 junction0-1 junction1-2 var: 43, val: 0/2
-    road_connect: road4 junction0-2 junction0-1 var: 42, val: 0/2
-    road_connect: road4 junction0-2 junction1-1 var: 37, val: 0/2
-    road_connect: road4 junction0-2 junction1-2 var: 33, val: 0/2
-    road_connect: road4 junction1-0 junction0-0 var: 32, val: 0/2
-    road_connect: road4 junction1-0 junction0-1 var: 40, val: 0/2
-    road_connect: road4 junction1-0 junction1-1 var: 31, val: 0/2
-    road_connect: road4 junction1-0 junction2-0 var: 30, val: 0/2
-    road_connect: road4 junction1-0 junction2-1 var: 29, val: 0/2
-    road_connect: road4 junction1-1 junction0-0 var: 28, val: 0/2
-    road_connect: road4 junction1-1 junction0-1 var: 39, val: 0/2
-    road_connect: road4 junction1-1 junction0-2 var: 35, val: 0/2
-    road_connect: road4 junction1-1 junction1-0 var: 27, val: 0/2
-    road_connect: road4 junction1-1 junction1-2 var: 26, val: 0/2
-    road_connect: road4 junction1-1 junction2-0 var: 25, val: 0/2
-    road_connect: road4 junction1-1 junction2-1 var: 24, val: 0/2
-    road_connect: road4 junction1-1 junction2-2 var: 23, val: 0/2
-    road_connect: road4 junction1-2 junction0-1 var: 38, val: 0/2
-    road_connect: road4 junction1-2 junction0-2 var: 34, val: 0/2
-    road_connect: road4 junction1-2 junction1-1 var: 22, val: 0/2
-    road_connect: road4 junction1-2 junction2-1 var: 21, val: 0/2
-    road_connect: road4 junction1-2 junction2-2 var: 19, val: 0/2
-    road_connect: road4 junction2-0 junction1-0 var: 18, val: 0/2
-    road_connect: road4 junction2-0 junction1-1 var: 17, val: 0/2
-    road_connect: road4 junction2-0 junction2-1 var: 16, val: 0/2
-    road_connect: road4 junction2-1 junction1-0 var: 15, val: 0/2
-    road_connect: road4 junction2-1 junction1-1 var: 14, val: 0/2
-    road_connect: road4 junction2-1 junction1-2 var: 13, val: 0/2
-    road_connect: road4 junction2-1 junction2-0 var: 12, val: 0/2
-    road_connect: road4 junction2-1 junction2-2 var: 11, val: 0/2
-    road_connect: road4 junction2-2 junction1-1 var: 10, val: 0/2
-    road_connect: road4 junction2-2 junction1-2 var: 9, val: 0/2
-    road_connect: road4 junction2-2 junction2-1 var: 8, val: 0/2
-    clear: junction0-0 var: 47, val: 0/2
-    clear: junction0-1 var: 41, val: 0/2
-    clear: junction0-2 var: 36, val: 0/2
-    clear: junction1-0 var: 7, val: 0/2
-    clear: junction1-1 var: 5, val: 0/2
-    clear: junction1-2 var: 4, val: 0/2
-    clear: junction2-0 var: 6, val: 0/2
-    clear: junction2-1 var: 2, val: 0/2
-    clear: junction2-2 var: 3, val: 0/2
-    in_place: road0 var: 189, val: 0/2
-    in_place: road1 var: 148, val: 0/2
-    in_place: road2 var: 107, val: 0/2
-    in_place: road3 var: 66, val: 0/2
-    in_place: road4 var: 20, val: 0/2
-    at_car_jun: car0 junction0-0 var: 1, val: 0/24
-    at_car_jun: car0 junction0-1 var: 1, val: 1/24
-    at_car_jun: car0 junction0-2 var: 1, val: 2/24
-    at_car_jun: car0 junction1-0 var: 1, val: 3/24
-    at_car_jun: car0 junction1-1 var: 1, val: 4/24
-    at_car_jun: car0 junction1-2 var: 1, val: 5/24
-    at_car_jun: car0 junction2-0 var: 1, val: 6/24
-    at_car_jun: car0 junction2-1 var: 1, val: 7/24
-    at_car_jun: car0 junction2-2 var: 1, val: 8/24
-    at_car_jun: car1 junction0-0 var: 0, val: 0/24
-    at_car_jun: car1 junction0-1 var: 0, val: 1/24
-    at_car_jun: car1 junction0-2 var: 0, val: 2/24
-    at_car_jun: car1 junction1-0 var: 0, val: 3/24
-    at_car_jun: car1 junction1-1 var: 0, val: 4/24
-    at_car_jun: car1 junction1-2 var: 0, val: 5/24
-    at_car_jun: car1 junction2-0 var: 0, val: 6/24
-    at_car_jun: car1 junction2-1 var: 0, val: 7/24
-    at_car_jun: car1 junction2-2 var: 0, val: 8/24
-    at_car_road: car0 road0 var: 1, val: 9/24
-    at_car_road: car0 road1 var: 1, val: 10/24
-    at_car_road: car0 road2 var: 1, val: 11/24
-    at_car_road: car0 road3 var: 1, val: 12/24
-    at_car_road: car0 road4 var: 1, val: 13/24
-    at_car_road: car1 road0 var: 0, val: 9/24
-    at_car_road: car1 road1 var: 0, val: 10/24
-    at_car_road: car1 road2 var: 0, val: 11/24
-    at_car_road: car1 road3 var: 0, val: 12/24
-    at_car_road: car1 road4 var: 0, val: 13/24
-    P[9]:starting: car0 garage0 var: 1, val: 14/24
-    P[10]:starting: car1 garage1 var: 0, val: 14/24
-    P[9]:arrived: car0 junction0-0 var: 1, val: 15/24
-    P[9]:arrived: car0 junction0-1 var: 1, val: 16/24
-    P[9]:arrived: car0 junction0-2 var: 1, val: 17/24
-    P[9]:arrived: car0 junction1-0 var: 1, val: 18/24
-    P[9]:arrived: car0 junction1-1 var: 1, val: 19/24
-    P[9]:arrived: car0 junction1-2 var: 1, val: 20/24
-    P[9]:arrived: car0 junction2-0 var: 1, val: 21/24
-    P[9]:arrived: car0 junction2-1 var: 1, val: 22/24
-    P[9]:arrived: car0 junction2-2 var: 1, val: 23/24
-    P[10]:arrived: car1 junction0-0 var: 0, val: 15/24
-    P[10]:arrived: car1 junction0-1 var: 0, val: 16/24
-    P[10]:arrived: car1 junction0-2 var: 0, val: 17/24
-    P[10]:arrived: car1 junction1-0 var: 0, val: 18/24
-    P[10]:arrived: car1 junction1-1 var: 0, val: 19/24
-    P[10]:arrived: car1 junction1-2 var: 0, val: 20/24
-    P[10]:arrived: car1 junction2-0 var: 0, val: 21/24
-    P[10]:arrived: car1 junction2-1 var: 0, val: 22/24
-    P[10]:arrived: car1 junction2-2 var: 0, val: 23/24
+    [0] road_connect: road0 junction0-0 junction0-1 var: 241, val: 0/2
+    [1] road_connect: road0 junction0-0 junction1-0 var: 240, val: 0/2
+    [2] road_connect: road0 junction0-0 junction1-1 var: 239, val: 0/2
+    [3] road_connect: road0 junction0-1 junction0-0 var: 238, val: 0/2
+    [4] road_connect: road0 junction0-1 junction0-2 var: 237, val: 0/2
+    [5] road_connect: road0 junction0-1 junction1-0 var: 236, val: 0/2
+    [6] road_connect: road0 junction0-1 junction1-1 var: 235, val: 0/2
+    [7] road_connect: road0 junction0-1 junction1-2 var: 234, val: 0/2
+    [8] road_connect: road0 junction0-2 junction0-1 var: 233, val: 0/2
+    [9] road_connect: road0 junction0-2 junction1-1 var: 232, val: 0/2
+    [10] road_connect: road0 junction0-2 junction1-2 var: 231, val: 0/2
+    [11] road_connect: road0 junction1-0 junction0-0 var: 230, val: 0/2
+    [12] road_connect: road0 junction1-0 junction0-1 var: 229, val: 0/2
+    [13] road_connect: road0 junction1-0 junction1-1 var: 228, val: 0/2
+    [14] road_connect: road0 junction1-0 junction2-0 var: 227, val: 0/2
+    [15] road_connect: road0 junction1-0 junction2-1 var: 226, val: 0/2
+    [16] road_connect: road0 junction1-1 junction0-0 var: 225, val: 0/2
+    [17] road_connect: road0 junction1-1 junction0-1 var: 224, val: 0/2
+    [18] road_connect: road0 junction1-1 junction0-2 var: 223, val: 0/2
+    [19] road_connect: road0 junction1-1 junction1-0 var: 222, val: 0/2
+    [20] road_connect: road0 junction1-1 junction1-2 var: 221, val: 0/2
+    [21] road_connect: road0 junction1-1 junction2-0 var: 220, val: 0/2
+    [22] road_connect: road0 junction1-1 junction2-1 var: 219, val: 0/2
+    [23] road_connect: road0 junction1-1 junction2-2 var: 218, val: 0/2
+    [24] road_connect: road0 junction1-2 junction0-1 var: 217, val: 0/2
+    [25] road_connect: road0 junction1-2 junction0-2 var: 216, val: 0/2
+    [26] road_connect: road0 junction1-2 junction1-1 var: 214, val: 0/2
+    [27] road_connect: road0 junction1-2 junction2-1 var: 213, val: 0/2
+    [28] road_connect: road0 junction1-2 junction2-2 var: 212, val: 0/2
+    [29] road_connect: road0 junction2-0 junction1-0 var: 211, val: 0/2
+    [30] road_connect: road0 junction2-0 junction1-1 var: 210, val: 0/2
+    [31] road_connect: road0 junction2-0 junction2-1 var: 209, val: 0/2
+    [32] road_connect: road0 junction2-1 junction1-0 var: 208, val: 0/2
+    [33] road_connect: road0 junction2-1 junction1-1 var: 207, val: 0/2
+    [34] road_connect: road0 junction2-1 junction1-2 var: 206, val: 0/2
+    [35] road_connect: road0 junction2-1 junction2-0 var: 205, val: 0/2
+    [36] road_connect: road0 junction2-1 junction2-2 var: 204, val: 0/2
+    [37] road_connect: road0 junction2-2 junction1-1 var: 203, val: 0/2
+    [38] road_connect: road0 junction2-2 junction1-2 var: 202, val: 0/2
+    [39] road_connect: road0 junction2-2 junction2-1 var: 201, val: 0/2
+    [40] road_connect: road1 junction0-0 junction0-1 var: 200, val: 0/2
+    [41] road_connect: road1 junction0-0 junction1-0 var: 199, val: 0/2
+    [42] road_connect: road1 junction0-0 junction1-1 var: 198, val: 0/2
+    [43] road_connect: road1 junction0-1 junction0-0 var: 197, val: 0/2
+    [44] road_connect: road1 junction0-1 junction0-2 var: 196, val: 0/2
+    [45] road_connect: road1 junction0-1 junction1-0 var: 195, val: 0/2
+    [46] road_connect: road1 junction0-1 junction1-1 var: 194, val: 0/2
+    [47] road_connect: road1 junction0-1 junction1-2 var: 193, val: 0/2
+    [48] road_connect: road1 junction0-2 junction0-1 var: 192, val: 0/2
+    [49] road_connect: road1 junction0-2 junction1-1 var: 191, val: 0/2
+    [50] road_connect: road1 junction0-2 junction1-2 var: 190, val: 0/2
+    [51] road_connect: road1 junction1-0 junction0-0 var: 189, val: 0/2
+    [52] road_connect: road1 junction1-0 junction0-1 var: 188, val: 0/2
+    [53] road_connect: road1 junction1-0 junction1-1 var: 187, val: 0/2
+    [54] road_connect: road1 junction1-0 junction2-0 var: 186, val: 0/2
+    [55] road_connect: road1 junction1-0 junction2-1 var: 185, val: 0/2
+    [56] road_connect: road1 junction1-1 junction0-0 var: 184, val: 0/2
+    [57] road_connect: road1 junction1-1 junction0-1 var: 183, val: 0/2
+    [58] road_connect: road1 junction1-1 junction0-2 var: 182, val: 0/2
+    [59] road_connect: road1 junction1-1 junction1-0 var: 181, val: 0/2
+    [60] road_connect: road1 junction1-1 junction1-2 var: 180, val: 0/2
+    [61] road_connect: road1 junction1-1 junction2-0 var: 179, val: 0/2
+    [62] road_connect: road1 junction1-1 junction2-1 var: 178, val: 0/2
+    [63] road_connect: road1 junction1-1 junction2-2 var: 177, val: 0/2
+    [64] road_connect: road1 junction1-2 junction0-1 var: 176, val: 0/2
+    [65] road_connect: road1 junction1-2 junction0-2 var: 175, val: 0/2
+    [66] road_connect: road1 junction1-2 junction1-1 var: 173, val: 0/2
+    [67] road_connect: road1 junction1-2 junction2-1 var: 172, val: 0/2
+    [68] road_connect: road1 junction1-2 junction2-2 var: 171, val: 0/2
+    [69] road_connect: road1 junction2-0 junction1-0 var: 170, val: 0/2
+    [70] road_connect: road1 junction2-0 junction1-1 var: 169, val: 0/2
+    [71] road_connect: road1 junction2-0 junction2-1 var: 168, val: 0/2
+    [72] road_connect: road1 junction2-1 junction1-0 var: 167, val: 0/2
+    [73] road_connect: road1 junction2-1 junction1-1 var: 166, val: 0/2
+    [74] road_connect: road1 junction2-1 junction1-2 var: 165, val: 0/2
+    [75] road_connect: road1 junction2-1 junction2-0 var: 164, val: 0/2
+    [76] road_connect: road1 junction2-1 junction2-2 var: 163, val: 0/2
+    [77] road_connect: road1 junction2-2 junction1-1 var: 162, val: 0/2
+    [78] road_connect: road1 junction2-2 junction1-2 var: 161, val: 0/2
+    [79] road_connect: road1 junction2-2 junction2-1 var: 160, val: 0/2
+    [80] road_connect: road2 junction0-0 junction0-1 var: 159, val: 0/2
+    [81] road_connect: road2 junction0-0 junction1-0 var: 158, val: 0/2
+    [82] road_connect: road2 junction0-0 junction1-1 var: 157, val: 0/2
+    [83] road_connect: road2 junction0-1 junction0-0 var: 156, val: 0/2
+    [84] road_connect: road2 junction0-1 junction0-2 var: 155, val: 0/2
+    [85] road_connect: road2 junction0-1 junction1-0 var: 154, val: 0/2
+    [86] road_connect: road2 junction0-1 junction1-1 var: 153, val: 0/2
+    [87] road_connect: road2 junction0-1 junction1-2 var: 152, val: 0/2
+    [88] road_connect: road2 junction0-2 junction0-1 var: 151, val: 0/2
+    [89] road_connect: road2 junction0-2 junction1-1 var: 150, val: 0/2
+    [90] road_connect: road2 junction0-2 junction1-2 var: 149, val: 0/2
+    [91] road_connect: road2 junction1-0 junction0-0 var: 148, val: 0/2
+    [92] road_connect: road2 junction1-0 junction0-1 var: 147, val: 0/2
+    [93] road_connect: road2 junction1-0 junction1-1 var: 146, val: 0/2
+    [94] road_connect: road2 junction1-0 junction2-0 var: 145, val: 0/2
+    [95] road_connect: road2 junction1-0 junction2-1 var: 144, val: 0/2
+    [96] road_connect: road2 junction1-1 junction0-0 var: 143, val: 0/2
+    [97] road_connect: road2 junction1-1 junction0-1 var: 142, val: 0/2
+    [98] road_connect: road2 junction1-1 junction0-2 var: 141, val: 0/2
+    [99] road_connect: road2 junction1-1 junction1-0 var: 140, val: 0/2
+    [100] road_connect: road2 junction1-1 junction1-2 var: 139, val: 0/2
+    [101] road_connect: road2 junction1-1 junction2-0 var: 138, val: 0/2
+    [102] road_connect: road2 junction1-1 junction2-1 var: 137, val: 0/2
+    [103] road_connect: road2 junction1-1 junction2-2 var: 136, val: 0/2
+    [104] road_connect: road2 junction1-2 junction0-1 var: 135, val: 0/2
+    [105] road_connect: road2 junction1-2 junction0-2 var: 134, val: 0/2
+    [106] road_connect: road2 junction1-2 junction1-1 var: 132, val: 0/2
+    [107] road_connect: road2 junction1-2 junction2-1 var: 131, val: 0/2
+    [108] road_connect: road2 junction1-2 junction2-2 var: 130, val: 0/2
+    [109] road_connect: road2 junction2-0 junction1-0 var: 129, val: 0/2
+    [110] road_connect: road2 junction2-0 junction1-1 var: 128, val: 0/2
+    [111] road_connect: road2 junction2-0 junction2-1 var: 127, val: 0/2
+    [112] road_connect: road2 junction2-1 junction1-0 var: 126, val: 0/2
+    [113] road_connect: road2 junction2-1 junction1-1 var: 125, val: 0/2
+    [114] road_connect: road2 junction2-1 junction1-2 var: 124, val: 0/2
+    [115] road_connect: road2 junction2-1 junction2-0 var: 123, val: 0/2
+    [116] road_connect: road2 junction2-1 junction2-2 var: 122, val: 0/2
+    [117] road_connect: road2 junction2-2 junction1-1 var: 121, val: 0/2
+    [118] road_connect: road2 junction2-2 junction1-2 var: 120, val: 0/2
+    [119] road_connect: road2 junction2-2 junction2-1 var: 119, val: 0/2
+    [120] road_connect: road3 junction0-0 junction0-1 var: 118, val: 0/2
+    [121] road_connect: road3 junction0-0 junction1-0 var: 117, val: 0/2
+    [122] road_connect: road3 junction0-0 junction1-1 var: 116, val: 0/2
+    [123] road_connect: road3 junction0-1 junction0-0 var: 115, val: 0/2
+    [124] road_connect: road3 junction0-1 junction0-2 var: 114, val: 0/2
+    [125] road_connect: road3 junction0-1 junction1-0 var: 113, val: 0/2
+    [126] road_connect: road3 junction0-1 junction1-1 var: 112, val: 0/2
+    [127] road_connect: road3 junction0-1 junction1-2 var: 111, val: 0/2
+    [128] road_connect: road3 junction0-2 junction0-1 var: 110, val: 0/2
+    [129] road_connect: road3 junction0-2 junction1-1 var: 109, val: 0/2
+    [130] road_connect: road3 junction0-2 junction1-2 var: 108, val: 0/2
+    [131] road_connect: road3 junction1-0 junction0-0 var: 107, val: 0/2
+    [132] road_connect: road3 junction1-0 junction0-1 var: 106, val: 0/2
+    [133] road_connect: road3 junction1-0 junction1-1 var: 105, val: 0/2
+    [134] road_connect: road3 junction1-0 junction2-0 var: 104, val: 0/2
+    [135] road_connect: road3 junction1-0 junction2-1 var: 103, val: 0/2
+    [136] road_connect: road3 junction1-1 junction0-0 var: 102, val: 0/2
+    [137] road_connect: road3 junction1-1 junction0-1 var: 101, val: 0/2
+    [138] road_connect: road3 junction1-1 junction0-2 var: 100, val: 0/2
+    [139] road_connect: road3 junction1-1 junction1-0 var: 99, val: 0/2
+    [140] road_connect: road3 junction1-1 junction1-2 var: 98, val: 0/2
+    [141] road_connect: road3 junction1-1 junction2-0 var: 97, val: 0/2
+    [142] road_connect: road3 junction1-1 junction2-1 var: 96, val: 0/2
+    [143] road_connect: road3 junction1-1 junction2-2 var: 95, val: 0/2
+    [144] road_connect: road3 junction1-2 junction0-1 var: 94, val: 0/2
+    [145] road_connect: road3 junction1-2 junction0-2 var: 93, val: 0/2
+    [146] road_connect: road3 junction1-2 junction1-1 var: 91, val: 0/2
+    [147] road_connect: road3 junction1-2 junction2-1 var: 90, val: 0/2
+    [148] road_connect: road3 junction1-2 junction2-2 var: 89, val: 0/2
+    [149] road_connect: road3 junction2-0 junction1-0 var: 88, val: 0/2
+    [150] road_connect: road3 junction2-0 junction1-1 var: 87, val: 0/2
+    [151] road_connect: road3 junction2-0 junction2-1 var: 86, val: 0/2
+    [152] road_connect: road3 junction2-1 junction1-0 var: 85, val: 0/2
+    [153] road_connect: road3 junction2-1 junction1-1 var: 84, val: 0/2
+    [154] road_connect: road3 junction2-1 junction1-2 var: 83, val: 0/2
+    [155] road_connect: road3 junction2-1 junction2-0 var: 82, val: 0/2
+    [156] road_connect: road3 junction2-1 junction2-2 var: 81, val: 0/2
+    [157] road_connect: road3 junction2-2 junction1-1 var: 80, val: 0/2
+    [158] road_connect: road3 junction2-2 junction1-2 var: 79, val: 0/2
+    [159] road_connect: road3 junction2-2 junction2-1 var: 78, val: 0/2
+    [160] road_connect: road4 junction0-0 junction0-1 var: 77, val: 0/2
+    [161] road_connect: road4 junction0-0 junction1-0 var: 76, val: 0/2
+    [162] road_connect: road4 junction0-0 junction1-1 var: 75, val: 0/2
+    [163] road_connect: road4 junction0-1 junction0-0 var: 71, val: 0/2
+    [164] road_connect: road4 junction0-1 junction0-2 var: 68, val: 0/2
+    [165] road_connect: road4 junction0-1 junction1-0 var: 67, val: 0/2
+    [166] road_connect: road4 junction0-1 junction1-1 var: 66, val: 0/2
+    [167] road_connect: road4 junction0-1 junction1-2 var: 65, val: 0/2
+    [168] road_connect: road4 junction0-2 junction0-1 var: 64, val: 0/2
+    [169] road_connect: road4 junction0-2 junction1-1 var: 57, val: 0/2
+    [170] road_connect: road4 junction0-2 junction1-2 var: 51, val: 0/2
+    [171] road_connect: road4 junction1-0 junction0-0 var: 70, val: 0/2
+    [172] road_connect: road4 junction1-0 junction0-1 var: 60, val: 0/2
+    [173] road_connect: road4 junction1-0 junction1-1 var: 50, val: 0/2
+    [174] road_connect: road4 junction1-0 junction2-0 var: 49, val: 0/2
+    [175] road_connect: road4 junction1-0 junction2-1 var: 48, val: 0/2
+    [176] road_connect: road4 junction1-1 junction0-0 var: 69, val: 0/2
+    [177] road_connect: road4 junction1-1 junction0-1 var: 59, val: 0/2
+    [178] road_connect: road4 junction1-1 junction0-2 var: 53, val: 0/2
+    [179] road_connect: road4 junction1-1 junction1-0 var: 47, val: 0/2
+    [180] road_connect: road4 junction1-1 junction1-2 var: 46, val: 0/2
+    [181] road_connect: road4 junction1-1 junction2-0 var: 45, val: 0/2
+    [182] road_connect: road4 junction1-1 junction2-1 var: 44, val: 0/2
+    [183] road_connect: road4 junction1-1 junction2-2 var: 43, val: 0/2
+    [184] road_connect: road4 junction1-2 junction0-1 var: 58, val: 0/2
+    [185] road_connect: road4 junction1-2 junction0-2 var: 52, val: 0/2
+    [186] road_connect: road4 junction1-2 junction1-1 var: 42, val: 0/2
+    [187] road_connect: road4 junction1-2 junction2-1 var: 41, val: 0/2
+    [188] road_connect: road4 junction1-2 junction2-2 var: 39, val: 0/2
+    [189] road_connect: road4 junction2-0 junction1-0 var: 38, val: 0/2
+    [190] road_connect: road4 junction2-0 junction1-1 var: 37, val: 0/2
+    [191] road_connect: road4 junction2-0 junction2-1 var: 36, val: 0/2
+    [192] road_connect: road4 junction2-1 junction1-0 var: 35, val: 0/2
+    [193] road_connect: road4 junction2-1 junction1-1 var: 34, val: 0/2
+    [194] road_connect: road4 junction2-1 junction1-2 var: 33, val: 0/2
+    [195] road_connect: road4 junction2-1 junction2-0 var: 32, val: 0/2
+    [196] road_connect: road4 junction2-1 junction2-2 var: 31, val: 0/2
+    [197] road_connect: road4 junction2-2 junction1-1 var: 30, val: 0/2
+    [198] road_connect: road4 junction2-2 junction1-2 var: 29, val: 0/2
+    [199] road_connect: road4 junction2-2 junction2-1 var: 28, val: 0/2
+    [200] clear: junction0-0 var: 73, val: 0/2
+    [201] clear: junction0-1 var: 62, val: 0/2
+    [202] clear: junction0-2 var: 55, val: 0/2
+    [203] clear: junction1-0 var: 26, val: 0/2
+    [204] clear: junction1-1 var: 20, val: 0/2
+    [205] clear: junction1-2 var: 15, val: 0/2
+    [206] clear: junction2-0 var: 23, val: 0/2
+    [207] clear: junction2-1 var: 8, val: 0/2
+    [208] clear: junction2-2 var: 17, val: 0/2
+    [209] in_place: road0 var: 215, val: 0/2
+    [210] in_place: road1 var: 174, val: 0/2
+    [211] in_place: road2 var: 133, val: 0/2
+    [212] in_place: road3 var: 92, val: 0/2
+    [213] in_place: road4 var: 40, val: 0/2
+    [214] at_car_jun: car0 junction0-0 var: 74, val: 0/2
+    [215] at_car_jun: car0 junction0-1 var: 63, val: 0/2
+    [216] at_car_jun: car0 junction0-2 var: 56, val: 0/2
+    [217] at_car_jun: car0 junction1-0 var: 27, val: 0/2
+    [218] at_car_jun: car0 junction1-1 var: 21, val: 0/2
+    [219] at_car_jun: car0 junction1-2 var: 16, val: 0/2
+    [220] at_car_jun: car0 junction2-0 var: 24, val: 0/2
+    [221] at_car_jun: car0 junction2-1 var: 0, val: 0/2
+    [222] at_car_jun: car0 junction2-2 var: 18, val: 0/2
+    [223] at_car_jun: car1 junction0-0 var: 72, val: 0/2
+    [224] at_car_jun: car1 junction0-1 var: 61, val: 0/2
+    [225] at_car_jun: car1 junction0-2 var: 54, val: 0/2
+    [226] at_car_jun: car1 junction1-0 var: 25, val: 0/2
+    [227] at_car_jun: car1 junction1-1 var: 10, val: 0/2
+    [228] at_car_jun: car1 junction1-2 var: 6, val: 0/2
+    [229] at_car_jun: car1 junction2-0 var: 22, val: 0/2
+    [230] at_car_jun: car1 junction2-1 var: 2, val: 0/2
+    [231] at_car_jun: car1 junction2-2 var: 7, val: 0/2
+    [232] at_car_road: car0 road0 var: 14, val: 0/2
+    [233] at_car_road: car0 road1 var: 13, val: 0/2
+    [234] at_car_road: car0 road2 var: 12, val: 0/2
+    [235] at_car_road: car0 road3 var: 11, val: 0/2
+    [236] at_car_road: car0 road4 var: 19, val: 0/2
+    [237] at_car_road: car1 road0 var: 5, val: 0/2
+    [238] at_car_road: car1 road1 var: 4, val: 0/2
+    [239] at_car_road: car1 road2 var: 3, val: 0/2
+    [240] at_car_road: car1 road3 var: 1, val: 0/2
+    [241] at_car_road: car1 road4 var: 9, val: 0/2
+    [242] P[9]:starting: car0 garage0 var: 243, val: 0/2
+    [243] P[10]:starting: car1 garage1 var: 242, val: 0/2
+    [244] P[9]:arrived: car0 junction0-0 var: -1
+    [245] P[9]:arrived: car0 junction0-1 var: -1
+    [246] P[9]:arrived: car0 junction0-2 var: -1
+    [247] P[9]:arrived: car0 junction1-0 var: -1
+    [248] P[9]:arrived: car0 junction1-1 var: -1
+    [249] P[9]:arrived: car0 junction1-2 var: -1
+    [250] P[9]:arrived: car0 junction2-0 var: 245, val: 0/2
+    [251] P[9]:arrived: car0 junction2-1 var: -1
+    [252] P[9]:arrived: car0 junction2-2 var: -1
+    [253] P[10]:arrived: car1 junction0-0 var: -1
+    [254] P[10]:arrived: car1 junction0-1 var: -1
+    [255] P[10]:arrived: car1 junction0-2 var: -1
+    [256] P[10]:arrived: car1 junction1-0 var: -1
+    [257] P[10]:arrived: car1 junction1-1 var: -1
+    [258] P[10]:arrived: car1 junction1-2 var: -1
+    [259] P[10]:arrived: car1 junction2-0 var: -1
+    [260] P[10]:arrived: car1 junction2-1 var: 244, val: 0/2
+    [261] P[10]:arrived: car1 junction2-2 var: -1
 Facts[262]:
     road_connect: road0 junction0-0 junction0-1
     road_connect: road0 junction0-0 junction1-0

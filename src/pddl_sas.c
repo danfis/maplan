@@ -33,7 +33,8 @@ static void writeFactIds(plan_pddl_ground_facts_t *dst,
                          plan_pddl_fact_pool_t *fact_pool,
                          const plan_pddl_facts_t *src);
 /** Transforms invariants into sas variables */
-static void invariantToVar(plan_pddl_sas_t *sas);
+static void invariantToVar(plan_pddl_sas_t *sas,
+                           const plan_pddl_ground_t *ground);
 /** Applies simplifications received from causal graph */
 static void causalGraph(plan_pddl_sas_t *sas,
                         const plan_pddl_ground_t *ground);
@@ -42,7 +43,8 @@ void planPDDLSasInit(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g)
 {
     int i;
 
-    planPDDLSasInvFinderInit(&sas->inv_finder, g);
+    borListInit(&sas->inv);
+    sas->inv_size = 0;
 
     sas->fact_size = g->fact_pool.size;
     sas->fact = BOR_CALLOC_ARR(plan_pddl_sas_fact_t, sas->fact_size);
@@ -65,16 +67,18 @@ void planPDDLSasFree(plan_pddl_sas_t *sas)
         BOR_FREE(sas->var_range);
     if (sas->var_order != NULL)
         BOR_FREE(sas->var_order);
-
-    planPDDLSasInvFinderFree(&sas->inv_finder);
+    planPDDLInvFreeList(&sas->inv);
 }
 
 void planPDDLSas(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g,
                  unsigned flags)
 {
     planPDDLSasInit(sas, g);
-    planPDDLSasInvFinder(&sas->inv_finder);
-    invariantToVar(sas);
+
+    borListInit(&sas->inv);
+    sas->inv_size = planPDDLInvFind(g, &sas->inv);
+
+    invariantToVar(sas, g);
 
     if (flags & PLAN_PDDL_SAS_USE_CG){
         causalGraph(sas, g);
@@ -88,12 +92,12 @@ void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
 {
     const plan_pddl_fact_t *fact;
     bor_list_t *item;
-    const plan_pddl_sas_inv_t *inv;
+    const plan_pddl_inv_t *inv;
     int i, j;
 
     i = 0;
-    BOR_LIST_FOR_EACH(&sas->inv_finder.inv, item){
-        inv = BOR_LIST_ENTRY(item, plan_pddl_sas_inv_t, list);
+    BOR_LIST_FOR_EACH(&sas->inv, item){
+        inv = BOR_LIST_ENTRY(item, plan_pddl_inv_t, list);
         fprintf(fout, "Invariant %d:\n", i);
         for (j = 0; j < inv->size; ++j){
             fact = planPDDLFactPoolGet(&g->fact_pool, inv->fact[j]);
@@ -117,12 +121,12 @@ void planPDDLSasPrintInvariantFD(const plan_pddl_sas_t *sas,
 {
     const plan_pddl_fact_t *fact;
     bor_list_t *item;
-    const plan_pddl_sas_inv_t *inv;
+    const plan_pddl_inv_t *inv;
     int i, j, k;
 
     i = 0;
-    BOR_LIST_FOR_EACH(&sas->inv_finder.inv, item){
-        inv = BOR_LIST_ENTRY(item, plan_pddl_sas_inv_t, list);
+    BOR_LIST_FOR_EACH(&sas->inv, item){
+        inv = BOR_LIST_ENTRY(item, plan_pddl_inv_t, list);
         fprintf(fout, "I: ");
         for (j = 0; j < inv->size; ++j){
             fact = planPDDLFactPoolGet(&g->fact_pool, inv->fact[j]);
@@ -216,13 +220,13 @@ static void invariantsToGroundFacts(plan_pddl_sas_t *sas,
                                     plan_pddl_ground_facts_t *fs)
 {
     bor_list_t *item;
-    plan_pddl_sas_inv_t *inv;
+    plan_pddl_inv_t *inv;
     plan_pddl_ground_facts_t *f;
     int size;
 
     size = 0;
-    BOR_LIST_FOR_EACH(&sas->inv_finder.inv, item){
-        inv = BOR_LIST_ENTRY(item, plan_pddl_sas_inv_t, list);
+    BOR_LIST_FOR_EACH(&sas->inv, item){
+        inv = BOR_LIST_ENTRY(item, plan_pddl_inv_t, list);
         f = fs + size;
         f->size = inv->size;
         f->fact = BOR_ALLOC_ARR(int, inv->size);
@@ -237,7 +241,7 @@ static void invariantGroundFactsFree(plan_pddl_sas_t *sas,
                                      plan_pddl_ground_facts_t *inv)
 {
     int i;
-    for (i = 0; i < sas->inv_finder.inv_size; ++i){
+    for (i = 0; i < sas->inv_size; ++i){
         if (inv[i].fact != NULL)
             BOR_FREE(inv[i].fact);
     }
@@ -295,61 +299,77 @@ static void invariantRemoveTop(const plan_pddl_sas_t *sas,
 {
     int i;
 
-    for (i = 1; i < sas->inv_finder.inv_size; ++i)
+    for (i = 1; i < sas->inv_size; ++i)
         invariantRemoveFacts(sas, inv, inv + i);
     inv[0].size = 0;
-    qsort(inv, sas->inv_finder.inv_size, sizeof(plan_pddl_ground_facts_t),
+    qsort(inv, sas->inv_size, sizeof(plan_pddl_ground_facts_t),
           invariantCmp);
 }
 
-static int numVarEdge(const plan_pddl_sas_t *sas,
-                      const plan_pddl_ground_facts_t *fs,
-                      int var)
+static void setVarNegDelAdd(const plan_pddl_sas_t *sas,
+                            const plan_pddl_ground_facts_t *eff_del,
+                            const plan_pddl_ground_facts_t *eff_add,
+                            int *var_neg)
 {
-    int i, num = 0;
+    int i, var_id;
 
-    for (i = 0; i < fs->size; ++i){
-        if (sas->fact[fs->fact[i]].var == var)
-            ++num;
-    }
-    return num;
-}
-
-static void setVarNeg(plan_pddl_sas_t *sas)
-{
-    const plan_pddl_sas_fact_t *fact;
-    const plan_pddl_sas_inv_fact_t *inv_fact;
-    int i, j, add, *var_done;
-
-    var_done = BOR_CALLOC_ARR(int, sas->var_size);
-    for (i = 0; i < sas->fact_size; ++i){
-        fact = sas->fact + i;
-        inv_fact = sas->inv_finder.facts.fact + i;
-        if (var_done[fact->var])
+    for (i = 0; i < eff_del->size; ++i){
+        var_id = sas->fact[eff_del->fact[i]].var;
+        if (var_neg[var_id] == 1)
             continue;
-
-        add = (sas->var_range[fact->var] == 1);
-        for (j = 0; !add && j < inv_fact->edge_size; ++j){
-            if (numVarEdge(sas, inv_fact->edge + j, fact->var) == 0)
-                add = 1;
-        }
-
-        if (add){
-            var_done[fact->var] = 1;
-            ++sas->var_range[fact->var];
-        }
+        var_neg[var_id] = 2;
     }
-    BOR_FREE(var_done);
+
+    for (i = 0; i < eff_add->size; ++i){
+        var_id = sas->fact[eff_add->fact[i]].var;
+        if (var_neg[var_id] == 1)
+            continue;
+        if (var_neg[var_id] == 2)
+            var_neg[var_id] = 0;
+    }
+
+    for (i = 0; i < sas->var_size; ++i){
+        if (var_neg[i] == 2)
+            var_neg[i] = 1;
+    }
 }
 
-static void invariantToVar(plan_pddl_sas_t *sas)
+static void setVarNeg(plan_pddl_sas_t *sas, const plan_pddl_ground_t *ground)
+{
+    const plan_pddl_ground_action_t *action;
+    int i, j, *var_neg;
+
+    var_neg = BOR_ALLOC_ARR(int, sas->var_size);
+    for (i = 0; i < sas->var_size; ++i)
+        var_neg[i] = 1;
+
+    for (i = 0; i < ground->init.size; ++i)
+        var_neg[sas->fact[ground->init.fact[i]].var] = 0;
+
+    for (i = 0; i < ground->action_pool.size; ++i){
+        action = planPDDLGroundActionPoolGet(&ground->action_pool, i);
+        setVarNegDelAdd(sas, &action->eff_del, &action->eff_add, var_neg);
+        for (j = 0; j < action->cond_eff.size; ++j)
+            setVarNegDelAdd(sas, &action->cond_eff.cond_eff[j].eff_del,
+                            &action->cond_eff.cond_eff[j].eff_add, var_neg);
+    }
+
+    for (i = 0; i < sas->var_size; ++i){
+        if (var_neg[i])
+            ++sas->var_range[i];
+    }
+    BOR_FREE(var_neg);
+}
+
+static void invariantToVar(plan_pddl_sas_t *sas,
+                           const plan_pddl_ground_t *ground)
 {
     plan_pddl_ground_facts_t *inv = NULL;
     plan_pddl_ground_facts_t one;
     int i;
 
-    if (sas->inv_finder.inv_size > 0){
-        inv = BOR_CALLOC_ARR(plan_pddl_ground_facts_t, sas->inv_finder.inv_size);
+    if (sas->inv_size > 0){
+        inv = BOR_CALLOC_ARR(plan_pddl_ground_facts_t, sas->inv_size);
         invariantsToGroundFacts(sas, inv);
 
         while (inv[0].size > 1){
@@ -372,7 +392,7 @@ static void invariantToVar(plan_pddl_sas_t *sas)
         BOR_FREE(inv);
     }
 
-    setVarNeg(sas);
+    setVarNeg(sas, ground);
 }
 /*** INVARIANT-TO-VAR END ***/
 

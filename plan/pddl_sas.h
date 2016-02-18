@@ -22,7 +22,7 @@
 
 #include <plan/state.h>
 #include <plan/pddl_ground.h>
-#include <plan/pddl_sas_inv.h>
+#include <plan/pddl_inv.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,7 +40,8 @@ struct _plan_pddl_sas_fact_t {
 typedef struct _plan_pddl_sas_fact_t plan_pddl_sas_fact_t;
 
 struct _plan_pddl_sas_t {
-    plan_pddl_sas_inv_finder_t inv_finder;
+    bor_list_t inv;
+    int inv_size;
 
     plan_pddl_sas_fact_t *fact; /*!< Array of fact related data */
     int fact_size;              /*!< Number of facts */
@@ -52,10 +53,11 @@ struct _plan_pddl_sas_t {
 };
 typedef struct _plan_pddl_sas_t plan_pddl_sas_t;
 
-void planPDDLSasFree(plan_pddl_sas_t *sas);
-
 void planPDDLSas(plan_pddl_sas_t *sas, const plan_pddl_ground_t *g,
                  unsigned flags);
+
+void planPDDLSasFree(plan_pddl_sas_t *sas);
+
 void planPDDLSasPrintInvariant(const plan_pddl_sas_t *sas,
                                const plan_pddl_ground_t *g,
                                const plan_pddl_t *pddl,

@@ -701,10 +701,13 @@ def qsubCmd(cfg, cfg_search, root):
     max_time = cfg_search.max_time + 600
     max_mem = cfg_search.max_mem + 128
     if cfg_search.cluster == 'luna':
-        resources = 'xeon:nodecpus16:cl_luna'
+        resources = 'cl_luna'
         queue = '@arien'
     elif cfg_search.cluster == 'zapat':
-        resources = 'nodecpus16:cl_zapat'
+        resources = 'cl_zapat'
+        queue = '@wagap'
+    elif cfg_search.cluster == 'zebra':
+        resources = 'cl_zebra'
         queue = '@wagap'
 
     if cfg_search.type == 'seq':

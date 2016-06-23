@@ -180,6 +180,7 @@ class ConfigSearch(object):
 class Config(object):
     def __init__(self, topdir):
         topdir = os.path.abspath(topdir)
+        topdir = topdir.replace('/auto/praha1/danfis', '/storage/praha1/home/danfis')
         self.topdir = topdir
         self.repodir = os.path.join(topdir, 'repo')
         self.search_bin = os.path.join(self.repodir, 'bin/search')

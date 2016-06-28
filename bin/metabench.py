@@ -859,10 +859,10 @@ def main(topdir):
     p('========== START ==========')
 
     cfg = Config(topdir)
-#    if not os.path.exists(cfg.repodir):
-#        compileMaplan(cfg)
-#    else:
-#        repoCheck(cfg)
+    if not os.path.exists(cfg.repodir):
+        compileMaplan(cfg)
+    else:
+        repoCheck(cfg)
     createTasks(cfg)
     qsub(cfg)
     return 0

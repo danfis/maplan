@@ -8,6 +8,7 @@ cplex-libdir = /opt/cplex-1263/cplex/lib/x86-64_linux/static_pic/
 #search = lazy-ff ma-lazy-ff
 #search = all-seq lazy-ff
 search = fd-opt fd-cplex-opt
+run-per-domain = true
 
 [metabench-search-all-seq]
 combine = true
@@ -57,7 +58,7 @@ search = astar
 heur = lm-cut
 fd-translate-py = /home/danfis/dev/fast-downward-work/src/build/bin/translate/translate.py
 fd-preprocess = /home/danfis/dev/fast-downward-work/src/build/bin/preprocess
-fd-translate-cplex = true
+fd-translate-opts = --cplex
 max-time = 1800
 max-mem = 8192
 repeat = 1

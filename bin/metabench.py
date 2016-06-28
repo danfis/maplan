@@ -9,6 +9,7 @@ import datetime
 import shutil
 import re
 import logging
+import random
 import ConfigParser as cfgparser
 from matopddl import PlanningProblem
 
@@ -155,7 +156,7 @@ class ConfigSearch(object):
         self.cluster = cfg.get(self.section, 'cluster')
         self.fd_translate_py = None
         self.fd_preprocess = None
-        self.fd_translate_cplex = False
+        self.fd_translate_opts = ''
 
         if cfg.has_option(self.section, 'fd-translate-py') \
            or cfg.has_option(self.section, 'fd-preprocess'):
@@ -166,8 +167,8 @@ class ConfigSearch(object):
         if cfg.has_option(self.section, 'fd-translate-py'):
             self.fd_translate_py = cfg.get(self.section, 'fd-translate-py')
             self.fd_preprocess = cfg.get(self.section, 'fd-preprocess')
-        if cfg.has_option(self.section, 'fd-translate-cplex'):
-            self.fd_translate_cplex = cfg.getboolean(self.section, 'fd-translate-cplex')
+        if cfg.has_option(self.section, 'fd-translate-opts'):
+            self.fd_translate_opts = cfg.get(self.section, 'fd-translate-opts')
 
         self.bench = cfg.get(self.section, 'bench')
         self.bench = self.bench.split()
@@ -193,12 +194,14 @@ class Config(object):
         self.cfg.read(self.fn)
         self.repo = self.cfg.get('metabench', 'repo')
         self.commit = self.cfg.get('metabench', 'commit')
-        self.cplex_includedir = '/software/cplex-126/cplex/include'
-        self.cplex_libdir = '/software/cplex-126/cplex/lib/x86-64_linux/static_pic'
-        if self.cfg.has_option('metabench', 'cplex-includedir'):
-            self.cplex_includedir = self.cfg.get('metabench', 'cplex-includedir')
-        if self.cfg.has_option('metabench', 'cplex-libdir'):
-            self.cplex_libdir = self.cfg.get('metabench', 'cplex-libdir')
+        self.cplex_includedir = self._cfgGet('metabench', 'cplex-includedir',
+                                              '/software/cplex-126/cplex/include')
+        self.cplex_libdir = self._cfgGet('metabench', 'cplex-libdir',
+                                         '/software/cplex-126/cplex/lib/x86-64_linux/static_pic')
+
+        self.run_in_batch = self._cfgGet('metabench', 'run-in-batch', 0)
+        self.pythonpath = self._cfgGet('metabench', 'pythonpath', '')
+        self.copyfile = self._cfgGet('metabench', 'copyfile', False)
 
         search = self.cfg.get('metabench', 'search')
         search = search.split()
@@ -222,6 +225,17 @@ class Config(object):
 
         else:
             return [ConfigSearch(self.cfg, name)]
+
+    def _cfgGet(self, section, option, default):
+        if self.cfg.has_option(section, option):
+            if type(default) is bool:
+                return self.cfg.getboolean(section, option)
+            elif type(default) is int:
+                return self.cfg.getint(section, option)
+            elif type(default) is float:
+                return self.cfg.getfloat(section, option)
+            return self.cfg.get(section, option)
+        return default
 
 def repoClone(path, dst):
     runCmd('git clone {0} {1}'.format(path, dst))
@@ -314,29 +328,35 @@ echo $(($END - $START)) >{0}/alloc-ports.nanotime
     fout.close()
 
 def shTranslateSeq(cfg, path):
+    pythonpath = cfg.pythonpath
+    if len(pythonpath) > 0:
+        pythonpath += ':'
+
     sh = '''#!/bin/bash
 START=$(date +%s%N)
 cd {0};
-PYTHONPATH={2}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
+PYTHONPATH={3}{2}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
 python2 {1} --proto --output {0}/problem.proto \\
     {0}/domain.pddl {0}/problem.pddl \\
         >{0}/translate.out 2>{0}/translate.err
 touch {0}/translate.done;
 END=$(date +%s%N)
 echo $(($END - $START)) >{0}/translate.nanotime
-'''.format(path, cfg.translate_py, cfg.protobuf_egg)
+'''.format(path, cfg.translate_py, cfg.protobuf_egg, pythonpath)
     fout = open(os.path.join(path, 'translate.sh'), 'w')
     fout.write(sh)
     fout.close()
 
 def shTranslateFDSeq(cfg, cfg_search, path):
-    cplex = ''
-    if cfg_search.fd_translate_cplex:
-        cplex = '--cplex'
+    pythonpath = cfg.pythonpath
+    if len(pythonpath) > 0:
+        pythonpath += ':'
+
+    opts = cfg_search.fd_translate_opts
     sh = '''#!/bin/bash
 START=$(date +%s%N)
 cd {0};
-PYTHONPATH={3}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
+PYTHONPATH={5}{3}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
 python2 {1} {2} {0}/domain.pddl {0}/problem.pddl \\
         >{0}/fd-translate.out 2>{0}/fd-translate.err
 {4} <{0}/output.sas >{0}/fd-preprocess.out 2>{0}/fd-preprocess.err
@@ -344,29 +364,37 @@ mv {0}/output {0}/problem.fd
 touch {0}/translate.done;
 END=$(date +%s%N)
 echo $(($END - $START)) >{0}/translate.nanotime
-'''.format(path, cfg_search.fd_translate_py, cplex, cfg.protobuf_egg,
-           cfg_search.fd_preprocess)
+'''.format(path, cfg_search.fd_translate_py, opts, cfg.protobuf_egg,
+           cfg_search.fd_preprocess, pythonpath)
     fout = open(os.path.join(path, 'translate.sh'), 'w')
     fout.write(sh)
     fout.close()
 
 def shTranslateUnfactor(cfg, path):
+    pythonpath = cfg.pythonpath
+    if len(pythonpath) > 0:
+        pythonpath += ':'
+
     sh = '''#!/bin/bash
 START=$(date +%s%N)
 cd {0};
-PYTHONPATH={2}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
+PYTHONPATH={3}{2}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
 {1} --proto --output {0}/problem.proto \\
     {0}/domain.pddl {0}/problem.pddl {0}/problem.addl \\
         >{0}/translate.out 2>{0}/translate.err
 touch {0}/translate.done;
 END=$(date +%s%N)
 echo $(($END - $START)) >{0}/translate.nanotime
-'''.format(path, cfg.translate_py, cfg.protobuf_egg)
+'''.format(path, cfg.translate_py, cfg.protobuf_egg, pythonpath)
     fout = open(os.path.join(path, 'translate.sh'), 'w')
     fout.write(sh)
     fout.close()
 
 def shTranslateFactor(cfg, path):
+    pythonpath = cfg.pythonpath
+    if len(pythonpath) > 0:
+        pythonpath += ':'
+
     sh = '''#!/bin/bash
 START=$(date +%s%N)
 cd {0};
@@ -386,7 +414,7 @@ while [ $agent_id != $num_agents ]; do
     agent_id=$(($agent_id + 1))
 done
 
-PYTHONPATH={2}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
+PYTHONPATH={3}{2}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages \\
 {1} --proto --output {0}/problem.${{node_id}}.proto \\
     $agent_url \\
     --agent-id $node_id \\
@@ -395,7 +423,7 @@ PYTHONPATH={2}:/software/python27-modules/software/python-2.7.6/gcc/lib/python2.
 touch {0}/translate.${{node_id}}.done;
 END=$(date +%s%N)
 echo $(($END - $START)) >{0}/translate.${{node_id}}.nanotime
-'''.format(path, cfg.translate_py, cfg.protobuf_egg)
+'''.format(path, cfg.translate_py, cfg.protobuf_egg, pythonpath)
     fout = open(os.path.join(path, 'translate.sh'), 'w')
     fout.write(sh)
     fout.close()
@@ -526,6 +554,7 @@ def shSeq(cfg, cfg_search, path):
     sh = '''#!/bin/bash
 START=$(date +%s%N)
 cd {0};
+ulimit -v {1}
 bash translate.sh
 bash search.sh
 bash validate.sh
@@ -533,7 +562,7 @@ bash validate.sh
 touch {0}/done;
 END=$(date +%s%N)
 echo $(($END - $START)) >{0}/nanotime
-'''.format(path)
+'''.format(path, cfg_search.max_mem * 1024)
     fout = open(os.path.join(path, 'run.sh'), 'w')
     fout.write(sh)
     fout.close()
@@ -576,14 +605,42 @@ echo $(($END - $START)) >{0}/nanotime
     fout.write(sh)
     fout.close()
 
+def shBatch(cfg, path, dirs):
+    sh = '''#!/bin/bash
+START=$(date +%s%N)
+cd {0};
+'''.format(path)
+    for d in dirs:
+        sh += '''
+if [ ! -f {0}/done ]; then
+    bash {0}/run.sh;
+fi
+'''.format(d)
+    sh += '''
+touch {0}/done;
+END=$(date +%s%N)
+echo $(($END - $START)) >{0}/nanotime
+'''.format(path)
+    fout = open(os.path.join(path, 'run-batch.sh'), 'w')
+    fout.write(sh)
+    fout.close()
+
+    fout = open(os.path.join(path, 'size'), 'w')
+    fout.write(str(len(dirs)))
+    fout.close()
+
 
 def createTasksSeq(topdir, cfg, cfg_search, cfg_bench, domain, problem, pddl):
     if os.path.exists(os.path.join(topdir, 'domain.pddl')):
         p('Skipping:', topdir, 'already created')
         return;
     p('Creating', topdir)
-    shutil.copyfile(pddl['domain'], os.path.join(topdir, 'domain.pddl'))
-    shutil.copyfile(pddl['problem'], os.path.join(topdir, 'problem.pddl'))
+    if cfg.copyfile:
+        shutil.copyfile(pddl['domain'], os.path.join(topdir, 'domain.pddl'))
+        shutil.copyfile(pddl['problem'], os.path.join(topdir, 'problem.pddl'))
+    else:
+        os.link(pddl['domain'], os.path.join(topdir, 'domain.pddl'))
+        os.link(pddl['problem'], os.path.join(topdir, 'problem.pddl'))
     if cfg_search.fd_translate_py is not None:
         shTranslateFDSeq(cfg, cfg_search, topdir)
     else:
@@ -619,8 +676,12 @@ def createTasksFactor(topdir, cfg, cfg_search, cfg_bench, domain, problem, pddl)
     for i in range(num_agents):
         dom = 'domain.{0}.pddl'.format(i)
         prob = 'problem.{0}.pddl'.format(i)
-        shutil.copyfile(pddl['domain'][i], os.path.join(topdir, dom))
-        shutil.copyfile(pddl['problem'][i], os.path.join(topdir, prob))
+        if cfg.copyfile:
+            shutil.copyfile(pddl['domain'][i], os.path.join(topdir, dom))
+            shutil.copyfile(pddl['problem'][i], os.path.join(topdir, prob))
+        else:
+            os.link(pddl['domain'][i], os.path.join(topdir, dom))
+            os.link(pddl['problem'][i], os.path.join(topdir, prob))
     with open(os.path.join(topdir, 'num-agents'), 'w') as fout:
         fout.write('{0}'.format(num_agents))
         fout.close()
@@ -653,11 +714,19 @@ def createTasksProblem(topdir, cfg, cfg_search, cfg_bench, domain, problem):
         else:
             raise Exception('Unkown type {0}'.format(cfg_search.type))
 
+def createPerDomainRun(topdir, cfg, dirs, repeat):
+    dst = os.path.join(topdir, 'domain-{0}'.format(repeat))
+    if not os.path.isdir(dst):
+        p('Creating', dst)
+        os.mkdir(dst)
+    shPerDomain(cfg, dst, dirs)
+
 def createTasksDomain(topdir, cfg, cfg_search, cfg_bench, domain):
     dst = os.path.join(topdir, domain)
     if not os.path.isdir(dst):
         p('Creating', dst)
         os.mkdir(dst)
+
     for problem in cfg_bench.pddl[domain]:
         createTasksProblem(dst, cfg, cfg_search, cfg_bench, domain, problem)
 
@@ -677,9 +746,28 @@ def createTasksSearch(cfg, cfg_search):
     for cfg_bench in cfg_search.bench:
         createTasksSearchBench(dst, cfg, cfg_search, cfg_bench)
 
+def createBatches(cfg, cfg_search):
+    topdir = os.path.join(cfg.topdir, cfg_search.name)
+
+    task_dirs = []
+    for root, dirs, files in os.walk(topdir):
+        if 'run.sh' in files:
+            task_dirs += [root]
+
+    random.shuffle(task_dirs)
+    for bi, i in enumerate(range(0, len(task_dirs), cfg.run_in_batch)):
+        dst = os.path.join(topdir, 'batch-{0:06d}'.format(bi))
+        if not os.path.isdir(dst):
+            p('Creating', dst)
+            os.mkdir(dst)
+        shBatch(cfg, dst, task_dirs[i:i+cfg.run_in_batch])
+
 def createTasks(cfg):
     for cfg_search in cfg.search:
         createTasksSearch(cfg, cfg_search)
+    for cfg_search in cfg.search:
+        if cfg.run_in_batch > 0:
+            createBatches(cfg, cfg_search)
 
 
 
@@ -698,7 +786,7 @@ def numAgents(addl):
         agents = filter(lambda x: len(x) > 0, agents)
         return len(agents)
 
-def qsubCmd(cfg, cfg_search, root):
+def qsubCmd(cfg, cfg_search, root, script = 'run.sh', size = 1):
     max_time = cfg_search.max_time + 600
     max_mem = cfg_search.max_mem + 128
     if cfg_search.cluster == 'luna':
@@ -727,23 +815,33 @@ def qsubCmd(cfg, cfg_search, root):
 
     qargs = ['qsub']
     qargs += ['-l', 'nodes={0}:ppn={1}:{2}'.format(nodes, ppn, resources)]
-    qargs += ['-l', 'walltime={0}s'.format(max_time)]
+    qargs += ['-l', 'walltime={0}s'.format(max_time * size)]
     qargs += ['-l', 'mem={0}mb'.format(max_mem)]
     qargs += ['-q', queue]
     qargs += ['-o', os.path.join(root, 'task.out')]
     qargs += ['-e', os.path.join(root, 'task.err')]
     #qargs += ['-v', 'BENCH_DATA_FN={0},BENCH_TASK_I={1}'.format(bench_fn, task_i)]
-    qargs += [os.path.join(root, 'run.sh')]
+    qargs += [os.path.join(root, script)]
     return qargs
 
 def qsubTopdir(cfg, cfg_search, topdir):
+    script = 'run.sh'
+    if cfg.run_in_batch > 0:
+        script = 'run-batch.sh'
+
     for root, dirs, files in os.walk(topdir):
-        if 'run.sh' in files:
+        if script in files:
             if 'qsub' in files:
                 p('qsub: Skipping', root)
                 continue
 
-            cmd = qsubCmd(cfg, cfg_search, root)
+            size = 1
+            if cfg.run_in_batch > 0:
+                fin = open(os.path.join(root, 'size'), 'r')
+                size = int(fin.read())
+                fin.close()
+
+            cmd = qsubCmd(cfg, cfg_search, root, script, size)
             out = subprocess.check_output(cmd)
             qsub_fn = os.path.join(root, 'qsub')
             with open(qsub_fn, 'w') as fout:
@@ -761,10 +859,10 @@ def main(topdir):
     p('========== START ==========')
 
     cfg = Config(topdir)
-    if not os.path.exists(cfg.repodir):
-        compileMaplan(cfg)
-    else:
-        repoCheck(cfg)
+#    if not os.path.exists(cfg.repodir):
+#        compileMaplan(cfg)
+#    else:
+#        repoCheck(cfg)
     createTasks(cfg)
     qsub(cfg)
     return 0

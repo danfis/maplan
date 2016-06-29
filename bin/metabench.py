@@ -719,12 +719,19 @@ def createTasksProblem(topdir, cfg, cfg_search, cfg_bench, domain, problem):
         else:
             raise Exception('Unkown type {0}'.format(cfg_search.type))
 
-def createPerDomainRun(topdir, cfg, dirs, repeat):
-    dst = os.path.join(topdir, 'domain-{0}'.format(repeat))
-    if not os.path.isdir(dst):
-        p('Creating', dst)
-        os.mkdir(dst)
-    shPerDomain(cfg, dst, dirs)
+def createDomainBatches(cfg, topdir):
+    task_dirs = []
+    for root, dirs, files in os.walk(topdir):
+        if 'run.sh' in files:
+            task_dirs += [root]
+
+    random.shuffle(task_dirs)
+    for bi, i in enumerate(range(0, len(task_dirs), cfg.run_in_batch)):
+        dst = os.path.join(topdir, 'batch-{0:06d}'.format(bi))
+        if not os.path.isdir(dst):
+            p('Creating', dst)
+            os.mkdir(dst)
+        shBatch(cfg, dst, task_dirs[i:i+cfg.run_in_batch])
 
 def createTasksDomain(topdir, cfg, cfg_search, cfg_bench, domain):
     dst = os.path.join(topdir, domain)
@@ -734,6 +741,7 @@ def createTasksDomain(topdir, cfg, cfg_search, cfg_bench, domain):
 
     for problem in cfg_bench.pddl[domain]:
         createTasksProblem(dst, cfg, cfg_search, cfg_bench, domain, problem)
+    createDomainBatches(cfg, dst)
 
 def createTasksSearchBench(topdir, cfg, cfg_search, cfg_bench):
     dst = os.path.join(topdir, cfg_bench.name)
@@ -751,28 +759,9 @@ def createTasksSearch(cfg, cfg_search):
     for cfg_bench in cfg_search.bench:
         createTasksSearchBench(dst, cfg, cfg_search, cfg_bench)
 
-def createBatches(cfg, cfg_search):
-    topdir = os.path.join(cfg.topdir, cfg_search.name)
-
-    task_dirs = []
-    for root, dirs, files in os.walk(topdir):
-        if 'run.sh' in files:
-            task_dirs += [root]
-
-    random.shuffle(task_dirs)
-    for bi, i in enumerate(range(0, len(task_dirs), cfg.run_in_batch)):
-        dst = os.path.join(topdir, 'batch-{0:06d}'.format(bi))
-        if not os.path.isdir(dst):
-            p('Creating', dst)
-            os.mkdir(dst)
-        shBatch(cfg, dst, task_dirs[i:i+cfg.run_in_batch])
-
 def createTasks(cfg):
     for cfg_search in cfg.search:
         createTasksSearch(cfg, cfg_search)
-    for cfg_search in cfg.search:
-        if cfg.run_in_batch > 0:
-            createBatches(cfg, cfg_search)
 
 
 

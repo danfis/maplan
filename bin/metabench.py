@@ -613,7 +613,7 @@ cd {0};
     for d in dirs:
         sh += '''
 if [ ! -f {0}/done ]; then
-    bash {0}/run.sh;
+    bash {0}/run.sh >{0}/task.out 2>{0}/task.err;
 fi
 '''.format(d)
     sh += '''
@@ -628,6 +628,11 @@ echo $(($END - $START)) >{0}/nanotime
     fout = open(os.path.join(path, 'size'), 'w')
     fout.write(str(len(dirs)))
     fout.close()
+
+    for d in dirs:
+        fout = open(os.path.join(d, 'batch'), 'w')
+        fout.write(path)
+        fout.close()
 
 
 def createTasksSeq(topdir, cfg, cfg_search, cfg_bench, domain, problem, pddl):

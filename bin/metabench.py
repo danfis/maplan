@@ -795,6 +795,9 @@ def qsubCmd(cfg, cfg_search, root, script = 'run.sh', size = 1):
     elif cfg_search.cluster == 'urga':
         resources = 'cl_urga'
         queue = 'uv@wagap'
+    elif cfg_search.cluster == 'ungu':
+        resources = 'cl_ungu'
+        queue = 'uv@wagap'
 
     if cfg_search.type == 'seq':
         ppn = 1

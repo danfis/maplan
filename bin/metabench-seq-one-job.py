@@ -540,7 +540,7 @@ class ProblemTask(object):
     def validate(self):
         self.log('validate: START')
 
-        if os.path.join(self.outscratchdir, 'plan.out'):
+        if os.path.isfile(os.path.join(self.outscratchdir, 'plan.out')):
             cmd  = [self.cfg.validate_bin]
             cmd += ['-v']
             cmd += [os.path.join(self.outscratchdir, 'domain.pddl')]

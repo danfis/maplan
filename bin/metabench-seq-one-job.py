@@ -198,6 +198,9 @@ class Config(object):
 
         self.cluster = self.cfg.get('metabench', 'cluster')
         self.ppn = self.cfg.getint('metabench', 'ppn')
+        self.nodes = self.cfg.getint('metabench', 'nodes')
+        if self.nodes <= 0:
+            raise 'Error: nodes must be >=1'
 
         search = self.cfg.get('metabench', 'search')
         search = search.split()
@@ -289,6 +292,8 @@ def checkoutPDDL(cfg):
 
 def runLocal(cfg):
     os.environ['METABENCH_TOPDIR'] = cfg.topdir
+    os.environ['METABENCH_NODES'] = '1'
+    os.environ['METABENCH_NODE_ID'] = '0'
     os.environ['METABENCH_PPN'] = str(cfg.ppn)
     os.environ['METABENCH_TIME_LIMIT'] = str(12 * 3600)
     script = os.path.realpath(__file__)
@@ -306,6 +311,30 @@ def runLocal(cfg):
 
             p('Ret: {0}'.format(ret))
 
+def _createRunSh(cfg, max_time, node_id = -1):
+    script = os.path.realpath(__file__)
+    script = script.replace('/auto/praha1', '/storage/praha1/home')
+    out = '''#!/bin/bash
+module add python-2.7.5
+export METABENCH_TOPDIR={0}
+export METABENCH_NODES={1}
+export METABENCH_NODE_ID={2}
+export METABENCH_PPN={3}
+export METABENCH_TIME_LIMIT={4}
+python2 {5}
+'''.format(cfg.topdir, cfg.nodes, node_id, cfg.ppn, int(max_time), script)
+    fn = 'run-main.sh'
+    if node_id >= 0:
+        fn = 'run-main-{0:02d}.sh'.format(node_id)
+
+    fout = open(os.path.join(cfg.topdir, fn), 'w')
+    fout.write(out)
+    fout.close()
+    return fn
+
+def createRunSh(cfg, max_time):
+    return [_createRunSh(cfg, max_time, x) for x in range(cfg.nodes)]
+
 def qsub(cfg):
     if cfg.cluster == 'local':
         runLocal(cfg)
@@ -322,7 +351,7 @@ def qsub(cfg):
     else:
         err('Unkown cluster {0}'.format(cfg.cluster))
 
-    if os.path.isfile(os.path.join(cfg.topdir, 'qsub')):
+    if os.path.isfile(os.path.join(cfg.topdir, 'qsub-00')):
         err('Already qsub\'ed!')
 
     max_mem  = max(x.max_mem for x in cfg.search)
@@ -330,40 +359,30 @@ def qsub(cfg):
     max_mem += 1024
     scratch = cfg.ppn * 128
 
-    script = os.path.realpath(__file__)
-    script = script.replace('/auto/praha1', '/storage/praha1/home')
-    out = '''#!/bin/bash
-module add python-2.7.5
-export METABENCH_TOPDIR={0}
-export METABENCH_PPN={1}
-export METABENCH_TIME_LIMIT={2}
-python2 {3}
-'''.format(cfg.topdir, cfg.ppn, int(max_time), script)
-    fout = open(os.path.join(cfg.topdir, 'run-main.sh'), 'w')
-    fout.write(out)
-    fout.close()
+    for node_id, run_sh in enumerate(createRunSh(cfg, max_time)):
+        qargs = ['qsub']
+        qargs += ['-l', 'nodes=1:ppn={0}:{1}'.format(cfg.ppn, resources)]
+        qargs += ['-l', 'walltime={0}s'.format(max_time)]
+        qargs += ['-l', 'mem={0}mb'.format(max_mem)]
+        qargs += ['-l', 'scratch={0}mb'.format(scratch)]
+        qargs += ['-q', queue]
+        out = os.path.join(cfg.topdir, 'main-task-{0:02d}.out'.format(node_id))
+        err = os.path.join(cfg.topdir, 'main-task-{0:02d}.err'.format(node_id))
+        qargs += ['-o', out]
+        qargs += ['-e', err]
+    #    environ  = 'METABENCH_TOPDIR={0}'.format(cfg.topdir)
+    #    environ += ',METABENCH_PPN={0}'.format(cfg.ppn)
+    #    environ += ',METABENCH_TIME_LIMIT={0}'.format(max_time)
+    #    qargs += ['-v', environ]
+        qargs += [os.path.join(cfg.topdir, run_sh)]
+        print(qargs)
+        out = subprocess.check_output(qargs)
 
-    qargs = ['qsub']
-    qargs += ['-l', 'nodes=1:ppn={0}:{1}'.format(cfg.ppn, resources)]
-    qargs += ['-l', 'walltime={0}s'.format(max_time)]
-    qargs += ['-l', 'mem={0}mb'.format(max_mem)]
-    qargs += ['-l', 'scratch={0}mb'.format(scratch)]
-    qargs += ['-q', queue]
-    qargs += ['-o', os.path.join(cfg.topdir, 'main-task.out')]
-    qargs += ['-e', os.path.join(cfg.topdir, 'main-task.err')]
-#    environ  = 'METABENCH_TOPDIR={0}'.format(cfg.topdir)
-#    environ += ',METABENCH_PPN={0}'.format(cfg.ppn)
-#    environ += ',METABENCH_TIME_LIMIT={0}'.format(max_time)
-#    qargs += ['-v', environ]
-    qargs += [os.path.join(cfg.topdir, 'run-main.sh')]
-    print(qargs)
-    out = subprocess.check_output(qargs)
-
-    qsub_fn = os.path.join(cfg.topdir, 'qsub')
-    fout = open(qsub_fn, 'w')
-    p('{0} -> {1}'.format(out.strip(), qsub_fn))
-    fout.write(out.strip())
-    fout.close()
+        qsub_fn = os.path.join(cfg.topdir, 'qsub-{0:02d}'.format(node_id))
+        fout = open(qsub_fn, 'w')
+        p('{0} -> {1}'.format(out.strip(), qsub_fn))
+        fout.write(out.strip())
+        fout.close()
 
 def main(topdir):
     initLogging(os.path.join(topdir, 'metabench.log'))
@@ -380,6 +399,10 @@ def main(topdir):
         checkoutPDDL(cfg)
     cfg.loadBench()
 
+    p('Creating output directory...')
+    if not os.path.isdir(os.path.join(cfg.topdir, 'out')):
+        os.mkdir(os.path.join(cfg.topdir, 'out'))
+
     qsub(cfg)
 
     #createTasks(cfg)
@@ -389,25 +412,20 @@ def main(topdir):
 
 
 class ProblemQueue(object):
-    def __init__(self, cfg):
+    def __init__(self, cfg, nodes, node_id):
         self._queue = []
         self._lock = threading.Lock()
 
-        class Item(object):
-            def __init__(self, search, bench, dom, prob):
-                self.search = search
-                self.bench = bench
-                self.domain = dom
-                self.problem = prob
-
-        for search in cfg.search:
-            for bench in search.bench:
-                for domain in bench.pddl:
-                    for problem in bench.pddl[domain]:
+        for search in sorted(cfg.search, key = lambda x: x.name):
+            for bench in sorted(search.bench, key = lambda x: x.name):
+                for domain in sorted(bench.pddl.keys()):
+                    for problem in sorted(bench.pddl[domain].keys()):
                         d = (search, bench, domain, problem,
                              bench.pddl[domain][problem]['domain'],
                              bench.pddl[domain][problem]['problem'])
                         self._queue += [d]
+        if nodes > 0 and node_id >= 0:
+            self._queue = self._queue[node_id::nodes]
 
     def pop(self):
         self._lock.acquire()
@@ -667,7 +685,7 @@ def initPython(jobid, cfg):
     p('Setting PYTHONPATH: {0}'.format(pythonpath))
     os.environ['PYTHONPATH'] = pythonpath
 
-def mainRun(topdir, ppn, time_limit):
+def mainRun(topdir, nodes, node_id, ppn, time_limit):
     start_time = time.time()
     end_time = start_time + time_limit
     jobid = 'local'
@@ -689,11 +707,7 @@ def mainRun(topdir, ppn, time_limit):
     cfg.loadBench()
 
     p('Creating problem queue...')
-    queue = ProblemQueue(cfg)
-
-    p('Creating output directory...')
-    if not os.path.isdir(os.path.join(cfg.topdir, 'out')):
-        os.mkdir(os.path.join(cfg.topdir, 'out'))
+    queue = ProblemQueue(cfg, nodes, node_id)
 
     p('Creating threads...')
     ths = [threading.Thread(target = runTh, args = (i, cfg, queue))
@@ -709,9 +723,11 @@ def mainRun(topdir, ppn, time_limit):
 if __name__ == '__main__':
     if 'METABENCH_TOPDIR' in os.environ:
         topdir = os.environ['METABENCH_TOPDIR']
+        nodes = int(os.environ['METABENCH_NODES'])
+        node_id = int(os.environ['METABENCH_NODE_ID'])
         ppn = int(os.environ['METABENCH_PPN'])
         time_limit = int(os.environ['METABENCH_TIME_LIMIT'])
-        sys.exit(mainRun(topdir, ppn, time_limit))
+        sys.exit(mainRun(topdir, nodes, node_id, ppn, time_limit))
 
     if len(sys.argv) != 2:
         print('Usage: {0} dir'.format(sys.argv[0]))

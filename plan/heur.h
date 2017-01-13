@@ -260,6 +260,15 @@ plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
                                       unsigned cache_flags);
 
 /**
+ * h^2 heuristic
+ */
+plan_heur_t *planHeurH2MaxNew(const plan_var_t *var, int var_size,
+                              const plan_part_state_t *goal,
+                              const plan_op_t *op, int op_size,
+                              unsigned flags);
+
+
+/**
  * Domain transition graph based heuristic.
  */
 plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,

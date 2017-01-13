@@ -43,6 +43,7 @@ OBJS += heur_flow.o
 OBJS += heur_ma.o
 OBJS += heur_ma_pot.o
 OBJS += heur_potential.o
+OBJS += heur_h2.o
 OBJS += list_lazy.o
 OBJS += list.o
 OBJS += ma_comm_nanomsg.o

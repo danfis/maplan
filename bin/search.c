@@ -568,6 +568,8 @@ static plan_heur_t *_heurNew(const options_t *o,
     }else if (strcmp(name, "dtg") == 0){
         heur = planHeurDTGNew(prob->var, prob->var_size,
                               prob->goal, op, op_size);
+    }else if (strcmp(name, "h2") == 0){
+        heur = planHeurH2MaxNew(prob, flags);
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
                                 prob->goal, op, op_size, flags);

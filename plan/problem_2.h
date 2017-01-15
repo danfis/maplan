@@ -59,7 +59,9 @@ typedef struct _plan_problem_2_t plan_problem_2_t;
 
 void planProblem2Init(plan_problem_2_t *p2, const plan_problem_t *p);
 void planProblem2Free(plan_problem_2_t *p2);
+void planProblem2PruneByMutex(plan_problem_2_t *p2, int fact_id);
 
+void planProblem2PruneEmptyOps(plan_problem_2_t *p2);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -278,3 +278,43 @@ void planProblem2Free(plan_problem_2_t *p2)
 
     planFactId2Free(&p2->fact_id);
 }
+
+static void emptyOp(plan_problem_2_t *p2, int op_id)
+{
+    plan_op_2_t *op = p2->op + op_id;
+
+    if (op->eff != NULL)
+        BOR_FREE(op->eff);
+    op->eff = NULL;
+    op->eff_size = 2;
+}
+
+void planProblem2PruneByMutex(plan_problem_2_t *p2, int fact_id)
+{
+    plan_fact_2_t *fact = p2->fact + fact_id;
+    int i;
+
+    for (i = 0; i < fact->pre_op_size; ++i)
+        emptyOp(p2, fact->pre_op[i]);
+
+    if (fact->pre_op != NULL)
+        BOR_FREE(fact->pre_op);
+    fact->pre_op = NULL;
+    fact->pre_op_size = fact->pre_op_alloc = 0;
+}
+
+void planProblem2PruneEmptyOps(plan_problem_2_t *p2)
+{
+    plan_fact_2_t *fact;
+    int i, fact_id;
+
+    for (fact_id = 0; fact_id < p2->fact_id.fact_size; ++fact_id){
+        fact = p2->fact + fact_id;
+        for (i = 0; i < fact->pre_op_size; ++i){
+            if (p2->op[fact->pre_op[i]].eff_size == 0
+                    && fact->pre_op[i] != p2->goal_op_id){
+                fact->pre_op[i--] = fact->pre_op[--fact->pre_op_size];
+            }
+        }
+    }
+}

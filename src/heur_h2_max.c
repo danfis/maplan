@@ -50,6 +50,7 @@ typedef struct _plan_heur_h2_max_t plan_heur_h2_max_t;
 static void heurDel(plan_heur_t *_heur);
 static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
                     plan_heur_res_t *res);
+static void pruneByH2Mutexes(plan_heur_h2_max_t *h, const plan_problem_t *p);
 
 plan_heur_t *planHeurH2MaxNew(const plan_problem_t *p, unsigned flags)
 {
@@ -62,6 +63,8 @@ plan_heur_t *planHeurH2MaxNew(const plan_problem_t *p, unsigned flags)
     planProblem2Init(&heur->p2, p);
     heur->fact = BOR_ALLOC_ARR(fact_t, heur->p2.fact_id.fact_size);
     heur->op = BOR_ALLOC_ARR(op_t, heur->p2.op_size);
+
+    pruneByH2Mutexes(heur, p);
 
     return &heur->heur;
 }
@@ -177,4 +180,19 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
     }
 
     planPrioQueueFree(&queue);
+}
+
+static void pruneByH2Mutexes(plan_heur_h2_max_t *h, const plan_problem_t *p)
+{
+    PLAN_STATE_STACK(state, p->var_size);
+    plan_heur_res_t res;
+
+    planStatePoolGetState(p->state_pool, p->initial_state, &state);
+    planHeurResInit(&res);
+    heurVal(&h->heur, &state, &res);
+    for (int i = 0; i < h->p2.fact_id.fact_size; ++i){
+        if (h->fact[i].value == PLAN_COST_MAX)
+            planProblem2PruneByMutex(&h->p2, i);
+    }
+    planProblem2PruneEmptyOps(&h->p2);
 }

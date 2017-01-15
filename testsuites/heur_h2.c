@@ -7,12 +7,17 @@
 
 static plan_heur_t *h2New(plan_problem_t *p)
 {
-    return planHeurH2MaxNew(p->var, p->var_size, p->goal,
-                            p->op, p->op_size, 0);
+    return planHeurH2MaxNew(p, 0);
 }
 
 TEST(testHeurH2Max)
 {
     runHeurTest("h2", "proto/depot-pfile1.proto",
                 "states/depot-pfile1.txt", h2New, 0, 0);
+    runHeurTest("h2", "proto/depot-pfile5.proto",
+                "states/depot-pfile5.txt", h2New, 0, 0);
+    runHeurTest("h2", "proto/rovers-p03.proto",
+            "states/rovers-p03.txt", h2New, 0, 0);
+    runHeurTest("h2", "proto/rovers-p15.proto",
+            "states/rovers-p15.txt", h2New, 0, 0);
 }

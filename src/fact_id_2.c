@@ -37,7 +37,6 @@ void planFactId2Init(plan_fact_id_2_t *f, const plan_var_t *var, int var_size)
 
     if (var_size > 1){
         f->fact2 = BOR_ALLOC_ARR(int, f->var[var_size - 1][0]);
-        fprintf(stderr, "fact2-size: %d\n", f->var[var_size - 1][0]);
         for (f1 = 0, var_id = 0; var_id < var_size - 1; ++var_id){
             for (val_id = 0; val_id < var[var_id].range; ++val_id, ++f1){
                 f->fact2[f1] = fid - f->var[var_id + 1][0];

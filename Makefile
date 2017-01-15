@@ -15,6 +15,7 @@ TARGETS  = libplan.a
 
 OBJS  = problem
 OBJS += problem_fd
+OBJS += problem_2
 OBJS += fact_id_2
 OBJS += var
 OBJS += state

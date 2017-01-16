@@ -118,6 +118,20 @@ static plan_op_2_t *nextOp(plan_problem_2_t *p2,
     return op;
 }
 
+static void addChild(plan_problem_2_t *p2, int parent, int child)
+{
+    plan_op_2_t *op = p2->op + parent;
+
+    if (op->child_alloc == op->child_size){
+        if (op->child_alloc == 0)
+            op->child_alloc = 1;
+        op->child_alloc *= 2;
+        op->child = BOR_REALLOC_ARR(op->child, int, op->child_alloc);
+    }
+
+    op->child[op->child_size++] = child;
+}
+
 static void addSlaveOp(plan_problem_2_t *p2,
                        const plan_op_t *oop,
                        int parent,
@@ -128,16 +142,11 @@ static void addSlaveOp(plan_problem_2_t *p2,
 
     op = nextOp(p2, oop, p2->op[parent].original_op_id, &op_id);
     op->parent = parent;
+    addChild(p2, parent, op_id);
     op->eff = genCombs(p2, oop->eff, fact, 0, &op->eff_size);
 
-    pre = planFactId2PartState(&p2->fact_id, oop->pre, &op->pre_size);
-    for (i = 0; i < op->pre_size; ++i)
-        addPre(p2, op_id, pre[i]);
-    if (pre != NULL)
-        BOR_FREE(pre);
-
     pre = genCombs(p2, oop->pre, fact, 1, &size);
-    op->pre_size += size;
+    op->pre_size = p2->op[parent].pre_size + size;
     for (i = 0; i < size; ++i)
         addPre(p2, op_id, pre[i]);
     if (pre != NULL)

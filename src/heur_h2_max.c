@@ -134,6 +134,18 @@ static void applyOp(plan_heur_h2_max_t *h, int op_id,
     value = op->cost + fact->value;
     for (i = 0; i < op->eff_size; ++i)
         addFact(h, op->eff[i], op_id, value, queue);
+
+    for (i = 0; i < op->child_size; ++i){
+        h->op[op->child[i]].pre_unsat -= op->pre_size;
+        if (h->op[op->child[i]].pre_unsat < 0){
+            fprintf(stderr, "ERROR: pre_unsat < 0, op_id: %d, parent: %d\n",
+                    op->child[i], op_id);
+            exit(-1);
+        }
+
+        if (h->op[op->child[i]].pre_unsat == 0)
+            applyOp(h, op->child[i], fact, fact_id, queue);
+    }
 }
 
 static void heurVal(plan_heur_t *_heur, const plan_state_t *state,

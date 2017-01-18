@@ -21,7 +21,7 @@
 #define __PLAN_PROBLEM_2_H__
 
 #include <plan/problem.h>
-#include <plan/fact_id_2.h>
+#include <plan/fact_id.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,7 +53,7 @@ struct _plan_op_2_t {
 typedef struct _plan_op_2_t plan_op_2_t;
 
 struct _plan_problem_2_t {
-    plan_fact_id_2_t fact_id;
+    plan_fact_id_t fact_id;
     plan_fact_2_t *fact;
     int fact_size;
     plan_op_2_t *op;

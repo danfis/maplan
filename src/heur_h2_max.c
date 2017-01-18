@@ -21,7 +21,7 @@
 #include "plan/heur.h"
 #include "plan/prio_queue.h"
 #include "plan/problem_2.h"
-#include "fact_id.h"
+#include "plan/fact_id.h"
 #include "fact_op_cross_ref.h"
 
 struct _op_t {
@@ -83,22 +83,18 @@ static void initFacts(plan_heur_h2_max_t *h,
                       const plan_state_t *state,
                       plan_prio_queue_t *queue)
 {
-    int i, *fs, size;
+    int i, fid;
 
     for (i = 0; i < h->p2.fact_id.fact_size; ++i){
         h->fact[i].value = PLAN_COST_MAX;
         h->fact[i].supp_op = -2;
     }
 
-    fs = planFactId2State(&h->p2.fact_id, state, &size);
-    for (i = 0; i < size; ++i){
-        h->fact[fs[i]].value = 0;
-        h->fact[fs[i]].supp_op = -1;
-        planPrioQueuePush(queue, 0, fs[i]);
+    PLAN_FACT_ID_FOR_EACH_STATE(&h->p2.fact_id, state, fid){
+        h->fact[fid].value = 0;
+        h->fact[fid].supp_op = -1;
+        planPrioQueuePush(queue, 0, fid);
     }
-
-    if (fs != NULL)
-        BOR_FREE(fs);
 }
 
 static void initOps(plan_heur_h2_max_t *h)

@@ -22,7 +22,7 @@
 #include <boruvka/alloc.h>
 
 #include "plan/problem.h"
-#include "fact_id.h"
+#include "plan/fact_id.h"
 
 
 void planProblemInit(plan_problem_t *p)

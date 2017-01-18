@@ -22,7 +22,7 @@
 #include "plan/heur.h"
 #include "plan/prio_queue.h"
 #include "plan/problem_2.h"
-#include "fact_id.h"
+#include "plan/fact_id.h"
 #include "fact_op_cross_ref.h"
 
 struct _op_t {
@@ -110,7 +110,7 @@ static void initFacts(plan_heur_h2_lm_cut_t *h,
         h->fact[i].goal_zone = 0;
     }
 
-    fs = planFactId2State(&h->p2.fact_id, state, &size);
+    fs = planFactIdState2(&h->p2.fact_id, state, &size);
     for (i = 0; i < size; ++i){
         h->fact[fs[i]].value = 0;
         h->fact[fs[i]].supp_op = INIT_STATE_SUPP;

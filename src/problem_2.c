@@ -30,9 +30,9 @@ static int *genCombs(plan_problem_2_t *p2, const plan_part_state_t *ps,
     if (add_fact)
         comb[0] = fact;
     for (i = 0; i < ps->vals_size; ++i){
-        fact1 = planFactId2Var(&p2->fact_id, ps->vals[i].var,
-                                             ps->vals[i].val);
-        comb[i + add_fact] = planFactId2Fact2(&p2->fact_id, fact1, fact);
+        fact1 = planFactIdVar(&p2->fact_id,
+                              ps->vals[i].var, ps->vals[i].val);
+        comb[i + add_fact] = planFactIdFact2(&p2->fact_id, fact1, fact);
     }
 
     return comb;
@@ -46,7 +46,7 @@ static void setEff(plan_problem_2_t *p2,
     int prei, effi;
     int fact, *eff2, size;
 
-    op->eff = planFactId2PartState(&p2->fact_id, oop->eff, &op->eff_size);
+    op->eff = planFactIdPartState2(&p2->fact_id, oop->eff, &op->eff_size);
 
     // Add also combinations of prevails
     for (prei = effi = 0; prei < pre->vals_size && effi < eff->vals_size;){
@@ -54,8 +54,8 @@ static void setEff(plan_problem_2_t *p2,
             ++prei;
             ++effi;
         }else if (pre->vals[prei].var < eff->vals[effi].var){
-            fact = planFactId2Var(&p2->fact_id, pre->vals[prei].var,
-                                                pre->vals[prei].val);
+            fact = planFactIdVar(&p2->fact_id, pre->vals[prei].var,
+                                               pre->vals[prei].val);
             eff2 = genCombs(p2, eff, fact, 0, &size);
             op->eff = BOR_REALLOC_ARR(op->eff, int, op->eff_size + size);
             memcpy(op->eff + op->eff_size, eff2, sizeof(int) * size);
@@ -69,8 +69,8 @@ static void setEff(plan_problem_2_t *p2,
     }
 
     for (; prei < pre->vals_size; ++prei){
-        fact = planFactId2Var(&p2->fact_id, pre->vals[prei].var,
-                                            pre->vals[prei].val);
+        fact = planFactIdVar(&p2->fact_id, pre->vals[prei].var,
+                                           pre->vals[prei].val);
         eff2 = genCombs(p2, eff, fact, 0, &size);
         op->eff = BOR_REALLOC_ARR(op->eff, int, op->eff_size + size);
         memcpy(op->eff + op->eff_size, eff2, sizeof(int) * size);
@@ -195,7 +195,7 @@ static void addSlaveOps(plan_problem_2_t *p2,
 
         for (val = 0; val < p->var[var].range; ++val){
             addSlaveOp(p2, oop, parent,
-                       planFactId2Var(&p2->fact_id, var, val));
+                       planFactIdVar(&p2->fact_id, var, val));
         }
 
         /*
@@ -214,7 +214,7 @@ static void addOp(plan_problem_2_t *p2, const plan_problem_t *p,
 
     op = nextOp(p2, oop, original_op_id, &op_id);
     setEff(p2, op, oop);
-    pre = planFactId2PartState(&p2->fact_id, oop->pre, &op->pre_size);
+    pre = planFactIdPartState2(&p2->fact_id, oop->pre, &op->pre_size);
     for (i = 0; i < op->pre_size; ++i)
         addPre(p2, op_id, pre[i]);
     if (pre != NULL)
@@ -233,7 +233,7 @@ static void addGoal(plan_problem_2_t *p2, const plan_problem_t *p)
 
     op = nextOp(p2, NULL, -1, &op_id);
     op->cost = 0;
-    pre = planFactId2PartState(&p2->fact_id, p->goal, &size);
+    pre = planFactIdPartState2(&p2->fact_id, p->goal, &size);
     for (i = 0; i < size; ++i)
         addPre(p2, op_id, pre[i]);
     if (pre != NULL)
@@ -252,7 +252,7 @@ static void addGoal(plan_problem_2_t *p2, const plan_problem_t *p)
     op->eff = BOR_ALLOC(int);
     op->eff[0] = p2->goal_fact_id;
 
-    p2->goal = planFactId2PartState(&p2->fact_id, p->goal, &p2->goal_size);
+    p2->goal = planFactIdPartState2(&p2->fact_id, p->goal, &p2->goal_size);
 }
 
 void planProblem2Init(plan_problem_2_t *p2, const plan_problem_t *p)
@@ -261,7 +261,7 @@ void planProblem2Init(plan_problem_2_t *p2, const plan_problem_t *p)
 
     bzero(p2, sizeof(*p2));
 
-    planFactId2Init(&p2->fact_id, p->var, p->var_size);
+    planFactIdInit(&p2->fact_id, p->var, p->var_size, PLAN_FACT_ID_H2);
     p2->fact_size = p2->fact_id.fact_size + 1;
     p2->fact = BOR_CALLOC_ARR(plan_fact_2_t, p2->fact_size);
 
@@ -314,7 +314,7 @@ void planProblem2Free(plan_problem_2_t *p2)
     if (p2->op)
         BOR_FREE(p2->op);
 
-    planFactId2Free(&p2->fact_id);
+    planFactIdFree(&p2->fact_id);
 }
 
 static void emptyOp(plan_problem_2_t *p2, int op_id)

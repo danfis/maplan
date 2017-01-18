@@ -19,7 +19,7 @@
 
 #include <boruvka/alloc.h>
 
-#include "fact_id.h"
+#include "plan/fact_id.h"
 
 static void initVar(plan_fact_id_t *fid, const plan_var_t *var, int var_size)
 {
@@ -49,6 +49,24 @@ static void initVar(plan_fact_id_t *fid, const plan_var_t *var, int var_size)
     fid->var_size = var_size;
 }
 
+static void extendVar2(plan_fact_id_t *f, const plan_var_t *var, int var_size)
+{
+    int var_id, val_id, fid, f1, fact1_size;
+
+    if (var_size <= 1)
+        return;
+
+    fid = fact1_size = f->fact_size;
+    f->fact_offset = BOR_ALLOC_ARR(int, f->var[var_size - 1][0]);
+    for (f1 = 0, var_id = 0; var_id < var_size - 1; ++var_id){
+        for (val_id = 0; val_id < var[var_id].range; ++val_id, ++f1){
+            f->fact_offset[f1] = fid - f->var[var_id + 1][0];
+            fid += fact1_size - f->var[var_id + 1][0];
+        }
+    }
+    f->fact_size = fid;
+}
+
 void planFactIdInit(plan_fact_id_t *fid, const plan_var_t *var, int var_size,
                     unsigned flags)
 {
@@ -58,10 +76,12 @@ void planFactIdInit(plan_fact_id_t *fid, const plan_var_t *var, int var_size,
 
     fid->flags = flags;
     initVar(fid, var, var_size);
+    if (flags & PLAN_FACT_ID_H2)
+        extendVar2(fid, var, var_size);
 
     alloc = var_size;
     if (flags & PLAN_FACT_ID_H2)
-        alloc = (alloc * (var_size - 1)) / 2;
+        alloc = (alloc * (var_size + 1)) / 2;
     fid->state_buf = BOR_ALLOC_ARR(int, alloc);
     fid->part_state_buf = BOR_ALLOC_ARR(int, alloc);
 }
@@ -81,11 +101,11 @@ void planFactIdFree(plan_fact_id_t *fid)
         BOR_FREE(fid->part_state_buf);
 }
 
-int __planFactIdState(const plan_fact_id_t *f, const plan_state_t *state)
+static int __planFactIdState2(const plan_fact_id_t *f,
+                              const plan_state_t *state, int *fact_id)
 {
-    int *fact_id, fid, i, j, ins;
+    int fid, i, j, ins;
 
-    fact_id = f->state_buf;
     for (ins = 0, i = 0; i < state->size; ++i){
         if ((fid = planFactIdVar(f, i, planStateGet(state, i))) != -1)
             fact_id[ins++] = fid;
@@ -105,12 +125,12 @@ int __planFactIdState(const plan_fact_id_t *f, const plan_state_t *state)
     return ins;
 }
 
-int __planFactIdPartState(const plan_fact_id_t *f,
-                          const plan_part_state_t *part_state)
+static int __planFactIdPartState2(const plan_fact_id_t *f,
+                                  const plan_part_state_t *part_state,
+                                  int *fact_id)
 {
-    int *fact_id, fid, i, j, ins;
+    int fid, i, j, ins;
 
-    fact_id = f->part_state_buf;
     for (ins = 0, i = 0; i < part_state->vals_size; ++i){
         fid = planFactIdVar(f, part_state->vals[i].var,
                                part_state->vals[i].val);
@@ -132,4 +152,42 @@ int __planFactIdPartState(const plan_fact_id_t *f,
     }
 
     return ins;
+}
+
+int __planFactIdState(const plan_fact_id_t *f, const plan_state_t *state)
+{
+    return __planFactIdState2(f, state, f->state_buf);
+}
+
+int __planFactIdPartState(const plan_fact_id_t *f,
+                          const plan_part_state_t *part_state)
+{
+    return __planFactIdPartState2(f, part_state, f->part_state_buf);
+}
+
+int *planFactIdState2(const plan_fact_id_t *f, const plan_state_t *state,
+                      int *size)
+{
+    int alloc, *arr;
+
+    alloc = f->var_size;
+    if (f->flags & PLAN_FACT_ID_H2)
+        alloc = (alloc * (f->var_size + 1)) / 2;
+    arr = BOR_ALLOC_ARR(int, alloc);
+    *size = __planFactIdState2(f, state, arr);
+    return arr;
+}
+
+int *planFactIdPartState2(const plan_fact_id_t *f,
+                          const plan_part_state_t *part_state,
+                          int *size)
+{
+    int alloc, *arr;
+
+    alloc = part_state->vals_size;
+    if (f->flags & PLAN_FACT_ID_H2)
+        alloc = (alloc * (part_state->vals_size + 1)) / 2;
+    arr = BOR_ALLOC_ARR(int, alloc);
+    *size = __planFactIdPartState2(f, part_state, arr);
+    return arr;
 }

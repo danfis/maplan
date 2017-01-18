@@ -102,12 +102,25 @@ _bor_inline const int *planFactIdState(const plan_fact_id_t *f,
                                        int *size);
 
 /**
+ * Same as planFactIdState() but a new array is returned.
+ */
+int *planFactIdState2(const plan_fact_id_t *f, const plan_state_t *state,
+                      int *size);
+
+/**
  * Same as planFactIdState() but translates a partial state and first
  * part_state->vals_size IDs correspond to unary facts.
  */
 _bor_inline const int *planFactIdPartState(const plan_fact_id_t *f,
                                            const plan_part_state_t *part_state,
                                            int *size);
+
+/**
+ * Same as planFactIdPartState() but a new array is returned.
+ */
+int *planFactIdPartState2(const plan_fact_id_t *f,
+                          const plan_part_state_t *part_state,
+                          int *size);
 
 
 int __planFactIdState(const plan_fact_id_t *f, const plan_state_t *state);

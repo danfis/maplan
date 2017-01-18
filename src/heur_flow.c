@@ -22,7 +22,7 @@
 #include <plan/heur.h>
 
 #include "plan/lp.h"
-#include "fact_id.h"
+#include "plan/fact_id.h"
 
 #ifdef PLAN_LP
 

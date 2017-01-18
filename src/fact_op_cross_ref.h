@@ -21,7 +21,7 @@
 #define __PLAN_FACT_OP_CROSS_REF_H__
 
 #include "plan/problem.h"
-#include "fact_id.h"
+#include "plan/fact_id.h"
 
 #ifdef __cplusplus
 extern "C" {

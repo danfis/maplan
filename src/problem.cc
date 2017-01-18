@@ -26,8 +26,8 @@
 
 #include "plan/problem.h"
 #include "plan/causal_graph.h"
+#include "plan/fact_id.h"
 #include "problemdef.pb.h"
-#include "fact_id.h"
 
 void planShutdownProtobuf(void)
 {

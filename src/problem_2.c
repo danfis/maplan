@@ -93,6 +93,20 @@ static void addPre(plan_problem_2_t *p2, int op_id, int pre_id)
     fact->pre_op[fact->pre_op_size++] = op_id;
 }
 
+static void addEff(plan_problem_2_t *p2, int op_id, int eff_id)
+{
+    plan_fact_2_t *fact;
+
+    fact = p2->fact + eff_id;
+    if (fact->eff_op_alloc == fact->eff_op_size){
+        if (fact->eff_op_alloc == 0)
+            fact->eff_op_alloc = 1;
+        fact->eff_op_alloc *= 2;
+        fact->eff_op = BOR_REALLOC_ARR(fact->eff_op, int, fact->eff_op_alloc);
+    }
+    fact->eff_op[fact->eff_op_size++] = op_id;
+}
+
 static plan_op_2_t *nextOp(plan_problem_2_t *p2,
                            const plan_op_t *oop,
                            int original_op_id, int *op_id)
@@ -151,6 +165,8 @@ static void addSlaveOp(plan_problem_2_t *p2,
         addPre(p2, op_id, pre[i]);
     if (pre != NULL)
         BOR_FREE(pre);
+    for (i = 0; i < op->eff_size; ++i)
+        addEff(p2, op_id, op->eff[i]);
 }
 
 static void addSlaveOps(plan_problem_2_t *p2,
@@ -203,6 +219,8 @@ static void addOp(plan_problem_2_t *p2, const plan_problem_t *p,
         addPre(p2, op_id, pre[i]);
     if (pre != NULL)
         BOR_FREE(pre);
+    for (i = 0; i < op->eff_size; ++i)
+        addEff(p2, op_id, op->eff[i]);
 
     addSlaveOps(p2, p, p->op + original_op_id, op_id);
 }
@@ -210,6 +228,7 @@ static void addOp(plan_problem_2_t *p2, const plan_problem_t *p,
 static void addGoal(plan_problem_2_t *p2, const plan_problem_t *p)
 {
     plan_op_2_t *op;
+    plan_fact_2_t *fact;
     int op_id, *pre, size, i;
 
     op = nextOp(p2, NULL, -1, &op_id);
@@ -222,6 +241,17 @@ static void addGoal(plan_problem_2_t *p2, const plan_problem_t *p)
     op->pre_size = size;
     p2->goal_op_id = op_id;
 
+    p2->goal_fact_id = p2->fact_id.fact_size;
+    fact = p2->fact + p2->goal_fact_id;
+    bzero(fact, sizeof(plan_fact_2_t));
+    fact->eff_op_size = fact->eff_op_alloc = 1;
+    fact->eff_op = BOR_ALLOC(int);
+    fact->eff_op[0] = op_id;
+
+    op->eff_size = 1;
+    op->eff = BOR_ALLOC(int);
+    op->eff[0] = p2->goal_fact_id;
+
     p2->goal = planFactId2PartState(&p2->fact_id, p->goal, &p2->goal_size);
 }
 
@@ -232,7 +262,8 @@ void planProblem2Init(plan_problem_2_t *p2, const plan_problem_t *p)
     bzero(p2, sizeof(*p2));
 
     planFactId2Init(&p2->fact_id, p->var, p->var_size);
-    p2->fact = BOR_CALLOC_ARR(plan_fact_2_t, p2->fact_id.fact_size);
+    p2->fact_size = p2->fact_id.fact_size + 1;
+    p2->fact = BOR_CALLOC_ARR(plan_fact_2_t, p2->fact_size);
 
     for (i = 0; i < p->op_size; ++i)
         addOp(p2, p, i);
@@ -240,7 +271,6 @@ void planProblem2Init(plan_problem_2_t *p2, const plan_problem_t *p)
     addGoal(p2, p);
 
     // TODO: Free memory
-    /*
     for (i = 0; i < p2->fact_id.fact_size; ++i){
         fprintf(stderr, "fact[%d]: pre:", i);
         for (int j = 0; j < p2->fact[i].pre_op_size; ++j)
@@ -261,7 +291,6 @@ void planProblem2Init(plan_problem_2_t *p2, const plan_problem_t *p)
                     p->op[p2->op[i].original_op_id].name);
         fprintf(stderr, "\n");
     }
-    */
 }
 
 void planProblem2Free(plan_problem_2_t *p2)
@@ -271,7 +300,7 @@ void planProblem2Free(plan_problem_2_t *p2)
     if (p2->goal != NULL)
         BOR_FREE(p2->goal);
 
-    for (i = 0; i < p2->fact_id.fact_size; ++i){
+    for (i = 0; i < p2->fact_size; ++i){
         if (p2->fact[i].pre_op != NULL)
             BOR_FREE(p2->fact[i].pre_op);
     }

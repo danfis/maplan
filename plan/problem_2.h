@@ -32,6 +32,10 @@ struct _plan_fact_2_t {
     int *pre_op;
     int pre_op_size;
     int pre_op_alloc;
+
+    int *eff_op;
+    int eff_op_size;
+    int eff_op_alloc;
 };
 typedef struct _plan_fact_2_t plan_fact_2_t;
 
@@ -51,11 +55,13 @@ typedef struct _plan_op_2_t plan_op_2_t;
 struct _plan_problem_2_t {
     plan_fact_id_2_t fact_id;
     plan_fact_2_t *fact;
+    int fact_size;
     plan_op_2_t *op;
     int op_size;
     int op_alloc;
     int *goal;
     int goal_size;
+    int goal_fact_id;
     int goal_op_id;
 };
 typedef struct _plan_problem_2_t plan_problem_2_t;

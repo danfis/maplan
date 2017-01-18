@@ -270,15 +270,15 @@ void planProblemAgentsDotGraph(const plan_problem_agents_t *agents,
     plan_fact_id_t fid;
     char op_label[1024];
 
-    planFactIdInit(&fid, agents->glob.var, agents->glob.var_size);
+    planFactIdInit(&fid, agents->glob.var, agents->glob.var_size, 0);
 
     fprintf(fout, "digraph FactOp {\n");
 
     for (var = 0; var < agents->glob.var_size; ++var){
         for (val = 0; val < agents->glob.var[var].range; ++val){
             fprintf(fout, "%d [label=\"%d [%d:%d]\"",
-                    planFactId(&fid, var, val),
-                    planFactId(&fid, var, val), var, val);
+                    planFactIdVar(&fid, var, val),
+                    planFactIdVar(&fid, var, val), var, val);
 
             if (dotGraphIsGoal(agents, var, val)){
                 fprintf(fout, ",color=red,style=bold");
@@ -294,7 +294,7 @@ void planProblemAgentsDotGraph(const plan_problem_agents_t *agents,
     for (var = 0; var < agents->glob.var_size; ++var){
         for (val = 0; val < agents->glob.var[var].range; ++val){
             if (dotGraphIsInit(agents, var, val))
-                fprintf(fout, " %d;", planFactId(&fid, var, val));
+                fprintf(fout, " %d;", planFactIdVar(&fid, var, val));
         }
     }
     fprintf(fout, "}\n");
@@ -303,7 +303,7 @@ void planProblemAgentsDotGraph(const plan_problem_agents_t *agents,
     for (var = 0; var < agents->glob.var_size; ++var){
         for (val = 0; val < agents->glob.var[var].range; ++val){
             if (dotGraphIsGoal(agents, var, val))
-                fprintf(fout, " %d;", planFactId(&fid, var, val));
+                fprintf(fout, " %d;", planFactIdVar(&fid, var, val));
         }
     }
     fprintf(fout, "}\n");
@@ -316,8 +316,8 @@ void planProblemAgentsDotGraph(const plan_problem_agents_t *agents,
         PLAN_PART_STATE_FOR_EACH(op->pre, _i, var_pre, val_pre){
             PLAN_PART_STATE_FOR_EACH(op->eff, _j, var_eff, val_eff){
                 fprintf(fout, "%d -> %d [%s];\n",
-                        planFactId(&fid, var_pre, val_pre),
-                        planFactId(&fid, var_eff, val_eff),
+                        planFactIdVar(&fid, var_pre, val_pre),
+                        planFactIdVar(&fid, var_eff, val_eff),
                         op_label);
             }
         }

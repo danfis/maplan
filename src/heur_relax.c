@@ -103,13 +103,9 @@ static void relaxAddInitState(plan_heur_relax_t *relax,
     int i, len, fact_id;
     plan_cost_t value;
 
-    len = planStateSize(state);
-    for (i = 0; i < len; ++i){
-        fact_id = planFactId(&relax->cref.fact_id, i, planStateGet(state, i));
-        if (fact_id >= 0){
-            relax->fact[fact_id].value = 0;
-            planPrioQueuePush(queue, 0, fact_id);
-        }
+    PLAN_FACT_ID_FOR_EACH_STATE(&relax->cref.fact_id, state, fact_id){
+        relax->fact[fact_id].value = 0;
+        planPrioQueuePush(queue, 0, fact_id);
     }
 
     len = relax->cref.fake_pre_size;
@@ -246,17 +242,11 @@ static void setGoalFact(int *goal_fact, int fact_size,
                         const plan_fact_id_t *fid,
                         const plan_part_state_t *goal)
 {
-    plan_var_id_t var;
-    plan_val_t val;
-    int i;
     int fact_id;
 
     bzero(goal_fact, sizeof(int) * fact_size);
-
-    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
-        fact_id = planFactId(fid, var, val);
+    PLAN_FACT_ID_FOR_EACH_PART_STATE(fid, goal, fact_id)
         goal_fact[fact_id] = 1;
-    }
 }
 
 static plan_cost_t exploreAdd2(plan_heur_relax_t *relax,
@@ -606,9 +596,6 @@ void planHeurRelaxMarkPlan(plan_heur_relax_t *relax)
 void planHeurRelaxMarkPlan2(plan_heur_relax_t *relax,
                             const plan_part_state_t *goal)
 {
-    plan_var_id_t var;
-    plan_val_t val;
-    int i;
     int fact_id;
 
     if (relax->plan_fact == NULL)
@@ -619,10 +606,8 @@ void planHeurRelaxMarkPlan2(plan_heur_relax_t *relax,
     bzero(relax->plan_fact, sizeof(int) * relax->cref.fact_size);
     bzero(relax->plan_op, sizeof(int) * relax->cref.op_size);
 
-    PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
-        fact_id = planFactId(&relax->cref.fact_id, var, val);
+    PLAN_FACT_ID_FOR_EACH_PART_STATE(&relax->cref.fact_id, goal, fact_id)
         markPlan(relax, fact_id);
-    }
 }
 
 int planHeurRelaxAddFakePre(plan_heur_relax_t *relax, int op_id)
@@ -678,7 +663,7 @@ void planHeurRelaxDumpJustificationDotGraph(const plan_heur_relax_t *relax,
     fprintf(fout, "digraph JustificationGraph {\n");
 
     for (j = 0; j < planStateSize(_state); ++j){
-        state[j] = planFactId(&relax->cref.fact_id, j, planStateGet(_state, j));
+        state[j] = planFactIdVar(&relax->cref.fact_id, j, planStateGet(_state, j));
     }
 
     for (i = 0; i < relax->cref.fact_size; ++i){

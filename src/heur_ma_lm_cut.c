@@ -1026,8 +1026,8 @@ static int stepFindCut(plan_heur_ma_lm_cut_t *heur, plan_ma_comm_t *comm,
 
     // Find cut from all facts in initial state and all fake preconditions
     for (i = 0; i < heur->init_state->size; ++i){
-        fact_id = planFactId(&heur->relax.cref.fact_id, i,
-                             planStateGet(heur->init_state, i));
+        fact_id = planFactIdVar(&heur->relax.cref.fact_id, i,
+                                planStateGet(heur->init_state, i));
         if (fact_id >= 0)
             cutFind(&heur->cut, &heur->relax, fact_id, 1);
     }
@@ -1125,7 +1125,7 @@ static void privateFindCut(private_t *private, plan_ma_comm_t *comm,
 
         for (i = 0; i < private->relax.cref.fact_id.var_size; ++i){
             fact_id = planStateGet(&state, i);
-            fact_id = planFactId(&private->relax.cref.fact_id, i, fact_id);
+            fact_id = planFactIdVar(&private->relax.cref.fact_id, i, fact_id);
             if (fact_id >= 0)
                 cutFind(&private->cut, &private->relax, fact_id, 1);
         }

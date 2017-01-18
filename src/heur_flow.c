@@ -138,7 +138,7 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
     _planHeurInit(&hflow->heur, heurFlowDel, heurFlow, NULL);
     hflow->use_ilp = (flags & PLAN_HEUR_FLOW_ILP);
 
-    planFactIdInit(&hflow->fact_id, var, var_size);
+    planFactIdInit(&hflow->fact_id, var, var_size, 0);
     hflow->facts = BOR_CALLOC_ARR(fact_t, hflow->fact_id.fact_size);
     factsInit(hflow->facts, &hflow->fact_id, var, var_size, goal, op, op_size);
 
@@ -210,13 +210,13 @@ static void factsInitGoal(fact_t *facts, const plan_fact_id_t *fact_id,
 
     PLAN_PART_STATE_FOR_EACH(goal, i, var, val){
         // Set .is_goal flag
-        fid = planFactId(fact_id, var, val);
+        fid = planFactIdVar(fact_id, var, val);
         if (fid >= 0)
             facts[fid].is_goal = 1;
 
         // Set .is_goal_var and .is_mutex_with_goal flag
         for (val2 = 0; val2 < vars[var].range; ++val2){
-            fid = planFactId(fact_id, var, val2);
+            fid = planFactIdVar(fact_id, var, val2);
             if (fid >= 0){
                 facts[fid].is_goal_var = 1;
                 if (val2 != val)
@@ -268,12 +268,12 @@ static void factsInitOp(fact_t *facts, const plan_fact_id_t *fact_id,
 
             // The operator produces the eff_val
             eff_val = eff->vals[effi].val;
-            fid = planFactId(fact_id, eff_var, eff_val);
+            fid = planFactIdVar(fact_id, eff_var, eff_val);
             factAddProduce(facts + fid, op_id);
 
             // and consumes the pre_val
             pre_val = pre->vals[prei].val;
-            fid = planFactId(fact_id, pre_var, pre_val);
+            fid = planFactIdVar(fact_id, pre_var, pre_val);
             factAddConsume(facts + fid, op_id);
 
             ++prei;
@@ -289,7 +289,7 @@ static void factsInitOp(fact_t *facts, const plan_fact_id_t *fact_id,
 
             // The eff_val is produced
             eff_val = eff->vals[effi].val;
-            fid = planFactId(fact_id, eff_var, eff_val);
+            fid = planFactIdVar(fact_id, eff_var, eff_val);
             factAddProduce(facts + fid, op_id);
 
             // Also set the fact as causing incompletness because this
@@ -305,7 +305,7 @@ static void factsInitOp(fact_t *facts, const plan_fact_id_t *fact_id,
     for (; effi < eff->vals_size; ++effi){
         eff_var = eff->vals[effi].var;
         eff_val = eff->vals[effi].val;
-        fid = planFactId(fact_id, eff_var, eff_val);
+        fid = planFactIdVar(fact_id, eff_var, eff_val);
         factAddProduce(facts + fid, op_id);
         cause_incomplete_op[facts[fid].var] = 1;
     }
@@ -339,7 +339,7 @@ static void factsInit(fact_t *facts, const plan_fact_id_t *fact_id,
         if (var[vi].ma_privacy)
             continue;
         for (ri = 0; ri < var[vi].range; ++ri){
-            fid = planFactId(fact_id, vi, ri);
+            fid = planFactIdVar(fact_id, vi, ri);
             if (fid >= 0)
                 facts[fid].var = vi;
         }
@@ -358,7 +358,7 @@ static void factsSetState(fact_t *facts, const plan_fact_id_t *fact_id,
     for (i = 0; i < fact_id->fact_size; ++i)
         facts[i].is_init = 0;
     for (i = 0; i < fact_id->var_size; ++i){
-        fid = planFactId(fact_id, i, planStateGet(state, i));
+        fid = planFactIdVar(fact_id, i, planStateGet(state, i));
         if (fid >= 0)
             facts[fid].is_init = 1;
     }

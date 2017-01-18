@@ -37,26 +37,22 @@ static void crossRefPartState(const plan_part_state_t *ps,
                               int op_id, const plan_fact_id_t *fid,
                               plan_factarr_t *op, plan_oparr_t *fact)
 {
-    int i, fact_id, ins;
-    plan_var_id_t var;
-    plan_val_t val;
+    const int *fact_id;
+    int i, ins, size;
 
-    op[op_id].size = ps->vals_size;
-    if (ps2)
-        op[op_id].size += ps2->vals_size;
+    fact_id = planFactIdPartState(fid, ps, &size);
+    op[op_id].size = size;
     op[op_id].fact = BOR_ALLOC_ARR(int, op[op_id].size);
-
     ins = 0;
-    PLAN_PART_STATE_FOR_EACH(ps, i, var, val){
-        fact_id = planFactId(fid, var, val);
-        crossRefOpFact(op_id, ins++, fact_id, op, fact);
-    }
+    for (i = 0; i < size; ++i)
+        crossRefOpFact(op_id, ins++, fact_id[i], op, fact);
 
     if (ps2){
-        PLAN_PART_STATE_FOR_EACH(ps2, i, var, val){
-            fact_id = planFactId(fid, var, val);
-            crossRefOpFact(op_id, ins++, fact_id, op, fact);
-        }
+        fact_id = planFactIdPartState(fid, ps2, &size);
+        op[op_id].size += size;
+        op[op_id].fact = BOR_REALLOC_ARR(op[op_id].fact, int, op[op_id].size);
+        for (i = 0; i < size; ++i)
+            crossRefOpFact(op_id, ins++, fact_id[i], op, fact);
     }
 }
 
@@ -157,7 +153,7 @@ void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
 {
     int i;
 
-    planFactIdInit(&cr->fact_id, var, var_size);
+    planFactIdInit(&cr->fact_id, var, var_size, 0);
 
     // Allocate artificial precondition for operators without preconditions
     cr->fake_pre_size = 1;

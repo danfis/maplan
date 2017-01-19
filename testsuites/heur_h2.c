@@ -10,8 +10,15 @@ static plan_heur_t *h2New(plan_problem_t *p)
     return planHeurH2MaxNew(p, 0);
 }
 
+static plan_heur_t *h2LMCutNew(plan_problem_t *p)
+{
+    return planHeurH2LMCutNew(p, 0);
+}
+
 TEST(testHeurH2Max)
 {
+    runHeurTest("h2", "proto/simple.proto",
+                "states/simple.txt", h2New, 0, 0);
     runHeurTest("h2", "proto/depot-pfile1.proto",
                 "states/depot-pfile1.txt", h2New, 0, 0);
     runHeurTest("h2", "proto/depot-pfile5.proto",
@@ -20,4 +27,11 @@ TEST(testHeurH2Max)
             "states/rovers-p03.txt", h2New, 0, 0);
     runHeurTest("h2", "proto/rovers-p15.proto",
             "states/rovers-p15.txt", h2New, 0, 0);
+}
+
+TEST(testHeurH2LMCut)
+{
+    return;
+    runHeurTest("h2-lm-cut", "proto/depot-pfile1.proto",
+                "states/depot-pfile1.txt", h2LMCutNew, 0, 0);
 }

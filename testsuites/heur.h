@@ -49,8 +49,10 @@ TEST_SUITE(TSHeurPotential) {
 };
 
 TEST(testHeurH2Max);
+TEST(testHeurH2LMCut);
 TEST_SUITE(TSHeurH2) {
     TEST_ADD(testHeurH2Max),
+    TEST_ADD(testHeurH2LMCut),
     TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE
 };

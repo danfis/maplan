@@ -22,6 +22,26 @@
 #include "plan/heur.h"
 #include "fact_op_cross_ref.h"
 
+static int nextOp(plan_fact_op_cross_ref_t *cr, int prob_op_id)
+{
+    int op_id;
+
+    if (cr->op_size == cr->op_alloc){
+        if (cr->op_alloc == 0)
+            cr->op_alloc = 8;
+        cr->op_alloc *= 2;
+        cr->op_pre = BOR_REALLOC_ARR(cr->op_pre, plan_arr_int_t, cr->op_alloc);
+        cr->op_eff = BOR_REALLOC_ARR(cr->op_eff, plan_arr_int_t, cr->op_alloc);
+        cr->op_id  = BOR_REALLOC_ARR(cr->op_id, int, cr->op_alloc);
+    }
+
+    op_id = cr->op_size++;
+    bzero(cr->op_pre + op_id, sizeof(plan_arr_int_t));
+    bzero(cr->op_eff + op_id, sizeof(plan_arr_int_t));
+    cr->op_id[op_id] = prob_op_id;
+    return op_id;
+}
+
 static void crossRefOpFact(int op_id, int fact_id,
                            plan_arr_int_t *op, plan_arr_int_t *fact)
 {
@@ -45,9 +65,63 @@ static void crossRefNoPre(plan_fact_op_cross_ref_t *cr, int op_id)
     crossRefOpFact(op_id, cr->fake_pre[0].fact_id, cr->op_pre, cr->fact_pre);
 }
 
-static void crossRefOp(plan_fact_op_cross_ref_t *cr,
-                       int id, const plan_op_t *op)
+static void crossRefPartStateCombs2(plan_fact_op_cross_ref_t *cr, int op_id,
+                                    int fact_id, const plan_part_state_t *ps,
+                                    plan_arr_int_t *op, plan_arr_int_t *fact)
 {
+    int i, fact_id2, fact2;
+
+    for (i = 0; i < ps->vals_size; ++i){
+        fact_id2 = planFactIdVar(&cr->fact_id,
+                                 ps->vals[i].var, ps->vals[i].val);
+        fact2 = planFactIdFact2(&cr->fact_id, fact_id, fact_id2);
+        crossRefOpFact(op_id, fact2, op, fact);
+    }
+}
+
+static void expandOpH2(plan_fact_op_cross_ref_t *cr,
+                       const plan_op_t *op, int id)
+{
+    const plan_part_state_t *pre = op->pre;
+    const plan_part_state_t *eff = op->eff;
+    int prei, effi, fact_id;
+
+    // Skip operators without effects
+    if (op->eff->vals_size == 0)
+        return;
+
+    // Find preconditions that are not changed by the effect and add
+    // combinations of this precondition with all effects
+    for (prei = effi = 0; prei < pre->vals_size && effi < eff->vals_size;){
+        if (pre->vals[prei].var == eff->vals[effi].var){
+            ++prei;
+            ++effi;
+
+        }else if (pre->vals[prei].var < eff->vals[effi].var){
+            fact_id = planFactIdVar(&cr->fact_id, pre->vals[prei].var,
+                                                  pre->vals[prei].val);
+            crossRefPartStateCombs2(cr, id, fact_id, eff,
+                                    cr->op_eff, cr->fact_eff);
+            ++prei;
+
+        }else{
+            ++effi;
+        }
+    }
+
+    for (; prei < pre->vals_size; ++prei){
+        fact_id = planFactIdVar(&cr->fact_id, pre->vals[prei].var,
+                                              pre->vals[prei].val);
+        crossRefPartStateCombs2(cr, id, fact_id, eff,
+                                cr->op_eff, cr->fact_eff);
+    }
+}
+
+static void crossRefOp(plan_fact_op_cross_ref_t *cr,
+                       int op_id, const plan_op_t *op)
+{
+    int id = nextOp(cr, op_id);
+
     if (op->pre->vals_size > 0){
         crossRefPartState(op->pre, id, &cr->fact_id,
                           cr->op_pre, cr->fact_pre);
@@ -59,12 +133,17 @@ static void crossRefOp(plan_fact_op_cross_ref_t *cr,
         crossRefPartState(op->eff, id, &cr->fact_id,
                           cr->op_eff, cr->fact_eff);
     }
+
+    if (op->eff->vals_size > 0 && cr->flags & PLAN_HEUR_H2)
+        expandOpH2(cr, op, id);
 }
 
-static void crossRefCondEff(plan_fact_op_cross_ref_t *cr, int id,
-                            const plan_op_t *op,
+static void crossRefCondEff(plan_fact_op_cross_ref_t *cr,
+                            int op_id, const plan_op_t *op,
                             const plan_op_cond_eff_t *cond_eff)
 {
+    int id = nextOp(cr, op_id);
+
     if (op->pre->vals_size > 0 || cond_eff->pre->vals_size > 0){
         crossRefPartState(op->pre, id, &cr->fact_id,
                           cr->op_pre, cr->fact_pre);
@@ -82,97 +161,40 @@ static void crossRefCondEff(plan_fact_op_cross_ref_t *cr, int id,
     }
 }
 
-static void crossRefOps(plan_fact_op_cross_ref_t *cr,
-                        const plan_op_t *op, int op_size)
+static void crossRefH2Op(plan_fact_op_cross_ref_t *cr,
+                         int op_id, const plan_op_t *op,
+                         int fact_id)
 {
-    int i, j;
-    int cond_eff_ins = op_size;
+    int id = nextOp(cr, op_id);
+    int val;
 
-    for (i = 0; i < op_size; ++i){
-        crossRefOp(cr, i, op + i);
-        for (j = 0; j < op[i].cond_eff_size; ++j){
-            crossRefCondEff(cr, cond_eff_ins++, op + i, op[i].cond_eff + j);
-        }
-    }
+    // Copy parent operator
+    PLAN_ARR_INT_FOR_EACH(cr->op_pre + op_id, val)
+        crossRefOpFact(id, val, cr->op_pre, cr->fact_pre);
+    PLAN_ARR_INT_FOR_EACH(cr->op_eff + op_id, val)
+        crossRefOpFact(id, val, cr->op_eff, cr->fact_eff);
+
+    // Add preconditions
+    crossRefOpFact(id, fact_id, cr->op_pre, cr->fact_pre);
+    crossRefPartStateCombs2(cr, id, fact_id, op->pre,
+                            cr->op_pre, cr->fact_pre);
+
+    // Skip operators without effects
+    if (op->eff->vals_size == 0)
+        return;
+
+    // Add effects
+    crossRefPartStateCombs2(cr, id, fact_id, op->eff,
+                            cr->op_eff, cr->fact_eff);
 }
 
-static void addGoalOp(plan_fact_op_cross_ref_t *cr,
-                      const plan_part_state_t *goal)
-{
-    crossRefPartState(goal, cr->goal_op_id, &cr->fact_id,
-                      cr->op_pre, cr->fact_pre);
-
-    planArrIntAdd(cr->op_eff + cr->goal_op_id, cr->goal_id);
-    planArrIntAdd(cr->fact_eff + cr->goal_id, cr->goal_op_id);
-}
-
-static void addH2Op(plan_fact_op_cross_ref_t *cr,
-                    int parent, const plan_op_t *op,
-                    int add_fact, int *op_alloc)
-{
-    /*
-    int op_id, i, fact_id, ins;
-
-    if (*op_alloc == cr->op_size){
-        *op_alloc *= 2;
-        cr->op_pre = BOR_REALLOC_ARR(cr->op_pre, plan_arr_int_t, *op_alloc);
-        cr->op_eff = BOR_REALLOC_ARR(cr->op_eff, plan_arr_int_t, *op_alloc);
-    }
-    op_id = cr->op_size++;
-    fprintf(stderr, "addH2Op: %d <- %d\n", op_id, parent);
-
-    // Allocate space for preconditions
-    cr->op_pre[op_id].size  = cr->op_pre[parent].size;
-    cr->op_pre[op_id].size += op->pre->vals_size + 1;
-    cr->op_pre[op_id].fact = BOR_ALLOC_ARR(int, cr->op_pre[op_id].size);
-
-    // Copy preconditions from the parent
-    ins = 0;
-    for (i = 0; i < cr->op_pre[parent].size; ++i)
-        crossRefOpFact(op_id, ins++, cr->op_pre[parent].fact[i],
-                       cr->op_pre, cr->fact_pre);
-
-    // And add combinations with add_fact
-    crossRefOpFact(op_id, ins++, add_fact, cr->op_pre, cr->fact_pre);
-    fprintf(stderr, "%d -- %d\n", op->pre->vals_size,
-            cr->op_pre[parent].size);
-    fflush(stderr);
-    for (i = 0; i < op->pre->vals_size; ++i){
-        fact_id = planFactIdVar(&cr->fact_id, op->pre->vals[i].var,
-                                              op->pre->vals[i].val);
-        fact_id = planFactIdFact2(&cr->fact_id, fact_id, add_fact);
-        crossRefOpFact(op_id, ins++, fact_id, cr->op_pre, cr->fact_pre);
-    }
-
-    // Allocate space for effects
-    cr->op_eff[op_id].size  = cr->op_eff[parent].size;
-    cr->op_eff[op_id].size += op->eff->vals_size;
-    cr->op_eff[op_id].fact = BOR_ALLOC_ARR(int, cr->op_eff[op_id].size);
-
-    // Copy effects from the parent
-    ins = 0;
-    for (i = 0; i < cr->op_eff[parent].size; ++i)
-        crossRefOpFact(op_id, ins++, cr->op_eff[parent].fact[i],
-                       cr->op_eff, cr->fact_eff);
-
-    // And add combinations with add_fact
-    for (i = 0; i < op->eff->vals_size; ++i){
-        fact_id = planFactIdVar(&cr->fact_id, op->eff->vals[i].var,
-                                              op->eff->vals[i].val);
-        fact_id = planFactIdFact2(&cr->fact_id, fact_id, add_fact);
-        crossRefOpFact(op_id, ins++, fact_id, cr->op_eff, cr->fact_eff);
-    }
-    */
-}
-
-static void addH2OpsFromOp(plan_fact_op_cross_ref_t *cr,
-                           int op_id, const plan_op_t *op,
-                           const plan_var_t *pvar, int pvar_size,
-                           int *op_alloc)
+static void crossRefH2(plan_fact_op_cross_ref_t *cr,
+                       int op_id, const plan_op_t *op,
+                       const plan_var_t *pvar, int pvar_size)
 {
     const plan_part_state_t *pre = op->pre;
     const plan_part_state_t *eff = op->eff;
-    int prei, effi, var, val;
+    int prei, effi, var, val, fact_id;
 
     // Skip operators without effects
     if (op->eff->vals_size == 0)
@@ -194,51 +216,86 @@ static void addH2OpsFromOp(plan_fact_op_cross_ref_t *cr,
         }
 
         for (val = 0; val < pvar[var].range; ++val){
-            addH2Op(cr, op_id, op + op_id,
-                    planFactIdVar(&cr->fact_id, var, val),
-                    op_alloc);
+            fact_id = planFactIdVar(&cr->fact_id, var, val);
+            crossRefH2Op(cr, op_id, op, fact_id);
+        }
+    }
+}
+
+static void crossRefOps(plan_fact_op_cross_ref_t *cr,
+                        const plan_op_t *op, int op_size,
+                        const plan_var_t *var, int var_size)
+{
+    int i, j, have_cond_eff = 0;
+
+    for (i = 0; i < op_size; ++i){
+        crossRefOp(cr, i, op + i);
+        have_cond_eff |= op[i].cond_eff_size;
+    }
+
+    if (have_cond_eff){
+        // Disable H2 for conditional effects for now
+        if (cr->flags & PLAN_HEUR_H2){
+            fprintf(stderr, "ERROR: H2 does not work with conditinal effects"
+                    " for now!\n");
+            exit(-1);
         }
 
-        /*
-        if (prei < pre->vals_size && var == pre->vals[prei].var)
-            ++prei;
-        */
+        for (i = 0; i < op_size; ++i){
+            for (j = 0; j < op[i].cond_eff_size; ++j){
+                crossRefCondEff(cr, i, op + i, op[i].cond_eff + j);
+            }
+        }
     }
-}
 
-static void addH2Ops(plan_fact_op_cross_ref_t *cr,
-                     const plan_op_t *op, int op_size,
-                     const plan_var_t *var, int var_size)
-{
-    int op_alloc = cr->op_size;
-    int op_id;
-
-    for (op_id = 0; op_id < op_size; ++op_id){
-        addH2OpsFromOp(cr, op_id, op + op_id, var, var_size, &op_alloc);
+    if (cr->flags & PLAN_HEUR_H2){
+        for (i = 0; i < op_size; ++i){
+            crossRefH2(cr, i, op + i, var, var_size);
+        }
     }
-}
 
-static void setOpId(plan_fact_op_cross_ref_t *cr,
-                    const plan_op_t *op, int op_size)
-{
-    int i, j, cond_eff;
-
-    cr->op_id = BOR_ALLOC_ARR(int, cr->op_size);
-    cond_eff = op_size;
-    for (i = 0; i < op_size; ++i){
-        cr->op_id[i] = i;
-        for (j = 0; j < op[i].cond_eff_size; ++j)
-            cr->op_id[cond_eff++] = i;
+    /*
+    for (i = 0; i < cr->op_size; ++i){
+        fprintf(stderr, "op[% 3d] pre:", i);
+        for (j = 0; j < cr->op_pre[i].size; ++j){
+            fprintf(stderr, " %d", cr->op_pre[i].arr[j]);
+        }
+        fprintf(stderr, "\n");
+        fprintf(stderr, "        eff:");
+        for (j = 0; j < cr->op_eff[i].size; ++j){
+            fprintf(stderr, " %d", cr->op_eff[i].arr[j]);
+        }
+        fprintf(stderr, "\n");
+        fprintf(stderr, "        op_id: %d\n", cr->op_id[i]);
     }
-    cr->op_id[cr->goal_op_id] = -1;
+
+    for (i = 0; i < cr->fact_size; ++i){
+        fprintf(stderr, "fact[% 3d] pre:", i);
+        for (j = 0; j < cr->fact_pre[i].size; ++j){
+            fprintf(stderr, " %d", cr->fact_pre[i].arr[j]);
+        }
+        fprintf(stderr, "\n");
+        fprintf(stderr, "          eff:");
+        for (j = 0; j < cr->fact_eff[i].size; ++j){
+            fprintf(stderr, " %d", cr->fact_eff[i].arr[j]);
+        }
+        fprintf(stderr, "\n");
+    }
+    */
 }
 
-static int sortIntCmp(const void *a, const void *b)
+static void addGoalOp(plan_fact_op_cross_ref_t *cr,
+                      const plan_part_state_t *goal)
 {
-    int i1 = *(int *)a;
-    int i2 = *(int *)b;
-    return i1 - i2;
+    cr->goal_op_id = nextOp(cr, -1);
+
+    crossRefPartState(goal, cr->goal_op_id, &cr->fact_id,
+                      cr->op_pre, cr->fact_pre);
+
+    planArrIntAdd(cr->op_eff + cr->goal_op_id, cr->goal_id);
+    planArrIntAdd(cr->fact_eff + cr->goal_id, cr->goal_op_id);
 }
+
 
 void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
                             const plan_var_t *var, int var_size,
@@ -247,7 +304,8 @@ void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
                             unsigned flags)
 {
     unsigned fact_id_flags = 0;
-    int i;
+
+    bzero(cr, sizeof(*cr));
 
     if (flags & PLAN_HEUR_H2)
         fact_id_flags = PLAN_FACT_ID_H2;
@@ -265,41 +323,21 @@ void planFactOpCrossRefInit(plan_fact_op_cross_ref_t *cr,
     cr->fake_pre[0].fact_id = cr->fact_size++;
     cr->fake_pre[0].value = 0;
 
-    // Compute number of operators including conditional effects
-    cr->op_size = op_size;
-    for (i = 0; i < op_size; ++i){
-        cr->op_size += op[i].cond_eff_size;
-    }
-
-    // Disable H2 for conditional effects for now
-    if (flags & PLAN_HEUR_H2 && cr->op_size != op_size){
-        fprintf(stderr, "ERROR: H2 does not work with conditinal effects"
-                        " for now!\n");
-        exit(-1);
-    }
-
-    // Add artificial goal-reaching operator
-    cr->goal_op_id = cr->op_size++;
-
-    // Allocate arrays
+    // Allocate arrays for facts
     cr->fact_pre = BOR_CALLOC_ARR(plan_arr_int_t, cr->fact_size);
     cr->fact_eff = BOR_CALLOC_ARR(plan_arr_int_t, cr->fact_size);
-    cr->op_pre = BOR_CALLOC_ARR(plan_arr_int_t, cr->op_size);
-    cr->op_eff = BOR_CALLOC_ARR(plan_arr_int_t, cr->op_size);
+
+    // Allocated initial space for operators
+    cr->op_alloc = op_size;
+    cr->op_pre = BOR_ALLOC_ARR(plan_arr_int_t, cr->op_alloc);
+    cr->op_eff = BOR_ALLOC_ARR(plan_arr_int_t, cr->op_alloc);
+    cr->op_id  = BOR_ALLOC_ARR(int, cr->op_alloc);
 
     // Compute cross reference tables for operators
-    crossRefOps(cr, op, op_size);
+    crossRefOps(cr, op, op_size, var, var_size);
 
     // Adds operator reaching artificial goal
     addGoalOp(cr, goal);
-
-    // Set up .op_id[] array
-    setOpId(cr, op, op_size);
-
-    // Add h^2 operators
-    // TODO
-    if (flags & PLAN_HEUR_H2)
-        addH2Ops(cr, op, op_size, var, var_size);
 }
 
 void planFactOpCrossRefFree(plan_fact_op_cross_ref_t *cr)

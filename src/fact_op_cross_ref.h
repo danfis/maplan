@@ -38,8 +38,9 @@ struct _plan_fact_op_cross_ref_t {
     unsigned flags;
     plan_fact_id_t fact_id; /*!< Translation from var-val pair to fact ID */
 
-    int fact_size;          /*!< Number of facts -- value from .fact_id */
-    int op_size;            /*!< Number of operators */
+    int fact_size; /*!< Number of facts -- value from .fact_id */
+    int op_size;   /*!< Number of operators */
+    int op_alloc;  /*!< Allocated space for operators */
     plan_arr_int_t *fact_pre; /*!< Operators for which the corresponding fact
                                    is precondition -- the size of this array
                                    equals to .fact_size */

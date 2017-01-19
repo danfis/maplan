@@ -140,6 +140,13 @@ plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
     return lmCutNew(var, var_size, goal, op, op_size, 2, flags, cache_flags);
 }
 
+plan_heur_t *planHeurH2LMCutNew(const plan_problem_t *p, unsigned flags)
+{
+    flags |= PLAN_HEUR_H2;
+    return lmCutNew(p->var, p->var_size, p->goal,
+                    p->op, p->op_size, 0, flags, 0);
+}
+
 static void planHeurLMCutDel(plan_heur_t *_heur)
 {
     plan_heur_lm_cut_t *heur = HEUR(_heur);

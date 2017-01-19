@@ -49,9 +49,14 @@ TEST_SUITE(TSHeurPotential) {
 };
 
 TEST(testHeurH2Max);
-TEST(testHeurH2LMCut);
 TEST_SUITE(TSHeurH2) {
     TEST_ADD(testHeurH2Max),
+    TEST_ADD(protobufTearDown),
+    TEST_SUITE_CLOSURE
+};
+
+TEST(testHeurH2LMCut);
+TEST_SUITE(TSHeurH2LMCut) {
     TEST_ADD(testHeurH2LMCut),
     TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE
@@ -68,6 +73,7 @@ TEST_SUITE(TSHeurH2) {
     TEST_SUITE_ADD(TSHeurDTG), \
     TEST_SUITE_ADD(TSHeurFlow), \
     TEST_SUITE_ADD(TSHeurPotential), \
-    TEST_SUITE_ADD(TSHeurH2)
+    TEST_SUITE_ADD(TSHeurH2), \
+    TEST_SUITE_ADD(TSHeurH2LMCut)
 
 #endif

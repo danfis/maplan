@@ -47,7 +47,7 @@ struct _plan_heur_lm_cut_t {
 
     int *fact_goal_zone; /*!< Flag for each fact whether it is in goal zone */
     int *fact_in_queue;
-    plan_oparr_t cut;    /*!< Array of cut operators */
+    plan_arr_int_t cut;    /*!< Array of cut operators */
 
     inc_local_t inc_local; /*!< Struct for local incremental LM-Cut */
     inc_cache_t inc_cache; /*!< Struct for cached incremental LM-Cut */
@@ -98,8 +98,7 @@ static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
 
     heur->fact_goal_zone = BOR_ALLOC_ARR(int, heur->relax.cref.fact_size);
     heur->fact_in_queue  = BOR_ALLOC_ARR(int, heur->relax.cref.fact_size);
-    heur->cut.op = BOR_ALLOC_ARR(int, heur->relax.cref.op_size);
-    heur->cut.size = 0;
+    planArrIntInit(&heur->cut, 2);
 
     heur->inc_local.enabled = 0;
     heur->inc_cache.enabled = 0;
@@ -145,7 +144,7 @@ static void planHeurLMCutDel(plan_heur_t *_heur)
 {
     plan_heur_lm_cut_t *heur = HEUR(_heur);
 
-    BOR_FREE(heur->cut.op);
+    planArrIntFree(&heur->cut);
     BOR_FREE(heur->fact_goal_zone);
     BOR_FREE(heur->fact_in_queue);
     if (heur->inc_local.enabled){
@@ -165,7 +164,7 @@ static void planHeurLMCutDel(plan_heur_t *_heur)
 
 static void markGoalZoneRecursive(plan_heur_lm_cut_t *heur, int fact_id)
 {
-    int i, len, *op_ids, op_id;
+    int op_id;
     plan_heur_relax_op_t *op;
 
     if (heur->fact_goal_zone[fact_id])
@@ -173,10 +172,7 @@ static void markGoalZoneRecursive(plan_heur_lm_cut_t *heur, int fact_id)
 
     heur->fact_goal_zone[fact_id] = 1;
 
-    len    = heur->relax.cref.fact_eff[fact_id].size;
-    op_ids = heur->relax.cref.fact_eff[fact_id].op;
-    for (i = 0; i < len; ++i){
-        op_id = op_ids[i];
+    PLAN_ARR_INT_FOR_EACH(heur->relax.cref.fact_eff + fact_id, op_id){
         op = heur->relax.op + op_id;
         if (op->cost == 0 && op->supp != -1)
             markGoalZoneRecursive(heur, op->supp);
@@ -210,17 +206,13 @@ static void findCutAddInit(plan_heur_lm_cut_t *heur,
 static void findCutEnqueueEffects(plan_heur_lm_cut_t *heur,
                                   int op_id, bor_lifo_t *queue)
 {
-    int i, len, *facts, fact_id;
+    int fact_id;
     int in_cut = 0;
 
-    len   = heur->relax.cref.op_eff[op_id].size;
-    facts = heur->relax.cref.op_eff[op_id].fact;
-    for (i = 0; i < len; ++i){
-        fact_id = facts[i];
-
+    PLAN_ARR_INT_FOR_EACH(heur->relax.cref.op_eff + op_id, fact_id){
         // Determine whether the operator belongs to cut
         if (!in_cut && heur->fact_goal_zone[fact_id]){
-            heur->cut.op[heur->cut.size++] = op_id;
+            planArrIntAdd(&heur->cut, op_id);
             in_cut = 1;
         }
 
@@ -234,7 +226,7 @@ static void findCutEnqueueEffects(plan_heur_lm_cut_t *heur,
 
 static void findCut(plan_heur_lm_cut_t *heur, const plan_state_t *state)
 {
-    int i, len, *ops, fact_id, op_id;
+    int fact_id, op_id;
     bor_lifo_t queue;
 
     // Zeroize in-queue flags
@@ -252,11 +244,7 @@ static void findCut(plan_heur_lm_cut_t *heur, const plan_state_t *state)
         fact_id = *(int *)borLifoBack(&queue);
         borLifoPop(&queue);
 
-        len = heur->relax.cref.fact_pre[fact_id].size;
-        ops = heur->relax.cref.fact_pre[fact_id].op;
-        for (i = 0; i < len; ++i){
-            op_id = ops[i];
-
+        PLAN_ARR_INT_FOR_EACH(heur->relax.cref.fact_pre + fact_id, op_id){
             if (heur->relax.op[op_id].supp == fact_id){
                 findCutEnqueueEffects(heur, op_id, &queue);
             }
@@ -266,25 +254,18 @@ static void findCut(plan_heur_lm_cut_t *heur, const plan_state_t *state)
     borLifoFree(&queue);
 }
 
-static plan_cost_t updateCutCost(const plan_oparr_t *cut, plan_heur_relax_op_t *op)
+static plan_cost_t updateCutCost(const plan_arr_int_t *cut,
+                                 plan_heur_relax_op_t *op)
 {
     int cut_cost = INT_MAX;
-    int i, len, op_id;
-    const int *ops;
-
-    len = cut->size;
-    ops = cut->op;
+    int op_id;
 
     // Find minimal cost from the cut operators
-    cut_cost = op[ops[0]].cost;
-    for (i = 1; i < len; ++i){
-        op_id = ops[i];
+    PLAN_ARR_INT_FOR_EACH(cut, op_id)
         cut_cost = BOR_MIN(cut_cost, op[op_id].cost);
-    }
 
     // Substract the minimal cost from all cut operators
-    for (i = 0; i < len; ++i){
-        op_id = ops[i];
+    PLAN_ARR_INT_FOR_EACH(cut, op_id){
         op[op_id].cost  -= cut_cost;
         op[op_id].value -= cut_cost;
     }
@@ -334,9 +315,7 @@ static plan_cost_t applyInitLandmarks(plan_heur_lm_cut_t *heur,
     const plan_landmark_t *ldm;
     int cost, *op_changed, i, j, size, op_id;
 
-    // Reuse structure for cut
-    op_changed = heur->cut.op;
-    bzero(op_changed, sizeof(*heur->cut.op) * heur->relax.cref.op_size);
+    op_changed = BOR_CALLOC_ARR(int, heur->relax.cref.op_size);
 
     // Record operators that should be changed as well as value that should
     // be substracted from their cost.
@@ -374,6 +353,9 @@ static plan_cost_t applyInitLandmarks(plan_heur_lm_cut_t *heur,
 
     // Update relaxation heuristic
     planHeurRelaxIncMaxFull(&heur->relax, op_changed, size);
+
+    if (op_changed)
+        BOR_FREE(op_changed);
 
     return h;
 }
@@ -417,7 +399,7 @@ static void lmCutState(plan_heur_lm_cut_t *heur, const plan_state_t *state,
 
         // Store landmarks into output structure if requested.
         if (res->save_landmarks)
-            storeLandmarks(heur, heur->cut.op, heur->cut.size, res);
+            storeLandmarks(heur, heur->cut.arr, heur->cut.size, res);
 
         // Determine the minimal cost from all cut-operators. Substract
         // this cost from their cost and add it to the final heuristic
@@ -426,7 +408,7 @@ static void lmCutState(plan_heur_lm_cut_t *heur, const plan_state_t *state,
 
         // Performat incremental h^max computation using changed operator
         // costs
-        planHeurRelaxIncMaxFull(&heur->relax, heur->cut.op, heur->cut.size);
+        planHeurRelaxIncMaxFull(&heur->relax, heur->cut.arr, heur->cut.size);
     }
 
     res->heur = h;

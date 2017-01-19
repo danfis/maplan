@@ -82,6 +82,8 @@ struct _plan_search_t;
  */
 #define PLAN_HEUR_POT_PRINT_INIT_TIME 0x100u
 
+#define PLAN_HEUR_H2 0x1000u
+
 /** Forward declaration */
 typedef struct _plan_heur_t plan_heur_t;
 

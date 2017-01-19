@@ -41,10 +41,10 @@ struct _plan_heur_ma_max_t {
                                     whether an operator changed */
     int cur_agent_id;          /*!< ID of the agent from which a response
                                     is expected. */
-    plan_oparr_t *agent_op;    /*!< Operators owned by a corresponding agent */
+    plan_arr_int_t *agent_op;  /*!< Operators owned by a corresponding agent */
     plan_state_t *init_state;  /*!< Stored actual state for which the
                                     heuristic is computed */
-    plan_oparr_t *op_by_owner; /*!< List of operators divided by an owner */
+    plan_arr_int_t *op_by_owner; /*!< List of operators divided by an owner */
     plan_heur_relax_op_t *old_op;
 
     private_t private;
@@ -112,21 +112,10 @@ static void initAgentOp(plan_heur_ma_max_t *heur,
                         const plan_op_t *op, int op_size)
 {
     int i;
-    plan_oparr_t *oparr;
 
-    heur->agent_op = BOR_CALLOC_ARR(plan_oparr_t, heur->agent_size);
-    for (i = 0; i < heur->agent_size; ++i)
-        heur->agent_op[i].op = BOR_ALLOC_ARR(int, heur->relax.cref.op_size);
-
-    for (i = 0; i < op_size; ++i){
-        oparr = heur->agent_op + op[i].owner;
-        oparr->op[oparr->size++] = i;
-    }
-
-    for (i = 0; i < heur->agent_size; ++i){
-        heur->agent_op[i].op = BOR_REALLOC_ARR(heur->agent_op[i].op, int,
-                                               heur->agent_op[i].size);
-    }
+    heur->agent_op = BOR_CALLOC_ARR(plan_arr_int_t, heur->agent_size);
+    for (i = 0; i < op_size; ++i)
+        planArrIntAdd(heur->agent_op + op[i].owner, i);
 }
 
 static void initOpByOwner(plan_heur_ma_max_t *heur,
@@ -134,22 +123,13 @@ static void initOpByOwner(plan_heur_ma_max_t *heur,
 {
     int i, op_id, owner;
 
-    heur->op_by_owner = BOR_CALLOC_ARR(plan_oparr_t, heur->agent_size);
-    for (i = 0; i < heur->agent_size; ++i){
-        heur->op_by_owner[i].op = BOR_ALLOC_ARR(int, heur->relax.cref.op_size);
-    }
-
+    heur->op_by_owner = BOR_CALLOC_ARR(plan_arr_int_t, heur->agent_size);
     for (i = 0; i < heur->relax.cref.op_size; ++i){
         op_id = heur->relax.cref.op_id[i];
         if (op_id > 0){
             owner = prob->proj_op[op_id].owner;
-            heur->op_by_owner[owner].op[heur->op_by_owner[owner].size++] = i;
+            planArrIntAdd(heur->op_by_owner + owner, i);
         }
-    }
-
-    for (i = 0; i < heur->agent_size; ++i){
-        heur->op_by_owner[i].op = BOR_REALLOC_ARR(heur->op_by_owner[i].op, int,
-                                                  heur->op_by_owner[i].size);
     }
 }
 
@@ -186,18 +166,14 @@ static void heurDel(plan_heur_t *_heur)
     plan_heur_ma_max_t *heur = HEUR(_heur);
 
     BOR_FREE(heur->agent_changed);
-    for (i = 0; i < heur->agent_size; ++i){
-        if (heur->agent_op[i].op)
-            BOR_FREE(heur->agent_op[i].op);
-    }
+    for (i = 0; i < heur->agent_size; ++i)
+        planArrIntFree(heur->agent_op + i);
     BOR_FREE(heur->agent_op);
     BOR_FREE(heur->old_op);
 
     planStateDel(heur->init_state);
-    for (i = 0; i < heur->agent_size; ++i){
-        if (heur->op_by_owner[i].op)
-            BOR_FREE(heur->op_by_owner[i].op);
-    }
+    for (i = 0; i < heur->agent_size; ++i)
+        planArrIntFree(heur->op_by_owner + i);
     BOR_FREE(heur->op_by_owner);
 
     privateFree(&heur->private);
@@ -218,7 +194,7 @@ static void sendRequest(plan_heur_ma_max_t *heur, plan_ma_comm_t *comm,
                         int agent_id)
 {
     plan_ma_msg_t *msg;
-    plan_oparr_t *oparr;
+    plan_arr_int_t *oparr;
     plan_ma_msg_op_t *msg_op;
     int i, op_id, value;
 
@@ -228,8 +204,8 @@ static void sendRequest(plan_heur_ma_max_t *heur, plan_ma_comm_t *comm,
 
     oparr = heur->agent_op + agent_id;
     for (i = 0; i < oparr->size; ++i){
-        op_id = planOpIdTrGlob(&heur->op_id_tr, oparr->op[i]);
-        value = heur->relax.op[oparr->op[i]].value;
+        op_id = planOpIdTrGlob(&heur->op_id_tr, oparr->arr[i]);
+        value = heur->relax.op[oparr->arr[i]].value;
         msg_op = planMAMsgAddOp(msg);
         planMAMsgOpSetOpId(msg_op, op_id);
         planMAMsgOpSetValue(msg_op, value);
@@ -279,7 +255,7 @@ static void updateRelax(plan_heur_ma_max_t *heur,
                         const int *update_op, int update_op_size)
 {
     int i, j, op_id, size;
-    plan_oparr_t *oparr;
+    plan_arr_int_t *oparr;
 
     // Remember old values of operators
     size = sizeof(plan_heur_relax_op_t) * heur->relax.cref.op_size;
@@ -295,7 +271,7 @@ static void updateRelax(plan_heur_ma_max_t *heur,
 
         oparr = heur->op_by_owner + i;
         for (j = 0; j < oparr->size; ++j){
-            op_id = oparr->op[j];
+            op_id = oparr->arr[j];
             if (heur->old_op[op_id].value != heur->relax.op[op_id].value){
                 heur->agent_changed[i] = 1;
                 break;

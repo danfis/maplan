@@ -27,8 +27,7 @@
 
 {
     plan_prio_queue_t queue;
-    int i, size, *op, op_id;
-    int fact_id;
+    int fact_id, op_id;
     plan_cost_t value;
     plan_heur_relax_fact_t *fact;
 
@@ -44,10 +43,7 @@
 
         PLAN_HEUR_RELAX_EXPLORE_CHECK_GOAL;
 
-        size = relax->cref.fact_pre[fact_id].size;
-        op   = relax->cref.fact_pre[fact_id].op;
-        for (i = 0; i < size; ++i){
-            op_id = op[i];
+        PLAN_ARR_INT_FOR_EACH(relax->cref.fact_pre + fact_id, op_id){
             PLAN_HEUR_RELAX_EXPLORE_OP_ADD;
         }
     }

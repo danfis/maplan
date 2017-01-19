@@ -88,7 +88,7 @@ struct _private_t {
     plan_ma_state_t *ma_state;
     plan_heur_relax_t relax;
     plan_op_id_tr_t op_id_tr;
-    plan_oparr_t public_op; /*!< List of public operators */
+    plan_arr_int_t public_op; /*!< List of public operators */
     int *updated_ops;       /*!< Array for operators that were updated */
     plan_heur_relax_op_t *opcmp; /*!< Array for comparing operators before
                                       and after change */
@@ -454,15 +454,12 @@ static void privateInit(private_t *private,
                       prob->var, prob->var_size, prob->goal, op, op_size, 0);
 
     // Get IDs of all public operators
-    private->public_op.op = BOR_ALLOC_ARR(int, op_size);
-    private->public_op.size = 0;
+    planArrIntInit(&private->public_op, 2);
     for (i = 0; i < op_size; ++i){
         if (!op[i].is_private){
-            private->public_op.op[private->public_op.size++] = i;
+            planArrIntAdd(&private->public_op, i);
         }
     }
-    private->public_op.op = BOR_REALLOC_ARR(private->public_op.op, int,
-                                            private->public_op.size);
 
     planOpIdTrInit(&private->op_id_tr, op, op_size);
     planProblemDestroyOps(op, op_size);
@@ -478,8 +475,7 @@ static void privateFree(private_t *private)
 {
     planHeurRelaxFree(&private->relax);
     planOpIdTrFree(&private->op_id_tr);
-    if (private->public_op.op)
-        BOR_FREE(private->public_op.op);
+    planArrIntFree(&private->public_op);
     if (private->updated_ops)
         BOR_FREE(private->updated_ops);
     if (private->opcmp)
@@ -698,7 +694,7 @@ static void sendHMaxEmptyResponse(plan_ma_comm_t *comm,
 static void sendHMaxResponse(private_t *private, plan_ma_comm_t *comm,
                              int agent_id)
 {
-    int i, op_id;
+    int op_id;
     plan_cost_t value;
     plan_ma_msg_t *msg;
     plan_ma_msg_op_t *add_op;
@@ -708,8 +704,7 @@ static void sendHMaxResponse(private_t *private, plan_ma_comm_t *comm,
                        planMACommId(comm));
 
     // Check all public operators and send all that were changed
-    for (i = 0; i < private->public_op.size; ++i){
-        op_id = private->public_op.op[i];
+    PLAN_ARR_INT_FOR_EACH(&private->public_op, op_id){
         if (private->opcmp[op_id].value == private->relax.op[op_id].value)
             continue;
         if (private->relax.op[op_id].unsat > 0)
@@ -924,17 +919,14 @@ static void sendGoalZoneResponse(private_t *private, plan_ma_comm_t *comm,
                                  int agent_id)
 {
     plan_ma_msg_t *msg;
-    int i, len, *ops, op_id;
+    int op_id;
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_GOAL_ZONE_RESPONSE,
                        planMACommId(comm));
 
     // Add operators that in goal-zone
-    len = private->public_op.size;
-    ops = private->public_op.op;
-    for (i = 0; i < len; ++i){
-        op_id = ops[i];
+    PLAN_ARR_INT_FOR_EACH(&private->public_op, op_id){
         if (private->cut.op[op_id].state == CUT_GOAL_ZONE){
             private->cut.op[op_id].state = CUT_OP_DONE;
             op_id = private->relax.cref.op_id[op_id];
@@ -1084,17 +1076,14 @@ static void sendFindCutResponse(private_t *private, plan_ma_comm_t *comm,
                                 int agent_id)
 {
     plan_ma_msg_t *msg;
-    int i, len, *ops, op_id;
+    int op_id;
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_FIND_CUT_RESPONSE,
                        planMACommId(comm));
 
     // Add operators that were discovered in start-zone
-    len = private->public_op.size;
-    ops = private->public_op.op;
-    for (i = 0; i < len; ++i){
-        op_id = ops[i];
+    PLAN_ARR_INT_FOR_EACH(&private->public_op, op_id){
         if (private->cut.op[op_id].state == CUT_START_ZONE){
             private->cut.op[op_id].state = CUT_OP_DONE;
             op_id = private->relax.cref.op_id[op_id];
@@ -1239,15 +1228,14 @@ static void sendCutResponse(private_t *private, plan_ma_comm_t *comm,
                             int agent_id)
 {
     plan_ma_msg_t *msg;
-    int i, op_id;
+    int op_id;
 
     msg = planMAMsgNew(PLAN_MA_MSG_HEUR,
                        PLAN_MA_MSG_HEUR_LM_CUT_CUT_RESPONSE,
                        planMACommId(comm));
 
     // Add all operators from cut
-    for (i = 0; i < private->public_op.size; ++i){
-        op_id = private->public_op.op[i];
+    PLAN_ARR_INT_FOR_EACH(&private->public_op, op_id){
         if (private->cut.op[op_id].in_cut){
             op_id = planOpIdTrGlob(&private->op_id_tr, op_id);
             planMAMsgOpSetOpId(planMAMsgAddOp(msg), op_id);
@@ -1346,7 +1334,7 @@ static void hmaxResetNonSupportedOps(plan_heur_relax_t *relax,
                                      int *updated_ops,
                                      int *updated_ops_size)
 {
-    int op_id, i, len, *facts, fact_id, supp;
+    int op_id, fact_id, supp;
     plan_heur_relax_op_t *op;
     plan_cost_t value;
 
@@ -1358,10 +1346,7 @@ static void hmaxResetNonSupportedOps(plan_heur_relax_t *relax,
         // Find biggest value and remember that fact as supporter
         value = -1;
         supp = -1;
-        len = relax->cref.op_pre[op_id].size;
-        facts = relax->cref.op_pre[op_id].fact;
-        for (i = 0; i < len; ++i){
-            fact_id = facts[i];
+        PLAN_ARR_INT_FOR_EACH(relax->cref.op_pre + op_id, fact_id){
             if (relax->fact[fact_id].value > value){
                 value = relax->fact[fact_id].value;
                 supp = fact_id;
@@ -1404,8 +1389,7 @@ static void cutMarkGoalZone(cut_t *cut, const plan_heur_relax_t *relax,
                             int goal_id)
 {
     bor_lifo_t lifo;
-    int fact_id;
-    int i, len, *ops, op_id;
+    int fact_id, op_id;
     plan_heur_relax_op_t *op;
 
     borLifoInit(&lifo, sizeof(int));
@@ -1415,10 +1399,7 @@ static void cutMarkGoalZone(cut_t *cut, const plan_heur_relax_t *relax,
         fact_id = *(int *)borLifoBack(&lifo);
         borLifoPop(&lifo);
 
-        len = relax->cref.fact_eff[fact_id].size;
-        ops = relax->cref.fact_eff[fact_id].op;
-        for (i = 0; i < len; ++i){
-            op_id = ops[i];
+        PLAN_ARR_INT_FOR_EACH(relax->cref.fact_eff + fact_id, op_id){
             op = relax->op + op_id;
             if (cut->op[op_id].state == 0 && op->cost == 0){
                 cut->op[op_id].state = CUT_GOAL_ZONE;
@@ -1447,12 +1428,9 @@ static void cutMarkGoalZoneOp(cut_t *cut, const plan_heur_relax_t *relax,
 static void cutFindAddEff(cut_t *cut, const plan_heur_relax_t *relax,
                           int op_id, bor_lifo_t *lifo)
 {
-    int i, len, *facts, fact_id;
+    int fact_id;
 
-    len = relax->cref.op_eff[op_id].size;
-    facts = relax->cref.op_eff[op_id].fact;
-    for (i = 0; i < len; ++i){
-        fact_id = facts[i];
+    PLAN_ARR_INT_FOR_EACH(relax->cref.op_eff + op_id, fact_id){
         if (cut->fact[fact_id].state == CUT_GOAL_ZONE){
             cut->op[op_id].in_cut = 1;
             cut->min_cut = BOR_MIN(cut->min_cut, relax->op[op_id].cost);
@@ -1467,18 +1445,14 @@ static void cutFindAddEff(cut_t *cut, const plan_heur_relax_t *relax,
 static void cutFindLoop(cut_t *cut, const plan_heur_relax_t *relax,
                         bor_lifo_t *lifo)
 {
-    int fact_id;
-    int i, len, *ops, op_id;
+    int fact_id, op_id;
     plan_heur_relax_op_t *op;
 
     while (!borLifoEmpty(lifo)){
         fact_id = *(int *)borLifoBack(lifo);
         borLifoPop(lifo);
 
-        len = relax->cref.fact_pre[fact_id].size;
-        ops = relax->cref.fact_pre[fact_id].op;
-        for (i = 0; i < len; ++i){
-            op_id = ops[i];
+        PLAN_ARR_INT_FOR_EACH(relax->cref.fact_pre + fact_id, op_id){
             op = relax->op + op_id;
             if (cut->op[op_id].state == 0 && op->supp == fact_id){
                 cut->op[op_id].state = CUT_START_ZONE;

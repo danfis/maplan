@@ -28,8 +28,8 @@ struct _plan_heur_ma_ff_t {
     plan_heur_t heur;
     plan_heur_relax_t relax;
 
-    plan_state_t *state;       /*!< State for which the heuristic is computed */
-    plan_oparr_t relaxed_plan; /*!< Relaxed plan computed on all operators.
+    plan_state_t *state; /*!< State for which the heuristic is computed */
+    plan_arr_int_t relaxed_plan; /*!< Relaxed plan computed on all operators.
                                     It means that the operators are
                                     identified by its global ID */
 
@@ -111,7 +111,7 @@ plan_heur_t *planHeurMARelaxFFNew(const plan_problem_t *prob)
 
     heur->state = planStateNew(prob->var_size);
 
-    heur->relaxed_plan.op = NULL;
+    heur->relaxed_plan.arr = NULL;
     heur->relaxed_plan.size = 0;
 
     heur->peer_op = borRBTreeIntNew();
@@ -141,8 +141,8 @@ static void heurDel(plan_heur_t *_heur)
     planHeurRelaxFree(&heur->relax);
 
     planStateDel(heur->state);
-    if (heur->relaxed_plan.op)
-        BOR_FREE(heur->relaxed_plan.op);
+    if (heur->relaxed_plan.arr)
+        BOR_FREE(heur->relaxed_plan.arr);
 
     while ((n = borRBTreeIntExtractMin(heur->peer_op)) != NULL){
         BOR_FREE(n);
@@ -163,16 +163,16 @@ static int maAddOpToRelaxedPlan(plan_heur_ma_ff_t *ma, int id, int cost)
     if (ma->relaxed_plan.size <= id){
         i = ma->relaxed_plan.size;
         ma->relaxed_plan.size = id + 1;
-        ma->relaxed_plan.op = BOR_REALLOC_ARR(ma->relaxed_plan.op, int,
-                                              ma->relaxed_plan.size);
+        ma->relaxed_plan.arr = BOR_REALLOC_ARR(ma->relaxed_plan.arr, int,
+                                               ma->relaxed_plan.size);
         // Initialize the newly allocated memory
         for (; i < ma->relaxed_plan.size; ++i){
-            ma->relaxed_plan.op[i] = -1;
+            ma->relaxed_plan.arr[i] = -1;
         }
     }
 
-    if (ma->relaxed_plan.op[id] == -1){
-        ma->relaxed_plan.op[id] = cost;
+    if (ma->relaxed_plan.arr[id] == -1){
+        ma->relaxed_plan.arr[id] = cost;
         return 0;
     }
 
@@ -183,7 +183,7 @@ static int maAddPeerOp(plan_heur_ma_ff_t *ma, int id)
 {
     bor_rbtree_int_node_t *n;
 
-    if (id < ma->relaxed_plan.size && ma->relaxed_plan.op[id] >= 0)
+    if (id < ma->relaxed_plan.size && ma->relaxed_plan.arr[id] >= 0)
         return -1;
 
     n = borRBTreeIntInsert(ma->peer_op, id, ma->pre_peer_op);
@@ -231,8 +231,8 @@ static void maHeur(plan_heur_ma_ff_t *heur,
     plan_cost_t hval = 0;
 
     for (i = 0; i < heur->relaxed_plan.size; ++i){
-        if (heur->relaxed_plan.op[i] > 0)
-            hval += heur->relaxed_plan.op[i];
+        if (heur->relaxed_plan.arr[i] > 0)
+            hval += heur->relaxed_plan.arr[i];
     }
 
     res->heur = hval;
@@ -342,7 +342,7 @@ static int planHeurRelaxFFMA(plan_heur_t *_heur,
 
     // Reset relaxed plan
     for (i = 0; i < heur->relaxed_plan.size; ++i)
-        heur->relaxed_plan.op[i] = -1;
+        heur->relaxed_plan.arr[i] = -1;
 
     // Explore projected state space
     maExploreLocal(heur, comm, NULL, res);

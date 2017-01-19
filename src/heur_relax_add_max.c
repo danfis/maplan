@@ -108,3 +108,10 @@ plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
     return heurNew(var, var_size, goal, op, op_size,
                    PLAN_HEUR_RELAX_TYPE_MAX, flags);
 }
+
+plan_heur_t *planHeurH2MaxNew(const plan_problem_t *p, unsigned flags)
+{
+    return heurNew(p->var, p->var_size, p->goal, p->op, p->op_size,
+                   PLAN_HEUR_RELAX_TYPE_MAX,
+                   flags | PLAN_HEUR_H2);
+}

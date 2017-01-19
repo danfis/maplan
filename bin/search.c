@@ -568,7 +568,7 @@ static plan_heur_t *_heurNew(const options_t *o,
     }else if (strcmp(name, "dtg") == 0){
         heur = planHeurDTGNew(prob->var, prob->var_size,
                               prob->goal, op, op_size);
-    }else if (strcmp(name, "h2") == 0){
+    }else if (strcmp(name, "max2") == 0){
         heur = planHeurH2MaxNew(prob, flags);
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob->var, prob->var_size,
@@ -581,6 +581,8 @@ static plan_heur_t *_heurNew(const options_t *o,
             flags2 |= PLAN_LANDMARK_CACHE_PRUNE;
         heur = planHeurLMCutIncCacheNew(prob->var, prob->var_size,
                                         prob->goal, op, op_size, flags, flags2);
+    }else if (strcmp(name, "lm-cut2") == 0){
+        heur = planHeurH2LMCutNew(prob, flags);
     }else if (strcmp(name, "flow") == 0){
         if (optionsHeurOpt(o, "ilp"))
             flags |= PLAN_HEUR_FLOW_ILP;

@@ -57,9 +57,12 @@ static int heur(const char *hname)
                                    problem->goal,
                                    problem->op, problem->op_size, 0);
     }else if (strcmp(hname, "max") == 0){
+        /*
         heur = planHeurRelaxMaxNew(problem->var, problem->var_size,
                                    problem->goal,
                                    problem->op, problem->op_size, 0);
+        */
+        heur = planHeurMaxNew(problem, 0);
     }else if (strcmp(hname, "ff") == 0){
         heur = planHeurRelaxFFNew(problem->var, problem->var_size,
                                   problem->goal,
@@ -104,8 +107,13 @@ static int heur(const char *hname)
 
     planHeurDel(heur);
     borTimerStop(&timer);
-    printf("%-20s\t% 4d\t%.8fs\n", hname, (int)res.heur,
-            borTimerElapsedInSF(&timer));
+    printf("%-20s", hname);
+    if (res.heur == PLAN_HEUR_DEAD_END){
+        printf("\t  DE");
+    }else{
+        printf("\t% 4d", (int)res.heur);
+    }
+    printf("\t%.8fs\n", borTimerElapsedInSF(&timer));
     return 0;
 }
 
@@ -144,6 +152,8 @@ int main(int argc, char *argv[])
     H("pot");
     H("pot-all-synt-states");
 
+    if (problem)
+        planProblemDel(problem);
     borTimerStop(&timer);
     printf("\nOverall Time: %f\n", borTimerElapsedInSF(&timer));
     return 0;

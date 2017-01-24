@@ -73,6 +73,7 @@ static void planHeurLMCutNodeIncCache(plan_heur_t *_heur,
 static void planHeurLMCutStateInc(plan_heur_t *_heur,
                                   const plan_state_t *state,
                                   plan_heur_res_t *res);
+void planHeurLMCutDebug(const plan_heur_lm_cut_t *h);
 
 static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
                              const plan_part_state_t *goal,
@@ -82,6 +83,7 @@ static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
     plan_heur_lm_cut_t *heur;
 
     heur = BOR_ALLOC(plan_heur_lm_cut_t);
+    bzero(heur, sizeof(*heur));
     if (inc == 1){
         _planHeurInit(&heur->heur, planHeurLMCutDel,
                       planHeurLMCutStateInc,
@@ -271,6 +273,11 @@ static plan_cost_t updateCutCost(const plan_arr_int_t *cut,
     PLAN_ARR_INT_FOR_EACH(cut, op_id)
         cut_cost = BOR_MIN(cut_cost, op[op_id].cost);
 
+    if (cut_cost <= 0){
+        fprintf(stderr, "ERROR: Invalid cut (cost: %d)\n", cut_cost);
+        exit(-1);
+    }
+
     // Substract the minimal cost from all cut operators
     PLAN_ARR_INT_FOR_EACH(cut, op_id){
         op[op_id].cost  -= cut_cost;
@@ -367,6 +374,30 @@ static plan_cost_t applyInitLandmarks(plan_heur_lm_cut_t *heur,
     return h;
 }
 
+static void updateOpSupp(plan_heur_lm_cut_t *h)
+{
+    /*
+    int op_id;
+    int i, fact_id, value;
+
+    for (op_id = 0; op_id < h->relax.cref.op_size; ++op_id){
+        if (h->relax.op[op_id].supp == -1)
+            continue;
+        if (op_id <= 17)
+            continue;
+        value = h->relax.fact[h->relax.op[op_id].supp].value;
+
+        for (i = h->relax.cref.op_pre[op_id].size - 1; i >= 0; --i){
+            fact_id = h->relax.cref.op_pre[op_id].arr[i];
+            if (h->relax.fact[fact_id].value == value){
+                h->relax.op[op_id].supp = fact_id;
+                break;
+            }
+        }
+    }
+    */
+}
+
 static void lmCutState(plan_heur_lm_cut_t *heur, const plan_state_t *state,
                        const plan_landmark_set_t *ldms, int inc_op_id,
                        plan_heur_res_t *res)
@@ -392,6 +423,7 @@ static void lmCutState(plan_heur_lm_cut_t *heur, const plan_state_t *state,
         // Mark facts connected with a goal by zero-cost operators in
         // justification graph.
         markGoalZone(heur);
+        updateOpSupp(heur);
 
         // Find operators that are reachable from the initial state and are
         // connected with the goal-zone facts in justification graph.
@@ -528,4 +560,53 @@ static void planHeurLMCutStateInc(plan_heur_t *_heur,
     fprintf(stderr, "Error: Incremental LM-Cut cannot be called via"
                     " planHeurState() function!\n");
     exit(-1);
+}
+
+void planHeurLMCutDebug(const plan_heur_lm_cut_t *h)
+{
+    int i, j, f1, f2;
+
+    fprintf(stderr, "Cut:");
+    for (i = 0; i < h->cut.size; ++i){
+        fprintf(stderr, " %d (op_id: %d, s: %d)", h->cut.arr[i],
+                h->relax.cref.op_id[h->cut.arr[i]],
+                h->relax.op[h->cut.arr[i]].supp);
+    }
+    fprintf(stderr, "\n");
+
+    for (i = 0; i < h->relax.cref.op_size; ++i){
+        fprintf(stderr, "op[%03d/%03d]: supp: %d", i,
+                h->relax.cref.op_id[i], h->relax.op[i].supp);
+        fprintf(stderr, ", pre:");
+        for (j = 0; j < h->relax.cref.op_pre[i].size; ++j){
+            fprintf(stderr, " %d(%d)", h->relax.cref.op_pre[i].arr[j],
+                    h->relax.fact[h->relax.cref.op_pre[i].arr[j]].value);
+        }
+        fprintf(stderr, ", eff:");
+        for (j = 0; j < h->relax.cref.op_eff[i].size; ++j){
+            fprintf(stderr, " %d(%d)", h->relax.cref.op_eff[i].arr[j],
+                    h->relax.fact[h->relax.cref.op_eff[i].arr[j]].value);
+        }
+        fprintf(stderr, ", cost: %d, value: %d",
+                h->relax.op[i].cost, h->relax.op[i].value);
+        fprintf(stderr, "\n");
+    }
+    for (i = 0; i < h->relax.cref.fact_size; ++i){
+        f1 = f2 = i;
+        if (i < h->relax.cref.fact_id.fact_size)
+            planFactIdFromFactId(&h->relax.cref.fact_id, i, &f1, &f2);
+        fprintf(stderr, "fact[%03d]: value: %d, supp: %d, gz: %d, (%d/%d)\n",
+                i, h->relax.fact[i].value, h->relax.fact[i].supp,
+                h->fact_goal_zone[i], f1, f2);
+    }
+    fprintf(stderr, "Goal: value: %d, supp: %d, gz:",
+            h->relax.fact[h->relax.cref.goal_id].value,
+            h->relax.fact[h->relax.cref.goal_id].supp);
+    for (i = 0; i < h->relax.cref.fact_size; ++i){
+        if (h->fact_goal_zone[i])
+            fprintf(stderr, " %d", i);
+    }
+    fprintf(stderr, "\n");
+    fprintf(stderr, "--------\n");
+    fflush(stderr);
 }

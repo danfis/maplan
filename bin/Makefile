@@ -23,12 +23,14 @@ endif
 OBJS  = search.o
 OBJS += options.o
 
-TARGETS = search
+TARGETS = search init-state-heur
 
 all: $(TARGETS)
 
 search: ../libplan.a $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
+init-state-heur: ../libplan.a init-state-heur.c
+	$(CC) $(CFLAGS) -o $@ init-state-heur.c $(LDFLAGS)
 ma-search: ma-search.c ../libplan.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 

@@ -46,6 +46,7 @@ static void initVar(plan_fact_id_t *fid, const plan_var_t *var, int var_size)
 
     // remember number of values
     fid->fact_size = id;
+    fid->fact1_size = id;
     fid->var_size = var_size;
 }
 
@@ -99,6 +100,26 @@ void planFactIdFree(plan_fact_id_t *fid)
         BOR_FREE(fid->state_buf);
     if (fid->part_state_buf != NULL)
         BOR_FREE(fid->part_state_buf);
+}
+
+void planFactIdFromFactId(const plan_fact_id_t *f, int fid,
+                          int *fid1, int *fid2)
+{
+    int i, id;
+
+    if (fid < f->fact1_size || fid >= f->fact_size){
+        *fid1 = *fid2 = fid;
+        return;
+    }
+
+    for (i = 0; i < f->fact1_size; ++i){
+        id = fid - f->fact_offset[i];
+        if (id < f->fact1_size){
+            *fid1 = i;
+            *fid2 = id;
+            return;
+        }
+    }
 }
 
 static int __planFactIdState2(const plan_fact_id_t *f,

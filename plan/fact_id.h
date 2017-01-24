@@ -39,6 +39,7 @@ struct _plan_fact_id_t {
     int var_size;
     int fact_size;
     int *fact_offset;
+    int fact1_size;
 
     int *state_buf;
     int *part_state_buf;
@@ -89,6 +90,13 @@ _bor_inline int planFactIdVar2(const plan_fact_id_t *f,
  */
 _bor_inline int planFactIdFact2(const plan_fact_id_t *f,
                                 int fid1, int fid2);
+
+
+/**
+ * Takes fact ID and converts it back to a pair of facts.
+ */
+void planFactIdFromFactId(const plan_fact_id_t *f, int fid,
+                          int *fid1, int *fid2);
 
 /**
  * Returns a list of fact IDs corresponding to the state.

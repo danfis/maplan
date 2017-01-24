@@ -29,3 +29,17 @@ void planArrIntSort(plan_arr_int_t *arr)
 {
     qsort(arr->arr, arr->size, sizeof(int), intCmp);
 }
+
+void planArrIntUniq(plan_arr_int_t *arr)
+{
+    int i, ins;
+
+    if (arr->size <= 1)
+        return;
+
+    for (i = ins = 1; i < arr->size; ++i){
+        if (arr->arr[i] != arr->arr[i - 1])
+            arr->arr[ins++] = arr->arr[i];
+    }
+    arr->size = ins;
+}

@@ -33,6 +33,11 @@ BOR_VARR_DECL(int, plan_arr_int_t, planArrInt)
  */
 void planArrIntSort(plan_arr_int_t *arr);
 
+/**
+ * Same as uniq(1)
+ */
+void planArrIntUniq(plan_arr_int_t *arr);
+
 #define PLAN_ARR_INT_FOR_EACH(ARR, VAL) \
     for (int ___i = 0, ___size = (ARR)->size, *___a = (ARR)->arr; \
          ___i < ___size && ((VAL) = ___a[___i], 1); ++___i)

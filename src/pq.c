@@ -170,6 +170,9 @@ static void planPQBucketQueueUpdate(plan_pq_bucket_queue_t *q,
     bucket = q->bucket + el->key;
     bucket->el[el->conn.bucket] = bucket->el[--bucket->size];
     bucket->el[el->conn.bucket]->conn.bucket = el->conn.bucket;
+    --q->size;
+    if (q->size == 0)
+        q->lowest_key = q->bucket_size;
     planPQBucketQueuePush(q, key, el);
 }
 

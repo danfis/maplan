@@ -81,15 +81,11 @@ static void loadOpFact(plan_heur_max_t *h, const plan_problem_t *p);
 plan_heur_t *planHeurMaxNew(const plan_problem_t *p, unsigned flags)
 {
     plan_heur_max_t *h;
-    unsigned fact_id_flags = 0;
-
-    if (flags & PLAN_HEUR_H2)
-        fact_id_flags = PLAN_FACT_ID_H2;
 
     h = BOR_ALLOC(plan_heur_max_t);
     bzero(h, sizeof(*h));
     _planHeurInit(&h->heur, heurDel, heurVal, NULL);
-    planFactIdInit(&h->fact_id, p->var, p->var_size, fact_id_flags);
+    planFactIdInit(&h->fact_id, p->var, p->var_size, 0);
     loadOpFact(h, p);
 
     return &h->heur;
@@ -222,6 +218,7 @@ static void loadOpFact(plan_heur_max_t *h, const plan_problem_t *p)
     h->op_goal = h->op_size - 1;
 
     for (op_id = 0; op_id < p->op_size; ++op_id){
+        // TODO: Conditional effects
         op = h->op + op_id;
         op->eff.arr = planFactIdPartState2(&h->fact_id, p->op[op_id].eff,
                                            &size);

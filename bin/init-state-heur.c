@@ -69,9 +69,12 @@ static int heur(const char *hname)
                                   problem->goal,
                                   problem->op, problem->op_size, 0);
     }else if (strcmp(hname, "lm-cut") == 0){
+        /*
         heur = planHeurLMCutNew(problem->var, problem->var_size,
                                 problem->goal,
                                 problem->op, problem->op_size, 0);
+        */
+        heur = planHeurLMCutXNew(problem, 0);
     }else if (strcmp(hname, "max2") == 0){
         heur = planHeurMax2New(problem, 0);
         //heur = planHeurH2MaxNew(problem, 0);
@@ -131,8 +134,8 @@ int main(int argc, char *argv[])
 {
     bor_timer_t timer;
 
-    if (argc != 2){
-        fprintf(stderr, "Usage: %s problem.proto\n", argv[0]);
+    if (argc < 2 || argc > 3){
+        fprintf(stderr, "Usage: %s problem.proto [heur-name]\n", argv[0]);
         return -1;
     }
 
@@ -141,20 +144,24 @@ int main(int argc, char *argv[])
         return -1;
 
     printf("\n");
-    H("goalcount");
-    H("add");
-    H("ff");
+    if (argc == 2){
+        H("goalcount");
+        H("add");
+        H("ff");
 
-    printf("\n");
-    H("max");
-    H("max2");
-    H("lm-cut");
-    H("lm-cut2");
-    H("flow");
-    H("flow-ilp");
-    H("flow-lm-cut");
-    H("pot");
-    H("pot-all-synt-states");
+        printf("\n");
+        H("max");
+        H("max2");
+        H("lm-cut");
+        H("lm-cut2");
+        H("flow");
+        H("flow-ilp");
+        H("flow-lm-cut");
+        H("pot");
+        H("pot-all-synt-states");
+    }else{
+        H(argv[2]);
+    }
 
     if (problem)
         planProblemDel(problem);

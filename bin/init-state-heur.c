@@ -42,6 +42,7 @@ static int loadProblem(const char *fn)
 static int heur(const char *hname)
 {
     bor_timer_t timer;
+    double build_time;
     plan_heur_t *heur;
     plan_heur_res_t res;
     PLAN_STATE_STACK(state, problem->var_size);
@@ -72,7 +73,8 @@ static int heur(const char *hname)
                                 problem->goal,
                                 problem->op, problem->op_size, 0);
     }else if (strcmp(hname, "max2") == 0){
-        heur = planHeurH2MaxNew(problem, 0);
+        heur = planHeurMax2New(problem, 0);
+        //heur = planHeurH2MaxNew(problem, 0);
     }else if (strcmp(hname, "lm-cut2") == 0){
         heur = planHeurH2LMCutNew(problem, 0);
     }else if (strcmp(hname, "flow") == 0){
@@ -101,6 +103,8 @@ static int heur(const char *hname)
                                     &state,
                                     PLAN_HEUR_POT_ALL_SYNTACTIC_STATES);
     }
+    borTimerStop(&timer);
+    build_time = borTimerElapsedInSF(&timer);
 
     planHeurResInit(&res);
     planHeurState(heur, &state, &res);
@@ -113,7 +117,7 @@ static int heur(const char *hname)
     }else{
         printf("\t% 4d", (int)res.heur);
     }
-    printf("\t%.8fs\n", borTimerElapsedInSF(&timer));
+    printf("\t%.8fs / %.8fs\n", borTimerElapsedInSF(&timer), build_time);
     return 0;
 }
 

@@ -55,6 +55,7 @@ OBJS += heur_relax
 OBJS += heur_goalcount
 OBJS += heur_relax_add_max
 OBJS += heur_max
+OBJS += heur_max2
 OBJS += heur_relax_ff
 OBJS += heur_lm_cut
 OBJS += heur_dtg

@@ -22,6 +22,7 @@ CHECK_REG=cu/check-regressions
 CHECK_TS ?=
 
 TARGETS = test optimal-cost msg-schema-gen msg-schema-load
+TARGETS += test-heur
 
 OBJS  = load-from-file.o
 OBJS += state.o
@@ -69,6 +70,8 @@ msg-schema-gen: msg-schema-gen.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 msg-schema-load: msg-schema-load.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+test-heur: test-heur.c ../libplan.a submodule
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -111,4 +114,8 @@ clean:
 	rm -f regressions/temp.*
 	rm -f $(BENCH_HEAP)
 
-.PHONY: all clean check check-valgrind cu
+submodule:
+	cd .. && git submodule init
+	cd .. && git submodule update
+
+.PHONY: all clean check check-valgrind cu submodule

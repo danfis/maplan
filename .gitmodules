@@ -14,3 +14,6 @@
 [submodule "third-party/nanomsg4py"]
 	path = third-party/nanomsg4py
 	url = https://github.com/danfis/nanomsg4py
+[submodule "testsuites/pddl-data"]
+	path = testsuites/pddl-data
+	url = https://github.com/danfis/pddl-data

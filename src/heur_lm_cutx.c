@@ -55,6 +55,12 @@ typedef struct _fact_t fact_t;
     } \
     } while (0)
 
+#define SET_OP_SUPP(h, op, fact_id) \
+    do { \
+        (op)->supp = (fact_id); \
+        (h)->fact_supp[fact_id] = 1; \
+    } while (0)
+
 struct _plan_heur_lm_cut_t {
     plan_heur_t heur;
     plan_fact_id_t fact_id;
@@ -63,6 +69,7 @@ struct _plan_heur_lm_cut_t {
     int fact_size;
     int fact_goal;
     int fact_nopre;
+    int *fact_supp;
 
     op_t *op;
     int op_size;
@@ -97,6 +104,7 @@ plan_heur_t *planHeurLMCutXNew(const plan_problem_t *p, unsigned flags)
     _planHeurInit(&h->heur, heurDel, heurVal, NULL);
     planFactIdInit(&h->fact_id, p->var, p->var_size, 0);
     loadOpFact(h, p);
+    h->fact_supp = BOR_ALLOC_ARR(int, h->fact_size);
 
     h->fact_state = BOR_ALLOC_ARR(int, h->fact_size);
     planArrIntInit(&h->queue, h->fact_size / 2);
@@ -111,12 +119,13 @@ static void heurDel(plan_heur_t *_heur)
     int i;
 
     _planHeurFree(&h->heur);
-    planFactIdFree(&h->fact_id);
 
     for (i = 0; i < h->fact_size; ++i)
         factFree(h->fact + i);
     if (h->fact)
         BOR_FREE(h->fact);
+    if (h->fact_supp)
+        BOR_FREE(h->fact_supp);
 
     for (i = 0; i < h->op_size; ++i)
         opFree(h->op + i);
@@ -128,6 +137,7 @@ static void heurDel(plan_heur_t *_heur)
     planArrIntFree(&h->queue);
     planPQFree(&h->pq);
 
+    planFactIdFree(&h->fact_id);
     BOR_FREE(h);
 }
 
@@ -138,6 +148,7 @@ static void initFacts(plan_heur_lm_cut_t *h)
     for (i = 0; i < h->fact_size; ++i){
         FVALUE_INIT(h->fact + i);
     }
+    bzero(h->fact_supp, sizeof(int) * h->fact_size);
 }
 
 static void initOps(plan_heur_lm_cut_t *h, int init_cost)
@@ -205,29 +216,12 @@ static void hMaxFull(plan_heur_lm_cut_t *h, const plan_state_t *state,
                 // Set as supporter the last fact that enabled this
                 // operator (it must be one of those that have maximum
                 // value
-                op->supp = fact - h->fact;
+                SET_OP_SUPP(h, op, fact - h->fact);
                 enqueueOpEffects(h, op, value, &pq);
             }
         }
     }
     planPQFree(&pq);
-}
-
-static void setSupp(plan_heur_lm_cut_t *h)
-{
-    op_t *op;
-    int fact_id, op_id, fvalue;
-
-    for (fact_id = 0; fact_id < h->fact_size; ++fact_id){
-        fvalue = FVALUE(h->fact + fact_id);
-        PLAN_ARR_INT_FOR_EACH(&h->fact[fact_id].pre_op, op_id){
-            op = h->op + op_id;
-            if (op->unsat > 0)
-                continue;
-            if (op->supp == -1 || FVALUE(h->fact + op->supp) < fvalue)
-                op->supp = fact_id;
-        }
-    }
 }
 
 #define CUT_UNDEF 0
@@ -293,8 +287,10 @@ static int findCut(plan_heur_lm_cut_t *h)
                 continue;
             PLAN_ARR_INT_FOR_EACH(&op->eff, next){
                 if (h->fact_state[next] == CUT_UNDEF){
-                    h->fact_state[next] = CUT_INIT;
-                    planArrIntAdd(&h->queue, next);
+                    if (h->fact_supp[next]){
+                        h->fact_state[next] = CUT_INIT;
+                        planArrIntAdd(&h->queue, next);
+                    }
 
                 }else if (h->fact_state[next] == CUT_GOAL){
                     planArrIntAdd(&h->cut, op_id);
@@ -360,7 +356,6 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
     }
 
     while (FVALUE(h->fact + h->fact_goal) > 0){
-        //setSupp(h);
         res->heur += cut(h);
         hMaxFull(h, state, 0);
     }
@@ -374,6 +369,7 @@ static void opFree(op_t *op)
 static void factFree(fact_t *fact)
 {
     planArrIntFree(&fact->pre_op);
+    planArrIntFree(&fact->eff_op);
 }
 
 static void loadOpFact(plan_heur_lm_cut_t *h, const plan_problem_t *p)
@@ -419,7 +415,7 @@ static void loadOpFact(plan_heur_lm_cut_t *h, const plan_problem_t *p)
     // Set up goal operator
     op = h->op + h->op_goal;
     planArrIntAdd(&op->eff, h->fact_goal);
-    op->cost = 0;
+    op->op_cost = 0;
 
     PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, p->goal, fid)
         planArrIntAdd(&h->fact[fid].pre_op, h->op_goal);

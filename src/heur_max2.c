@@ -271,9 +271,8 @@ static void addPrevail(plan_heur_max2_t *h, int op_id, int fact_id)
     int size = op->eff.size;
     int i, fid;
 
-    // Just add the prevail condition and all its combinations with unary
-    // facts (those are always at the beggining of the array).
-    planArrIntAdd(&op->eff, fact_id);
+    // A all combinations of prevail and unary facts (those are always at
+    // the beggining of the array).
     for (i = 0; i < size && op->eff.arr[i] < h->fact_id.fact1_size; ++i){
         fid = planFactIdFact2(&h->fact_id, op->eff.arr[i], fact_id);
         planArrIntAdd(&op->eff, fid);
@@ -281,6 +280,7 @@ static void addPrevail(plan_heur_max2_t *h, int op_id, int fact_id)
 
     // Sort the effects so the first are unary facts -- we need to do this
     // because we rely on this later.
+    // TODO: I think we don't need this
     planArrIntSort(&op->eff);
 }
 

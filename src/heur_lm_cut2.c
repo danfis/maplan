@@ -52,6 +52,8 @@ struct _fact_t {
                                 precondition */
     plan_arr_int_t eff_op; /*!< Operators having this fact as its effect */
     plan_pq_el_t heap;     /*!< Connection to priority heap */
+    int supp_cnt;          /*!< Number of operators that have this fact as
+                                a supporter. */
 };
 typedef struct _fact_t fact_t;
 
@@ -76,17 +78,6 @@ typedef struct _fact_t fact_t;
     } \
     } while (0)
 
-#define SET_OP_SUPP(h, op, fact_id) \
-    do { \
-        (op)->supp = (fact_id); \
-        (h)->fact_supp[fact_id] = 1; \
-    } while (0)
-
-#define SET_OP_SUPP2(h, op, fact1, fact_id) \
-    do { \
-        (op)->supp2[fact1] = (fact_id); \
-        (h)->fact_supp[fact_id] = 1; \
-    } while (0)
 
 #define CUT_UNDEF 0
 #define CUT_INIT 1
@@ -183,8 +174,10 @@ static void initFacts(plan_heur_lm_cut2_t *h)
 {
     int i;
 
-    for (i = 0; i < h->fact_size; ++i)
+    for (i = 0; i < h->fact_size; ++i){
         FVALUE_INIT(h->fact + i);
+        h->fact[i].supp_cnt = 0;
+    }
 }
 
 static void initOps(plan_heur_lm_cut2_t *h, int init_cost)
@@ -219,7 +212,7 @@ static void addInitState(plan_heur_lm_cut2_t *h,
 static void enqueueOpEffects(plan_heur_lm_cut2_t *h, op_t *op,
                              int enable_fact, int fact_value, plan_pq_t *pq)
 {
-    op_base_t *op_base;
+    op_base_t *op_base = OPBASE_FROM_OP(h, op);
     fact_t *fact;
     op_t *child_op;
     int value = op->cost + fact_value;
@@ -227,9 +220,9 @@ static void enqueueOpEffects(plan_heur_lm_cut2_t *h, op_t *op,
 
     // Set supporter as the enabling fact
     op->supp = enable_fact;
+    ++h->fact[enable_fact].supp_cnt;
 
     // Check all base effects
-    op_base = OPBASE_FROM_OP(h, op);
     PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
         fact = h->fact + fact_id;
         if (FVALUE(fact) > value)
@@ -392,7 +385,8 @@ static void findCutOpExpand(plan_heur_lm_cut2_t *h, int op_id)
     int fact_id;
 
     PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
-        if (h->fact_state[fact_id] == CUT_UNDEF){
+        if (h->fact[fact_id].supp_cnt
+                && h->fact_state[fact_id] == CUT_UNDEF){
             h->fact_state[fact_id] = CUT_INIT;
             planArrIntAdd(&h->queue, fact_id);
         }
@@ -404,7 +398,8 @@ static void findCutOpExpand(plan_heur_lm_cut2_t *h, int op_id)
                 break;
 
             fact_id = planFactIdFact2(&h->fact_id, fact_id, op->ext_fact);
-            if (h->fact_state[fact_id] == CUT_UNDEF){
+            if (h->fact[fact_id].supp_cnt
+                    && h->fact_state[fact_id] == CUT_UNDEF){
                 h->fact_state[fact_id] = CUT_INIT;
                 planArrIntAdd(&h->queue, fact_id);
             }
@@ -468,11 +463,15 @@ static int findCut(plan_heur_lm_cut2_t *h)
             exit(-1);
         }
 
-        planArrIntAdd(&h->queue, fact_id);
-        h->fact_state[fact_id] = CUT_INIT;
+        if (h->fact[fact_id].supp_cnt){
+            planArrIntAdd(&h->queue, fact_id);
+            h->fact_state[fact_id] = CUT_INIT;
+        }
     }
-    planArrIntAdd(&h->queue, h->fact_nopre);
-    h->fact_state[h->fact_nopre] = CUT_INIT;
+    if (h->fact[h->fact_nopre].supp_cnt){
+        planArrIntAdd(&h->queue, h->fact_nopre);
+        h->fact_state[h->fact_nopre] = CUT_INIT;
+    }
 
     h->cut.size = 0;
     while (h->queue.size > 0){

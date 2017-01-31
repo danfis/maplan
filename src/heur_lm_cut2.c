@@ -319,17 +319,14 @@ static void markGoalZone(plan_heur_lm_cut2_t *h)
     }
 }
 
-static int findCutOpGoal(plan_heur_lm_cut2_t *h, int op_id)
-{
-    op_t *op = h->op + op_id;
 
-    if (op->goal_zone){
-        planArrIntAdd(&h->cut, op_id);
-        return op->cost;
-    }else{
-        return INT_MAX;
-    }
-}
+#define CUT_ENQUEUE_FACT(H, FID) \
+    do { \
+    if ((H)->fact[(FID)].supp_cnt && (H)->fact_state[(FID)] == CUT_UNDEF){ \
+        planArrIntAdd(&(H)->queue, FID); \
+        (H)->fact_state[(FID)] = CUT_INIT; \
+    } \
+    } while (0)
 
 static void findCutOpExpand(plan_heur_lm_cut2_t *h, int op_id)
 {
@@ -337,13 +334,8 @@ static void findCutOpExpand(plan_heur_lm_cut2_t *h, int op_id)
     op_base_t *op_base = OPBASE_FROM_OP(h, op);
     int fact_id;
 
-    PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
-        if (h->fact[fact_id].supp_cnt
-                && h->fact_state[fact_id] == CUT_UNDEF){
-            h->fact_state[fact_id] = CUT_INIT;
-            planArrIntAdd(&h->queue, fact_id);
-        }
-    }
+    PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id)
+        CUT_ENQUEUE_FACT(h, fact_id);
 
     if (OP_HAS_PARENT(op)){
         PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
@@ -351,53 +343,9 @@ static void findCutOpExpand(plan_heur_lm_cut2_t *h, int op_id)
                 break;
 
             fact_id = planFactIdFact2(&h->fact_id, fact_id, op->ext_fact);
-            if (h->fact[fact_id].supp_cnt
-                    && h->fact_state[fact_id] == CUT_UNDEF){
-                h->fact_state[fact_id] = CUT_INIT;
-                planArrIntAdd(&h->queue, fact_id);
-            }
+            CUT_ENQUEUE_FACT(h, fact_id);
         }
     }
-}
-
-static int findCutOp(plan_heur_lm_cut2_t *h, int op_id)
-{
-    op_t *op = h->op + op_id;
-    op_base_t *op_base = OPBASE_FROM_OP(h, op);
-    int fact_id;
-    int min_cost = INT_MAX;
-
-    PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
-        if (h->fact_state[fact_id] == CUT_UNDEF){
-            h->fact_state[fact_id] = CUT_INIT;
-            planArrIntAdd(&h->queue, fact_id);
-
-        }else if (h->fact_state[fact_id] == CUT_GOAL){
-            planArrIntAdd(&h->cut, op_id);
-            min_cost = BOR_MIN(min_cost, op->cost);
-            break;
-        }
-    }
-
-    if (op->parent >= 0){
-        PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
-            if (fact_id >= h->fact_id.fact1_size)
-                break;
-
-            fact_id = planFactIdFact2(&h->fact_id, fact_id, op->ext_fact);
-            if (h->fact_state[fact_id] == CUT_UNDEF){
-                h->fact_state[fact_id] = CUT_INIT;
-                planArrIntAdd(&h->queue, fact_id);
-
-            }else if (h->fact_state[fact_id] == CUT_GOAL){
-                planArrIntAdd(&h->cut, op_id);
-                min_cost = BOR_MIN(min_cost, op->cost);
-                break;
-            }
-        }
-    }
-
-    return min_cost;
 }
 
 /** Finds cut (and fills h->cut) and returns cost of the cut.
@@ -406,7 +354,7 @@ static int findCut(plan_heur_lm_cut2_t *h)
 {
     op_t *op, *child;
     int fact_id, op_id, child_id;
-    int cost, min_cost = INT_MAX;
+    int min_cost = INT_MAX;
 
     h->queue.size = 0;
     PLAN_ARR_INT_FOR_EACH(&h->state, fact_id){
@@ -415,16 +363,9 @@ static int findCut(plan_heur_lm_cut2_t *h)
                             "h^max!\n");
             exit(-1);
         }
-
-        if (h->fact[fact_id].supp_cnt){
-            planArrIntAdd(&h->queue, fact_id);
-            h->fact_state[fact_id] = CUT_INIT;
-        }
+        CUT_ENQUEUE_FACT(h, fact_id);
     }
-    if (h->fact[h->fact_nopre].supp_cnt){
-        planArrIntAdd(&h->queue, h->fact_nopre);
-        h->fact_state[h->fact_nopre] = CUT_INIT;
-    }
+    CUT_ENQUEUE_FACT(h, h->fact_nopre);
 
     h->cut.size = 0;
     while (h->queue.size > 0){
@@ -432,10 +373,9 @@ static int findCut(plan_heur_lm_cut2_t *h)
         PLAN_ARR_INT_FOR_EACH(&h->fact[fact_id].pre_op, op_id){
             op = h->op + op_id;
             if (op->supp == fact_id){
-                //cost = findCutOp(h, op_id);
-                //min_cost = BOR_MIN(min_cost, cost);
-                if ((cost = findCutOpGoal(h, op_id)) != INT_MAX){
-                    min_cost = BOR_MIN(min_cost, cost);
+                if (op->goal_zone){
+                    planArrIntAdd(&h->cut, op_id);
+                    min_cost = BOR_MIN(min_cost, op->cost);
                 }else{
                     findCutOpExpand(h, op_id);
                 }
@@ -444,10 +384,9 @@ static int findCut(plan_heur_lm_cut2_t *h)
             PLAN_ARR_INT_FOR_EACH(&op->child, child_id){
                 child = h->op + child_id;
                 if (child->supp == fact_id){
-                    //cost = findCutOp(h, child_id);
-                    //min_cost = BOR_MIN(min_cost, cost);
-                    if ((cost = findCutOpGoal(h, child_id)) != INT_MAX){
-                        min_cost = BOR_MIN(min_cost, cost);
+                    if (child->goal_zone){
+                        planArrIntAdd(&h->cut, child_id);
+                        min_cost = BOR_MIN(min_cost, child->cost);
                     }else{
                         findCutOpExpand(h, op_id);
                     }

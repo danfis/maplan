@@ -30,14 +30,15 @@ struct _op_base_t {
 typedef struct _op_base_t op_base_t;
 
 struct _op_t {
-    int parent;
-    plan_arr_int_t child;
-    int pre_size;
-    int ext_fact;
+    int parent;           /*!< ID of the parent operator or -1 */
+    plan_arr_int_t child; /*!< List of child operators */
+    int pre_size;         /*!< Number of preconditions */
+    int ext_fact;         /*!< Extension fact or -1 */
 
-    int unsat;
-    int cost;
-    int supp;
+    int unsat; /*!< Number of unsatisfied preconditions */
+    int cost;  /*!< Current cost */
+    int supp;  /*!< Supporter fact */
+    int goal_zone; /*!< True if the operator is connected to a goal zone */
 };
 typedef struct _op_t op_t;
 
@@ -191,6 +192,7 @@ static void initOps(plan_heur_lm_cut2_t *h, int init_cost)
         op->supp = -1;
         if (init_cost)
             op->cost = OPBASE_FROM_OP(h, op)->cost;
+        op->goal_zone = 0;
     }
 }
 
@@ -282,54 +284,26 @@ static void hMaxFull(plan_heur_lm_cut2_t *h, const plan_state_t *state,
     planPQFree(&pq);
 }
 
-#ifdef MARK_GOAL_RECURSIVE
-static void markGoalZoneRec(plan_heur_lm_cut2_t *h, int fact_id)
-{
-    fact_t *fact = h->fact + fact_id;
-    int op_id, child_id;
-    op_t *op, *child;
-
-    if (h->fact_state[fact_id] == CUT_GOAL)
-        return;
-
-    h->fact_state[fact_id] = CUT_GOAL;
-    PLAN_ARR_INT_FOR_EACH(&fact->eff_op, op_id){
-        op = h->op + op_id;
-        if (op->cost == 0 && op->supp >= 0)
-            markGoalZoneRec(h, op->supp);
-
-        PLAN_ARR_INT_FOR_EACH(&op->child, child_id){
-            child = h->op + child_id;
-            if (child->cost == 0 && child->supp >= 0)
-                markGoalZoneRec(h, child->supp);
-        }
-    }
-}
-
-#else /* MARK_GOAL_RECURSIVE */
-
 static void markGoalZoneOp(plan_heur_lm_cut2_t *h, op_t *op)
 {
     int child_id;
 
-    if (op->supp >= 0
-            && op->cost == 0
-            && h->fact_state[op->supp] == CUT_UNDEF){
-        planArrIntAdd(&h->queue, op->supp);
-        h->fact_state[op->supp] = CUT_GOAL;
+    if (op->supp >= 0 && h->fact_state[op->supp] == CUT_UNDEF){
+        if (op->cost == 0){
+            planArrIntAdd(&h->queue, op->supp);
+            h->fact_state[op->supp] = CUT_GOAL;
+        }else{
+            op->goal_zone = 1;
+        }
     }
 
     PLAN_ARR_INT_FOR_EACH(&op->child, child_id)
         markGoalZoneOp(h, h->op + child_id);
 }
-#endif /* MARK_GOAL_RECURSIVE */
 
 /** Mark facts connected with the goal with zero cost paths */
 static void markGoalZone(plan_heur_lm_cut2_t *h)
 {
-#ifdef MARK_GOAL_RECURSIVE
-    markGoalZoneRec(h, h->fact_goal);
-#else /* MARK_GOAL_RECURSIVE */
     fact_t *fact;
     int fact_id, op_id;
 
@@ -343,39 +317,18 @@ static void markGoalZone(plan_heur_lm_cut2_t *h)
         PLAN_ARR_INT_FOR_EACH(&fact->eff_op, op_id)
             markGoalZoneOp(h, h->op + op_id);
     }
-#endif /* MARK_GOAL_RECURSIVE */
 }
 
 static int findCutOpGoal(plan_heur_lm_cut2_t *h, int op_id)
 {
     op_t *op = h->op + op_id;
-    op_base_t *op_base = OPBASE_FROM_OP(h, op);
-    int fact_id;
-    int min_cost = INT_MAX;
 
-    PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
-        if (h->fact_state[fact_id] == CUT_GOAL){
-            planArrIntAdd(&h->cut, op_id);
-            min_cost = BOR_MIN(min_cost, op->cost);
-            break;
-        }
+    if (op->goal_zone){
+        planArrIntAdd(&h->cut, op_id);
+        return op->cost;
+    }else{
+        return INT_MAX;
     }
-
-    if (OP_HAS_PARENT(op)){
-        PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
-            if (fact_id >= h->fact_id.fact1_size)
-                break;
-
-            fact_id = planFactIdFact2(&h->fact_id, fact_id, op->ext_fact);
-            if (h->fact_state[fact_id] == CUT_GOAL){
-                planArrIntAdd(&h->cut, op_id);
-                min_cost = BOR_MIN(min_cost, op->cost);
-                break;
-            }
-        }
-    }
-
-    return min_cost;
 }
 
 static void findCutOpExpand(plan_heur_lm_cut2_t *h, int op_id)
@@ -502,8 +455,6 @@ static int findCut(plan_heur_lm_cut2_t *h)
             }
         }
     }
-    planArrIntSort(&h->cut);
-    planArrIntUniq(&h->cut);
 
     if (h->cut.size == 0){
         fprintf(stderr, "ERROR: Empty cut!\n");
@@ -596,11 +547,6 @@ static void addPrevail(plan_heur_lm_cut2_t *h, int op_id, int fact_id)
         fid = planFactIdFact2(&h->fact_id, op_base->eff.arr[i], fact_id);
         planArrIntAdd(&op_base->eff, fid);
     }
-
-    // Sort the effects so the first are unary facts -- we need to do this
-    // because we rely on this later.
-    // TODO: I don't think we need this
-    planArrIntSort(&op_base->eff);
 }
 
 static void addOpExtFact(plan_heur_lm_cut2_t *h, const plan_problem_t *p,

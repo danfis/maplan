@@ -388,12 +388,14 @@ static int findCut(plan_heur_lm_cut2_t *h)
                         planArrIntAdd(&h->cut, child_id);
                         min_cost = BOR_MIN(min_cost, child->cost);
                     }else{
-                        findCutOpExpand(h, op_id);
+                        findCutOpExpand(h, child_id);
                     }
                 }
             }
         }
     }
+    planArrIntSort(&h->cut);
+    planArrIntUniq(&h->cut);
 
     if (h->cut.size == 0){
         fprintf(stderr, "ERROR: Empty cut!\n");
@@ -666,6 +668,7 @@ static void debug(plan_heur_lm_cut2_t *h, const char *header)
         fprintf(stderr, ", eff_op:");
         PLAN_ARR_INT_FOR_EACH(&h->fact[i].eff_op, j)
             fprintf(stderr, " %d", j);
+        fprintf(stderr, " | supp_cnt: %d", h->fact[i].supp_cnt);
         fprintf(stderr, "\n");
     }
 
@@ -694,6 +697,7 @@ static void debug(plan_heur_lm_cut2_t *h, const char *header)
         fprintf(stderr, " unsat: %d", h->op[i].unsat);
         fprintf(stderr, " cost: %d", h->op[i].cost);
         fprintf(stderr, " supp: %d", h->op[i].supp);
+        fprintf(stderr, " goal_zone: %d", h->op[i].goal_zone);
         fprintf(stderr, "\n");
     }
 
@@ -720,6 +724,6 @@ static void debug(plan_heur_lm_cut2_t *h, const char *header)
     fprintf(stderr, "Cut size: %d\n", (int)h->cut.size);
     fprintf(stderr, "Cut:");
     PLAN_ARR_INT_FOR_EACH(&h->cut, i)
-        fprintf(stderr, " %d(%d)", i, h->op[i].cost);
+        fprintf(stderr, " %d(c:%d,p:%d)", i, h->op[i].cost, h->op[i].parent);
     fprintf(stderr, "\n");
 }

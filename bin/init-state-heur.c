@@ -79,7 +79,8 @@ static int heur(const char *hname)
         heur = planHeurMax2New(problem, 0);
         //heur = planHeurH2MaxNew(problem, 0);
     }else if (strcmp(hname, "lm-cut2") == 0){
-        heur = planHeurH2LMCutNew(problem, 0);
+        //heur = planHeurH2LMCutNew(problem, 0);
+        heur = planHeurLMCut2New(problem, 0);
     }else if (strcmp(hname, "flow") == 0){
         heur = planHeurFlowNew(problem->var, problem->var_size,
                                problem->goal,

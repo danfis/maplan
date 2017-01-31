@@ -273,6 +273,7 @@ plan_heur_t *planHeurMax2New(const plan_problem_t *p, unsigned flags);
  * h^2 LM-Cut heuristic
  */
 plan_heur_t *planHeurH2LMCutNew(const plan_problem_t *p, unsigned flags);
+plan_heur_t *planHeurLMCut2New(const plan_problem_t *p, unsigned flags);
 
 
 /**

@@ -59,6 +59,7 @@ OBJS += heur_max2
 OBJS += heur_relax_ff
 OBJS += heur_lm_cut
 OBJS += heur_lm_cutx
+OBJS += heur_lm_cut2
 OBJS += heur_dtg
 OBJS += heur_flow
 OBJS += heur_potential

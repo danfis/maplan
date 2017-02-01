@@ -376,8 +376,8 @@ static void incRelaxOpMax(plan_heur_relax_t *relax,
     }
 }
 
-void incMax(plan_heur_relax_t *relax,
-            const int *changed_op, int changed_op_size, int goal_id)
+static void incMax(plan_heur_relax_t *relax,
+                   const int *changed_op, int changed_op_size, int goal_id)
 {
     plan_prio_queue_t queue;
     int i, fact_id, op_id;

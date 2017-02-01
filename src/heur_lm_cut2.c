@@ -25,6 +25,7 @@
 
 struct _op_base_t {
     plan_arr_int_t eff; /*!< Facts in its effect */
+    plan_arr_int_t pre; /*!< Precondition facts */
     int cost;
 };
 typedef struct _op_base_t op_base_t;
@@ -38,6 +39,7 @@ struct _op_t {
     int unsat; /*!< Number of unsatisfied preconditions */
     int cost;  /*!< Current cost */
     int supp;  /*!< Supporter fact */
+    int supp_cost; /*!< Cost of the supporter -- needed for hMaxInc() */
     int goal_zone; /*!< True if the operator is connected to a goal zone */
 };
 typedef struct _op_t op_t;
@@ -52,6 +54,7 @@ struct _fact_t {
     plan_arr_int_t pre_op; /*!< Operators having this fact as its
                                 precondition */
     plan_arr_int_t eff_op; /*!< Operators having this fact as its effect */
+    int value;
     plan_pq_el_t heap;     /*!< Connection to priority heap */
     int supp_cnt;          /*!< Number of operators that have this fact as
                                 a supporter. */
@@ -61,23 +64,37 @@ typedef struct _fact_t fact_t;
 /** Returns fact ID from fact object */
 #define FID(heur, f) ((int)((f) - (heur)->fact))
 /** Returns current value of the fact */
-#define FVALUE(fact) (fact)->heap.key
-/** Set value of the fact */
-#define FVALUE_SET(fact, val) do { (fact)->heap.key = val; } while(0)
+#define FVALUE(fact) (fact)->value
 /** Initialize fact value */
-#define FVALUE_INIT(fact) FVALUE_SET((fact), INT_MAX)
+#define FVALUE_INIT(fact) \
+    do { (fact)->value = (fact)->heap.key = INT_MAX; } while(0)
 /** Returns true if fact value was set */
 #define FVALUE_IS_SET(fact) (FVALUE(fact) != INT_MAX)
 /** Set value of the fact and push the fact to the priority queue (or
  *  update its value int the queue). */
-#define FPUSH(pq, value, fact) \
+#define FPUSH(pq, val, fact) \
     do { \
-    if (FVALUE_IS_SET(fact)){ \
-        planPQUpdate((pq), (value), &(fact)->heap); \
+    if ((fact)->heap.key != INT_MAX){ \
+        (fact)->value = val; \
+        planPQUpdate((pq), (val), &(fact)->heap); \
     }else{ \
-        planPQPush((pq), (value), &(fact)->heap); \
+        (fact)->value = val; \
+        planPQPush((pq), (val), &(fact)->heap); \
     } \
     } while (0)
+
+_bor_inline fact_t *FPOP(plan_pq_t *pq, int *value)
+{
+    plan_pq_el_t *el = planPQPop(pq, value);
+    fact_t *fact = bor_container_of(el, fact_t, heap);
+    fact->heap.key = INT_MAX;
+    return fact;
+}
+
+#define F_INIT_SUPP(fact) ((fact)->supp_cnt = 0)
+#define F_SET_SUPP(fact) (++(fact)->supp_cnt)
+#define F_UNSET_SUPP(fact) (--(fact)->supp_cnt)
+#define F_IS_SUPP(fact) ((fact)->supp_cnt)
 
 
 #define CUT_UNDEF 0
@@ -121,7 +138,9 @@ static void opFree(op_t *op);
 static void factFree(fact_t *fact);
 static void loadOpFact(plan_heur_lm_cut2_t *h, const plan_problem_t *p);
 
+#ifdef PLAN_DEBUG
 static void debug(plan_heur_lm_cut2_t *h, const char *header);
+#endif /* PLAN_DEBUG */
 
 plan_heur_t *planHeurLMCut2New(const plan_problem_t *p, unsigned flags)
 {
@@ -177,7 +196,7 @@ static void initFacts(plan_heur_lm_cut2_t *h)
 
     for (i = 0; i < h->fact_size; ++i){
         FVALUE_INIT(h->fact + i);
-        h->fact[i].supp_cnt = 0;
+        F_INIT_SUPP(h->fact + i);
     }
 }
 
@@ -190,6 +209,7 @@ static void initOps(plan_heur_lm_cut2_t *h, int init_cost)
         op = h->op + i;
         op->unsat = op->pre_size;
         op->supp = -1;
+        op->supp_cost = INT_MAX;
         if (init_cost)
             op->cost = OPBASE_FROM_OP(h, op)->cost;
         op->goal_zone = 0;
@@ -222,7 +242,8 @@ static void enqueueOpEffects(plan_heur_lm_cut2_t *h, op_t *op,
 
     // Set supporter as the enabling fact
     op->supp = enable_fact;
-    ++h->fact[enable_fact].supp_cnt;
+    op->supp_cost = fact_value;
+    F_SET_SUPP(h->fact + enable_fact);
 
     // Check all base effects
     PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
@@ -256,20 +277,16 @@ static void enqueueOpEffects(plan_heur_lm_cut2_t *h, op_t *op,
 static void hMaxFull(plan_heur_lm_cut2_t *h, const plan_state_t *state,
                      int init_cost)
 {
-    plan_pq_t pq;
-    plan_pq_el_t *el;
     fact_t *fact;
     op_t *op;
     int value, op_id;
 
-    planPQInit(&pq);
     initFacts(h);
     initOps(h, init_cost);
 
-    addInitState(h, state, &pq);
-    while (!planPQEmpty(&pq)){
-        el = planPQPop(&pq, &value);
-        fact = bor_container_of(el, fact_t, heap);
+    addInitState(h, state, &h->pq);
+    while (!planPQEmpty(&h->pq)){
+        fact = FPOP(&h->pq, &value);
 
         // Check operators of which the current fact is in their
         // preconditions
@@ -277,11 +294,130 @@ static void hMaxFull(plan_heur_lm_cut2_t *h, const plan_state_t *state,
             op = h->op + op_id;
             if (--op->unsat == 0
                     && (!OP_HAS_PARENT(op) || OP_PARENT(h, op)->unsat == 0)){
-                enqueueOpEffects(h, op, FID(h, fact), value, &pq);
+                enqueueOpEffects(h, op, FID(h, fact), value, &h->pq);
             }
         }
     }
-    planPQFree(&pq);
+}
+
+#define UPDATE_SUPP(fact_id) \
+    do { \
+        fact_t *fact = h->fact + (fact_id); \
+        if (FVALUE_IS_SET(fact) && FVALUE(fact) > value){ \
+            value = FVALUE(fact); \
+            supp = (fact_id); \
+        } \
+    } while (0)
+
+static void updateSupp(plan_heur_lm_cut2_t *h, op_t *op)
+{
+    op_base_t *op_base = OPBASE_FROM_OP(h, op);
+    int fact_id, supp = -1, value = -1;
+
+    PLAN_ARR_INT_FOR_EACH(&op_base->pre, fact_id)
+        UPDATE_SUPP(fact_id);
+
+    if (OP_HAS_PARENT(op)){
+        UPDATE_SUPP(op->ext_fact);
+
+        PLAN_ARR_INT_FOR_EACH(&op_base->pre, fact_id){
+            if (fact_id >= h->fact_id.fact1_size)
+                break;
+
+            fact_id = planFactIdFact2(&h->fact_id, fact_id, op->ext_fact);
+            UPDATE_SUPP(fact_id);
+        }
+    }
+
+    if (supp == -1){
+        fprintf(stderr, "ERROR: Could not update supporter!\n");
+        exit(-1);
+    }
+
+    F_UNSET_SUPP(h->fact + op->supp);
+    op->supp = supp;
+    op->supp_cost = value;
+    F_SET_SUPP(h->fact + supp);
+}
+
+static void enqueueOpEffectsInc(plan_heur_lm_cut2_t *h, op_t *op,
+                                int fact_value, plan_pq_t *pq)
+{
+    op_base_t *op_base = OPBASE_FROM_OP(h, op);
+    fact_t *fact;
+    int value = op->cost + fact_value;
+    int fact_id;
+
+    // Check all base effects
+    PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
+        fact = h->fact + fact_id;
+        if (FVALUE(fact) > value)
+            FPUSH(pq, value, fact);
+    }
+
+    // Check all extension effects if necessary
+    if (OP_HAS_PARENT(op)){
+        PLAN_ARR_INT_FOR_EACH(&op_base->eff, fact_id){
+            if (fact_id >= h->fact_id.fact1_size)
+                break;
+
+            fact_id = planFactIdFact2(&h->fact_id, fact_id, op->ext_fact);
+            fact = h->fact + fact_id;
+            if (FVALUE(fact) > value)
+                FPUSH(pq, value, fact);
+        }
+    }
+}
+
+static void hMaxIncUpdateOp(plan_heur_lm_cut2_t *h, op_t *op,
+                            int fact_id, int fact_value)
+{
+    int old_supp_value, child_id;
+
+    PLAN_ARR_INT_FOR_EACH(&op->child, child_id)
+        hMaxIncUpdateOp(h, h->op + child_id, fact_id, fact_value);
+
+    if (op->supp != fact_id || op->unsat > 0)
+        return;
+
+    old_supp_value = op->supp_cost;
+    if (old_supp_value <= fact_value)
+        return;
+
+    updateSupp(h, op);
+    if (op->supp_cost != old_supp_value){
+        if (op->supp_cost >= old_supp_value){
+            fprintf(stderr, "XXX %d %d\n", op->supp_cost,
+                    old_supp_value);
+            exit(-1);
+        }
+        enqueueOpEffectsInc(h, op, op->supp_cost, &h->pq);
+    }
+}
+
+static void hMaxInc(plan_heur_lm_cut2_t *h)
+{
+    fact_t *fact;
+    op_t *op;
+    int op_id, fact_id, fact_value;
+
+    for (op_id = 0; op_id < h->op_size; ++op_id)
+        h->op[op_id].goal_zone = 0;
+
+    PLAN_ARR_INT_FOR_EACH(&h->cut, op_id){
+        op = h->op + op_id;
+        enqueueOpEffectsInc(h, op, op->supp_cost, &h->pq);
+    }
+
+    while (!planPQEmpty(&h->pq)){
+        fact = FPOP(&h->pq, &fact_value);
+        fact_id = FID(h, fact);
+
+        PLAN_ARR_INT_FOR_EACH(&fact->pre_op, op_id){
+            op = h->op + op_id;
+            hMaxIncUpdateOp(h, op, fact_id, fact_value);
+        }
+    }
 }
 
 static void markGoalZoneOp(plan_heur_lm_cut2_t *h, op_t *op)
@@ -322,7 +458,7 @@ static void markGoalZone(plan_heur_lm_cut2_t *h)
 
 #define CUT_ENQUEUE_FACT(H, FID) \
     do { \
-    if ((H)->fact[(FID)].supp_cnt && (H)->fact_state[(FID)] == CUT_UNDEF){ \
+    if (F_IS_SUPP((H)->fact + (FID)) && (H)->fact_state[(FID)] == CUT_UNDEF){ \
         planArrIntAdd(&(H)->queue, FID); \
         (H)->fact_state[(FID)] = CUT_INIT; \
     } \
@@ -359,8 +495,9 @@ static int findCut(plan_heur_lm_cut2_t *h)
     h->queue.size = 0;
     PLAN_ARR_INT_FOR_EACH(&h->state, fact_id){
         if (h->fact_state[fact_id] == CUT_GOAL){
-            fprintf(stderr, "ERROR: Initial fact in goal-zone but non-zero"
-                            "h^max!\n");
+            fprintf(stderr, "ERROR: Initial fact in goal-zone but with"
+                            " non-zero h^max (%d)!\n",
+                            FVALUE(h->fact + h->fact_goal));
             exit(-1);
         }
         CUT_ENQUEUE_FACT(h, fact_id);
@@ -444,7 +581,7 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
 
     while (FVALUE(h->fact + h->fact_goal) > 0){
         res->heur += cut(h);
-        hMaxFull(h, state, 0);
+        hMaxInc(h);
     }
 }
 
@@ -453,6 +590,7 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
 static void opBaseFree(op_base_t *op)
 {
     planArrIntFree(&op->eff);
+    planArrIntFree(&op->pre);
 }
 
 static void opFree(op_t *op)
@@ -607,12 +745,14 @@ static void loadOpFact(plan_heur_lm_cut2_t *h, const plan_problem_t *p)
         PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, p->op[op_id].pre, fid){
             planArrIntAdd(&h->fact[fid].pre_op, op_id);
             ++op->pre_size;
+            planArrIntAdd(&op_base->pre, fid);
         }
 
         // Record operator with no preconditions
         if (p->op[op_id].pre->vals_size == 0){
             planArrIntAdd(&h->fact[h->fact_nopre].pre_op, op_id);
             op->pre_size = 1;
+            planArrIntAdd(&op_base->pre, h->fact_nopre);
         }
 
         // Extend operator with prevail condition and add extension facts
@@ -634,6 +774,7 @@ static void loadOpFact(plan_heur_lm_cut2_t *h, const plan_problem_t *p)
     PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, p->goal, fid){
         planArrIntAdd(&h->fact[fid].pre_op, h->op_goal);
         ++op->pre_size;
+        planArrIntAdd(&op_base->pre, fid);
     }
     planArrIntAdd(&h->fact[h->fact_goal].eff_op, h->op_goal);
 
@@ -643,6 +784,7 @@ static void loadOpFact(plan_heur_lm_cut2_t *h, const plan_problem_t *p)
 }
 
 
+#ifdef PLAN_DEBUG
 static void debug(plan_heur_lm_cut2_t *h, const char *header)
 {
     int i, j, f1, f2;
@@ -727,3 +869,4 @@ static void debug(plan_heur_lm_cut2_t *h, const char *header)
         fprintf(stderr, " %d(c:%d,p:%d)", i, h->op[i].cost, h->op[i].parent);
     fprintf(stderr, "\n");
 }
+#endif /* PLAN_DEBUG */

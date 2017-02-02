@@ -22,6 +22,7 @@
 
 #include <limits.h>
 #include <boruvka/core.h>
+#include <plan/config.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -155,6 +156,13 @@ typedef uint32_t plan_packer_word_t;
  * Only the preferred operators are used.
  */
 #define PLAN_SEARCH_PREFERRED_ONLY 2
+
+#ifdef PLAN_DEBUG
+#include <assert.h>
+# define ASSERT(exp) assert(exp)
+#else /* PLAN_DEBUG */
+# define ASSERT(exp) do{}while(0)
+#endif /* PLAN_DEBUG */
 
 #ifdef __cplusplus
 } /* extern "C" */

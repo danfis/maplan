@@ -329,11 +329,7 @@ static void updateSupp(plan_heur_lm_cut2_t *h, op_t *op)
         }
     }
 
-    if (supp == -1){
-        fprintf(stderr, "ERROR: Could not update supporter!\n");
-        exit(-1);
-    }
-
+    ASSERT(supp != -1);
     F_UNSET_SUPP(h->fact + op->supp);
     op->supp = supp;
     op->supp_cost = value;
@@ -386,11 +382,7 @@ static void hMaxIncUpdateOp(plan_heur_lm_cut2_t *h, op_t *op,
 
     updateSupp(h, op);
     if (op->supp_cost != old_supp_value){
-        if (op->supp_cost >= old_supp_value){
-            fprintf(stderr, "XXX %d %d\n", op->supp_cost,
-                    old_supp_value);
-            exit(-1);
-        }
+        ASSERT(op->supp_cost < old_supp_value);
         enqueueOpEffectsInc(h, op, op->supp_cost, &h->pq);
     }
 }
@@ -494,12 +486,7 @@ static int findCut(plan_heur_lm_cut2_t *h)
 
     h->queue.size = 0;
     PLAN_ARR_INT_FOR_EACH(&h->state, fact_id){
-        if (h->fact_state[fact_id] == CUT_GOAL){
-            fprintf(stderr, "ERROR: Initial fact in goal-zone but with"
-                            " non-zero h^max (%d)!\n",
-                            FVALUE(h->fact + h->fact_goal));
-            exit(-1);
-        }
+        ASSERT(h->fact_state[fact_id] != CUT_GOAL);
         CUT_ENQUEUE_FACT(h, fact_id);
     }
     CUT_ENQUEUE_FACT(h, h->fact_nopre);

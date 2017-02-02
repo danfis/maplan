@@ -106,6 +106,9 @@ static int heur(const char *hname)
                                     problem->op, problem->op_size,
                                     &state,
                                     PLAN_HEUR_POT_ALL_SYNTACTIC_STATES);
+    }else{
+        fprintf(stderr, "ERROR: Unkown heur `%s'\n", hname);
+        exit(-1);
     }
     borTimerStop(&timer);
     build_time = borTimerElapsedInSF(&timer);

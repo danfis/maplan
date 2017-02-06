@@ -213,6 +213,7 @@ plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
                                  const plan_part_state_t *goal,
                                  const plan_op_t *op, int op_size,
                                  unsigned flags);
+plan_heur_t *planHeurAddNew(const plan_problem_t *prob, unsigned flags);
 
 /**
  * Creates an MAX version of relaxation heuristics.

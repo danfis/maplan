@@ -39,6 +39,8 @@ struct _fact_t {
     plan_arr_int_t pre_op; /*!< Operators having this fact as its precond */
     plan_arr_int_t eff_op; /*!< Operators having this fact as its effect */
     plan_pq_el_t heap;     /*!< Connection to priority heap */
+    int supp_cnt;          /*!< Number of operators that have this fact as
+                                a supporter. */
 };
 typedef struct _fact_t fact_t;
 
@@ -59,8 +61,13 @@ typedef struct _fact_t fact_t;
 #define SET_OP_SUPP(h, op, fact_id) \
     do { \
         (op)->supp = (fact_id); \
-        (h)->fact_supp[fact_id] = 1; \
+        F_SET_SUPP((h)->fact + (fact_id)); \
     } while (0)
+
+#define F_INIT_SUPP(fact) ((fact)->supp_cnt = 0)
+#define F_SET_SUPP(fact) (++(fact)->supp_cnt)
+#define F_UNSET_SUPP(fact) (--(fact)->supp_cnt)
+#define F_IS_SUPP(fact) ((fact)->supp_cnt)
 
 struct _plan_heur_lm_cut_t {
     plan_heur_t heur;
@@ -71,7 +78,6 @@ struct _plan_heur_lm_cut_t {
     int fact_size;
     int fact_goal;
     int fact_nopre;
-    int *fact_supp;
 
     op_t *op;
     int op_alloc;
@@ -108,7 +114,6 @@ plan_heur_t *planHeurLMCutXNew(const plan_problem_t *p, unsigned flags)
     _planHeurInit(&h->heur, heurDel, heurVal, NULL);
     planFactIdInit(&h->fact_id, p->var, p->var_size, 0);
     loadOpFact(h, p);
-    h->fact_supp = BOR_ALLOC_ARR(int, h->fact_size);
 
     h->fact_state = BOR_ALLOC_ARR(int, h->fact_size);
     planArrIntInit(&h->queue, h->fact_size / 2);
@@ -128,8 +133,6 @@ static void heurDel(plan_heur_t *_heur)
         factFree(h->fact + i);
     if (h->fact)
         BOR_FREE(h->fact);
-    if (h->fact_supp)
-        BOR_FREE(h->fact_supp);
 
     for (i = 0; i < h->op_size; ++i)
         opFree(h->op + i);
@@ -151,8 +154,8 @@ static void initFacts(plan_heur_lm_cut_t *h)
 
     for (i = 0; i < h->fact_size; ++i){
         FVALUE_INIT(h->fact + i);
+        F_INIT_SUPP(h->fact + i);
     }
-    bzero(h->fact_supp, sizeof(int) * h->fact_size);
 }
 
 static void initOps(plan_heur_lm_cut_t *h, int init_cost)
@@ -300,7 +303,7 @@ static int findCut(plan_heur_lm_cut_t *h)
 
             PLAN_ARR_INT_FOR_EACH(&op->eff, next){
                 if (h->fact_state[next] == CUT_UNDEF){
-                    if (h->fact_supp[next]){
+                    if (F_IS_SUPP(h->fact + next)){
                         h->fact_state[next] = CUT_INIT;
                         planArrIntAdd(&h->queue, next);
                     }

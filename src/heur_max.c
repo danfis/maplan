@@ -55,6 +55,7 @@ typedef struct _fact_t fact_t;
 
 struct _plan_heur_max_t {
     plan_heur_t heur;
+    unsigned flags;
     plan_fact_id_t fact_id;
 
     fact_t *fact;
@@ -84,6 +85,7 @@ plan_heur_t *planHeurMaxNew(const plan_problem_t *p, unsigned flags)
 
     h = BOR_ALLOC(plan_heur_max_t);
     bzero(h, sizeof(*h));
+    h->flags = flags;
     _planHeurInit(&h->heur, heurDel, heurVal, NULL);
     planFactIdInit(&h->fact_id, p->var, p->var_size, 0);
     loadOpFact(h, p);
@@ -219,11 +221,24 @@ static void loadOpFact(plan_heur_max_t *h, const plan_problem_t *p)
 
     for (op_id = 0; op_id < p->op_size; ++op_id){
         // TODO: Conditional effects
+        if (p->op[op_id].cond_eff_size > 0){
+            fprintf(stderr, "ERROR: h^max does not support conditional"
+                            " effects, yet.\n");
+            exit(-1);
+        }
+
         op = h->op + op_id;
         op->eff.arr = planFactIdPartState2(&h->fact_id, p->op[op_id].eff,
                                            &size);
         op->eff.alloc = op->eff.size = size;
-        op->cost = p->op[op_id].cost;
+        if (h->flags & PLAN_HEUR_OP_UNIT_COST){
+            op->cost = 1;
+        }else{
+            op->cost = p->op[op_id].cost;
+        }
+        if (h->flags & PLAN_HEUR_OP_COST_PLUS_ONE)
+            op->cost = op->cost + 1;
+
 
         PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, p->op[op_id].pre, fid)
             planArrIntAdd(&h->fact[fid].pre_op, op_id);

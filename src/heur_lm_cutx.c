@@ -63,6 +63,7 @@ typedef struct _fact_t fact_t;
 
 struct _plan_heur_lm_cut_t {
     plan_heur_t heur;
+    unsigned flags;
     plan_fact_id_t fact_id;
 
     fact_t *fact;
@@ -72,6 +73,7 @@ struct _plan_heur_lm_cut_t {
     int *fact_supp;
 
     op_t *op;
+    int op_alloc;
     int op_size;
     int op_goal;
 
@@ -101,6 +103,7 @@ plan_heur_t *planHeurLMCutXNew(const plan_problem_t *p, unsigned flags)
 
     h = BOR_ALLOC(plan_heur_lm_cut_t);
     bzero(h, sizeof(*h));
+    h->flags = flags;
     _planHeurInit(&h->heur, heurDel, heurVal, NULL);
     planFactIdInit(&h->fact_id, p->var, p->var_size, 0);
     loadOpFact(h, p);
@@ -372,10 +375,80 @@ static void factFree(fact_t *fact)
     planArrIntFree(&fact->eff_op);
 }
 
+static op_t *nextOp(plan_heur_lm_cut_t *h)
+{
+    if (h->op_size == h->op_alloc){
+        h->op_alloc *= 2;
+        h->op = BOR_REALLOC_ARR(h->op, op_t, h->op_alloc);
+        bzero(h->op + h->op_size, sizeof(op_t) * (h->op_alloc - h->op_size));
+    }
+
+    return h->op + h->op_size++;
+}
+
+static int getCost(const plan_heur_lm_cut_t *h, const plan_op_t *op)
+{
+    int cost;
+
+    cost = op->cost;
+    if (h->flags & PLAN_HEUR_OP_UNIT_COST)
+        cost = 1;
+    if (h->flags & PLAN_HEUR_OP_COST_PLUS_ONE)
+        cost = cost + 1;
+    return cost;
+}
+
+static void addOp(plan_heur_lm_cut_t *h, const plan_op_t *pop,
+                  int parent_op_id,
+                  const plan_op_cond_eff_t *cond_eff)
+{
+    op_t *op;
+    int op_id, fid;
+
+    if (cond_eff != NULL){
+        op = nextOp(h);
+    }else{
+        op = h->op + parent_op_id;
+    }
+    op_id = op - h->op;
+
+    op->op_cost = getCost(h, pop);
+
+    // Set effects
+    PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, pop->eff, fid){
+        planArrIntAdd(&op->eff, fid);
+        planArrIntAdd(&h->fact[fid].eff_op, op_id);
+    }
+    if (cond_eff){
+        PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, cond_eff->eff, fid){
+            planArrIntAdd(&op->eff, fid);
+            planArrIntAdd(&h->fact[fid].eff_op, op_id);
+        }
+    }
+
+    // Set preconditions
+    PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, pop->pre, fid)
+        planArrIntAdd(&h->fact[fid].pre_op, op_id);
+    op->pre_size = pop->pre->vals_size;
+    if (cond_eff){
+        PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, cond_eff->pre, fid)
+            planArrIntAdd(&h->fact[fid].pre_op, op_id);
+        op->pre_size += cond_eff->pre->vals_size;
+    }
+
+    // Record operator with no preconditions
+    if (op->pre_size == 0){
+        planArrIntAdd(&h->fact[h->fact_nopre].pre_op, op_id);
+        op->pre_size = 1;
+    }
+
+    planArrIntSort(&op->eff);
+}
+
 static void loadOpFact(plan_heur_lm_cut_t *h, const plan_problem_t *p)
 {
     op_t *op;
-    int op_id, fid, size;
+    int i, op_id, fid;
 
     // Allocate facts and add one for empty-precondition fact and one for
     // goal fact
@@ -385,31 +458,14 @@ static void loadOpFact(plan_heur_lm_cut_t *h, const plan_problem_t *p)
     h->fact_nopre = h->fact_size - 1;
 
     // Allocate operators and add one artificial for goal
-    h->op_size = p->op_size + 1;
+    h->op_alloc = h->op_size = p->op_size + 1;
     h->op = BOR_CALLOC_ARR(op_t, h->op_size);
     h->op_goal = h->op_size - 1;
 
     for (op_id = 0; op_id < p->op_size; ++op_id){
-        // TODO: Conditional effects
-        op = h->op + op_id;
-        op->eff.arr = planFactIdPartState2(&h->fact_id, p->op[op_id].eff,
-                                           &size);
-        op->eff.alloc = op->eff.size = size;
-        op->op_cost = p->op[op_id].cost;
-
-        PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, p->op[op_id].pre, fid)
-            planArrIntAdd(&h->fact[fid].pre_op, op_id);
-        op->pre_size = p->op[op_id].pre->vals_size;
-
-        // Record operator with no preconditions
-        if (p->op[op_id].pre->vals_size == 0){
-            planArrIntAdd(&h->fact[h->fact_nopre].pre_op, op_id);
-            op->pre_size = 1;
-        }
-
-        PLAN_ARR_INT_FOR_EACH(&op->eff, fid){
-            planArrIntAdd(&h->fact[fid].eff_op, op_id);
-        }
+        addOp(h, p->op + op_id, op_id, NULL);
+        for (i = 0; i < p->op[op_id].cond_eff_size; ++i)
+            addOp(h, p->op + op_id, op_id, p->op[op_id].cond_eff + i);
     }
 
     // Set up goal operator

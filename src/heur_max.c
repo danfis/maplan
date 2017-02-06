@@ -64,6 +64,7 @@ struct _plan_heur_max_t {
     int fact_nopre;
 
     op_t *op;
+    int op_alloc;
     int op_size;
     int op_goal;
 };
@@ -202,10 +203,56 @@ static void factFree(fact_t *fact)
     planArrIntFree(&fact->pre_op);
 }
 
+static op_t *nextOp(plan_heur_max_t *h)
+{
+    if (h->op_size == h->op_alloc){
+        h->op_alloc *= 2;
+        h->op = BOR_REALLOC_ARR(h->op, op_t, h->op_alloc);
+        bzero(h->op + h->op_size, sizeof(op_t) * (h->op_alloc - h->op_size));
+    }
+
+    return h->op + h->op_size++;
+}
+
+static int getCost(const plan_heur_max_t *h, const plan_op_t *op)
+{
+    int cost;
+
+    cost = op->cost;
+    if (h->flags & PLAN_HEUR_OP_UNIT_COST)
+        cost = 1;
+    if (h->flags & PLAN_HEUR_OP_COST_PLUS_ONE)
+        cost = cost + 1;
+    return cost;
+}
+
+static void addCondEff(plan_heur_max_t *h, int parent_op_id,
+                       const plan_op_t *pop,
+                       const plan_op_cond_eff_t *cond_eff)
+{
+    op_t *op = nextOp(h);
+    int op_id = op - h->op;
+    int fid, size;
+
+    op->cost = getCost(h, pop);
+
+    PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, pop->pre, fid)
+        planArrIntAdd(&h->fact[fid].pre_op, op_id);
+    PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, cond_eff->pre, fid)
+        planArrIntAdd(&h->fact[fid].pre_op, op_id);
+    op->pre_size = pop->pre->vals_size + cond_eff->pre->vals_size;
+
+    op->eff.arr = planFactIdPartState2(&h->fact_id, cond_eff->eff, &size);
+    op->eff.alloc = op->eff.size = size;
+    PLAN_ARR_INT_FOR_EACH(&h->op[parent_op_id].eff, fid)
+        planArrIntAdd(&op->eff, fid);
+    planArrIntSort(&op->eff);
+}
+
 static void loadOpFact(plan_heur_max_t *h, const plan_problem_t *p)
 {
     op_t *op;
-    int op_id, fid, size;
+    int i, op_id, fid, size;
 
     // Allocate facts and add one for empty-precondition fact and one for
     // goal fact
@@ -215,30 +262,16 @@ static void loadOpFact(plan_heur_max_t *h, const plan_problem_t *p)
     h->fact_nopre = h->fact_size - 1;
 
     // Allocate operators and add one artificial for goal
-    h->op_size = p->op_size + 1;
-    h->op = BOR_CALLOC_ARR(op_t, h->op_size);
+    h->op_alloc = h->op_size = p->op_size + 1;
+    h->op = BOR_CALLOC_ARR(op_t, h->op_alloc);
     h->op_goal = h->op_size - 1;
 
     for (op_id = 0; op_id < p->op_size; ++op_id){
-        // TODO: Conditional effects
-        if (p->op[op_id].cond_eff_size > 0){
-            fprintf(stderr, "ERROR: h^max does not support conditional"
-                            " effects, yet.\n");
-            exit(-1);
-        }
-
         op = h->op + op_id;
         op->eff.arr = planFactIdPartState2(&h->fact_id, p->op[op_id].eff,
                                            &size);
         op->eff.alloc = op->eff.size = size;
-        if (h->flags & PLAN_HEUR_OP_UNIT_COST){
-            op->cost = 1;
-        }else{
-            op->cost = p->op[op_id].cost;
-        }
-        if (h->flags & PLAN_HEUR_OP_COST_PLUS_ONE)
-            op->cost = op->cost + 1;
-
+        op->cost = getCost(h, p->op + op_id);
 
         PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, p->op[op_id].pre, fid)
             planArrIntAdd(&h->fact[fid].pre_op, op_id);
@@ -249,6 +282,9 @@ static void loadOpFact(plan_heur_max_t *h, const plan_problem_t *p)
             planArrIntAdd(&h->fact[h->fact_nopre].pre_op, op_id);
             op->pre_size = 1;
         }
+
+        for (i = 0; i < p->op[op_id].cond_eff_size; ++i)
+            addCondEff(h, op_id, p->op + op_id, p->op[op_id].cond_eff + i);
     }
 
     // Set up goal operator
@@ -259,5 +295,10 @@ static void loadOpFact(plan_heur_max_t *h, const plan_problem_t *p)
     PLAN_FACT_ID_FOR_EACH_PART_STATE(&h->fact_id, p->goal, fid)
         planArrIntAdd(&h->fact[fid].pre_op, h->op_goal);
     op->pre_size = p->goal->vals_size;
+
+    if (h->op_alloc != h->op_size){
+        h->op_alloc = h->op_size;
+        h->op = BOR_REALLOC_ARR(h->op, op_t, h->op_alloc);
+    }
 }
 

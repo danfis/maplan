@@ -18,10 +18,31 @@
  */
 
 #include <boruvka/alloc.h>
+#include "plan/search.h"
 #include "plan/arr.h"
 #include "plan/pq.h"
 #include "plan/fact_id.h"
 #include "plan/heur.h"
+#include "op_id_tr.h"
+
+/**
+ * Incremental LM-Cut, the local version.
+ */
+#define INC_LOCAL 1
+
+/**
+ * Incremental LM-Cut, the version with cached landmarks.
+ */
+#define INC_CACHE 2
+
+struct _inc_local_t {
+    int enabled;
+    plan_landmark_set_t ldms; /*!< Cached landmarks */
+    plan_state_id_t ldms_id;  /*!< ID of the state for which the landmarks
+                                   are cached */
+    plan_op_id_tr_t op_id_tr; /*!< Translation from global ID to local ID */
+};
+typedef struct _inc_local_t inc_local_t;
 
 struct _op_t {
     int op_id;
@@ -103,6 +124,8 @@ struct _plan_heur_lm_cut_t {
     plan_arr_int_t state; /*!< Current state from which heur is computed */
     plan_arr_int_t cut;   /*!< Current cut */
 
+    inc_local_t inc_local; /*!< Struct for local incremental LM-Cut */
+
     /** Auxiliary structures to avoid re-allocation */
     int *fact_state;
     plan_arr_int_t queue;
@@ -115,27 +138,58 @@ typedef struct _plan_heur_lm_cut_t plan_heur_lm_cut_t;
 static void heurDel(plan_heur_t *_heur);
 static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
                     plan_heur_res_t *res);
+static void heurValIncLocal(plan_heur_t *_heur,
+                            plan_state_id_t state_id,
+                            plan_search_t *search,
+                            plan_heur_res_t *res);
+static void planHeurLMCutStateInc(plan_heur_t *_heur,
+                                  const plan_state_t *state,
+                                  plan_heur_res_t *res);
 
 static void opFree(op_t *op);
 static void factFree(fact_t *fact);
 static void loadOpFact(plan_heur_lm_cut_t *h, const plan_problem_t *p);
 
-plan_heur_t *planHeurLMCutXNew(const plan_problem_t *p, unsigned flags)
+plan_heur_t *lmCutNew(const plan_problem_t *p, unsigned type,
+                      unsigned flags, unsigned cache_flags)
 {
     plan_heur_lm_cut_t *h;
 
     h = BOR_ALLOC(plan_heur_lm_cut_t);
     bzero(h, sizeof(*h));
     h->flags = flags;
-    _planHeurInit(&h->heur, heurDel, heurVal, NULL);
+    if (type & INC_LOCAL){
+        _planHeurInit(&h->heur, heurDel, planHeurLMCutStateInc,
+                      heurValIncLocal);
+    }else{
+        _planHeurInit(&h->heur, heurDel, heurVal, NULL);
+    }
     planFactIdInit(&h->fact_id, p->var, p->var_size, 0);
     loadOpFact(h, p);
+
+    h->inc_local.enabled = 0;
+    if (type & INC_LOCAL){
+        h->inc_local.enabled = 1;
+        bzero(&h->inc_local.ldms, sizeof(h->inc_local.ldms));
+        h->inc_local.ldms_id = PLAN_NO_STATE;
+        planOpIdTrInit(&h->inc_local.op_id_tr, p->op, p->op_size);
+    }
 
     h->fact_state = BOR_ALLOC_ARR(int, h->fact_size);
     planArrIntInit(&h->queue, h->fact_size / 2);
     planPQInit(&h->pq);
 
     return &h->heur;
+}
+
+plan_heur_t *planHeurLMCutXNew(const plan_problem_t *p, unsigned flags)
+{
+    return lmCutNew(p, 0, flags, 0);
+}
+
+plan_heur_t *planHeurLMCutXIncLocalNew(const plan_problem_t *p, unsigned flags)
+{
+    return lmCutNew(p, INC_LOCAL, flags, 0);
 }
 
 static void heurDel(plan_heur_t *_heur)
@@ -154,6 +208,11 @@ static void heurDel(plan_heur_t *_heur)
         opFree(h->op + i);
     if (h->op)
         BOR_FREE(h->op);
+
+    if (h->inc_local.enabled){
+        planLandmarkSetFree(&h->inc_local.ldms);
+        planOpIdTrFree(&h->inc_local.op_id_tr);
+    }
 
     if (h->fact_state)
         BOR_FREE(h->fact_state);
@@ -301,7 +360,7 @@ static void hMaxIncUpdateOp(plan_heur_lm_cut_t *h, op_t *op,
     }
 }
 
-static void hMaxInc(plan_heur_lm_cut_t *h)
+static void hMaxInc(plan_heur_lm_cut_t *h, const plan_arr_int_t *cut)
 {
     fact_t *fact;
     op_t *op;
@@ -310,7 +369,7 @@ static void hMaxInc(plan_heur_lm_cut_t *h)
     for (op_id = 0; op_id < h->op_size; ++op_id)
         h->op[op_id].cut_candidate = 0;
 
-    PLAN_ARR_INT_FOR_EACH(&h->cut, op_id){
+    PLAN_ARR_INT_FOR_EACH(cut, op_id){
         op = h->op + op_id;
         enqueueOpEffectsInc(h, op, op->supp_cost, &h->pq);
     }
@@ -449,28 +508,101 @@ static int cut(plan_heur_lm_cut_t *h)
     return cost;
 }
 
-static void saveLandmark(plan_heur_lm_cut_t *h, plan_heur_res_t *res)
+static void _saveLandmark(plan_heur_lm_cut_t *h,
+                          const int *ldm, int ldm_size,
+                          plan_heur_res_t *res)
 {
     plan_arr_int_t ops;
     int i;
 
-    if (h->cut.size == 0)
+    if (ldm_size == 0)
         return;
 
-    planArrIntInit(&ops, h->cut.size);
-    for (i = 0; i < h->cut.size; ++i)
-        planArrIntAdd(&ops, h->op[h->cut.arr[i]].op_id);
+    planArrIntInit(&ops, ldm_size);
+    for (i = 0; i < ldm_size; ++i)
+        planArrIntAdd(&ops, h->op[ldm[i]].op_id);
     planArrIntSort(&ops);
     planArrIntUniq(&ops);
     planLandmarkSetAdd(&res->landmarks, ops.size, ops.arr);
     planArrIntFree(&ops);
 }
 
-static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
-                    plan_heur_res_t *res)
+static void saveLandmark(plan_heur_lm_cut_t *h, plan_heur_res_t *res)
 {
-    plan_heur_lm_cut_t *h = HEUR(_heur);
+    _saveLandmark(h, h->cut.arr, h->cut.size, res);
+}
 
+static int landmarkCost(const plan_heur_lm_cut_t *h,
+                        const int *ldm, int ldm_size,
+                        int used_op_id)
+{
+    plan_cost_t cost = PLAN_COST_MAX;
+    int i, op_id;
+
+    for (i = 0; i < ldm_size; ++i){
+        op_id = ldm[i];
+        // If this landmark contains the operator that was used during
+        // creation of a new state, discard this landmark (i.e., return
+        // zero cost).
+        if (op_id == used_op_id)
+            return 0;
+        cost = BOR_MIN(cost, h->op[op_id].cost);
+    }
+
+    return cost;
+}
+
+static void applyInitLandmarks(plan_heur_lm_cut_t *h,
+                               const plan_landmark_set_t *ldms,
+                               int inc_op_id,
+                               plan_heur_res_t *res)
+{
+    plan_arr_int_t ldm_ops;
+    const plan_landmark_t *ldm;
+    int cost, i, j, op_id;
+
+    planArrIntInit(&ldm_ops, 8);
+
+    // Record operators that should be changed as well as value that should
+    // be substracted from their cost.
+    for (i = 0; i < ldms->size; ++i){
+        ldm = ldms->landmark + i;
+        if (ldm->size <= 0)
+            continue;
+
+        // Determine cost of the landmark and skip zero-cost landmarks
+        cost = landmarkCost(h, ldm->op_id, ldm->size, inc_op_id);
+        if (cost <= 0)
+            continue;
+
+        // Update initial heuristic value
+        res->heur += cost;
+
+        // Mark each operator as changed and update it by substracting the
+        // cost of the landmark.
+        for (j = 0; j < ldm->size; ++j){
+            op_id = ldm->op_id[j];
+            planArrIntAdd(&ldm_ops, op_id);
+            h->op[op_id].cost -= cost;
+        }
+
+        if (res->save_landmarks)
+            _saveLandmark(h, ldm->op_id, ldm->size, res);
+    }
+
+    planArrIntSort(&ldm_ops);
+    planArrIntUniq(&ldm_ops);
+
+    // Update h^max
+    hMaxInc(h, &ldm_ops);
+
+    planArrIntFree(&ldm_ops);
+}
+
+static void _heurVal(plan_heur_lm_cut_t *h, const plan_state_t *state,
+                     const plan_landmark_set_t *ldms, int inc_op_id,
+                     plan_heur_res_t *res)
+{
     res->heur = 0;
 
     hMaxFull(h, state, 1);
@@ -478,6 +610,11 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
         res->heur = PLAN_HEUR_DEAD_END;
         return;
     }
+
+    // If landmarks are given, apply them before continuing with LM-Cut and
+    // set up initial heuristic value accordingly.
+    if (ldms != NULL && ldms->size > 0)
+        applyInitLandmarks(h, ldms, inc_op_id, res);
 
     while (FVALUE(h->fact + h->fact_goal) > 0){
         res->heur += cut(h);
@@ -487,8 +624,64 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
             saveLandmark(h, res);
 
         //hMaxFull(h, state, 0);
-        hMaxInc(h);
+        hMaxInc(h, &h->cut);
     }
+}
+
+static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
+                    plan_heur_res_t *res)
+{
+    plan_heur_lm_cut_t *h = HEUR(_heur);
+    _heurVal(h, state, NULL, -1, res);
+}
+
+static void lmCutIncLocalParent(plan_heur_lm_cut_t *heur,
+                                plan_search_t *search,
+                                plan_state_id_t parent_state_id)
+{
+    const plan_state_t *state;
+    plan_heur_res_t res;
+
+    if (heur->inc_local.ldms_id == parent_state_id)
+        return;
+
+    // Run LM-Cut on parent state to obtain initial landmarks
+    state = planSearchLoadState(search, parent_state_id);
+    planHeurResInit(&res);
+    res.save_landmarks = 1;
+    _heurVal(heur, state, NULL, -1, &res);
+
+    // Save landmarks into cache
+    planLandmarkSetFree(&heur->inc_local.ldms);
+    heur->inc_local.ldms = res.landmarks;
+    heur->inc_local.ldms_id = parent_state_id;
+}
+
+static void heurValIncLocal(plan_heur_t *_heur,
+                            plan_state_id_t state_id,
+                            plan_search_t *search,
+                            plan_heur_res_t *res)
+{
+    plan_heur_lm_cut_t *heur = HEUR(_heur);
+    const plan_state_t *state;
+    plan_state_space_node_t *node;
+    int op_id = -1;
+
+    // Obtain initial landmarks from the parent state
+    node = planSearchLoadNode(search, state_id);
+    if (node->parent_state_id >= 0){
+        lmCutIncLocalParent(heur, search, node->parent_state_id);
+    }else{
+        planLandmarkSetFree(&heur->inc_local.ldms);
+        bzero(&heur->inc_local.ldms, sizeof(heur->inc_local.ldms));
+        heur->inc_local.ldms_id = -1;
+    }
+
+    // Compute heuristic for the current state
+    state = planSearchLoadState(search, state_id);
+    if (node->op != NULL)
+        op_id = planOpIdTrLoc(&heur->inc_local.op_id_tr, node->op->global_id);
+    _heurVal(heur, state, &heur->inc_local.ldms, op_id, res);
 }
 
 static void opFree(op_t *op)
@@ -610,3 +803,11 @@ static void loadOpFact(plan_heur_lm_cut_t *h, const plan_problem_t *p)
 }
 
 
+static void planHeurLMCutStateInc(plan_heur_t *_heur,
+                                  const plan_state_t *state,
+                                  plan_heur_res_t *res)
+{
+    fprintf(stderr, "Error: Incremental LM-Cut cannot be called via"
+                    " planHeurState() function!\n");
+    exit(-1);
+}

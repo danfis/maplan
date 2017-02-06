@@ -24,6 +24,7 @@
 #include "plan/heur.h"
 
 struct _op_t {
+    int op_id;
     plan_arr_int_t eff; /*!< Facts in its effect */
     plan_arr_int_t pre; /*!< Facts in its effect */
     int op_cost;        /*!< Original operator's cost */
@@ -448,6 +449,23 @@ static int cut(plan_heur_lm_cut_t *h)
     return cost;
 }
 
+static void saveLandmark(plan_heur_lm_cut_t *h, plan_heur_res_t *res)
+{
+    plan_arr_int_t ops;
+    int i;
+
+    if (h->cut.size == 0)
+        return;
+
+    planArrIntInit(&ops, h->cut.size);
+    for (i = 0; i < h->cut.size; ++i)
+        planArrIntAdd(&ops, h->op[h->cut.arr[i]].op_id);
+    planArrIntSort(&ops);
+    planArrIntUniq(&ops);
+    planLandmarkSetAdd(&res->landmarks, ops.size, ops.arr);
+    planArrIntFree(&ops);
+}
+
 static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
                     plan_heur_res_t *res)
 {
@@ -463,6 +481,11 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
 
     while (FVALUE(h->fact + h->fact_goal) > 0){
         res->heur += cut(h);
+
+        // Store landmarks into output structure if requested.
+        if (res->save_landmarks)
+            saveLandmark(h, res);
+
         //hMaxFull(h, state, 0);
         hMaxInc(h);
     }
@@ -517,6 +540,7 @@ static void addOp(plan_heur_lm_cut_t *h, const plan_op_t *pop,
     }
     op_id = op - h->op;
 
+    op->op_id = parent_op_id;
     op->op_cost = getCost(h, pop);
 
     // Set effects

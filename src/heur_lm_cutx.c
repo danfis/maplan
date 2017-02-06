@@ -31,6 +31,7 @@ struct _op_t {
     int cost;           /*!< Current cost of the operator */
     int unsat;          /*!< Number of unsatisfied preconditions */
     int supp;           /*!< Supporter fact (that maximizes h^max) */
+    int cut_candidate; /*!< True if the operator is candidate for a cut */
 };
 typedef struct _op_t op_t;
 
@@ -163,6 +164,7 @@ static void initOps(plan_heur_lm_cut_t *h, int init_cost)
         h->op[i].supp = -1;
         if (init_cost)
             h->op[i].cost = h->op[i].op_cost;
+        h->op[i].cut_candidate = 0;
     }
 }
 
@@ -246,11 +248,13 @@ static void markGoalZone(plan_heur_lm_cut_t *h)
         fact = h->fact + fact_id;
         PLAN_ARR_INT_FOR_EACH(&fact->eff_op, op_id){
             op = h->op + op_id;
-            if (op->supp >= 0
-                    && op->cost == 0
-                    && h->fact_state[op->supp] == CUT_UNDEF){
-                planArrIntAdd(&h->queue, op->supp);
-                h->fact_state[op->supp] = CUT_GOAL;
+            if (op->supp >= 0 && h->fact_state[op->supp] == CUT_UNDEF){
+                if (op->cost == 0){
+                    planArrIntAdd(&h->queue, op->supp);
+                    h->fact_state[op->supp] = CUT_GOAL;
+                }else{
+                    op->cut_candidate = 1;
+                }
             }
         }
     }
@@ -288,16 +292,18 @@ static int findCut(plan_heur_lm_cut_t *h)
             op = h->op + op_id;
             if (op->supp != fact_id)
                 continue;
+            if (op->cut_candidate){
+                planArrIntAdd(&h->cut, op_id);
+                min_cost = BOR_MIN(min_cost, op->cost);
+                continue;
+            }
+
             PLAN_ARR_INT_FOR_EACH(&op->eff, next){
                 if (h->fact_state[next] == CUT_UNDEF){
                     if (h->fact_supp[next]){
                         h->fact_state[next] = CUT_INIT;
                         planArrIntAdd(&h->queue, next);
                     }
-
-                }else if (h->fact_state[next] == CUT_GOAL){
-                    planArrIntAdd(&h->cut, op_id);
-                    min_cost = BOR_MIN(min_cost, op->cost);
                 }
             }
         }

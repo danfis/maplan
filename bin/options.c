@@ -78,7 +78,9 @@ static int opt_search_size = sizeof(opt_search) / sizeof(optdef_t);
 static optdef_t opt_heur[] = {
     { "goalcount", opt_empty },
     { "add", opt_heur_all },
+    { "relax-add", opt_heur_all },
     { "max", opt_heur_all },
+    { "relax-max", opt_heur_all },
     { "ff", opt_heur_all },
     { "dtg", opt_heur_all },
     { "max2", opt_heur_all },

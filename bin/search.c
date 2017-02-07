@@ -556,9 +556,13 @@ static plan_heur_t *_heurNew(const options_t *o,
     if (strcmp(name, "goalcount") == 0){
         heur = planHeurGoalCountNew(prob->goal);
     }else if (strcmp(name, "add") == 0){
+        heur = planHeurAddNew(prob, flags);
+    }else if (strcmp(name, "relax-add") == 0){
         heur = planHeurRelaxAddNew(prob, flags);
     }else if (strcmp(name, "max") == 0){
         heur = planHeurMaxNew(prob, flags);
+    }else if (strcmp(name, "relax-max") == 0){
+        heur = planHeurRelaxMaxNew(prob, flags);
     }else if (strcmp(name, "ff") == 0){
         heur = planHeurRelaxFFNew(prob, flags);
     }else if (strcmp(name, "dtg") == 0){

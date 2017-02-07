@@ -41,6 +41,7 @@ struct _op_t {
     int supp;  /*!< Supporter fact */
     int supp_cost; /*!< Cost of the supporter -- needed for hMaxInc() */
     int goal_zone; /*!< True if the operator is connected to a goal zone */
+    // TODO: Rename goal_zone to cut_candidate
 };
 typedef struct _op_t op_t;
 
@@ -75,7 +76,7 @@ typedef struct _fact_t fact_t;
 #define FPUSH(pq, val, fact) \
     do { \
     if ((fact)->heap.key != INT_MAX){ \
-        (fact)->value = val; \
+        (fact)->value = (val); \
         planPQUpdate((pq), (val), &(fact)->heap); \
     }else{ \
         (fact)->value = val; \

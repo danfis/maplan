@@ -557,11 +557,9 @@ static plan_heur_t *_heurNew(const options_t *o,
     if (strcmp(name, "goalcount") == 0){
         heur = planHeurGoalCountNew(prob->goal);
     }else if (strcmp(name, "add") == 0){
-        heur = planHeurRelaxAddNew(prob->var, prob->var_size,
-                                   prob->goal, op, op_size, flags);
+        heur = planHeurRelaxAddNew(prob, flags);
     }else if (strcmp(name, "max") == 0){
-        heur = planHeurRelaxMaxNew(prob->var, prob->var_size,
-                                   prob->goal, op, op_size, flags);
+        heur = planHeurMaxNew(prob, flags);
     }else if (strcmp(name, "ff") == 0){
         heur = planHeurRelaxFFNew(prob->var, prob->var_size,
                                   prob->goal, op, op_size, flags);
@@ -579,10 +577,9 @@ static plan_heur_t *_heurNew(const options_t *o,
     }else if (strcmp(name, "lm-cut-inc-cache") == 0){
         if (optionsHeurOpt(o, "prune"))
             flags2 |= PLAN_LANDMARK_CACHE_PRUNE;
-        heur = planHeurLMCutIncCacheNew(prob->var, prob->var_size,
-                                        prob->goal, op, op_size, flags, flags2);
+        heur = planHeurLMCutXIncCacheNew(prob, flags, flags2);
     }else if (strcmp(name, "lm-cut2") == 0){
-        heur = planHeurH2LMCutNew(prob, flags);
+        heur = planHeurLMCut2New(prob, flags);
     }else if (strcmp(name, "flow") == 0){
         if (optionsHeurOpt(o, "ilp"))
             flags |= PLAN_HEUR_FLOW_ILP;

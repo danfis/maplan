@@ -13,8 +13,7 @@ plan_heur_t *maHeurMax(const plan_problem_t *prob)
 
 plan_heur_t *seqHeurMaxNew(const plan_problem_t *prob)
 {
-    return planHeurRelaxMaxNew(prob->var, prob->var_size, prob->goal,
-                               prob->op, prob->op_size, 0);
+    return planHeurRelaxMaxNew(prob, 0);
 }
 
 plan_heur_t *seqHeurLMCutNew(const plan_problem_t *prob)

@@ -209,10 +209,7 @@ plan_heur_t *planHeurGoalCountNew(const plan_part_state_t *goal);
  * If succ_gen is NULL, a new successor generator is created internally
  * from the given operators.
  */
-plan_heur_t *planHeurRelaxAddNew(const plan_var_t *var, int var_size,
-                                 const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size,
-                                 unsigned flags);
+plan_heur_t *planHeurRelaxAddNew(const plan_problem_t *p, unsigned flags);
 plan_heur_t *planHeurAddNew(const plan_problem_t *prob, unsigned flags);
 
 /**
@@ -220,10 +217,7 @@ plan_heur_t *planHeurAddNew(const plan_problem_t *prob, unsigned flags);
  * If succ_gen is NULL, a new successor generator is created internally
  * from the given operators.
  */
-plan_heur_t *planHeurRelaxMaxNew(const plan_var_t *var, int var_size,
-                                 const plan_part_state_t *goal,
-                                 const plan_op_t *op, int op_size,
-                                 unsigned flags);
+plan_heur_t *planHeurRelaxMaxNew(const plan_problem_t *p, unsigned flags);
 plan_heur_t *planHeurMaxNew(const plan_problem_t *p, unsigned flags);
 
 /**
@@ -252,6 +246,7 @@ plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
                                       const plan_part_state_t *goal,
                                       const plan_op_t *op, int op_size,
                                       unsigned flags);
+plan_heur_t *planHeurLMCutXIncLocalNew(const plan_problem_t *p, unsigned f);
 
 /**
  * Incremental LM-Cut, the version with cached landmarks.
@@ -263,6 +258,9 @@ plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
                                       const plan_op_t *op, int op_size,
                                       unsigned flags,
                                       unsigned cache_flags);
+plan_heur_t *planHeurLMCutXIncCacheNew(const plan_problem_t *p,
+                                       unsigned flags,
+                                       unsigned cache_flags);
 
 /**
  * h^2 heuristic

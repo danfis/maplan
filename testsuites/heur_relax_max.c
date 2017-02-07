@@ -4,8 +4,7 @@
 
 static plan_heur_t *maxNew(plan_problem_t *p)
 {
-    return planHeurRelaxMaxNew(p->var, p->var_size, p->goal,
-                               p->op, p->op_size, 0);
+    return planHeurRelaxMaxNew(p, 0);
 }
 
 TEST(testHeurRelaxMax)

@@ -400,6 +400,15 @@ int _planSearchHeur(plan_search_t *search,
  */
 int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node);
 
+/**
+ * Apply operator to a specified state. A new state is created a heuristic
+ * value is computed and the resulting state ID is returned.
+ * Mainly for a testing.
+ */
+plan_state_id_t planSearchApplyOp(plan_search_t *search,
+                                  plan_state_id_t state_id,
+                                  plan_op_t *op);
+
 
 /**** INLINES: ****/
 _bor_inline void _planSearchExpandedNode(plan_search_t *search,

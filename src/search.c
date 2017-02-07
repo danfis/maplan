@@ -263,6 +263,26 @@ int _planSearchCheckGoal(plan_search_t *search, plan_state_space_node_t *node)
     return found;
 }
 
+plan_state_id_t planSearchApplyOp(plan_search_t *search,
+                                  plan_state_id_t state_id,
+                                  plan_op_t *op)
+{
+    plan_state_id_t next_state;
+    plan_state_space_node_t *cur_node, *next_node;
+    plan_cost_t heur;
+
+    cur_node = planStateSpaceNode(search->state_space, state_id);
+    next_state = planOpApply(op, search->state_pool, state_id);
+    next_node = planStateSpaceNode(search->state_space, next_state);
+    _planSearchHeur(search, next_node, &heur, NULL);
+
+    next_node->parent_state_id = state_id;
+    next_node->op = op;
+    next_node->cost = cur_node->cost + op->cost;
+    next_node->heuristic = heur;
+
+    return next_state;
+}
 
 static plan_state_id_t extractPath(plan_state_space_t *state_space,
                                    plan_state_id_t goal_state,

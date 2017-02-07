@@ -146,7 +146,7 @@ plan_heur_t *planHeurFlowNew(const plan_problem_t *p, unsigned flags)
 
     hflow->lm_cut = NULL;
     if (flags & PLAN_HEUR_FLOW_LANDMARKS_LM_CUT)
-        hflow->lm_cut = planHeurRelaxLMCutNew(p, flags);
+        hflow->lm_cut = planHeurLMCutNew(p, flags);
 
     return &hflow->heur;
 }

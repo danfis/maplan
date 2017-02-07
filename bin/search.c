@@ -35,6 +35,7 @@ static plan_problem_t *problem = NULL;
 static plan_problem_agents_t *agent_problem = NULL;
 static plan_problem_t **problems = NULL;
 static int problems_size = 0;
+static plan_ma_comm_inproc_pool_t *comm_pool = NULL;
 
 struct _progress_t {
     int max_time;
@@ -102,7 +103,7 @@ static void *limitMonitorTh(void *_)
         elapsed = borTimerElapsedInSF(&limit_monitor.timer);
         if ((int)elapsed > limit_monitor.max_time){
             fprintf(stderr, "Aborting due to exceeded hard time limit"
-                            " (elapsed %f, limit: %d.\n",
+                            " (elapsed %f, limit: %d).\n",
                     elapsed, limit_monitor.max_time);
             fflush(stderr);
             limitMonitorAbort();
@@ -396,6 +397,7 @@ static int loadProblemAgents(const options_t *o)
 
     flags = PLAN_PROBLEM_USE_CG;
     agent_problem = planProblemAgentsFromProto(o->proto, flags);
+
     if (agent_problem->agent_size <= 1){
         // TODO: Maybe only warning and switch to single-agent mode.
         fprintf(stderr, "Error: Cannot run multi-agent planner on one"
@@ -420,12 +422,16 @@ static int loadProblemSeq(const options_t *o)
     problem = NULL;
     if (o->proto != NULL){
         problem = planProblemFromProto(o->proto, flags);
+        if (problem == NULL){
+            fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
+            return -1;
+        }
     }else if (o->fd != NULL){
         problem = planProblemFromFD(o->fd);
-    }
-    if (problem == NULL){
-        fprintf(stderr, "Error: Could not load file `%s'\n", o->proto);
-        return -1;
+        if (problem == NULL){
+            fprintf(stderr, "Error: Could not load file `%s'\n", o->fd);
+            return -1;
+        }
     }
 
     printProblem(problem);
@@ -782,6 +788,13 @@ static void maRun(int agent_id, ma_t *ma)
     planMASearchDel(ma_search);
 }
 
+static plan_ma_comm_t *maInproc(int agent_id, int agent_size)
+{
+    if (comm_pool == NULL)
+        comm_pool = planMACommInprocPoolNew(agent_size);
+    return planMACommInprocNew(comm_pool, agent_id);
+}
+
 static int maInit(ma_t *ma, int agent_id, const options_t *o,
                   plan_problem_t *prob, plan_problem_t *globprob)
 {
@@ -802,13 +815,19 @@ static int maInit(ma_t *ma, int agent_id, const options_t *o,
     planPathInit(&ma->path);
 
     if (o->tcp_id >= 0){
-        ma->comm = planMACommTCPNew(agent_id, o->tcp_size, (const char **)o->tcp);
+        ma->comm = planMACommTCPNew(agent_id, o->tcp_size,
+                                    (const char **)o->tcp, 0);
     }else if (agent_problem){
-        ma->comm = planMACommInprocNew(agent_id, agent_problem->agent_size);
+        ma->comm = maInproc(agent_id, agent_problem->agent_size);
     }else if (problems_size > 0){
-        ma->comm = planMACommInprocNew(agent_id, problems_size);
+        ma->comm = maInproc(agent_id, problems_size);
     }else{
         fprintf(stderr, "Error: Cannot create communication channel.\n");
+        return -1;
+    }
+
+    if (ma->comm == NULL){
+        fprintf(stderr, "Error: Cannot create a communication channel.\n");
         return -1;
     }
 
@@ -1000,6 +1019,8 @@ int main(int argc, char *argv[])
     if (opts->hard_limit_sleeptime > 0)
         limitMonitorJoin();
 
+    if (comm_pool != NULL)
+        planMACommInprocPoolDel(comm_pool);
     delProblem();
     optionsFree();
     planShutdownProtobuf();

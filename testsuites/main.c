@@ -12,7 +12,7 @@
 #include "heur_ma_pot.h"
 #include "list_lazy.h"
 #include "list.h"
-#include "ma_comm_nanomsg.h"
+#include "ma_comm.h"
 #include "causal_graph.h"
 #include "ma_search.h"
 #include "heur_admissible.h"
@@ -39,7 +39,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSHeurMAPot),
     TEST_SUITE_ADD(TSListLazy),
     TEST_SUITE_ADD(TSList),
-    TEST_SUITE_ADD(TSMACommNanomsg),
+    TEST_SUITE_ADD(TSMAComm),
     TEST_SUITE_ADD(TSCausalGraph),
     TEST_SUITE_ADD(TSMASearch),
     TEST_SUITE_ADD(TSHeurAdmissible),
@@ -53,6 +53,7 @@ TEST_SUITES {
 int main(int argc, char *argv[])
 {
     CU_SET_OUT_PREFIX("regressions/");
+    CU_SET_OUT_PER_TEST(1);
     CU_RUN(argc, argv);
 
     planShutdownProtobuf();

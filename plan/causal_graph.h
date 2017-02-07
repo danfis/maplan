@@ -20,6 +20,7 @@
 #ifndef __PLAN_CAUSALGRAPH_H__
 #define __PLAN_CAUSALGRAPH_H__
 
+#include <boruvka/rbtree_int.h>
 #include <plan/op.h>
 
 #ifdef __cplusplus
@@ -50,17 +51,55 @@ struct _plan_causal_graph_t {
 };
 typedef struct _plan_causal_graph_t plan_causal_graph_t;
 
+struct _plan_causal_graph_build_t {
+    bor_rbtree_int_t *succ_graph;
+    bor_rbtree_int_t *pred_graph;
+};
+typedef struct _plan_causal_graph_build_t plan_causal_graph_build_t;
+
+/**
+ * Initializes build structure.
+ */
+void planCausalGraphBuildInit(plan_causal_graph_build_t *cg_build);
+
+/**
+ * Frees allocated resources of build structure.
+ */
+void planCausalGraphBuildFree(plan_causal_graph_build_t *cg_build);
+
+/**
+ * Adds connection from variable in action precondition to a variable in
+ * its effect.
+ */
+void planCausalGraphBuildAdd(plan_causal_graph_build_t *cg_build,
+                             int var_pre, int var_eff);
+
 /**
  * Creates a new causal graph of variables
  */
-plan_causal_graph_t *planCausalGraphNew(int var_size,
-                                        const plan_op_t *op, int op_size,
-                                        const plan_part_state_t *goal);
+plan_causal_graph_t *planCausalGraphNew(int var_size);
 
 /**
  * Deletes causal graph object.
  */
 void planCausalGraphDel(plan_causal_graph_t *cg);
+
+/**
+ * Builds causal graph from the build structure.
+ */
+void planCausalGraphBuild(plan_causal_graph_t *cg,
+                          plan_causal_graph_build_t *cg_build);
+
+/**
+ * Fill causal graphs from operators.
+ */
+void planCausalGraphBuildFromOps(plan_causal_graph_t *cg,
+                                const plan_op_t *op, int op_size);
+
+/**
+ * Process causal graph and fills .important_var and .var_order* members.
+ */
+void planCausalGraph(plan_causal_graph_t *cg, const plan_part_state_t *goal);
 
 #ifdef __cplusplus
 } /* extern "C" */

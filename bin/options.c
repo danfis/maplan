@@ -409,6 +409,8 @@ void optionsFree(void)
         BOR_FREE(o->heur_opts);
     if (o->search_opts)
         BOR_FREE(o->search_opts);
+    if (o->tcp)
+        BOR_FREE(o->tcp);
 
     optsClear();
 }

@@ -28,6 +28,7 @@
 void planProblemInit(plan_problem_t *p)
 {
     bzero(p, sizeof(*p));
+    p->ma_privacy_var = -1;
 }
 
 void planProblemDel(plan_problem_t *plan)

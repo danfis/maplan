@@ -516,7 +516,10 @@ void planPotCompute2(const plan_pot_prob_t *prob, double *pot)
     for (i = 0; i < prob->var_size; ++i)
         planLPSetObj(lp, i, prob->state_coef[i]);
 
-    planLPSolve(lp, pot);
+    if (planLPSolve(lp, NULL, pot) != 0){
+        fprintf(stderr, "Error: LP has no solution!\n");
+        exit(-1);
+    }
     planLPDel(lp);
 }
 

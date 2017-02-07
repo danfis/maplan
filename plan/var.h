@@ -29,15 +29,21 @@
 extern "C" {
 #endif /* __cplusplus */
 
+struct _plan_var_val_t {
+    char *name;       /*!< Name of the value (i.e., corresponding fact) */
+    int is_private;   /*!< True if the value is private */
+    uint64_t used_by; /*!< Bit array recording agents that use this value */
+};
+typedef struct _plan_var_val_t plan_var_val_t;
+
 struct _plan_var_t {
     char *name;          /*!< Name of the variable */
     plan_val_t range;    /*!< Number of values in variable */
-    int *is_val_private; /*!< Flag for each value signal whether it is
-                              private */
     int is_private;      /*!< True if all values are private */
-    char **val_name;     /*!< Names of the values (i.e., corresponding facts) */
     int ma_privacy;      /*!< True if the variable is used for state
                               privacy preserving in ma mode */
+
+    plan_var_val_t *val; /*!< Info about each value within variable */
 };
 typedef struct _plan_var_t plan_var_t;
 
@@ -75,6 +81,33 @@ void planVarSetPrivate(plan_var_t *var);
  * Sets name of the value.
  */
 void planVarSetValName(plan_var_t *var, plan_val_t val, const char *name);
+
+/**
+ * Sets value as used-by the specified agent.
+ */
+void planVarSetValUsedBy(plan_var_t *var, plan_val_t val, int used_by);
+
+/**
+ * Sets variable's values as private if their .used_by contains at most one
+ * bit set to 1. Then it sets the whole variable as private if all values
+ * are private.
+ */
+void planVarSetPrivateFromUsedBy(plan_var_t *var);
+
+/**
+ * Returns true if the value is used by the specified agent.
+ */
+_bor_inline int planVarValIsUsedBy(const plan_var_t *var, plan_val_t val,
+                                   int used_by);
+
+
+/**** INLINES: ****/
+_bor_inline int planVarValIsUsedBy(const plan_var_t *var, plan_val_t val,
+                                   int used_by)
+{
+    uint64_t mask = (1u << used_by);
+    return (var->val[val].used_by & mask);
+}
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -479,10 +479,9 @@ static plan_cost_t lpSolve(plan_lp_t *lp, const fact_t *facts,
     // Add landmarks if provided
     lpAddLandmarks(lp, ldms);
 
-    if (use_ilp){
-        z = planLPSolveILPObjVal(lp);
-    }else{
-        z = planLPSolveObjVal(lp);
+    if (planLPSolve(lp, &z, NULL) != 0){
+        fprintf(stderr, "Error: LP has no solution!\n");
+        exit(-1);
     }
     h = roundOff(z);
 

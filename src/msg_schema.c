@@ -281,9 +281,9 @@ static void encode(unsigned char **wbuf, const void *msg,
     }
 }
 
-unsigned char *planMsgEncode(const void *msg,
-                                const plan_msg_schema_t *_schema,
-                                int *size)
+void *planMsgEncode(const void *msg,
+                    const plan_msg_schema_t *_schema,
+                    int *size)
 {
     unsigned char *buf, *wbuf;
     int bufsize;
@@ -295,6 +295,25 @@ unsigned char *planMsgEncode(const void *msg,
     wbuf = buf;
     encode(&wbuf, msg, _schema);
     return buf;
+}
+
+int planMsgEncode2(const void *msg,
+                   const plan_msg_schema_t *_schema,
+                   void *buf, int *size)
+{
+    unsigned char *wbuf;
+    int bufsize;
+
+    bufsize = wBufSize(msg, _schema);
+    if (bufsize > *size){
+        *size = bufsize;
+        return -1;
+    }
+
+    *size = bufsize;
+    wbuf = (unsigned char *)buf;
+    encode(&wbuf, msg, _schema);
+    return 0;
 }
 
 _bor_inline void convEndian(int type, void *msg, int offset)

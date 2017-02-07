@@ -9,16 +9,14 @@ endif
 CFLAGS += -I./ -I../
 CFLAGS += $(BORUVKA_CFLAGS)
 CFLAGS += $(PROTOBUF_CFLAGS)
-CFLAGS += $(NANOMSG_CFLAGS)
 CFLAGS += $(LP_CFLAGS)
 LDFLAGS += -Lcu/ -lcu -lrt -lm -L../ -lplan -pthread
 LDFLAGS += $(BORUVKA_LDFLAGS)
 LDFLAGS += $(PROTOBUF_LDFLAGS)
-LDFLAGS += $(NANOMSG_LDFLAGS)
 LDFLAGS += -lstdc++
 LDFLAGS += $(LP_LDFLAGS)
 
-CHECK_REG=cu/check-regressions
+CHECK_REG=cu/cu-check-regressions
 CHECK_TS ?=
 
 TARGETS = test optimal-cost msg-schema-gen msg-schema-load
@@ -48,7 +46,7 @@ OBJS += heur_h2.o
 OBJS += heur_h2_lm_cut.o
 OBJS += list_lazy.o
 OBJS += list.o
-OBJS += ma_comm_nanomsg.o
+OBJS += ma_comm.o
 OBJS += causal_graph.o
 OBJS += state_pool.o
 OBJS += ma_search.o

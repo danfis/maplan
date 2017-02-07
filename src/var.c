@@ -25,19 +25,18 @@ void planVarInit(plan_var_t *var, const char *name, plan_val_t range)
 {
     var->name = BOR_STRDUP(name);
     var->range = range;
-    var->is_val_private = BOR_CALLOC_ARR(int, var->range);
     var->is_private = 0;
-    var->val_name = BOR_CALLOC_ARR(char *, var->range);
     var->ma_privacy = 0;
+
+    var->val = BOR_CALLOC_ARR(plan_var_val_t, var->range);
 }
 
 void planVarInitMAPrivacy(plan_var_t *var)
 {
     var->name = NULL;
     var->range = INT_MAX;
-    var->is_val_private = NULL;
+    var->val = NULL;
     var->is_private = 0;
-    var->val_name = NULL;
     var->ma_privacy = 1;
 }
 
@@ -47,14 +46,13 @@ void planVarFree(plan_var_t *var)
 
     if (var->name)
         BOR_FREE(var->name);
-    if (var->is_val_private)
-        BOR_FREE(var->is_val_private);
-    if (var->val_name){
+
+    if (var->val){
         for (i = 0; i < var->range; ++i){
-            if (var->val_name[i])
-                BOR_FREE(var->val_name[i]);
+            if (var->val[i].name)
+                BOR_FREE(var->val[i].name);
         }
-        BOR_FREE(var->val_name);
+        BOR_FREE(var->val);
     }
 }
 
@@ -67,19 +65,13 @@ void planVarCopy(plan_var_t *dst, const plan_var_t *src)
     dst->is_private = src->is_private;
     dst->ma_privacy = src->ma_privacy;
 
-    dst->is_val_private = NULL;
-    if (src->is_val_private){
-        dst->is_val_private = BOR_ALLOC_ARR(int, dst->range);
-        memcpy(dst->is_val_private, src->is_val_private,
-               sizeof(int) * dst->range);
-    }
-
-    dst->val_name = NULL;
-    if (src->val_name){
-        dst->val_name = BOR_CALLOC_ARR(char *, dst->range);
+    dst->val = NULL;
+    if (src->val){
+        dst->val = BOR_CALLOC_ARR(plan_var_val_t, dst->range);
+        memcpy(dst->val, src->val, sizeof(plan_var_val_t) * dst->range);
         for (i = 0; i < dst->range; ++i){
-            if (src->val_name[i])
-                dst->val_name[i] = BOR_STRDUP(src->val_name[i]);
+            if (src->val[i].name)
+                dst->val[i].name = BOR_STRDUP(src->val[i].name);
         }
     }
 }
@@ -88,7 +80,7 @@ static int _isAllPrivate(plan_var_t *var)
 {
     plan_val_t i;
     for (i = 0; i < var->range; ++i){
-        if (!var->is_val_private[i])
+        if (!var->val[i].is_private)
             return 0;
     }
     return 1;
@@ -96,7 +88,7 @@ static int _isAllPrivate(plan_var_t *var)
 
 void planVarSetPrivateVal(plan_var_t *var, plan_val_t val)
 {
-    var->is_val_private[val] = 1;
+    var->val[val].is_private = 1;
     if (_isAllPrivate(var))
         var->is_private = 1;
 }
@@ -105,13 +97,54 @@ void planVarSetPrivate(plan_var_t *var)
 {
     plan_val_t i;
     for (i = 0; i < var->range; ++i)
-        var->is_val_private[i] = 1;
+        var->val[i].is_private = 1;
     var->is_private = 1;
 }
 
 void planVarSetValName(plan_var_t *var, plan_val_t val, const char *name)
 {
-    if (var->val_name[val] != NULL)
-        BOR_FREE(var->val_name[val]);
-    var->val_name[val] = BOR_STRDUP(name);
+    if (var->val[val].name != NULL)
+        BOR_FREE(var->val[val].name);
+    var->val[val].name = BOR_STRDUP(name);
+}
+
+void planVarSetValUsedBy(plan_var_t *var, plan_val_t val, int used_by)
+{
+    uint64_t set;
+    set = (1u << used_by);
+    var->val[val].used_by |= set;
+}
+
+_bor_inline int popcount(uint64_t v)
+{
+    uint64_t w = v;
+    int cnt = 0;
+
+    while (w != 0){
+        cnt += (int)(w & 1u);
+        w >>= 1u;
+    }
+
+    return cnt;
+}
+
+static int setValPrivateFromUsedBy(plan_var_val_t *val)
+{
+    if (popcount(val->used_by) <= 1){
+        val->is_private = 1;
+        return 1;
+    }
+    return 0;
+}
+
+void planVarSetPrivateFromUsedBy(plan_var_t *var)
+{
+    int i, num_private;
+
+    num_private = 0;
+    for (i = 0; i < var->range; ++i)
+        num_private += setValPrivateFromUsedBy(var->val + i);
+
+    if (num_private == var->range)
+        var->is_private = 1;
 }

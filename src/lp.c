@@ -60,6 +60,7 @@ static int lpSense(char sense)
 struct _plan_lp_t {
     CPXENVptr env;
     CPXLPptr lp;
+    int mip;
 };
 
 static void cplexErr(plan_lp_t *lp, int status, const char *s)
@@ -110,6 +111,7 @@ plan_lp_t *planLPNew(int rows, int cols, unsigned flags)
     int st, num_threads;
 
     lp = BOR_ALLOC(plan_lp_t);
+    lp->mip = 0;
 
     // Initialize CPLEX structures
     lp->env = CPXopenCPLEX(&st);
@@ -230,6 +232,25 @@ void planLPSetVarInt(plan_lp_t *lp, int i)
     st = CPXchgctype(lp->env, lp->lp, 1, &i, &type);
     if (st != 0)
         cplexErr(lp, st, "Could not set variable as integer.");
+    lp->mip = 1;
+#endif /* PLAN_USE_CPLEX */
+}
+
+void planLPSetVarBinary(plan_lp_t *lp, int i)
+{
+#ifdef PLAN_USE_LP_SOLVE
+    planLPSetVarRange(lp, i, 0, 1);
+    planLPSetVarInt(lp, i);
+#endif /* PLAN_USE_LP_SOLVE */
+
+#ifdef PLAN_USE_CPLEX
+    static char type = CPX_BINARY;
+    int st;
+
+    st = CPXchgctype(lp->env, lp->lp, 1, &i, &type);
+    if (st != 0)
+        cplexErr(lp, st, "Could not set variable as binary.");
+    lp->mip = 1;
 #endif /* PLAN_USE_CPLEX */
 }
 
@@ -327,48 +348,7 @@ int planLPNumRows(const plan_lp_t *lp)
 #endif /* PLAN_USE_CPLEX */
 }
 
-double planLPSolveObjVal(plan_lp_t *lp)
-{
-#ifdef PLAN_USE_LP_SOLVE
-    lprec *l = (lprec *)lp;
-    int ret;
-
-    set_verbose(l, NEUTRAL);
-    ret = solve(l);
-    if (ret == OPTIMAL || ret == SUBOPTIMAL)
-        return get_objective(l);
-    return DBL_MAX;
-#endif /* PLAN_USE_LP_SOLVE */
-
-#ifdef PLAN_USE_CPLEX
-    int st;
-
-    st = CPXlpopt(lp->env, lp->lp);
-    if (st != 0)
-        cplexErr(lp, st, "Failed to optimize LP");
-
-    return cplexObjVal(lp);
-#endif /* PLAN_USE_CPLEX */
-}
-
-double planLPSolveILPObjVal(plan_lp_t *lp)
-{
-#ifdef PLAN_USE_LP_SOLVE
-    return planLPSolveObjVal(lp);
-#endif /* PLAN_USE_LP_SOLVE */
-
-#ifdef PLAN_USE_CPLEX
-    int st;
-
-    st = CPXmipopt(lp->env, lp->lp);
-    if (st != 0)
-        cplexErr(lp, st, "Failed to optimize ILP");
-
-    return cplexObjVal(lp);
-#endif /* PLAN_USE_CPLEX */
-}
-
-double planLPSolve(plan_lp_t *lp, double *obj)
+int planLPSolve(plan_lp_t *lp, double *val, double *obj)
 {
 #ifdef PLAN_USE_LP_SOLVE
     lprec *l = (lprec *)lp;
@@ -377,28 +357,49 @@ double planLPSolve(plan_lp_t *lp, double *obj)
     set_verbose(l, NEUTRAL);
     ret = solve(l);
     if (ret == OPTIMAL || ret == SUBOPTIMAL){
-        get_variables(l, obj);
-        return get_objective(l);
-    }
+        if (val != NULL)
+            *val = get_objective(l);
+        if (obj != NULL)
+            get_variables(l, obj);
 
-    bzero(obj, sizeof(double) * get_Ncolumns(l));
-    return DBL_MAX;
+        return 0;
+
+    }else{
+        if (obj != NULL)
+            bzero(obj, sizeof(double) * get_Ncolumns(l));
+        if (val != NULL)
+            *val = 0.;
+        return -1;
+    }
 #endif /* PLAN_USE_LP_SOLVE */
 
 #ifdef PLAN_USE_CPLEX
-    int st, solst;
-    double ov;
+    int st;
 
-    st = CPXlpopt(lp->env, lp->lp);
+    if (lp->mip){
+        st = CPXmipopt(lp->env, lp->lp);
+    }else{
+        st = CPXlpopt(lp->env, lp->lp);
+    }
     if (st != 0)
         cplexErr(lp, st, "Failed to optimize LP");
 
-    st = CPXsolution(lp->env, lp->lp, &solst, &ov, obj, NULL, NULL, NULL);
-    if (st != 0)
+    st = CPXsolution(lp->env, lp->lp, NULL, val, obj, NULL, NULL, NULL);
+    if (st == CPXERR_NO_SOLN){
+        if (obj != NULL)
+            bzero(obj, sizeof(double) * CPXgetnumcols(lp->env, lp->lp));
+        if (val != NULL)
+            *val = 0.;
+        return -1;
+
+    }else if (st != 0){
         cplexErr(lp, st, "Cannot retrieve solution");
-    return ov;
+        return -1;
+    }
+    return 0;
 #endif /* PLAN_USE_CPLEX */
 }
+
 
 void planLPWrite(plan_lp_t *lp, const char *fn)
 {

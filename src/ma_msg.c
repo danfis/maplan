@@ -183,7 +183,6 @@ PLAN_MSG_SCHEMA_END(schema_dtg_req, plan_ma_msg_dtg_req_t, header)
 #define M_val_to    0x4u
 #define M_reachable 0x8u
 
-
 PLAN_MSG_SCHEMA_BEGIN(schema_msg)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, type, INT32)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, agent_id, INT32)
@@ -209,6 +208,7 @@ PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, dtg_req, &schema_dtg_req)
 PLAN_MSG_SCHEMA_ADD(plan_ma_msg_t, search_res, INT32)
 PLAN_MSG_SCHEMA_ADD_MSG_ARR(plan_ma_msg_t, op, op_size, &schema_op)
 PLAN_MSG_SCHEMA_ADD_MSG(plan_ma_msg_t, pot, &schema_pot)
+
 PLAN_MSG_SCHEMA_END(schema_msg, plan_ma_msg_t, header)
 #define M_type                 0x000001u
 #define M_agent_id             0x000002u
@@ -533,7 +533,29 @@ int planMAMsgHeurRequestedAgent(const plan_ma_msg_t *msg, int i)
 GETTER_SETTER(HeurCost, heur_cost, int)
 GETTER_SETTER(SearchRes, search_res, int)
 
+static void updateStrArr(const char *names, int names_size,
+                         char ***dst, int *dst_size)
+{
+    int num_names, i, size;
 
+    // Find the number of strings in names
+    for (i = 0, num_names = 0; i < names_size; ++i){
+        if (names[i] == 0x0)
+            ++num_names;
+    }
+
+    if (num_names == 0)
+        return;
+
+    // Create output array and assign strings
+    size = *dst_size + num_names;
+    *dst = BOR_REALLOC_ARR(*dst, char *, size);
+    (*dst)[(*dst_size)++] = (char *)names;
+    for (i = 1; i < names_size; ++i){
+        if (names[i] == 0x0 && (*dst_size) < size)
+            (*dst)[(*dst_size)++] = (char *)(names + i + 1);
+    }
+}
 
 
 
@@ -683,13 +705,14 @@ plan_ma_msg_t *planMAMsgSnapshotNewResponse(const plan_ma_msg_t *sshot_init,
 
 
 
-void *planMAMsgPacked(const plan_ma_msg_t *msg, size_t *size)
+void *planMAMsgPacked(const plan_ma_msg_t *msg, int *size)
 {
-    int siz;
-    void *buf;
-    buf = planMsgEncode(msg, &schema_msg, &siz);
-    *size = siz;
-    return buf;
+    return planMsgEncode(msg, &schema_msg, size);
+}
+
+int planMAMsgPackToBuf(const plan_ma_msg_t *msg, void *buf, int *size)
+{
+    return planMsgEncode2(msg, &schema_msg, buf, size);
 }
 
 plan_ma_msg_t *planMAMsgUnpacked(void *buf, size_t size)

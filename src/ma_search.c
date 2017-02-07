@@ -19,25 +19,12 @@
 
 #include "plan/ma_search.h"
 #include "plan/ma_state.h"
+#include "plan/ma_terminate.h"
 
 #include "ma_snapshot.h"
 
 /** Timeout before dead-end verification is started */
 #define DEAD_END_BLOCK_TIME 1000 // 1 second
-
-struct _term_t {
-    int is_initiator;
-    int initiator_id;
-
-    int final_target;
-    int final_counter;
-
-    int final_ack_target;
-    int final_ack_counter;
-    int is_first;
-    int is_last;
-};
-typedef struct _term_t term_t;
 
 /** Main mutli-agent search structure. */
 struct _plan_ma_search_t {
@@ -54,10 +41,9 @@ struct _plan_ma_search_t {
     plan_state_id_t goal;
     plan_cost_t goal_cost;
     int blocked;
-    int terminate;
-    term_t term;
-
     plan_heur_t *heur;
+
+    plan_ma_terminate_t term;
 };
 
 /** Reference data for the received public states */
@@ -82,11 +68,8 @@ static void publicStateSend(plan_ma_search_t *ma,
 static void publicStateRecv(plan_ma_search_t *ma,
                             plan_ma_msg_t *msg);
 
-/** Starts termination schema */
-static void terminate(plan_ma_search_t *ma);
-/** Process TERMINATE message */
-static int terminateMsg(plan_ma_search_t *ma_search,
-                        plan_ma_msg_t *msg);
+static void terminateUpdateMsg(plan_ma_msg_t *msg, void *ud);
+static void terminateRecvMsg(const plan_ma_msg_t *msg, void *ud);
 
 /** Starts trace-path process */
 static void tracePath(plan_ma_search_t *ma, plan_state_id_t goal_state);
@@ -202,9 +185,6 @@ plan_ma_search_t *planMASearchNew(plan_ma_search_params_t *params)
     ma_search->goal = PLAN_NO_STATE;
     ma_search->goal_cost = PLAN_COST_MAX;
     ma_search->blocked = 0;
-    ma_search->terminate = 0;
-    ma_search->term.is_initiator = 0;
-    ma_search->term.initiator_id = INT_MAX;
 
     ma_search->heur = NULL;
     if (ma_search->search->heur->ma){
@@ -212,6 +192,9 @@ plan_ma_search_t *planMASearchNew(plan_ma_search_params_t *params)
         planHeurMAInit(ma_search->heur, ma_search->comm->node_size,
                        ma_search->comm->node_id, ma_search->ma_state);
     }
+
+    planMATerminateInit(&ma_search->term, terminateUpdateMsg,
+                        terminateRecvMsg, ma_search);
 
     return ma_search;
 }
@@ -221,6 +204,7 @@ void planMASearchDel(plan_ma_search_t *ma_search)
     planMAStateDel(ma_search->ma_state);
     planMASnapshotRegFree(&ma_search->snapshot);
     planPathFree(&ma_search->path);
+    planMATerminateFree(&ma_search->term);
     BOR_FREE(ma_search);
 }
 
@@ -261,7 +245,7 @@ static int searchPostStep(plan_search_t *search, int res, void *ud)
 
     }else if (res == PLAN_SEARCH_ABORT){
         // Initialize termination of a whole cluster
-        terminate(ma);
+        planMATerminateStart(&ma->term, ma->comm);
 
     }else if (res == PLAN_SEARCH_NOT_FOUND){
         // Block until some message unblocks the process
@@ -279,25 +263,18 @@ static int searchPostStep(plan_search_t *search, int res, void *ud)
     }
 
     // Process all messages -- non-blocking
-    while (!ma->terminate && (msg = planMACommRecv(ma->comm)) != NULL){
+    while (ma->term.state == PLAN_MA_TERMINATE_NONE
+            && (msg = planMACommRecv(ma->comm)) != NULL){
         processMsg(ma, msg);
         planMAMsgDel(msg);
     }
 
-    // If we are in termination process, ignore all messages except
-    // terminate messages
-    while (ma->terminate == 1 && (msg = planMACommRecvBlock(ma->comm, -1)) != NULL){
-        if (planMAMsgType(msg) == PLAN_MA_MSG_TERMINATE
-                && terminateMsg(ma, msg) != 0){
-            ma->terminate = 2;
-        }
-
-        planMAMsgDel(msg);
-    }
+    // Process termination procedure if needed
+    planMATerminateWait(&ma->term, ma->comm);
 
     // If we were terminated, set-up result flag and terminate underlying
     // search algorithm.
-    if (ma->terminate == 2){
+    if (ma->term.state == PLAN_MA_TERMINATE_TERMINATED){
         if (ma->res != PLAN_SEARCH_FOUND)
             ma->res = PLAN_SEARCH_NOT_FOUND;
         res = ma->res;
@@ -348,7 +325,7 @@ static void searchMAHeur(plan_search_t *search, plan_heur_t *heur,
 
     ret = planHeurMANode(heur, ma->comm, state_id, search, res);
     while (ret == -1
-            && !ma->terminate
+            && ma->term.state == PLAN_MA_TERMINATE_NONE
             && (msg = planMACommRecvBlock(ma->comm, 0)) != NULL){
         if (planMAMsgType(msg) == PLAN_MA_MSG_HEUR
                 && planMAMsgHeurType(msg) == PLAN_MA_MSG_HEUR_UPDATE){
@@ -370,9 +347,7 @@ static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg)
 
     type = planMAMsgType(msg);
     if (type == PLAN_MA_MSG_TERMINATE){
-        ma->terminate = 1;
-        if (terminateMsg(ma, msg) != 0)
-            ma->terminate = 2;
+        planMATerminateProcessMsg(&ma->term, msg, ma->comm);
         return;
     }
 
@@ -408,10 +383,10 @@ static void processMsg(plan_ma_search_t *ma, plan_ma_msg_t *msg)
                                   ma->comm, &ma->path);
         if (res == 0){
             ma->res = PLAN_SEARCH_FOUND;
-            terminate(ma);
+            planMATerminateStart(&ma->term, ma->comm);
         }else if (res == -1){
             ma->res = PLAN_SEARCH_ABORT;
-            terminate(ma);
+            planMATerminateStart(&ma->term, ma->comm);
         }
 
     }else if (type == PLAN_MA_MSG_HEUR){
@@ -520,183 +495,23 @@ static void publicStateRecv(plan_ma_search_t *ma,
 }
 
 
-static void terminate(plan_ma_search_t *ma)
+static void terminateUpdateMsg(plan_ma_msg_t *msg, void *ud)
 {
-    plan_ma_msg_t *msg;
-
-    if (ma->terminate)
-        return;
-
-    msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
-                       PLAN_MA_MSG_TERMINATE_REQUEST,
-                       ma->comm->node_id);
-    planMAMsgSetTerminateAgent(msg, ma->comm->node_id);
-    planMAMsgSetSearchRes(msg, ma->res);
-    planMAMsgTracePathAppendPath(msg, &ma->path);
-    planMACommSendInRing(ma->comm, msg);
-    planMAMsgDel(msg);
-
-    ma->terminate = 1;
-    ma->term.is_initiator = 1;
+    plan_ma_search_t *ma_search = ud;
+    planMAMsgSetSearchRes(msg, ma_search->res);
+    planMAMsgTracePathAppendPath(msg, &ma_search->path);
 }
 
-static void terminateSendFinalFin(plan_ma_search_t *ma_search)
+static void terminateRecvMsg(const plan_ma_msg_t *msg, void *ud)
 {
-    plan_ma_msg_t *term_msg;
+    plan_ma_search_t *ma_search = ud;
 
-    term_msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
-                            PLAN_MA_MSG_TERMINATE_FINAL_FIN,
-                            ma_search->comm->node_id);
-    planMACommSendToAll(ma_search->comm, term_msg);
-    planMAMsgDel(term_msg);
-}
-
-static void terminateSendFinal(plan_ma_search_t *ma_search, int send_plan)
-{
-    plan_ma_msg_t *term_msg;
-    int i, to;
-
-    if (ma_search->term.final_ack_target == 0)
-        return;
-
-    term_msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
-                            PLAN_MA_MSG_TERMINATE_FINAL,
-                            ma_search->comm->node_id);
-    if (send_plan){
-        planMAMsgSetSearchRes(term_msg, ma_search->res);
-        planMAMsgTracePathAppendPath(term_msg, &ma_search->path);
+    ma_search->res = planMAMsgSearchRes(msg);
+    if (!planPathEmpty(&ma_search->path)){
+        planPathFree(&ma_search->path);
+        planPathInit(&ma_search->path);
     }
-
-    to = ma_search->comm->node_id + 1;
-    to = to % ma_search->comm->node_size;
-    for (i = 0; i < ma_search->term.final_ack_target; ++i){
-        planMACommSendToNode(ma_search->comm, to, term_msg);
-        to = (to + 1) % ma_search->comm->node_size;
-    }
-    planMAMsgDel(term_msg);
-}
-
-static void terminateSendFinalAck(plan_ma_search_t *ma_search)
-{
-    plan_ma_msg_t *term_msg;
-    int i, to, node_size;
-
-    if (ma_search->term.final_target == 0)
-        return;
-
-    term_msg = planMAMsgNew(PLAN_MA_MSG_TERMINATE,
-                            PLAN_MA_MSG_TERMINATE_FINAL_ACK,
-                            ma_search->comm->node_id);
-
-    node_size = ma_search->comm->node_size;
-    to = ma_search->comm->node_id - 1;
-    to = (to + node_size) % node_size;
-    for (i = 0; i < ma_search->term.final_target; ++i){
-        planMACommSendToNode(ma_search->comm, to, term_msg);
-        to = (to + node_size - 1) % node_size;
-    }
-    planMAMsgDel(term_msg);
-}
-
-static void terminatePrepareTargets(plan_ma_search_t *ma_search,
-                                    int initiator_id)
-{
-    int target;
-
-    if (initiator_id == -1){
-        ma_search->term.is_first = 1;
-        ma_search->term.is_last = 0;
-        ma_search->term.final_counter = 0;
-        ma_search->term.final_target = 0;
-        ma_search->term.final_ack_counter = 0;
-        ma_search->term.final_ack_target = ma_search->comm->node_size - 1;
-
-    }else{
-        ma_search->term.is_first = 0;
-        ma_search->term.is_last = 0;
-        ma_search->term.final_counter = 0;
-        ma_search->term.final_ack_counter = 0;
-
-        target = ma_search->comm->node_id - initiator_id;
-        target = target + ma_search->comm->node_size;
-        target = target % ma_search->comm->node_size;
-        ma_search->term.final_target = target;
-        target = ma_search->comm->node_size - 1 - target;
-        ma_search->term.final_ack_target = target;
-        if (ma_search->term.final_ack_target == 0)
-            ma_search->term.is_last = 1;
-    }
-}
-
-static int terminateMsg(plan_ma_search_t *ma_search,
-                        plan_ma_msg_t *msg)
-{
-    int subtype = planMAMsgSubType(msg);
-    int agent_id;
-
-    if (subtype == PLAN_MA_MSG_TERMINATE_FINAL_FIN){
-        return -1;
-
-    }else if (subtype == PLAN_MA_MSG_TERMINATE_FINAL){
-        if (planMAMsgAgent(msg) == ma_search->term.initiator_id){
-            ma_search->res = planMAMsgSearchRes(msg);
-            if (!planPathEmpty(&ma_search->path)){
-                planPathFree(&ma_search->path);
-                planPathInit(&ma_search->path);
-            }
-            planMAMsgTracePathExtractPath(msg, &ma_search->path);
-        }
-        ++ma_search->term.final_counter;
-
-    }else if (subtype == PLAN_MA_MSG_TERMINATE_FINAL_ACK){
-        ++ma_search->term.final_ack_counter;
-
-    }else{ // PLAN_MA_MSG_TERMINATE_REQUEST
-        agent_id = planMAMsgTerminateAgent(msg);
-        if (agent_id == ma_search->comm->node_id){
-            // The REQ message circled and arrived back to the initiator.
-            // Initialize flushing message queues.
-            ma_search->term.initiator_id = agent_id;
-            terminatePrepareTargets(ma_search, -1);
-            terminateSendFinal(ma_search, 1);
-
-        }else{
-            if (ma_search->term.is_initiator
-                    && agent_id > ma_search->comm->node_id)
-                return 0;
-
-            if (agent_id < ma_search->term.initiator_id){
-                ma_search->term.initiator_id = agent_id;
-                terminatePrepareTargets(ma_search, agent_id);
-            }
-            planMACommSendInRing(ma_search->comm, msg);
-        }
-    }
-
-    if (ma_search->term.final_counter == ma_search->term.final_target){
-        if (ma_search->term.is_last){
-            terminateSendFinalAck(ma_search);
-        }else if (!ma_search->term.is_first){
-            terminateSendFinal(ma_search, 0);
-        }
-        ma_search->term.final_counter = -1;
-    }
-
-    if (ma_search->term.final_ack_counter == ma_search->term.final_ack_target){
-        if (!ma_search->term.is_first && !ma_search->term.is_last){
-            terminateSendFinalAck(ma_search);
-        }
-        ma_search->term.final_ack_counter = -1;
-    }
-
-    if (ma_search->term.final_ack_counter == -1
-            && ma_search->term.final_counter == -1
-            && ma_search->term.is_first){
-        terminateSendFinalFin(ma_search);
-        return -1;
-    }
-
-    return 0;
+    planMAMsgTracePathExtractPath(msg, &ma_search->path);
 }
 
 
@@ -708,11 +523,11 @@ static void tracePath(plan_ma_search_t *ma, plan_state_id_t goal_state)
                                ma->pub_state_reg, ma->comm, &ma->path);
     if (trace_path == -1){
         ma->res = PLAN_SEARCH_ABORT;
-        terminate(ma);
+        planMATerminateStart(&ma->term, ma->comm);
 
     }else if (trace_path == 0){
         ma->res = PLAN_SEARCH_FOUND;
-        terminate(ma);
+        planMATerminateStart(&ma->term, ma->comm);
     }
 }
 
@@ -1135,5 +950,5 @@ static void deadEndVerifyResponseFinalize(plan_ma_snapshot_t *s)
 {
     dead_end_verify_t *ver = DEAD_END_VERIFY(s);
     if (!ver->ack)
-        terminate(ver->ma);
+        planMATerminateStart(&ver->ma->term, ver->ma->comm);
 }

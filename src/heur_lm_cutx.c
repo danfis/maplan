@@ -25,25 +25,6 @@
 #include "plan/heur.h"
 #include "op_id_tr.h"
 
-/**
- * Incremental LM-Cut, the local version.
- */
-#define INC_LOCAL 1
-
-/**
- * Incremental LM-Cut, the version with cached landmarks.
- */
-#define INC_CACHE 2
-
-struct _inc_local_t {
-    int enabled;
-    plan_landmark_set_t ldms; /*!< Cached landmarks */
-    plan_state_id_t ldms_id;  /*!< ID of the state for which the landmarks
-                                   are cached */
-    plan_op_id_tr_t op_id_tr; /*!< Translation from global ID to local ID */
-};
-typedef struct _inc_local_t inc_local_t;
-
 struct _op_t {
     int op_id;
     plan_arr_int_t eff; /*!< Facts in its effect */
@@ -106,6 +87,28 @@ _bor_inline fact_t *FPOP(plan_pq_t *pq, int *value)
 #define F_UNSET_SUPP(fact) (--(fact)->supp_cnt)
 #define F_IS_SUPP(fact) ((fact)->supp_cnt)
 
+/** Incremental LM-Cut, the local version. */
+#define INC_LOCAL 1
+
+/** Incremental LM-Cut, the version with cached landmarks. */
+#define INC_CACHE 2
+
+struct _inc_local_t {
+    int enabled;
+    plan_landmark_set_t ldms; /*!< Cached landmarks */
+    plan_state_id_t ldms_id;  /*!< ID of the state for which the landmarks
+                                   are cached */
+    plan_op_id_tr_t op_id_tr; /*!< Translation from global ID to local ID */
+};
+typedef struct _inc_local_t inc_local_t;
+
+struct _inc_cache_t {
+    int enabled;
+    plan_landmark_cache_t *ldm_cache;
+    plan_op_id_tr_t op_id_tr;
+};
+typedef struct _inc_cache_t inc_cache_t;
+
 struct _plan_heur_lm_cut_t {
     plan_heur_t heur;
     unsigned flags;
@@ -125,6 +128,7 @@ struct _plan_heur_lm_cut_t {
     plan_arr_int_t cut;   /*!< Current cut */
 
     inc_local_t inc_local; /*!< Struct for local incremental LM-Cut */
+    inc_cache_t inc_cache; /*!< Struct for cached incremental LM-Cut */
 
     /** Auxiliary structures to avoid re-allocation */
     int *fact_state;
@@ -139,6 +143,10 @@ static void heurDel(plan_heur_t *_heur);
 static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
                     plan_heur_res_t *res);
 static void heurValIncLocal(plan_heur_t *_heur,
+                            plan_state_id_t state_id,
+                            plan_search_t *search,
+                            plan_heur_res_t *res);
+static void heurValIncCache(plan_heur_t *_heur,
                             plan_state_id_t state_id,
                             plan_search_t *search,
                             plan_heur_res_t *res);
@@ -158,21 +166,27 @@ plan_heur_t *lmCutNew(const plan_problem_t *p, unsigned type,
     h = BOR_ALLOC(plan_heur_lm_cut_t);
     bzero(h, sizeof(*h));
     h->flags = flags;
-    if (type & INC_LOCAL){
+    if (type == INC_LOCAL){
         _planHeurInit(&h->heur, heurDel, planHeurLMCutStateInc,
                       heurValIncLocal);
+    }else if (type == INC_CACHE){
+        _planHeurInit(&h->heur, heurDel, planHeurLMCutStateInc,
+                      heurValIncCache);
     }else{
         _planHeurInit(&h->heur, heurDel, heurVal, NULL);
     }
     planFactIdInit(&h->fact_id, p->var, p->var_size, 0);
     loadOpFact(h, p);
 
-    h->inc_local.enabled = 0;
-    if (type & INC_LOCAL){
+    if (type == INC_LOCAL){
         h->inc_local.enabled = 1;
         bzero(&h->inc_local.ldms, sizeof(h->inc_local.ldms));
         h->inc_local.ldms_id = PLAN_NO_STATE;
         planOpIdTrInit(&h->inc_local.op_id_tr, p->op, p->op_size);
+    }else if (type == INC_CACHE){
+        h->inc_cache.enabled = 1;
+        h->inc_cache.ldm_cache = planLandmarkCacheNew(cache_flags);
+        planOpIdTrInit(&h->inc_cache.op_id_tr, p->op, p->op_size);
     }
 
     h->fact_state = BOR_ALLOC_ARR(int, h->fact_size);
@@ -190,6 +204,12 @@ plan_heur_t *planHeurLMCutXNew(const plan_problem_t *p, unsigned flags)
 plan_heur_t *planHeurLMCutXIncLocalNew(const plan_problem_t *p, unsigned flags)
 {
     return lmCutNew(p, INC_LOCAL, flags, 0);
+}
+
+plan_heur_t *planHeurLMCutXIncCacheNew(const plan_problem_t *p,
+                                       unsigned flags, unsigned cache_flags)
+{
+    return lmCutNew(p, INC_CACHE, flags, cache_flags);
 }
 
 static void heurDel(plan_heur_t *_heur)
@@ -212,6 +232,10 @@ static void heurDel(plan_heur_t *_heur)
     if (h->inc_local.enabled){
         planLandmarkSetFree(&h->inc_local.ldms);
         planOpIdTrFree(&h->inc_local.op_id_tr);
+    }
+    if (h->inc_cache.enabled){
+        planLandmarkCacheDel(h->inc_cache.ldm_cache);
+        planOpIdTrFree(&h->inc_cache.op_id_tr);
     }
 
     if (h->fact_state)
@@ -682,6 +706,50 @@ static void heurValIncLocal(plan_heur_t *_heur,
     if (node->op != NULL)
         op_id = planOpIdTrLoc(&heur->inc_local.op_id_tr, node->op->global_id);
     _heurVal(heur, state, &heur->inc_local.ldms, op_id, res);
+}
+
+static void heurValIncCache(plan_heur_t *_heur,
+                            plan_state_id_t state_id,
+                            plan_search_t *search,
+                            plan_heur_res_t *res_out)
+{
+    plan_heur_lm_cut_t *heur = HEUR(_heur);
+    const plan_landmark_set_t *ldms = NULL;
+    const plan_state_t *state;
+    plan_state_space_node_t *node;
+    plan_heur_res_t res;
+    int op_id = -1, ret;
+
+    if (res_out->save_landmarks){
+        fprintf(stderr, "Warning: LM-Cut-inc-cache: Saving landmarks is not"
+                        " currently supported by this version of LM-Cut.\n");
+    }
+
+    // Obtain initial landmarks from the parent state
+    node = planSearchLoadNode(search, state_id);
+    if (node->parent_state_id >= 0){
+        ldms = planLandmarkCacheGet(heur->inc_cache.ldm_cache,
+                                    node->parent_state_id);
+    }
+
+    // Compute heuristic for the current state
+    state = planSearchLoadState(search, state_id);
+    if (node->op != NULL)
+        op_id = planOpIdTrLoc(&heur->inc_cache.op_id_tr, node->op->global_id);
+
+    res = *res_out;
+    res.save_landmarks = 1;
+    _heurVal(heur, state, ldms, op_id, &res);
+    //lmCutState(heur, state, NULL, -1, &res);
+    ret = planLandmarkCacheAdd(heur->inc_cache.ldm_cache, state_id,
+                               &res.landmarks);
+    if (ret != 0)
+        planLandmarkSetFree(&res.landmarks);
+
+    //lmCutState(heur, state, ldms, op_id, res_out);
+    *res_out = res;
+    res_out->save_landmarks = 0;
+    bzero(&res_out->landmarks, sizeof(res_out->landmarks));
 }
 
 static void opFree(op_t *op)

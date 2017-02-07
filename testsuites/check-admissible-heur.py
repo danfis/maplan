@@ -43,31 +43,44 @@ def optimalCost(prob_plan):
             p = line.strip().split()[-1]
             return int(p)
 
-def testHeur(heur, prob_proto):
-    cmd = ['./test-heur', heur, prob_proto]
+def testHeur(heur, prob_proto, plan_fn):
+    cmd = ['./test-heur', heur, prob_proto, plan_fn]
     p = subprocess.Popen(cmd, stdout = subprocess.PIPE)
     output = p.communicate()[0]
     output = output.decode('ascii').split('\t')
-    return int(output[0]), float(output[1]), float(output[2])
+    build_time = float(output[0])
+    path = [x.split(':') for x in output[1:]]
+    path = [(int(x[0]), x[1], float(x[2])) for x in path]
+    return build_time, path
 
 def main(heur, topdir):
+    failed = []
     for dom, prob, dom_pddl, prob_pddl, prob_plan in probIt(topdir):
         print(dom, prob, end = ': ')
         sys.stdout.flush()
         translate(dom_pddl, prob_pddl, 'problem.proto')
         optimal_hval = optimalCost(prob_plan)
-        print('optimal: {0}'.format(optimal_hval), end = '')
+
+        build_time, path = testHeur(heur, 'problem.proto', prob_plan)
+        print('build time: {0}s'.format(build_time))
+        for p in path:
+            optimal_hval -= p[0]
+            if p[1] == 'DE' or int(p[1]) > optimal_hval:
+                ok = 'FAIL'
+                failed += [(dom, prob)]
+            else:
+                ok = 'OK'
+            print('    optimal: {0}, computed: {1}, time: {2}s ==> {3}' \
+                    .format(optimal_hval, p[1], p[2], ok))
         sys.stdout.flush()
-        hval, time, build_time = testHeur(heur, 'problem.proto')
-        print(', value: {0}, time: {1:.6f}/{2:.6f}' \
-                .format(hval, time, build_time), end = '')
-        sys.stdout.flush()
-        if hval <= optimal_hval:
-            print(' ==> OK')
-        else:
-            print(' ==> FAIL!')
-            sys.exit(-1)
-        sys.stdout.flush()
+        os.unlink('problem.proto')
+
+    if len(failed) > 0:
+        print('FAILED:')
+        for f in failed:
+            print('    {0} {1}'.format(f[0], f[1]))
+        return -1
+    return 0
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:

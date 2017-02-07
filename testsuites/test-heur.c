@@ -2,6 +2,8 @@
 #include <boruvka/timer.h>
 #include <plan/problem.h>
 #include <plan/heur.h>
+#include <plan/search.h>
+#include <plan/arr.h>
 
 plan_problem_t *problem = NULL;
 
@@ -18,13 +20,57 @@ static int loadProblem(const char *fn)
     return 0;
 }
 
-static int heur(const char *hname)
+static void loadPlan(const char *fname, plan_arr_int_t *op_ids)
+{
+    FILE *fin;
+    char *line = NULL;
+    size_t size = 0;
+    ssize_t lsize;
+    int i, found;
+
+    fin = fopen(fname, "r");
+    if (fin == NULL){
+        fprintf(stderr, "Error: Could not open plan file `%s'\n", fname);
+        exit(-1);
+    }
+
+    while ((lsize = getline(&line, &size, fin)) > 0){
+        if (lsize < 3 || line[0] != '(' || line[lsize - 2] != ')')
+            continue;
+
+        found = 0;
+        line[lsize - 2] = 0;
+        for (i = 0; i < problem->op_size; ++i){
+            if (strcmp(line + 1, problem->op[i].name) == 0){
+                planArrIntAdd(op_ids, i);
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found){
+            fprintf(stderr, "Error: Could not find operator `%s'\n", line + 1);
+            exit(-1);
+        }
+    }
+
+    fclose(fin);
+    if (line != NULL)
+        free(line);
+}
+
+static int heur(const char *hname, const plan_arr_int_t *plan)
 {
     bor_timer_t timer;
     double build_time;
+    plan_search_astar_params_t sparams;
+    plan_search_t *search;
     plan_heur_t *heur;
     plan_heur_res_t res;
     PLAN_STATE_STACK(state, problem->var_size);
+    plan_state_id_t state_id;
+    plan_state_space_node_t *node;
+    int op_id;
 
     borTimerStart(&timer);
 
@@ -54,6 +100,10 @@ static int heur(const char *hname)
                                 problem->op, problem->op_size, 0);
         */
         heur = planHeurLMCutXNew(problem, 0);
+    }else if (strcmp(hname, "lm-cut-inc-local") == 0){
+        heur = planHeurLMCutXIncLocalNew(problem, 0);
+    }else if (strcmp(hname, "lm-cut-inc-cache") == 0){
+        heur = planHeurLMCutXIncCacheNew(problem, 0, 0);
     }else if (strcmp(hname, "max2") == 0){
         heur = planHeurMax2New(problem, 0);
         //heur = planHeurH2MaxNew(problem, 0);
@@ -91,40 +141,70 @@ static int heur(const char *hname)
     }
     borTimerStop(&timer);
     build_time = borTimerElapsedInSF(&timer);
+    printf("%.8f", build_time);
 
+    planSearchAStarParamsInit(&sparams);
+    sparams.search.heur = heur;
+    sparams.search.heur_del = 1;
+    sparams.search.prob = problem;
+    search = planSearchAStarNew(&sparams);
+
+    borTimerStart(&timer);
     planHeurResInit(&res);
-    planHeurState(heur, &state, &res);
-
-    planHeurDel(heur);
+    planHeurNode(heur, 0, search, &res);
     borTimerStop(&timer);
     if (res.heur == PLAN_HEUR_DEAD_END){
-        printf("DE");
+        printf("\t0:DE:%.8f", borTimerElapsedInSF(&timer));
     }else{
-        printf("%d", (int)res.heur);
+        printf("\t0:%d:%.8f", (int)res.heur, borTimerElapsedInSF(&timer));
     }
-    printf("\t%.8f\t%.8f\n", borTimerElapsedInSF(&timer), build_time);
+
+    search->init_step_fn(search);
+    state_id = search->initial_state;
+    PLAN_ARR_INT_FOR_EACH(plan, op_id){
+        borTimerStart(&timer);
+        state_id = planSearchApplyOp(search, state_id, problem->op + op_id);
+        borTimerStop(&timer);
+
+        node = planStateSpaceNode(search->state_space, state_id);
+        printf("\t%d:", problem->op[op_id].cost);
+        if (node->heuristic == PLAN_HEUR_DEAD_END){
+            printf("DE");
+        }else{
+            printf("%d", (int)node->heuristic);
+        }
+        printf(":%.8f", borTimerElapsedInSF(&timer));
+    }
+    printf("\n");
+
+    planSearchDel(search);
     return 0;
 }
 
-#define H(hname) \
-    if (heur(hname) != 0){ \
-        fprintf(stderr, "Error: %s\n", (hname)); \
-        return -1; \
-    }
-
 int main(int argc, char *argv[])
 {
-    if (argc != 3){
-        fprintf(stderr, "Usage: %s heur-name problem.proto\n", argv[0]);
+    plan_arr_int_t plan;
+
+    if (argc != 3 && argc != 4){
+        fprintf(stderr, "Usage: %s heur-name problem.proto [problem.plan]\n",
+                argv[0]);
         return -1;
     }
 
     if (loadProblem(argv[2]) != 0)
         return -1;
 
-    H(argv[1]);
+    planArrIntInit(&plan, 4);
+    if (argc >= 4)
+        loadPlan(argv[3], &plan);
+
+    if (heur(argv[1], &plan) != 0){
+        fprintf(stderr, "Error: %s\n", argv[1]);
+        return -1;
+    }
 
     if (problem)
         planProblemDel(problem);
+    planArrIntFree(&plan);
     return 0;
 }

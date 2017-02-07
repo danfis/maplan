@@ -4,17 +4,17 @@
 
 static plan_heur_t *lmCutNew(plan_problem_t *p)
 {
-    return planHeurLMCutNew(p, 0);
+    return planHeurRelaxLMCutNew(p, 0);
 }
 
 static plan_heur_t *lmCut1New(plan_problem_t *p)
 {
-    return planHeurLMCutNew(p, PLAN_HEUR_OP_UNIT_COST);
+    return planHeurRelaxLMCutNew(p, PLAN_HEUR_OP_UNIT_COST);
 }
 
 static plan_heur_t *lmCutPlus1New(plan_problem_t *p)
 {
-    return planHeurLMCutNew(p, PLAN_HEUR_OP_COST_PLUS_ONE);
+    return planHeurRelaxLMCutNew(p, PLAN_HEUR_OP_COST_PLUS_ONE);
 }
 
 TEST(testHeurLMCut)

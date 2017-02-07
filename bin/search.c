@@ -571,12 +571,20 @@ static plan_heur_t *_heurNew(const options_t *o,
         heur = planHeurH2MaxNew(prob, flags);
     }else if (strcmp(name, "lm-cut") == 0){
         heur = planHeurLMCutNew(prob, flags);
+    }else if (strcmp(name, "relax-lm-cut") == 0){
+        heur = planHeurRelaxLMCutNew(prob, flags);
     }else if (strcmp(name, "lm-cut-inc-local") == 0){
         heur = planHeurLMCutIncLocalNew(prob, flags);
+    }else if (strcmp(name, "relax-lm-cut-inc-local") == 0){
+        heur = planHeurRelaxLMCutIncLocalNew(prob, flags);
     }else if (strcmp(name, "lm-cut-inc-cache") == 0){
         if (optionsHeurOpt(o, "prune"))
             flags2 |= PLAN_LANDMARK_CACHE_PRUNE;
-        heur = planHeurLMCutXIncCacheNew(prob, flags, flags2);
+        heur = planHeurLMCutIncCacheNew(prob, flags, flags2);
+    }else if (strcmp(name, "relax-lm-cut-inc-cache") == 0){
+        if (optionsHeurOpt(o, "prune"))
+            flags2 |= PLAN_LANDMARK_CACHE_PRUNE;
+        heur = planHeurRelaxLMCutIncCacheNew(prob, flags, flags2);
     }else if (strcmp(name, "lm-cut2") == 0){
         heur = planHeurLMCut2New(prob, flags);
     }else if (strcmp(name, "flow") == 0){

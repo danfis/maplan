@@ -85,11 +85,11 @@ static int heur(const char *hname, const plan_arr_int_t *plan)
     }else if (strcmp(hname, "ff") == 0){
         heur = planHeurRelaxFFNew(problem, 0);
     }else if (strcmp(hname, "lm-cut") == 0){
-        heur = planHeurLMCutXNew(problem, 0);
+        heur = planHeurLMCutNew(problem, 0);
     }else if (strcmp(hname, "lm-cut-inc-local") == 0){
-        heur = planHeurLMCutXIncLocalNew(problem, 0);
+        heur = planHeurLMCutIncLocalNew(problem, 0);
     }else if (strcmp(hname, "lm-cut-inc-cache") == 0){
-        heur = planHeurLMCutXIncCacheNew(problem, 0, 0);
+        heur = planHeurLMCutIncCacheNew(problem, 0, 0);
     }else if (strcmp(hname, "max2") == 0){
         heur = planHeurMax2New(problem, 0);
     }else if (strcmp(hname, "lm-cut2") == 0){

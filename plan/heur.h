@@ -230,24 +230,26 @@ plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *p, unsigned flags);
 /**
  * Creates an LM-Cut heuristics.
  */
+plan_heur_t *planHeurRelaxLMCutNew(const plan_problem_t *p, unsigned flags);
 plan_heur_t *planHeurLMCutNew(const plan_problem_t *p, unsigned flags);
-plan_heur_t *planHeurLMCutXNew(const plan_problem_t *p, unsigned flags);
 
 /**
  * Incremental LM-Cut, the local version.
  */
-plan_heur_t *planHeurLMCutIncLocalNew(const plan_problem_t *p, unsigned flags);
-plan_heur_t *planHeurLMCutXIncLocalNew(const plan_problem_t *p, unsigned f);
+plan_heur_t *planHeurRelaxLMCutIncLocalNew(const plan_problem_t *p,
+                                           unsigned flags);
+plan_heur_t *planHeurLMCutIncLocalNew(const plan_problem_t *p, unsigned f);
 
 /**
  * Incremental LM-Cut, the version with cached landmarks.
  * Use PLAN_LANDMARK_CACHE_* flags if you want to change the default
  * behaviour of the landmark cache.
  */
+plan_heur_t *planHeurRelaxLMCutIncCacheNew(const plan_problem_t *p,
+                                           unsigned flags,
+                                           unsigned cache_flags);
 plan_heur_t *planHeurLMCutIncCacheNew(const plan_problem_t *p,
                                       unsigned flags, unsigned cache_flags);
-plan_heur_t *planHeurLMCutXIncCacheNew(const plan_problem_t *p,
-                                       unsigned flags, unsigned cache_flags);
 
 /**
  * h^2 heuristic

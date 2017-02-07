@@ -75,9 +75,7 @@ static void planHeurLMCutStateInc(plan_heur_t *_heur,
                                   plan_heur_res_t *res);
 void planHeurLMCutDebug(const plan_heur_lm_cut_t *h);
 
-static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
-                             const plan_part_state_t *goal,
-                             const plan_op_t *op, int op_size,
+static plan_heur_t *lmCutNew(const plan_problem_t *p,
                              int inc, unsigned flags, unsigned cache_flags)
 {
     plan_heur_lm_cut_t *heur;
@@ -96,7 +94,7 @@ static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
         _planHeurInit(&heur->heur, planHeurLMCutDel, planHeurLMCutState, NULL);
     }
     planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_MAX,
-                      var, var_size, goal, op, op_size, flags);
+                      p->var, p->var_size, p->goal, p->op, p->op_size, flags);
 
     heur->fact_goal_zone = BOR_ALLOC_ARR(int, heur->relax.cref.fact_size);
     heur->fact_in_queue  = BOR_ALLOC_ARR(int, heur->relax.cref.fact_size);
@@ -108,45 +106,36 @@ static plan_heur_t *lmCutNew(const plan_var_t *var, int var_size,
         heur->inc_local.enabled = 1;
         bzero(&heur->inc_local.ldms, sizeof(heur->inc_local.ldms));
         heur->inc_local.ldms_id = PLAN_NO_STATE;
-        planOpIdTrInit(&heur->inc_local.op_id_tr, op, op_size);
+        planOpIdTrInit(&heur->inc_local.op_id_tr, p->op, p->op_size);
     }else if (inc == 2){
         heur->inc_cache.enabled = 1;
         heur->inc_cache.ldm_cache = planLandmarkCacheNew(cache_flags);
-        planOpIdTrInit(&heur->inc_cache.op_id_tr, op, op_size);
+        planOpIdTrInit(&heur->inc_cache.op_id_tr, p->op, p->op_size);
     }
 
     return &heur->heur;
 }
 
-plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
-                              const plan_part_state_t *goal,
-                              const plan_op_t *op, int op_size,
-                              unsigned flags)
+plan_heur_t *planHeurLMCutNew(const plan_problem_t *p, unsigned flags)
 {
-    return lmCutNew(var, var_size, goal, op, op_size, 0, flags, 0);
+    return lmCutNew(p, 0, flags, 0);
 }
 
-plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
-                                      const plan_part_state_t *goal,
-                                      const plan_op_t *op, int op_size,
-                                      unsigned flags)
+plan_heur_t *planHeurLMCutIncLocalNew(const plan_problem_t *p, unsigned flags)
 {
-    return lmCutNew(var, var_size, goal, op, op_size, 1, flags, 0);
+    return lmCutNew(p, 1, flags, 0);
 }
 
-plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
-                                      const plan_part_state_t *goal,
-                                      const plan_op_t *op, int op_size,
+plan_heur_t *planHeurLMCutIncCacheNew(const plan_problem_t *p,
                                       unsigned flags, unsigned cache_flags)
 {
-    return lmCutNew(var, var_size, goal, op, op_size, 2, flags, cache_flags);
+    return lmCutNew(p, 2, flags, cache_flags);
 }
 
 plan_heur_t *planHeurH2LMCutNew(const plan_problem_t *p, unsigned flags)
 {
     flags |= PLAN_HEUR_H2;
-    return lmCutNew(p->var, p->var_size, p->goal,
-                    p->op, p->op_size, 0, flags, 0);
+    return lmCutNew(p, 0, flags, 0);
 }
 
 static void planHeurLMCutDel(plan_heur_t *_heur)

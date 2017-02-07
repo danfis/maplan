@@ -7,14 +7,12 @@ typedef plan_heur_t *(*new_heur_fn)(plan_problem_t *p);
 
 static plan_heur_t *lmCutNew(plan_problem_t *p)
 {
-    return planHeurLMCutNew(p->var, p->var_size, p->goal,
-                            p->op, p->op_size, 0);
+    return planHeurLMCutNew(p, 0);
 }
 
 static plan_heur_t *flowBaseNew(plan_problem_t *p)
 {
-    return planHeurFlowNew(p->var, p->var_size, p->goal,
-                           p->op, p->op_size, 0);
+    return planHeurFlowNew(p, 0);
 }
 
 static void _runTest(const char *name, const char *proto,
@@ -33,8 +31,7 @@ static void _runTest(const char *name, const char *proto,
     state = planStateNew(p->state_pool->num_vars);
     statePoolInit(&state_pool, states);
 
-    heur = planHeurFlowNew(p->var, p->var_size, p->goal,
-                           p->op, p->op_size, flags);
+    heur = planHeurFlowNew(p, flags);
     if (heur == NULL){
         fprintf(stderr, "Test Error: Cannot create a heuristic object!\n");
         goto run_test_end;

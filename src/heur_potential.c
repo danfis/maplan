@@ -36,9 +36,7 @@ static void heurPotentialDel(plan_heur_t *_heur);
 static void heurPotential(plan_heur_t *_heur, const plan_state_t *state,
                           plan_heur_res_t *res);
 
-plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
-                                  const plan_part_state_t *goal,
-                                  const plan_op_t *op, int op_size,
+plan_heur_t *planHeurPotentialNew(const plan_problem_t *p,
                                   const plan_state_t *init_state,
                                   unsigned flags)
 {
@@ -48,7 +46,8 @@ plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
     bzero(heur, sizeof(*heur));
     _planHeurInit(&heur->heur, heurPotentialDel, heurPotential, NULL);
 
-    planPotInit(&heur->pot, var, var_size, goal, op, op_size, init_state, flags, 0);
+    planPotInit(&heur->pot, p->var, p->var_size, p->goal,
+                p->op, p->op_size, init_state, flags, 0);
     planPotCompute(&heur->pot);
 
     return &heur->heur;

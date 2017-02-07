@@ -541,8 +541,7 @@ static plan_list_lazy_t *listLazyCreate(const options_t *o)
 
 static plan_heur_t *_heurNew(const options_t *o,
                              const char *name,
-                             const plan_problem_t *prob,
-                             const plan_op_t *op, int op_size)
+                             const plan_problem_t *prob)
 {
     plan_state_t *state;
     plan_heur_t *heur = NULL;
@@ -561,19 +560,15 @@ static plan_heur_t *_heurNew(const options_t *o,
     }else if (strcmp(name, "max") == 0){
         heur = planHeurMaxNew(prob, flags);
     }else if (strcmp(name, "ff") == 0){
-        heur = planHeurRelaxFFNew(prob->var, prob->var_size,
-                                  prob->goal, op, op_size, flags);
+        heur = planHeurRelaxFFNew(prob, flags);
     }else if (strcmp(name, "dtg") == 0){
-        heur = planHeurDTGNew(prob->var, prob->var_size,
-                              prob->goal, op, op_size);
+        heur = planHeurDTGNew(prob, 0);
     }else if (strcmp(name, "max2") == 0){
         heur = planHeurH2MaxNew(prob, flags);
     }else if (strcmp(name, "lm-cut") == 0){
-        heur = planHeurLMCutNew(prob->var, prob->var_size,
-                                prob->goal, op, op_size, flags);
+        heur = planHeurLMCutNew(prob, flags);
     }else if (strcmp(name, "lm-cut-inc-local") == 0){
-        heur = planHeurLMCutIncLocalNew(prob->var, prob->var_size,
-                                        prob->goal, op, op_size, flags);
+        heur = planHeurLMCutIncLocalNew(prob, flags);
     }else if (strcmp(name, "lm-cut-inc-cache") == 0){
         if (optionsHeurOpt(o, "prune"))
             flags2 |= PLAN_LANDMARK_CACHE_PRUNE;
@@ -585,15 +580,13 @@ static plan_heur_t *_heurNew(const options_t *o,
             flags |= PLAN_HEUR_FLOW_ILP;
         if (optionsHeurOpt(o, "lm-cut"))
             flags |= PLAN_HEUR_FLOW_LANDMARKS_LM_CUT;
-        heur = planHeurFlowNew(prob->var, prob->var_size,
-                               prob->goal, op, op_size, flags);
+        heur = planHeurFlowNew(prob, flags);
     }else if (strcmp(name, "pot") == 0){
         if (optionsHeurOpt(o, "all-synt-states"))
             flags |= PLAN_HEUR_POT_ALL_SYNTACTIC_STATES;
         state = planStateNew(prob->state_pool->num_vars);
         planStatePoolGetState(prob->state_pool, prob->initial_state, state);
-        heur = planHeurPotentialNew(prob->var, prob->var_size,
-                                    prob->goal, op, op_size, state, flags);
+        heur = planHeurPotentialNew(prob, state, flags);
         planStateDel(state);
     }else if (strcmp(name, "ma-max") == 0){
         heur = planHeurMARelaxMaxNew(prob, flags);
@@ -627,7 +620,7 @@ static plan_heur_t *heurNew(const options_t *o,
 {
     plan_heur_t *heur;
 
-    heur = _heurNew(o, o->heur, prob, prob->op, prob->op_size);
+    heur = _heurNew(o, o->heur, prob);
     return heur;
 }
 
@@ -635,13 +628,11 @@ static plan_heur_t *heurNewMA(const options_t *o,
                               const plan_problem_t *prob,
                               const plan_problem_t *glob)
 {
+    plan_problem_t proj;
     plan_heur_t *heur;
-    const plan_op_t *op;
-    int op_size;
 
     if (optionsHeurOpt(o, "loc")){
-        op = prob->op;
-        op_size = prob->op_size;
+        heur = _heurNew(o, o->heur, prob);
 
     }else if (optionsHeurOpt(o, "glob")){
         if (glob == NULL){
@@ -649,15 +640,14 @@ static plan_heur_t *heurNewMA(const options_t *o,
                             " (:glob option) cannot be created.\n");
             return NULL;
         }
-        op = glob->op;
-        op_size = glob->op_size;
+        planProblemGlobOps(&proj, prob, glob);
+        heur = _heurNew(o, o->heur, &proj);
 
     }else{
-        op = prob->proj_op;
-        op_size = prob->proj_op_size;
+        planProblemProj(&proj, prob);
+        heur = _heurNew(o, o->heur, &proj);
     }
 
-    heur = _heurNew(o, o->heur, prob, op, op_size);
     return heur;
 }
 

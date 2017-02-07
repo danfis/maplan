@@ -12,9 +12,15 @@ static plan_heur_t *h2LMCutNew(plan_problem_t *p)
 
 TEST(testHeurH2LMCut)
 {
+    /*
     runHeurTest("h2-lm-cut", "proto/simple.proto",
                 "states/simple.txt", h2LMCutNew, 0, 0);
     runHeurTest("h2-lm-cut", "proto/depot-pfile1.proto",
                 "states/depot-pfile1.txt", h2LMCutNew, 0, 0);
+    runHeurTest("h2-lm-cut", "proto/rovers-p15.proto",
+            "states/rovers-p15.txt", h2LMCutNew, 0, 0);
+    runHeurTest("h2-lm-cut", "proto/rovers-p03.proto",
+            "states/rovers-p03.txt", h2LMCutNew, 0, 0);
+    */
 }
 

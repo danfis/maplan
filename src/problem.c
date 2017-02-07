@@ -367,3 +367,19 @@ void planProblemDestroyOps(plan_op_t *op, int op_size)
         planOpFree(op + i);
     BOR_FREE(op);
 }
+
+void planProblemProj(plan_problem_t *proj, const plan_problem_t *p)
+{
+    *proj = *p;
+    proj->op = p->proj_op;
+    proj->op_size = p->proj_op_size;
+}
+
+void planProblemGlobOps(plan_problem_t *proj,
+                        const plan_problem_t *base,
+                        const plan_problem_t *glob)
+{
+    *proj = *base;
+    proj->op = glob->op;
+    proj->op_size = glob->op_size;
+}

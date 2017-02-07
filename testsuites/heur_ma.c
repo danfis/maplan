@@ -18,8 +18,7 @@ plan_heur_t *seqHeurMaxNew(const plan_problem_t *prob)
 
 plan_heur_t *seqHeurLMCutNew(const plan_problem_t *prob)
 {
-    return planHeurLMCutNew(prob->var, prob->var_size, prob->goal,
-                            prob->op, prob->op_size, 0);
+    return planHeurLMCutNew(prob, 0);
 }
 
 static plan_ma_msg_t *nextMsg(plan_ma_comm_t **comm,

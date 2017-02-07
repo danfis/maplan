@@ -19,9 +19,7 @@ static void runAStar(const char *proto, unsigned flags,
     planStatePoolGetState(p->state_pool, p->initial_state, state);
 
     planSearchAStarParamsInit(&params);
-    params.search.heur = planHeurPotentialNew(p->var, p->var_size, p->goal,
-                                              p->op, p->op_size, state,
-                                              flags);
+    params.search.heur = planHeurPotentialNew(p, state, flags);
     //params.search.heur = planHeurLMCutNew(p->var, p->var_size, p->goal,
     //                                      p->op, p->op_size, flags);
     planStateDel(state);

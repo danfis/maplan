@@ -79,26 +79,12 @@ static int heur(const char *hname, const plan_arr_int_t *plan)
     if (strcmp(hname, "goalcount") == 0){
         heur = planHeurGoalCountNew(problem->goal);
     }else if (strcmp(hname, "add") == 0){
-        heur = planHeurRelaxAddNew(problem->var, problem->var_size,
-                                   problem->goal,
-                                   problem->op, problem->op_size, 0);
+        heur = planHeurAddNew(problem, 0);
     }else if (strcmp(hname, "max") == 0){
-        /*
-        heur = planHeurRelaxMaxNew(problem->var, problem->var_size,
-                                   problem->goal,
-                                   problem->op, problem->op_size, 0);
-        */
         heur = planHeurMaxNew(problem, 0);
     }else if (strcmp(hname, "ff") == 0){
-        heur = planHeurRelaxFFNew(problem->var, problem->var_size,
-                                  problem->goal,
-                                  problem->op, problem->op_size, 0);
+        heur = planHeurRelaxFFNew(problem, 0);
     }else if (strcmp(hname, "lm-cut") == 0){
-        /*
-        heur = planHeurLMCutNew(problem->var, problem->var_size,
-                                problem->goal,
-                                problem->op, problem->op_size, 0);
-        */
         heur = planHeurLMCutXNew(problem, 0);
     }else if (strcmp(hname, "lm-cut-inc-local") == 0){
         heur = planHeurLMCutXIncLocalNew(problem, 0);
@@ -106,34 +92,18 @@ static int heur(const char *hname, const plan_arr_int_t *plan)
         heur = planHeurLMCutXIncCacheNew(problem, 0, 0);
     }else if (strcmp(hname, "max2") == 0){
         heur = planHeurMax2New(problem, 0);
-        //heur = planHeurH2MaxNew(problem, 0);
     }else if (strcmp(hname, "lm-cut2") == 0){
-        //heur = planHeurH2LMCutNew(problem, 0);
         heur = planHeurLMCut2New(problem, 0);
     }else if (strcmp(hname, "flow") == 0){
-        heur = planHeurFlowNew(problem->var, problem->var_size,
-                               problem->goal,
-                               problem->op, problem->op_size, 0);
+        heur = planHeurFlowNew(problem, 0);
     }else if (strcmp(hname, "flow-lm-cut") == 0){
-        heur = planHeurFlowNew(problem->var, problem->var_size,
-                               problem->goal,
-                               problem->op, problem->op_size,
-                               PLAN_HEUR_FLOW_LANDMARKS_LM_CUT);
+        heur = planHeurFlowNew(problem, PLAN_HEUR_FLOW_LANDMARKS_LM_CUT);
     }else if (strcmp(hname, "flow-ilp") == 0){
-        heur = planHeurFlowNew(problem->var, problem->var_size,
-                               problem->goal,
-                               problem->op, problem->op_size,
-                               PLAN_HEUR_FLOW_ILP);
+        heur = planHeurFlowNew(problem, PLAN_HEUR_FLOW_ILP);
     }else if (strcmp(hname, "pot") == 0){
-        heur = planHeurPotentialNew(problem->var, problem->var_size,
-                                    problem->goal,
-                                    problem->op, problem->op_size,
-                                    &state, 0);
+        heur = planHeurPotentialNew(problem, &state, 0);
     }else if (strcmp(hname, "pot-all-synt-states") == 0){
-        heur = planHeurPotentialNew(problem->var, problem->var_size,
-                                    problem->goal,
-                                    problem->op, problem->op_size,
-                                    &state,
+        heur = planHeurPotentialNew(problem, &state,
                                     PLAN_HEUR_POT_ALL_SYNTACTIC_STATES);
     }else{
         fprintf(stderr, "Error: Unknown heuristic: `%s'\n", hname);

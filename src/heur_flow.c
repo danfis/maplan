@@ -127,10 +127,7 @@ static plan_cost_t lpSolve(plan_lp_t *lp, const fact_t *facts,
                            int facts_size, int use_ilp,
                            const plan_landmark_set_t *ldms);
 
-plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
-                             const plan_part_state_t *goal,
-                             const plan_op_t *op, int op_size,
-                             unsigned flags)
+plan_heur_t *planHeurFlowNew(const plan_problem_t *p, unsigned flags)
 {
     plan_heur_flow_t *hflow;
 
@@ -138,18 +135,18 @@ plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
     _planHeurInit(&hflow->heur, heurFlowDel, heurFlow, NULL);
     hflow->use_ilp = (flags & PLAN_HEUR_FLOW_ILP);
 
-    planFactIdInit(&hflow->fact_id, var, var_size, 0);
+    planFactIdInit(&hflow->fact_id, p->var, p->var_size, 0);
     hflow->facts = BOR_CALLOC_ARR(fact_t, hflow->fact_id.fact_size);
-    factsInit(hflow->facts, &hflow->fact_id, var, var_size, goal, op, op_size);
+    factsInit(hflow->facts, &hflow->fact_id, p->var, p->var_size,
+              p->goal, p->op, p->op_size);
 
     // Initialize LP solver
-    hflow->lp = lpInit(hflow->facts, hflow->fact_id.fact_size, op, op_size,
-                       hflow->use_ilp, flags);
+    hflow->lp = lpInit(hflow->facts, hflow->fact_id.fact_size,
+                       p->op, p->op_size, hflow->use_ilp, flags);
 
     hflow->lm_cut = NULL;
     if (flags & PLAN_HEUR_FLOW_LANDMARKS_LM_CUT)
-        hflow->lm_cut = planHeurLMCutNew(var, var_size, goal, op, op_size,
-                                         flags);
+        hflow->lm_cut = planHeurLMCutNew(p, flags);
 
     return &hflow->heur;
 }

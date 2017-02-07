@@ -29,6 +29,7 @@ static void maLMCutTask(int id, void *data, const bor_tasks_thinfo_t *_)
 static void runMALMCut(int agent_size, plan_problem_t **prob,
                        int optimal_cost)
 {
+    plan_problem_t proj;
     plan_search_astar_params_t params;
     plan_search_t *search;
     plan_heur_t *heur;
@@ -40,9 +41,8 @@ static void runMALMCut(int agent_size, plan_problem_t **prob,
 
     tasks = borTasksNew(agent_size);
     for (i = 0; i < agent_size; ++i){
-        heur = planHeurLMCutNew(prob[i]->var, prob[i]->var_size,
-                                prob[i]->goal,
-                                prob[i]->proj_op, prob[i]->proj_op_size, 0);
+        planProblemProj(&proj, prob[i]);
+        heur = planHeurLMCutNew(&proj, 0);
 
         planSearchAStarParamsInit(&params);
         params.search.heur = heur;

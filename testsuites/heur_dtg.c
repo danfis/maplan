@@ -4,8 +4,7 @@
 
 static plan_heur_t *dtgNew(plan_problem_t *p)
 {
-    return planHeurDTGNew(p->var, p->var_size, p->goal,
-                          p->op, p->op_size);
+    return planHeurDTGNew(p, 0);
 }
 
 TEST(testHeurDTG)

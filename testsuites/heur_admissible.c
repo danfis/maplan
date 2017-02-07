@@ -7,7 +7,7 @@ typedef plan_heur_t *(*new_heur_fn)(const plan_problem_t *prob);
 
 static plan_heur_t *heurLMCut(const plan_problem_t *p)
 {
-    return planHeurLMCutNew(p->var, p->var_size, p->goal, p->op, p->op_size, 0);
+    return planHeurLMCutNew(p, 0);
 }
 
 static plan_heur_t *heurMax(const plan_problem_t *p)
@@ -17,23 +17,19 @@ static plan_heur_t *heurMax(const plan_problem_t *p)
 
 static plan_heur_t *heurFlow(const plan_problem_t *p)
 {
-    return planHeurFlowNew(p->var, p->var_size, p->goal,
-                           p->op, p->op_size, 0);
+    return planHeurFlowNew(p, 0);
 }
 
 static plan_heur_t *heurFlowLandmarks(const plan_problem_t *p)
 {
-    return planHeurFlowNew(p->var, p->var_size, p->goal,
-                           p->op, p->op_size,
-                           PLAN_HEUR_FLOW_LANDMARKS_LM_CUT);
+    return planHeurFlowNew(p, PLAN_HEUR_FLOW_LANDMARKS_LM_CUT);
 }
 
 static plan_heur_t *heurPotential(const plan_problem_t *p)
 {
     PLAN_STATE_STACK(init_state, p->state_pool->num_vars);
     planStatePoolGetState(p->state_pool, p->initial_state, &init_state);
-    return planHeurPotentialNew(p->var, p->var_size, p->goal,
-                                p->op, p->op_size, &init_state, 0);
+    return planHeurPotentialNew(p, &init_state, 0);
 }
 
 static void checkOptimalCost(new_heur_fn new_heur, const char *proto)

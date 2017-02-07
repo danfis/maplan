@@ -4,25 +4,23 @@
 
 static plan_heur_t *lmCutNew(plan_problem_t *p)
 {
-    return planHeurLMCutNew(p->var, p->var_size, p->goal,
-                            p->op, p->op_size, 0);
+    return planHeurLMCutNew(p, 0);
 }
 
 static plan_heur_t *lmCut1New(plan_problem_t *p)
 {
-    return planHeurLMCutNew(p->var, p->var_size, p->goal,
-                            p->op, p->op_size, PLAN_HEUR_OP_UNIT_COST);
+    return planHeurLMCutNew(p, PLAN_HEUR_OP_UNIT_COST);
 }
 
 static plan_heur_t *lmCutPlus1New(plan_problem_t *p)
 {
-    return planHeurLMCutNew(p->var, p->var_size, p->goal,
-                            p->op, p->op_size,
-                            PLAN_HEUR_OP_COST_PLUS_ONE);
+    return planHeurLMCutNew(p, PLAN_HEUR_OP_COST_PLUS_ONE);
 }
 
 TEST(testHeurLMCut)
 {
+    runHeurTest("LM-CUT", "proto/simple.proto",
+            "states/simple.txt", lmCutNew, 0, 1);
     runHeurTest("LM-CUT", "proto/sokoban-p01.proto",
             "states/sokoban-p01.txt", lmCutNew, 0, 0);
     runHeurTest("LM-CUT", "proto/depot-pfile1.proto",

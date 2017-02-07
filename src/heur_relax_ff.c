@@ -79,18 +79,15 @@ static void heurVal(plan_heur_t *_heur, const plan_state_t *state,
         prefOps(heur, res);
 }
 
-plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
-                                const plan_part_state_t *goal,
-                                const plan_op_t *op, int op_size,
-                                unsigned flags)
+plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *p, unsigned flags)
 {
     plan_heur_relax_ff_t *heur;
 
     heur = BOR_ALLOC(plan_heur_relax_ff_t);
-    heur->base_op = op;
+    heur->base_op = p->op;
     _planHeurInit(&heur->heur, heurDel, heurVal, NULL);
     planHeurRelaxInit(&heur->relax, PLAN_HEUR_RELAX_TYPE_ADD,
-                      var, var_size, goal, op, op_size, flags);
+                      p->var, p->var_size, p->goal, p->op, p->op_size, flags);
 
     return &heur->heur;
 }

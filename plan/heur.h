@@ -225,27 +225,18 @@ plan_heur_t *planHeurMaxNew(const plan_problem_t *p, unsigned flags);
  * If succ_gen is NULL, a new successor generator is created internally
  * from the given operators.
  */
-plan_heur_t *planHeurRelaxFFNew(const plan_var_t *var, int var_size,
-                                const plan_part_state_t *goal,
-                                const plan_op_t *op, int op_size,
-                                unsigned flags);
+plan_heur_t *planHeurRelaxFFNew(const plan_problem_t *p, unsigned flags);
 
 /**
  * Creates an LM-Cut heuristics.
  */
-plan_heur_t *planHeurLMCutNew(const plan_var_t *var, int var_size,
-                              const plan_part_state_t *goal,
-                              const plan_op_t *op, int op_size,
-                              unsigned flags);
+plan_heur_t *planHeurLMCutNew(const plan_problem_t *p, unsigned flags);
 plan_heur_t *planHeurLMCutXNew(const plan_problem_t *p, unsigned flags);
 
 /**
  * Incremental LM-Cut, the local version.
  */
-plan_heur_t *planHeurLMCutIncLocalNew(const plan_var_t *var, int var_size,
-                                      const plan_part_state_t *goal,
-                                      const plan_op_t *op, int op_size,
-                                      unsigned flags);
+plan_heur_t *planHeurLMCutIncLocalNew(const plan_problem_t *p, unsigned flags);
 plan_heur_t *planHeurLMCutXIncLocalNew(const plan_problem_t *p, unsigned f);
 
 /**
@@ -253,14 +244,10 @@ plan_heur_t *planHeurLMCutXIncLocalNew(const plan_problem_t *p, unsigned f);
  * Use PLAN_LANDMARK_CACHE_* flags if you want to change the default
  * behaviour of the landmark cache.
  */
-plan_heur_t *planHeurLMCutIncCacheNew(const plan_var_t *var, int var_size,
-                                      const plan_part_state_t *goal,
-                                      const plan_op_t *op, int op_size,
-                                      unsigned flags,
-                                      unsigned cache_flags);
+plan_heur_t *planHeurLMCutIncCacheNew(const plan_problem_t *p,
+                                      unsigned flags, unsigned cache_flags);
 plan_heur_t *planHeurLMCutXIncCacheNew(const plan_problem_t *p,
-                                       unsigned flags,
-                                       unsigned cache_flags);
+                                       unsigned flags, unsigned cache_flags);
 
 /**
  * h^2 heuristic
@@ -278,25 +265,18 @@ plan_heur_t *planHeurLMCut2New(const plan_problem_t *p, unsigned flags);
 /**
  * Domain transition graph based heuristic.
  */
-plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,
-                            const plan_part_state_t *goal,
-                            const plan_op_t *op, int op_size);
+plan_heur_t *planHeurDTGNew(const plan_problem_t *p, unsigned flags);
 
 /**
  * Flow based heuristics.
  * For flags see PLAN_HEUR_FLOW_* macros above.
  */
-plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
-                             const plan_part_state_t *goal,
-                             const plan_op_t *op, int op_size,
-                             unsigned flags);
+plan_heur_t *planHeurFlowNew(const plan_problem_t *p, unsigned flags);
 
 /**
  * Potential based heuristics.
  */
-plan_heur_t *planHeurPotentialNew(const plan_var_t *var, int var_size,
-                                  const plan_part_state_t *goal,
-                                  const plan_op_t *op, int op_size,
+plan_heur_t *planHeurPotentialNew(const plan_problem_t *p,
                                   const plan_state_t *init_state,
                                   unsigned flags);
 

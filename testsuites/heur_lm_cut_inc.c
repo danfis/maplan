@@ -4,21 +4,17 @@
 
 static plan_heur_t *lmCutIncLocalNew(plan_problem_t *p)
 {
-    return planHeurLMCutIncLocalNew(p->var, p->var_size, p->goal,
-                                    p->op, p->op_size, 0);
+    return planHeurLMCutIncLocalNew(p, 0);
 }
 
 static plan_heur_t *lmCutIncCacheNew(plan_problem_t *p)
 {
-    return planHeurLMCutIncCacheNew(p->var, p->var_size, p->goal,
-                                    p->op, p->op_size, 0, 0);
+    return planHeurLMCutIncCacheNew(p, 0, 0);
 }
 
 static plan_heur_t *lmCutIncCachePruneNew(plan_problem_t *p)
 {
-    return planHeurLMCutIncCacheNew(p->var, p->var_size, p->goal,
-                                    p->op, p->op_size, 0,
-                                    PLAN_LANDMARK_CACHE_PRUNE);
+    return planHeurLMCutIncCacheNew(p, 0, PLAN_LANDMARK_CACHE_PRUNE);
 }
 
 TEST(testHeurLMCutIncLocal)

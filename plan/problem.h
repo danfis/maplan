@@ -181,6 +181,17 @@ void planProblemCreatePrivateProjOps(const plan_op_t *op, int op_size,
  */
 void planProblemDestroyOps(plan_op_t *op, int op_size);
 
+/**
+ * Create a shallow copy of a projection of a problem.
+ */
+void planProblemProj(plan_problem_t *proj, const plan_problem_t *p);
+
+/**
+ * Shallow copy containing global operators.
+ */
+void planProblemGlobOps(plan_problem_t *proj,
+                        const plan_problem_t *base,
+                        const plan_problem_t *glob);
 
 /**
  * Frees global memory allocated by google protobuffers.

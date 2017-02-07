@@ -42,22 +42,20 @@ static void heurDTGDel(plan_heur_t *_heur);
 static void heurDTG(plan_heur_t *_heur, const plan_state_t *state,
                     plan_heur_res_t *res);
 
-plan_heur_t *planHeurDTGNew(const plan_var_t *var, int var_size,
-                            const plan_part_state_t *goal,
-                            const plan_op_t *op, int op_size)
+plan_heur_t *planHeurDTGNew(const plan_problem_t *p, unsigned flags)
 {
     plan_heur_dtg_t *hdtg;
 
     hdtg = BOR_ALLOC(plan_heur_dtg_t);
     _planHeurInit(&hdtg->heur, heurDTGDel, heurDTG, NULL);
-    planHeurDTGDataInit(&hdtg->data, var, var_size, op, op_size);
+    planHeurDTGDataInit(&hdtg->data, p->var, p->var_size, p->op, p->op_size);
     planHeurDTGCtxInit(&hdtg->ctx, &hdtg->data);
 
     // Save goal values
-    hdtg->goal = BOR_ALLOC_ARR(plan_part_state_pair_t, goal->vals_size);
-    hdtg->goal_size = goal->vals_size;
-    memcpy(hdtg->goal, goal->vals,
-           sizeof(plan_part_state_pair_t) * goal->vals_size);
+    hdtg->goal = BOR_ALLOC_ARR(plan_part_state_pair_t, p->goal->vals_size);
+    hdtg->goal_size = p->goal->vals_size;
+    memcpy(hdtg->goal, p->goal->vals,
+           sizeof(plan_part_state_pair_t) * p->goal->vals_size);
 
     return &hdtg->heur;
 }

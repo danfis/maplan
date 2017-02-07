@@ -4,21 +4,17 @@
 
 static plan_heur_t *ffNew(plan_problem_t *p)
 {
-    return planHeurRelaxFFNew(p->var, p->var_size, p->goal,
-                              p->op, p->op_size, 0);
+    return planHeurRelaxFFNew(p, 0);
 }
 
 static plan_heur_t *ff1New(plan_problem_t *p)
 {
-    return planHeurRelaxFFNew(p->var, p->var_size, p->goal,
-                              p->op, p->op_size, PLAN_HEUR_OP_UNIT_COST);
+    return planHeurRelaxFFNew(p, PLAN_HEUR_OP_UNIT_COST);
 }
 
 static plan_heur_t *ffPlus1New(plan_problem_t *p)
 {
-    return planHeurRelaxFFNew(p->var, p->var_size, p->goal,
-                              p->op, p->op_size,
-                              PLAN_HEUR_OP_COST_PLUS_ONE);
+    return planHeurRelaxFFNew(p, PLAN_HEUR_OP_COST_PLUS_ONE);
 }
 
 TEST(testHeurRelaxFF)

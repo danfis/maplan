@@ -21,7 +21,12 @@ nanomsg: submodule
 				ln -s ../nanomsg4py/nanomsg2module.so ../translate/nanomsg2module.so; \
 		fi;
 
-protobuf: submodule
+protobuf:
+	if [ ! -d protobuf ]; then \
+		wget https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.bz2 \
+			&& tar xf protobuf-2.6.1.tar.bz2 \
+			&& mv protobuf-2.6.1 protobuf; \
+	fi;
 	cd protobuf \
 		&& if test ! -f build/lib/libprotobuf.a; then \
 				./autogen.sh \

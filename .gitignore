@@ -14,3 +14,5 @@ __pycache__
 *.pyc
 *.pyo
 third-party/preprocess/preprocess
+third-party/protobuf
+third-party/protobuf-2.6.1.tar.*

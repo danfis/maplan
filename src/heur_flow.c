@@ -491,10 +491,7 @@ static plan_cost_t lpSolve(plan_lp_t *lp, const fact_t *facts,
 
 #else /* PLAN_LP */
 
-plan_heur_t *planHeurFlowNew(const plan_var_t *var, int var_size,
-                             const plan_part_state_t *goal,
-                             const plan_op_t *op, int op_size,
-                             unsigned flags)
+plan_heur_t *planHeurFlowNew(const plan_problem_t *p, unsigned flags)
 {
     fprintf(stderr, "Error: Cannot create Flow heuristic object because no"
                     " LP-solver was available during compilation!\n");

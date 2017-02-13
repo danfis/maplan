@@ -21,29 +21,14 @@
 #define __PLAN_FA_MUTEX_H__
 
 #include <plan/problem.h>
-#include <plan/arr.h>
+#include <plan/mutex.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-struct _plan_fa_mutex_set_t {
-    plan_arr_int_t *fa_mutex;
-    int alloc;
-    int size;
-};
-typedef struct _plan_fa_mutex_set_t plan_fa_mutex_set_t;
-
-void planFAMutexSetInit(plan_fa_mutex_set_t *ms);
-void planFAMutexSetFree(plan_fa_mutex_set_t *ms);
-void planFAMutexSetSort(plan_fa_mutex_set_t *ms);
-void planFAMutexSetClone(plan_fa_mutex_set_t *dst,
-                         const plan_fa_mutex_set_t *src);
-void planFAMutexAddFromVars(plan_fa_mutex_set_t *ms,
-                            const plan_var_t *var, int var_size);
-
 void planFAMutexFind(const plan_problem_t *p, const plan_state_t *state,
-                     plan_fa_mutex_set_t *ms);
+                     plan_mutex_group_set_t *ms);
 
 
 #ifdef __cplusplus

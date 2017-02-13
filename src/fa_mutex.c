@@ -22,94 +22,6 @@
 #include "plan/fact_id.h"
 #include "plan/lp.h"
 
-void planFAMutexSetInit(plan_fa_mutex_set_t *ms)
-{
-    bzero(ms, sizeof(*ms));
-}
-
-void planFAMutexSetFree(plan_fa_mutex_set_t *ms)
-{
-    int i;
-
-    for (i = 0; i < ms->size; ++i)
-        planArrIntFree(ms->fa_mutex + i);
-    if (ms->fa_mutex)
-        BOR_FREE(ms->fa_mutex);
-}
-
-static int cmpFAMutex(const void *a, const void *b)
-{
-    const plan_arr_int_t *m1 = a;
-    const plan_arr_int_t *m2 = b;
-    int i;
-
-    for (i = 0; i < m1->size && i < m2->size; ++i){
-        if (m1->arr[i] != m2->arr[i])
-            return m1->arr[i] - m2->arr[i];
-    }
-    return m1->size - m2->size;
-}
-
-void planFAMutexSetSort(plan_fa_mutex_set_t *ms)
-{
-    qsort(ms->fa_mutex, ms->size, sizeof(plan_arr_int_t), cmpFAMutex);
-}
-
-static plan_arr_int_t *planFAMutexNext(plan_fa_mutex_set_t *ms)
-{
-    if (ms->size == ms->alloc){
-        if (ms->alloc == 0)
-            ms->alloc = 2;
-        ms->alloc *= 2;
-        ms->fa_mutex = BOR_REALLOC_ARR(ms->fa_mutex, plan_arr_int_t,
-                                       ms->alloc);
-        bzero(ms->fa_mutex + ms->size,
-              sizeof(plan_arr_int_t) * (ms->alloc - ms->size));
-    }
-    return ms->fa_mutex + ms->size++;
-}
-
-void planFAMutexSetClone(plan_fa_mutex_set_t *dst,
-                         const plan_fa_mutex_set_t *src)
-{
-    const plan_arr_int_t *asrc;
-    plan_arr_int_t *adst;
-    int i;
-
-    planFAMutexSetInit(dst);
-    if (src->size == 0)
-        return;
-
-    dst->alloc = dst->size = src->size;
-    dst->fa_mutex = BOR_CALLOC_ARR(plan_arr_int_t, dst->alloc);
-    for (i = 0; i < src->size; ++i){
-        asrc = src->fa_mutex + i;
-        adst = dst->fa_mutex + i;
-        adst->alloc = adst->size = asrc->size;
-        adst->arr = BOR_ALLOC_ARR(int, adst->alloc);
-        memcpy(adst->arr, asrc->arr, sizeof(int) * asrc->size);
-    }
-}
-
-void planFAMutexAddFromVars(plan_fa_mutex_set_t *ms,
-                            const plan_var_t *var, int var_size)
-{
-    plan_fact_id_t fact_id;
-    plan_arr_int_t *mutex;
-    int vi, val, fid;
-
-    planFactIdInit(&fact_id, var, var_size, 0);
-    for (vi = 0; vi < var_size; ++vi){
-        if (var[vi].ma_privacy)
-            continue;
-        mutex = planFAMutexNext(ms);
-        for (val = 0; val < var[vi].range; ++val){
-            fid = planFactIdVar(&fact_id, vi, val);
-            planArrIntAdd(mutex, fid);
-        }
-    }
-    planFactIdFree(&fact_id);
-}
 
 static void setStateConstr(plan_lp_t *lp, int row,
                            const plan_fact_id_t *fact_id,
@@ -167,46 +79,58 @@ static void setOpConstr(plan_lp_t *lp, int row,
     planLPSetRHS(lp, row, 0., 'L');
 }
 
-static void addFAMutexConstr(plan_lp_t *lp, int fact_size,
-                             const plan_arr_int_t *m)
+static void addMutexConstr(plan_lp_t *lp,
+                           const plan_fact_id_t *fact_id,
+                           const plan_mutex_group_t *m)
 {
     double rhs = 1.;
     char sense = 'G';
-    int i, mi, row;
+    int fid, i, mi, row;
+
+    if (m->fact_size == 0)
+        return;
 
     row = planLPNumRows(lp);
     planLPAddRows(lp, 1, &rhs, &sense);
-    for (i = 0, mi = 0; i < fact_size; ++i){
-        if (mi < m->size && m->arr[mi] == i){
-            ++mi;
+    fid = planFactIdVar(fact_id, m->fact[0].var, m->fact[0].val);
+    for (i = 0, mi = 0; i < fact_id->fact_size; ++i){
+        if (fid == i){
+            fid = fact_id->fact_size + 1;
+            if (++mi < m->fact_size)
+                fid = planFactIdVar(fact_id, m->fact[mi].var, m->fact[mi].val);
             continue;
         }
         planLPSetCoef(lp, row, i, 1.);
     }
 }
 
-static void addFAMutex(plan_fa_mutex_set_t *ms,
-                       int fact_size, const double *obj)
+static void addFAMutex(plan_mutex_group_set_t *ms,
+                       const plan_fact_id_t *fact_id,
+                       const double *obj)
 {
-    plan_arr_int_t *mutex;
+    plan_mutex_group_t *m;
+    plan_var_id_t var;
+    plan_val_t val;
     int i;
 
-    mutex = planFAMutexNext(ms);
-    for (i = 0; i < fact_size; ++i){
-        if (obj[i] > 0.5)
-            planArrIntAdd(mutex, i);
+    m = planMutexGroupSetAdd(ms);
+    for (i = 0; i < fact_id->fact_size; ++i){
+        if (obj[i] > 0.5){
+            planFactIdVarFromFact(fact_id, i, &var, &val);
+            planMutexGroupAdd(m, var, val);
+        }
     }
 }
 
 void planFAMutexFind(const plan_problem_t *p, const plan_state_t *state,
-                     plan_fa_mutex_set_t *ms)
+                     plan_mutex_group_set_t *ms)
 {
     plan_fact_id_t fact_id;
     plan_lp_t *lp;
     int i;
     double val, *obj;
 
-    planFactIdInit(&fact_id, p->var, p->var_size, 0);
+    planFactIdInit(&fact_id, p->var, p->var_size, PLAN_FACT_ID_REVERSE_MAP);
     lp = planLPNew(p->op_size + 1, fact_id.fact_size, PLAN_LP_MAX);
 
     // Set objective and all variables as binary
@@ -223,13 +147,13 @@ void planFAMutexFind(const plan_problem_t *p, const plan_state_t *state,
         setOpConstr(lp, i + 1, &fact_id, p->op + i);
 
     // Add constraints for each input mutex
-    for (i = 0; i < ms->size; ++i)
-        addFAMutexConstr(lp, fact_id.fact_size, ms->fa_mutex + i);
+    for (i = 0; i < ms->group_size; ++i)
+        addMutexConstr(lp, &fact_id, ms->group + i);
 
     obj = BOR_ALLOC_ARR(double, fact_id.fact_size);
     while (planLPSolve(lp, &val, obj) == 0){
-        addFAMutex(ms, fact_id.fact_size, obj);
-        addFAMutexConstr(lp, fact_id.fact_size, ms->fa_mutex + ms->size - 1);
+        addFAMutex(ms, &fact_id, obj);
+        addMutexConstr(lp, &fact_id, ms->group + ms->group_size - 1);
     }
     BOR_FREE(obj);
     planLPDel(lp);

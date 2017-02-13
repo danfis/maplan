@@ -104,9 +104,27 @@ static void addMutexConstr(plan_lp_t *lp,
     }
 }
 
+static void setGoalFlag(plan_mutex_group_t *m,
+                        const plan_part_state_t *goal)
+{
+    plan_var_id_t var;
+    plan_val_t val;
+    int i, tmpi;
+
+    for (i = 0; i < m->fact_size; ++i){
+        PLAN_PART_STATE_FOR_EACH(goal, tmpi, var, val){
+            if (m->fact[i].var == var && m->fact[i].val == val){
+                m->is_goal = 1;
+                return;
+            }
+        }
+    }
+}
+
 static void addFAMutex(plan_mutex_group_set_t *ms,
                        const plan_fact_id_t *fact_id,
-                       const double *obj)
+                       const double *obj,
+                       const plan_part_state_t *goal)
 {
     plan_mutex_group_t *m;
     plan_var_id_t var;
@@ -114,12 +132,15 @@ static void addFAMutex(plan_mutex_group_set_t *ms,
     int i;
 
     m = planMutexGroupSetAdd(ms);
+    m->is_fa = 1;
     for (i = 0; i < fact_id->fact_size; ++i){
         if (obj[i] > 0.5){
             planFactIdVarFromFact(fact_id, i, &var, &val);
             planMutexGroupAdd(m, var, val);
         }
     }
+
+    setGoalFlag(m, goal);
 }
 
 void planFAMutexFind(const plan_problem_t *p, const plan_state_t *state,
@@ -152,7 +173,7 @@ void planFAMutexFind(const plan_problem_t *p, const plan_state_t *state,
 
     obj = BOR_ALLOC_ARR(double, fact_id.fact_size);
     while (planLPSolve(lp, &val, obj) == 0){
-        addFAMutex(ms, &fact_id, obj);
+        addFAMutex(ms, &fact_id, obj, p->goal);
         addMutexConstr(lp, &fact_id, ms->group + ms->group_size - 1);
     }
     BOR_FREE(obj);

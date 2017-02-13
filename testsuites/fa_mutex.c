@@ -5,7 +5,7 @@ void faMutex(const char *fn)
 {
     plan_problem_t *prob;
     plan_mutex_group_set_t ms;
-    int i, j, fact_id;
+    int i, j;
 
     printf("---- %s ----\n", fn);
     prob = planProblemFromProto(fn, PLAN_PROBLEM_USE_CG);
@@ -19,7 +19,7 @@ void faMutex(const char *fn)
     planFAMutexFind(prob, &state, &ms);
     planMutexGroupSetSort(&ms);
     for (i = 0; i < ms.group_size; ++i){
-        printf("fa-mutex[%d]:", i);
+        printf("fa-mutex[%d]: is-goal: %d", i, ms.group[i].is_goal);
         for (j = 0; j < ms.group[i].fact_size; ++j)
             printf(" %d:%d", ms.group[i].fact[j].var, ms.group[i].fact[j].val);
         printf("\n");

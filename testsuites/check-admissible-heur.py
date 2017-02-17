@@ -6,7 +6,7 @@ import subprocess
 
 def probIt(topdir):
     for root, dirs, files in os.walk(topdir):
-        plans = [x for x in files if x.endswith('.plan')]
+        plans = sorted([x for x in files if x.endswith('.plan')])
         if len(plans) == 0:
             continue
 

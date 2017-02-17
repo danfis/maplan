@@ -23,6 +23,7 @@
 
 #include "plan/lp.h"
 #include "plan/fact_id.h"
+#include "plan/fa_mutex.h"
 
 #ifdef PLAN_LP
 
@@ -127,6 +128,30 @@ static plan_cost_t lpSolve(plan_lp_t *lp, const fact_t *facts,
                            int facts_size, int use_ilp,
                            const plan_landmark_set_t *ldms);
 
+static void factsInitFAMutex(fact_t *facts, const plan_problem_t *p,
+                             const plan_fact_id_t *fact_id)
+{
+    plan_mutex_group_set_t ms;
+    PLAN_STATE_STACK(state, p->var_size);
+    plan_mutex_group_t *m;
+    int i, j, fid;
+
+    planStatePoolGetState(p->state_pool, p->initial_state, &state);
+    planMutexGroupSetInit(&ms);
+    planFAMutexFind(p, &state, &ms, PLAN_FA_MUTEX_ONLY_GOAL);
+    for (i = 0; i < ms.group_size; ++i){
+        m = ms.group + i;
+        for (j = 0; j < m->fact_size; ++j){
+            fid = planFactIdVar(fact_id, m->fact[j].var, m->fact[j].val);
+            if (!facts[fid].is_goal)
+                facts[fid].is_mutex_with_goal = 1;
+            facts[fid].is_goal_var = 1;
+            facts[fid].cause_incomplete_op = 0;
+        }
+    }
+    planMutexGroupSetFree(&ms);
+}
+
 plan_heur_t *planHeurFlowNew(const plan_problem_t *p, unsigned flags)
 {
     plan_heur_flow_t *hflow;
@@ -139,6 +164,8 @@ plan_heur_t *planHeurFlowNew(const plan_problem_t *p, unsigned flags)
     hflow->facts = BOR_CALLOC_ARR(fact_t, hflow->fact_id.fact_size);
     factsInit(hflow->facts, &hflow->fact_id, p->var, p->var_size,
               p->goal, p->op, p->op_size);
+    if (flags & PLAN_HEUR_FLOW_FA_MUTEX)
+        factsInitFAMutex(hflow->facts, p, &hflow->fact_id);
 
     // Initialize LP solver
     hflow->lp = lpInit(hflow->facts, hflow->fact_id.fact_size,

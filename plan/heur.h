@@ -59,6 +59,11 @@ struct _plan_search_t;
 #define PLAN_HEUR_FLOW_LANDMARKS_LM_CUT 0x20u
 
 /**
+ * Use fa-mutexes to tighten bounds.
+ */
+#define PLAN_HEUR_FLOW_FA_MUTEX 0x40u
+
+/**
  * Sets the number of parallel threads that will be invoked by any CPLEX
  * parallel optimizer.
  * By default one thread is used.

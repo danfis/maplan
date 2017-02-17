@@ -27,8 +27,10 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#define PLAN_FA_MUTEX_ONLY_GOAL 0x1u
+
 void planFAMutexFind(const plan_problem_t *p, const plan_state_t *state,
-                     plan_mutex_group_set_t *ms);
+                     plan_mutex_group_set_t *ms, unsigned flags);
 
 
 #ifdef __cplusplus

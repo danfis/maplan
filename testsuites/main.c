@@ -20,6 +20,7 @@
 #include "ma_private_state.h"
 #include "landmark.h"
 #include "msg_schema.h"
+#include "fa_mutex.h"
 
 TEST(protobufTearDown)
 {
@@ -47,6 +48,7 @@ TEST_SUITES {
     TEST_SUITE_ADD(TSMAPrivateState),
     TEST_SUITE_ADD(TSLandmark),
     TEST_SUITE_ADD(TSMsgSchema),
+    TEST_SUITE_ADD(TSFAMutex),
     TEST_SUITES_CLOSURE
 };
 

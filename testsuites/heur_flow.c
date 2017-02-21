@@ -172,3 +172,22 @@ TEST(testHeurFlowILP)
     runTest("Flow ILP", "proto/CityCar-p3-2-2-0-1.proto",
             "states/citycar-p3-2-2-0-1.txt", flags);
 }
+
+TEST(testHeurFlowFAMutex)
+{
+    unsigned flags;
+
+    flags = PLAN_HEUR_FLOW_FA_MUTEX;
+    runTest("Flow", "proto/simple.proto",
+            "states/simple.txt", flags);
+    runTest("Flow", "proto/depot-pfile1.proto",
+            "states/depot-pfile1.txt", flags);
+    runTest("Flow", "proto/depot-pfile5.proto",
+            "states/depot-pfile5.txt", flags);
+    runTest("Flow", "proto/rovers-p03.proto",
+            "states/rovers-p03.txt", flags);
+    runTest("Flow", "proto/rovers-p15.proto",
+            "states/rovers-p15.txt", flags);
+    runTest("Flow", "proto/CityCar-p3-2-2-0-1.proto",
+            "states/citycar-p3-2-2-0-1.txt", flags);
+}

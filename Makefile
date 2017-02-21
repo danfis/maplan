@@ -81,6 +81,8 @@ OBJS += ma_state
 OBJS += ma_terminate
 OBJS += lp
 OBJS += pot
+OBJS += mutex
+OBJS += fa_mutex
 
 CXX_OBJS  =
 CXX_OBJS += problem

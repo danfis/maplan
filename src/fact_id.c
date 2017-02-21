@@ -68,6 +68,27 @@ static void extendVar2(plan_fact_id_t *f, const plan_var_t *var, int var_size)
     f->fact_size = fid;
 }
 
+static void factToVarMap(plan_fact_id_t *f,
+                         const plan_var_t *var, int var_size)
+{
+    plan_var_id_t vi;
+    plan_val_t val;
+    int fact_id;
+
+    f->fact_to_var = BOR_ALLOC_ARR(plan_var_id_t, f->fact1_size);
+    f->fact_to_val = BOR_ALLOC_ARR(plan_val_t, f->fact1_size);
+    for (vi = 0; vi < var_size; ++vi){
+        if (var[vi].ma_privacy)
+            continue;
+
+        for (val = 0; val < var[vi].range; ++val){
+            fact_id = planFactIdVar(f, vi, val);
+            f->fact_to_var[fact_id] = vi;
+            f->fact_to_val[fact_id] = val;
+        }
+    }
+}
+
 void planFactIdInit(plan_fact_id_t *fid, const plan_var_t *var, int var_size,
                     unsigned flags)
 {
@@ -79,6 +100,9 @@ void planFactIdInit(plan_fact_id_t *fid, const plan_var_t *var, int var_size,
     initVar(fid, var, var_size);
     if (flags & PLAN_FACT_ID_H2)
         extendVar2(fid, var, var_size);
+
+    if (flags & PLAN_FACT_ID_REVERSE_MAP)
+        factToVarMap(fid, var, var_size);
 
     alloc = var_size;
     if (flags & PLAN_FACT_ID_H2)
@@ -96,6 +120,10 @@ void planFactIdFree(plan_fact_id_t *fid)
         BOR_FREE(fid->var);
     if (fid->fact_offset != NULL)
         BOR_FREE(fid->fact_offset);
+    if (fid->fact_to_var)
+        BOR_FREE(fid->fact_to_var);
+    if (fid->fact_to_val)
+        BOR_FREE(fid->fact_to_val);
     if (fid->state_buf != NULL)
         BOR_FREE(fid->state_buf);
     if (fid->part_state_buf != NULL)

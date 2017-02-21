@@ -29,6 +29,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #define PLAN_FACT_ID_H2 0x1u
+#define PLAN_FACT_ID_REVERSE_MAP 0x2u
 
 /**
  * Structure for translation of variable's value to fact id.
@@ -40,6 +41,10 @@ struct _plan_fact_id_t {
     int fact_size;
     int *fact_offset;
     int fact1_size;
+
+    /** Mapping from fact to var/val */
+    plan_var_id_t *fact_to_var;
+    plan_val_t *fact_to_val;
 
     int *state_buf;
     int *part_state_buf;
@@ -130,6 +135,14 @@ int *planFactIdPartState2(const plan_fact_id_t *f,
                           const plan_part_state_t *part_state,
                           int *size);
 
+/**
+ * Returns var/val value corresponding to the fact ID.
+ * Works only if PLAN_FACT_ID_REVERSE_MAP is enabled during initialization.
+ */
+_bor_inline void planFactIdVarFromFact(const plan_fact_id_t *f,
+                                       int fact_id,
+                                       plan_var_id_t *var,
+                                       plan_val_t *val);
 
 int __planFactIdState(const plan_fact_id_t *f, const plan_state_t *state);
 int __planFactIdPartState(const plan_fact_id_t *f,
@@ -178,6 +191,15 @@ _bor_inline const int *planFactIdPartState(const plan_fact_id_t *f,
 {
     *size = __planFactIdPartState(f, part_state);
     return f->part_state_buf;
+}
+
+_bor_inline void planFactIdVarFromFact(const plan_fact_id_t *f,
+                                       int fact_id,
+                                       plan_var_id_t *var,
+                                       plan_val_t *val)
+{
+    *var = f->fact_to_var[fact_id];
+    *val = f->fact_to_val[fact_id];
 }
 
 #ifdef __cplusplus

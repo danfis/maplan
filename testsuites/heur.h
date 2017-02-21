@@ -33,10 +33,12 @@ TEST_SUITE(TSHeurLMCutInc) {
 TEST(testHeurFlow);
 TEST(testHeurFlowLandmarks);
 TEST(testHeurFlowILP);
+TEST(testHeurFlowFAMutex);
 TEST_SUITE(TSHeurFlow) {
     TEST_ADD(testHeurFlow),
     TEST_ADD(testHeurFlowLandmarks),
     TEST_ADD(testHeurFlowILP),
+    TEST_ADD(testHeurFlowFAMutex),
     TEST_ADD(protobufTearDown),
     TEST_SUITE_CLOSURE
 };

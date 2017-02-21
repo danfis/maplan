@@ -55,6 +55,7 @@ OBJS += dtg.o
 OBJS += ma_private_state.o
 OBJS += landmark.o
 OBJS += msg_schema.o
+OBJS += fa_mutex.o
 
 all: $(TARGETS)
 

@@ -506,11 +506,11 @@ static plan_cost_t lpSolve(plan_lp_t *lp, const fact_t *facts,
     // Add landmarks if provided
     lpAddLandmarks(lp, ldms);
 
-    if (planLPSolve(lp, &z, NULL) != 0){
-        fprintf(stderr, "Error: LP has no solution!\n");
-        exit(-1);
+    if (planLPSolve(lp, &z, NULL) == 0){
+        h = roundOff(z);
+    }else{
+        h = PLAN_HEUR_DEAD_END;
     }
-    h = roundOff(z);
 
     lpDelLandmarks(lp, ldms);
     return h;

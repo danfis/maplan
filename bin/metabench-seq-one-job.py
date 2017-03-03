@@ -146,6 +146,8 @@ class ConfigSearch(object):
         self.fd_translate_py = None
         self.fd_preprocess = None
         self.fd_translate_opts = ''
+        self.fd_search_bin = None
+        self.fd_search = None
 
         if cfg.has_option(self.section, 'fd-translate-py') \
            or cfg.has_option(self.section, 'fd-preprocess'):
@@ -158,6 +160,10 @@ class ConfigSearch(object):
             self.fd_preprocess = cfg.get(self.section, 'fd-preprocess')
         if cfg.has_option(self.section, 'fd-translate-opts'):
             self.fd_translate_opts = cfg.get(self.section, 'fd-translate-opts')
+        if cfg.has_option(self.section, 'fd-search-bin'):
+            self.fd_search_bin = cfg.get(self.section, 'fd-search-bin')
+            fd_search_opt = 'fd-search-' + search + '-' + heur
+            self.fd_search = cfg.get(self.section, fd_search_opt)
 
         self.bench = cfg.get(self.section, 'bench')
         self.bench = self.bench.split()
@@ -267,8 +273,10 @@ def repoCheck(cfg):
     check_files = [cfg.search_bin,
                    cfg.validate_bin,
                    cfg.translate_py,
-                   cfg.protobuf_egg
                   ]
+    if cfg.cluster != 'local':
+        check_files += [cfg.protobuf_egg]
+
     for f in check_files:
         if not os.path.isfile(f):
             err('Could not find `{0}\''.format(f))
@@ -467,7 +475,10 @@ class ProblemTask(object):
         self._log = open(os.path.join(self.outdir, 'task.log'), 'w')
 
         if self.translate() == 0:
-            self.search()
+            if self.cfg_search.fd_search_bin is not None:
+                self.searchFD()
+            else:
+                self.search()
             self.validate()
 
         shutil.rmtree(self.outscratchdir)
@@ -527,6 +538,30 @@ class ProblemTask(object):
             return -1
 
         return 0
+
+    def searchFD(self):
+        self.log('fd-search: START')
+
+        max_time  = self.cfg_search.max_time
+        max_time -= self.translate_time
+        max_time = int(max_time)
+        max_mem = self.cfg_search.max_mem
+
+        cmd  = [self.cfg_search.fd_search_bin]
+        cmd += ['--search', '\'' + self.cfg_search.fd_search + '\'']
+        cmd += ['--internal-plan-file',
+                os.path.join(self.outscratchdir, 'plan.out')]
+        cmd += ['<{0}'.format(os.path.join(self.outscratchdir, 'problem.fd'))]
+
+        self.log('fd-search: cmd: {0}'.format(' '.join(cmd)))
+        ret, out, err, tm = self._runCmd(cmd, max_mem = max_mem)
+        self.log('fd-search: --> {0}'.format(ret))
+        self.log('fd-search: time {0}'.format(tm))
+        self.search_time = tm
+        self.writeOutErr('fd-search', out, err)
+        self.copyFromScratch('plan.out')
+
+        return ret
 
     def search(self):
         self.log('search: START')

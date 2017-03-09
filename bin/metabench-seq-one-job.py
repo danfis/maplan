@@ -343,19 +343,52 @@ python2 {5}
 def createRunSh(cfg, max_time):
     return [_createRunSh(cfg, max_time, x) for x in range(cfg.nodes)]
 
+def walltimePro(max_time):
+    hours = max_time / 3600
+    max_time = max_time % 3600
+    minutes = max_time / 60
+    secs = max_time % 60
+    return '{0}:{1}:{2}'.format(hours, minutes, secs)
+
 def qsub(cfg):
+    pbs_pro = False
     if cfg.cluster == 'local':
         runLocal(cfg)
         return
 
     elif cfg.cluster == 'ungu':
-        resources = 'cl_ungu'
-        queue = 'uv@wagap'
+        pbs_pro = True
+        resources = 'host=ungu1:queue_list=q_uv'
+        queue = 'uv@wagap-pro.cerit-sc.cz'
         max_time = 95 * 3600
+
     elif cfg.cluster == 'urga':
         resources = 'cl_urga'
         queue = 'uv@wagap'
         max_time = 95 * 3600
+
+    elif cfg.cluster == 'ida':
+        resources = 'cl_ida'
+        queue = 'q_1w@arien'
+        max_time = 6 * 24 * 3600
+
+    elif cfg.cluster == 'mandos':
+        pbs_pro = True
+        resources = 'cl_mandos=True'
+        queue = 'q_1w@arien-pro.ics.muni.cz'
+        max_time = 6 * 24 * 3600
+
+    elif cfg.cluster == 'tarkil':
+        pbs_pro = True
+        resources = 'cl_tarkil=True'
+        queue = 'q_1w@arien-pro.ics.muni.cz'
+        max_time = 6 * 24 * 3600
+
+    elif cfg.cluster == 'zewura':
+        resources = 'cl_zewura'
+        queue = 'default@wagap'
+        max_time = 6 * 24 * 3600
+
     else:
         err('Unkown cluster {0}'.format(cfg.cluster))
 
@@ -369,10 +402,18 @@ def qsub(cfg):
 
     for node_id, run_sh in enumerate(createRunSh(cfg, max_time)):
         qargs = ['qsub']
-        qargs += ['-l', 'nodes=1:ppn={0}:{1}'.format(cfg.ppn, resources)]
-        qargs += ['-l', 'walltime={0}s'.format(max_time)]
-        qargs += ['-l', 'mem={0}mb'.format(max_mem)]
-        qargs += ['-l', 'scratch={0}mb'.format(scratch)]
+        if pbs_pro:
+            r  = 'select=1:ncpus={0}'.format(cfg.pnn}
+            r += ':{0}'.format(resources)
+            r += ':mem={0}mb'.format(max_mem)
+            r += ':scratch_local={0}mb'.format(scratch)
+            qargs += ['-l', r]
+            qargs += ['-l', 'walltime={0}'.format(walltimePro(max_time))]
+        else:
+            qargs += ['-l', 'nodes=1:ppn={0}:{1}'.format(cfg.ppn, resources)]
+            qargs += ['-l', 'walltime={0}s'.format(max_time)]
+            qargs += ['-l', 'mem={0}mb'.format(max_mem)]
+            qargs += ['-l', 'scratch={0}mb'.format(scratch)]
         qargs += ['-q', queue]
         out = os.path.join(cfg.topdir, 'main-task-{0:02d}.out'.format(node_id))
         err = os.path.join(cfg.topdir, 'main-task-{0:02d}.err'.format(node_id))

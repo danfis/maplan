@@ -403,7 +403,7 @@ def qsub(cfg):
     for node_id, run_sh in enumerate(createRunSh(cfg, max_time)):
         qargs = ['qsub']
         if pbs_pro:
-            r  = 'select=1:ncpus={0}'.format(cfg.pnn}
+            r  = 'select=1:ncpus={0}'.format(cfg.ppn)
             r += ':{0}'.format(resources)
             r += ':mem={0}mb'.format(max_mem)
             r += ':scratch_local={0}mb'.format(scratch)

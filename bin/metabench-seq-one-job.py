@@ -64,11 +64,20 @@ class ConfigBench(object):
     def __init__(self, cfg, name):
         self.name = name
         section = 'metabench-bench-' + name
-        self.path = cfg.get(section, 'path')
+        self.pddl_dir = cfg.cfgGet(section, 'pddl-dir', cfg.pddl_dir)
+        self.path = cfg.cfgGet(section, 'path')
+        self.skip_domains = cfg.cfgGet(section, 'skip-domains', '').split()
         self.pddl = {}
 
-    def load(self, cfg):
-        self._loadSeq(os.path.join(cfg.pddl_repodir, self.path))
+        if self.path is None:
+            err('Missing path option in {0}'.format(section))
+        if self.pddl_dir is None:
+            err('Missing pddl-dir option in {0}'.format(section))
+        if not os.path.isdir(self.pddl_dir):
+            err('PDDL repo {0} is not a directory.'.format(self.pddl_dir))
+
+    def load(self):
+        self._loadSeq(os.path.join(self.pddl_dir, self.path))
 
     def _addPDDL(self, domain, problem, domain_pddl, problem_pddl):
         if domain not in self.pddl:
@@ -82,6 +91,8 @@ class ConfigBench(object):
     def _loadSeq(self, path):
         for pddl_dir in self._pddlDirs(path):
             domain = os.path.split(pddl_dir)[-1]
+            if domain in self.skip_domains:
+                continue
             for problem, pddl, domain_pddl in self._pddlDomainProblem(pddl_dir):
                 self._addPDDL(domain, problem, domain_pddl, pddl)
 
@@ -135,37 +146,55 @@ class ConfigSearch(object):
         else:
             self.name = name2
         self.section = 'metabench-search-' + name
-        self.search = search
-        if search is None:
-            self.search = cfg.get(self.section, 'search')
-        self.heur = heur
-        if heur is None:
-            self.heur = cfg.get(self.section, 'heur')
-        self.max_time = cfg.getint(self.section, 'max-time')
-        self.max_mem = cfg.getint(self.section, 'max-mem')
-        self.fd_translate_py = None
-        self.fd_preprocess = None
-        self.fd_translate_opts = ''
-        self.fd_search_bin = None
+
+        keys = ['search_bin', 'validate_bin', 'translate_py',
+                'pddl_dir', 'pythonpath',
+                'fd_translate_py', 'fd_preprocess', 'fd_translate_opts',
+                'fd_search_bin',
+                'max_time', 'max_mem', 'bench',
+                'search_alg', 'heur',
+                'combine', 'type']
+        for key in keys:
+            opt = key.replace('_', '-')
+            val = cfg.cfgGet(self.section, opt, getattr(cfg, key))
+            setattr(self, key, val)
         self.fd_search = None
 
-        if cfg.has_option(self.section, 'fd-translate-py') \
-           or cfg.has_option(self.section, 'fd-preprocess'):
-            if not cfg.has_option(self.section, 'fd-translate-py') \
-               or not cfg.has_option(self.section, 'fd-preprocess'):
-                err('If you want to use FD preprocessor, both ' \
-                     + 'fd-translate-py and fd-preprocess must be defined!')
-        if cfg.has_option(self.section, 'fd-translate-py'):
-            self.fd_translate_py = cfg.get(self.section, 'fd-translate-py')
-            self.fd_preprocess = cfg.get(self.section, 'fd-preprocess')
-        if cfg.has_option(self.section, 'fd-translate-opts'):
-            self.fd_translate_opts = cfg.get(self.section, 'fd-translate-opts')
-        if cfg.has_option(self.section, 'fd-search-bin'):
-            self.fd_search_bin = cfg.get(self.section, 'fd-search-bin')
-            fd_search_opt = 'fd-search-' + search + '-' + heur
-            self.fd_search = cfg.get(self.section, fd_search_opt)
+        if search is not None:
+            self.search_alg = search
+        if heur is not None:
+            self.heur = heur
 
-        self.bench = cfg.get(self.section, 'bench')
+        if self.max_time < 60:
+            err('max-time must be explicitly set for at least 60 seconds')
+        if self.max_mem < 100:
+            err('max-mem must be explicitly set for at least 100MB')
+
+        use_fd = [self.fd_translate_py, self.fd_preprocess,
+                  self.fd_translate_opts]
+        use_fd = [x for x in use_fd if x is not None]
+        if len(use_fd) > 0 and len(use_fd) != 3:
+            err('If you want to use FD preprocessor, ' \
+                     + 'fd-translate-py, fd-preprocess, and' \
+                     + 'fd-translate-opts must be defined!')
+        if self.fd_search_bin is not None:
+            fd_search_opt = 'fd-search-' + self.search_alg + '-' + self.heur
+            self.fd_search = cfg.cfgGet(self.section, fd_search_opt, None)
+            if self.fd_search is None:
+                err('Missing {0} option in {1}'
+                        .format(fd_search_opt, self.section))
+
+        if self.search_bin is None and self.fd_search_bin is None:
+            err('{0}: search-bin or fd-search-bin must be defined.'
+                    .format(self.name))
+        if self.search_bin is not None and not os.path.isfile(self.search_bin):
+            err('{0}: search-bin {1} is not a file'
+                    .format(self.name, self.search_bin))
+        if self.fd_search_bin is not None \
+           and not os.path.isfile(self.fd_search_bin):
+            err('{0}: fd-search-bin {1} is not a file'
+                    .format(self.name, self.fd_search_bin))
+
         self.bench = self.bench.split()
         self.bench = [ConfigBench(cfg, x) for x in self.bench]
 
@@ -181,26 +210,26 @@ class Config(object):
         if not os.path.isdir(self.scratchdir):
             os.mkdir(self.scratchdir)
 
-        self.repodir = os.path.join(topdir, 'repo')
-        self.search_bin = os.path.join(self.repodir, 'bin/search')
-        self.validate_bin = os.path.join(self.repodir, 'third-party/VAL/validate')
-        self.translate_py = os.path.join(self.repodir, 'third-party/translate/translate.py')
-        self.protobuf_egg = os.path.join(self.repodir, 'third-party/protobuf/python/build/protobuf-2.6.1-py2.7.egg')
-        self.pddl_repodir = os.path.join(topdir, 'pddl')
-
         self.fn = os.path.join(topdir, 'metabench.cfg')
         self.cfg = cfgparser.ConfigParser()
         self.cfg.read(self.fn)
-        self.repo = self.cfg.get('metabench', 'repo')
-        self.commit = self.cfg.get('metabench', 'commit')
-        self.pddl_repo = self.cfg.get('metabench', 'pddl_repo')
-        self.pddl_commit = self.cfg.get('metabench', 'pddl_commit')
-        self.cplex_includedir = self._cfgGet('metabench', 'cplex-includedir',
-                                              '/software/cplex-126/cplex/include')
-        self.cplex_libdir = self._cfgGet('metabench', 'cplex-libdir',
-                                         '/software/cplex-126/cplex/lib/x86-64_linux/static_pic')
 
-        self.pythonpath = self._cfgGet('metabench', 'pythonpath', '')
+        self.search_bin = self.cfgGet('metabench', 'search-bin')
+        self.validate_bin = self.cfgGet('metabench', 'validate-bin')
+        self.translate_py = self.cfgGet('metabench', 'translate-py')
+        self.pddl_dir = self.cfgGet('metabench', 'pddl-dir')
+        self.pythonpath = self.cfgGet('metabench', 'pythonpath', '')
+        self.fd_translate_py = self.cfgGet('metabench', 'fd-translate-py')
+        self.fd_preprocess = self.cfgGet('metabench', 'fd-preprocess')
+        self.fd_translate_opts = self.cfgGet('metabench', 'fd-translate-opts')
+        self.fd_search_bin = self.cfgGet('metabench', 'fd-search-bin')
+        self.max_time = self.cfgGet('metabench', 'max-time', 0)
+        self.max_mem = self.cfgGet('metabench', 'max-mem', 0)
+        self.bench = self.cfgGet('metabench', 'bench', '')
+        self.search_alg = self.cfgGet('metabench', 'search-alg', '')
+        self.heur = self.cfgGet('metabench', 'heur', '')
+        self.combine = self.cfgGet('metabench', 'combine', False)
+        self.type = self.cfgGet('metabench', 'type', 'seq')
 
         self.cluster = self.cfg.get('metabench', 'cluster')
         self.ppn = self.cfg.getint('metabench', 'ppn')
@@ -217,26 +246,28 @@ class Config(object):
     def loadBench(self):
         for s in self.search:
             for b in s.bench:
-                b.load(self)
+                b.load()
 
     def _parseSearch(self, name):
         section = 'metabench-search-' + name
-        if self.cfg.has_option(section, 'combine') \
-           and self.cfg.getboolean(section, 'combine'):
-            search = self.cfg.get(section, 'search').split()
-            heur = self.cfg.get(section, 'heur').split()
+        if self.cfgGet(section, 'combine', self.combine):
+            search = self.cfgGet(section, 'search-alg', self.search_alg)
+            search = search.split()
+            if len(search) == 0:
+                err('Option search-alg is not set for {0}'.format(section))
+            heur = self.cfgGet(section, 'heur', self.heur).split()
             out = []
             for s in search:
                 for h in heur:
                     name2 = name + '-' + s + '-' + h
                     name2 = name2.replace(':', '-')
-                    out += [ConfigSearch(self.cfg, name, s, h, name2)]
+                    out += [ConfigSearch(self, name, s, h, name2)]
             return out
 
         else:
-            return [ConfigSearch(self.cfg, name)]
+            return [ConfigSearch(self, name)]
 
-    def _cfgGet(self, section, option, default):
+    def cfgGet(self, section, option, default = None):
         if self.cfg.has_option(section, option):
             if type(default) is bool:
                 return self.cfg.getboolean(section, option)
@@ -247,55 +278,6 @@ class Config(object):
             return self.cfg.get(section, option)
         return default
 
-
-
-def repoClone(path, dst):
-    runCmd('git clone {0} {1}'.format(path, dst))
-
-def repoCheckout(repo, commit):
-    runCmd('cd {0} && (git checkout -b bench origin/{1} || git checkout -b bench {1})'.format(repo, commit))
-
-def repoMaplanMake(cfg):
-    make_local = open(os.path.join(cfg.repodir, 'Makefile.local'), 'w')
-    make_local.write('CFLAGS = -O3 -march=corei7\n')
-    make_local.write('CXXFLAGS = -O3 -march=corei7\n')
-    if cfg.cplex_includedir is not None:
-        make_local.write('CPLEX_CFLAGS = -I{0}\n'.format(cfg.cplex_includedir))
-    if cfg.cplex_libdir is not None:
-        make_local.write('CPLEX_LDFLAGS = -L{0} -lcplex\n'.format(cfg.cplex_libdir))
-    make_local.close()
-
-    runCmd('cd {0} && make third-party'.format(cfg.repodir))
-    runCmd('cd {0} && make'.format(cfg.repodir))
-    runCmd('cd {0} && make -C bin'.format(cfg.repodir))
-
-def repoCheck(cfg):
-    check_files = [cfg.search_bin,
-                   cfg.validate_bin,
-                   cfg.translate_py,
-                  ]
-    if cfg.cluster != 'local':
-        check_files += [cfg.protobuf_egg]
-
-    for f in check_files:
-        if not os.path.isfile(f):
-            err('Could not find `{0}\''.format(f))
-
-def compileMaplan(cfg):
-    if os.path.exists(cfg.repodir):
-        err('Directory for maplan `{0}\' already exist'.format(cfg.repodir))
-
-    repoClone(cfg.repo, cfg.repodir)
-    repoCheckout(cfg.repodir, cfg.commit)
-    repoMaplanMake(cfg)
-    repoCheck(cfg)
-
-def checkoutPDDL(cfg):
-    if os.path.exists(cfg.pddl_repodir):
-        err('Directory for pddl data `{0}\' already exist'.format(cfg.pddl_repodir))
-
-    repoClone(cfg.pddl_repo, cfg.pddl_repodir)
-    repoCheckout(cfg.pddl_repodir, cfg.pddl_commit)
 
 
 def runLocal(cfg):
@@ -358,7 +340,7 @@ def qsub(cfg):
 
     elif cfg.cluster == 'ungu':
         pbs_pro = True
-        resources = 'host=ungu1:queue_list=q_uv'
+        resources = 'host=ungu1'
         queue = 'uv@wagap-pro.cerit-sc.cz'
         max_time = 95 * 3600
 
@@ -438,14 +420,6 @@ def main(topdir):
     p('========== START ==========')
 
     cfg = Config(topdir)
-
-    if not os.path.exists(cfg.repodir):
-        compileMaplan(cfg)
-    else:
-        repoCheck(cfg)
-
-    if not os.path.exists(cfg.pddl_repodir):
-        checkoutPDDL(cfg)
     cfg.loadBench()
 
     p('Creating output directory...')
@@ -612,9 +586,9 @@ class ProblemTask(object):
         max_time = int(max_time)
         max_mem = self.cfg_search.max_mem
 
-        cmd  = [self.cfg.search_bin]
+        cmd  = [self.cfg_search.search_bin]
         cmd += ['--fd-problem', os.path.join(self.outscratchdir, 'problem.fd')]
-        cmd += ['-s', self.cfg_search.search]
+        cmd += ['-s', self.cfg_search.search_alg]
         cmd += ['-H', self.cfg_search.heur]
         cmd += ['--max-time', str(max_time)]
         cmd += ['--max-mem', str(max_mem)]
@@ -634,8 +608,12 @@ class ProblemTask(object):
     def validate(self):
         self.log('validate: START')
 
+        if self.cfg_search.validate_bin is None:
+            self.log('Skipping validation because validate-bin is not set.')
+            return
+
         if os.path.isfile(os.path.join(self.outscratchdir, 'plan.out')):
-            cmd  = [self.cfg.validate_bin]
+            cmd  = [self.cfg_search.validate_bin]
             cmd += ['-v']
             cmd += [os.path.join(self.outscratchdir, 'domain.pddl')]
             cmd += [os.path.join(self.outscratchdir, 'problem.pddl')]
@@ -753,7 +731,7 @@ def runTh(thid, cfg, queue):
         task.run()
 
 def initPython(jobid, cfg):
-    paths = [cfg.pythonpath, cfg.protobuf_egg,
+    paths = [cfg.pythonpath,
              '/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages']
     paths = [x for x in paths if len(x) > 0]
     pythonpath = ':'.join(paths)

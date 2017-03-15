@@ -345,8 +345,9 @@ def qsub(cfg):
         max_time = 95 * 3600
 
     elif cfg.cluster == 'urga':
-        resources = 'cl_urga'
-        queue = 'uv@wagap'
+        pbs_pro = True
+        resources = 'host=urga1'
+        queue = 'uv@wagap-pro.cerit-sc.cz'
         max_time = 95 * 3600
 
     elif cfg.cluster == 'ida':

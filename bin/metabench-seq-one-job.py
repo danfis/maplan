@@ -372,6 +372,12 @@ def qsub(cfg):
         queue = 'default@wagap'
         max_time = 6 * 24 * 3600
 
+    elif cfg.cluster == 'alfrid':
+        pbs_pro = True
+        resources = 'cl_alfrid=True'
+        queue = '@arien-pro.ics.muni.cz'
+        max_time = 47 * 3600
+
     else:
         err('Unkown cluster {0}'.format(cfg.cluster))
 

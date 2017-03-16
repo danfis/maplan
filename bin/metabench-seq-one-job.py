@@ -59,6 +59,17 @@ def runCmd(cmd):
     if os.system(cmd) != 0:
         sys.exit(-1)
 
+def absPath(path):
+    path = os.path.abspath(path)
+    #path = os.path.realpath(path)
+    path = path.replace('/auto/praha1', '/storage/praha1/home')
+    path = path.replace('/auto/plzen1', '/storage/plzen1/home')
+    path = path.replace('/auto/brno2', '/storage/brno2/home')
+    path = path.replace('/auto/brno3-cerit', '/storage/brno3-cerit/home')
+    path = path.replace('/mnt/storage-brno3-cerit/nfs4',
+                        '/storage/brno3-cerit')
+    return path
+
 
 class ConfigBench(object):
     def __init__(self, cfg, name):
@@ -201,8 +212,7 @@ class ConfigSearch(object):
 
 class Config(object):
     def __init__(self, topdir):
-        topdir = os.path.abspath(topdir)
-        topdir = topdir.replace('/auto/praha1', '/storage/praha1/home')
+        topdir = absPath(topdir)
         self.topdir = topdir
         self.scratchdir = os.path.join(topdir, 'scratch')
         if 'SCRATCHDIR' in os.environ:
@@ -302,10 +312,10 @@ def runLocal(cfg):
             p('Ret: {0}'.format(ret))
 
 def _createRunSh(cfg, max_time, node_id = -1):
-    script = os.path.realpath(__file__)
-    script = script.replace('/auto/praha1', '/storage/praha1/home')
+    script = absPath(__file__)
     out = '''#!/bin/bash
 module add python-2.7.5
+python2 --version
 export METABENCH_TOPDIR={0}
 export METABENCH_NODES={1}
 export METABENCH_NODE_ID={2}
@@ -377,6 +387,16 @@ def qsub(cfg):
         resources = 'cl_alfrid=True'
         queue = '@arien-pro.ics.muni.cz'
         max_time = 47 * 3600
+
+    elif cfg.cluster == 'zigur':
+        resources = 'cl_zigur'
+        queue = '@wagap'
+        max_time = 6 * 24 * 3600
+
+    elif cfg.cluster == 'zapat':
+        resources = 'cl_zapat'
+        queue = '@wagap'
+        max_time = 6 * 24 * 3600
 
     else:
         err('Unkown cluster {0}'.format(cfg.cluster))

@@ -63,7 +63,7 @@ def absPath(path):
     path = os.path.abspath(path)
     #path = os.path.realpath(path)
     path = path.replace('/auto/praha1', '/storage/praha1/home')
-    path = path.replace('/auto/plzen1', '/storage/plzen1/home')
+    path = path.replace('/auto/plzen1/home', '/storage/plzen1/home')
     path = path.replace('/auto/brno2', '/storage/brno2/home')
     path = path.replace('/auto/brno3-cerit', '/storage/brno3-cerit/home')
     path = path.replace('/mnt/storage-brno3-cerit/nfs4',
@@ -315,7 +315,6 @@ def _createRunSh(cfg, max_time, node_id = -1):
     script = absPath(__file__)
     out = '''#!/bin/bash
 module add python-2.7.5
-python2 --version
 export METABENCH_TOPDIR={0}
 export METABENCH_NODES={1}
 export METABENCH_NODE_ID={2}

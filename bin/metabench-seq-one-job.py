@@ -315,6 +315,8 @@ def _createRunSh(cfg, max_time, node_id = -1):
     script = absPath(__file__)
     out = '''#!/bin/bash
 module add python-2.7.5
+#module add python-2.7.10-intel
+python2 --version
 export METABENCH_TOPDIR={0}
 export METABENCH_NODES={1}
 export METABENCH_NODE_ID={2}
@@ -757,8 +759,7 @@ def runTh(thid, cfg, queue):
         task.run()
 
 def initPython(jobid, cfg):
-    paths = [cfg.pythonpath,
-             '/software/python27-modules/software/python-2.7.6/gcc/lib/python2.7/site-packages']
+    paths = [cfg.pythonpath]
     paths = [x for x in paths if len(x) > 0]
     pythonpath = ':'.join(paths)
 

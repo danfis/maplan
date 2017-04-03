@@ -22,6 +22,7 @@
 #include "plan/fact_id.h"
 #include "plan/lp.h"
 
+#ifdef PLAN_LP
 
 static void setStateConstr(plan_lp_t *lp, int row,
                            const plan_fact_id_t *fact_id,
@@ -201,3 +202,14 @@ void planFAMutexFind(const plan_problem_t *p, const plan_state_t *state,
     planLPDel(lp);
     planFactIdFree(&fact_id);
 }
+
+#else /* PLAN_LP */
+
+void planFAMutexFind(const plan_problem_t *p, const plan_state_t *state,
+                     plan_mutex_group_set_t *ms, unsigned flags)
+{
+    fprintf(stderr, "Error: Cannot compute fa-mutexes because no"
+                    " LP-solver was available during compilation!\n");
+    fflush(stderr);
+}
+#endif /* PLAN_LP */

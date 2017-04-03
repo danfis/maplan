@@ -48,7 +48,11 @@ int planSearchRun(plan_search_t *search, plan_path_t *path)
 
     planSearchStatStartTimer(&search->stat);
 
-    res = search->init_step_fn(search);
+    if (search->succ_gen->num_operators == 0){
+        res = PLAN_SEARCH_NOT_FOUND;
+    }else{
+        res = search->init_step_fn(search);
+    }
     while (res == PLAN_SEARCH_CONT){
         res = search->step_fn(search);
         if (search->abort)

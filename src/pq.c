@@ -236,5 +236,6 @@ static plan_pq_el_t *planPQHeapQueuePop(plan_pq_heap_queue_t *q, int *key)
 static void planPQHeapQueueUpdate(plan_pq_heap_queue_t *q,
                                   int key, plan_pq_el_t *el)
 {
+    el->key = key;
     borPairHeapUpdate(q->heap, &el->conn.heap);
 }

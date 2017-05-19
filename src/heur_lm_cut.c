@@ -56,6 +56,7 @@ typedef struct _fact_t fact_t;
 #define FVALUE_IS_SET(fact) (FVALUE(fact) != INT_MAX)
 #define FPUSH(pq, val, fact) \
     do { \
+    ASSERT(val != INT_MAX); \
     if ((fact)->heap.key != INT_MAX){ \
         (fact)->value = (val); \
         planPQUpdate((pq), (val), &(fact)->heap); \
@@ -157,6 +158,52 @@ static void planHeurLMCutStateInc(plan_heur_t *_heur,
 static void opFree(op_t *op);
 static void factFree(fact_t *fact);
 static void loadOpFact(plan_heur_lm_cut_t *h, const plan_problem_t *p);
+
+#if 0
+static void debug(plan_heur_lm_cut_t *h)
+{
+    for (int i = 0; i < h->fact_size; ++i){
+        fprintf(stderr, "F[%03d]: value: %d, supp_cnt: %d",
+                i, FVALUE(h->fact + i), h->fact[i].supp_cnt);
+        fprintf(stderr, ", pre:");
+        for (int j = 0; j < h->fact[i].pre_op.size; ++j){
+            fprintf(stderr, " %d", h->fact[i].pre_op.arr[j]);
+        }
+        fprintf(stderr, ", eff:");
+        for (int j = 0; j < h->fact[i].eff_op.size; ++j){
+            fprintf(stderr, " %d", h->fact[i].eff_op.arr[j]);
+        }
+
+        for (int j = 0; j < h->state.size; ++j){
+            if (i == h->state.arr[j]){
+                fprintf(stderr, " *");
+                break;
+            }
+        }
+        if (h->fact_goal == i)
+            fprintf(stderr, " +G");
+        if (h->fact_nopre == i)
+            fprintf(stderr, " +NP");
+        fprintf(stderr, "\n");
+    }
+
+    for (int i = 0; i < h->op_size; ++i){
+        fprintf(stderr, "O[%03d]: cost: %d, unsat: %d, supp: %d,"
+                        " supp_cost: %d, cut_candidate: %d",
+                i, h->op[i].cost, h->op[i].unsat, h->op[i].supp,
+                h->op[i].supp_cost, h->op[i].cut_candidate);
+        fprintf(stderr, ", pre:");
+        for (int j = 0; j < h->op[i].pre.size; ++j){
+            fprintf(stderr, " %d", h->op[i].pre.arr[j]);
+        }
+        fprintf(stderr, ", eff:");
+        for (int j = 0; j < h->op[i].eff.size; ++j){
+            fprintf(stderr, " %d", h->op[i].eff.arr[j]);
+        }
+        fprintf(stderr, "\n");
+    }
+}
+#endif
 
 plan_heur_t *lmCutNew(const plan_problem_t *p, unsigned type,
                       unsigned flags, unsigned cache_flags)
@@ -317,6 +364,7 @@ static void hMaxFull(plan_heur_lm_cut_t *h, const plan_state_t *state,
     addInitState(h, state, &pq);
     while (!planPQEmpty(&pq)){
         fact = FPOP(&pq, &value);
+        ASSERT(FVALUE(fact) == value);
 
         for (i = 0; i < fact->pre_op.size; ++i){
             op = h->op + fact->pre_op.arr[i];

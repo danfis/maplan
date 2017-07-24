@@ -3,6 +3,7 @@ from __future__ import print_function
 import invariant_finder
 import pddl
 import timers
+import sys
 
 
 DEBUG = False
@@ -204,25 +205,34 @@ class MutexDict(object):
         groups = [[x[1] for x in g] for g in groups]
         return groups
 
+def unreachable_atoms(atoms, init, actions):
+    reach = set(init)
+    for a in actions:
+        reach |= set(a.precondition)
+        reach |= set([x[1] for x in a.add_effects])
+        reach |= set([x[1] for x in a.del_effects])
+    unreach = set(atoms) - reach
+    unreach = [x for x in unreach if str(x).startswith('Atom ')]
+    return unreach
 
-def ma_split_groups(comm, groups):
+def extend_groups(groups, atoms, init, actions):
+    unreach = unreachable_atoms(atoms, init, actions)
+    return [set(g) | set(unreach) for g in groups]
+
+MAX_GROUPS = 500
+
+def ma_split_groups(comm, groups, atoms, init, actions):
     private_groups = [x for x in groups if x[0].is_private]
     pub_groups = [x for x in groups if not x[0].is_private]
+    pub_groups = extend_groups(pub_groups, atoms, init, actions)
 
+    print('Num pub groups:', len(pub_groups))
     if comm.is_master:
-        # Fill dictionary with all atoms and mark corresponding mutexes
-        mutex_dict = MutexDict()
-        mutex_dict.update(pub_groups)
+        mg = MutexGroups(pub_groups)
         for i, grps in enumerate(comm.recvFromAll()):
             grps = [[pddl.Atom(x[0], x[1]) for x in g] for g in grps]
-            mutex_dict.update(grps)
-
-        if mutex_dict.empty():
-            comm.sendToAll([])
-            return []
-
-        # Read out mutex groups and send them to all agents
-        pub_groups = mutex_dict.groups()
+            mg.update(grps)
+        pub_groups = mg.get_groups()
         comm.sendToAll(public_groups(pub_groups))
 
     else:
@@ -236,7 +246,8 @@ def ma_split_groups(comm, groups):
     groups = pub_groups + private_groups
     return groups
 
-def compute_groups(task, atoms, reachable_action_params, partial_encoding=True,
+def compute_groups(task, atoms, actions,
+                   reachable_action_params, partial_encoding=True,
                    comm = None):
     invariants, groups = invariant_finder.get_groups(task, reachable_action_params)
 
@@ -246,14 +257,21 @@ def compute_groups(task, atoms, reachable_action_params, partial_encoding=True,
     if comm is not None:
         # Try to instantiate another mutex groups that are based on initial
         # states of other agents
-        groups = ma_instantiate_groups(comm, groups, invariants, task, atoms)
+        #groups = ma_instantiate_groups(comm, groups, invariants, task, atoms)
 
         # Separate private atoms to a separate groups
         groups = split_groups_by_private_atoms(groups)
+        print('Groups split to private/public')
+        sys.stdout.flush()
 
         # Split mutex groups so that all agents have the same mutex groups
         # -- this should ensure that no agent have invalid mutexes.
-        groups = ma_split_groups(comm, groups)
+        groups = ma_split_groups(comm, groups, atoms, task.init, actions)
+    else:
+        print('NOT COMM!')
+        sys.stdout.flush()
+    print('Groups computed.')
+    sys.stdout.flush()
 
     # Sort here already to get deterministic mutex groups.
     groups = sort_groups(groups)

@@ -645,7 +645,7 @@ def translate_task(strips_to_sas, ranges, translation_key, private_vars,
 def unsolvable_sas_task(msg):
     print("%s! Generating unsolvable task..." % msg)
     variables = sas_tasks.SASVariables(
-        [2], [-1], [["Atom dummy(val1)", "Atom dummy(val2)"]])
+        [2], [-1], [["Atom dummy(val1)", "Atom dummy(val2)"]], [])
     # We create no mutexes: the only possible mutex is between
     # dummy(val1) and dummy(val2), but the preprocessor would filter
     # it out anyway since it is trivial (only involves one
@@ -657,7 +657,7 @@ def unsolvable_sas_task(msg):
     axioms = []
     metric = True
     return sas_tasks.SASTask(variables, mutexes, init, goal,
-                             operators, axioms, metric, [])
+                             operators, axioms, metric, [], [], None)
 
 
 
@@ -683,7 +683,7 @@ def pddl_to_sas(task, agent_id, agent_url):
 
     with timers.timing("Computing fact groups", block=True):
         groups, mutex_groups, translation_key = fact_groups.compute_groups(
-            task, atoms, reachable_action_params,
+            task, atoms, actions, reachable_action_params,
             partial_encoding=USE_PARTIAL_ENCODING,
             comm = comm)
 

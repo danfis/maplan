@@ -32,6 +32,7 @@
 #include "options.h"
 
 static plan_problem_t *problem = NULL;
+static plan_problem_t problem2;
 static plan_problem_agents_t *agent_problem = NULL;
 static plan_problem_t **problems = NULL;
 static int problems_size = 0;
@@ -646,7 +647,6 @@ static plan_heur_t *heurNewMA(const options_t *o,
                               const plan_problem_t *prob,
                               const plan_problem_t *glob)
 {
-    plan_problem_t proj;
     plan_heur_t *heur;
 
     if (optionsHeurOpt(o, "loc")){
@@ -658,12 +658,12 @@ static plan_heur_t *heurNewMA(const options_t *o,
                             " (:glob option) cannot be created.\n");
             return NULL;
         }
-        planProblemGlobOps(&proj, prob, glob);
-        heur = _heurNew(o, o->heur, &proj);
+        planProblemGlobOps(&problem2, prob, glob);
+        heur = _heurNew(o, o->heur, &problem2);
 
     }else{
-        planProblemProj(&proj, prob);
-        heur = _heurNew(o, o->heur, &proj);
+        planProblemProj(&problem2, prob);
+        heur = _heurNew(o, o->heur, &problem2);
     }
 
     return heur;

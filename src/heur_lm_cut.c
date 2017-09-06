@@ -877,8 +877,10 @@ static void addOp(plan_heur_lm_cut_t *h, const plan_op_t *pop,
     }
 
     // Record operator with no preconditions
-    if (op->pre.size == 0)
+    if (op->pre.size == 0){
         planArrIntAdd(&h->fact[h->fact_nopre].pre_op, op_id);
+        planArrIntAdd(&h->op[op_id].pre, h->fact_nopre);
+    }
 
     planArrIntSort(&op->eff);
 }

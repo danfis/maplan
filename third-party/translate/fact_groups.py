@@ -3,6 +3,7 @@ from __future__ import print_function
 import invariant_finder
 import pddl
 import timers
+import sys
 
 
 DEBUG = False
@@ -154,81 +155,88 @@ def split_groups_by_private_atoms(groups):
             result += [private]
     return result
 
-class MutexDict(object):
-    def __init__(self):
-        self.d = {}
-        self.counter = 0
-        self.col = 0
+def unreachable_atoms(atoms, init, actions):
+    reach = set(init)
+    for a in actions:
+        reach |= set(a.precondition)
+        reach |= set([x[1] for x in a.add_effects])
+        reach |= set([x[1] for x in a.del_effects])
+#        print(a.name)
+#        print('\t', a.precondition)
+#        print('\t', a.add_effects)
+#        print('\t', a.del_effects)
+    unreach = set(atoms) - reach
+    unreach = [x for x in unreach if str(x).startswith('Atom ')]
+#    print('Reach:', reach)
+#    print('Unreach:', unreach)
+#    print('Unreach:', [x.is_private for x in unreach])
+    return unreach
+
+def extend_groups(groups, atoms, init, actions):
+    unreach = unreachable_atoms(atoms, init, actions)
+    print('Unreach:', sorted(unreach))
+    for f in unreach:
+        print('\t', f)
+    return [set(g) | set(unreach) for g in groups]
+
+MAX_GROUPS = 500
+MAX_GROUPS = 5000000
+class MutexGroups(object):
+    def __init__(self, groups):
+        self.groups = set([frozenset(g) for g in groups])
 
     def update(self, groups):
-        for group in groups:
-            self.updateGroup(group)
-        self.col += 1
+        print('Update: start with:', len(self.groups), len(groups))
+        print('   -->', sorted(list(set([len(g) for g in self.groups]))))
+        sys.stdout.flush()
+        res = set()
+        for g in groups:
+            g = frozenset(g)
+            for g1 in self.groups:
+                x = g & g1
+                if len(x) > 0:
+                    l = len(res)
+                    res.add(x)
+                    if l != len(res):# and len(res) % 10000 == 0:
+                        print('Add', len(res), end = '\r')
+                        sys.stdout.flush()
+        print()
+        if len(res) > MAX_GROUPS:
+            print('GROUPS PRUNED with limit', MAX_GROUPS)
+            res = sorted([(len(g), g) for g in res])
+            res = res[:MAX_GROUPS]
+            res = set([x[1] for x in res])
+        self.groups = res
 
-    def updateGroup(self, group):
-        idx = self.counter
-        self.counter += 1
-        for atom in group:
-            if atom not in self.d:
-                self.d[atom] = []
-            for _ in range(len(self.d[atom]), self.col):
-                self.d[atom].append(self.counter)
-                self.counter += 1
-            self.d[atom].append(idx)
+    def get_groups(self):
+        return [list(g) for g in self.groups]
 
-    def empty(self):
-        return len(self.d.keys()) == 0
-
-    def groups(self):
-        # Fix dict -- maybe not necessary
-        for key, value in self.d.iteritems():
-            if len(value) != self.col:
-                value.append(self.counter)
-                self.counter += 1
-
-        # Atoms are sorted so that the mutexes are a consecutive subsets of
-        # the array
-        mutex_groups = zip(self.d.values(), self.d.keys())
-        mutex_groups = sorted(mutex_groups)
-        groups = []
-        group = [mutex_groups[0]]
-        for atom in mutex_groups[1:]:
-            if atom[0] == group[0][0]:
-                group += [atom]
-            else:
-                groups += [group]
-                group = [atom]
-        groups += [group]
-
-        # Cherry-pick atoms
-        groups = [[x[1] for x in g] for g in groups]
-        return groups
-
-
-def ma_split_groups(comm, groups):
+def ma_split_groups(comm, groups, atoms, init, actions):
     private_groups = [x for x in groups if x[0].is_private]
     pub_groups = [x for x in groups if not x[0].is_private]
+    #pub_groups = extend_groups(pub_groups, atoms, init, actions)
 
+    print('Num pub groups:', len(pub_groups))
     if comm.is_master:
-        # Fill dictionary with all atoms and mark corresponding mutexes
-        mutex_dict = MutexDict()
-        mutex_dict.update(pub_groups)
+        print('Master')
+        sys.stdout.flush()
+        mg = MutexGroups(pub_groups)
         for i, grps in enumerate(comm.recvFromAll()):
+            print('Master: update', i)
+            sys.stdout.flush()
             grps = [[pddl.Atom(x[0], x[1]) for x in g] for g in grps]
-            mutex_dict.update(grps)
-
-        if mutex_dict.empty():
-            comm.sendToAll([])
-            return []
-
-        # Read out mutex groups and send them to all agents
-        pub_groups = mutex_dict.groups()
+            mg.update(grps)
+        pub_groups = mg.get_groups()
         comm.sendToAll(public_groups(pub_groups))
 
     else:
+        print('Slave')
+        sys.stdout.flush()
         # Slave just sends its public groups to the master and waits for
         # the splitted groups
         comm.sendToMaster(public_groups(pub_groups))
+        print('Sent to master')
+        sys.stdout.flush()
         pub_groups = comm.recvFromMaster()
         pub_groups = [[pddl.Atom(x[0], x[1]) for x in g] for g in pub_groups]
 
@@ -236,7 +244,8 @@ def ma_split_groups(comm, groups):
     groups = pub_groups + private_groups
     return groups
 
-def compute_groups(task, atoms, reachable_action_params, partial_encoding=True,
+def compute_groups(task, atoms, actions,
+                   reachable_action_params, partial_encoding=True,
                    comm = None):
     invariants, groups = invariant_finder.get_groups(task, reachable_action_params)
 
@@ -246,14 +255,21 @@ def compute_groups(task, atoms, reachable_action_params, partial_encoding=True,
     if comm is not None:
         # Try to instantiate another mutex groups that are based on initial
         # states of other agents
-        groups = ma_instantiate_groups(comm, groups, invariants, task, atoms)
+        #groups = ma_instantiate_groups(comm, groups, invariants, task, atoms)
 
         # Separate private atoms to a separate groups
         groups = split_groups_by_private_atoms(groups)
+        print('Groups split to private/public')
+        sys.stdout.flush()
 
         # Split mutex groups so that all agents have the same mutex groups
         # -- this should ensure that no agent have invalid mutexes.
-        groups = ma_split_groups(comm, groups)
+        groups = ma_split_groups(comm, groups, atoms, task.init, actions)
+    else:
+        print('NOT COMM!')
+        sys.stdout.flush()
+    print('Groups computed.')
+    sys.stdout.flush()
 
     # Sort here already to get deterministic mutex groups.
     groups = sort_groups(groups)

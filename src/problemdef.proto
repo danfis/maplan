@@ -74,8 +74,8 @@ message PlanProblemCondEff {
 message PlanProblemOperator {
     required string name = 1;
     required int32 cost = 2;
-    required PlanProblemPartState pre = 3;
-    required PlanProblemPartState eff = 4;
+    optional PlanProblemPartState pre = 3;
+    optional PlanProblemPartState eff = 4;
     repeated PlanProblemCondEff cond_eff = 5;
     optional int32 owner = 6;
     optional int32 global_id = 7;

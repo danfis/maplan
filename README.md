@@ -7,21 +7,20 @@ The repository of MAPlan is currently hosted on gitlab:
 ```
 
 ## Compilation
-MAPlan has some dependencies on other libraries and compilation may require
+MAPlan has some dependencies on other libraries and the compilation may require
 some configuration.
 Use
 ```sh
   $ make help
 ```
-
 and you should see how all Makefile variables are set in the current
 configuration. The Makefiles are organized so that Makefile.include
 contains detection of dependencies and it sets up all variables and
 Makefile (that includes Makefile.include) contains all the rules.
 Additionally you can create Makefile.local (which is not tracked by git)
 that is always included before Makefile.include so you can override
-(almost) all settings that are done in Makefile.include by setting the
-right variables in Makefile.local.
+(almost) all settings that from Makefile.include by setting the right
+variables in Makefile.local.
 
 ### Configuration
 Besides overriding configurations of dependencies, Makefile.local must be used
@@ -30,18 +29,18 @@ it (like potential or flow heuristics). The planner will, however, compile
 without them and if you try to use them, it will write an error message and
 exit.
 
-To set up depndency on an LP solver, you need to set corresponding
+To set up depndency on an LP solver, you need to set the corresponding
 variables in Makefile.local. MAPlan can currently use lpsolve (open-source)
-or CPLEX solvers and we would recommend CPLEX.
+or CPLEX solvers and we would recommend using CPLEX.
 
-So if you install CPLEX you need to set up CPLEX_CFLAGS to use CPLEX's
-include directory (`-I/path/to/include/dir`) and CPLEX_LDFLAGS to link to
+So if you install CPLEX you need to set up `CPLEX_CFLAGS` to use CPLEX's
+include directory (`-I/path/to/include/dir`) and `CPLEX_LDFLAGS` to link to
 CPLEX's library (`-L/path/to/lib/dir -lcplex`). Look into Makefile.local.tpl for
 the example Makefile.local file.
 
 ### Dependecies
 MAPlan depends on some other libraries, but all of them are listed in
-third-party/ directory (either directly or as git's submodule) so you
+`third-party/` directory (either directly or as git's submodule) so you
 should not need to install any. But one of the dependencies is google's
 protobuffers that is almost impossible to use if you have already
 system-wide installation.
@@ -53,7 +52,7 @@ be able to compile all dependencies by:
   $ make boruvka opts protobuf nanomsg translate
 ```
 
-If you have protobuffers already installed on the computer you have to skip
+If you have protobuffers already installed on your computer, you have to skip
 compiling protobuffers from third-party/ directory:
 ```sh
   $ cd third-party
@@ -72,7 +71,7 @@ by using make from the top directory:
 ```
 
 Now in `bin/` directory should be `search` binary that when called without
-parameters (or with `-h` or `--help`) should print list of parameters
+parameters (or with `-h` or `--help`) should print list of options
 that can be used. Currently, the planner needs pre-processed problems in
 protobuf format that is produced by modified Fast Downward's translate
 program located in `third-party/translate/` directory.
@@ -93,8 +92,8 @@ options available. The most notable are:
  * `-H` defines heuristic function
 
 ### Sequential Planner
-First, preprocess the input PDDL files using `third-party/translate/translate.py`
-with `--proto` option:
+First, preprocess the input PDDL files using
+`third-party/translate/translate.py` with `--proto` option:
 ```sh
   $ ./third-party/translate/translate.py --proto --output problem.proto path/to/domain.pddl path/to/problem.pddl
 ```
@@ -112,7 +111,7 @@ algorithm:
 Preprocessing factored MA-PDDL files can be done with
 `third-party/translate/translate-factored.sh` script. Run this script from the
 directory with factored MA-PDDL files corresponding to the problem you want to
-solve, for example using the CoDMAP depot domain:
+solve, for example using the CoDMAP depot/pfile1 problem:
 ```sh
   $ cd path/to/factored/depot/pfile1
   $ /path/to/third-party/translate/translate-factored.sh
@@ -133,13 +132,13 @@ The preprocessing is the same as in the previous case (use
 The option `--ma-factor` switches to multi-agent solver using TCP/IP
 communication channels.
 
-The configuration of TCP/IP channels is done using `--tcp` and `--tcp-id` options.
-Each agent runs in its own process, so you'll need to run as many `./bin/search`
-planners as you have agents in your problem. The `--tcp` option defines
-ip-address:port TCP address, so you need to define as many `--tcp` options as
-you have agents and each planner needs to have defined the same `--tcp` options
-in the same order. Lastly, `--tcp-id` defines ID of the current agent, counting
-from 0 to the number of agents minus 1.
+The configuration of TCP/IP channels is done using `--tcp` and `--tcp-id`
+options. Each agent runs in its own process, so you'll need to run as many
+`./bin/search` planners as you have agents in your problem. The `--tcp` option
+defines ip-address:port TCP address, so you need to define as many `--tcp`
+options as you have agents and each planner needs to have defined the same
+`--tcp` options in the same order. Lastly, `--tcp-id` defines ID of the
+current agent, counting from 0 to the number of agents minus 1.
 
 So for example to run the multi-agent multi-process planner on
 driverlog/pfile1 problem from CoDMAP, you need to

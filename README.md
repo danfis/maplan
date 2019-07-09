@@ -2,14 +2,17 @@
 
 ## Download
 The repository of MAPlan is currently hosted on gitlab:
+```sh
   $ git clone https://gitlab.com/danfis/maplan.git
+```
 
 ## Compilation
 MAPlan has some dependencies on other libraries and compilation may require
 some configuration.
 Use
-
+```sh
   $ make help
+```
 
 and you should see how all Makefile variables are set in the current
 configuration. The Makefiles are organized so that Makefile.include
@@ -45,13 +48,17 @@ system-wide installation.
 
 So if you *don't* have installed protobuffers on your computer you should
 be able to compile all dependencies by:
+```sh
   $ cd third-party
   $ make boruvka opts protobuf nanomsg translate
+```
 
 If you have protobuffers already installed on the computer you have to skip
 compiling protobuffers from third-party/ directory:
+```sh
   $ cd third-party
   $ make boruvka opts nanomsg translate
+```
 
 Now 'make help' should show all *_CFLAGS and *_LDFLAGS variables properly
 set up.
@@ -59,8 +66,10 @@ set up.
 ### Compilation of MAPlan
 Once you have compiled and set up all dependencies, you can compile MAPlan
 by using make from the top directory:
+```sh
   $ make
   $ make -C bin
+```
 
 Now in bin/ directory should be 'search' binary that when called without
 parameters (or with -h or --help) should print list of parameters
@@ -86,29 +95,36 @@ options available. The most notable are:
 ### Sequential Planner
 First, preprocess the input PDDL files using third-party/translate/translate.py
 with --proto option:
-
+```sh
   $ ./third-party/translate/translate.py --proto --output problem.proto path/to/domain.pddl path/to/problem.pddl
+```
 
 This generates the input problem in protobuf format and writes it into
 problem.proto file.
 
 Now you can run the planner, for example with lm-cut heuristic and A* search
 algorithm:
+```sh
   $ ./bin/search -p problem.proto -H lm-cut -s astar -o plan.out
+```
 
 ### Multi-agent Planner in Threads
 Preprocessing factored MA-PDDL files can be done with
 third-party/translate/translate-factored.sh script. Run this script from the
 directory with factored MA-PDDL files corresponding to the problem you want to
 solve, for example using the CoDMAP depot domain:
+```sh
   $ cd path/to/factored/depot/pfile1
   $ /path/to/third-party/translate/translate-factored.sh
+```
 
 This generates a set of .proto files in the same directory, each corresponding
 to one agent.
 
 Now, you can run planner with --ma-factor-dir option, for example:
+```sh
   $ ./bin/search --ma-factor-dir -p path/to/factored/depot/pfile1 -H lm-cut -s astar
+```
 
 ### Multi-agent Planner in Processes
 The preprocessing is the same as in the previous case (use
@@ -131,8 +147,9 @@ driverlog/pfile1 problem from CoDMAP, you need to
 problem, which will generate two files (for each agent) driver1.proto and
 driver2.proto.
 2. Then you need to choose some available ports and determine the IP address.
-Let's say we will run both agents on the same machine with ports 10000 and
-10001.
+Let's say we will run both agents on the same machine with ports 10000 and 10001.
 3. Run one planner per agent:
+```sh
   $ ./bin/search --ma-factor --tcp 127.0.0.1:10000 --tcp 127.0.0.1:10001 --tcp-id 0 -p path/to/driver1.proto -o plan0.out -H lm-cut -s astar &
   $ ./bin/search --ma-factor --tcp 127.0.0.1:10000 --tcp 127.0.0.1:10001 --tcp-id 1 -p path/to/driver2.proto -o plan1.out -H lm-cut -s astar &
+```
